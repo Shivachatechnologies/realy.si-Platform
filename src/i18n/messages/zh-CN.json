@@ -1,0 +1,499 @@
+{
+  "meta": {
+    "title": "Realy",
+    "description": "面向企业的智能基础设施。"
+  },
+  "common": {
+    "appName": "Realy",
+    "tagline": "面向企业的智能基础设施。",
+    "promise": "一位创始人。一个平台。一整家公司。",
+    "loading": "加载中…",
+    "save": "保存",
+    "saving": "保存中…",
+    "cancel": "取消",
+    "create": "创建",
+    "creating": "创建中…",
+    "close": "关闭",
+    "continue": "继续",
+    "optional": "可选",
+    "none": "无",
+    "notConnected": "未连接",
+    "notAvailable": "不可用",
+    "comingInPhase": "第 {phase} 阶段",
+    "yes": "是",
+    "no": "否",
+    "searchPlaceholder": "搜索或跳转到…",
+    "reason": "原因",
+    "reasonHint": "将记录在审计日志中。",
+    "reasonPlaceholder": "为什么要进行此更改？",
+    "actions": "操作",
+    "status": "状态",
+    "enabled": "已启用",
+    "disabled": "已停用",
+    "noResults": "没有结果。",
+    "next": "下一页",
+    "previous": "上一页",
+    "signOut": "退出登录",
+    "language": "语言",
+    "organization": "组织",
+    "company": "公司",
+    "allCompanies": "所有公司",
+    "skipToContent": "跳到主要内容",
+    "toggleNavigation": "显示/隐藏导航",
+    "all": "全部"
+  },
+  "status": {
+    "ACTIVE": "活跃",
+    "INACTIVE": "未激活",
+    "DRAFT": "草稿",
+    "DISABLED": "已停用",
+    "ARCHIVED": "已归档",
+    "SUSPENDED": "已暂停"
+  },
+  "nav": {
+    "commandCenter": "指挥中心",
+    "sections": {
+      "intelligence": "智能",
+      "company": "公司",
+      "build": "构建",
+      "growth": "增长",
+      "operations": "运营",
+      "platform": "平台"
+    },
+    "integrations": "集成",
+    "marketplace": "市场",
+    "settings": "设置",
+    "admin": "管理控制台",
+    "commandPalette": "命令面板",
+    "phaseShort": "P{phase}"
+  },
+  "modules": {
+    "phaseNote": "此模块将在 Realy 路线图的第 {phase} 阶段推出。目前尚不可用，本页面没有任何模拟内容。",
+    "roadmap": "查看路线图阶段",
+    "intelligence": {
+      "title": "智能",
+      "description": "覆盖整个公司的上下文、规划、推理与执行监控。"
+    },
+    "objectives": {
+      "title": "目标",
+      "description": "包含负责人、截止日期、预算、风险和成功标准的成果。"
+    },
+    "plans": {
+      "title": "计划",
+      "description": "由目标生成的里程碑和依赖关系，激活前可编辑。"
+    },
+    "tasks": {
+      "title": "任务",
+      "description": "分配给员工和数字员工的持久任务层级。"
+    },
+    "workforce": {
+      "title": "员工队伍",
+      "description": "在同一受治理运行时上工作的数字员工，权限和预算均有限定。"
+    },
+    "activity": {
+      "title": "动态",
+      "description": "公司正在进行的工作的实时时间线。"
+    },
+    "approvals": {
+      "title": "审批",
+      "description": "等待您决定的受监督操作和仅限创始人的操作。"
+    },
+    "overview": {
+      "title": "概览",
+      "description": "公司的身份、所有权和结构。"
+    },
+    "brain": {
+      "title": "公司大脑",
+      "description": "具备权限感知的战略、决策、文档和政策记忆，并附带引用来源。"
+    },
+    "products": {
+      "title": "产品",
+      "description": "您的产品及其与客户和收入的关联。"
+    },
+    "customers": {
+      "title": "客户",
+      "description": "客户、订阅及其历史记录。"
+    },
+    "people": {
+      "title": "人员",
+      "description": "创始人、团队成员和承包商。"
+    },
+    "documents": {
+      "title": "文档",
+      "description": "已导入公司大脑的公司文档。"
+    },
+    "projects": {
+      "title": "项目",
+      "description": "按工作区和项目组织的工作。"
+    },
+    "studio": {
+      "title": "产品工作室",
+      "description": "从创意到研究、需求、设计、开发、测试和部署。"
+    },
+    "deployments": {
+      "title": "部署",
+      "description": "通过已连接的托管服务商发布的版本。"
+    },
+    "environments": {
+      "title": "环境",
+      "description": "预览、预发布和生产环境。"
+    },
+    "marketing": {
+      "title": "营销",
+      "description": "品牌、活动、内容、SEO、社交媒体、邮件和实验。"
+    },
+    "sales": {
+      "title": "销售",
+      "description": "线索发现、资格评估、触达、方案和跟进。"
+    },
+    "crm": {
+      "title": "CRM",
+      "description": "公司、联系人、线索、商机、销售管道和预测。"
+    },
+    "analytics": {
+      "title": "分析",
+      "description": "来自公司图谱的指标和报告。"
+    },
+    "finance": {
+      "title": "财务",
+      "description": "收入、支出、发票、现金流、跑道、MRR、ARR、CAC 和 LTV。"
+    },
+    "operations": {
+      "title": "运营",
+      "description": "流程、供应商、采购和项目。"
+    },
+    "support": {
+      "title": "支持",
+      "description": "入门引导、工单、知识库和续约。"
+    },
+    "workflows": {
+      "title": "工作流",
+      "description": "带审批和重试的持久化事件驱动工作流。"
+    },
+    "integrations": {
+      "title": "集成",
+      "description": "Realy Connect：与 GitHub、Stripe、Google、Microsoft、Slack、HubSpot 等的受治理连接。"
+    },
+    "marketplace": {
+      "title": "市场",
+      "description": "来自 Realy 生态的工作流、数字员工和集成。"
+    }
+  },
+  "auth": {
+    "signInTitle": "登录 Realy",
+    "signInSubtitle": "在一个地方运营您的公司。",
+    "signUpTitle": "创建您的 Realy 账户",
+    "email": "电子邮箱",
+    "password": "密码",
+    "passwordHint": "至少 12 个字符。",
+    "name": "姓名",
+    "country": "您居住的国家/地区",
+    "countryHint": "仅用于默认设置。公司所在国家和账单国家会单独设置。",
+    "selectCountry": "选择国家/地区",
+    "signIn": "登录",
+    "signUp": "创建账户",
+    "noAccount": "第一次使用 Realy？",
+    "haveAccount": "已有账户？",
+    "mfaTitle": "双重验证",
+    "mfaSubtitle": "输入身份验证器应用中的 6 位验证码，或任一恢复码。",
+    "mfaCode": "验证码",
+    "verify": "验证"
+  },
+  "errors": {
+    "validation_error": "部分字段需要修改。",
+    "unauthenticated": "邮箱、密码或验证码不正确。",
+    "mfa_required": "此操作需要双重验证。请在 设置 → 安全 中启用后重新登录。",
+    "forbidden": "您没有执行此操作的权限。",
+    "not_found": "未找到。",
+    "conflict": "与现有数据冲突。",
+    "idempotency_conflict": "该请求已使用不同的数据提交过。",
+    "rate_limited": "尝试次数过多。请稍等一分钟后重试。",
+    "not_configured": "当前环境尚未配置此功能。",
+    "not_available": "所选国家/地区不可用。",
+    "internal_error": "出现错误，请重试。",
+    "network": "网络错误。请检查连接后重试。",
+    "notFoundTitle": "页面未找到",
+    "notFoundBody": "您要查找的页面不存在，或您没有访问权限。"
+  },
+  "onboarding": {
+    "title": "设置您的公司",
+    "subtitle": "Realy 将您的居住地、公司注册地、销售市场以及数据存储位置视为相互独立的决定。",
+    "orgName": "组织名称",
+    "orgNameHint": "拥有您的公司、账单和团队的账户。",
+    "companyName": "公司名称",
+    "incorporation": "注册国家/地区",
+    "incorporationHint": "公司依法注册（或将注册）的地方。",
+    "targetMarkets": "目标市场",
+    "targetMarketsHint": "您计划销售的地区。可选择一个或多个。",
+    "baseCurrency": "本位币",
+    "timezone": "公司时区",
+    "dataRegion": "数据区域",
+    "dataRegionHint": "公司数据的存储位置。现在记录；区域基础设施将在后续阶段推出。",
+    "suggested": "根据注册国家/地区建议——如有需要可修改。",
+    "submit": "创建公司",
+    "dataRegions": {
+      "US_EAST": "美国 (us-east)",
+      "EU_WEST": "欧洲 (eu-west)",
+      "ME_CENTRAL": "中东 (me-central)",
+      "AP_SOUTH": "印度 (ap-south)",
+      "AP_SOUTHEAST": "亚太 (ap-southeast)"
+    }
+  },
+  "command": {
+    "title": "指挥中心",
+    "objectivePrompt": "您的公司应该实现什么目标？",
+    "objectivePlaceholder": "获得我们在美国的前 100 位客户。",
+    "objectiveUnavailable": "目标规划将在第 3 阶段推出。目前在此输入的内容不会被执行。",
+    "planObjective": "规划目标",
+    "business": "业务",
+    "metrics": {
+      "revenue": "收入",
+      "mrr": "MRR",
+      "customers": "客户",
+      "pipeline": "销售管道",
+      "cash": "现金",
+      "runway": "跑道",
+      "growth": "增长"
+    },
+    "metricsNotConnected": "连接财务和 CRM 数据后将显示实时业务指标（第 6 阶段）。",
+    "intelligence": "智能",
+    "counters": {
+      "objectives": "进行中的目标",
+      "tasks": "进行中的任务",
+      "workforce": "数字员工",
+      "approvals": "待审批"
+    },
+    "systemHealth": "系统健康",
+    "health": {
+      "database": "数据库",
+      "queue": "事件队列",
+      "backlog": "未发布事件",
+      "ok": "正常",
+      "fail": "不可用"
+    },
+    "activity": "最近动态",
+    "activityEmpty": "暂无动态。",
+    "companyProfile": "公司概况",
+    "incorporation": "注册地",
+    "operating": "运营地区",
+    "targets": "目标市场",
+    "localTime": "当地时间",
+    "dataRegion": "数据区域",
+    "baseCurrency": "本位币",
+    "notSet": "未设置",
+    "setup": "设置",
+    "setupItems": {
+      "company": "创建公司",
+      "billing": "确认账单国家/地区",
+      "mfa": "启用双重验证",
+      "team": "邀请团队成员"
+    },
+    "noCompany": "您还没有公司。",
+    "createCompany": "创建公司"
+  },
+  "company": {
+    "title": "公司",
+    "subtitle": "此组织中的所有公司，包括其司法管辖区、市场和数据区域。",
+    "create": "新建公司",
+    "empty": "暂无公司。",
+    "columns": {
+      "name": "名称",
+      "incorporation": "注册地",
+      "markets": "目标市场",
+      "currency": "货币",
+      "region": "数据区域",
+      "created": "创建时间"
+    },
+    "workspaces": "工作区",
+    "newWorkspace": "新建工作区",
+    "workspaceName": "工作区名称"
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "profile": "个人资料",
+      "security": "安全",
+      "members": "成员与角色",
+      "billing": "账单"
+    },
+    "profile": {
+      "name": "姓名",
+      "language": "语言",
+      "timezone": "时区",
+      "country": "您居住的国家/地区",
+      "saved": "已保存。"
+    },
+    "security": {
+      "title": "双重验证",
+      "enabled": "双重验证已开启。",
+      "off": "保护您的账户。管理和账单操作需要双重验证。",
+      "start": "设置身份验证器应用",
+      "scan": "将此密钥添加到您的身份验证器应用（例如 Google Authenticator、1Password 或 Authy）。",
+      "secret": "设置密钥",
+      "uri": "设置链接",
+      "confirmCode": "6 位验证码",
+      "confirm": "确认",
+      "recoveryTitle": "恢复码",
+      "recoveryHint": "请妥善保存。每个恢复码只能使用一次，且不会再次显示。"
+    },
+    "members": {
+      "title": "成员",
+      "invite": "邀请成员",
+      "inviteEmail": "电子邮箱",
+      "role": "角色",
+      "sent": "邀请已创建。当前环境尚未配置邮件发送，被邀请人不会收到邮件。",
+      "roles": "角色",
+      "system": "系统",
+      "custom": "自定义",
+      "newRole": "新建自定义角色",
+      "roleKey": "标识",
+      "roleName": "名称",
+      "permissions": "权限",
+      "mfa": "双重验证",
+      "permissionCount": "{count, plural, other {# 项权限}}"
+    },
+    "billing": {
+      "countryTitle": "账单国家/地区",
+      "countryHint": "决定价格、货币和税费。它可以不同于您所在的国家和公司所在的国家。",
+      "confirm": "确认账单国家/地区",
+      "confirmed": "已确认的账单国家/地区：{country}",
+      "suggestions": "建议",
+      "suggestionUser": "您的居住地：{country}",
+      "suggestionCompany": "公司注册地：{countries}",
+      "plan": "套餐",
+      "interval": {
+        "MONTH": "按月",
+        "YEAR": "按年"
+      },
+      "per": {
+        "MONTH": "每月",
+        "YEAR": "每年"
+      },
+      "getQuote": "获取报价",
+      "quote": "报价",
+      "subtotal": "小计",
+      "discount": "折扣",
+      "total": "合计",
+      "taxIncluded": "已含{tax}",
+      "taxAtCheckout": "{tax}将在结账时计算",
+      "trial": "{days, plural, =0 {无免费试用} other {# 天免费试用}}",
+      "paymentMethods": "支付方式",
+      "coupon": "优惠码",
+      "checkout": "继续付款",
+      "current": "当前订阅",
+      "noSubscription": "没有有效订阅。",
+      "lockedPrice": "锁定在第 {version} 版：{amount}"
+    }
+  },
+  "pricing": {
+    "title": "价格",
+    "subtitle": "价格按市场设定，并以您账单国家/地区的货币显示。",
+    "country": "账单国家/地区",
+    "unavailable": "该国家/地区不可用",
+    "contactSales": "联系销售",
+    "getStarted": "开始使用",
+    "unlimited": "无限制",
+    "included": "包含",
+    "notIncluded": "不包含",
+    "taxNote": "税费将在结账时根据您的账单国家/地区计算。",
+    "features": {
+      "agents.max": "数字员工",
+      "companies.max": "公司",
+      "computer_use.advanced": "高级计算机操作"
+    }
+  },
+  "admin": {
+    "title": "管理控制台",
+    "nav": {
+      "overview": "概览",
+      "pricing": "价格",
+      "countries": "国家与区域",
+      "flags": "功能开关",
+      "audit": "审计日志"
+    },
+    "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
+    "yourAccess": "您的平台权限",
+    "mfaNotice": "管理类更改需要在过去 12 小时内完成双重验证。",
+    "noAccess": "您没有平台管理权限。",
+    "pricing": {
+      "plans": "套餐",
+      "newPlan": "新建套餐",
+      "key": "标识",
+      "name": "名称",
+      "trialDays": "默认试用期（天）",
+      "markets": "市场价格",
+      "market": "市场",
+      "interval": "周期",
+      "amount": "金额",
+      "currency": "货币",
+      "version": "版本",
+      "effective": "生效",
+      "effectiveFrom": "生效时间",
+      "effectiveNow": "留空则立即生效。",
+      "scheduled": "已排期",
+      "history": "版本历史",
+      "changePrice": "修改价格",
+      "addPrice": "添加市场价格",
+      "newAmount": "新金额",
+      "immutableNote": "现有订阅者保留当前价格。此操作会创建新版本；历史记录永不修改。",
+      "cannotManage": "您无法管理此市场。",
+      "activate": "启用",
+      "disable": "停用",
+      "entitlements": "权益",
+      "feature": "功能",
+      "limit": "上限",
+      "noLimit": "无上限",
+      "noPrices": "暂无市场价格。",
+      "marketCode": "市场代码",
+      "marketTypes": {
+        "GLOBAL": "全球",
+        "REGION": "区域",
+        "COUNTRY": "国家/地区"
+      },
+      "since": "自 {date} 起",
+      "until": "至 {date}",
+      "open": "长期有效"
+    },
+    "countries": {
+      "countries": "国家/地区",
+      "regions": "区域",
+      "code": "代码",
+      "region": "区域",
+      "defaultCurrency": "货币",
+      "defaultLocale": "语言区域",
+      "billing": "账单",
+      "paymentMethods": "支付方式",
+      "tax": "税费",
+      "dataRegion": "数据区域",
+      "timezone": "时区",
+      "enableBilling": "启用账单",
+      "disableBilling": "停用账单"
+    },
+    "flags": {
+      "default": "默认",
+      "rules": "规则",
+      "addRule": "添加规则",
+      "target": "目标",
+      "value": "值",
+      "priority": "优先级",
+      "noRules": "暂无定向规则。",
+      "remove": "移除",
+      "turnOn": "开启",
+      "turnOff": "关闭"
+    },
+    "audit": {
+      "time": "时间",
+      "category": "类别",
+      "actor": "执行者",
+      "action": "操作",
+      "resource": "资源",
+      "reason": "原因",
+      "categories": {
+        "TENANT": "租户",
+        "ADMIN": "管理",
+        "SECURITY": "安全"
+      },
+      "empty": "暂无审计记录。"
+    }
+  }
+}

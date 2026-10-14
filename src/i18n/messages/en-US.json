@@ -1,0 +1,499 @@
+{
+  "meta": {
+    "title": "Realy",
+    "description": "Intelligence infrastructure for companies."
+  },
+  "common": {
+    "appName": "Realy",
+    "tagline": "Intelligence infrastructure for companies.",
+    "promise": "One founder. One platform. An entire company.",
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "create": "Create",
+    "creating": "Creating…",
+    "close": "Close",
+    "continue": "Continue",
+    "optional": "Optional",
+    "none": "None",
+    "notConnected": "Not connected",
+    "notAvailable": "Not available",
+    "comingInPhase": "Phase {phase}",
+    "yes": "Yes",
+    "no": "No",
+    "searchPlaceholder": "Search or jump to…",
+    "reason": "Reason",
+    "reasonHint": "Recorded in the audit log.",
+    "reasonPlaceholder": "Why is this changing?",
+    "actions": "Actions",
+    "status": "Status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noResults": "No results.",
+    "next": "Next",
+    "previous": "Previous",
+    "signOut": "Sign out",
+    "language": "Language",
+    "organization": "Organization",
+    "company": "Company",
+    "allCompanies": "All companies",
+    "skipToContent": "Skip to content",
+    "toggleNavigation": "Toggle navigation",
+    "all": "All"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "DRAFT": "Draft",
+    "DISABLED": "Disabled",
+    "ARCHIVED": "Archived",
+    "SUSPENDED": "Suspended"
+  },
+  "nav": {
+    "commandCenter": "Command Center",
+    "sections": {
+      "intelligence": "Intelligence",
+      "company": "Company",
+      "build": "Build",
+      "growth": "Growth",
+      "operations": "Operations",
+      "platform": "Platform"
+    },
+    "integrations": "Integrations",
+    "marketplace": "Marketplace",
+    "settings": "Settings",
+    "admin": "Admin Console",
+    "commandPalette": "Command palette",
+    "phaseShort": "P{phase}"
+  },
+  "modules": {
+    "phaseNote": "This module ships in Phase {phase} of the Realy roadmap. It is not available yet, and nothing on this page is simulated.",
+    "roadmap": "View roadmap phase",
+    "intelligence": {
+      "title": "Intelligence",
+      "description": "Context, planning, reasoning and execution monitoring across your company."
+    },
+    "objectives": {
+      "title": "Objectives",
+      "description": "Outcomes with owners, deadlines, budgets, risks and success criteria."
+    },
+    "plans": {
+      "title": "Plans",
+      "description": "Milestones and dependencies generated from objectives, editable before activation."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Persistent task hierarchy assigned to people and digital employees."
+    },
+    "workforce": {
+      "title": "Workforce",
+      "description": "Digital employees running on one governed runtime with scoped permissions and budgets."
+    },
+    "activity": {
+      "title": "Activity",
+      "description": "A live timeline of what your company is doing."
+    },
+    "approvals": {
+      "title": "Approvals",
+      "description": "Supervised and founder-only actions waiting for your decision."
+    },
+    "overview": {
+      "title": "Overview",
+      "description": "Identity, ownership and structure of your company."
+    },
+    "brain": {
+      "title": "Company Brain",
+      "description": "Permission-aware memory of strategy, decisions, documents and policies, with citations."
+    },
+    "products": {
+      "title": "Products",
+      "description": "Your products and how they connect to customers and revenue."
+    },
+    "customers": {
+      "title": "Customers",
+      "description": "Customers, subscriptions and their history."
+    },
+    "people": {
+      "title": "People",
+      "description": "Founders, team members and contractors."
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Company documents, ingested into the Company Brain."
+    },
+    "projects": {
+      "title": "Projects",
+      "description": "Work organized by workspace and project."
+    },
+    "studio": {
+      "title": "Product Studio",
+      "description": "From idea to research, requirements, design, build, test and deploy."
+    },
+    "deployments": {
+      "title": "Deployments",
+      "description": "Releases across your connected hosting providers."
+    },
+    "environments": {
+      "title": "Environments",
+      "description": "Preview, staging and production environments."
+    },
+    "marketing": {
+      "title": "Marketing",
+      "description": "Brand, campaigns, content, SEO, social, email and experiments."
+    },
+    "sales": {
+      "title": "Sales",
+      "description": "Discovery, qualification, outreach, proposals and follow-up."
+    },
+    "crm": {
+      "title": "CRM",
+      "description": "Companies, contacts, leads, deals, pipelines and forecasts."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Metrics and reports from your company graph."
+    },
+    "finance": {
+      "title": "Finance",
+      "description": "Revenue, expenses, invoices, cash flow, runway, MRR, ARR, CAC and LTV."
+    },
+    "operations": {
+      "title": "Operations",
+      "description": "Processes, vendors, procurement and projects."
+    },
+    "support": {
+      "title": "Support",
+      "description": "Onboarding, tickets, knowledge and renewals."
+    },
+    "workflows": {
+      "title": "Workflows",
+      "description": "Durable, event-driven workflows with approvals and retries."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "Realy Connect: governed connections to GitHub, Stripe, Google, Microsoft, Slack, HubSpot and more."
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "description": "Workflows, digital employees and integrations from the Realy ecosystem."
+    }
+  },
+  "auth": {
+    "signInTitle": "Sign in to Realy",
+    "signInSubtitle": "Operate your company from one place.",
+    "signUpTitle": "Create your Realy account",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 12 characters.",
+    "name": "Full name",
+    "country": "Country you live in",
+    "countryHint": "Used for defaults only. Your company and billing countries are set separately.",
+    "selectCountry": "Select a country",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "noAccount": "New to Realy?",
+    "haveAccount": "Already have an account?",
+    "mfaTitle": "Two-factor verification",
+    "mfaSubtitle": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
+    "mfaCode": "Verification code",
+    "verify": "Verify"
+  },
+  "errors": {
+    "validation_error": "Some fields need attention.",
+    "unauthenticated": "Your email, password or code is incorrect.",
+    "mfa_required": "This action requires two-factor verification. Enable it in Settings → Security, then sign in again.",
+    "forbidden": "You don't have permission to do that.",
+    "not_found": "Not found.",
+    "conflict": "That conflicts with existing data.",
+    "idempotency_conflict": "That request was already used with different data.",
+    "rate_limited": "Too many attempts. Please wait a minute and try again.",
+    "not_configured": "This isn't configured in this environment yet.",
+    "not_available": "Not available for the selected country.",
+    "internal_error": "Something went wrong. Please try again.",
+    "network": "Network error. Check your connection and try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you're looking for doesn't exist or you don't have access to it."
+  },
+  "onboarding": {
+    "title": "Set up your company",
+    "subtitle": "Realy keeps where you live, where your company is incorporated, where it sells and where its data lives as separate decisions.",
+    "orgName": "Organization name",
+    "orgNameHint": "The account that owns your companies, billing and team.",
+    "companyName": "Company name",
+    "incorporation": "Incorporation country",
+    "incorporationHint": "Where the company is (or will be) legally registered.",
+    "targetMarkets": "Target markets",
+    "targetMarketsHint": "Where you plan to sell. Select one or more.",
+    "baseCurrency": "Base currency",
+    "timezone": "Company timezone",
+    "dataRegion": "Data region",
+    "dataRegionHint": "Where company data is stored. Recorded now; regional infrastructure rolls out in later phases.",
+    "suggested": "Suggested from the incorporation country — change it if needed.",
+    "submit": "Create company",
+    "dataRegions": {
+      "US_EAST": "United States (us-east)",
+      "EU_WEST": "Europe (eu-west)",
+      "ME_CENTRAL": "Middle East (me-central)",
+      "AP_SOUTH": "India (ap-south)",
+      "AP_SOUTHEAST": "Asia Pacific (ap-southeast)"
+    }
+  },
+  "command": {
+    "title": "Command Center",
+    "objectivePrompt": "What should your company accomplish?",
+    "objectivePlaceholder": "Get our first 100 US customers.",
+    "objectiveUnavailable": "Objective planning arrives in Phase 3. Nothing typed here is executed yet.",
+    "planObjective": "Plan objective",
+    "business": "Business",
+    "metrics": {
+      "revenue": "Revenue",
+      "mrr": "MRR",
+      "customers": "Customers",
+      "pipeline": "Pipeline",
+      "cash": "Cash",
+      "runway": "Runway",
+      "growth": "Growth"
+    },
+    "metricsNotConnected": "Live business metrics appear once finance and CRM data are connected (Phase 6).",
+    "intelligence": "Intelligence",
+    "counters": {
+      "objectives": "Active objectives",
+      "tasks": "Active tasks",
+      "workforce": "Digital employees",
+      "approvals": "Pending approvals"
+    },
+    "systemHealth": "System health",
+    "health": {
+      "database": "Database",
+      "queue": "Event queue",
+      "backlog": "Unpublished events",
+      "ok": "Operational",
+      "fail": "Unavailable"
+    },
+    "activity": "Recent activity",
+    "activityEmpty": "No activity yet.",
+    "companyProfile": "Company profile",
+    "incorporation": "Incorporated in",
+    "operating": "Operates in",
+    "targets": "Target markets",
+    "localTime": "Local time",
+    "dataRegion": "Data region",
+    "baseCurrency": "Base currency",
+    "notSet": "Not set",
+    "setup": "Setup",
+    "setupItems": {
+      "company": "Create your company",
+      "billing": "Confirm your billing country",
+      "mfa": "Enable two-factor authentication",
+      "team": "Invite your team"
+    },
+    "noCompany": "You don't have a company yet.",
+    "createCompany": "Create a company"
+  },
+  "company": {
+    "title": "Companies",
+    "subtitle": "Every company in this organization, with its jurisdiction, markets and data region.",
+    "create": "New company",
+    "empty": "No companies yet.",
+    "columns": {
+      "name": "Name",
+      "incorporation": "Incorporation",
+      "markets": "Target markets",
+      "currency": "Currency",
+      "region": "Data region",
+      "created": "Created"
+    },
+    "workspaces": "Workspaces",
+    "newWorkspace": "New workspace",
+    "workspaceName": "Workspace name"
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "members": "Members & roles",
+      "billing": "Billing"
+    },
+    "profile": {
+      "name": "Name",
+      "language": "Language",
+      "timezone": "Timezone",
+      "country": "Country you live in",
+      "saved": "Saved."
+    },
+    "security": {
+      "title": "Two-factor authentication",
+      "enabled": "Two-factor authentication is on.",
+      "off": "Protect your account. Administrative and billing actions require it.",
+      "start": "Set up authenticator app",
+      "scan": "Add this key to your authenticator app (for example Google Authenticator, 1Password or Authy).",
+      "secret": "Setup key",
+      "uri": "Setup link",
+      "confirmCode": "6-digit code",
+      "confirm": "Confirm",
+      "recoveryTitle": "Recovery codes",
+      "recoveryHint": "Store these somewhere safe. Each code works once and they will not be shown again."
+    },
+    "members": {
+      "title": "Members",
+      "invite": "Invite member",
+      "inviteEmail": "Email",
+      "role": "Role",
+      "sent": "Invitation created. Email delivery isn't configured in this environment yet, so the invitee won't receive an email.",
+      "roles": "Roles",
+      "system": "System",
+      "custom": "Custom",
+      "newRole": "New custom role",
+      "roleKey": "Key",
+      "roleName": "Name",
+      "permissions": "Permissions",
+      "mfa": "Two-factor",
+      "permissionCount": "{count, plural, one {# permission} other {# permissions}}"
+    },
+    "billing": {
+      "countryTitle": "Billing country",
+      "countryHint": "Determines price, currency and tax. It can differ from your own country and your company's country.",
+      "confirm": "Confirm billing country",
+      "confirmed": "Confirmed billing country: {country}",
+      "suggestions": "Suggestions",
+      "suggestionUser": "Where you live: {country}",
+      "suggestionCompany": "Company incorporation: {countries}",
+      "plan": "Plan",
+      "interval": {
+        "MONTH": "Monthly",
+        "YEAR": "Annual"
+      },
+      "per": {
+        "MONTH": "per month",
+        "YEAR": "per year"
+      },
+      "getQuote": "Get quote",
+      "quote": "Quote",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "total": "Total",
+      "taxIncluded": "{tax} included",
+      "taxAtCheckout": "{tax} calculated at checkout",
+      "trial": "{days, plural, =0 {No free trial} one {# day free trial} other {# day free trial}}",
+      "paymentMethods": "Payment methods",
+      "coupon": "Coupon code",
+      "checkout": "Continue to payment",
+      "current": "Current subscription",
+      "noSubscription": "No active subscription.",
+      "lockedPrice": "Locked at version {version}: {amount}"
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Prices are set per market and shown in your billing country's currency.",
+    "country": "Billing country",
+    "unavailable": "Not available in this country",
+    "contactSales": "Contact sales",
+    "getStarted": "Get started",
+    "unlimited": "Unlimited",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "taxNote": "Taxes are calculated at checkout based on your billing country.",
+    "features": {
+      "agents.max": "Digital employees",
+      "companies.max": "Companies",
+      "computer_use.advanced": "Advanced computer use"
+    }
+  },
+  "admin": {
+    "title": "Admin Console",
+    "nav": {
+      "overview": "Overview",
+      "pricing": "Pricing",
+      "countries": "Countries & regions",
+      "flags": "Feature flags",
+      "audit": "Audit log"
+    },
+    "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
+    "yourAccess": "Your platform access",
+    "mfaNotice": "Administrative changes require two-factor verification within the last 12 hours.",
+    "noAccess": "You don't have platform administration access.",
+    "pricing": {
+      "plans": "Plans",
+      "newPlan": "New plan",
+      "key": "Key",
+      "name": "Name",
+      "trialDays": "Default trial (days)",
+      "markets": "Market prices",
+      "market": "Market",
+      "interval": "Interval",
+      "amount": "Amount",
+      "currency": "Currency",
+      "version": "Version",
+      "effective": "Effective",
+      "effectiveFrom": "Effective from",
+      "effectiveNow": "Leave empty to apply immediately.",
+      "scheduled": "Scheduled",
+      "history": "Version history",
+      "changePrice": "Change price",
+      "addPrice": "Add market price",
+      "newAmount": "New amount",
+      "immutableNote": "Existing subscribers keep their current price. This creates a new version; history is never edited.",
+      "cannotManage": "You can't manage this market.",
+      "activate": "Activate",
+      "disable": "Disable",
+      "entitlements": "Entitlements",
+      "feature": "Feature",
+      "limit": "Limit",
+      "noLimit": "No limit",
+      "noPrices": "No market prices yet.",
+      "marketCode": "Market code",
+      "marketTypes": {
+        "GLOBAL": "Global",
+        "REGION": "Region",
+        "COUNTRY": "Country"
+      },
+      "since": "since {date}",
+      "until": "until {date}",
+      "open": "open"
+    },
+    "countries": {
+      "countries": "Countries",
+      "regions": "Regions",
+      "code": "Code",
+      "region": "Region",
+      "defaultCurrency": "Currency",
+      "defaultLocale": "Locale",
+      "billing": "Billing",
+      "paymentMethods": "Payment methods",
+      "tax": "Tax",
+      "dataRegion": "Data region",
+      "timezone": "Timezone",
+      "enableBilling": "Enable billing",
+      "disableBilling": "Disable billing"
+    },
+    "flags": {
+      "default": "Default",
+      "rules": "Rules",
+      "addRule": "Add rule",
+      "target": "Target",
+      "value": "Value",
+      "priority": "Priority",
+      "noRules": "No targeting rules.",
+      "remove": "Remove",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off"
+    },
+    "audit": {
+      "time": "Time",
+      "category": "Category",
+      "actor": "Actor",
+      "action": "Action",
+      "resource": "Resource",
+      "reason": "Reason",
+      "categories": {
+        "TENANT": "Tenant",
+        "ADMIN": "Admin",
+        "SECURITY": "Security"
+      },
+      "empty": "No audit entries."
+    }
+  }
+}

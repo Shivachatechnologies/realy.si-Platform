@@ -25,3 +25,12 @@ export function closestLocale(tag: string | null | undefined): AppLocale {
   const lang = tag.split("-")[0]!.toLowerCase();
   return LOCALES.find((l) => l.split("-")[0] === lang) ?? DEFAULT_LOCALE;
 }
+
+/** Endonyms shown in the language picker (data, not translatable UI copy). */
+export const LOCALE_NAMES: Record<AppLocale, string> = {
+  "en-US": "English",
+  "hi-IN": "हिन्दी",
+  "ar-AE": "العربية",
+  "de-DE": "Deutsch",
+  "zh-CN": "简体中文",
+};

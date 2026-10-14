@@ -1,0 +1,499 @@
+{
+  "meta": {
+    "title": "Realy",
+    "description": "Intelligente Infrastruktur für Unternehmen."
+  },
+  "common": {
+    "appName": "Realy",
+    "tagline": "Intelligente Infrastruktur für Unternehmen.",
+    "promise": "Eine Gründerin oder ein Gründer. Eine Plattform. Ein ganzes Unternehmen.",
+    "loading": "Wird geladen …",
+    "save": "Speichern",
+    "saving": "Wird gespeichert …",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "creating": "Wird erstellt …",
+    "close": "Schließen",
+    "continue": "Weiter",
+    "optional": "Optional",
+    "none": "Keine",
+    "notConnected": "Nicht verbunden",
+    "notAvailable": "Nicht verfügbar",
+    "comingInPhase": "Phase {phase}",
+    "yes": "Ja",
+    "no": "Nein",
+    "searchPlaceholder": "Suchen oder springen zu …",
+    "reason": "Begründung",
+    "reasonHint": "Wird im Audit-Protokoll gespeichert.",
+    "reasonPlaceholder": "Warum ändert sich das?",
+    "actions": "Aktionen",
+    "status": "Status",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "noResults": "Keine Ergebnisse.",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "signOut": "Abmelden",
+    "language": "Sprache",
+    "organization": "Organisation",
+    "company": "Unternehmen",
+    "allCompanies": "Alle Unternehmen",
+    "skipToContent": "Zum Inhalt springen",
+    "toggleNavigation": "Navigation ein-/ausblenden",
+    "all": "Alle"
+  },
+  "status": {
+    "ACTIVE": "Aktiv",
+    "INACTIVE": "Inaktiv",
+    "DRAFT": "Entwurf",
+    "DISABLED": "Deaktiviert",
+    "ARCHIVED": "Archiviert",
+    "SUSPENDED": "Gesperrt"
+  },
+  "nav": {
+    "commandCenter": "Kommandozentrale",
+    "sections": {
+      "intelligence": "Intelligenz",
+      "company": "Unternehmen",
+      "build": "Entwicklung",
+      "growth": "Wachstum",
+      "operations": "Betrieb",
+      "platform": "Plattform"
+    },
+    "integrations": "Integrationen",
+    "marketplace": "Marktplatz",
+    "settings": "Einstellungen",
+    "admin": "Admin-Konsole",
+    "commandPalette": "Befehlspalette",
+    "phaseShort": "P{phase}"
+  },
+  "modules": {
+    "phaseNote": "Dieses Modul erscheint in Phase {phase} der Realy-Roadmap. Es ist noch nicht verfügbar, und nichts auf dieser Seite ist simuliert.",
+    "roadmap": "Roadmap-Phase ansehen",
+    "intelligence": {
+      "title": "Intelligenz",
+      "description": "Kontext, Planung, Schlussfolgerung und Ausführungsüberwachung im gesamten Unternehmen."
+    },
+    "objectives": {
+      "title": "Ziele",
+      "description": "Ergebnisse mit Verantwortlichen, Fristen, Budgets, Risiken und Erfolgskriterien."
+    },
+    "plans": {
+      "title": "Pläne",
+      "description": "Aus Zielen erzeugte Meilensteine und Abhängigkeiten, vor der Aktivierung bearbeitbar."
+    },
+    "tasks": {
+      "title": "Aufgaben",
+      "description": "Dauerhafte Aufgabenhierarchie für Menschen und digitale Mitarbeitende."
+    },
+    "workforce": {
+      "title": "Belegschaft",
+      "description": "Digitale Mitarbeitende auf einer kontrollierten Laufzeit mit begrenzten Rechten und Budgets."
+    },
+    "activity": {
+      "title": "Aktivität",
+      "description": "Eine Live-Zeitleiste dessen, was Ihr Unternehmen tut."
+    },
+    "approvals": {
+      "title": "Freigaben",
+      "description": "Überwachte und gründerpflichtige Aktionen, die auf Ihre Entscheidung warten."
+    },
+    "overview": {
+      "title": "Übersicht",
+      "description": "Identität, Eigentum und Struktur Ihres Unternehmens."
+    },
+    "brain": {
+      "title": "Company Brain",
+      "description": "Berechtigungsbewusstes Gedächtnis für Strategie, Entscheidungen, Dokumente und Richtlinien – mit Quellen."
+    },
+    "products": {
+      "title": "Produkte",
+      "description": "Ihre Produkte und ihr Bezug zu Kunden und Umsatz."
+    },
+    "customers": {
+      "title": "Kunden",
+      "description": "Kunden, Abonnements und ihre Historie."
+    },
+    "people": {
+      "title": "Personen",
+      "description": "Gründer, Teammitglieder und Auftragnehmer."
+    },
+    "documents": {
+      "title": "Dokumente",
+      "description": "Unternehmensdokumente, eingelesen in das Company Brain."
+    },
+    "projects": {
+      "title": "Projekte",
+      "description": "Arbeit organisiert nach Arbeitsbereich und Projekt."
+    },
+    "studio": {
+      "title": "Product Studio",
+      "description": "Von der Idee über Recherche, Anforderungen, Design, Entwicklung und Tests bis zum Deployment."
+    },
+    "deployments": {
+      "title": "Deployments",
+      "description": "Releases über Ihre verbundenen Hosting-Anbieter."
+    },
+    "environments": {
+      "title": "Umgebungen",
+      "description": "Vorschau-, Staging- und Produktionsumgebungen."
+    },
+    "marketing": {
+      "title": "Marketing",
+      "description": "Marke, Kampagnen, Inhalte, SEO, Social Media, E-Mail und Experimente."
+    },
+    "sales": {
+      "title": "Vertrieb",
+      "description": "Akquise, Qualifizierung, Ansprache, Angebote und Nachverfolgung."
+    },
+    "crm": {
+      "title": "CRM",
+      "description": "Firmen, Kontakte, Leads, Deals, Pipelines und Prognosen."
+    },
+    "analytics": {
+      "title": "Analysen",
+      "description": "Kennzahlen und Berichte aus Ihrem Unternehmensgraphen."
+    },
+    "finance": {
+      "title": "Finanzen",
+      "description": "Umsatz, Ausgaben, Rechnungen, Cashflow, Runway, MRR, ARR, CAC und LTV."
+    },
+    "operations": {
+      "title": "Betrieb",
+      "description": "Prozesse, Lieferanten, Beschaffung und Projekte."
+    },
+    "support": {
+      "title": "Support",
+      "description": "Onboarding, Tickets, Wissen und Verlängerungen."
+    },
+    "workflows": {
+      "title": "Workflows",
+      "description": "Dauerhafte, ereignisgesteuerte Workflows mit Freigaben und Wiederholungen."
+    },
+    "integrations": {
+      "title": "Integrationen",
+      "description": "Realy Connect: kontrollierte Verbindungen zu GitHub, Stripe, Google, Microsoft, Slack, HubSpot und mehr."
+    },
+    "marketplace": {
+      "title": "Marktplatz",
+      "description": "Workflows, digitale Mitarbeitende und Integrationen aus dem Realy-Ökosystem."
+    }
+  },
+  "auth": {
+    "signInTitle": "Bei Realy anmelden",
+    "signInSubtitle": "Führen Sie Ihr Unternehmen von einem Ort aus.",
+    "signUpTitle": "Realy-Konto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 12 Zeichen.",
+    "name": "Vollständiger Name",
+    "country": "Land, in dem Sie leben",
+    "countryHint": "Nur für Voreinstellungen. Unternehmens- und Rechnungsland werden separat festgelegt.",
+    "selectCountry": "Land auswählen",
+    "signIn": "Anmelden",
+    "signUp": "Konto erstellen",
+    "noAccount": "Neu bei Realy?",
+    "haveAccount": "Sie haben bereits ein Konto?",
+    "mfaTitle": "Zwei-Faktor-Bestätigung",
+    "mfaSubtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App oder einen Ihrer Wiederherstellungscodes ein.",
+    "mfaCode": "Bestätigungscode",
+    "verify": "Bestätigen"
+  },
+  "errors": {
+    "validation_error": "Einige Felder müssen überprüft werden.",
+    "unauthenticated": "E-Mail, Passwort oder Code ist falsch.",
+    "mfa_required": "Für diese Aktion ist eine Zwei-Faktor-Bestätigung erforderlich. Aktivieren Sie sie unter Einstellungen → Sicherheit und melden Sie sich erneut an.",
+    "forbidden": "Dazu haben Sie keine Berechtigung.",
+    "not_found": "Nicht gefunden.",
+    "conflict": "Das steht im Konflikt mit vorhandenen Daten.",
+    "idempotency_conflict": "Diese Anfrage wurde bereits mit anderen Daten verwendet.",
+    "rate_limited": "Zu viele Versuche. Bitte warten Sie eine Minute und versuchen Sie es erneut.",
+    "not_configured": "Dies ist in dieser Umgebung noch nicht eingerichtet.",
+    "not_available": "Für das ausgewählte Land nicht verfügbar.",
+    "internal_error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "network": "Netzwerkfehler. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "notFoundTitle": "Seite nicht gefunden",
+    "notFoundBody": "Die gesuchte Seite existiert nicht oder Sie haben keinen Zugriff darauf."
+  },
+  "onboarding": {
+    "title": "Unternehmen einrichten",
+    "subtitle": "Realy behandelt Ihren Wohnort, den Sitz Ihres Unternehmens, seine Zielmärkte und den Speicherort seiner Daten als getrennte Entscheidungen.",
+    "orgName": "Name der Organisation",
+    "orgNameHint": "Das Konto, dem Ihre Unternehmen, die Abrechnung und Ihr Team gehören.",
+    "companyName": "Name des Unternehmens",
+    "incorporation": "Land der Gründung",
+    "incorporationHint": "Wo das Unternehmen rechtlich eingetragen ist (oder wird).",
+    "targetMarkets": "Zielmärkte",
+    "targetMarketsHint": "Wo Sie verkaufen möchten. Wählen Sie einen oder mehrere.",
+    "baseCurrency": "Basiswährung",
+    "timezone": "Zeitzone des Unternehmens",
+    "dataRegion": "Datenregion",
+    "dataRegionHint": "Wo Unternehmensdaten gespeichert werden. Wird jetzt erfasst; regionale Infrastruktur folgt in späteren Phasen.",
+    "suggested": "Vorschlag basierend auf dem Gründungsland – bei Bedarf ändern.",
+    "submit": "Unternehmen erstellen",
+    "dataRegions": {
+      "US_EAST": "Vereinigte Staaten (us-east)",
+      "EU_WEST": "Europa (eu-west)",
+      "ME_CENTRAL": "Naher Osten (me-central)",
+      "AP_SOUTH": "Indien (ap-south)",
+      "AP_SOUTHEAST": "Asien-Pazifik (ap-southeast)"
+    }
+  },
+  "command": {
+    "title": "Kommandozentrale",
+    "objectivePrompt": "Was soll Ihr Unternehmen erreichen?",
+    "objectivePlaceholder": "Unsere ersten 100 Kunden in den USA gewinnen.",
+    "objectiveUnavailable": "Zielplanung kommt in Phase 3. Hier Eingegebenes wird noch nicht ausgeführt.",
+    "planObjective": "Ziel planen",
+    "business": "Geschäft",
+    "metrics": {
+      "revenue": "Umsatz",
+      "mrr": "MRR",
+      "customers": "Kunden",
+      "pipeline": "Pipeline",
+      "cash": "Liquidität",
+      "runway": "Runway",
+      "growth": "Wachstum"
+    },
+    "metricsNotConnected": "Live-Kennzahlen erscheinen, sobald Finanz- und CRM-Daten verbunden sind (Phase 6).",
+    "intelligence": "Intelligenz",
+    "counters": {
+      "objectives": "Aktive Ziele",
+      "tasks": "Aktive Aufgaben",
+      "workforce": "Digitale Mitarbeitende",
+      "approvals": "Offene Freigaben"
+    },
+    "systemHealth": "Systemzustand",
+    "health": {
+      "database": "Datenbank",
+      "queue": "Ereigniswarteschlange",
+      "backlog": "Unveröffentlichte Ereignisse",
+      "ok": "Betriebsbereit",
+      "fail": "Nicht verfügbar"
+    },
+    "activity": "Letzte Aktivität",
+    "activityEmpty": "Noch keine Aktivität.",
+    "companyProfile": "Unternehmensprofil",
+    "incorporation": "Gegründet in",
+    "operating": "Tätig in",
+    "targets": "Zielmärkte",
+    "localTime": "Ortszeit",
+    "dataRegion": "Datenregion",
+    "baseCurrency": "Basiswährung",
+    "notSet": "Nicht festgelegt",
+    "setup": "Einrichtung",
+    "setupItems": {
+      "company": "Unternehmen erstellen",
+      "billing": "Rechnungsland bestätigen",
+      "mfa": "Zwei-Faktor-Authentifizierung aktivieren",
+      "team": "Team einladen"
+    },
+    "noCompany": "Sie haben noch kein Unternehmen.",
+    "createCompany": "Unternehmen erstellen"
+  },
+  "company": {
+    "title": "Unternehmen",
+    "subtitle": "Alle Unternehmen dieser Organisation mit Rechtsraum, Märkten und Datenregion.",
+    "create": "Neues Unternehmen",
+    "empty": "Noch keine Unternehmen.",
+    "columns": {
+      "name": "Name",
+      "incorporation": "Gründungsland",
+      "markets": "Zielmärkte",
+      "currency": "Währung",
+      "region": "Datenregion",
+      "created": "Erstellt"
+    },
+    "workspaces": "Arbeitsbereiche",
+    "newWorkspace": "Neuer Arbeitsbereich",
+    "workspaceName": "Name des Arbeitsbereichs"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "tabs": {
+      "profile": "Profil",
+      "security": "Sicherheit",
+      "members": "Mitglieder & Rollen",
+      "billing": "Abrechnung"
+    },
+    "profile": {
+      "name": "Name",
+      "language": "Sprache",
+      "timezone": "Zeitzone",
+      "country": "Land, in dem Sie leben",
+      "saved": "Gespeichert."
+    },
+    "security": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "enabled": "Die Zwei-Faktor-Authentifizierung ist aktiviert.",
+      "off": "Schützen Sie Ihr Konto. Verwaltungs- und Abrechnungsaktionen setzen sie voraus.",
+      "start": "Authenticator-App einrichten",
+      "scan": "Fügen Sie diesen Schlüssel Ihrer Authenticator-App hinzu (zum Beispiel Google Authenticator, 1Password oder Authy).",
+      "secret": "Einrichtungsschlüssel",
+      "uri": "Einrichtungslink",
+      "confirmCode": "6-stelliger Code",
+      "confirm": "Bestätigen",
+      "recoveryTitle": "Wiederherstellungscodes",
+      "recoveryHint": "Bewahren Sie diese sicher auf. Jeder Code funktioniert einmal und sie werden nicht erneut angezeigt."
+    },
+    "members": {
+      "title": "Mitglieder",
+      "invite": "Mitglied einladen",
+      "inviteEmail": "E-Mail",
+      "role": "Rolle",
+      "sent": "Einladung erstellt. Der E-Mail-Versand ist in dieser Umgebung noch nicht eingerichtet, daher erhält die eingeladene Person keine E-Mail.",
+      "roles": "Rollen",
+      "system": "System",
+      "custom": "Benutzerdefiniert",
+      "newRole": "Neue benutzerdefinierte Rolle",
+      "roleKey": "Schlüssel",
+      "roleName": "Name",
+      "permissions": "Berechtigungen",
+      "mfa": "Zwei-Faktor",
+      "permissionCount": "{count, plural, one {# Berechtigung} other {# Berechtigungen}}"
+    },
+    "billing": {
+      "countryTitle": "Rechnungsland",
+      "countryHint": "Bestimmt Preis, Währung und Steuern. Es kann sich von Ihrem eigenen Land und dem Land Ihres Unternehmens unterscheiden.",
+      "confirm": "Rechnungsland bestätigen",
+      "confirmed": "Bestätigtes Rechnungsland: {country}",
+      "suggestions": "Vorschläge",
+      "suggestionUser": "Ihr Wohnort: {country}",
+      "suggestionCompany": "Gründungsland des Unternehmens: {countries}",
+      "plan": "Tarif",
+      "interval": {
+        "MONTH": "Monatlich",
+        "YEAR": "Jährlich"
+      },
+      "per": {
+        "MONTH": "pro Monat",
+        "YEAR": "pro Jahr"
+      },
+      "getQuote": "Angebot berechnen",
+      "quote": "Angebot",
+      "subtotal": "Zwischensumme",
+      "discount": "Rabatt",
+      "total": "Gesamt",
+      "taxIncluded": "{tax} enthalten",
+      "taxAtCheckout": "{tax} wird beim Bezahlen berechnet",
+      "trial": "{days, plural, =0 {Keine kostenlose Testphase} one {# Tag kostenlos testen} other {# Tage kostenlos testen}}",
+      "paymentMethods": "Zahlungsmethoden",
+      "coupon": "Gutscheincode",
+      "checkout": "Weiter zur Zahlung",
+      "current": "Aktuelles Abonnement",
+      "noSubscription": "Kein aktives Abonnement.",
+      "lockedPrice": "Festgeschrieben auf Version {version}: {amount}"
+    }
+  },
+  "pricing": {
+    "title": "Preise",
+    "subtitle": "Preise werden je Markt festgelegt und in der Währung Ihres Rechnungslandes angezeigt.",
+    "country": "Rechnungsland",
+    "unavailable": "In diesem Land nicht verfügbar",
+    "contactSales": "Vertrieb kontaktieren",
+    "getStarted": "Loslegen",
+    "unlimited": "Unbegrenzt",
+    "included": "Enthalten",
+    "notIncluded": "Nicht enthalten",
+    "taxNote": "Steuern werden beim Bezahlen anhand Ihres Rechnungslandes berechnet.",
+    "features": {
+      "agents.max": "Digitale Mitarbeitende",
+      "companies.max": "Unternehmen",
+      "computer_use.advanced": "Erweiterte Computersteuerung"
+    }
+  },
+  "admin": {
+    "title": "Admin-Konsole",
+    "nav": {
+      "overview": "Übersicht",
+      "pricing": "Preise",
+      "countries": "Länder & Regionen",
+      "flags": "Feature-Flags",
+      "audit": "Audit-Protokoll"
+    },
+    "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
+    "yourAccess": "Ihr Plattformzugang",
+    "mfaNotice": "Administrative Änderungen erfordern eine Zwei-Faktor-Bestätigung innerhalb der letzten 12 Stunden.",
+    "noAccess": "Sie haben keinen Zugriff auf die Plattformverwaltung.",
+    "pricing": {
+      "plans": "Tarife",
+      "newPlan": "Neuer Tarif",
+      "key": "Schlüssel",
+      "name": "Name",
+      "trialDays": "Standard-Testphase (Tage)",
+      "markets": "Marktpreise",
+      "market": "Markt",
+      "interval": "Intervall",
+      "amount": "Betrag",
+      "currency": "Währung",
+      "version": "Version",
+      "effective": "Gültig",
+      "effectiveFrom": "Gültig ab",
+      "effectiveNow": "Leer lassen, um sofort anzuwenden.",
+      "scheduled": "Geplant",
+      "history": "Versionsverlauf",
+      "changePrice": "Preis ändern",
+      "addPrice": "Marktpreis hinzufügen",
+      "newAmount": "Neuer Betrag",
+      "immutableNote": "Bestehende Abonnenten behalten ihren aktuellen Preis. Dies erstellt eine neue Version; der Verlauf wird nie bearbeitet.",
+      "cannotManage": "Sie können diesen Markt nicht verwalten.",
+      "activate": "Aktivieren",
+      "disable": "Deaktivieren",
+      "entitlements": "Leistungsumfang",
+      "feature": "Funktion",
+      "limit": "Limit",
+      "noLimit": "Kein Limit",
+      "noPrices": "Noch keine Marktpreise.",
+      "marketCode": "Marktcode",
+      "marketTypes": {
+        "GLOBAL": "Global",
+        "REGION": "Region",
+        "COUNTRY": "Land"
+      },
+      "since": "seit {date}",
+      "until": "bis {date}",
+      "open": "offen"
+    },
+    "countries": {
+      "countries": "Länder",
+      "regions": "Regionen",
+      "code": "Code",
+      "region": "Region",
+      "defaultCurrency": "Währung",
+      "defaultLocale": "Gebietsschema",
+      "billing": "Abrechnung",
+      "paymentMethods": "Zahlungsmethoden",
+      "tax": "Steuer",
+      "dataRegion": "Datenregion",
+      "timezone": "Zeitzone",
+      "enableBilling": "Abrechnung aktivieren",
+      "disableBilling": "Abrechnung deaktivieren"
+    },
+    "flags": {
+      "default": "Standard",
+      "rules": "Regeln",
+      "addRule": "Regel hinzufügen",
+      "target": "Ziel",
+      "value": "Wert",
+      "priority": "Priorität",
+      "noRules": "Keine Targeting-Regeln.",
+      "remove": "Entfernen",
+      "turnOn": "Einschalten",
+      "turnOff": "Ausschalten"
+    },
+    "audit": {
+      "time": "Zeit",
+      "category": "Kategorie",
+      "actor": "Akteur",
+      "action": "Aktion",
+      "resource": "Ressource",
+      "reason": "Begründung",
+      "categories": {
+        "TENANT": "Mandant",
+        "ADMIN": "Verwaltung",
+        "SECURITY": "Sicherheit"
+      },
+      "empty": "Keine Audit-Einträge."
+    }
+  }
+}

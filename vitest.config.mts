@@ -5,7 +5,12 @@ import path from "node:path";
 const testDb = process.env.TEST_DATABASE_URL ?? "postgresql://realy:realy@localhost:5432/realy_test";
 
 export default defineConfig({
-  resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "src"),
+      "server-only": path.resolve(import.meta.dirname, "tests/stubs/server-only.ts"),
+    },
+  },
   test: {
     include: ["tests/**/*.test.ts"],
     globalSetup: ["tests/global-setup.ts"],

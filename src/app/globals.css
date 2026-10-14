@@ -1,26 +1,125 @@
 @import "tailwindcss";
 
+/*
+ * Realy design tokens. Graphite neutrals, one cool accent, semantic status colors.
+ * Light and dark are both first-class; dark follows the OS unless data-theme is set.
+ * Layout uses logical properties only (RTL is first-class — see docs/globalization.md §4).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.21 0.01 265);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.97 0.003 260);
+  --muted: oklch(0.955 0.004 260);
+  --muted-foreground: oklch(0.5 0.012 262);
+  --border: oklch(0.91 0.005 260);
+  --input: oklch(0.88 0.006 260);
+  --ring: oklch(0.58 0.16 264);
+  --primary: oklch(0.52 0.18 264);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.94 0.03 264);
+  --accent-foreground: oklch(0.35 0.14 264);
+  --success: oklch(0.6 0.14 155);
+  --warning: oklch(0.72 0.15 75);
+  --danger: oklch(0.58 0.2 25);
+  --danger-foreground: oklch(0.99 0 0);
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: oklch(0.155 0.006 265);
+    --foreground: oklch(0.94 0.004 260);
+    --surface: oklch(0.19 0.007 265);
+    --surface-2: oklch(0.215 0.008 265);
+    --muted: oklch(0.235 0.008 265);
+    --muted-foreground: oklch(0.68 0.012 262);
+    --border: oklch(0.28 0.008 265);
+    --input: oklch(0.32 0.01 265);
+    --ring: oklch(0.68 0.15 264);
+    --primary: oklch(0.66 0.16 264);
+    --primary-foreground: oklch(0.15 0.01 265);
+    --accent: oklch(0.27 0.05 264);
+    --accent-foreground: oklch(0.86 0.08 264);
+    --success: oklch(0.7 0.14 155);
+    --warning: oklch(0.8 0.14 80);
+    --danger: oklch(0.66 0.19 25);
+    --danger-foreground: oklch(0.15 0 0);
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: oklch(0.155 0.006 265);
+  --foreground: oklch(0.94 0.004 260);
+  --surface: oklch(0.19 0.007 265);
+  --surface-2: oklch(0.215 0.008 265);
+  --muted: oklch(0.235 0.008 265);
+  --muted-foreground: oklch(0.68 0.012 262);
+  --border: oklch(0.28 0.008 265);
+  --input: oklch(0.32 0.01 265);
+  --ring: oklch(0.68 0.15 264);
+  --primary: oklch(0.66 0.16 264);
+  --primary-foreground: oklch(0.15 0.01 265);
+  --accent: oklch(0.27 0.05 264);
+  --accent-foreground: oklch(0.86 0.08 264);
+  --success: oklch(0.7 0.14 155);
+  --warning: oklch(0.8 0.14 80);
+  --danger: oklch(0.66 0.19 25);
+  --danger-foreground: oklch(0.15 0 0);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --font-sans: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -186,3 +186,35 @@ export async function confirmTotpSetup(
     return { recoveryCodes };
   });
 }
+
+export const preferencesInput = z.object({
+  locale: z.string().max(35).optional(),
+  timezone: timezone.optional(),
+  countryCode: z.string().regex(/^[A-Z]{2}$/).nullable().optional(),
+  name: z.string().trim().min(1).max(120).optional(),
+});
+
+/** The signed-in user's own profile/preferences. Locale is normalized to a shipped catalog. */
+export async function updatePreferences(ctx: RequestContext, raw: z.input<typeof preferencesInput>) {
+  if (ctx.actor.type !== "USER" || !ctx.actor.id) throw new AppError("unauthenticated", "Sign in required");
+  const input = preferencesInput.parse(raw);
+  if (input.countryCode && !(await db().country.findUnique({ where: { code: input.countryCode } }))) throw invalid("Unknown country");
+  const userId = ctx.actor.id;
+  return transaction(async (tx) => {
+    const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { locale: true, timezone: true, countryCode: true, name: true } });
+    const after = await tx.user.update({
+      where: { id: userId },
+      data: { ...input, locale: input.locale ? closestLocale(input.locale) : undefined },
+      select: { id: true, email: true, name: true, locale: true, timezone: true, countryCode: true, mfaEnabled: true },
+    });
+    await writeAudit(tx, ctx, { category: "TENANT", action: "user.preferences_updated", resourceType: "user", resourceId: userId, oldValue: before, newValue: after });
+    return after;
+  });
+}
+
+export async function getMe(userId: string) {
+  return db().user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { id: true, email: true, name: true, locale: true, timezone: true, countryCode: true, mfaEnabled: true },
+  });
+}

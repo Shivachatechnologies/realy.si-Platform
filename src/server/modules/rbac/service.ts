@@ -82,6 +82,7 @@ export function grantsAllow(grants: Grant[], permission: string, chain: ScopeCha
 export async function can(ctx: RequestContext, permission: string, chain: ScopeChain, client?: Tx | Db): Promise<boolean> {
   if (!PERMISSION_KEYS.has(permission)) throw new Error(`Unknown permission ${permission}`);
   if (ctx.actor.type === "SYSTEM") return true;
+  if (!ctx.actor.id) return false; // anonymous
   const orgId = chainOrganization(chain);
   if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(client ?? db(), orgId, ctx.actor.id!))) {
     return false;
@@ -106,8 +107,9 @@ export async function requirePermission(
   client?: Tx | Db,
 ): Promise<void> {
   if (ctx.actor.type === "SYSTEM") return;
+  if (!ctx.actor.id) throw new AppError("unauthenticated", "Sign in required");
   const orgId = chainOrganization(chain);
-  if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(client ?? db(), orgId, ctx.actor.id!))) {
+  if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(client ?? db(), orgId, ctx.actor.id))) {
     throw notFound("Organization");
   }
   if (!(await can(ctx, permission, chain, client))) {
@@ -122,6 +124,7 @@ export async function requirePermission(
 /** Effective permission keys for the actor at a chain (for UI capability hints only — never for enforcement). */
 export async function effectivePermissions(ctx: RequestContext, chain: ScopeChain): Promise<string[]> {
   if (ctx.actor.type === "SYSTEM") return [...PERMISSION_KEYS];
+  if (!ctx.actor.id) return [];
   const orgId = chainOrganization(chain);
   if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(db(), orgId, ctx.actor.id!))) return [];
   const grants = await grantsFor(ctx);
@@ -138,7 +141,7 @@ export const assignRoleInput = z.object({
   scopeId: z.string().min(1).max(64),
   expiresAt: z.coerce.date().optional(),
 });
-export type AssignRoleInput = z.infer<typeof assignRoleInput>;
+export type AssignRoleInput = z.input<typeof assignRoleInput>;
 
 async function principalBelongsToOrg(tx: Tx, type: PrincipalType, id: string, orgId: string): Promise<boolean> {
   if (type === "USER") return isActiveMember(tx, orgId, id);
