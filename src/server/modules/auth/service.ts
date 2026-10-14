@@ -4,6 +4,7 @@ import { decryptSecret, encryptSecret, randomToken, sha256 } from "@/server/core
 import { AppError, conflict, invalid } from "@/server/core/errors";
 import type { RequestContext } from "@/server/core/context";
 import { writeAudit } from "@/server/modules/audit/service";
+import { securityEvent } from "@/server/core/telemetry";
 import { emitEvent } from "@/server/modules/events/emit";
 import { closestLocale } from "@/i18n/config";
 import { dummyHash, hashPassword, PASSWORD_MAX, PASSWORD_MIN, verifyPassword } from "./password";
@@ -95,6 +96,7 @@ export async function signIn(ctx: RequestContext, raw: z.input<typeof signInInpu
         newValue: { email: input.email },
       }),
     );
+    securityEvent("auth.sign_in_failed", { known_user: !!user });
     throw new AppError("unauthenticated", "Invalid email or password");
   }
   return transaction(async (tx) => {
@@ -115,9 +117,18 @@ export async function signIn(ctx: RequestContext, raw: z.input<typeof signInInpu
 }
 
 /** Complete MFA for a pending session (TOTP or a one-time recovery code); also refreshes MFA freshness. */
+export const MFA_MAX_FAILED_ATTEMPTS = 5;
+
+/**
+ * Complete MFA for a pending session (TOTP or a one-time recovery code); also refreshes MFA freshness.
+ * Failures are counted per session; after MFA_MAX_FAILED_ATTEMPTS the session is revoked, so an
+ * attacker with the password cannot keep guessing codes from many IPs.
+ */
 export async function verifyMfa(ctx: RequestContext, sessionId: string, userId: string, code: string): Promise<void> {
   const trimmed = code.replace(/\s/g, "");
-  await transaction(async (tx) => {
+  const verified = await transaction(async (tx) => {
+    const session = await tx.session.findUnique({ where: { id: sessionId }, select: { revokedAt: true } });
+    if (!session || session.revokedAt) throw new AppError("unauthenticated", "Sign in required");
     const factor = await tx.mfaFactor.findFirst({ where: { userId, type: "TOTP", confirmedAt: { not: null } } });
     if (!factor) throw invalid("MFA is not enabled");
     let method: "totp" | "recovery" | null = null;
@@ -132,19 +143,29 @@ export async function verifyMfa(ctx: RequestContext, sessionId: string, userId: 
       });
       if (used.count === 1) method = "recovery";
     }
-    if (!method) {
-      await writeAudit(tx, ctx, { category: "SECURITY", action: "auth.mfa_failed", resourceType: "session", resourceId: sessionId });
-      throw new AppError("unauthenticated", "Invalid verification code");
-    }
-    await tx.session.update({ where: { id: sessionId }, data: { mfaPending: false, mfaVerifiedAt: new Date() } });
+    if (!method) return false;
+    await tx.session.update({ where: { id: sessionId }, data: { mfaPending: false, mfaVerifiedAt: new Date(), mfaFailedAttempts: 0 } });
+    await writeAudit(tx, ctx, { category: "SECURITY", action: "auth.mfa_verified", resourceType: "session", resourceId: sessionId, newValue: { method } });
+    return true;
+  });
+  if (verified) return;
+
+  // Failure bookkeeping commits on its own (the verification transaction above changed nothing).
+  const locked = await transaction(async (tx) => {
+    const s = await tx.session.update({ where: { id: sessionId }, data: { mfaFailedAttempts: { increment: 1 } }, select: { mfaFailedAttempts: true } });
+    const lock = s.mfaFailedAttempts >= MFA_MAX_FAILED_ATTEMPTS;
+    if (lock) await tx.session.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
     await writeAudit(tx, ctx, {
       category: "SECURITY",
-      action: "auth.mfa_verified",
+      action: lock ? "auth.mfa_locked" : "auth.mfa_failed",
       resourceType: "session",
       resourceId: sessionId,
-      newValue: { method },
+      newValue: { failedAttempts: s.mfaFailedAttempts },
     });
+    return lock;
   });
+  securityEvent(locked ? "auth.mfa_locked" : "auth.mfa_failed", { userId });
+  throw new AppError("unauthenticated", locked ? "Too many failed attempts; sign in again" : "Invalid verification code");
 }
 
 /** Start TOTP enrollment: stores an unconfirmed, encrypted secret and returns the provisioning URL. */

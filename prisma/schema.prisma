@@ -132,11 +132,24 @@ enum DiscountType {
 
 enum SubscriptionStatus {
   INCOMPLETE
+  INCOMPLETE_EXPIRED
   TRIALING
   ACTIVE
   PAST_DUE
   CANCELED
   UNPAID
+  PAUSED
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+  NOT_CONFIGURED
 }
 
 enum FlagTargetType {
@@ -176,6 +189,8 @@ model User {
   recoveryCodes MfaRecoveryCode[]
   oauthAccounts OAuthAccount[]
   memberships   Membership[]
+  emailTokens   EmailVerificationToken[]
+  resetTokens   PasswordResetToken[]
 
   @@map("users")
 }
@@ -186,6 +201,7 @@ model Session {
   tokenHash            String    @unique @map("token_hash")
   mfaPending           Boolean   @default(false) @map("mfa_pending")
   mfaVerifiedAt        DateTime? @map("mfa_verified_at") @db.Timestamptz(3)
+  mfaFailedAttempts    Int       @default(0) @map("mfa_failed_attempts")
   activeOrganizationId String?   @map("active_organization_id") @db.Uuid
   ip                   String?
   userAgent            String?   @map("user_agent")
@@ -233,11 +249,14 @@ model OAuthAccount {
   userId            String   @map("user_id") @db.Uuid
   provider          String
   providerAccountId String   @map("provider_account_id")
+  providerEmail     String?  @map("provider_email")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
   @@index([userId])
   @@map("oauth_accounts")
 }
@@ -295,6 +314,9 @@ model Invitation {
   expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
   acceptedAt     DateTime? @map("accepted_at") @db.Timestamptz(3)
   revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  deliveryStatus EmailStatus? @map("delivery_status")
+  lastSentAt     DateTime? @map("last_sent_at") @db.Timestamptz(3)
+  sendCount      Int       @default(0) @map("send_count")
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -362,6 +384,8 @@ model Company {
   workspaces   Workspace[]
   projects     Project[]
 
+  // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
+  @@unique([id, organizationId])
   @@unique([organizationId, slug])
   @@index([organizationId, createdAt])
   @@map("companies")
@@ -377,9 +401,10 @@ model Workspace {
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   projects     Project[]
 
+  @@unique([id, organizationId])
   @@unique([organizationId, companyId, slug])
   @@index([organizationId, companyId])
   @@map("workspaces")
@@ -395,8 +420,8 @@ model Project {
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workspace    Workspace    @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
   @@index([organizationId, companyId, workspaceId])
   @@map("projects")
@@ -577,6 +602,7 @@ model Plan {
   public           Boolean    @default(true)
   sortOrder        Int        @default(0) @map("sort_order")
   defaultTrialDays Int        @default(0) @map("default_trial_days")
+  stripeProductId  String?    @unique @map("stripe_product_id")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -656,6 +682,7 @@ model Promotion {
   endsAt         DateTime?    @map("ends_at") @db.Timestamptz(3)
   maxRedemptions Int?         @map("max_redemptions")
   status         ConfigStatus @default(ACTIVE)
+  stripeCouponId String?      @unique @map("stripe_coupon_id")
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   coupons Coupon[]
@@ -705,6 +732,10 @@ model Subscription {
   currentPeriodEnd     DateTime?          @map("current_period_end") @db.Timestamptz(3)
   trialEndsAt          DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
   cancelAt             DateTime?          @map("cancel_at") @db.Timestamptz(3)
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt           DateTime?          @map("canceled_at") @db.Timestamptz(3)
+  lastPaymentFailedAt  DateTime?          @map("last_payment_failed_at") @db.Timestamptz(3)
+  lastPaymentSucceededAt DateTime?        @map("last_payment_succeeded_at") @db.Timestamptz(3)
   stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
   createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -713,6 +744,7 @@ model Subscription {
   plan         Plan               @relation(fields: [planId], references: [id])
   items        SubscriptionItem[]
 
+  @@unique([id, organizationId])
   @@index([organizationId, status])
   @@map("subscriptions")
 }
@@ -725,9 +757,10 @@ model SubscriptionItem {
   quantity        Int      @default(1)
   unitAmountMinor BigInt   @map("unit_amount_minor")
   currency        String   @db.Char(3)
+  stripeSubscriptionItemId String? @unique @map("stripe_subscription_item_id")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId, organizationId], references: [id, organizationId], onDelete: Cascade)
   priceVersion PriceVersion @relation(fields: [priceVersionId], references: [id], onDelete: Restrict)
 
   @@index([organizationId])
@@ -839,15 +872,80 @@ model Notification {
 }
 
 model IdempotencyKey {
-  id             String   @id @default(uuid(7)) @db.Uuid
-  principalId    String   @map("principal_id")
+  id             String            @id @default(uuid(7)) @db.Uuid
+  principalId    String            @map("principal_id")
+  /// "METHOD /route/template", so one key cannot replay across endpoints.
+  endpoint       String
   key            String
-  requestHash    String   @map("request_hash")
-  responseStatus Int      @map("response_status")
-  responseBody   Json     @map("response_body")
-  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  requestHash    String            @map("request_hash")
+  status         IdempotencyStatus @default(IN_PROGRESS)
+  responseStatus Int?              @map("response_status")
+  responseBody   Json?             @map("response_body")
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt    DateTime?         @map("completed_at") @db.Timestamptz(3)
 
-  @@unique([principalId, key])
+  @@unique([principalId, endpoint, key])
+  @@index([expiresAt])
   @@map("idempotency_keys")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  email     String
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+/// Delivery log for outbound email. Never stores the message body (it may contain one-time tokens).
+model EmailMessage {
+  id                String      @id @default(uuid(7)) @db.Uuid
+  organizationId    String?     @map("organization_id") @db.Uuid
+  userId            String?     @map("user_id") @db.Uuid
+  toEmail           String      @map("to_email")
+  template          String
+  locale            String
+  status            EmailStatus
+  provider          String?
+  providerMessageId String?     @map("provider_message_id")
+  error             String?
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt])
+  @@map("email_messages")
+}
+
+/// Stripe webhook ledger: one row per processed Stripe event id (idempotent processing).
+model StripeEvent {
+  id             String   @id
+  type           String
+  livemode       Boolean
+  organizationId String?  @map("organization_id") @db.Uuid
+  outcome        String
+  processedAt    DateTime @default(now()) @map("processed_at") @db.Timestamptz(3)
+
+  @@index([type, processedAt])
+  @@map("stripe_events")
 }

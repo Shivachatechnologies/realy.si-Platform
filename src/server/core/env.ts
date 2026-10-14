@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/** Empty strings (common in .env templates) count as "not set". */
+const optional = z
+  .string()
+  .optional()
+  .transform((v) => (v && v.trim() ? v.trim() : undefined));
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().url(),
@@ -12,8 +18,29 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Number of trusted reverse proxies in front of the app. The client IP is the X-Forwarded-For entry
+   * this many hops from the right; entries further left are client-controlled and ignored.
+   * 0 = do not trust X-Forwarded-For at all.
+   */
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(1),
+  // Optional external services. Each feature reports "not configured" when its variables are absent.
+  STRIPE_SECRET_KEY: optional,
+  STRIPE_WEBHOOK_SECRET: optional,
+  STRIPE_AUTOMATIC_TAX: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+  EMAIL_PROVIDER: z.enum(["resend", "postmark"]).optional().or(z.literal("").transform(() => undefined)),
+  EMAIL_API_KEY: optional,
+  EMAIL_FROM: optional,
+  OAUTH_GOOGLE_CLIENT_ID: optional,
+  OAUTH_GOOGLE_CLIENT_SECRET: optional,
+  OAUTH_GITHUB_CLIENT_ID: optional,
+  OAUTH_GITHUB_CLIENT_SECRET: optional,
+  OAUTH_MICROSOFT_CLIENT_ID: optional,
+  OAUTH_MICROSOFT_CLIENT_SECRET: optional,
+  OAUTH_MICROSOFT_TENANT: z.string().regex(/^[A-Za-z0-9.-]{1,64}$/).default("common"),
+  SENTRY_DSN: optional,
+  SENTRY_ENVIRONMENT: optional,
+  OTEL_EXPORTER_OTLP_ENDPOINT: optional,
 });
 
 export type Env = z.infer<typeof schema>;

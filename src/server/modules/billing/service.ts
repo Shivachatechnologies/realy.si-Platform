@@ -196,7 +196,7 @@ export async function activateSubscription(
       stripeSubscriptionId: args.stripeSubscriptionId ?? null,
       items: {
         create: {
-          organizationId: args.organizationId,
+          // organization_id is inherited from the parent subscription (composite FK keeps them equal).
           priceVersionId: version.id,
           quantity: args.quantity ?? 1,
           unitAmountMinor: version.amountMinor,

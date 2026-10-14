@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/server/core/db";
 import { newRequestId, userContext, type RequestContext } from "@/server/core/context";
+import { clientIpFrom } from "@/server/core/http";
 import { SESSION_COOKIE, validateSessionToken, type SessionInfo } from "@/server/modules/auth/session";
 import type { AppLocale } from "@/i18n/config";
 
@@ -36,7 +37,7 @@ export const requireViewer = cache(async (locale: AppLocale): Promise<Viewer> =>
     requestId: newRequestId(h.get("x-request-id")),
     sessionId: session.id,
     mfaVerifiedAt: session.mfaVerifiedAt,
-    ip: h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    ip: clientIpFrom(h),
     userAgent: h.get("user-agent"),
   });
   return { session, user, ctx };
