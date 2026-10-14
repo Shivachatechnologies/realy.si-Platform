@@ -261,7 +261,7 @@ describe("independent country dimensions + regional checkout", () => {
     const { ctx } = await makeUser();
     const org = await createOrganization(ctx, { name: "Pay Co" });
     await expectCode(
-      (await import("@/server/modules/billing/service")).createCheckoutSession(ctx, org.id, { planKey: "founder", interval: "MONTH", billingCountryCode: "US" }),
+      (await import("@/server/modules/billing/stripe-billing")).createCheckoutSession(ctx, org.id, { planKey: "founder", interval: "MONTH", billingCountryCode: "US" }),
       "not_configured",
     );
   });

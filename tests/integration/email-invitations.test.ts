@@ -14,7 +14,7 @@ import { DELETE as revokeRoute } from "@/app/api/v1/organizations/[orgId]/invita
 import { POST as acceptRoute } from "@/app/api/v1/invitations/accept/route";
 import { POST as signInRoute } from "@/app/api/v1/auth/sign-in/route";
 import { POST as forgotRoute } from "@/app/api/v1/auth/password/forgot/route";
-import { expectCode, grant, makeUser, resetDb } from "../helpers";
+import { expectCode, makeUser, resetDb } from "../helpers";
 import { params, req, sessionCookie } from "../http";
 import { redis } from "@/server/core/rate-limit";
 

@@ -7,6 +7,9 @@ import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
 import { orgChain } from "@/server/modules/rbac/scope";
 import { getActiveSubscription } from "@/server/modules/billing/service";
+import { billingConfigured } from "@/server/modules/billing/stripe-billing";
+import { formatDate } from "@/i18n/format";
+import { Badge } from "@/components/ui/badge";
 import { requireOrgContext } from "@/server/workspace";
 
 export default async function BillingSettingsPage() {
@@ -31,12 +34,18 @@ export default async function BillingSettingsPage() {
         <CardHeader title={t("settings.billing.current")} />
         <CardBody>
           {subscription && item ? (
-            <p>
-              <span className="font-medium">{subscription.plan.name}</span>{" "}
-              <span className="text-muted-foreground">
-                {t("settings.billing.lockedPrice", { version: item.priceVersion.version, amount: formatMoney({ amountMinor: item.unitAmountMinor, currency: item.currency }, locale) })}
-              </span>
-            </p>
+            <div className="grid gap-1">
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{subscription.plan.name}</span>
+                <Badge tone={subscription.status === "ACTIVE" || subscription.status === "TRIALING" ? "success" : "warning"}>{t(`settings.billing.statuses.${subscription.status}`)}</Badge>
+                <span className="text-muted-foreground">
+                  {t("settings.billing.lockedPrice", { version: item.priceVersion.version, amount: formatMoney({ amountMinor: item.unitAmountMinor, currency: item.currency }, locale) })}
+                </span>
+              </p>
+              {subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd ? (
+                <p className="text-xs text-muted-foreground">{t("settings.billing.cancelsAt", { date: formatDate(subscription.currentPeriodEnd, locale, viewer.user.timezone) })}</p>
+              ) : null}
+            </div>
           ) : (
             <p className="text-muted-foreground">{t("settings.billing.noSubscription")}</p>
           )}
@@ -48,6 +57,8 @@ export default async function BillingSettingsPage() {
         countryCodes={countries.map((c) => c.code)}
         plans={plans}
         canManage={canManage}
+        billingConfigured={billingConfigured()}
+        hasBillingAccount={!!profile?.stripeCustomerId}
         suggestions={{
           user: viewer.user.countryCode,
           companies: [...new Set(companies.map((c) => c.incorporationCountryCode).filter((c): c is string => !!c))],

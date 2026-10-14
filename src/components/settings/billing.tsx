@@ -11,6 +11,7 @@ import { FormError } from "@/components/form-error";
 import { useI18n } from "@/i18n/client";
 import { displayName, formatList, formatMoney } from "@/i18n/format";
 import { api } from "@/lib/api-client";
+import { useLocationSearch } from "@/lib/use-location-search";
 
 interface WireMoney {
   amountMinor: string;
@@ -35,6 +36,8 @@ export function BillingPanel({
   plans,
   canManage,
   suggestions,
+  billingConfigured,
+  hasBillingAccount,
 }: {
   orgId: string;
   confirmedCountry: string | null;
@@ -42,9 +45,12 @@ export function BillingPanel({
   plans: { key: string; name: string }[];
   canManage: boolean;
   suggestions: { user: string | null; companies: string[] };
+  billingConfigured: boolean;
+  hasBillingAccount: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const search = useLocationSearch();
   const name = (c: string) => displayName(c, "region", locale);
   const [country, setCountry] = useState(confirmedCountry ?? suggestions.companies[0] ?? suggestions.user ?? "");
   const [planKey, setPlanKey] = useState(plans[0]?.key ?? "");
@@ -67,8 +73,29 @@ export function BillingPanel({
   };
   const body = () => ({ planKey, interval, billingCountryCode: country || undefined, couponCode: coupon || undefined });
 
+  const checkout = new URLSearchParams(search).get("checkout");
+
   return (
     <div className="grid gap-4">
+      {!billingConfigured ? <Notice tone="warning">{t("settings.billing.notConfigured")}</Notice> : null}
+      {checkout === "success" ? <Notice tone="success">{t("settings.billing.checkoutSuccess")}</Notice> : null}
+      {checkout === "canceled" ? <Notice>{t("settings.billing.checkoutCanceled")}</Notice> : null}
+      {billingConfigured && canManage && hasBillingAccount ? (
+        <div>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                const r = await api<{ url: string }>(`/api/v1/organizations/${orgId}/billing/portal`, { body: { locale } });
+                window.location.assign(r.url);
+              })
+            }
+          >
+            {t("settings.billing.manage")}
+          </Button>
+        </div>
+      ) : null}
       <Card>
         <CardHeader title={t("settings.billing.countryTitle")} description={t("settings.billing.countryHint")} />
         <CardBody className="grid gap-3">
@@ -177,8 +204,13 @@ export function BillingPanel({
               {canManage ? (
                 <div>
                   <Button
-                    disabled={busy}
-                    onClick={() => run(async () => void (await api(`/api/v1/organizations/${orgId}/checkout/session`, { body: body() })))}
+                    disabled={busy || !billingConfigured || !confirmedCountry}
+                    onClick={() =>
+                      run(async () => {
+                        const r = await api<{ url: string }>(`/api/v1/organizations/${orgId}/checkout/session`, { body: { ...body(), locale } });
+                        window.location.assign(r.url); // Stripe-hosted checkout; state changes only via verified webhooks
+                      })
+                    }
                   >
                     {t("settings.billing.checkout")}
                   </Button>

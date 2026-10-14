@@ -3,7 +3,6 @@ import type { BillingInterval } from "@/generated/prisma/enums";
 import { db, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { AppError, forbidden, invalid, notFound } from "@/server/core/errors";
-import { env } from "@/server/core/env";
 import { applyBps, money, subtractMoney, type Money } from "@/server/core/money";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitEvent } from "@/server/modules/events/emit";
@@ -160,16 +159,6 @@ export async function quote(ctx: RequestContext, organizationId: string, raw: z.
     paymentMethods: country.paymentMethods,
     trialDays: price.trialDays,
   };
-}
-
-/** Stripe Checkout. Reports `not_configured` until Stripe credentials are provided (no simulated success). */
-export async function createCheckoutSession(ctx: RequestContext, organizationId: string, raw: z.input<typeof quoteInput>) {
-  await requirePermission(ctx, "billing.manage", orgChain(organizationId));
-  await quote(ctx, organizationId, raw);
-  if (!env().STRIPE_SECRET_KEY) {
-    throw new AppError("not_configured", "Payments are not configured for this environment");
-  }
-  throw new AppError("not_configured", "Stripe Checkout integration ships in Phase 1.1");
 }
 
 /**
