@@ -1,21 +1,15 @@
 import type { NextConfig } from "next";
+import { API_CSP, HSTS, STATIC_SECURITY_HEADERS } from "./src/server/core/security-headers";
 
-/** Static security headers (docs/security.md §4). A nonce-based CSP is tracked for Phase 1.1. */
-const securityHeaders = [
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "X-Frame-Options", value: "DENY" },
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
-  ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
-];
+const production = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components / Partial Prerendering are disabled on purpose: a nonce-based CSP requires every HTML
+  // response to be rendered per request (Next.js docs: PPR static shells cannot carry a nonce).
+  cacheComponents: false,
   poweredByHeader: false,
   // Native/server-only packages stay external to the server bundle.
-  serverExternalPackages: ["@node-rs/argon2", "pino"],
+  serverExternalPackages: ["@node-rs/argon2", "pino", "@sentry/node"],
   turbopack: {
     rules: {
       "*.css": {
@@ -25,7 +19,12 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    const common = [...STATIC_SECURITY_HEADERS, ...(production ? [HSTS] : [])];
+    return [
+      { source: "/:path*", headers: common },
+      // HTML pages get their nonce CSP from src/proxy.ts; API responses get a deny-all CSP here.
+      { source: "/api/:path*", headers: [{ key: "Content-Security-Policy", value: API_CSP }] },
+    ];
   },
 };
 

@@ -10,11 +10,30 @@ import { env } from "@/server/core/env";
 import { logger } from "@/server/core/logger";
 import { relayBatch } from "@/server/modules/events/relay";
 import { db } from "@/server/core/db";
+import { initObservability } from "@/server/core/observability";
+import { captureException, withSpan } from "@/server/core/telemetry";
+import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
+import { purgeExpiredAuthTokens } from "@/server/modules/auth/recovery";
 
 const POLL_MS = 500;
 let stopping = false;
 
+const MAINTENANCE_MS = 10 * 60 * 1000;
+
+/** Periodic cleanup of expired idempotency keys and auth tokens. */
+async function maintenance(log: typeof logger) {
+  try {
+    const keys = await purgeExpiredIdempotencyKeys();
+    const tokens = await purgeExpiredAuthTokens();
+    if (keys || tokens) log.info({ idempotencyKeys: keys, authTokens: tokens }, "maintenance purge");
+  } catch (err) {
+    log.error({ err }, "maintenance failed");
+    captureException(err, { job: "maintenance" });
+  }
+}
+
 async function main() {
+  await initObservability("realy-worker");
   const connection = new Redis(env().REDIS_URL, { maxRetriesPerRequest: null });
   const queue = new Queue("events", { connection });
   const log = logger.child({ component: "outbox-relay" });
@@ -31,13 +50,19 @@ async function main() {
     );
   };
 
+  let nextMaintenance = 0;
   while (!stopping) {
+    if (Date.now() >= nextMaintenance) {
+      nextMaintenance = Date.now() + MAINTENANCE_MS;
+      await maintenance(log);
+    }
     try {
-      const n = await relayBatch(publish);
+      const n = await withSpan("worker.outbox_relay", {}, () => relayBatch(publish));
       if (n > 0) log.info({ published: n }, "relayed events");
       if (n === 0) await new Promise((r) => setTimeout(r, POLL_MS));
     } catch (err) {
       log.error({ err }, "relay batch failed");
+      captureException(err, { job: "outbox-relay" });
       await new Promise((r) => setTimeout(r, POLL_MS * 4));
     }
   }

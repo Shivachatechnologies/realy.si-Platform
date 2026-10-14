@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans_Arabic, Noto_Sans_Devanagari } from "next/font/google";
-import { LOCALES, directionOf, type AppLocale } from "@/i18n/config";
+import { connection } from "next/server";
+import { directionOf, type AppLocale } from "@/i18n/config";
 import { getLocale, getMessages, getT } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { Providers } from "@/components/providers";
@@ -18,10 +19,6 @@ const LOCALE_FONT: Partial<Record<AppLocale, string>> = {
   "zh-CN": "var(--font-geist-sans), 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei'",
 };
 
-export function generateStaticParams() {
-  return LOCALES.map((locale) => ({ locale }));
-}
-
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return { title: { default: t("meta.title"), template: `%s · ${t("meta.title")}` }, description: t("meta.description") };
@@ -35,6 +32,8 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/[locale]">) {
+  // Render per request: required for the per-request CSP nonce (see next.config.ts).
+  await connection();
   const locale = await getLocale();
   const messages = await getMessages(locale);
   const font = LOCALE_FONT[locale];
