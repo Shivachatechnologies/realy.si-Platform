@@ -1,0 +1,853 @@
+// Realy — Phase 1 relational model. Conventions: docs/database.md
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum MfaFactorType {
+  TOTP
+  WEBAUTHN
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum CompanyStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum CompanyStage {
+  IDEA
+  FORMING
+  BUILDING
+  LAUNCHED
+  SCALING
+}
+
+enum DataRegion {
+  US_EAST      @map("us-east")
+  EU_WEST      @map("eu-west")
+  ME_CENTRAL   @map("me-central")
+  AP_SOUTH     @map("ap-south")
+  AP_SOUTHEAST @map("ap-southeast")
+}
+
+enum PrincipalType {
+  USER
+  SERVICE_ACCOUNT
+  AGENT
+}
+
+enum ActorType {
+  USER
+  SERVICE_ACCOUNT
+  AGENT
+  SYSTEM
+}
+
+enum ScopeType {
+  PLATFORM
+  REGION
+  COUNTRY
+  ORGANIZATION
+  COMPANY
+  WORKSPACE
+  PROJECT
+}
+
+enum TextDirection {
+  LTR
+  RTL
+}
+
+enum ConfigStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TaxType {
+  VAT
+  GST
+  SALES_TAX
+  DIGITAL_SERVICES_TAX
+  NONE
+}
+
+enum TaxCalculation {
+  STRIPE_TAX
+  MANUAL
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  DISABLED
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+
+enum MarketType {
+  GLOBAL
+  REGION
+  COUNTRY
+}
+
+enum UsageType {
+  LICENSED
+  SEAT
+  METERED
+}
+
+enum DiscountType {
+  PERCENT
+  AMOUNT
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+enum FlagTargetType {
+  GLOBAL
+  REGION
+  COUNTRY
+  PLAN
+  ORGANIZATION
+  COMPANY
+  USER
+}
+
+enum AuditCategory {
+  TENANT
+  ADMIN
+  SECURITY
+}
+
+// ───────────────────────────── Identity ─────────────────────────────
+
+model User {
+  id              String     @id @default(uuid(7)) @db.Uuid
+  email           String     @unique
+  name            String
+  passwordHash    String?    @map("password_hash")
+  emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(3)
+  locale          String     @default("en-US")
+  timezone        String     @default("UTC")
+  countryCode     String?    @map("country_code") @db.Char(2)
+  status          UserStatus @default(ACTIVE)
+  mfaEnabled      Boolean    @default(false) @map("mfa_enabled")
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions      Session[]
+  mfaFactors    MfaFactor[]
+  recoveryCodes MfaRecoveryCode[]
+  oauthAccounts OAuthAccount[]
+  memberships   Membership[]
+
+  @@map("users")
+}
+
+model Session {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  tokenHash            String    @unique @map("token_hash")
+  mfaPending           Boolean   @default(false) @map("mfa_pending")
+  mfaVerifiedAt        DateTime? @map("mfa_verified_at") @db.Timestamptz(3)
+  activeOrganizationId String?   @map("active_organization_id") @db.Uuid
+  ip                   String?
+  userAgent            String?   @map("user_agent")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt           DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  expiresAt            DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt            DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model MfaFactor {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  type            MfaFactorType
+  secretEncrypted String        @map("secret_encrypted")
+  lastUsedStep    BigInt?       @map("last_used_step")
+  confirmedAt     DateTime?     @map("confirmed_at") @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("mfa_factors")
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("mfa_recovery_codes")
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+// ───────────────────────────── Tenancy ─────────────────────────────
+
+model Organization {
+  id            String             @id @default(uuid(7)) @db.Uuid
+  name          String
+  slug          String             @unique
+  status        OrganizationStatus @default(ACTIVE)
+  defaultLocale String             @default("en-US") @map("default_locale")
+  createdById   String?            @map("created_by_id") @db.Uuid
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  memberships     Membership[]
+  invitations     Invitation[]
+  companies       Company[]
+  workspaces      Workspace[]
+  projects        Project[]
+  serviceAccounts ServiceAccount[]
+  apiKeys         ApiKey[]
+  customRoles     Role[]
+  billingProfile  BillingProfile?
+  subscriptions   Subscription[]
+
+  @@map("organizations")
+}
+
+model Membership {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  email          String
+  roleId         String    @map("role_id") @db.Uuid
+  scopeType      ScopeType @default(ORGANIZATION) @map("scope_type")
+  scopeId        String    @map("scope_id")
+  tokenHash      String    @unique @map("token_hash")
+  invitedById    String    @map("invited_by_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  acceptedAt     DateTime? @map("accepted_at") @db.Timestamptz(3)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@map("invitations")
+}
+
+model ServiceAccount {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  name           String
+  createdById    String    @map("created_by_id") @db.Uuid
+  disabledAt     DateTime? @map("disabled_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiKeys      ApiKey[]
+
+  @@index([organizationId])
+  @@map("service_accounts")
+}
+
+model ApiKey {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  serviceAccountId String    @map("service_account_id") @db.Uuid
+  name             String
+  prefix           String    @unique
+  keyHash          String    @map("key_hash")
+  lastUsedAt       DateTime? @map("last_used_at") @db.Timestamptz(3)
+  expiresAt        DateTime? @map("expires_at") @db.Timestamptz(3)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  serviceAccount ServiceAccount @relation(fields: [serviceAccountId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("api_keys")
+}
+
+model Company {
+  id                       String        @id @default(uuid(7)) @db.Uuid
+  organizationId           String        @map("organization_id") @db.Uuid
+  name                     String
+  legalName                String?       @map("legal_name")
+  slug                     String
+  stage                    CompanyStage  @default(IDEA)
+  status                   CompanyStatus @default(ACTIVE)
+  incorporationCountryCode String?       @map("incorporation_country_code") @db.Char(2)
+  operatingCountryCodes    String[]      @map("operating_country_codes")
+  targetMarketCodes        String[]      @map("target_market_codes")
+  baseCurrency             String        @map("base_currency") @db.Char(3)
+  defaultLocale            String        @map("default_locale")
+  timezone                 String
+  dataRegion               DataRegion    @map("data_region")
+  createdById              String        @map("created_by_id") @db.Uuid
+  createdAt                DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt                DateTime?     @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspaces   Workspace[]
+  projects     Project[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, createdAt])
+  @@map("companies")
+}
+
+model Workspace {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  slug           String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  projects     Project[]
+
+  @@unique([organizationId, companyId, slug])
+  @@index([organizationId, companyId])
+  @@map("workspaces")
+}
+
+model Project {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, companyId, workspaceId])
+  @@map("projects")
+}
+
+// ───────────────────────────── RBAC ─────────────────────────────
+
+model Permission {
+  id           String  @id @default(uuid(7)) @db.Uuid
+  key          String  @unique
+  resource     String
+  action       String
+  description  String
+  platformOnly Boolean @default(false) @map("platform_only")
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String?   @map("organization_id") @db.Uuid
+  key            String
+  name           String
+  description    String    @default("")
+  isSystem       Boolean   @default(false) @map("is_system")
+  // Scope types at which this role may be assigned.
+  assignableAt   ScopeType[] @map("assignable_at")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  assignments  RoleAssignment[]
+  invitations  Invitation[]
+
+  // System roles have organization_id NULL; uniqueness of system keys enforced by a partial index (migration).
+  @@unique([organizationId, key])
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RoleAssignment {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  principalType  PrincipalType @map("principal_type")
+  principalId    String        @map("principal_id") @db.Uuid
+  roleId         String        @map("role_id") @db.Uuid
+  scopeType      ScopeType     @map("scope_type")
+  scopeId        String        @map("scope_id")
+  organizationId String?       @map("organization_id") @db.Uuid
+  grantedById    String?       @map("granted_by_id") @db.Uuid
+  expiresAt      DateTime?     @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([principalType, principalId, roleId, scopeType, scopeId])
+  @@index([principalType, principalId])
+  @@index([organizationId, scopeType, scopeId])
+  @@map("role_assignments")
+}
+
+// ───────────────────────────── Globalization ─────────────────────────────
+
+model Region {
+  code           String       @id
+  name           String
+  defaultCurrency String      @map("default_currency") @db.Char(3)
+  defaultLocale  String       @map("default_locale")
+  timezone       String
+  dataRegion     DataRegion   @map("data_region")
+  status         ConfigStatus @default(ACTIVE)
+  config         Json         @default("{}")
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  countries Country[]
+
+  @@map("regions")
+}
+
+model Country {
+  code                String       @id @db.Char(2)
+  name                String
+  regionCode          String       @map("region_code")
+  defaultLocale       String       @map("default_locale")
+  supportedLocales    String[]     @map("supported_locales")
+  defaultCurrency     String       @map("default_currency") @db.Char(3)
+  supportedCurrencies String[]     @map("supported_currencies")
+  defaultTimezone     String       @map("default_timezone")
+  billingEnabled      Boolean      @default(true) @map("billing_enabled")
+  paymentMethods      String[]     @map("payment_methods")
+  status              ConfigStatus @default(ACTIVE)
+  config              Json         @default("{}")
+  updatedAt           DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  region     Region      @relation(fields: [regionCode], references: [code])
+  taxConfigs TaxConfig[]
+
+  @@index([regionCode])
+  @@map("countries")
+}
+
+model Currency {
+  code       String  @id @db.Char(3)
+  name       String
+  symbol     String
+  minorUnits Int     @map("minor_units")
+  enabled    Boolean @default(true)
+
+  @@map("currencies")
+}
+
+model Locale {
+  tag         String        @id
+  language    String
+  name        String
+  nativeName  String        @map("native_name")
+  direction   TextDirection @default(LTR)
+  enabled     Boolean       @default(true)
+  fallbackTag String?       @map("fallback_tag")
+
+  @@map("locales")
+}
+
+model TaxConfig {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  countryCode      String         @map("country_code") @db.Char(2)
+  subdivision      String?
+  taxType          TaxType        @map("tax_type")
+  displayName      String         @map("display_name")
+  rateBps          Int            @map("rate_bps")
+  priceIncludesTax Boolean        @default(false) @map("price_includes_tax")
+  calculation      TaxCalculation @default(STRIPE_TAX)
+  reverseChargeB2b Boolean        @default(false) @map("reverse_charge_b2b")
+  effectiveFrom    DateTime       @map("effective_from") @db.Timestamptz(3)
+  effectiveTo      DateTime?      @map("effective_to") @db.Timestamptz(3)
+  status           ConfigStatus   @default(ACTIVE)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  country Country @relation(fields: [countryCode], references: [code])
+
+  @@index([countryCode, status])
+  @@map("tax_configs")
+}
+
+// ───────────────────────────── Pricing & billing ─────────────────────────────
+
+model BillingProduct {
+  id        String       @id @default(uuid(7)) @db.Uuid
+  key       String       @unique
+  name      String
+  status    ConfigStatus @default(ACTIVE)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  plans Plan[]
+
+  @@map("billing_products")
+}
+
+model Plan {
+  id               String     @id @default(uuid(7)) @db.Uuid
+  productId        String     @map("product_id") @db.Uuid
+  key              String     @unique
+  name             String
+  description      String     @default("")
+  status           PlanStatus @default(DRAFT)
+  public           Boolean    @default(true)
+  sortOrder        Int        @default(0) @map("sort_order")
+  defaultTrialDays Int        @default(0) @map("default_trial_days")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  product       BillingProduct    @relation(fields: [productId], references: [id])
+  prices        Price[]
+  entitlements  PlanEntitlement[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Price {
+  id         String          @id @default(uuid(7)) @db.Uuid
+  planId     String          @map("plan_id") @db.Uuid
+  interval   BillingInterval
+  marketType MarketType      @map("market_type")
+  marketCode String          @map("market_code")
+  currency   String          @db.Char(3)
+  usageType  UsageType       @default(LICENSED) @map("usage_type")
+  status     ConfigStatus    @default(ACTIVE)
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  plan     Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  versions PriceVersion[]
+
+  @@unique([planId, interval, marketType, marketCode])
+  @@map("prices")
+}
+
+model PriceVersion {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  priceId       String    @map("price_id") @db.Uuid
+  version       Int
+  amountMinor   BigInt    @map("amount_minor")
+  currency      String    @db.Char(3)
+  effectiveFrom DateTime  @map("effective_from") @db.Timestamptz(3)
+  effectiveTo   DateTime? @map("effective_to") @db.Timestamptz(3)
+  trialDays     Int?      @map("trial_days")
+  stripePriceId String?   @unique @map("stripe_price_id")
+  reason        String    @default("")
+  createdById   String?   @map("created_by_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  price             Price              @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  subscriptionItems SubscriptionItem[]
+
+  @@unique([priceId, version])
+  @@index([priceId, effectiveFrom(sort: Desc)])
+  @@map("price_versions")
+}
+
+model PlanEntitlement {
+  id         String  @id @default(uuid(7)) @db.Uuid
+  planId     String  @map("plan_id") @db.Uuid
+  featureKey String  @map("feature_key")
+  enabled    Boolean @default(true)
+  limitValue BigInt? @map("limit_value")
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureKey])
+  @@map("plan_entitlements")
+}
+
+model Promotion {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  name           String
+  discountType   DiscountType @map("discount_type")
+  percentOffBps  Int?         @map("percent_off_bps")
+  amountOffMinor BigInt?      @map("amount_off_minor")
+  currency       String?      @db.Char(3)
+  planKeys       String[]     @map("plan_keys")
+  countryCodes   String[]     @map("country_codes")
+  regionCodes    String[]     @map("region_codes")
+  startsAt       DateTime     @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime?    @map("ends_at") @db.Timestamptz(3)
+  maxRedemptions Int?         @map("max_redemptions")
+  status         ConfigStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  coupons Coupon[]
+
+  @@map("promotions")
+}
+
+model Coupon {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  promotionId String   @map("promotion_id") @db.Uuid
+  code        String   @unique
+  redemptions Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@map("coupons")
+}
+
+model BillingProfile {
+  id                        String    @id @default(uuid(7)) @db.Uuid
+  organizationId            String    @unique @map("organization_id") @db.Uuid
+  billingCountryCode        String    @map("billing_country_code") @db.Char(2)
+  billingCountryConfirmedAt DateTime? @map("billing_country_confirmed_at") @db.Timestamptz(3)
+  currency                  String    @db.Char(3)
+  legalName                 String?   @map("legal_name")
+  taxIds                    Json      @default("[]") @map("tax_ids")
+  address                   Json      @default("{}")
+  stripeCustomerId          String?   @unique @map("stripe_customer_id")
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("billing_profiles")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid(7)) @db.Uuid
+  organizationId       String             @map("organization_id") @db.Uuid
+  planId               String             @map("plan_id") @db.Uuid
+  status               SubscriptionStatus
+  currency             String             @db.Char(3)
+  billingCountryCode   String             @map("billing_country_code") @db.Char(2)
+  interval             BillingInterval
+  currentPeriodStart   DateTime?          @map("current_period_start") @db.Timestamptz(3)
+  currentPeriodEnd     DateTime?          @map("current_period_end") @db.Timestamptz(3)
+  trialEndsAt          DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
+  cancelAt             DateTime?          @map("cancel_at") @db.Timestamptz(3)
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         Plan               @relation(fields: [planId], references: [id])
+  items        SubscriptionItem[]
+
+  @@index([organizationId, status])
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  subscriptionId  String   @map("subscription_id") @db.Uuid
+  priceVersionId  String   @map("price_version_id") @db.Uuid
+  quantity        Int      @default(1)
+  unitAmountMinor BigInt   @map("unit_amount_minor")
+  currency        String   @db.Char(3)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  priceVersion PriceVersion @relation(fields: [priceVersionId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([priceVersionId])
+  @@map("subscription_items")
+}
+
+model UsageRecord {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String?  @map("company_id") @db.Uuid
+  meter          String
+  quantity       BigInt
+  occurredAt     DateTime @map("occurred_at") @db.Timestamptz(3)
+  idempotencyKey String   @unique @map("idempotency_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, meter, occurredAt])
+  @@map("usage_records")
+}
+
+// ───────────────────────────── Platform controls ─────────────────────────────
+
+model FeatureFlag {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  key            String       @unique
+  description    String       @default("")
+  defaultEnabled Boolean      @default(false) @map("default_enabled")
+  status         ConfigStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  rules FeatureFlagRule[]
+
+  @@map("feature_flags")
+}
+
+model FeatureFlagRule {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  flagId      String         @map("flag_id") @db.Uuid
+  targetType  FlagTargetType @map("target_type")
+  targetValue String         @map("target_value")
+  enabled     Boolean
+  priority    Int            @default(0)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  flag FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+
+  @@unique([flagId, targetType, targetValue])
+  @@map("feature_flag_rules")
+}
+
+model AuditLog {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  category       AuditCategory
+  organizationId String?       @map("organization_id") @db.Uuid
+  actorType      ActorType     @map("actor_type")
+  actorId        String?       @map("actor_id") @db.Uuid
+  action         String
+  resourceType   String        @map("resource_type")
+  resourceId     String?       @map("resource_id")
+  oldValue       Json?         @map("old_value")
+  newValue       Json?         @map("new_value")
+  reason         String?
+  requestId      String?       @map("request_id")
+  ip             String?
+  userAgent      String?       @map("user_agent")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model Event {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  type           String
+  version        Int
+  organizationId String?   @map("organization_id") @db.Uuid
+  companyId      String?   @map("company_id") @db.Uuid
+  aggregateType  String    @map("aggregate_type")
+  aggregateId    String    @map("aggregate_id")
+  actorType      ActorType @map("actor_type")
+  actorId        String?   @map("actor_id") @db.Uuid
+  requestId      String?   @map("request_id")
+  payload        Json
+  occurredAt     DateTime  @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(3)
+  attempts       Int       @default(0)
+  lastError      String?   @map("last_error")
+
+  @@index([organizationId, occurredAt])
+  @@index([type, occurredAt])
+  @@map("events")
+}
+
+model Notification {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  type           String
+  payload        Json
+  readAt         DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, userId, createdAt])
+  @@map("notifications")
+}
+
+model IdempotencyKey {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  principalId    String   @map("principal_id")
+  key            String
+  requestHash    String   @map("request_hash")
+  responseStatus Int      @map("response_status")
+  responseBody   Json     @map("response_body")
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([principalId, key])
+  @@map("idempotency_keys")
+}
