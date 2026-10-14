@@ -22,7 +22,7 @@ async function Topbar() {
       {org ? (
         <ContextSwitcher orgs={orgs} orgId={org.id} companies={companies.map((c) => ({ id: c.id, name: c.name }))} companyId={company?.id ?? null} />
       ) : null}
-      <div className="ms-auto flex flex-1 items-center justify-end gap-2">
+      <div className="ms-auto flex shrink-0 items-center justify-end gap-2">
         <CommandPalette showAdmin={isAdmin} />
         <LanguageSwitcher signedIn className="hidden sm:inline-flex" />
         <span className="hidden max-w-40 truncate text-xs text-muted-foreground md:inline">{viewer.user.name}</span>

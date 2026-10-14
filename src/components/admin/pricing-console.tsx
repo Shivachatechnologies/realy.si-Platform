@@ -52,7 +52,7 @@ export function PricingConsole({ plans, scope, options, timeZone, now }: { plans
   const plan = plans.find((p) => p.id === selectedId) ?? plans[0];
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
       <Card className="h-fit">
         <CardHeader title={t("admin.pricing.plans")} actions={scope.platform ? <NewPlanDialog /> : null} />
         <ul className="grid gap-0.5 p-1.5">
@@ -87,7 +87,7 @@ function PlanDetail({ plan, scope, options, timeZone, now }: { plan: PlanDTO; sc
     p.marketType === "GLOBAL" ? t("admin.pricing.marketTypes.GLOBAL") : p.marketType === "COUNTRY" ? displayName(p.marketCode, "region", locale) : p.marketCode;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <Card>
         <CardHeader
           title={
