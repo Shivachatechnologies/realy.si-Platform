@@ -107,8 +107,8 @@ regardless of what the model asked for.
 |---|---|---|
 | Web | Next.js 16 (App Router), React 19, TypeScript strict | RSC by default; client components only for interactivity |
 | Styling | Tailwind CSS 4, shadcn/ui-style primitives on Radix | logical properties only (RTL) |
-| Data fetching (client) | TanStack Query; TanStack Table for grids | |
-| Forms | React Hook Form + Zod | same Zod schema validates server-side |
+| Data fetching (client) | TanStack Query; TanStack Table for large interactive grids | Table is adopted with the first sortable/virtualized grids (Phase 2); Phase 1 tables are server-rendered |
+| Forms | React Hook Form; Zod on the server | services are the single source of validation; the API returns field-level issues that forms render inline |
 | ORM / DB | Prisma 7 (`@prisma/adapter-pg`), PostgreSQL 16, pgvector | |
 | Queue | BullMQ on Redis | durable jobs, retries, backoff, rate limits |
 | Object storage | S3-compatible (AWS S3 / R2 / MinIO locally) | |

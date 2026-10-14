@@ -25,8 +25,9 @@
   10 single-use recovery codes stored hashed. WebAuthn/passkeys reserved (`mfa_factors.type`).
   Sign-in with MFA enabled creates a session in `mfa_pending` state that can only call `/mfa/verify`.
   Replayed TOTP codes within their window are rejected (`last_used_step`).
-* **OAuth login** — provider abstraction (Google, GitHub, Microsoft); PKCE + state; providers without
-  configured credentials return `not_configured` (no fake buttons that succeed).
+* **OAuth login** _(Phase 1.1; `oauth_accounts` table exists)_ — Google, GitHub, Microsoft with PKCE +
+  state; providers without configured credentials will return `not_configured`. No OAuth buttons are
+  shown until then.
 * **Enterprise SSO** — SAML 2.0 / OIDC per organization (verified domains → IdP), JIT provisioning,
   SCIM (Phase 7). Feeds the same session model.
 * **API keys** — `rk_live_<prefix>_<secret>`; store prefix + SHA-256; bound to a service account.
@@ -40,8 +41,10 @@ are mandatory for every agent action.
 
 ## 4. Data protection
 
-* TLS everywhere; HSTS; secure headers (CSP with nonces, `X-Content-Type-Options`,
-  `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, frame-ancestors none).
+* TLS everywhere; HSTS (production); secure headers set globally in `next.config.ts`:
+  `X-Content-Type-Options`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`,
+  `X-Frame-Options: DENY` and a CSP with `frame-ancestors 'none'`, `base-uri`, `form-action`,
+  `object-src 'none'`. A full nonce-based `script-src` CSP is Phase 1.1.
 * **Secrets**: application secrets from the platform secrets manager (env injection), never in the
   repo (`.env*` git-ignored; `.env.example` contains names only). Tenant secrets (OAuth tokens, API
   keys, TOTP secrets) encrypted with AES-256-GCM using a data key derived per purpose from
@@ -83,9 +86,10 @@ CPU/memory/disk/time limits, credentials injected per-session from Realy Connect
 full session recording (screenshots + action log), destroyed after the run.
 
 ## 7. Abuse & rate limiting
-Redis token buckets per IP and per principal for auth endpoints (e.g. sign-in 10/min/IP,
-5/min/account), API (per plan), and per-agent tool calls. Account lockout is soft (exponential delay)
-to avoid lockout-DoS.
+Implemented: Redis fixed-window limits per IP on sign-up, sign-in and MFA verification (10/min),
+failing open (logged) if Redis is unavailable so sign-in never depends on the limiter. Planned:
+per-account sign-in limits with soft exponential delay (Phase 1.1), per-plan API limits (Phase 7),
+per-agent tool-call limits (Phase 3).
 
 ## 8. Audit
 Every administrative and security-relevant action writes `audit_logs` (actor, action, resource,

@@ -26,12 +26,15 @@ API-key/OAuth authentication and stricter rate limits.
 * **Time** — RFC 3339 UTC strings.
 * **Pagination** — cursor: `?limit=50&cursor=<opaque>` → `{ data: [...], nextCursor: string | null }`.
   `limit` max 200. No offset pagination on large collections.
-* **Idempotency** — mutating `POST`s accept `Idempotency-Key`; replays within 24 h return the stored
-  response; same key + different body → `409 idempotency_conflict`.
+* **Idempotency** _(Phase 1.1; table `idempotency_keys` exists)_ — mutating `POST`s will accept
+  `Idempotency-Key`; replays within 24 h return the stored response; same key + different body →
+  `409 idempotency_conflict`. Phase 1 relies on natural uniqueness constraints (e.g. one price per
+  plan/interval/market) to make retries safe.
 * **Request IDs** — every response carries `X-Request-Id` (accepted from the caller if well-formed,
   otherwise generated). It is written to logs, traces and audit rows.
-* **Rate limits** — token bucket per principal and per IP (Redis). Headers: `RateLimit-Limit`,
-  `RateLimit-Remaining`, `RateLimit-Reset`; exceeded → `429 rate_limited` + `Retry-After`.
+* **Rate limits** — Redis fixed-window counters per IP on authentication endpoints (sign-up, sign-in,
+  MFA verify: 10/min); exceeded → `429 rate_limited` + `Retry-After`. Per-principal API limits and
+  `RateLimit-*` headers arrive with the public API (Phase 7).
 
 ### Error envelope
 ```json
@@ -48,48 +51,46 @@ Codes: `validation_error` 400, `unauthenticated` 401, `mfa_required` 401, `forbi
 `not_found` 404 (also returned for cross-tenant ids — never leak existence), `conflict` 409,
 `idempotency_conflict` 409, `rate_limited` 429, `internal_error` 500.
 
-## 3. Phase 1 endpoints
+## 3. Phase 1 endpoints (implemented)
 
-### Auth
-| Method | Path | Notes |
-|---|---|---|
-| ✅ POST | `/api/v1/auth/sign-up` | `{email, password, name, locale?, timezone?, countryCode?}` → session cookie |
-| ✅ POST | `/api/v1/auth/sign-in` | `{email, password}` → session, or `{mfaRequired: true}` (session is created in MFA-pending state) |
-| ✅ POST | `/api/v1/auth/mfa/verify` | `{code}` (TOTP or recovery code) → upgrades session |
-| ✅ POST | `/api/v1/auth/mfa/totp/setup` | → `{otpauthUrl, secret}` (unconfirmed factor) |
-| ✅ POST | `/api/v1/auth/mfa/totp/confirm` | `{code}` → `{recoveryCodes: string[]}` (shown once) |
-| ✅ POST | `/api/v1/auth/sign-out` | revokes session |
-| ✅ GET | `/api/v1/me` | user, memberships, effective locale/direction |
-| GET | `/api/v1/auth/oauth/{provider}/start` · `/callback` | provider abstraction; returns `not_configured` when provider credentials absent |
+All under `/api/v1` unless noted. "Auth" = session cookie; "MFA" = permission is MFA-gated (rbac.md §4).
 
-### Tenancy
-| ✅ GET/POST | `/api/v1/organizations` | list mine / create (creator gets ORGANIZATION_OWNER) |
-|---|---|---|
-| ✅ GET/POST | `/api/v1/organizations/{orgId}/companies` | `companies.read` / `companies.manage` |
-| ✅ GET/POST | `/api/v1/organizations/{orgId}/companies/{companyId}/workspaces` | |
-| ✅ GET/POST | `/api/v1/organizations/{orgId}/members` · `/invitations` | `users.read` / `users.manage` |
-| ✅ GET/POST | `/api/v1/organizations/{orgId}/roles` | custom roles; `roles.manage` |
-| ✅ POST | `/api/v1/organizations/{orgId}/role-assignments` | grant role at scope; cannot grant permissions the granter lacks |
+| Method | Path | Auth / permission | Notes |
+|---|---|---|---|
+| GET | `/api/health` · `/api/health/ready` | public | liveness / readiness (DB + Redis) |
+| POST | `/auth/sign-up` | public, 10/min/IP | `{email, password, name, locale?, timezone?, countryCode?}` → session cookie |
+| POST | `/auth/sign-in` | public, 10/min/IP | → `{mfaRequired}`; with MFA the session is created MFA-pending |
+| POST | `/auth/mfa/verify` | pending session | `{code}` (TOTP or recovery code) |
+| POST | `/auth/mfa/totp/setup` · `/auth/mfa/totp/confirm` | session | enrollment; confirm returns 10 recovery codes once |
+| POST | `/auth/sign-out` | session | revokes the session |
+| GET · PATCH | `/me` | session | profile, locale (normalized to a shipped catalog), timezone, country |
+| GET · POST | `/organizations` | session | creator becomes member + `ORGANIZATION_OWNER` |
+| GET · POST | `/organizations/{orgId}/companies` | `companies.read` / `companies.manage` | cursor pagination |
+| GET · POST | `/organizations/{orgId}/companies/{companyId}/workspaces` | `workspaces.read` / `.manage` | |
+| GET | `/organizations/{orgId}/members` | `users.read` | members with role assignments |
+| POST | `/organizations/{orgId}/invitations` | `users.manage` + `roles.assign` (MFA) + every permission in the role | returns id only; token goes to the invitee |
+| POST | `/invitations/accept` | session (email must match) | |
+| GET · POST | `/organizations/{orgId}/roles` | `roles.read` / `roles.manage` (MFA) | custom roles |
+| POST · DELETE | `/organizations/{orgId}/role-assignments[/{id}]` | `roles.assign` (MFA), no escalation | last owner cannot be removed |
+| GET · PUT | `/organizations/{orgId}/billing-profile` | `billing.read` / `billing.manage` (MFA) | explicit billing-country confirmation |
+| POST | `/organizations/{orgId}/checkout/quote` | `billing.read` | regional price, coupon, tax config, payment methods |
+| POST | `/organizations/{orgId}/checkout/session` | `billing.manage` (MFA) | `501 not_configured` until Stripe (Phase 1.1) |
+| GET | `/organizations/{orgId}/audit-logs` | `audit.read` | |
+| GET | `/catalog/pricing?country=IN&interval=MONTH` | public | resolved regional prices |
+| GET | `/reference/{countries\|regions\|currencies\|locales}` | public | |
+| GET · POST · PATCH | `/admin/plans[/{planId}]` | `pricing.read` (any market) / `pricing.manage` @ PLATFORM (MFA) | |
+| POST | `/admin/plans/{planId}/prices` | `pricing.manage` @ the price's market chain (MFA) | REGION/COUNTRY admins only for their markets |
+| POST | `/admin/prices/{priceId}/versions` | `pricing.manage` @ market (MFA) | schedule `{amountMinor, effectiveFrom?, reason}` |
+| PATCH | `/admin/prices/{priceId}` | `pricing.manage` @ market (MFA) | activate / deactivate a market price |
+| PUT | `/admin/plans/{planId}/entitlements` | `pricing.manage` @ PLATFORM (MFA) | |
+| POST | `/admin/promotions` | `pricing.manage` @ each restricted market (MFA) | optional coupon code |
+| PATCH | `/admin/countries/{code}` · `/admin/regions/{code}` | `globalization.manage` @ country/region chain (MFA) | |
+| GET · PATCH | `/admin/feature-flags[/{flagId}]` | `flags.read` / `flags.manage` (MFA) | |
+| POST · DELETE | `/admin/feature-flags/{flagId}/rules` · `/admin/feature-flag-rules/{ruleId}` | `flags.manage` (MFA) | |
+| GET | `/admin/audit-logs?category=&cursor=` | `platform.audit.read` | |
 
-### Globalization & pricing (public read)
-| ✅ GET | `/api/v1/catalog/pricing?country=IN&interval=MONTH` | resolved regional prices for all public plans |
-|---|---|---|
-| ✅ GET | `/api/v1/reference/countries` · `/regions` · `/currencies` · `/locales` | reference data |
-
-### Checkout
-| ✅ POST | `/api/v1/organizations/{orgId}/checkout/quote` | `{planKey, interval, billingCountryCode, couponCode?}` → resolved price version, currency, tax config, payment methods, trial, total (pre-tax) |
-|---|---|---|
-| POST | `/api/v1/organizations/{orgId}/checkout/session` | creates Stripe Checkout session from the quote; `not_configured` without Stripe keys |
-
-### Admin (platform principals only)
-| ✅ GET/POST/PATCH | `/api/v1/admin/plans` | `pricing.read` / `pricing.manage` @ PLATFORM |
-|---|---|---|
-| ✅ GET/POST | `/api/v1/admin/plans/{planId}/prices` | create regional price (market scope checked: REGION/COUNTRY admins only for their market) |
-| ✅ POST | `/api/v1/admin/prices/{priceId}/versions` | schedule a new version `{amountMinor, effectiveFrom, reason}`; requires MFA-verified session |
-| ✅ GET/PATCH | `/api/v1/admin/countries/{code}` · `/regions/{code}` | `globalization.manage` scoped |
-| ✅ GET/POST/PATCH | `/api/v1/admin/feature-flags` (+ `/rules`) | `flags.manage` |
-| ✅ GET | `/api/v1/admin/audit-logs?cursor=` | `audit.read` |
-| ✅ GET | `/api/health` · `/api/health/ready` | liveness / readiness (DB + Redis) |
+Contracts not yet implemented: OAuth login (`/auth/oauth/{provider}/start|callback`, Phase 1.1),
+Stripe webhooks (`/webhooks/stripe`, Phase 1.1).
 
 ## 4. Later-phase resource contracts (public API v1 shape)
 

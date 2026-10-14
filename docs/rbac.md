@@ -112,7 +112,8 @@ without a human*.
 
 ## 7. Evaluation & performance
 
-`can()` loads the principal's non-expired assignments once per request (one indexed query), expands
-role → permission sets (roles/permissions cached in-process for 60 s, invalidated by
-`role.updated` events), and checks chain membership in memory. O(assignments) per check; typical
-principals have < 10 assignments.
+`can()` loads the principal's non-expired assignments with their role permissions once per request
+(one indexed query, memoized per request context; inside a transaction it reads through the
+transaction), and checks chain membership in memory. O(assignments) per check; typical principals
+have < 10 assignments. A cross-request cache of role → permission sets, invalidated by `role.*`
+events, is planned when profiling shows the need.

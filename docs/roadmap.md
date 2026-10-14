@@ -8,24 +8,32 @@ Repository inspected (empty — greenfield). Frozen: database conventions, API c
 envelope, agent protocol, tool protocol, permissions, globalization, pricing, billing, security,
 design system (tokens in `src/app/globals.css`, primitives in `src/components/ui`).
 
-## Phase 1 — Foundation (this phase)
-| Module | Scope | Status |
-|---|---|---|
-| Tooling | Next.js 16, TS strict, Tailwind 4, Prisma 7 + pg adapter, Vitest, ESLint, Docker Compose, CI workflow | see `README.md` |
-| Identity | sign-up/in/out, argon2id, DB sessions, TOTP MFA + recovery codes, OAuth provider abstraction (returns *not configured* without credentials) | |
-| Tenancy | organizations, memberships, invitations, companies (independent globalization fields), workspaces, projects | |
-| RBAC | permission catalog, system roles, custom roles, scoped assignments, no-escalation, MFA-gated permissions | |
-| Globalization | locales (en-US, hi-IN, ar-AE, de-DE, zh-CN), RTL, formatting, countries, regions, currencies, tax configs | |
-| Pricing/Billing foundation | catalog, regional prices, price versioning, entitlements, promotions/coupons, checkout quote, billing profile | |
-| Admin foundation | admin console: pricing console, countries/regions, feature flags, audit log | |
-| Audit + events | same-transaction audit logs + outbox; worker outbox relay | |
-| Feature flags | targeting GLOBAL/REGION/COUNTRY/ORG/COMPANY/USER/PLAN | |
-| Experience | Command Center shell with real (empty-state) data, navigation per spec, command palette | |
+## Phase 1 — Foundation ✅ (core) · 1.1 items listed below
 
-Deferred inside Phase 1 to Phase 1.1 (explicitly not claimed): Stripe Checkout session creation and
-webhook processing (needs Stripe credentials; endpoint returns `not_configured`), email delivery
-(provider abstraction logs in dev), OAuth login providers (abstraction only), breached-password
-check, PostgreSQL RLS policies, OpenTelemetry exporter wiring, Playwright E2E in CI.
+Status as of 2026-10-14. ✅ = implemented and covered by automated tests.
+
+| Module | Delivered | Verified by |
+|---|---|---|
+| Tooling | ✅ Next.js 16 (Cache Components/PPR), TS strict, Tailwind 4, Prisma 7 + pg adapter, Vitest, Playwright, ESLint, Docker/Compose, CI workflow | build, typecheck, lint in CI |
+| Identity | ✅ sign-up/in/out, argon2id, hashed DB sessions (absolute + idle expiry), TOTP MFA with replay protection, single-use recovery codes, MFA-pending sessions | `auth-events.test.ts`, E2E |
+| Tenancy | ✅ organizations, memberships, invitations (single-use, addressee-bound), companies with independent country dimensions, workspaces, projects | `rbac-tenancy.test.ts`, E2E |
+| RBAC | ✅ 59 permissions, 15 system roles, custom roles, 7 scope levels, no-escalation, MFA-gated critical permissions, AI-identity restrictions, 404-on-foreign-tenant | `rbac-tenancy.test.ts` |
+| Globalization | ✅ en-US, hi-IN, ar-AE (RTL), de-DE, zh-CN; locale negotiation; Intl formatting; 17 countries, 8 regions, 12 currencies, tax configs; logical-CSS and no-hardcoded-text guards | `i18n.test.ts`, `global-pricing.test.ts`, E2E |
+| Pricing/Billing foundation | ✅ catalog, COUNTRY→REGION→GLOBAL resolution, immutable versioning (DB-enforced), entitlements, promotions/coupons, billing profile with explicit country confirmation, regional quote, subscriptions locked to price versions | `global-pricing.test.ts`, E2E |
+| Admin foundation | ✅ Admin Console: pricing console, countries/regions, feature flags, platform audit log; audited bootstrap CLI for the first platform admin | E2E |
+| Audit + events | ✅ same-transaction audit (append-only, DB-enforced) and outbox; relay worker → BullMQ | `auth-events.test.ts`, live worker run |
+| Feature flags | ✅ GLOBAL/REGION/COUNTRY/PLAN/ORG/COMPANY/USER targeting | `core.test.ts`, `global-pricing.test.ts` |
+| Experience | ✅ Command Center (real company profile, activity, health, setup; honest empty states), navigation per spec, ⌘K palette, mobile drawer | E2E incl. mobile overflow checks |
+
+### Phase 1.1 (not done — not claimed)
+* Stripe Checkout session + signature-verified webhooks driving subscriptions (endpoint currently `501 not_configured`).
+* Email provider abstraction + invitation/verification emails (invitations are created; no email is sent).
+* OAuth login (Google/GitHub/Microsoft); enterprise SSO (SAML/OIDC).
+* API idempotency keys; per-account sign-in limits; breached-password check.
+* Nonce-based `script-src` CSP; PostgreSQL RLS policies (defense-in-depth on top of service-layer isolation).
+* OpenTelemetry exporter + Sentry wiring; PostHog analytics abstraction.
+* Usage metering writers (table exists), entitlement enforcement (e.g. `companies.max`).
+* QR code for TOTP enrollment (setup key and `otpauth://` link are shown today).
 
 ## Phase 2 — Company OS
 Company Graph (`graph_edges` + typed relations), Company Brain (documents → S3, ingestion workers,

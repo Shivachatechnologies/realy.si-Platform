@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: realy
+          POSTGRES_PASSWORD: realy
+          POSTGRES_DB: realy_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U realy" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://realy:realy@localhost:5432/realy_test
+      TEST_DATABASE_URL: postgresql://realy:realy@localhost:5432/realy_test
+      REDIS_URL: redis://localhost:6379
+      # CI-only key; production keys come from the secrets manager.
+      REALY_ENCRYPTION_KEY: Y2ktb25seS1rZXktbm90LWEtc2VjcmV0LTEyMzQ1Njc=
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: E2E (fresh database)
+        env:
+          DATABASE_URL: postgresql://realy:realy@localhost:5432/realy_e2e
+        run: |
+          PGPASSWORD=realy psql -h localhost -U realy -d realy_test -c "CREATE DATABASE realy_e2e"
+          pnpm db:migrate && pnpm db:seed
+          pnpm exec playwright install --with-deps chromium
+          (pnpm start > server.log 2>&1 &)
+          (pnpm worker > worker.log 2>&1 &)
+          npx --yes wait-on http://localhost:3000/api/health/ready
+          pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            test-results
+            server.log
+            worker.log
