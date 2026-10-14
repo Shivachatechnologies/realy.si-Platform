@@ -11,6 +11,8 @@ import { FormError } from "@/components/form-error";
 import { useI18n } from "@/i18n/client";
 import { displayName } from "@/i18n/format";
 import { api, ApiError } from "@/lib/api-client";
+import { nextFromLocation } from "@/lib/safe-next";
+import { useLocationSearch } from "@/lib/use-location-search";
 
 function useSubmit<T>(fn: (values: T) => Promise<void>) {
   const [error, setError] = useState<unknown>(null);
@@ -30,11 +32,13 @@ function useSubmit<T>(fn: (values: T) => Promise<void>) {
 
 export function SignInForm() {
   const { t, locale } = useI18n();
+  const search = useLocationSearch();
   const router = useRouter();
   const form = useForm<{ email: string; password: string }>();
   const { error, run } = useSubmit(async (v: { email: string; password: string }) => {
     const r = await api<{ mfaRequired: boolean }>("/api/v1/auth/sign-in", { body: v });
-    router.replace(r.mfaRequired ? `/${locale}/mfa` : `/${locale}`);
+    const next = nextFromLocation(`/${locale}`);
+    router.replace(r.mfaRequired ? `/${locale}/mfa?next=${encodeURIComponent(next)}` : next);
     router.refresh();
   });
   return (
@@ -45,13 +49,16 @@ export function SignInForm() {
       <Field label={t("auth.password")} htmlFor="password">
         <Input id="password" type="password" autoComplete="current-password" required {...form.register("password", { required: true })} />
       </Field>
+      <Link className="-mt-2 justify-self-end text-xs text-primary hover:underline" href={`/${locale}/forgot-password`}>
+        {t("auth.forgotPassword")}
+      </Link>
       <FormError error={error} />
       <Button type="submit" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? t("common.loading") : t("auth.signIn")}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         {t("auth.noAccount")}{" "}
-        <Link className="text-primary hover:underline" href={`/${locale}/sign-up`}>
+        <Link className="text-primary hover:underline" href={`/${locale}/sign-up${search}`}>
           {t("auth.signUp")}
         </Link>
       </p>
@@ -68,6 +75,7 @@ interface SignUpValues {
 
 export function SignUpForm({ countryCodes }: { countryCodes: string[] }) {
   const { t, locale } = useI18n();
+  const search = useLocationSearch();
   const router = useRouter();
   const form = useForm<SignUpValues>({ defaultValues: { countryCode: "" } });
   const { error, fields, run } = useSubmit(async (v: SignUpValues) => {
@@ -79,7 +87,7 @@ export function SignUpForm({ countryCodes }: { countryCodes: string[] }) {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
     });
-    router.replace(`/${locale}/onboarding`);
+    router.replace(nextFromLocation(`/${locale}/onboarding`));
     router.refresh();
   });
   const countries = countryCodes
@@ -112,7 +120,7 @@ export function SignUpForm({ countryCodes }: { countryCodes: string[] }) {
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         {t("auth.haveAccount")}{" "}
-        <Link className="text-primary hover:underline" href={`/${locale}/sign-in`}>
+        <Link className="text-primary hover:underline" href={`/${locale}/sign-in${search}`}>
           {t("auth.signIn")}
         </Link>
       </p>
@@ -126,7 +134,7 @@ export function MfaForm() {
   const form = useForm<{ code: string }>();
   const { error, run } = useSubmit(async (v: { code: string }) => {
     await api("/api/v1/auth/mfa/verify", { body: v });
-    router.replace(`/${locale}`);
+    router.replace(nextFromLocation(`/${locale}`));
     router.refresh();
   });
   return (

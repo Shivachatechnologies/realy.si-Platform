@@ -6,6 +6,10 @@ import { systemRoleId } from "@/server/modules/rbac/service";
 import type { ScopeType } from "@/generated/prisma/enums";
 
 const TENANT_TABLES = [
+  "stripe_events",
+  "email_messages",
+  "email_verification_tokens",
+  "password_reset_tokens",
   "idempotency_keys",
   "notifications",
   "events",

@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { db, transaction, type Tx } from "@/server/core/db";
-import type { RequestContext } from "@/server/core/context";
+import { userContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, forbidden, invalid, notFound } from "@/server/core/errors";
 import { randomToken, sha256 } from "@/server/core/crypto";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
+import { sendEmail } from "@/server/modules/email/service";
+import { tokenLink } from "@/server/modules/auth/recovery";
 import { emitEvent } from "@/server/modules/events/emit";
 import { can, requirePermission, systemRoleId } from "@/server/modules/rbac/service";
 import { chainFor, isPlatformScope, orgChain } from "@/server/modules/rbac/scope";
@@ -144,28 +146,39 @@ export const inviteInput = z.object({
 });
 
 /**
- * Invite someone with a role at a scope. The inviter must be able to grant that role right now
- * (users.manage + roles.assign + every permission in the role) — the same no-escalation rule as assignRole.
- * Returns the raw token for delivery by the email provider; only its hash is stored.
+ * The no-escalation rule for invitations: the granter must hold users.manage + roles.assign at the
+ * scope and every permission in the role. Used at creation, resend and — with the inviter's *current*
+ * grants — again at acceptance, so revoking an inviter also neutralizes their pending invitations.
+ */
+async function assertCanInvite(tx: Tx, granter: RequestContext, organizationId: string, roleId: string, scopeType: string, scopeId: string) {
+  const chain = await chainFor(tx, { type: scopeType as "ORGANIZATION", id: scopeId }, organizationId);
+  await requirePermission(granter, "users.manage", chain, tx);
+  await requirePermission(granter, "roles.assign", chain, tx);
+  const role = await tx.role.findUnique({ where: { id: roleId }, include: { permissions: { include: { permission: true } } } });
+  if (!role || (role.organizationId && role.organizationId !== organizationId)) throw notFound("Role");
+  if (!role.assignableAt.includes(scopeType as "ORGANIZATION") || isPlatformScope(scopeType as "ORGANIZATION")) {
+    throw invalid(`Role ${role.key} cannot be assigned at ${scopeType} scope`);
+  }
+  for (const rp of role.permissions) {
+    if (!(await can(granter, rp.permission.key, chain, tx))) {
+      throw forbidden(`Cannot invite with ${role.key}: you do not hold ${rp.permission.key}`);
+    }
+  }
+  return role;
+}
+
+/**
+ * Invite someone with a role at a scope. Returns the raw token for delivery by email; only its hash is
+ * stored, and the token is never logged or returned to the inviter by the API.
  */
 export async function inviteMember(ctx: RequestContext, organizationId: string, raw: z.input<typeof inviteInput>) {
   requireUser(ctx);
   const input = inviteInput.parse(raw);
   const scopeId = input.scopeId ?? organizationId;
-  const result = await transaction(async (tx) => {
-    const chain = await chainFor(tx, { type: input.scopeType, id: scopeId }, organizationId);
-    await requirePermission(ctx, "users.manage", chain, tx);
-    await requirePermission(ctx, "roles.assign", chain, tx);
-    const role = await tx.role.findUnique({ where: { id: input.roleId }, include: { permissions: { include: { permission: true } } } });
-    if (!role || (role.organizationId && role.organizationId !== organizationId)) throw notFound("Role");
-    if (!role.assignableAt.includes(input.scopeType) || isPlatformScope(input.scopeType)) {
-      throw invalid(`Role ${role.key} cannot be assigned at ${input.scopeType} scope`);
-    }
-    for (const rp of role.permissions) {
-      if (!(await can(ctx, rp.permission.key, chain, tx))) {
-        throw forbidden(`Cannot invite with ${role.key}: you do not hold ${rp.permission.key}`);
-      }
-    }
+  return transaction(async (tx) => {
+    const role = await assertCanInvite(tx, ctx, organizationId, input.roleId, input.scopeType, scopeId);
+    const alreadyMember = await tx.membership.findFirst({ where: { organizationId, user: { email: input.email } } });
+    if (alreadyMember) throw conflict("This person is already a member");
     const token = randomToken(32);
     const invitation = await tx.invitation.create({
       data: {
@@ -194,9 +207,64 @@ export async function inviteMember(ctx: RequestContext, organizationId: string, 
     });
     return { invitationId: invitation.id, token };
   });
-  // Email delivery is behind the notifications provider abstraction (Phase 1.1); never log the token.
-  logger.info({ invitationId: result.invitationId, organizationId }, "invitation created");
-  return result;
+}
+
+/** Email the invitation link and record the truthful delivery status on the invitation. */
+export async function deliverInvitation(ctx: RequestContext, invitationId: string, token: string, locale: string) {
+  const inv = await db().invitation.findUniqueOrThrow({ where: { id: invitationId }, include: { organization: true, role: true } });
+  const inviter = await db().user.findUnique({ where: { id: inv.invitedById }, select: { name: true } });
+  const result = await sendEmail({
+    to: inv.email,
+    template: "invitation",
+    locale,
+    vars: { inviter: inviter?.name ?? "", organization: inv.organization.name, role: inv.role.name },
+    link: tokenLink(locale, "/invite", token),
+    organizationId: inv.organizationId,
+  });
+  await db().invitation.update({
+    where: { id: invitationId },
+    data: { deliveryStatus: result.status, lastSentAt: new Date(), sendCount: { increment: 1 } },
+  });
+  logger.info({ invitationId, organizationId: inv.organizationId, delivery: result.status }, "invitation delivery");
+  return result.status;
+}
+
+/** Pending (not accepted, not revoked, not expired) invitations. */
+export async function listInvitations(ctx: RequestContext, organizationId: string) {
+  await requirePermission(ctx, "users.read", orgChain(organizationId));
+  return db().invitation.findMany({
+    where: { organizationId, acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, email: true, scopeType: true, scopeId: true, expiresAt: true, deliveryStatus: true, lastSentAt: true, sendCount: true, role: { select: { key: true, name: true } } },
+  });
+}
+
+async function pendingInvitation(tx: Tx, organizationId: string, invitationId: string) {
+  const inv = await tx.invitation.findFirst({ where: { id: invitationId, organizationId, acceptedAt: null, revokedAt: null } });
+  if (!inv) throw notFound("Invitation");
+  return inv;
+}
+
+export async function revokeInvitation(ctx: RequestContext, organizationId: string, invitationId: string) {
+  await transaction(async (tx) => {
+    const inv = await pendingInvitation(tx, organizationId, invitationId);
+    const chain = await chainFor(tx, { type: inv.scopeType, id: inv.scopeId }, organizationId);
+    await requirePermission(ctx, "users.manage", chain, tx);
+    await tx.invitation.update({ where: { id: inv.id }, data: { revokedAt: new Date() } });
+    await writeAudit(tx, ctx, { category: "SECURITY", organizationId, action: "member.invitation_revoked", resourceType: "invitation", resourceId: inv.id });
+  });
+}
+
+/** Resend with a fresh token (the old link stops working) and a renewed expiry. */
+export async function resendInvitation(ctx: RequestContext, organizationId: string, invitationId: string, locale: string) {
+  const token = randomToken(32);
+  await transaction(async (tx) => {
+    const inv = await pendingInvitation(tx, organizationId, invitationId);
+    await assertCanInvite(tx, ctx, organizationId, inv.roleId, inv.scopeType, inv.scopeId);
+    await tx.invitation.update({ where: { id: inv.id }, data: { tokenHash: sha256(token), expiresAt: new Date(Date.now() + INVITATION_TTL_MS) } });
+    await writeAudit(tx, ctx, { category: "SECURITY", organizationId, action: "member.invitation_resent", resourceType: "invitation", resourceId: inv.id });
+  });
+  return deliverInvitation(ctx, invitationId, token, locale);
 }
 
 /** Accept an invitation as the signed-in user whose email matches it. */
@@ -209,6 +277,19 @@ export async function acceptInvitation(ctx: RequestContext, token: string) {
     if (inv.email !== user.email) throw new AppError("forbidden", "This invitation was sent to a different email address");
     const existing = await tx.membership.findUnique({ where: { organizationId_userId: { organizationId: inv.organizationId, userId } } });
     if (existing) throw conflict("Already a member");
+
+    // Re-validate the inviter's authority *now* (MFA freshness is about the inviter's session, not authority).
+    const inviterCtx = userContext(inv.invitedById, { requestId: ctx.requestId, mfaVerifiedAt: new Date() });
+    try {
+      await assertCanInvite(tx, inviterCtx, inv.organizationId, inv.roleId, inv.scopeType, inv.scopeId);
+    } catch {
+      await tx.invitation.update({ where: { id: inv.id }, data: { revokedAt: new Date() } });
+      await writeAudit(tx, ctx, { category: "SECURITY", organizationId: inv.organizationId, action: "member.invitation_invalidated", resourceType: "invitation", resourceId: inv.id, reason: "inviter no longer authorized" });
+      return { organizationId: null as string | null, invalidated: true };
+    }
+
+    // Accepting proves the invitee controls the address the token was emailed to.
+    if (!user.emailVerifiedAt) await tx.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
     await tx.membership.create({ data: { organizationId: inv.organizationId, userId } });
     const assignment = await tx.roleAssignment.create({
       data: {
@@ -235,6 +316,9 @@ export async function acceptInvitation(ctx: RequestContext, token: string) {
       aggregateType: "membership",
       aggregateId: userId,
     });
-    return { organizationId: inv.organizationId };
+    return { organizationId: inv.organizationId as string | null, invalidated: false };
+  }).then((r) => {
+    if (r.invalidated) throw notFound("Invitation");
+    return { organizationId: r.organizationId! };
   });
 }
