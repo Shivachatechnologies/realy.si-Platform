@@ -1,6 +1,9 @@
 # One image, two entrypoints (docs/architecture.md §2):
-#   web:    docker run IMAGE                      (next start)
-#   worker: docker run IMAGE pnpm worker
+#   web:     docker run IMAGE                                           (next start)
+#   worker:  docker run IMAGE node_modules/.bin/tsx src/worker/index.ts
+#   migrate: docker run IMAGE node_modules/.bin/prisma migrate deploy   (release step)
+# The runtime calls binaries directly: pnpm (via corepack) would need a writable home and network access
+# to download itself at container start.
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable
@@ -21,5 +24,4 @@ RUN useradd --system --uid 1001 realy
 COPY --from=build --chown=realy /app /app
 USER realy
 EXPOSE 3000
-# Migrations run as a separate release step: pnpm db:migrate
-CMD ["pnpm", "start"]
+CMD ["node_modules/.bin/next", "start"]
