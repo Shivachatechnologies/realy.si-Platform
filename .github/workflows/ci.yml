@@ -32,9 +32,9 @@ jobs:
       APP_URL: http://localhost:3000
       TRUSTED_PROXY_HOPS: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -70,7 +70,7 @@ jobs:
           curl -fsS http://localhost:3100/api/health/ready
           docker logs realy-web
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: e2e-artifacts
           path: |
