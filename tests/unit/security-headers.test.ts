@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { API_CSP, buildCsp, newNonce, STATIC_SECURITY_HEADERS } from "@/server/core/security-headers";
 import { scrub, sentryBeforeSend } from "@/server/core/telemetry";
+import { stripUrlQueries } from "@/server/core/observability";
 import { safeNext } from "@/lib/safe-next";
 
 describe("content security policy", () => {
@@ -41,6 +42,23 @@ describe("telemetry scrubbing", () => {
     expect(e.request).toBeUndefined();
     expect(e.user).toBeUndefined();
     expect(e.extra).toEqual({ route: "/x" });
+  });
+
+  it("OpenTelemetry URL attributes lose their query strings (OAuth code/state never exported)", () => {
+    const attributes: Record<string, unknown> = {
+      "http.method": "GET",
+      "http.target": "/api/v1/auth/oauth/google/callback?code=abc&state=def",
+      "http.url": "https://api.example.test/x?token=t",
+      "url.query": "code=abc",
+    };
+    const span = { attributes, setAttribute: (k: string, v: unknown) => ((attributes[k] = v), span) };
+    stripUrlQueries.onStart(span as never, {} as never);
+    expect(attributes).toEqual({
+      "http.method": "GET",
+      "http.target": "/api/v1/auth/oauth/google/callback",
+      "http.url": "https://api.example.test/x",
+      "url.query": "[redacted]",
+    });
   });
 });
 
