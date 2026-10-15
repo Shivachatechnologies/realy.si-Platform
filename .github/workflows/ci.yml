@@ -62,6 +62,9 @@ jobs:
       - name: Container image builds and serves health checks
         run: |
           docker build -t realy:ci .
+          # The release image must be able to seed reference data with the documented command.
+          docker run --rm --network host -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
+            -e REDIS_URL -e REALY_ENCRYPTION_KEY realy:ci prisma db seed
           docker run -d --name realy-web --network host \
             -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
             -e REDIS_URL -e REALY_ENCRYPTION_KEY -e APP_URL=http://localhost:3100 -e PORT=3100 -e TRUSTED_PROXY_HOPS=1 \

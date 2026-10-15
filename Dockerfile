@@ -19,7 +19,8 @@ COPY . .
 RUN pnpm build
 
 FROM base AS runtime
-ENV NODE_ENV=production
+# node_modules/.bin on PATH, as `pnpm run` provides locally: `prisma db seed` spawns `tsx` by name.
+ENV NODE_ENV=production PATH=/app/node_modules/.bin:$PATH
 RUN useradd --system --uid 1001 realy
 COPY --from=build --chown=realy /app /app
 USER realy
