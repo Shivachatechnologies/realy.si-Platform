@@ -609,5 +609,42 @@
     "signInFirst": "Sign in or create an account with the email address this invitation was sent to. You'll come back here afterwards.",
     "missingToken": "This invitation link is incomplete.",
     "invalid": "This invitation is invalid, expired, or was sent to a different email address."
+  },
+  "graph": {
+    "title": "Company Graph",
+    "subtitle": "People, teams, products, customers, vendors and partners of {company}, and how they relate.",
+    "entities": "Entities",
+    "counts": "{entities, plural, one {# entity} other {# entities}} · {relations, plural, one {# relation} other {# relations}}",
+    "kind": "Type",
+    "name": "Name",
+    "addEntity": "Add",
+    "deleteEntity": "Delete",
+    "empty": "No entities yet. Add the people, teams and products of this company to start its graph.",
+    "relations": "Relations",
+    "noRelations": "No relations yet.",
+    "relation": "Relation",
+    "target": "Connects to",
+    "noTargets": "No matching entity yet",
+    "addRelation": "Connect",
+    "removeRelation": "Remove relation",
+    "selectHint": "Select an entity to see and edit its relations.",
+    "kinds": {
+      "PERSON": "Person",
+      "TEAM": "Team",
+      "PRODUCT": "Product",
+      "CUSTOMER": "Customer",
+      "VENDOR": "Vendor",
+      "PARTNER": "Partner"
+    },
+    "relationLabels": {
+      "MEMBER_OF": "member of",
+      "REPORTS_TO": "reports to",
+      "OWNS": "owns",
+      "WORKS_ON": "works on",
+      "USES": "uses",
+      "SUPPLIES": "supplies",
+      "PARTNERS_ON": "partners on",
+      "MANAGES_ACCOUNT": "manages account"
+    }
   }
 }

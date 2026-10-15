@@ -139,6 +139,38 @@ test("Arabic switches the whole UI to RTL, and unbuilt modules are honest about 
   await expect(page).toHaveURL(/\/en-US\/settings$/);
 });
 
+test("founder maps the company graph: people, teams, products and typed relations", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("link", { name: "Company Graph" }).first().click();
+  await expect(page).toHaveURL(/\/en-US\/graph$/);
+  await expect(page.getByRole("heading", { name: "Company Graph" })).toBeVisible();
+  const add = async (kind: string, name: string) => {
+    await page.getByLabel("Type").selectOption(kind);
+    await page.getByLabel("Name", { exact: true }).fill(name);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByRole("button", { name, exact: true })).toBeVisible();
+  };
+  await add("PERSON", "Priya");
+  await add("TEAM", "Growth");
+  await add("PRODUCT", "Gulf App");
+
+  await page.getByRole("button", { name: "Priya", exact: true }).click();
+  await page.getByLabel("Relation", { exact: true }).selectOption("MEMBER_OF");
+  await expect(page.getByLabel("Connects to")).toHaveValue(/.+/);
+  await page.getByRole("button", { name: "Connect" }).click();
+  const relations = page.getByRole("region", { name: "Relations" });
+  await expect(relations.getByText("member of")).toBeVisible();
+  await expect(relations.getByText("Growth")).toBeVisible();
+  await expect(page.getByText("3 entities · 1 relation")).toBeVisible();
+
+  // Typed relations only offer valid targets: a person "works on" products, never teams.
+  await page.getByLabel("Relation", { exact: true }).selectOption("WORKS_ON");
+  await expect(page.getByLabel("Connects to").locator("option")).toHaveText(["Gulf App · Product"]);
+  await page.reload();
+  await expect(page.getByText("3 entities · 1 relation")).toBeVisible();
+  await shot(page, "05-company-graph");
+});
+
 test("mobile layout keeps navigation reachable", async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();

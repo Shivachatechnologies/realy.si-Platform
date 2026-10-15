@@ -30,6 +30,7 @@ import {
   Wrench,
   Contact,
   Building2,
+  Network,
 } from "lucide-react";
 
 /** Roadmap phase in which each not-yet-built module ships (docs/roadmap.md). */
@@ -104,6 +105,7 @@ export const NAV: NavSection[] = [
     label: "nav.sections.company",
     items: [
       { label: "modules.overview.title", href: "/company", icon: Building2 },
+      { label: "graph.title", href: "/graph", icon: Network },
       mod("brain", Brain),
       mod("products", Boxes),
       mod("customers", Contact),

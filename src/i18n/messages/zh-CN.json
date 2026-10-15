@@ -609,5 +609,42 @@
     "signInFirst": "请使用收到此邀请的邮箱登录或创建账户，之后会返回此页面。",
     "missingToken": "此邀请链接不完整。",
     "invalid": "此邀请无效、已过期，或发送到了其他邮箱地址。"
+  },
+  "graph": {
+    "title": "公司图谱",
+    "subtitle": "{company} 的人员、团队、产品、客户、供应商和合作伙伴及其关系。",
+    "entities": "实体",
+    "counts": "{entities, plural, other {# 个实体}} · {relations, plural, other {# 个关系}}",
+    "kind": "类型",
+    "name": "名称",
+    "addEntity": "添加",
+    "deleteEntity": "删除",
+    "empty": "暂无实体。添加公司的人员、团队和产品以开始构建图谱。",
+    "relations": "关系",
+    "noRelations": "暂无关系。",
+    "relation": "关系",
+    "target": "连接到",
+    "noTargets": "暂无匹配的实体",
+    "addRelation": "连接",
+    "removeRelation": "删除关系",
+    "selectHint": "选择一个实体以查看和编辑其关系。",
+    "kinds": {
+      "PERSON": "人员",
+      "TEAM": "团队",
+      "PRODUCT": "产品",
+      "CUSTOMER": "客户",
+      "VENDOR": "供应商",
+      "PARTNER": "合作伙伴"
+    },
+    "relationLabels": {
+      "MEMBER_OF": "隶属于",
+      "REPORTS_TO": "汇报给",
+      "OWNS": "负责",
+      "WORKS_ON": "参与",
+      "USES": "使用",
+      "SUPPLIES": "供应",
+      "PARTNERS_ON": "合作于",
+      "MANAGES_ACCOUNT": "管理客户"
+    }
   }
 }
