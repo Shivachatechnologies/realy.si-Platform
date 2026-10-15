@@ -245,7 +245,12 @@
     "notFoundBody": "您要查找的页面不存在，或您没有访问权限。",
     "payload_too_large": "请求过大。",
     "idempotency_in_progress": "该请求仍在处理中，请稍候。",
-    "service_unavailable": "服务暂时不可用，请稍后重试。"
+    "service_unavailable": "服务暂时不可用，请稍后重试。",
+    "reasons": {
+      "already_subscribed": "该组织已有订阅。请通过“管理账单”进行更改。",
+      "checkout_in_progress": "该组织的结账流程正在启动中，请稍后再试。",
+      "payment_processing": "该组织的一笔付款刚刚完成，正在确认中。请稍后刷新。"
+    }
   },
   "onboarding": {
     "title": "设置您的公司",

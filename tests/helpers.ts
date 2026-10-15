@@ -7,6 +7,7 @@ import type { ScopeType } from "@/generated/prisma/enums";
 
 const TENANT_TABLES = [
   "stripe_events",
+  "checkout_sessions",
   "email_messages",
   "email_verification_tokens",
   "password_reset_tokens",

@@ -245,7 +245,12 @@
     "notFoundBody": "Die gesuchte Seite existiert nicht oder Sie haben keinen Zugriff darauf.",
     "payload_too_large": "Diese Anfrage ist zu groß.",
     "idempotency_in_progress": "Diese Anfrage wird noch verarbeitet. Bitte warten Sie einen Moment.",
-    "service_unavailable": "Dieser Dienst ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut."
+    "service_unavailable": "Dieser Dienst ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut.",
+    "reasons": {
+      "already_subscribed": "Diese Organisation hat bereits ein Abonnement. Ändern Sie es über „Abrechnung verwalten“.",
+      "checkout_in_progress": "Für diese Organisation wird bereits ein Bezahlvorgang gestartet. Versuchen Sie es gleich noch einmal.",
+      "payment_processing": "Eine Zahlung für diese Organisation wurde gerade abgeschlossen und wird bestätigt. Aktualisieren Sie die Seite gleich."
+    }
   },
   "onboarding": {
     "title": "Unternehmen einrichten",

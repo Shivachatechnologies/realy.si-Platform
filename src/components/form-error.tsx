@@ -9,6 +9,12 @@ export function useErrorMessage() {
   const t = useT();
   return (err: unknown) => {
     const code = err instanceof ApiError ? err.code : "internal_error";
+    // A more specific, user-actionable reason when the server provides one (e.g. checkout_in_progress).
+    const reason = err instanceof ApiError && typeof err.details?.reason === "string" ? err.details.reason : null;
+    if (reason && /^[a-z_]+$/.test(reason)) {
+      const specific = t(`errors.reasons.${reason}`);
+      if (specific !== `errors.reasons.${reason}`) return specific;
+    }
     const known = t(`errors.${code}`);
     return known === `errors.${code}` ? t("errors.internal_error") : known;
   };

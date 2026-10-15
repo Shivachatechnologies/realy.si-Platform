@@ -141,6 +141,13 @@ enum SubscriptionStatus {
   PAUSED
 }
 
+enum CheckoutSessionStatus {
+  OPEN
+  COMPLETED
+  EXPIRED
+  FAILED
+}
+
 enum IdempotencyStatus {
   IN_PROGRESS
   COMPLETED
@@ -283,6 +290,7 @@ model Organization {
   customRoles     Role[]
   billingProfile  BillingProfile?
   subscriptions   Subscription[]
+  checkoutSessions CheckoutSession[]
 
   @@map("organizations")
 }
@@ -938,6 +946,30 @@ model EmailMessage {
 }
 
 /// Stripe webhook ledger: one row per processed Stripe event id (idempotent processing).
+/// One row per Stripe Checkout Session Realy creates. A partial unique index (migration
+/// 20261015120000_checkout_sessions) allows at most ONE `OPEN` row per organization: the database-level
+/// lock that prevents two payable checkouts for the same organization (docs/billing.md §6).
+model CheckoutSession {
+  id              String                @id @default(uuid(7)) @db.Uuid
+  organizationId  String                @map("organization_id") @db.Uuid
+  status          CheckoutSessionStatus @default(OPEN)
+  /// Null only while the Stripe session is being created (a short-lived reservation).
+  stripeSessionId String?               @unique @map("stripe_session_id")
+  url             String?
+  priceVersionId  String                @map("price_version_id") @db.Uuid
+  couponCode      String?               @map("coupon_code")
+  expiresAt       DateTime              @map("expires_at") @db.Timestamptz(3)
+  completedAt     DateTime?             @map("completed_at") @db.Timestamptz(3)
+  createdById     String?               @map("created_by_id") @db.Uuid
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("checkout_sessions")
+}
+
 model StripeEvent {
   id             String   @id
   type           String

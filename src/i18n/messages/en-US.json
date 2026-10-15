@@ -245,7 +245,12 @@
     "notFoundBody": "The page you're looking for doesn't exist or you don't have access to it.",
     "payload_too_large": "That request is too large.",
     "idempotency_in_progress": "That request is still being processed. Please wait a moment.",
-    "service_unavailable": "This service is temporarily unavailable. Please try again shortly."
+    "service_unavailable": "This service is temporarily unavailable. Please try again shortly.",
+    "reasons": {
+      "already_subscribed": "This organization already has a subscription. Use Manage billing to change it.",
+      "checkout_in_progress": "A checkout for this organization is already being started. Try again in a moment.",
+      "payment_processing": "A payment for this organization was just completed and is being confirmed. Refresh in a moment."
+    }
   },
   "onboarding": {
     "title": "Set up your company",

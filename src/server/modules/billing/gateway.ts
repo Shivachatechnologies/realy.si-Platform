@@ -35,7 +35,21 @@ export interface PaymentGateway {
     cancelUrl: string;
     automaticTax: boolean;
     locale: string;
-  }): Promise<{ id: string; url: string }>;
+    /** When Stripe must stop accepting payment on this session (30 min – 24 h ahead). */
+    expiresAt: Date;
+  }, idempotencyKey: string): Promise<{ id: string; url: string }>;
+  /**
+   * Make a checkout session unpayable. Resolves "expired" once it can no longer be paid, or "complete" if
+   * the customer already finished paying (Stripe serializes the two, so exactly one of them wins).
+   */
+  expireCheckoutSession(id: string): Promise<"expired" | "complete">;
+  /** Ids of this customer's checkout sessions that can still be paid. */
+  listOpenCheckoutSessions(customerId: string): Promise<string[]>;
+  /**
+   * Ids of this customer's subscriptions that have not ended (anything but canceled / incomplete_expired).
+   * Stripe's own record — authoritative even before (or without) the webhook reaching Realy.
+   */
+  listUnendedSubscriptions(customerId: string): Promise<string[]>;
   createPortalSession(args: { customerId: string; returnUrl: string; locale: string }): Promise<{ url: string }>;
   retrieveSubscription(id: string): Promise<GatewaySubscription>;
 }
@@ -129,7 +143,7 @@ export function stripeGateway(stripe: Stripe): PaymentGateway {
       );
       return c.id;
     },
-    async createCheckoutSession(a) {
+    async createCheckoutSession(a, idempotencyKey) {
       const s = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: a.customerId,
@@ -143,9 +157,39 @@ export function stripeGateway(stripe: Stripe): PaymentGateway {
         automatic_tax: { enabled: a.automaticTax },
         customer_update: a.automaticTax ? { address: "auto", name: "auto" } : undefined,
         locale: stripeLocale(a.locale),
-      });
+        expires_at: Math.floor(a.expiresAt.getTime() / 1000),
+      }, { idempotencyKey });
       if (!s.url) throw new Error("Stripe did not return a checkout URL");
       return { id: s.id, url: s.url };
+    },
+    async expireCheckoutSession(id) {
+      const settled = async (): Promise<"expired" | "complete" | null> => {
+        const status = (await stripe.checkout.sessions.retrieve(id)).status;
+        return status === "complete" ? "complete" : status === "expired" ? "expired" : null;
+      };
+      const before = await settled();
+      if (before) return before;
+      try {
+        const s = await stripe.checkout.sessions.expire(id);
+        return s.status === "complete" ? "complete" : "expired";
+      } catch (err) {
+        // Lost a race with the customer paying (or another expiry): report the state Stripe settled on.
+        const after = await settled();
+        if (after) return after;
+        throw err;
+      }
+    },
+    async listOpenCheckoutSessions(customerId) {
+      const ids: string[] = [];
+      for await (const s of stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 100 })) ids.push(s.id);
+      return ids;
+    },
+    async listUnendedSubscriptions(customerId) {
+      const ids: string[] = [];
+      for await (const sub of stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 })) {
+        if (sub.status !== "canceled" && sub.status !== "incomplete_expired") ids.push(sub.id);
+      }
+      return ids;
     },
     async createPortalSession(a) {
       const s = await stripe.billingPortal.sessions.create({ customer: a.customerId, return_url: a.returnUrl, locale: stripeLocale(a.locale) as Stripe.BillingPortal.SessionCreateParams.Locale });
