@@ -6,22 +6,23 @@
 
 ## 0. Verdict
 
-**Phase 1.1 is not complete.** The code is finished and verified locally, but two required gates
-cannot be run from this environment:
+**Phase 1.1 is not complete.** The code is verified locally and on GitHub Actions (§10), but one
+required gate is still open:
 
-1. **GitHub Actions has never run the workflow.** Every workflow step was replicated locally on a
-   copy of the working tree with no `.env`, and all passed (§3).
-2. **No integration has been tested against a real provider.** Stripe, email and OAuth are tested
-   only against test doubles, and their "not configured" states are verified in the UI. The staging
-   plan is ready (`staging-verification.md`).
+- **No integration has been tested against a real provider.** Stripe, email and OAuth are tested
+  only against test doubles, and their "not configured" states are verified in the UI. The staging
+  plan (`staging-verification.md`) is **blocked**: there are no staging credentials, no staging
+  deployment, and this environment's network policy denies the Stripe, Resend/Postmark and
+  Microsoft Graph APIs (§10.3).
 
-Nothing has been committed or pushed since the review began; that is awaiting approval (§9).
+Commits were pushed with approval and are under review in PR #1
+(`claude/determined-lovelace-exapwp` → `phase-1-baseline`); nothing has been merged.
 
 | Verification level | Meaning | Status |
 |---|---|---|
 | **Locally verified** | Automated tests, a production build, Docker and live runs in this sandbox, against real PostgreSQL 16 and Redis 7 | ✅ all gates in §3 |
-| **GitHub Actions verified** | The workflow ran green on GitHub for the pushed commit | ❌ not run (no push yet) |
-| **Real-provider verified** | Stripe test mode, Resend or Postmark, and Google/GitHub/Microsoft OAuth exercised on staging (`staging-verification.md`) | ❌ not run (no staging credentials here) |
+| **GitHub Actions verified** | The workflow ran green on GitHub for the pushed commit | ✅ run #1 (`a38cffd`) and run #2 (`d97a1a0`), §10.1 |
+| **Real-provider verified** | Stripe test mode, Resend or Postmark, and Google/GitHub/Microsoft OAuth exercised on staging (`staging-verification.md`) | ❌ BLOCKED (§10.3) |
 
 ## 1. Fixes in this approval round, with test evidence
 
@@ -195,14 +196,14 @@ Concurrency suites (billing, rate limiting, recovery) were each run green 3× in
 
 | Gate | Locally verified | GitHub Actions |
 |---|---|---|
-| Typecheck (`next typegen && tsc`) | ✅ clean | ❌ not run |
-| Lint (ESLint) | ✅ clean | ❌ |
-| Unit + integration | ✅ 145/145 | ❌ |
-| Production build | ✅ clean, 0 warnings | ❌ |
-| E2E (CSP-violation watcher on every page; 4 global personas; tenant isolation; overflow at 390/768/1024/1440 in LTR and RTL; security headers) | ✅ 19/19 | ❌ |
-| Migration drift (`prisma migrate diff --exit-code`) | ✅ none; also fails correctly on an un-migrated change | ❌ |
+| Typecheck (`next typegen && tsc`) | ✅ clean | ✅ |
+| Lint (ESLint) | ✅ clean | ✅ |
+| Unit + integration | ✅ 145/145 | ✅ |
+| Production build | ✅ clean, 0 warnings | ✅ |
+| E2E (CSP-violation watcher on every page; 4 global personas; tenant isolation; overflow at 390/768/1024/1440 in LTR and RTL; security headers) | ✅ 19/19 | ✅ 19/19 |
+| Migration drift (`prisma migrate diff --exit-code`) | ✅ none; also fails correctly on an un-migrated change | ✅ |
 | Migration upgrade + failure atomicity via `prisma migrate deploy` | ✅ §1.5 | — |
-| Docker: image builds; migrate, web and worker entrypoints; non-root; health ready | ✅ CI replica §3a | ❌ |
+| Docker: image builds; migrate, web and worker entrypoints; non-root; health ready | ✅ CI replica §3a | ✅ |
 | Production fails closed without `TRUSTED_PROXY_HOPS` | ✅ unit test + container (readiness 500, log names the setting) | — |
 | Tests cannot reach a non-disposable database | ✅ §1.4 | — |
 | Secrets / debug code in diff | ✅ none (§9) | — |
@@ -371,3 +372,65 @@ Proposed commits after approval:
 6. migrations: atomic;
 7. CI and Docker;
 8. docs and reports.
+
+## 10. Verification after push (2026-10-15)
+
+### 10.1 GitHub Actions
+PR #1, `claude/determined-lovelace-exapwp` → `phase-1-baseline` (`e2f2e96`). Workflow `CI`, job
+`verify`, triggered by `pull_request`:
+
+| Run | Head | Result | Evidence from the job log |
+|---|---|---|---|
+| [#1](https://github.com/Shivachatechnologies/realy.si-Platform/actions/runs/38780840126) | `a38cffd` | ✅ success, every step | 3 migrations applied, "No difference detected"; Test Files 12/12, Tests 145/145; build; E2E 19 passed; container ready (database ok, redis ok) |
+| [#2](https://github.com/Shivachatechnologies/realy.si-Platform/actions/runs/38781967262) | `d97a1a0` | ✅ success, every step | same counts (12/12 files, 145/145 tests, 19 E2E); no `##[warning]` and no Node.js 20 notice |
+
+**Node.js 20 deprecation.** Run #1 warned that `actions/checkout@v4`, `actions/setup-node@v4` and
+`pnpm/action-setup@v4` target Node.js 20. `d97a1a0` moves to `checkout@v5`, `setup-node@v5`,
+`pnpm/action-setup@v5` and `upload-artifact@v6`; each declares `runs.using: node24` with the same
+inputs. Run #2 has no runtime warning.
+
+The remaining `DEP0040` (punycode) and `DEP0169` (`url.parse`) notices come from pnpm's
+self-installer, the setup-node environment step and `npx wait-on`, not from Realy code. They are
+informational and non-blocking.
+
+### 10.2 Local release rehearsal (NOT staging)
+Throwaway local databases, the release Docker image, and Phase 1 code (`e2f2e96`) for the rollback
+test:
+
+| Check | Result |
+|---|---|
+| Phase 1 database (Phase 1 migration + seed) → read-only pre-check | PASS (0 problem rows) |
+| Backup (`pg_dump -Fc`) before migrating | PASS |
+| `migrate` entrypoint of the release image | PASS (2 migrations applied, counts unchanged, no drift) |
+| Web without `TRUSTED_PROXY_HOPS` | PASS: fails closed (readiness 500; log names the setting) |
+| Web with configuration | PASS (readiness: database ok, redis ok) |
+| Worker | PASS (started, no errors; processed a password-reset job end to end) |
+| Spoofed left-most `X-Forwarded-For` with `TRUSTED_PROXY_HOPS=1` | PASS (the per-IP limit still applies: 8th request `429`) |
+| Smoke: pricing API, sign-in and pricing pages | PASS (200) |
+| **App rollback:** Phase 1 code on the migrated Phase 1.1 schema | PASS (builds; Phase 1's own E2E suite 9/9) |
+| Roll forward again to Phase 1.1 on the same database | PASS (ready) |
+| **Database rollback:** restore the pre-migration backup into a new database | PASS (Phase 1 schema: 1 migration, no `checkout_sessions`; counts match) |
+
+**Caveat.** The rehearsal database held reference and catalog data but no tenant rows. Preservation
+of tenant data (users, organizations, companies, workspaces, subscriptions) through the upgrade is
+covered by the `prisma migrate deploy` upgrade tests in §1.5.
+
+**Rollback procedure (validated locally):**
+1. **App only.** Redeploy the previous image. Phase 1 code runs on the Phase 1.1 schema, so no
+   database change is needed. Data written meanwhile in Phase 1.1-only tables (`checkout_sessions`,
+   `stripe_events`, `email_messages`, tokens) is ignored by Phase 1.
+2. **Full.** Restore the pre-migration backup. This loses all writes made after the backup, so use it
+   only if the migration itself is at fault.
+3. **Failed migration.** It rolls back atomically; fix the data, run
+   `prisma migrate resolve --rolled-back <migration>`, then deploy again (§5).
+
+### 10.3 Real-provider staging (`staging-verification.md`)
+| Area | Tests | Status | Reason |
+|---|---|---|---|
+| §1 Staging prerequisites | commit, migrate, web/worker health, proxy hops, Admin → System | BLOCKED on staging (rehearsed locally: §10.2) | no staging environment |
+| §2 Stripe test mode | S1–S14 | BLOCKED | no `sk_test_` key or webhook secret; no public HTTPS endpoint for webhooks; proxy denies `api.stripe.com` and `checkout.stripe.com` |
+| §3 Email (Resend/Postmark) | E1–E8 | BLOCKED | no API key or verified sending domain; proxy denies `api.resend.com` and `api.postmarkapp.com` |
+| §4 OAuth | O1–O9 × Google, GitHub, Microsoft | BLOCKED | no OAuth apps or client credentials; no public callback URL; consent needs real test accounts signed in by a person; proxy denies `graph.microsoft.com` |
+| §5 Observability | Sentry and OTLP on staging | NOT RUN | optional; no staging DSN or endpoint (verified locally with capture sinks earlier) |
+
+No real-provider test has been executed; none is reported as passed.

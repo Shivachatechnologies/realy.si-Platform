@@ -4,6 +4,11 @@ Purpose: exercise Stripe (test mode), email delivery (Resend or Postmark) and Go
 Microsoft OAuth against the real providers before Phase 1.1 is approved. Until every section below is
 signed off, those integrations count as **implemented and locally tested, not real-provider verified**.
 
+> **Status 2026-10-15:** every test below is BLOCKED (no staging environment or credentials yet;
+> this development environment's network policy also denies the Stripe, Resend/Postmark and
+> Microsoft Graph APIs). The release and rollback procedure was rehearsed locally instead, see
+> `phase-1.1-final-report.md` §10.
+
 ## 0. Rules
 
 - **Dedicated staging only.** Its own database, Redis, domain and provider accounts/apps. Never point
