@@ -12,6 +12,43 @@ import { useI18n } from "@/i18n/client";
 import { displayName } from "@/i18n/format";
 import { api, setCookie } from "@/lib/api-client";
 
+export function EmailStatus({ email, verified }: { email: string; verified: boolean }) {
+  const { t } = useI18n();
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  return (
+    <div className="grid max-w-lg gap-2 rounded-md border bg-surface p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">{t("auth.emailStatus")}</span>
+        <span className="font-medium">{email}</span>
+        <span className={`text-xs ${verified ? "text-success" : "text-warning"}`}>{verified ? t("auth.emailVerified") : t("auth.emailUnverified")}</span>
+        {!verified ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="ms-auto"
+            onClick={async () => {
+              setError(null);
+              try {
+                const r = await api<{ delivery: string }>("/api/v1/auth/email/resend", { method: "POST" });
+                setResult(r.delivery);
+              } catch (err) {
+                setError(err);
+              }
+            }}
+          >
+            {t("auth.resendVerification")}
+          </Button>
+        ) : null}
+      </div>
+      {result === "SENT" ? <Notice tone="success">{t("auth.verificationSent")}</Notice> : null}
+      {result === "NOT_CONFIGURED" ? <Notice tone="warning">{t("auth.emailNotConfigured")}</Notice> : null}
+      {result === "FAILED" ? <Notice tone="danger">{t("settings.members.delivery.FAILED")}</Notice> : null}
+      <FormError error={error} />
+    </div>
+  );
+}
+
 export function ProfileForm({ user, countryCodes }: { user: { name: string; locale: string; timezone: string; countryCode: string | null }; countryCodes: string[] }) {
   const { t, locale } = useI18n();
   const router = useRouter();

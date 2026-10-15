@@ -19,7 +19,7 @@ export default async function CountriesPage() {
     manage.some((g) => g.scopeType === "PLATFORM" || (g.scopeType === "REGION" && g.scopeId === region) || (g.scopeType === "COUNTRY" && g.scopeId === code));
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <Card>
         <CardHeader title={t("admin.countries.regions")} />
         <Table>

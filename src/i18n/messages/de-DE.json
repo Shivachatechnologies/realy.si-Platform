@@ -197,7 +197,38 @@
     "mfaTitle": "Zwei-Faktor-Bestätigung",
     "mfaSubtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App oder einen Ihrer Wiederherstellungscodes ein.",
     "mfaCode": "Bestätigungscode",
-    "verify": "Bestätigen"
+    "verify": "Bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "forgotTitle": "Passwort zurücksetzen",
+    "forgotSubtitle": "Geben Sie die E-Mail-Adresse Ihres Kontos ein. Falls ein Konto existiert, senden wir einen Link zum Zurücksetzen.",
+    "sendResetLink": "Link senden",
+    "resetSent": "Falls für diese E-Mail ein Konto existiert, ist ein Link unterwegs. Er ist 30 Minuten gültig.",
+    "emailNotConfigured": "Der E-Mail-Versand ist in dieser Umgebung nicht eingerichtet, daher kann keine E-Mail gesendet werden.",
+    "resetTitle": "Neues Passwort wählen",
+    "newPassword": "Neues Passwort",
+    "resetDone": "Ihr Passwort wurde geändert und Sie wurden überall abgemeldet. Melden Sie sich mit dem neuen Passwort an.",
+    "resetInvalid": "Dieser Link ist ungültig oder abgelaufen.",
+    "verifyTitle": "E-Mail bestätigen",
+    "verified": "Ihre E-Mail-Adresse ist bestätigt.",
+    "verifyInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen.",
+    "emailStatus": "E-Mail-Adresse",
+    "emailVerified": "Bestätigt",
+    "emailUnverified": "Nicht bestätigt",
+    "resendVerification": "Bestätigungs-E-Mail erneut senden",
+    "verificationSent": "Bestätigungs-E-Mail gesendet.",
+    "orContinueWith": "Oder weiter mit",
+    "oauthNotConfigured": "OAuth-Anbieter nicht konfiguriert.",
+    "oauthErrors": {
+      "account_exists": "Ein Konto mit dieser E-Mail existiert bereits. Melden Sie sich mit Ihrem Passwort an und verbinden Sie {provider} unter Einstellungen → Sicherheit.",
+      "email_unverified": "{provider} hat diese E-Mail-Adresse nicht bestätigt, daher kann damit kein Konto erstellt werden.",
+      "state_mismatch": "Der Anmeldeversuch ist abgelaufen oder konnte nicht überprüft werden. Bitte versuchen Sie es erneut.",
+      "provider_error": "Der Anbieter hat einen Fehler gemeldet. Bitte versuchen Sie es erneut.",
+      "already_linked": "Dieses {provider}-Konto ist bereits mit einem anderen Realy-Konto verbunden.",
+      "not_configured": "OAuth-Anbieter nicht konfiguriert.",
+      "account_disabled": "Dieses Konto ist nicht aktiv.",
+      "verify_email_first": "Bestätigen Sie Ihre E-Mail-Adresse, bevor Sie {provider} verbinden. Den Bestätigungslink finden Sie in Ihrem Posteingang."
+    },
+    "verifySignInFirst": "Melden Sie sich bei dem Konto an, für das dieser Link gesendet wurde. Danach wird Ihre E-Mail-Adresse bestätigt."
   },
   "errors": {
     "validation_error": "Einige Felder müssen überprüft werden.",
@@ -213,7 +244,15 @@
     "internal_error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "network": "Netzwerkfehler. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     "notFoundTitle": "Seite nicht gefunden",
-    "notFoundBody": "Die gesuchte Seite existiert nicht oder Sie haben keinen Zugriff darauf."
+    "notFoundBody": "Die gesuchte Seite existiert nicht oder Sie haben keinen Zugriff darauf.",
+    "payload_too_large": "Diese Anfrage ist zu groß.",
+    "idempotency_in_progress": "Diese Anfrage wird noch verarbeitet. Bitte warten Sie einen Moment.",
+    "service_unavailable": "Dieser Dienst ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut.",
+    "reasons": {
+      "already_subscribed": "Diese Organisation hat bereits ein Abonnement. Ändern Sie es über „Abrechnung verwalten“.",
+      "checkout_in_progress": "Für diese Organisation wird bereits ein Bezahlvorgang gestartet. Versuchen Sie es gleich noch einmal.",
+      "payment_processing": "Eine Zahlung für diese Organisation wurde gerade abgeschlossen und wird bestätigt. Aktualisieren Sie die Seite gleich."
+    }
   },
   "onboarding": {
     "title": "Unternehmen einrichten",
@@ -334,7 +373,10 @@
       "confirmCode": "6-stelliger Code",
       "confirm": "Bestätigen",
       "recoveryTitle": "Wiederherstellungscodes",
-      "recoveryHint": "Bewahren Sie diese sicher auf. Jeder Code funktioniert einmal und sie werden nicht erneut angezeigt."
+      "recoveryHint": "Bewahren Sie diese sicher auf. Jeder Code funktioniert einmal und sie werden nicht erneut angezeigt.",
+      "connections": "Verbundene Anmeldeanbieter",
+      "connect": "Verbinden",
+      "connectedAs": "Verbunden"
     },
     "members": {
       "title": "Mitglieder",
@@ -350,7 +392,18 @@
       "roleName": "Name",
       "permissions": "Berechtigungen",
       "mfa": "Zwei-Faktor",
-      "permissionCount": "{count, plural, one {# Berechtigung} other {# Berechtigungen}}"
+      "permissionCount": "{count, plural, one {# Berechtigung} other {# Berechtigungen}}",
+      "pending": "Offene Einladungen",
+      "delivery": {
+        "SENT": "E-Mail gesendet",
+        "FAILED": "E-Mail fehlgeschlagen",
+        "NOT_CONFIGURED": "E-Mail nicht konfiguriert"
+      },
+      "resend": "Erneut senden",
+      "revoke": "Widerrufen",
+      "expires": "Läuft ab: {date}",
+      "sentFailed": "Einladung erstellt, aber die E-Mail konnte nicht zugestellt werden. Versuchen Sie es erneut.",
+      "sentOk": "Einladung erstellt und per E-Mail gesendet."
     },
     "billing": {
       "countryTitle": "Rechnungsland",
@@ -382,7 +435,22 @@
       "checkout": "Weiter zur Zahlung",
       "current": "Aktuelles Abonnement",
       "noSubscription": "Kein aktives Abonnement.",
-      "lockedPrice": "Festgeschrieben auf Version {version}: {amount}"
+      "lockedPrice": "Festgeschrieben auf Version {version}: {amount}",
+      "notConfigured": "Die Abrechnung ist nicht konfiguriert.",
+      "manage": "Abrechnung verwalten",
+      "checkoutSuccess": "Zahlung übermittelt. Ihr Abonnement erscheint hier, sobald Stripe es bestätigt.",
+      "checkoutCanceled": "Der Bezahlvorgang wurde abgebrochen. Es wurde nichts berechnet.",
+      "cancelsAt": "Endet zum Periodenende ({date})",
+      "statuses": {
+        "ACTIVE": "Aktiv",
+        "TRIALING": "Testphase",
+        "PAST_DUE": "Zahlung fehlgeschlagen – Handlung erforderlich",
+        "CANCELED": "Gekündigt",
+        "INCOMPLETE": "Unvollständig",
+        "INCOMPLETE_EXPIRED": "Abgelaufen",
+        "UNPAID": "Unbezahlt",
+        "PAUSED": "Pausiert"
+      }
     }
   },
   "pricing": {
@@ -409,7 +477,8 @@
       "pricing": "Preise",
       "countries": "Länder & Regionen",
       "flags": "Feature-Flags",
-      "audit": "Audit-Protokoll"
+      "audit": "Audit-Protokoll",
+      "system": "Systemstatus"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -494,6 +563,51 @@
         "SECURITY": "Sicherheit"
       },
       "empty": "Keine Audit-Einträge."
+    },
+    "system": {
+      "title": "Externe Dienste",
+      "description": "Jeder Dienst ist entweder mit echten Zugangsdaten konfiguriert oder wird als nicht konfiguriert angezeigt. Nichts wird simuliert.",
+      "configured": "Konfiguriert",
+      "notConfigured": "Nicht konfiguriert",
+      "services": {
+        "stripe": "Zahlungen (Stripe)",
+        "stripeWebhook": "Stripe-Webhooks",
+        "email": "E-Mail-Versand",
+        "oauthGoogle": "Google-Anmeldung",
+        "oauthGithub": "GitHub-Anmeldung",
+        "oauthMicrosoft": "Microsoft-Anmeldung",
+        "sentry": "Fehlerverfolgung (Sentry)",
+        "otel": "Tracing (OpenTelemetry)",
+        "redis": "Rate-Limit-Speicher (Redis)"
+      }
     }
+  },
+  "email": {
+    "invitation": {
+      "subject": "{inviter} hat Sie zu {organization} auf Realy eingeladen",
+      "body": "{inviter} hat Sie eingeladen, {organization} auf Realy als {role} beizutreten. Die Einladung ist 7 Tage gültig und kann einmal verwendet werden.",
+      "cta": "Einladung annehmen",
+      "footer": "Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren."
+    },
+    "verify_email": {
+      "subject": "Bestätigen Sie Ihre E-Mail-Adresse für Realy",
+      "body": "Bestätigen Sie, dass dies Ihre E-Mail-Adresse ist. Der Link ist 24 Stunden gültig.",
+      "cta": "E-Mail bestätigen",
+      "footer": "Wenn Sie kein Realy-Konto erstellt haben, können Sie diese E-Mail ignorieren."
+    },
+    "password_reset": {
+      "subject": "Realy-Passwort zurücksetzen",
+      "body": "Jemand hat das Zurücksetzen des Passworts für Ihr Realy-Konto angefordert. Der Link ist 30 Minuten gültig und kann einmal verwendet werden.",
+      "cta": "Passwort zurücksetzen",
+      "footer": "Wenn Sie dies nicht angefordert haben, ignorieren Sie diese E-Mail – Ihr Passwort bleibt unverändert."
+    }
+  },
+  "invite": {
+    "title": "Einer Organisation beitreten",
+    "accept": "Einladung annehmen",
+    "accepted": "Sie sind der Organisation beigetreten.",
+    "signInFirst": "Melden Sie sich mit der E-Mail-Adresse an, an die diese Einladung gesendet wurde, oder erstellen Sie ein Konto. Danach kehren Sie hierher zurück.",
+    "missingToken": "Dieser Einladungslink ist unvollständig.",
+    "invalid": "Diese Einladung ist ungültig, abgelaufen oder wurde an eine andere E-Mail-Adresse gesendet."
   }
 }

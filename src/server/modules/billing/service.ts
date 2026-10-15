@@ -3,7 +3,6 @@ import type { BillingInterval } from "@/generated/prisma/enums";
 import { db, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { AppError, forbidden, invalid, notFound } from "@/server/core/errors";
-import { env } from "@/server/core/env";
 import { applyBps, money, subtractMoney, type Money } from "@/server/core/money";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitEvent } from "@/server/modules/events/emit";
@@ -162,16 +161,6 @@ export async function quote(ctx: RequestContext, organizationId: string, raw: z.
   };
 }
 
-/** Stripe Checkout. Reports `not_configured` until Stripe credentials are provided (no simulated success). */
-export async function createCheckoutSession(ctx: RequestContext, organizationId: string, raw: z.input<typeof quoteInput>) {
-  await requirePermission(ctx, "billing.manage", orgChain(organizationId));
-  await quote(ctx, organizationId, raw);
-  if (!env().STRIPE_SECRET_KEY) {
-    throw new AppError("not_configured", "Payments are not configured for this environment");
-  }
-  throw new AppError("not_configured", "Stripe Checkout integration ships in Phase 1.1");
-}
-
 /**
  * Activate a subscription locked to the exact price version that was quoted. Called by the payment
  * provider's webhook handler (SYSTEM actor) — never directly from a client request.
@@ -196,7 +185,7 @@ export async function activateSubscription(
       stripeSubscriptionId: args.stripeSubscriptionId ?? null,
       items: {
         create: {
-          organizationId: args.organizationId,
+          // organization_id is inherited from the parent subscription (composite FK keeps them equal).
           priceVersionId: version.id,
           quantity: args.quantity ?? 1,
           unitAmountMinor: version.amountMinor,

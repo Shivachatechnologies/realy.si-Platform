@@ -30,14 +30,19 @@ jobs:
       # CI-only key; production keys come from the secrets manager.
       REALY_ENCRYPTION_KEY: Y2ktb25seS1rZXktbm90LWEtc2VjcmV0LTEyMzQ1Njc=
       APP_URL: http://localhost:3000
+      TRUSTED_PROXY_HOPS: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Migrations apply cleanly and match the schema (drift check)
+        run: |
+          pnpm db:migrate
+          pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
@@ -54,8 +59,21 @@ jobs:
           (pnpm worker > worker.log 2>&1 &)
           npx --yes wait-on http://localhost:3000/api/health/ready
           pnpm test:e2e
+      - name: Container image builds and serves health checks
+        run: |
+          docker build -t realy:ci .
+          # The release image must be able to seed reference data with the documented command.
+          docker run --rm --network host -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
+            -e REDIS_URL -e REALY_ENCRYPTION_KEY -e TRUSTED_PROXY_HOPS=1 realy:ci prisma db seed
+          docker run -d --name realy-web --network host \
+            -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
+            -e REDIS_URL -e REALY_ENCRYPTION_KEY -e APP_URL=http://localhost:3100 -e PORT=3100 -e TRUSTED_PROXY_HOPS=1 \
+            realy:ci
+          npx --yes wait-on -t 60000 http://localhost:3100/api/health/ready
+          curl -fsS http://localhost:3100/api/health/ready
+          docker logs realy-web
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: e2e-artifacts
           path: |

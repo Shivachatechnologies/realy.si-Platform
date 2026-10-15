@@ -10,7 +10,9 @@
    never edited. Subscriptions reference the exact version they were sold at.
 3. **Integer money.** `amount_minor BIGINT` + ISO-4217 currency.
 4. **Internal catalog is the source of truth;** Stripe is the payment/tax processor. Each
-   `price_version` maps 1:1 to an (immutable) Stripe Price created on publish.
+   `price_version` maps 1:1 to an (immutable) Stripe Price. Phase 1.1 creates the Stripe Product,
+   Price and Coupon **lazily at the first checkout that needs them** (with Stripe idempotency keys,
+   ids stored on `plans`, `price_versions` and `promotions`), not on publish.
 
 ## 2. Catalog
 
@@ -92,7 +94,53 @@ Enterprise and disabled for Free/Founder without code changes.
 * `usage_records` are written idempotently by workers (AI tokens, execution minutes, storage,
   premium integration calls), aggregated hourly, and reported to Stripe metered prices.
 * Stripe webhooks (`/api/v1/webhooks/stripe`, signature-verified, idempotent by event id) drive
-  subscription state; the app never trusts client-side success redirects.
+  subscription state; the app never trusts client-side success redirects. _(Implemented in Phase 1.1,
+  `src/server/modules/billing/stripe-billing.ts`.)_ Details:
+  * raw body verified with `Stripe.webhooks.constructEvent` (300 s timestamp tolerance); invalid
+    signatures → `400` and nothing is recorded;
+  * each event id is recorded in `stripe_events` in the **same transaction** as its effects, so a
+    redelivery (sequential or concurrent) is acknowledged as a duplicate and never re-applied, and a
+    processing failure is not acknowledged (Stripe retries);
+  * the subscription is re-fetched from Stripe for every event, so out-of-order delivery converges
+    to the current state;
+  * the subscription is applied only if its Stripe customer belongs to the organization named in its
+    metadata (cross-tenant guard); items are locked to the sold `price_version`;
+  * handled: `checkout.session.completed`, `checkout.session.expired`,
+    `customer.subscription.created|updated|deleted|paused|resumed`, `invoice.paid`,
+    `invoice.payment_succeeded`, `invoice.payment_failed`; other events are acknowledged and ignored.
+  * Without `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` the UI and API say **"Billing is not
+    configured."**; nothing simulates a payment.
+* **Double-billing protection** _(Phase 1.1)_. An organization can never have two payable checkout
+  sessions or two live subscriptions:
+  1. **Checkout lock in the database.** Every Stripe Checkout Session Realy creates has a
+     `checkout_sessions` row; a partial unique index allows one `OPEN` row per organization. A
+     request reserves the row *before* calling Stripe, so concurrent requests (double clicks, two
+     admins, two tabs) race on the index: one creates the session, the others get `409`
+     (`checkout_in_progress`) or the same session URL.
+  2. **Same plan → same session.** Asking again for the same price version and coupon returns the
+     open session's URL; nothing new is created.
+  3. **Different plan → old session retired first.** The open session is expired at Stripe
+     (`checkout.sessions.expire`) before a new one is created. If the customer already paid it, Stripe
+     reports `complete` and the request is refused (`409 payment_processing`) — never a second session.
+  4. **Paid but not yet confirmed.** Under the lock, Stripe is asked whether the customer already has
+     an unended subscription (e.g. the webhook for a just-completed payment hasn't been applied, or
+     failed to apply). If so, no new session: `409 payment_processing`.
+  5. **Orphans.** Before creating a session, every other *open* Stripe session of the customer is
+     expired. This covers a crash after Stripe created a session but before Realy stored its id.
+  6. **Bounded lifetime.** Sessions are created with `expires_at` = 35 minutes, computed right before
+     the Stripe call, and an idempotency key per reservation; an expired row (by time or
+     `checkout.session.expired`) releases the lock. A reservation whose session id was never stored is
+     considered abandoned after 10 minutes (longer than the worst case of the Stripe calls). A request
+     that outlives its reservation stores nothing and expires its own session instead of returning it.
+  7. **One live subscription.** A partial unique index allows one subscription per organization in
+     `ACTIVE`, `TRIALING`, `PAST_DUE`, `INCOMPLETE`, `UNPAID` or `PAUSED`. If a second paid
+     subscription ever reaches the webhook (e.g. a session created in the Stripe dashboard), it is not
+     activated: the event is acknowledged with outcome `duplicate_subscription`, a SECURITY audit
+     entry (`billing.subscription.duplicate_blocked`) and an error log are written, and a human must
+     cancel/refund it in Stripe (runbook: Stripe dashboard → Subscriptions → filter by customer →
+     cancel the newer one → refund its invoice).
+  8. **Redirects are display-only.** `?checkout=success` only shows "Payment submitted…"; state
+     changes come exclusively from verified webhooks.
 
 ## 7. Required tests (Phase 1)
 * US / IN / AE / DE resolve correct price, currency, tax config.

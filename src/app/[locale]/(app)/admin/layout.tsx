@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/[locale]/a
   const viewer = await requireViewer(locale);
   const grants = await platformGrants(viewer.user.id);
   return (
-    <div className="mx-auto grid max-w-[1400px] gap-4">
+    <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4">
       <h1 className="text-lg font-semibold tracking-tight">{t("admin.title")}</h1>
       {grants.length === 0 ? (
         <Notice tone="warning">{t("admin.noAccess")}</Notice>

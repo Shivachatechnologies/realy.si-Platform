@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { assertDisposableDatabase } from "./db-guard";
 
 /**
  * Bring the dedicated test database up to the latest migration (non-destructive `migrate deploy`).
@@ -6,7 +7,7 @@ import { execFileSync } from "node:child_process";
  */
 export default async function setup() {
   const url = process.env.TEST_DATABASE_URL ?? "postgresql://realy:realy@localhost:5432/realy_test";
-  if (!/_test(\?|$)/.test(new URL(url).pathname + "?")) throw new Error(`Refusing to use a non-test database: ${url}`);
+  assertDisposableDatabase(url, ["_test"], "Integration tests");
   execFileSync("pnpm", ["prisma", "migrate", "deploy"], {
     stdio: "pipe",
     env: { ...process.env, DATABASE_URL: url },

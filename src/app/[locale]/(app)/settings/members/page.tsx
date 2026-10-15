@@ -2,10 +2,10 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { CustomRoleForm, InviteForm } from "@/components/settings/members";
+import { CustomRoleForm, InviteForm, PendingInvitations } from "@/components/settings/members";
 import { getLocale, getT } from "@/i18n/server";
 import { isAppError } from "@/server/core/errors";
-import { listMembers } from "@/server/modules/organizations/service";
+import { listInvitations, listMembers } from "@/server/modules/organizations/service";
 import { can, effectivePermissions, listRoles } from "@/server/modules/rbac/service";
 import { PLATFORM_ONLY } from "@/server/modules/rbac/catalog";
 import { orgChain } from "@/server/modules/rbac/scope";
@@ -24,7 +24,8 @@ export default async function MembersPage() {
     if (isAppError(e) && e.code === "forbidden") return <Notice tone="warning">{t("errors.forbidden")}</Notice>;
     throw e;
   }
-  const [roles, canInvite, canManageRoles, held] = await Promise.all([
+  const [invitations, roles, canInvite, canManageRoles, held] = await Promise.all([
+    listInvitations(viewer.ctx, org.id),
     listRoles(viewer.ctx, org.id).catch(() => []),
     can(viewer.ctx, "users.manage", chain),
     can(viewer.ctx, "roles.manage", chain),
@@ -70,6 +71,17 @@ export default async function MembersPage() {
           </CardBody>
         ) : null}
       </Card>
+
+      {invitations.length > 0 ? (
+        <Card>
+          <CardHeader title={t("settings.members.pending")} />
+          <PendingInvitations
+            orgId={org.id}
+            canManage={canInvite}
+            invitations={invitations.map((i) => ({ id: i.id, email: i.email, roleName: i.role.name, expiresAt: i.expiresAt.toISOString(), deliveryStatus: i.deliveryStatus }))}
+          />
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title={t("settings.members.roles")} />

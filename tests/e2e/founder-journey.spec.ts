@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { execFileSync } from "node:child_process";
 import { currentStep, hotp } from "../../src/server/modules/auth/totp";
 
@@ -72,7 +73,7 @@ async function signIn(page: Page) {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   if (recoveryCodes.length) {
-    await expect(page).toHaveURL(/\/en-US\/mfa$/);
+    await expect(page).toHaveURL(/\/en-US\/mfa(\?.*)?$/);
     await page.getByLabel("Verification code").fill(recoveryCodes.shift()!);
     await page.getByRole("button", { name: "Verify" }).click();
   }
@@ -97,10 +98,10 @@ test("a wrong verification code is rejected", async ({ page }) => {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/en-US\/mfa$/);
+  await expect(page).toHaveURL(/\/en-US\/mfa(\?.*)?$/);
   // Pending-MFA sessions cannot reach the app.
   await page.goto("/en-US/company");
-  await expect(page).toHaveURL(/\/en-US\/mfa$/);
+  await expect(page).toHaveURL(/\/en-US\/mfa(\?.*)?$/);
   await page.getByLabel("Verification code").fill("000000");
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page.getByText("Your email, password or code is incorrect.")).toBeVisible();
@@ -116,9 +117,9 @@ test("billing country is confirmed explicitly and quotes resolve in that market'
   await page.getByRole("button", { name: "Get quote" }).click();
   await expect(page.getByText(/AED\s?399\.00\s+per month/)).toBeVisible();
   await expect(page.getByText("VAT included")).toBeVisible();
-  // Payment is not configured in this environment: the UI says so instead of faking success.
-  await page.getByRole("button", { name: "Continue to payment" }).click();
-  await expect(page.getByText("This isn't configured in this environment yet.")).toBeVisible();
+  // Stripe is not configured in this environment: the UI says so and checkout cannot start.
+  await expect(page.getByText("Billing is not configured.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue to payment" })).toBeDisabled();
   await shot(page, "03-billing");
 });
 

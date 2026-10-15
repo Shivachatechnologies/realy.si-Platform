@@ -14,7 +14,7 @@ Status as of 2026-10-14. ✅ = implemented and covered by automated tests.
 
 | Module | Delivered | Verified by |
 |---|---|---|
-| Tooling | ✅ Next.js 16 (Cache Components/PPR), TS strict, Tailwind 4, Prisma 7 + pg adapter, Vitest, Playwright, ESLint, Docker/Compose, CI workflow | build, typecheck, lint in CI |
+| Tooling | ✅ Next.js 16 (Cache Components/PPR disabled in 1.1 for nonce CSP), TS strict, Tailwind 4, Prisma 7 + pg adapter, Vitest, Playwright, ESLint, Docker/Compose, CI workflow | build, typecheck, lint in CI |
 | Identity | ✅ sign-up/in/out, argon2id, hashed DB sessions (absolute + idle expiry), TOTP MFA with replay protection, single-use recovery codes, MFA-pending sessions | `auth-events.test.ts`, E2E |
 | Tenancy | ✅ organizations, memberships, invitations (single-use, addressee-bound), companies with independent country dimensions, workspaces, projects | `rbac-tenancy.test.ts`, E2E |
 | RBAC | ✅ 59 permissions, 15 system roles, custom roles, 7 scope levels, no-escalation, MFA-gated critical permissions, AI-identity restrictions, 404-on-foreign-tenant | `rbac-tenancy.test.ts` |
@@ -25,13 +25,22 @@ Status as of 2026-10-14. ✅ = implemented and covered by automated tests.
 | Feature flags | ✅ GLOBAL/REGION/COUNTRY/PLAN/ORG/COMPANY/USER targeting | `core.test.ts`, `global-pricing.test.ts` |
 | Experience | ✅ Command Center (real company profile, activity, health, setup; honest empty states), navigation per spec, ⌘K palette, mobile drawer | E2E incl. mobile overflow checks |
 
-### Phase 1.1 (not done — not claimed)
-* Stripe Checkout session + signature-verified webhooks driving subscriptions (endpoint currently `501 not_configured`).
-* Email provider abstraction + invitation/verification emails (invitations are created; no email is sent).
-* OAuth login (Google/GitHub/Microsoft); enterprise SSO (SAML/OIDC).
-* API idempotency keys; per-account sign-in limits; breached-password check.
-* Nonce-based `script-src` CSP; PostgreSQL RLS policies (defense-in-depth on top of service-layer isolation).
-* OpenTelemetry exporter + Sentry wiring; PostHog analytics abstraction.
+### Phase 1.1 — production hardening (see `phase-1.1-final-report.md` for verification status)
+Implemented in code and covered by automated tests; external services work only once credentials
+are configured, and **none has been exercised against a live provider account yet**:
+* Stripe Checkout, customer portal, signature-verified idempotent webhooks driving the subscription
+  lifecycle (`billing-stripe.test.ts`, against a gateway double).
+* Email provider abstraction (Resend, Postmark), invitation/verification/password-reset emails,
+  invitation list/revoke/resend, inviter re-validation at acceptance (`email-invitations.test.ts`).
+* OAuth login — Google, GitHub, Microsoft — with state + PKCE and takeover-safe linking (`oauth.test.ts`).
+* Idempotency keys; distributed sliding-window rate limits with trusted client IP; per-account and
+  per-session limits; MFA attempt cap; body-size limits (`security-core.test.ts`).
+* Nonce CSP; composite-FK tenant constraints; OpenTelemetry + Sentry (opt-in, privacy-scrubbed);
+  Admin → System configuration status.
+
+Still open (moved to Phase 2 unless noted):
+* PostgreSQL RLS — deferred with reasons in `security.md` §10.
+* Enterprise SSO (SAML/OIDC, Phase 7); breached-password check; PostHog analytics abstraction.
 * Usage metering writers (table exists), entitlement enforcement (e.g. `companies.max`).
 * QR code for TOTP enrollment (setup key and `otpauth://` link are shown today).
 

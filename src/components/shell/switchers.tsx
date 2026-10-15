@@ -28,7 +28,7 @@ export function ContextSwitcher({
     if (resetCompany) setCookie(COMPANY_COOKIE, "", 0);
     start(() => router.refresh());
   };
-  const cls = "h-8 max-w-44 truncate rounded-md border bg-surface px-2 text-xs disabled:opacity-60";
+  const cls = "h-8 min-w-0 max-w-44 truncate rounded-md border bg-surface px-2 text-xs disabled:opacity-60";
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <label className="sr-only" htmlFor="org-switch">{t("common.organization")}</label>

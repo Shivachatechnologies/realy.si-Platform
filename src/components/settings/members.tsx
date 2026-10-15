@@ -7,7 +7,7 @@ import { Input, Select } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { FormError } from "@/components/form-error";
-import { useT } from "@/i18n/client";
+import { useI18n, useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 
 export interface RoleOption {
@@ -25,7 +25,7 @@ export function InviteForm({ orgId, roles }: { orgId: string; roles: RoleOption[
   const [email, setEmail] = useState("");
   const [roleId, setRoleId] = useState(orgRoles.find((r) => r.key === "MEMBER" || r.key === "VIEWER")?.id ?? orgRoles[0]?.id ?? "");
   const [error, setError] = useState<unknown>(null);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<null | "SENT" | "FAILED" | "NOT_CONFIGURED">(null);
   const [busy, setBusy] = useState(false);
   return (
     <form
@@ -34,10 +34,12 @@ export function InviteForm({ orgId, roles }: { orgId: string; roles: RoleOption[
         e.preventDefault();
         setBusy(true);
         setError(null);
-        setSent(false);
+        setSent(null);
         try {
-          await api(`/api/v1/organizations/${orgId}/invitations`, { body: { email, roleId, scopeType: "ORGANIZATION" } });
-          setSent(true);
+          const r = await api<{ delivery: "SENT" | "FAILED" | "NOT_CONFIGURED" }>(`/api/v1/organizations/${orgId}/invitations`, {
+            body: { email, roleId, scopeType: "ORGANIZATION" },
+          });
+          setSent(r.delivery);
           setEmail("");
           router.refresh();
         } catch (err) {
@@ -64,7 +66,9 @@ export function InviteForm({ orgId, roles }: { orgId: string; roles: RoleOption[
       </Button>
       <div className="sm:col-span-3">
         <FormError error={error} />
-        {sent ? <Notice tone="info">{t("settings.members.sent")}</Notice> : null}
+        {sent === "SENT" ? <Notice tone="success">{t("settings.members.sentOk")}</Notice> : null}
+        {sent === "FAILED" ? <Notice tone="danger">{t("settings.members.sentFailed")}</Notice> : null}
+        {sent === "NOT_CONFIGURED" ? <Notice tone="warning">{t("settings.members.sent")}</Notice> : null}
       </div>
     </form>
   );
@@ -140,5 +144,61 @@ export function CustomRoleForm({ orgId, permissions }: { orgId: string; permissi
         </Button>
       </div>
     </form>
+  );
+}
+
+export interface PendingInvitation {
+  id: string;
+  email: string;
+  roleName: string;
+  expiresAt: string;
+  deliveryStatus: "SENT" | "FAILED" | "NOT_CONFIGURED" | null;
+}
+
+export function PendingInvitations({ orgId, invitations, canManage }: { orgId: string; invitations: PendingInvitation[]; canManage: boolean }) {
+  const { t, locale } = useI18n();
+  const router = useRouter();
+  const [error, setError] = useState<unknown>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const act = async (id: string, fn: () => Promise<unknown>) => {
+    setBusy(id);
+    setError(null);
+    try {
+      await fn();
+      router.refresh();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <div className="grid gap-2">
+      <FormError error={error} />
+      <ul className="divide-y">
+        {invitations.map((inv) => (
+          <li key={inv.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
+            <span className="font-medium">{inv.email}</span>
+            <span className="text-xs text-muted-foreground">{inv.roleName}</span>
+            <span className="text-xs text-muted-foreground">
+              {t("settings.members.expires", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(inv.expiresAt)) })}
+            </span>
+            {inv.deliveryStatus ? (
+              <span className={`text-xs ${inv.deliveryStatus === "SENT" ? "text-success" : "text-warning"}`}>{t(`settings.members.delivery.${inv.deliveryStatus}`)}</span>
+            ) : null}
+            {canManage ? (
+              <span className="ms-auto flex gap-1">
+                <Button size="sm" variant="ghost" disabled={busy === inv.id} onClick={() => act(inv.id, () => api(`/api/v1/organizations/${orgId}/invitations/${inv.id}/resend`, { method: "POST" }))}>
+                  {t("settings.members.resend")}
+                </Button>
+                <Button size="sm" variant="ghost" disabled={busy === inv.id} onClick={() => act(inv.id, () => api(`/api/v1/organizations/${orgId}/invitations/${inv.id}`, { method: "DELETE" }))}>
+                  {t("settings.members.revoke")}
+                </Button>
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

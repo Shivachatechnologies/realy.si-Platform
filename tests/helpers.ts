@@ -1,11 +1,19 @@
 import { db } from "@/server/core/db";
+import { assertDisposableDatabase } from "./db-guard";
 import { userContext, systemContext, type RequestContext } from "@/server/core/context";
 import { hashPassword } from "@/server/modules/auth/password";
 import { seedDevCatalog, seedReferenceData } from "@/server/modules/seed";
 import { systemRoleId } from "@/server/modules/rbac/service";
 import type { ScopeType } from "@/generated/prisma/enums";
+import { authEmailQueue } from "@/server/core/jobs";
+import { processPasswordResetRequest } from "@/server/modules/auth/recovery";
 
 const TENANT_TABLES = [
+  "stripe_events",
+  "checkout_sessions",
+  "email_messages",
+  "email_verification_tokens",
+  "password_reset_tokens",
   "idempotency_keys",
   "notifications",
   "events",
@@ -42,8 +50,7 @@ let referenceSeeded = false;
 
 /** Clean slate for one test file: tenant data and catalog wiped (TRUNCATE bypasses append-only row triggers). */
 export async function resetDb(): Promise<void> {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!new URL(url).pathname.endsWith("_test")) throw new Error("resetDb only runs against a *_test database");
+  assertDisposableDatabase(process.env.DATABASE_URL, ["_test"], "resetDb");
   const client = db();
   await client.$executeRawUnsafe(`TRUNCATE ${TENANT_TABLES.map((t) => `"${t}"`).join(", ")} CASCADE`);
   await client.$executeRawUnsafe(`DELETE FROM roles WHERE organization_id IS NOT NULL`);
@@ -98,4 +105,19 @@ export async function expectCode(p: Promise<unknown>, code: string) {
     return e;
   }
   throw new Error(`Expected error code ${code}, but the call succeeded`);
+}
+
+/** Do what the worker does: process (and remove) every queued password-reset job. Returns how many ran. */
+export async function runQueuedPasswordResets(): Promise<number> {
+  const jobs = await authEmailQueue().getJobs(["waiting", "delayed", "prioritized"]);
+  for (const job of jobs) {
+    await processPasswordResetRequest(job.data);
+    await job.remove();
+  }
+  return jobs.length;
+}
+
+/** Drop queued test jobs (the test queue prefix keeps these apart from any development worker). */
+export async function clearJobQueues(): Promise<void> {
+  await authEmailQueue().obliterate({ force: true });
 }

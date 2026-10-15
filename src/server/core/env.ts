@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/** Empty strings (common in .env templates) count as "not set". */
+const optional = z
+  .string()
+  .optional()
+  .transform((v) => (v && v.trim() ? v.trim() : undefined));
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().url(),
@@ -12,8 +18,29 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Number of trusted reverse proxies in front of the app. The client IP is the X-Forwarded-For entry
+   * this many hops from the right; entries further left are client-controlled and ignored.
+   * 0 = do not trust X-Forwarded-For at all.
+   */
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(1),
+  // Optional external services. Each feature reports "not configured" when its variables are absent.
+  STRIPE_SECRET_KEY: optional,
+  STRIPE_WEBHOOK_SECRET: optional,
+  STRIPE_AUTOMATIC_TAX: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+  EMAIL_PROVIDER: z.enum(["resend", "postmark"]).optional().or(z.literal("").transform(() => undefined)),
+  EMAIL_API_KEY: optional,
+  EMAIL_FROM: optional,
+  OAUTH_GOOGLE_CLIENT_ID: optional,
+  OAUTH_GOOGLE_CLIENT_SECRET: optional,
+  OAUTH_GITHUB_CLIENT_ID: optional,
+  OAUTH_GITHUB_CLIENT_SECRET: optional,
+  OAUTH_MICROSOFT_CLIENT_ID: optional,
+  OAUTH_MICROSOFT_CLIENT_SECRET: optional,
+  OAUTH_MICROSOFT_TENANT: z.string().regex(/^[A-Za-z0-9.-]{1,64}$/).default("common"),
+  SENTRY_DSN: optional,
+  SENTRY_ENVIRONMENT: optional,
+  OTEL_EXPORTER_OTLP_ENDPOINT: optional,
 });
 
 export type Env = z.infer<typeof schema>;
@@ -30,6 +57,12 @@ export function env(): Env {
   }
   if (parsed.data.NODE_ENV === "production" && parsed.data.REALY_DEV_RELAX_MFA) {
     throw new Error("REALY_DEV_RELAX_MFA must not be enabled in production");
+  }
+  // Per-IP rate limits are only as good as this number: too high trusts a client-supplied
+  // X-Forwarded-For (Next.js passes it through when there is no proxy), 0 puts every client in one
+  // bucket. Production must state its proxy topology rather than inherit the development default.
+  if (parsed.data.NODE_ENV === "production" && !process.env.TRUSTED_PROXY_HOPS?.trim()) {
+    throw new Error("TRUSTED_PROXY_HOPS must be set explicitly in production (number of proxies that append to X-Forwarded-For)");
   }
   cached = parsed.data;
   return cached;

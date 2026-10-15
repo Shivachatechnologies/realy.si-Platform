@@ -197,7 +197,38 @@
     "mfaTitle": "Two-factor verification",
     "mfaSubtitle": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
     "mfaCode": "Verification code",
-    "verify": "Verify"
+    "verify": "Verify",
+    "forgotPassword": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your account email. If an account exists, we'll send a reset link.",
+    "sendResetLink": "Send reset link",
+    "resetSent": "If an account exists for that email, a reset link is on its way. It expires in 30 minutes.",
+    "emailNotConfigured": "Email delivery is not configured in this environment, so no email can be sent.",
+    "resetTitle": "Choose a new password",
+    "newPassword": "New password",
+    "resetDone": "Your password was changed and you were signed out everywhere. Sign in with your new password.",
+    "resetInvalid": "This reset link is invalid or has expired.",
+    "verifyTitle": "Verify your email",
+    "verified": "Your email address is verified.",
+    "verifyInvalid": "This verification link is invalid or has expired.",
+    "emailStatus": "Email address",
+    "emailVerified": "Verified",
+    "emailUnverified": "Not verified",
+    "resendVerification": "Resend verification email",
+    "verificationSent": "Verification email sent.",
+    "orContinueWith": "Or continue with",
+    "oauthNotConfigured": "OAuth provider not configured.",
+    "oauthErrors": {
+      "account_exists": "An account with this email already exists. Sign in with your password, then connect {provider} in Settings → Security.",
+      "email_unverified": "{provider} did not confirm this email address, so it can't be used to create an account.",
+      "state_mismatch": "The sign-in attempt expired or could not be verified. Please try again.",
+      "provider_error": "The provider returned an error. Please try again.",
+      "already_linked": "This {provider} account is already connected to another Realy account.",
+      "not_configured": "OAuth provider not configured.",
+      "account_disabled": "This account is not active.",
+      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox."
+    },
+    "verifySignInFirst": "Sign in to the account this link was sent for, and your email address will be confirmed."
   },
   "errors": {
     "validation_error": "Some fields need attention.",
@@ -213,7 +244,15 @@
     "internal_error": "Something went wrong. Please try again.",
     "network": "Network error. Check your connection and try again.",
     "notFoundTitle": "Page not found",
-    "notFoundBody": "The page you're looking for doesn't exist or you don't have access to it."
+    "notFoundBody": "The page you're looking for doesn't exist or you don't have access to it.",
+    "payload_too_large": "That request is too large.",
+    "idempotency_in_progress": "That request is still being processed. Please wait a moment.",
+    "service_unavailable": "This service is temporarily unavailable. Please try again shortly.",
+    "reasons": {
+      "already_subscribed": "This organization already has a subscription. Use Manage billing to change it.",
+      "checkout_in_progress": "A checkout for this organization is already being started. Try again in a moment.",
+      "payment_processing": "A payment for this organization was just completed and is being confirmed. Refresh in a moment."
+    }
   },
   "onboarding": {
     "title": "Set up your company",
@@ -334,7 +373,10 @@
       "confirmCode": "6-digit code",
       "confirm": "Confirm",
       "recoveryTitle": "Recovery codes",
-      "recoveryHint": "Store these somewhere safe. Each code works once and they will not be shown again."
+      "recoveryHint": "Store these somewhere safe. Each code works once and they will not be shown again.",
+      "connections": "Connected sign-in providers",
+      "connect": "Connect",
+      "connectedAs": "Connected"
     },
     "members": {
       "title": "Members",
@@ -350,7 +392,18 @@
       "roleName": "Name",
       "permissions": "Permissions",
       "mfa": "Two-factor",
-      "permissionCount": "{count, plural, one {# permission} other {# permissions}}"
+      "permissionCount": "{count, plural, one {# permission} other {# permissions}}",
+      "pending": "Pending invitations",
+      "delivery": {
+        "SENT": "Email sent",
+        "FAILED": "Email failed",
+        "NOT_CONFIGURED": "Email not configured"
+      },
+      "resend": "Resend",
+      "revoke": "Revoke",
+      "expires": "Expires {date}",
+      "sentFailed": "Invitation created, but the email could not be delivered. Try resending.",
+      "sentOk": "Invitation created and emailed."
     },
     "billing": {
       "countryTitle": "Billing country",
@@ -382,7 +435,22 @@
       "checkout": "Continue to payment",
       "current": "Current subscription",
       "noSubscription": "No active subscription.",
-      "lockedPrice": "Locked at version {version}: {amount}"
+      "lockedPrice": "Locked at version {version}: {amount}",
+      "notConfigured": "Billing is not configured.",
+      "manage": "Manage billing",
+      "checkoutSuccess": "Payment submitted. Your subscription appears here once Stripe confirms it.",
+      "checkoutCanceled": "Checkout was canceled. You have not been charged.",
+      "cancelsAt": "Cancels at the end of the period ({date})",
+      "statuses": {
+        "ACTIVE": "Active",
+        "TRIALING": "Trial",
+        "PAST_DUE": "Payment failed — action needed",
+        "CANCELED": "Canceled",
+        "INCOMPLETE": "Incomplete",
+        "INCOMPLETE_EXPIRED": "Expired",
+        "UNPAID": "Unpaid",
+        "PAUSED": "Paused"
+      }
     }
   },
   "pricing": {
@@ -409,7 +477,8 @@
       "pricing": "Pricing",
       "countries": "Countries & regions",
       "flags": "Feature flags",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "system": "System status"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -494,6 +563,51 @@
         "SECURITY": "Security"
       },
       "empty": "No audit entries."
+    },
+    "system": {
+      "title": "External services",
+      "description": "Each service is either configured with real credentials or reported as not configured. Nothing is simulated.",
+      "configured": "Configured",
+      "notConfigured": "Not configured",
+      "services": {
+        "stripe": "Payments (Stripe)",
+        "stripeWebhook": "Stripe webhooks",
+        "email": "Email delivery",
+        "oauthGoogle": "Google sign-in",
+        "oauthGithub": "GitHub sign-in",
+        "oauthMicrosoft": "Microsoft sign-in",
+        "sentry": "Error tracking (Sentry)",
+        "otel": "Tracing (OpenTelemetry)",
+        "redis": "Rate-limit store (Redis)"
+      }
     }
+  },
+  "email": {
+    "invitation": {
+      "subject": "{inviter} invited you to {organization} on Realy",
+      "body": "{inviter} invited you to join {organization} on Realy as {role}. The invitation expires in 7 days and can be used once.",
+      "cta": "Accept invitation",
+      "footer": "If you weren't expecting this invitation, you can ignore this email."
+    },
+    "verify_email": {
+      "subject": "Verify your email for Realy",
+      "body": "Confirm that this is your email address. The link expires in 24 hours.",
+      "cta": "Verify email",
+      "footer": "If you didn't create a Realy account, you can ignore this email."
+    },
+    "password_reset": {
+      "subject": "Reset your Realy password",
+      "body": "Someone asked to reset the password for your Realy account. The link expires in 30 minutes and can be used once.",
+      "cta": "Reset password",
+      "footer": "If you didn't request this, ignore this email — your password stays the same."
+    }
+  },
+  "invite": {
+    "title": "Join an organization",
+    "accept": "Accept invitation",
+    "accepted": "You joined the organization.",
+    "signInFirst": "Sign in or create an account with the email address this invitation was sent to. You'll come back here afterwards.",
+    "missingToken": "This invitation link is incomplete.",
+    "invalid": "This invitation is invalid, expired, or was sent to a different email address."
   }
 }

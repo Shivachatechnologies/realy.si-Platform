@@ -197,7 +197,38 @@
     "mfaTitle": "双重验证",
     "mfaSubtitle": "输入身份验证器应用中的 6 位验证码，或任一恢复码。",
     "mfaCode": "验证码",
-    "verify": "验证"
+    "verify": "验证",
+    "forgotPassword": "忘记密码？",
+    "forgotTitle": "重置密码",
+    "forgotSubtitle": "输入您的账户邮箱。如果账户存在，我们会发送重置链接。",
+    "sendResetLink": "发送重置链接",
+    "resetSent": "如果该邮箱存在账户，重置链接已发出，30 分钟内有效。",
+    "emailNotConfigured": "当前环境未配置邮件发送，因此无法发送任何邮件。",
+    "resetTitle": "设置新密码",
+    "newPassword": "新密码",
+    "resetDone": "密码已更改，您已在所有设备上退出登录。请使用新密码登录。",
+    "resetInvalid": "此重置链接无效或已过期。",
+    "verifyTitle": "验证邮箱",
+    "verified": "您的邮箱已验证。",
+    "verifyInvalid": "此验证链接无效或已过期。",
+    "emailStatus": "邮箱地址",
+    "emailVerified": "已验证",
+    "emailUnverified": "未验证",
+    "resendVerification": "重新发送验证邮件",
+    "verificationSent": "验证邮件已发送。",
+    "orContinueWith": "或使用以下方式继续",
+    "oauthNotConfigured": "OAuth 提供商未配置。",
+    "oauthErrors": {
+      "account_exists": "该邮箱已有账户。请先用密码登录，然后在 设置 → 安全 中连接 {provider}。",
+      "email_unverified": "{provider} 未确认该邮箱地址，因此无法用它创建账户。",
+      "state_mismatch": "登录尝试已过期或无法验证，请重试。",
+      "provider_error": "提供商返回错误，请重试。",
+      "already_linked": "该 {provider} 账户已连接到另一个 Realy 账户。",
+      "not_configured": "OAuth 提供商未配置。",
+      "account_disabled": "该账户未激活。",
+      "verify_email_first": "连接 {provider} 之前，请先验证你的邮箱地址。请在收件箱中查找验证链接。"
+    },
+    "verifySignInFirst": "请登录此链接所对应的账户，随后你的邮箱地址将被确认。"
   },
   "errors": {
     "validation_error": "部分字段需要修改。",
@@ -213,7 +244,15 @@
     "internal_error": "出现错误，请重试。",
     "network": "网络错误。请检查连接后重试。",
     "notFoundTitle": "页面未找到",
-    "notFoundBody": "您要查找的页面不存在，或您没有访问权限。"
+    "notFoundBody": "您要查找的页面不存在，或您没有访问权限。",
+    "payload_too_large": "请求过大。",
+    "idempotency_in_progress": "该请求仍在处理中，请稍候。",
+    "service_unavailable": "服务暂时不可用，请稍后重试。",
+    "reasons": {
+      "already_subscribed": "该组织已有订阅。请通过“管理账单”进行更改。",
+      "checkout_in_progress": "该组织的结账流程正在启动中，请稍后再试。",
+      "payment_processing": "该组织的一笔付款刚刚完成，正在确认中。请稍后刷新。"
+    }
   },
   "onboarding": {
     "title": "设置您的公司",
@@ -334,7 +373,10 @@
       "confirmCode": "6 位验证码",
       "confirm": "确认",
       "recoveryTitle": "恢复码",
-      "recoveryHint": "请妥善保存。每个恢复码只能使用一次，且不会再次显示。"
+      "recoveryHint": "请妥善保存。每个恢复码只能使用一次，且不会再次显示。",
+      "connections": "已连接的登录方式",
+      "connect": "连接",
+      "connectedAs": "已连接"
     },
     "members": {
       "title": "成员",
@@ -350,7 +392,18 @@
       "roleName": "名称",
       "permissions": "权限",
       "mfa": "双重验证",
-      "permissionCount": "{count, plural, other {# 项权限}}"
+      "permissionCount": "{count, plural, other {# 项权限}}",
+      "pending": "待处理邀请",
+      "delivery": {
+        "SENT": "邮件已发送",
+        "FAILED": "邮件发送失败",
+        "NOT_CONFIGURED": "邮件未配置"
+      },
+      "resend": "重新发送",
+      "revoke": "撤销",
+      "expires": "{date} 过期",
+      "sentFailed": "邀请已创建，但邮件发送失败。请尝试重新发送。",
+      "sentOk": "邀请已创建并发送邮件。"
     },
     "billing": {
       "countryTitle": "账单国家/地区",
@@ -382,7 +435,22 @@
       "checkout": "继续付款",
       "current": "当前订阅",
       "noSubscription": "没有有效订阅。",
-      "lockedPrice": "锁定在第 {version} 版：{amount}"
+      "lockedPrice": "锁定在第 {version} 版：{amount}",
+      "notConfigured": "账单功能未配置。",
+      "manage": "管理账单",
+      "checkoutSuccess": "付款已提交。Stripe 确认后，您的订阅将显示在此处。",
+      "checkoutCanceled": "结账已取消，您未被扣款。",
+      "cancelsAt": "将于周期结束时取消（{date}）",
+      "statuses": {
+        "ACTIVE": "有效",
+        "TRIALING": "试用中",
+        "PAST_DUE": "付款失败——需要处理",
+        "CANCELED": "已取消",
+        "INCOMPLETE": "未完成",
+        "INCOMPLETE_EXPIRED": "已过期",
+        "UNPAID": "未支付",
+        "PAUSED": "已暂停"
+      }
     }
   },
   "pricing": {
@@ -409,7 +477,8 @@
       "pricing": "价格",
       "countries": "国家与区域",
       "flags": "功能开关",
-      "audit": "审计日志"
+      "audit": "审计日志",
+      "system": "系统状态"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -494,6 +563,51 @@
         "SECURITY": "安全"
       },
       "empty": "暂无审计记录。"
+    },
+    "system": {
+      "title": "外部服务",
+      "description": "每项服务要么使用真实凭据配置，要么显示为未配置。没有任何模拟。",
+      "configured": "已配置",
+      "notConfigured": "未配置",
+      "services": {
+        "stripe": "支付（Stripe）",
+        "stripeWebhook": "Stripe Webhook",
+        "email": "邮件发送",
+        "oauthGoogle": "Google 登录",
+        "oauthGithub": "GitHub 登录",
+        "oauthMicrosoft": "Microsoft 登录",
+        "sentry": "错误跟踪（Sentry）",
+        "otel": "链路追踪（OpenTelemetry）",
+        "redis": "限流存储（Redis）"
+      }
     }
+  },
+  "email": {
+    "invitation": {
+      "subject": "{inviter} 邀请您加入 Realy 上的 {organization}",
+      "body": "{inviter} 邀请您以 {role} 身份加入 Realy 上的 {organization}。邀请将在 7 天后过期，且只能使用一次。",
+      "cta": "接受邀请",
+      "footer": "如果您没有预期收到此邀请，可以忽略这封邮件。"
+    },
+    "verify_email": {
+      "subject": "验证您的 Realy 电子邮箱",
+      "body": "请确认这是您的电子邮箱地址。链接将在 24 小时后过期。",
+      "cta": "验证邮箱",
+      "footer": "如果您没有创建 Realy 账户，可以忽略这封邮件。"
+    },
+    "password_reset": {
+      "subject": "重置您的 Realy 密码",
+      "body": "有人请求重置您的 Realy 账户密码。链接将在 30 分钟后过期，且只能使用一次。",
+      "cta": "重置密码",
+      "footer": "如果不是您本人操作，请忽略这封邮件——您的密码不会改变。"
+    }
+  },
+  "invite": {
+    "title": "加入组织",
+    "accept": "接受邀请",
+    "accepted": "您已加入该组织。",
+    "signInFirst": "请使用收到此邀请的邮箱登录或创建账户，之后会返回此页面。",
+    "missingToken": "此邀请链接不完整。",
+    "invalid": "此邀请无效、已过期，或发送到了其他邮箱地址。"
   }
 }

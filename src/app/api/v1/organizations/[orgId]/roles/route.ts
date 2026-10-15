@@ -1,3 +1,4 @@
+import { LIMITS } from "@/server/core/limits";
 import { body, route } from "@/server/core/http";
 import { createCustomRole, customRoleInput, listRoles } from "@/server/modules/rbac/service";
 
@@ -17,4 +18,4 @@ export const GET = route<P>({ auth: "required" }, async ({ ctx }, { orgId }) => 
     })),
   };
 });
-export const POST = route<P>({ auth: "required" }, async ({ req, ctx }, { orgId }) => createCustomRole(ctx, orgId, await body(req, customRoleInput)));
+export const POST = route<P>({ auth: "required", name: "POST /organizations/:orgId/roles", rateLimits: LIMITS.tenantWrite, idempotent: true }, async ({ req, ctx }, { orgId }) => createCustomRole(ctx, orgId, await body(req, customRoleInput)));

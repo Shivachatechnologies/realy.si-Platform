@@ -6,9 +6,12 @@ export type ErrorCode =
   | "not_found"
   | "conflict"
   | "idempotency_conflict"
+  | "idempotency_in_progress"
+  | "payload_too_large"
   | "rate_limited"
   | "not_configured"
   | "not_available"
+  | "service_unavailable"
   | "internal_error";
 
 const STATUS: Record<ErrorCode, number> = {
@@ -18,10 +21,13 @@ const STATUS: Record<ErrorCode, number> = {
   forbidden: 403,
   not_found: 404,
   conflict: 409,
-  idempotency_conflict: 409,
+  idempotency_conflict: 422,
+  idempotency_in_progress: 409,
+  payload_too_large: 413,
   rate_limited: 429,
   not_configured: 501,
   not_available: 422,
+  service_unavailable: 503,
   internal_error: 500,
 };
 
