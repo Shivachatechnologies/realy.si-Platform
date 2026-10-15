@@ -226,7 +226,8 @@
       "already_linked": "This {provider} account is already connected to another Realy account.",
       "not_configured": "OAuth provider not configured.",
       "account_disabled": "This account is not active."
-    }
+    },
+    "verifySignInFirst": "Sign in to the account this link was sent for, and your email address will be confirmed."
   },
   "errors": {
     "validation_error": "Some fields need attention.",

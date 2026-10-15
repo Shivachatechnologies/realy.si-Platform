@@ -226,7 +226,8 @@
       "already_linked": "Dieses {provider}-Konto ist bereits mit einem anderen Realy-Konto verbunden.",
       "not_configured": "OAuth-Anbieter nicht konfiguriert.",
       "account_disabled": "Dieses Konto ist nicht aktiv."
-    }
+    },
+    "verifySignInFirst": "Melden Sie sich bei dem Konto an, für das dieser Link gesendet wurde. Danach wird Ihre E-Mail-Adresse bestätigt."
   },
   "errors": {
     "validation_error": "Einige Felder müssen überprüft werden.",

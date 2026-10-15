@@ -226,7 +226,8 @@
       "already_linked": "حساب {provider} هذا مرتبط بالفعل بحساب Realy آخر.",
       "not_configured": "لم يتم إعداد موفّر OAuth.",
       "account_disabled": "هذا الحساب غير نشط."
-    }
+    },
+    "verifySignInFirst": "سجّل الدخول إلى الحساب الذي أُرسل إليه هذا الرابط، وسيتم تأكيد عنوان بريدك الإلكتروني."
   },
   "errors": {
     "validation_error": "بعض الحقول تحتاج إلى مراجعة.",

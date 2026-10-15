@@ -226,7 +226,8 @@
       "already_linked": "该 {provider} 账户已连接到另一个 Realy 账户。",
       "not_configured": "OAuth 提供商未配置。",
       "account_disabled": "该账户未激活。"
-    }
+    },
+    "verifySignInFirst": "请登录此链接所对应的账户，随后你的邮箱地址将被确认。"
   },
   "errors": {
     "validation_error": "部分字段需要修改。",

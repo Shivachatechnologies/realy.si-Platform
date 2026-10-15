@@ -4,7 +4,7 @@ import { setEmailProviderForTests, type EmailProvider, type OutboundEmail } from
 import { renderEmail } from "@/server/modules/email/service";
 import { createOrganization } from "@/server/modules/organizations/service";
 import { systemRoleId } from "@/server/modules/rbac/service";
-import { requestPasswordReset, resetPassword, sendEmailVerification, verifyEmail } from "@/server/modules/auth/recovery";
+import { processPasswordResetRequest, requestPasswordReset, resetPassword, sendEmailVerification, verifyEmail } from "@/server/modules/auth/recovery";
 import { signIn } from "@/server/modules/auth/service";
 import { validateSessionToken } from "@/server/modules/auth/session";
 import { systemContext } from "@/server/core/context";
@@ -14,7 +14,9 @@ import { DELETE as revokeRoute } from "@/app/api/v1/organizations/[orgId]/invita
 import { POST as acceptRoute } from "@/app/api/v1/invitations/accept/route";
 import { POST as signInRoute } from "@/app/api/v1/auth/sign-in/route";
 import { POST as forgotRoute } from "@/app/api/v1/auth/password/forgot/route";
-import { expectCode, makeUser, resetDb } from "../helpers";
+import { POST as verifyRoute } from "@/app/api/v1/auth/email/verify/route";
+import { clearJobQueues, expectCode, makeUser, resetDb, runQueuedPasswordResets } from "../helpers";
+import { resetJobQueuesForTests, authEmailQueue } from "@/server/core/jobs";
 import { params, req, sessionCookie } from "../http";
 import { redis } from "@/server/core/rate-limit";
 
@@ -25,6 +27,7 @@ const tokenFrom = (m: OutboundEmail) => decodeURIComponent(/#token=([^\s"<]+)/.e
 
 beforeAll(async () => {
   await resetDb();
+  await clearJobQueues();
   const keys = await redis().keys("rl:*");
   if (keys.length) await redis().del(...keys);
 });
@@ -171,15 +174,65 @@ describe("invitation email delivery", () => {
 });
 
 describe("password reset", () => {
-  it("does not reveal whether an account exists", async () => {
+  it("does not reveal whether an account exists: same status, body, headers and timing; the work happens in the worker", async () => {
+    // A slow provider: if any account-dependent work ran on the request path, the known account would be ~1.5 s slower.
+    setEmailProviderForTests({ id: "slow", send: async (m) => (await new Promise((r) => setTimeout(r, 1500)), outbox.push(m), { messageId: "slow-1" }) });
+    const known = await makeUser();
+    const ask = async (email: string, ip: string) => {
+      const started = performance.now();
+      const res = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email }, xff: ip }), params({}));
+      return { res, ms: performance.now() - started };
+    };
+    await ask("warmup@example.test", "192.0.2.89"); // first-call costs (module load, queue connection)
+    const a = await ask(known.user.email, "192.0.2.90");
+    const b = await ask("ghost@example.test", "192.0.2.91");
+    expect(a.res.status).toBe(200);
+    expect(b.res.status).toBe(200);
+    expect(await a.res.json()).toEqual(await b.res.json());
+    // Everything but the request id and the wall-clock countdown (whole seconds; may tick between the calls).
+    const headers = (r: Response) => [...r.headers].filter(([k]) => k !== "x-request-id" && k !== "ratelimit-reset").sort();
+    expect(headers(a.res)).toEqual(headers(b.res));
+    expect(Math.abs(Number(a.res.headers.get("ratelimit-reset")) - Number(b.res.headers.get("ratelimit-reset")))).toBeLessThanOrEqual(1);
+    expect(a.ms).toBeLessThan(750);
+    expect(b.ms).toBeLessThan(750);
+    // Nothing account-specific happened before the response.
+    expect(outbox).toHaveLength(0);
+    expect(await db().passwordResetToken.count({ where: { userId: known.user.id } })).toBe(0);
+
+    // The worker then emails only the real account; the ghost is a silent no-op.
+    expect(await runQueuedPasswordResets()).toBe(3);
+    expect(outbox.map((m) => m.to)).toEqual([known.user.email]);
+    expect(await db().passwordResetToken.count({ where: { userId: known.user.id } })).toBe(1);
+  });
+
+  it("rate limits and validation errors are the same for existing and unknown accounts", async () => {
     setEmailProviderForTests(capturing);
     const known = await makeUser();
-    const r1 = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email: known.user.email }, xff: "192.0.2.90" }), params({}));
-    const r2 = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email: "ghost@example.test" }, xff: "192.0.2.91" }), params({}));
-    expect(r1.status).toBe(200);
-    expect(r2.status).toBe(200);
-    expect(await r1.json()).toEqual(await r2.json());
-    expect(outbox).toHaveLength(1);
+    const statuses = async (email: string, ipBase: number) => {
+      const out: number[] = [];
+      for (let i = 0; i < 4; i++) out.push((await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email }, xff: `198.51.100.${ipBase + i}` }), params({}))).status);
+      return out;
+    };
+    // Per-account limit (3/h) counts hashed addresses, whether or not an account exists.
+    expect(await statuses(known.user.email, 10)).toEqual([200, 200, 200, 429]);
+    expect(await statuses("nobody-here@example.test", 20)).toEqual([200, 200, 200, 429]);
+    const bad = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email: "not-an-email" }, xff: "198.51.100.40" }), params({}));
+    expect(bad.status).toBe(400);
+    await clearJobQueues();
+  });
+
+  it("if the job queue is unreachable, every request gets the same retryable 503", async () => {
+    const known = await makeUser();
+    await authEmailQueue().disconnect();
+    try {
+      const a = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email: known.user.email }, xff: "198.51.100.60" }), params({}));
+      const b = await forgotRoute(req("/api/v1/auth/password/forgot", { body: { email: "ghost2@example.test" }, xff: "198.51.100.61" }), params({}));
+      expect([a.status, b.status]).toEqual([503, 503]);
+      expect((await a.json()).error.code).toBe("service_unavailable");
+      expect((await b.json()).error.code).toBe("service_unavailable");
+    } finally {
+      await resetJobQueuesForTests();
+    }
   });
 
   it("is single-use, expires, rejects the old password and revokes every session", async () => {
@@ -188,6 +241,7 @@ describe("password reset", () => {
     const ctx = systemContext();
     const login = await signIn(ctx, { email: u.user.email, password: "correct horse battery staple" });
     await requestPasswordReset(ctx, { email: u.user.email });
+    await runQueuedPasswordResets();
     const token = tokenFrom(outbox[0]!);
     expect(outbox[0]!.text).toMatch(/\/reset-password#token=/);
 
@@ -198,14 +252,31 @@ describe("password reset", () => {
     await signIn(ctx, { email: u.user.email, password: "a brand new passphrase" });
 
     await requestPasswordReset(ctx, { email: u.user.email });
+    await runQueuedPasswordResets();
     await db().passwordResetToken.updateMany({ where: { userId: u.user.id, usedAt: null }, data: { expiresAt: new Date(Date.now() - 1) } });
     await expectCode(resetPassword(ctx, { token: tokenFrom(outbox[1]!), password: "yet another passphrase" }), "validation_error");
+  });
+
+  it("a provider failure is retried by the queue; each retry voids the previous link", async () => {
+    const u = await makeUser();
+    setEmailProviderForTests(failing);
+    await requestPasswordReset(systemContext(), { email: u.user.email });
+    const [job] = await authEmailQueue().getJobs(["waiting"]);
+    await expect(processPasswordResetRequest(job!.data)).rejects.toThrow(/delivery failed/); // → BullMQ retries
+    expect(await db().emailMessage.count({ where: { userId: u.user.id, template: "password_reset", status: "FAILED" } })).toBe(1);
+    setEmailProviderForTests(capturing);
+    await processPasswordResetRequest(job!.data); // the retry
+    await job!.remove();
+    expect(await db().passwordResetToken.count({ where: { userId: u.user.id, usedAt: null } })).toBe(1);
+    expect(outbox).toHaveLength(1);
   });
 
   it("reports not_configured instead of claiming an email was sent", async () => {
     setEmailProviderForTests(null);
     const u = await makeUser();
     expect(await requestPasswordReset(systemContext(), { email: u.user.email })).toEqual({ emailDelivery: "not_configured" });
+    await runQueuedPasswordResets();
+    expect(await db().emailMessage.findFirstOrThrow({ where: { userId: u.user.id, template: "password_reset" } })).toMatchObject({ status: "NOT_CONFIGURED" });
   });
 });
 
@@ -215,14 +286,27 @@ describe("email verification", () => {
     const u = await makeUser();
     expect((await sendEmailVerification(u.user.id)).status).toBe("SENT");
     const token = tokenFrom(outbox[0]!);
-    await verifyEmail(systemContext(), token);
+    await verifyEmail(u.ctx, token);
     expect((await db().user.findUniqueOrThrow({ where: { id: u.user.id } })).emailVerifiedAt).not.toBeNull();
-    await expectCode(verifyEmail(systemContext(), token), "validation_error");
+    await expectCode(verifyEmail(u.ctx, token), "validation_error");
 
     const v = await makeUser();
     await sendEmailVerification(v.user.id);
     await db().user.update({ where: { id: v.user.id }, data: { email: `changed-${v.user.email}` } });
-    await expectCode(verifyEmail(systemContext(), tokenFrom(outbox[1]!)), "validation_error");
+    await expectCode(verifyEmail(v.ctx, tokenFrom(outbox[1]!)), "validation_error");
+  });
+
+  it("is bound to the signed-in account: inbox access alone cannot confirm someone else's registration", async () => {
+    setEmailProviderForTests(capturing);
+    // An attacker registers the victim's address; the verification link lands in the victim's inbox.
+    const squatter = await makeUser();
+    await sendEmailVerification(squatter.user.id);
+    const token = tokenFrom(outbox[0]!);
+    const noSession = await verifyRoute(req("/api/v1/auth/email/verify", { body: { token }, xff: "198.51.100.70" }), params({}));
+    expect(noSession.status).toBe(401);
+    const someoneElse = await makeUser();
+    await expectCode(verifyEmail(someoneElse.ctx, token), "validation_error");
+    expect((await db().user.findUniqueOrThrow({ where: { id: squatter.user.id } })).emailVerifiedAt).toBeNull();
   });
 });
 

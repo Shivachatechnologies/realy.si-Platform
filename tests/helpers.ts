@@ -4,6 +4,8 @@ import { hashPassword } from "@/server/modules/auth/password";
 import { seedDevCatalog, seedReferenceData } from "@/server/modules/seed";
 import { systemRoleId } from "@/server/modules/rbac/service";
 import type { ScopeType } from "@/generated/prisma/enums";
+import { authEmailQueue } from "@/server/core/jobs";
+import { processPasswordResetRequest } from "@/server/modules/auth/recovery";
 
 const TENANT_TABLES = [
   "stripe_events",
@@ -103,4 +105,19 @@ export async function expectCode(p: Promise<unknown>, code: string) {
     return e;
   }
   throw new Error(`Expected error code ${code}, but the call succeeded`);
+}
+
+/** Do what the worker does: process (and remove) every queued password-reset job. Returns how many ran. */
+export async function runQueuedPasswordResets(): Promise<number> {
+  const jobs = await authEmailQueue().getJobs(["waiting", "delayed", "prioritized"]);
+  for (const job of jobs) {
+    await processPasswordResetRequest(job.data);
+    await job.remove();
+  }
+  return jobs.length;
+}
+
+/** Drop queued test jobs (the test queue prefix keeps these apart from any development worker). */
+export async function clearJobQueues(): Promise<void> {
+  await authEmailQueue().obliterate({ force: true });
 }

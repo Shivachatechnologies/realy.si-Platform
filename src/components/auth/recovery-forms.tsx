@@ -104,22 +104,53 @@ export function ResetPasswordForm() {
   );
 }
 
+const VERIFY_KEY = "realy_verify_token";
+
+/**
+ * Confirm an email address. The link must be opened while signed in to the account it was sent for
+ * (server-enforced); otherwise the token is kept in sessionStorage (this tab only) across sign-in.
+ */
 export function VerifyEmail() {
   const { t, locale } = useI18n();
-  const token = useFragmentToken();
-  const [state, setState] = useState<"pending" | "ok" | "invalid">("pending");
+  const fragment = useFragmentToken();
+  const [state, setState] = useState<"pending" | "ok" | "invalid" | "sign_in">("pending");
   useEffect(() => {
-    if (token === undefined) return;
-    if (token === null) {
+    if (fragment === undefined) return;
+    let token: string | null = fragment;
+    try {
+      if (fragment) sessionStorage.setItem(VERIFY_KEY, fragment);
+      token = sessionStorage.getItem(VERIFY_KEY);
+    } catch {}
+    if (!token) {
       queueMicrotask(() => setState("invalid"));
       return;
     }
+    const forget = () => {
+      try {
+        sessionStorage.removeItem(VERIFY_KEY);
+      } catch {}
+    };
     api("/api/v1/auth/email/verify", { body: { token } }).then(
-      () => setState("ok"),
-      () => setState("invalid"),
+      () => (forget(), setState("ok")),
+      (err) => {
+        const code = err instanceof ApiError ? err.code : "";
+        if (code === "unauthenticated" || code === "mfa_required") return setState("sign_in");
+        forget();
+        setState("invalid");
+      },
     );
-  }, [token]);
+  }, [fragment]);
   if (state === "pending") return <Notice>{t("common.loading")}</Notice>;
+  if (state === "sign_in") {
+    return (
+      <div className="grid gap-3">
+        <Notice>{t("auth.verifySignInFirst")}</Notice>
+        <Button asChild>
+          <Link href={`/${locale}/sign-in?next=${encodeURIComponent(`/${locale}/verify-email`)}`}>{t("auth.signIn")}</Link>
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       {state === "ok" ? <Notice tone="success">{t("auth.verified")}</Notice> : <Notice tone="danger">{t("auth.verifyInvalid")}</Notice>}

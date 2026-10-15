@@ -1,10 +1,11 @@
 /**
  * Realy worker process (docs/architecture.md §2). Same codebase as the web app, separate entrypoint:
  *   pnpm worker
- * Phase 1 runs the outbox relay; workflow, agent and ingestion processors attach here in later phases.
+ * Runs the outbox relay and the auth-email queue (password-reset email, kept off the request path);
+ * workflow, agent and ingestion processors attach here in later phases.
  */
 import "dotenv/config";
-import { Queue } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import { Redis } from "ioredis";
 import { env } from "@/server/core/env";
 import { logger } from "@/server/core/logger";
@@ -13,7 +14,8 @@ import { db } from "@/server/core/db";
 import { initObservability } from "@/server/core/observability";
 import { captureException, withSpan } from "@/server/core/telemetry";
 import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
-import { purgeExpiredAuthTokens } from "@/server/modules/auth/recovery";
+import { processPasswordResetRequest, purgeExpiredAuthTokens } from "@/server/modules/auth/recovery";
+import { AUTH_EMAIL_QUEUE, queuePrefix, type PasswordResetJob } from "@/server/core/jobs";
 
 const POLL_MS = 500;
 let stopping = false;
@@ -38,6 +40,20 @@ async function main() {
   const queue = new Queue("events", { connection });
   const log = logger.child({ component: "outbox-relay" });
   log.info("worker started");
+
+  const authEmail = new Worker<PasswordResetJob>(
+    AUTH_EMAIL_QUEUE,
+    // Return nothing: BullMQ records return values in Redis, and "sent" vs "no_account" would reveal accounts.
+    async (job) => {
+      await withSpan("worker.auth_email", { job: job.name }, () => processPasswordResetRequest(job.data));
+    },
+    { connection: new Redis(env().REDIS_URL, { maxRetriesPerRequest: null }), prefix: queuePrefix(), concurrency: 5 },
+  );
+  // Never log job data (it contains an email address).
+  authEmail.on("failed", (job, err) => {
+    log.error({ jobId: job?.id, err: err.message }, "auth-email job failed");
+    captureException(err, { job: "auth-email" });
+  });
 
   const publish = async (events: Awaited<Parameters<Parameters<typeof relayBatch>[0]>[0]>) => {
     // Job id = event id → BullMQ dedupes re-published events.
@@ -66,6 +82,7 @@ async function main() {
       await new Promise((r) => setTimeout(r, POLL_MS * 4));
     }
   }
+  await authEmail.close();
   await queue.close();
   await connection.quit();
   await db().$disconnect();

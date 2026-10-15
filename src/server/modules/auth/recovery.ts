@@ -3,12 +3,13 @@ import { db, transaction } from "@/server/core/db";
 import { env } from "@/server/core/env";
 import { randomToken, sha256 } from "@/server/core/crypto";
 import { AppError, invalid } from "@/server/core/errors";
-import type { RequestContext } from "@/server/core/context";
+import { systemContext, type RequestContext } from "@/server/core/context";
+import { enqueuePasswordReset, type PasswordResetJob } from "@/server/core/jobs";
 import { securityEvent } from "@/server/core/telemetry";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emailConfigured, sendEmail, type SendResult } from "@/server/modules/email/service";
 import { closestLocale } from "@/i18n/config";
-import { dummyHash, hashPassword, PASSWORD_MAX, PASSWORD_MIN, verifyPassword } from "./password";
+import { hashPassword, PASSWORD_MAX, PASSWORD_MIN, verifyPassword } from "./password";
 import { revokeAllSessions } from "./session";
 
 export const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -40,7 +41,8 @@ export async function verifyEmail(ctx: RequestContext, token: string): Promise<v
   await transaction(async (tx) => {
     const row = await tx.emailVerificationToken.findUnique({ where: { tokenHash: sha256(token) }, include: { user: true } });
     const now = new Date();
-    if (!row || row.usedAt || row.expiresAt <= now || row.email !== row.user.email) {
+    // Bound to the signed-in account; another account's link is reported exactly like an invalid one.
+    if (!row || row.usedAt || row.expiresAt <= now || row.email !== row.user.email || row.userId !== ctx.actor.id) {
       throw new AppError("validation_error", "Verification link is invalid or expired");
     }
     const used = await tx.emailVerificationToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: now } });
@@ -56,26 +58,35 @@ export const forgotPasswordInput = z.object({ email: z.string().trim().toLowerCa
 export const resetPasswordInput = z.object({ token: z.string().min(20).max(128), password: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX) });
 
 /**
- * Start a password reset. The response never reveals whether the account exists; it only reports
- * whether email delivery is configured at all (a global fact), so the UI never claims an email was sent
- * when none could be.
+ * Request a reset link. Account enumeration: the response — status, body and timing — must not depend on
+ * whether an account exists. So the request path does only account-independent work (validation, rate
+ * limits, one queue write) and the worker does the lookup, token and email (processPasswordResetRequest).
+ * `emailDelivery` reports whether email is configured at all (a global fact), so the UI never claims an
+ * email was sent when none could be.
  */
 export async function requestPasswordReset(ctx: RequestContext, raw: z.input<typeof forgotPasswordInput>): Promise<{ emailDelivery: "configured" | "not_configured" }> {
   const { email } = forgotPasswordInput.parse(raw);
-  const configured = emailConfigured();
+  await enqueuePasswordReset({ email, requestId: ctx.requestId, ip: ctx.ip, userAgent: ctx.userAgent });
+  return { emailDelivery: emailConfigured() ? "configured" : "not_configured" };
+}
+
+/** Worker side of requestPasswordReset. Unknown or inactive accounts are a silent no-op. */
+export async function processPasswordResetRequest(job: PasswordResetJob): Promise<"sent" | "no_account"> {
+  const { email } = forgotPasswordInput.parse({ email: job.email });
   const user = await db().user.findUnique({ where: { email } });
-  if (!user || user.status !== "ACTIVE") {
-    await dummyHash(); // keep timing similar to the existing-account path
-    return { emailDelivery: configured ? "configured" : "not_configured" };
-  }
+  if (!user || user.status !== "ACTIVE") return "no_account";
+  const ctx: RequestContext = { ...systemContext(job.requestId), actor: { type: "USER", id: user.id }, ip: job.ip, userAgent: job.userAgent };
   const token = randomToken(32);
   await transaction(async (tx) => {
     await tx.passwordResetToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } });
     await tx.passwordResetToken.create({ data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS) } });
-    await writeAudit(tx, { ...ctx, actor: { type: "USER", id: user.id } }, { category: "SECURITY", action: "auth.password_reset_requested", resourceType: "user", resourceId: user.id });
+    await writeAudit(tx, ctx, { category: "SECURITY", action: "auth.password_reset_requested", resourceType: "user", resourceId: user.id });
   });
-  await sendEmail({ to: user.email, template: "password_reset", locale: user.locale, vars: {}, link: tokenLink(user.locale, "/reset-password", token), userId: user.id });
-  return { emailDelivery: configured ? "configured" : "not_configured" };
+  const sent = await sendEmail({ to: user.email, template: "password_reset", locale: user.locale, vars: {}, link: tokenLink(user.locale, "/reset-password", token), userId: user.id });
+  // A provider failure is retried by the queue (each attempt issues a fresh token and voids the previous one).
+  // NOT_CONFIGURED is final: retrying cannot help and the UI already said email is unavailable.
+  if (sent.status === "FAILED") throw new Error("password reset email delivery failed");
+  return "sent";
 }
 
 /** Complete a reset: single-use token, new password, every existing session revoked. */
