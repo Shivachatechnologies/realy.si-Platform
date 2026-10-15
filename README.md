@@ -57,6 +57,8 @@ success. **Admin → System** shows which services are configured (booleans only
 `TRUSTED_PROXY_HOPS` is required in production (the app refuses to start without it): set it to
 the number of proxies in front of the app that append to `X-Forwarded-For`, or rate limits will key
 on the wrong address. Run the app behind at least one such proxy.
+Every process started from the production image (web, worker, `prisma db seed`, `realy:grant-role`)
+needs the same environment, including `TRUSTED_PROXY_HOPS`.
 
 ## Quality gates
 
