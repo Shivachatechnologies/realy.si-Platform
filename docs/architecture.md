@@ -115,9 +115,9 @@ regardless of what the model asked for.
 | Auth | First-party: argon2id passwords, opaque DB sessions, TOTP MFA, OAuth via provider abstraction, SAML/OIDC SSO architecture | see `security.md` |
 | AI | Provider abstraction: Anthropic Claude, OpenAI, Google Gemini | see `agent-runtime.md` |
 | Payments | Stripe (Billing + Tax) | internal pricing catalog is source of truth, synced to Stripe |
-| Observability | OpenTelemetry, Sentry, structured JSON logs (pino), health endpoints | |
+| Observability | OpenTelemetry, Sentry, structured JSON logs (pino), health endpoints | OTel and Sentry are wired (Phase 1.1) and enabled only when configured; see `security.md` §9 |
 | Product analytics | PostHog (abstracted) | |
-| Email | Provider abstraction (Resend / SES / Postmark) | |
+| Email | Provider abstraction: Resend and Postmark implemented (Phase 1.1); SES later | sends over HTTPS; no SMTP |
 | Tests | Vitest (unit + DB integration), Playwright (E2E), k6 (load) | |
 
 ## 5. Code layout (_frozen_)
@@ -145,10 +145,10 @@ Hierarchy: `User → (Membership) → Organization → Company → Workspace →
   composite indexes) so tenant-filtered queries are always index-driven.
 * **Isolation is enforced in three places**: (1) the service layer only accepts a `RequestContext`
   whose tenant was resolved from an authenticated membership — never from a client-supplied id alone;
-  (2) every query in tenant modules filters by `organization_id` (enforced by a repository helper
-  and verified by tenant-isolation tests); (3) PostgreSQL Row-Level Security policies keyed on
-  `current_setting('realy.org_id')` as defense-in-depth (rolled out per table in Phase 2; see
-  `security.md`).
+  (2) every query in tenant modules filters by `organization_id` (in each service, verified by
+  tenant-isolation tests), and composite foreign keys stop cross-tenant references in the database
+  (Phase 1.1); (3) PostgreSQL Row-Level Security as defense-in-depth is **planned, not enabled** —
+  it needs a non-owner app role and per-request tenant transactions first (`security.md` §10).
 * A user may belong to many organizations; principals may also be **service accounts** and **AI
   identities (agents)**, each a first-class principal with its own role assignments.
 

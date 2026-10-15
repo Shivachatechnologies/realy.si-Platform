@@ -128,3 +128,52 @@ inaccuracies found: `security.md` states rate limiting is per-IP without noting 
 8. Add: database-level tenant consistency constraints; decide on RLS with evidence.
 9. Add: OpenTelemetry + Sentry with safe degradation.
 10. Validate CI steps and Docker for real.
+
+---
+
+# Post-change status (2026-10-15)
+
+Re-assessed after the Phase 1.1 work, against code and verification runs (not docs). The rows above
+are kept unchanged as the baseline. Additional legend: **IMPLEMENTED (not live-verified)** = works
+in code and automated tests against test doubles, but has never been exercised against the real
+external provider because no credentials exist in this environment.
+
+| Item (baseline status) | Now | Evidence |
+|---|---|---|
+| Cache Components / PPR (IMPLEMENTED) | **Disabled on purpose** | incompatible with per-request CSP nonces; pages render per request |
+| GitHub Actions CI (PARTIAL) | IMPLEMENTED, **replicated locally**, not yet run on GitHub | every workflow step run in a clean clone without `.env` (2026-10-15): drift check, typecheck, lint, 119 tests, build, 19 E2E — all green. Workflow now adds a migration-drift check and a container smoke test |
+| Dockerfile (PARTIAL) | IMPLEMENTED (fixed) | image builds without build-time env; **bug found and fixed**: runtime `pnpm start` failed as the non-root user (corepack needs a writable home + network). Web, worker and migrate entrypoints verified in containers, `/api/health/ready` = ready, uid 1001 |
+| docker-compose (DOCUMENTATION ONLY) | unchanged | not run (services were started directly) |
+| MFA brute force (PARTIAL) | IMPLEMENTED | per-IP + per-session limits; 5th wrong code revokes the pending session; audited |
+| Password reset (NOT IMPLEMENTED) | IMPLEMENTED (email delivery not live-verified) | `auth/recovery.ts`, `email-invitations.test.ts` |
+| Email verification (NOT IMPLEMENTED) | IMPLEMENTED (email delivery not live-verified) | same |
+| OAuth Google/GitHub/Microsoft (NOT IMPLEMENTED) | IMPLEMENTED (not live-verified) | `auth/oauth.ts`, `oauth.test.ts` (state, PKCE, no auto-link, unverified-email refusal, nOAuth); "OAuth provider not configured." verified in E2E for 4 locales |
+| Invitations end-to-end (**BROKEN**) | IMPLEMENTED (email delivery not live-verified) | token delivered by email as a fragment link; accept page; list/revoke/resend; NOT_CONFIGURED reported truthfully |
+| Invitation re-validation (NOT IMPLEMENTED) | IMPLEMENTED | inviter's authority re-checked at acceptance |
+| Database-level tenant controls (NOT IMPLEMENTED) | IMPLEMENTED (composite FKs) | verified on an upgraded Phase-1 database: cross-tenant workspace insert rejected |
+| PostgreSQL RLS (NOT IMPLEMENTED) | **NOT IMPLEMENTED — deliberately deferred** | would be bypassed by the current owner/superuser role; plan in `security.md` §10 |
+| Request body size limit (NOT IMPLEMENTED) | IMPLEMENTED | 64 KiB default, 1 MiB webhook, `413` |
+| Rate limiting (PARTIAL / BROKEN) | IMPLEMENTED | trusted-hop client IP, sliding window in Redis (atomic), per-account/session/principal buckets, `RateLimit-*` headers; concurrent burst admits exactly the limit; fail-closed (503) for auth buckets in production when Redis is down (tested) |
+| Idempotency keys (NOT IMPLEMENTED) | IMPLEMENTED | principal+endpoint scope, replay, conflict 422, in-progress 409, failure release, expiry purge, concurrency test. Limitation: crash after claim → key blocked until expiry (24 h) |
+| Public API rate limit (none) | IMPLEMENTED | `public:ip` 120/min |
+| Stripe checkout / webhooks / portal (NOT IMPLEMENTED) | IMPLEMENTED (not live-verified) | `stripe-billing.ts`; webhook signature, stale-timestamp, duplicate (sequential and concurrent), out-of-order, cross-tenant tests; "Billing is not configured." verified in E2E |
+| Usage metering writers (NOT IMPLEMENTED) | unchanged — Phase 2 | |
+| Integration/configuration status view (NOT IMPLEMENTED) | IMPLEMENTED | Admin → System (booleans only) |
+| Nonce `script-src` CSP (NOT IMPLEMENTED) | IMPLEMENTED | E2E fails on any CSP violation; header test checks every `<script>` carries the request nonce; `style-src 'unsafe-inline'` remains (documented) |
+| Expired data cleanup (NOT IMPLEMENTED) | PARTIAL | idempotency keys + auth tokens purged by the worker every 10 min; expired sessions are not purged yet |
+| OpenTelemetry (DOCUMENTATION ONLY) | IMPLEMENTED (opt-in) | exported to a local OTLP sink: **leak found and fixed** — Next.js spans carried the OAuth callback `code`/`state` in `http.target`; now stripped; re-verified clean |
+| Sentry (DOCUMENTATION ONLY) | IMPLEMENTED (opt-in) | real SDK to a local envelope sink: no user/IP/breadcrumbs/secrets; console breadcrumbs now dropped too |
+| Email provider abstraction / outbound email (NOT IMPLEMENTED) | IMPLEMENTED (not live-verified) | Resend + Postmark over HTTPS; `email_messages` delivery log without bodies or tokens |
+| Docs accuracy | corrected | `api.md`, `security.md` (+§9 observability, §10 isolation/RLS), `billing.md`, `database.md`, `roadmap.md`, `architecture.md`, README |
+
+### Approval round (2026-10-15, second pass)
+
+| Item | Before | Now | Evidence |
+|---|---|---|---|
+| Double billing (two payable checkouts / two live subscriptions) | **BROKEN** (open review finding) | IMPLEMENTED (not live-verified) | DB checkout lock + one-live-subscription partial indexes; Stripe-side checks; 11 double-billing tests incl. concurrency and negative controls (`billing-stripe.test.ts`) |
+| Forgot-password account enumeration (timing) | **BROKEN** (open review finding) | IMPLEMENTED | request path enqueues only; worker does lookup/token/email; identical status/body/headers, timing test with a slow provider + negative control; live worker run |
+| Email verification as hijack vector | **BROKEN** (found in review) | IMPLEMENTED | verification bound to the signed-in account; test |
+| Tests reaching a non-test database | PARTIAL (name check only; URL echoed with credentials; E2E unguarded) | IMPLEMENTED | `tests/db-guard.ts` for unit/integration/E2E; live refusals |
+| Migration atomicity | **BROKEN** (`prisma migrate deploy` left half-applied schema on failure) | IMPLEMENTED | `BEGIN`/`COMMIT` in both Phase 1.1 migrations; upgrade A/B/C cases via `prisma migrate deploy` |
+
+Remaining gaps are listed in `phase-1.1-final-report.md` §4.

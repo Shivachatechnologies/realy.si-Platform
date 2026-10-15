@@ -139,8 +139,24 @@ feature_flags ── feature_flag_rules
   `company_id`, `aggregate_type`, `aggregate_id`, `payload jsonb`, `occurred_at`, `published_at`,
   `attempts`, `last_error`. Index on `(published_at) WHERE published_at IS NULL`.
 * **notifications** — `organization_id`, `user_id`, `type`, `payload`, `read_at`.
-* **idempotency_keys** — `(principal_id, key)` unique, `request_hash`, `response_status`,
-  `response_body`, `expires_at`.
+* **idempotency_keys** — `(principal_id, endpoint, key)` unique, `request_hash`, `status`
+  (`IN_PROGRESS` / `COMPLETED`), `response_status`, `response_body`, `completed_at`, `expires_at`
+  (24 h; purged by the worker).
+* **Phase 1.1 additions** — `email_verification_tokens`, `password_reset_tokens` (hashed, single use),
+  `email_messages` (delivery log: template, status SENT/FAILED/NOT_CONFIGURED, provider id — never
+  bodies or tokens), `stripe_events` (webhook ledger), Stripe ids on `plans`, `promotions` and
+  `subscription_items` (`price_versions.stripe_price_id` and `billing_profiles.stripe_customer_id` already existed); `oauth_accounts.provider_email`.
+* **checkout_sessions** _(Phase 1.1)_ — one row per Stripe Checkout Session Realy creates:
+  `organization_id`, `status` (OPEN / COMPLETED / EXPIRED / FAILED), `stripe_session_id` (unique,
+  null while being created), `url`, `price_version_id`, `coupon_code`, `expires_at`, `completed_at`.
+  Partial unique index `checkout_sessions_one_open_per_org` (one OPEN row per organization) is the
+  database-level checkout lock; `subscriptions_one_live_per_org` allows one subscription per
+  organization in a live status. Both are hand-written in migration `20261015120000_checkout_sessions`
+  (Prisma cannot declare partial indexes).
+* **Tenant-consistency constraints (Phase 1.1)** — `companies`, `workspaces` and `subscriptions` carry
+  a unique `(id, organization_id)`; `workspaces`, `projects` and `subscription_items` reference their
+  parents through composite foreign keys including `organization_id`, so a row can never point at
+  another organization's parent.
 
 ## 4. Later-phase tables (contract frozen, created in their phase)
 
