@@ -107,6 +107,15 @@ export async function resetPassword(ctx: RequestContext, raw: z.input<typeof res
     }
     // Possession of the emailed link proves control of the address.
     await tx.user.update({ where: { id: row.userId }, data: { passwordHash, emailVerifiedAt: row.user.emailVerifiedAt ?? now } });
+    if (!row.user.emailVerifiedAt) {
+      // The address was never proven before now, so any second factor or OAuth link on the account may
+      // belong to someone who registered it first (pre-account hijacking). Only the address owner remains.
+      await tx.oAuthAccount.deleteMany({ where: { userId: row.userId } });
+      await tx.mfaRecoveryCode.deleteMany({ where: { userId: row.userId } });
+      await tx.mfaFactor.deleteMany({ where: { userId: row.userId } });
+      await tx.user.update({ where: { id: row.userId }, data: { mfaEnabled: false } });
+      await writeAudit(tx, { ...ctx, actor: { type: "USER", id: row.userId } }, { category: "SECURITY", action: "auth.unverified_credentials_cleared", resourceType: "user", resourceId: row.userId });
+    }
     await revokeAllSessions(tx, row.userId);
     await writeAudit(tx, { ...ctx, actor: { type: "USER", id: row.userId } }, { category: "SECURITY", action: "auth.password_reset", resourceType: "user", resourceId: row.userId });
   });

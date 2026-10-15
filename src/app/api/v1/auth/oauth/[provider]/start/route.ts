@@ -3,6 +3,7 @@ import { env } from "@/server/core/env";
 import { clientIp } from "@/server/core/http";
 import { consume } from "@/server/core/rate-limit";
 import { LIMITS } from "@/server/core/limits";
+import { db } from "@/server/core/db";
 import { SESSION_COOKIE, validateSessionToken } from "@/server/modules/auth/session";
 import { beginOAuth, isOAuthProvider, OAUTH_COOKIE, OAuthError } from "@/server/modules/auth/oauth";
 import { closestLocale } from "@/i18n/config";
@@ -26,6 +27,9 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/v1/auth/oaut
     const session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
     if (!session || session.mfaPending) return NextResponse.redirect(new URL(`/${locale}/sign-in`, env().APP_URL));
     userId = session.userId;
+    // Checked again when the link is written (completeOAuth); failing here avoids a pointless provider round trip.
+    const user = await db().user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } });
+    if (!user?.emailVerifiedAt) return back("verify_email_first");
   }
   try {
     const { url, cookie, maxAgeSeconds } = beginOAuth(provider, { mode, userId, locale, next: safeNext(q.get("next"), "") || null });

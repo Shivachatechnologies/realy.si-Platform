@@ -115,7 +115,7 @@ export const oauthStatus = () => OAUTH_PROVIDERS.map((id) => ({ id, configured: 
 
 export class OAuthError extends Error {
   constructor(
-    readonly code: "not_configured" | "state_mismatch" | "provider_error" | "account_exists" | "email_unverified" | "already_linked" | "account_disabled",
+    readonly code: "not_configured" | "state_mismatch" | "provider_error" | "account_exists" | "email_unverified" | "already_linked" | "account_disabled" | "verify_email_first",
     message: string,
   ) {
     super(message);
@@ -201,6 +201,10 @@ export async function completeOAuth(ctx: RequestContext, state: StatePayload, co
   if (state.mode === "link") {
     if (!state.userId || state.userId !== currentUserId) throw new OAuthError("state_mismatch", "link session changed");
     return transaction(async (tx) => {
+      // Pre-account hijacking: whoever signed up with an address they don't control must not be able to
+      // attach a second sign-in path before the address is proven. See resetPassword for the other half.
+      const owner = await tx.user.findUnique({ where: { id: state.userId! }, select: { emailVerifiedAt: true } });
+      if (!owner?.emailVerifiedAt) throw new OAuthError("verify_email_first", "email not verified");
       const existing = await tx.oAuthAccount.findUnique({ where: { provider_providerAccountId: { provider: p, providerAccountId: identity.subject } } });
       if (existing && existing.userId !== state.userId) throw new OAuthError("already_linked", "identity linked elsewhere");
       if (!existing) {

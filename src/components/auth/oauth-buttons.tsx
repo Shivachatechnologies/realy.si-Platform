@@ -51,7 +51,7 @@ export function OAuthButtons({ providers, mode = "login", linked = [] }: { provi
   );
 }
 
-const KNOWN_ERRORS = new Set(["account_exists", "email_unverified", "state_mismatch", "provider_error", "already_linked", "not_configured", "account_disabled"]);
+const KNOWN_ERRORS = new Set(["account_exists", "email_unverified", "state_mismatch", "provider_error", "already_linked", "not_configured", "account_disabled", "verify_email_first"]);
 
 export function OAuthErrorNotice() {
   const { t } = useI18n();

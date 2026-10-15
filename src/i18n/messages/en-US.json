@@ -225,7 +225,8 @@
       "provider_error": "The provider returned an error. Please try again.",
       "already_linked": "This {provider} account is already connected to another Realy account.",
       "not_configured": "OAuth provider not configured.",
-      "account_disabled": "This account is not active."
+      "account_disabled": "This account is not active.",
+      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox."
     },
     "verifySignInFirst": "Sign in to the account this link was sent for, and your email address will be confirmed."
   },

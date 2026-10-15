@@ -58,6 +58,12 @@ export function env(): Env {
   if (parsed.data.NODE_ENV === "production" && parsed.data.REALY_DEV_RELAX_MFA) {
     throw new Error("REALY_DEV_RELAX_MFA must not be enabled in production");
   }
+  // Per-IP rate limits are only as good as this number: too high trusts a client-supplied
+  // X-Forwarded-For (Next.js passes it through when there is no proxy), 0 puts every client in one
+  // bucket. Production must state its proxy topology rather than inherit the development default.
+  if (parsed.data.NODE_ENV === "production" && !process.env.TRUSTED_PROXY_HOPS?.trim()) {
+    throw new Error("TRUSTED_PROXY_HOPS must be set explicitly in production (number of proxies that append to X-Forwarded-For)");
+  }
   cached = parsed.data;
   return cached;
 }

@@ -225,7 +225,8 @@
       "provider_error": "Der Anbieter hat einen Fehler gemeldet. Bitte versuchen Sie es erneut.",
       "already_linked": "Dieses {provider}-Konto ist bereits mit einem anderen Realy-Konto verbunden.",
       "not_configured": "OAuth-Anbieter nicht konfiguriert.",
-      "account_disabled": "Dieses Konto ist nicht aktiv."
+      "account_disabled": "Dieses Konto ist nicht aktiv.",
+      "verify_email_first": "Bestätigen Sie Ihre E-Mail-Adresse, bevor Sie {provider} verbinden. Den Bestätigungslink finden Sie in Ihrem Posteingang."
     },
     "verifySignInFirst": "Melden Sie sich bei dem Konto an, für das dieser Link gesendet wurde. Danach wird Ihre E-Mail-Adresse bestätigt."
   },

@@ -135,6 +135,7 @@ describe("OAuth configured", () => {
     const { signUp } = await import("@/server/modules/auth/service");
     const { systemContext } = await import("@/server/core/context");
     const reg = await signUp(systemContext(), { email: "linker@example.test", password: "a-very-long-password", name: "Linker" });
+    await db().user.update({ where: { id: reg.session.userId }, data: { emailVerifiedAt: new Date() } });
     profile = { sub: "ms-5005", email: "spoofable@example.test", verified: false };
     const linked = await flow("microsoft", { mode: "link", session: reg.token });
     expect(linked.redirect.pathname).toBe("/de-DE/settings/security");
@@ -153,8 +154,48 @@ describe("OAuth configured", () => {
     const { signUp } = await import("@/server/modules/auth/service");
     const { systemContext } = await import("@/server/core/context");
     const other = await signUp(systemContext(), { email: "other@example.test", password: "a-very-long-password", name: "Other" });
+    await db().user.update({ where: { id: other.session.userId }, data: { emailVerifiedAt: new Date() } });
     const res = await flow("github", { mode: "link", session: other.token });
     expect(res.redirect.search).toContain("oauthError=already_linked");
+  });
+
+  it("pre-account hijacking: an unverified account cannot link, and a reset by the address owner removes earlier links and MFA", async () => {
+    const { signUp } = await import("@/server/modules/auth/service");
+    const { systemContext } = await import("@/server/core/context");
+    const { requestPasswordReset, resetPassword } = await import("@/server/modules/auth/recovery");
+    const { setEmailProviderForTests } = await import("@/server/modules/email/provider");
+    // The attacker registers the victim's address (unverified) and tries to attach their own GitHub.
+    const squatter = await signUp(systemContext(), { email: "victim@example.test", password: "attacker-password-123", name: "Squatter" });
+    profile = { sub: "4242", email: "attacker@example.test", verified: true };
+    const start = await startRoute(get("/api/v1/auth/oauth/github/start?locale=en-US&mode=link", { realy_session: squatter.token }), ctxOf("github") as never);
+    expect(start.headers.get("location")).toContain("oauthError=verify_email_first");
+    // The completion step enforces it too (e.g. a flow started before verification was revoked).
+    const { beginOAuth, completeOAuth, readStateCookie } = await import("@/server/modules/auth/oauth");
+    const begun = beginOAuth("github", { mode: "link", userId: squatter.session.userId, locale: "en-US", next: null });
+    const state = readStateCookie(begun.cookie, "github", new URL(begun.url).searchParams.get("state"));
+    await expect(completeOAuth(systemContext(), state, "good-code", squatter.session.userId)).rejects.toMatchObject({ code: "verify_email_first" });
+    expect(await db().oAuthAccount.count({ where: { userId: squatter.session.userId } })).toBe(0);
+
+    // Links/MFA that predate verification (e.g. from before this fix) are removed when the owner resets.
+    await db().oAuthAccount.create({ data: { userId: squatter.session.userId, provider: "github", providerAccountId: "gh-legacy" } });
+    await db().user.update({ where: { id: squatter.session.userId }, data: { mfaEnabled: true } });
+    const outbox: unknown[] = [];
+    setEmailProviderForTests({ id: "test", send: async (m) => (outbox.push(m), { messageId: "m1" }) });
+    try {
+      await requestPasswordReset(systemContext(), { email: "victim@example.test" });
+      await (await import("../helpers")).runQueuedPasswordResets();
+    } finally {
+      setEmailProviderForTests(undefined);
+    }
+    const text = (outbox[0] as { text: string }).text;
+    const token = decodeURIComponent(/#token=([^\s"<]+)/.exec(text)?.[1] ?? "");
+    expect(token).toBeTruthy();
+    await resetPassword(systemContext(), { token: token!, password: "victims-new-password-1" });
+    const user = await db().user.findUniqueOrThrow({ where: { id: squatter.session.userId } });
+    expect(user.emailVerifiedAt).not.toBeNull();
+    expect(user.mfaEnabled).toBe(false);
+    expect(await db().oAuthAccount.count({ where: { userId: user.id } })).toBe(0);
+    expect(await db().auditLog.count({ where: { action: "auth.unverified_credentials_cleared", resourceId: user.id } })).toBe(1);
   });
 
   it("link mode requires a signed-in session", async () => {

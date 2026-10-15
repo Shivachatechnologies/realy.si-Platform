@@ -225,7 +225,8 @@
       "provider_error": "提供商返回错误，请重试。",
       "already_linked": "该 {provider} 账户已连接到另一个 Realy 账户。",
       "not_configured": "OAuth 提供商未配置。",
-      "account_disabled": "该账户未激活。"
+      "account_disabled": "该账户未激活。",
+      "verify_email_first": "连接 {provider} 之前，请先验证你的邮箱地址。请在收件箱中查找验证链接。"
     },
     "verifySignInFirst": "请登录此链接所对应的账户，随后你的邮箱地址将被确认。"
   },

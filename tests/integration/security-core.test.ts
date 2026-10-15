@@ -1,6 +1,7 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/server/core/db";
-import { redis, resetMemoryLimiter } from "@/server/core/rate-limit";
+import { consume, redis, resetMemoryLimiter } from "@/server/core/rate-limit";
+import { resetEnvCache } from "@/server/core/env";
 import { clientIpFrom } from "@/server/core/http";
 import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
 import { POST as signUpRoute } from "@/app/api/v1/auth/sign-up/route";
@@ -72,6 +73,68 @@ describe("rate limiting", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("ratelimit-limit")).toBe("120");
     expect(res.headers.get("ratelimit-remaining")).toBe("119");
+  });
+});
+
+describe("rate limiting under concurrency and store failure", () => {
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    resetEnvCache();
+    if (redis().status === "end") await redis().connect();
+  });
+
+  it("a concurrent burst is admitted exactly up to the limit (atomic counter in the shared store)", async () => {
+    const rule = { name: "test-burst", limit: 10, windowMs: 60_000 };
+    const now = Date.now();
+    const results = await Promise.all(Array.from({ length: 40 }, () => consume(rule, "burst-subject", now)));
+    expect(results.filter((r) => r.allowed)).toHaveLength(10);
+    expect(results.every((r) => !r.degraded)).toBe(true);
+    // Concurrent sign-in attempts against one account: never more than the 10 allowed through.
+    await signUp("burst@example.test");
+    const responses = await Promise.all(
+      Array.from({ length: 25 }, (_, i) =>
+        signInRoute(req("/api/v1/auth/sign-in", { body: { email: "burst@example.test", password: "wrong-password-x" }, xff: `198.18.0.${i}` }), noParams),
+      ),
+    );
+    const statuses = responses.map((r) => r.status);
+    expect(statuses.filter((s) => s === 401)).toHaveLength(10);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(15);
+  });
+
+  it("when the store is down, production fails closed for sensitive buckets and open for the rest", async () => {
+    redis().disconnect();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    resetEnvCache();
+    const sensitive = await consume({ name: "test-down-auth", limit: 5, windowMs: 60_000, sensitive: true }, "s");
+    expect(sensitive).toMatchObject({ allowed: false, degraded: true });
+    const normal = await consume({ name: "test-down-public", limit: 5, windowMs: 60_000 }, "s");
+    expect(normal).toMatchObject({ allowed: true, degraded: true });
+    // The route reports a retryable 503, not a fake "wrong password" or a silent pass.
+    const res = await signInRoute(req("/api/v1/auth/sign-in", { body: { email: "x@example.test", password: "x" }, xff: "198.18.1.1" }), noParams);
+    expect(res.status).toBe(503);
+    expect((await res.json()).error.code).toBe("service_unavailable");
+  });
+
+  it("production refuses to start without an explicit proxy topology (TRUSTED_PROXY_HOPS)", async () => {
+    const { env } = await import("@/server/core/env");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "");
+    resetEnvCache();
+    expect(() => env()).toThrow(/TRUSTED_PROXY_HOPS must be set explicitly/);
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "2");
+    resetEnvCache();
+    expect(env().TRUSTED_PROXY_HOPS).toBe(2);
+  });
+
+  it("outside production a down store falls back to a per-process limiter that still enforces limits", async () => {
+    redis().disconnect();
+    const rule = { name: "test-down-dev", limit: 3, windowMs: 60_000, sensitive: true };
+    const now = Date.now();
+    const results = [];
+    for (let i = 0; i < 5; i++) results.push(await consume(rule, "dev", now));
+    expect(results.map((r) => r.allowed)).toEqual([true, true, true, false, false]);
+    expect(results.every((r) => r.degraded)).toBe(true);
   });
 });
 
