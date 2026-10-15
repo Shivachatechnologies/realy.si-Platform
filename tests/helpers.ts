@@ -1,4 +1,5 @@
 import { db } from "@/server/core/db";
+import { assertDisposableDatabase } from "./db-guard";
 import { userContext, systemContext, type RequestContext } from "@/server/core/context";
 import { hashPassword } from "@/server/modules/auth/password";
 import { seedDevCatalog, seedReferenceData } from "@/server/modules/seed";
@@ -49,8 +50,7 @@ let referenceSeeded = false;
 
 /** Clean slate for one test file: tenant data and catalog wiped (TRUNCATE bypasses append-only row triggers). */
 export async function resetDb(): Promise<void> {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!new URL(url).pathname.endsWith("_test")) throw new Error("resetDb only runs against a *_test database");
+  assertDisposableDatabase(process.env.DATABASE_URL, ["_test"], "resetDb");
   const client = db();
   await client.$executeRawUnsafe(`TRUNCATE ${TENANT_TABLES.map((t) => `"${t}"`).join(", ")} CASCADE`);
   await client.$executeRawUnsafe(`DELETE FROM roles WHERE organization_id IS NOT NULL`);
