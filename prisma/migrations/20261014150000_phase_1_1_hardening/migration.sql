@@ -1,3 +1,9 @@
+-- Atomic: Prisma does not wrap a migration in a transaction, and a failure part-way (e.g. existing data
+-- violating a new constraint) would otherwise leave a half-applied schema. With BEGIN/COMMIT a failure rolls
+-- everything back; fix the data, run `prisma migrate resolve --rolled-back <this migration>`, deploy again.
+-- (ALTER TYPE ... ADD VALUE is allowed in a transaction on PostgreSQL 12+; new values are not used here.)
+BEGIN;
+
 -- CreateEnum
 CREATE TYPE "IdempotencyStatus" AS ENUM ('IN_PROGRESS', 'COMPLETED');
 
@@ -184,3 +190,4 @@ ALTER TABLE "email_verification_tokens" ADD CONSTRAINT "email_verification_token
 -- AddForeignKey
 ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+COMMIT;
