@@ -393,6 +393,7 @@ model Company {
   projects     Project[]
   graphEntities GraphEntity[]
   graphEdges    GraphEdge[]
+  brainDocuments BrainDocument[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -500,6 +501,56 @@ model GraphEdge {
   @@unique([fromId, relation, toId])
   @@index([companyId, toId])
   @@map("graph_edges")
+}
+
+// ───────────────────────────── Company Brain ─────────────────────────────
+// Documents and their searchable passages. v1 stores the extracted text in PostgreSQL (no binary storage);
+// full-text search uses a GIN expression index on brain_chunks created in the migration.
+
+enum BrainDocumentStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+model BrainDocument {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  title          String
+  filename       String?
+  mimeType       String              @map("mime_type")
+  sizeBytes      Int                 @map("size_bytes")
+  contentSha256  String              @map("content_sha256") @db.Char(64)
+  status         BrainDocumentStatus @default(PROCESSING)
+  createdById    String              @map("created_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  chunks  BrainChunk[]
+
+  @@unique([id, companyId])
+  // The same content is ingested once per company.
+  @@unique([companyId, contentSha256])
+  @@index([organizationId, companyId, createdAt])
+  @@map("brain_documents")
+}
+
+model BrainChunk {
+  id             String @id @default(uuid(7)) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  companyId      String @map("company_id") @db.Uuid
+  documentId     String @map("document_id") @db.Uuid
+  ordinal        Int
+  startOffset    Int    @map("start_offset")
+  text           String
+
+  document BrainDocument @relation(fields: [documentId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([documentId, ordinal])
+  @@index([companyId])
+  @@map("brain_chunks")
 }
 
 // ───────────────────────────── RBAC ─────────────────────────────

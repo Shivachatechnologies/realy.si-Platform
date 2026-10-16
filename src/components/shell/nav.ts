@@ -42,7 +42,6 @@ export const MODULE_PHASE = {
   activity: 3,
   approvals: 3,
   workforce: 4,
-  brain: 2,
   products: 2,
   customers: 2,
   people: 2,
@@ -106,7 +105,7 @@ export const NAV: NavSection[] = [
     items: [
       { label: "modules.overview.title", href: "/company", icon: Building2 },
       { label: "graph.title", href: "/graph", icon: Network },
-      mod("brain", Brain),
+      { label: "modules.brain.title", href: "/brain", icon: Brain },
       mod("products", Boxes),
       mod("customers", Contact),
       mod("people", UserRound),

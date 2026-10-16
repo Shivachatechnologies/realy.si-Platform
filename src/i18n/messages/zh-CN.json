@@ -251,7 +251,12 @@
     "reasons": {
       "already_subscribed": "该组织已有订阅。请通过“管理账单”进行更改。",
       "checkout_in_progress": "该组织的结账流程正在启动中，请稍后再试。",
-      "payment_processing": "该组织的一笔付款刚刚完成，正在确认中。请稍后刷新。"
+      "payment_processing": "该组织的一笔付款刚刚完成，正在确认中。请稍后刷新。",
+      "brain_unsupported_type": "暂不支持此文件类型。请上传 .txt 或 .md 文件，或粘贴文本。",
+      "brain_too_large": "文档大于 1 MB。",
+      "brain_not_text": "此文件不是可读文本。请上传 .txt 或 .md 文件。",
+      "brain_empty": "文档为空。",
+      "brain_duplicate": "此内容已在公司大脑中。"
     }
   },
   "onboarding": {
@@ -646,5 +651,42 @@
       "PARTNERS_ON": "合作于",
       "MANAGES_ACCOUNT": "管理客户"
     }
+  },
+  "brain": {
+    "subtitle": "{company} 的文档，已建立搜索索引。每条结果都注明其来源段落。",
+    "searchLabel": "搜索公司大脑",
+    "searchPlaceholder": "搜索文档，例如 refund policy",
+    "search": "搜索",
+    "results": "搜索结果",
+    "resultCount": "{count, plural, =0 {没有段落匹配“{query}”。} other {# 个段落匹配“{query}”。}}",
+    "source": "来源：",
+    "passage": "第 {n} 段",
+    "documents": "文档",
+    "documentCount": "{count, plural, other {# 个文档}}",
+    "empty": "暂无文档。添加文本或 Markdown 文件即可搜索。",
+    "columns": {
+      "title": "标题",
+      "type": "类型",
+      "passages": "段落",
+      "status": "状态",
+      "added": "添加时间"
+    },
+    "status": {
+      "PROCESSING": "处理中",
+      "READY": "已索引",
+      "FAILED": "失败"
+    },
+    "passageCount": "{count, plural, other {# 个段落}}",
+    "delete": "删除文档",
+    "confirmDelete": "要从公司大脑中删除此文档及其段落吗？",
+    "add": "添加文档",
+    "addHint": "上传文本文件（{types}，最大 1 MB）或粘贴文本，系统会立即建立索引。",
+    "file": "文件",
+    "titleLabel": "标题",
+    "titleHint": "可选——默认为文件名或第一行。",
+    "paste": "或粘贴文本",
+    "addSubmit": "添加并索引",
+    "indexing": "正在索引…",
+    "tooLarge": "文件大于 1 MB。"
   }
 }

@@ -251,7 +251,12 @@
     "reasons": {
       "already_subscribed": "This organization already has a subscription. Use Manage billing to change it.",
       "checkout_in_progress": "A checkout for this organization is already being started. Try again in a moment.",
-      "payment_processing": "A payment for this organization was just completed and is being confirmed. Refresh in a moment."
+      "payment_processing": "A payment for this organization was just completed and is being confirmed. Refresh in a moment.",
+      "brain_unsupported_type": "This file type isn't supported yet. Upload a .txt or .md file, or paste the text.",
+      "brain_too_large": "The document is larger than 1 MB.",
+      "brain_not_text": "This file isn't readable text. Upload a .txt or .md file.",
+      "brain_empty": "The document is empty.",
+      "brain_duplicate": "This content is already in Company Brain."
     }
   },
   "onboarding": {
@@ -646,5 +651,42 @@
       "PARTNERS_ON": "partners on",
       "MANAGES_ACCOUNT": "manages account"
     }
+  },
+  "brain": {
+    "subtitle": "Documents of {company}, indexed for search. Every result cites the passage it came from.",
+    "searchLabel": "Search Company Brain",
+    "searchPlaceholder": "Search documents, e.g. refund policy or \"launch plan\"",
+    "search": "Search",
+    "results": "Search results",
+    "resultCount": "{count, plural, =0 {No passages match “{query}”.} one {# passage matches “{query}”.} other {# passages match “{query}”.}}",
+    "source": "Source:",
+    "passage": "Passage {n}",
+    "documents": "Documents",
+    "documentCount": "{count, plural, one {# document} other {# documents}}",
+    "empty": "No documents yet. Add text or Markdown files to make them searchable.",
+    "columns": {
+      "title": "Title",
+      "type": "Type",
+      "passages": "Passages",
+      "status": "Status",
+      "added": "Added"
+    },
+    "status": {
+      "PROCESSING": "Processing",
+      "READY": "Indexed",
+      "FAILED": "Failed"
+    },
+    "passageCount": "{count, plural, one {# passage} other {# passages}}",
+    "delete": "Delete document",
+    "confirmDelete": "Delete this document and its passages from Company Brain?",
+    "add": "Add a document",
+    "addHint": "Upload a text file ({types}, up to 1 MB) or paste text. It is indexed immediately.",
+    "file": "File",
+    "titleLabel": "Title",
+    "titleHint": "Optional — defaults to the file name or first line.",
+    "paste": "Or paste text",
+    "addSubmit": "Add and index",
+    "indexing": "Indexing…",
+    "tooLarge": "The file is larger than 1 MB."
   }
 }

@@ -171,6 +171,51 @@ test("founder maps the company graph: people, teams, products and typed relation
   await shot(page, "05-company-graph");
 });
 
+test("founder adds documents to Company Brain and finds cited passages", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("link", { name: "Company Brain" }).first().click();
+  await expect(page).toHaveURL(/\/en-US\/brain$/);
+  await expect(page.getByText("No documents yet.")).toBeVisible();
+
+  // Upload a Markdown file…
+  await page.getByLabel("File").setInputFiles({
+    name: "refund-policy.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from("# Refund policy\n\nCustomers may request a full refund within 30 days of purchase."),
+  });
+  await page.getByRole("button", { name: "Add and index" }).click();
+  await expect(page).toHaveURL(/\/en-US\/brain\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("region", { name: "Passage 1" })).toContainText("full refund within 30 days");
+
+  // …and paste a note.
+  await page.goto("/en-US/brain");
+  await page.getByLabel("Title").fill("Launch plan");
+  await page.getByLabel("Or paste text").fill("We launch in the United Arab Emirates first, then India.");
+  await page.getByRole("button", { name: "Add and index" }).click();
+  await expect(page.getByRole("heading", { name: "Launch plan" })).toBeVisible();
+
+  await page.goto("/en-US/brain");
+  await expect(page.getByText("2 documents")).toBeVisible();
+  await page.getByRole("searchbox", { name: "Search Company Brain" }).fill("refunds");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  const results = page.getByRole("region", { name: "Search results" });
+  await expect(results.getByText("1 passage matches “refunds”.")).toBeVisible();
+  await expect(results.locator("mark").first()).toHaveText(/refund/i);
+  await shot(page, "06-company-brain-search");
+
+  await results.getByRole("link", { name: "refund-policy · Passage 1" }).click();
+  await expect(page).toHaveURL(/\/brain\/[0-9a-f-]{36}#passage-1$/);
+  await expect(page.getByRole("region", { name: "Passage 1" })).toBeVisible();
+
+  // Unsupported files are refused with a clear error and nothing is stored.
+  await page.goto("/en-US/brain");
+  await page.getByLabel("File").setInputFiles({ name: "deck.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.7") });
+  await page.getByRole("button", { name: "Add and index" }).click();
+  await expect(page.getByText("This file type isn't supported yet. Upload a .txt or .md file, or paste the text.")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("2 documents")).toBeVisible();
+});
+
 test("mobile layout keeps navigation reachable", async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
