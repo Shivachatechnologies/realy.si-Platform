@@ -609,5 +609,42 @@
     "signInFirst": "Melden Sie sich mit der E-Mail-Adresse an, an die diese Einladung gesendet wurde, oder erstellen Sie ein Konto. Danach kehren Sie hierher zurück.",
     "missingToken": "Dieser Einladungslink ist unvollständig.",
     "invalid": "Diese Einladung ist ungültig, abgelaufen oder wurde an eine andere E-Mail-Adresse gesendet."
+  },
+  "graph": {
+    "title": "Unternehmensgraph",
+    "subtitle": "Personen, Teams, Produkte, Kunden, Lieferanten und Partner von {company} und ihre Beziehungen.",
+    "entities": "Einträge",
+    "counts": "{entities, plural, one {# Eintrag} other {# Einträge}} · {relations, plural, one {# Beziehung} other {# Beziehungen}}",
+    "kind": "Typ",
+    "name": "Name",
+    "addEntity": "Hinzufügen",
+    "deleteEntity": "Löschen",
+    "empty": "Noch keine Einträge. Fügen Sie die Personen, Teams und Produkte dieses Unternehmens hinzu.",
+    "relations": "Beziehungen",
+    "noRelations": "Noch keine Beziehungen.",
+    "relation": "Beziehung",
+    "target": "Verbindet mit",
+    "noTargets": "Noch kein passender Eintrag",
+    "addRelation": "Verbinden",
+    "removeRelation": "Beziehung entfernen",
+    "selectHint": "Wählen Sie einen Eintrag, um seine Beziehungen zu sehen und zu bearbeiten.",
+    "kinds": {
+      "PERSON": "Person",
+      "TEAM": "Team",
+      "PRODUCT": "Produkt",
+      "CUSTOMER": "Kunde",
+      "VENDOR": "Lieferant",
+      "PARTNER": "Partner"
+    },
+    "relationLabels": {
+      "MEMBER_OF": "Mitglied von",
+      "REPORTS_TO": "berichtet an",
+      "OWNS": "verantwortet",
+      "WORKS_ON": "arbeitet an",
+      "USES": "nutzt",
+      "SUPPLIES": "beliefert",
+      "PARTNERS_ON": "Partner bei",
+      "MANAGES_ACCOUNT": "betreut"
+    }
   }
 }

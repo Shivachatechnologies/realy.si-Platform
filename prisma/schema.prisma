@@ -391,6 +391,8 @@ model Company {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   workspaces   Workspace[]
   projects     Project[]
+  graphEntities GraphEntity[]
+  graphEdges    GraphEdge[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -433,6 +435,71 @@ model Project {
 
   @@index([organizationId, companyId, workspaceId])
   @@map("projects")
+}
+
+// ───────────────────────────── Company Graph ─────────────────────────────
+// The company's entities and typed relations (docs/database.md, Phase 2). Allowed kind pairs per relation
+// live in src/server/modules/graph/relations.ts.
+
+enum GraphEntityKind {
+  PERSON
+  TEAM
+  PRODUCT
+  CUSTOMER
+  VENDOR
+  PARTNER
+}
+
+enum GraphRelation {
+  MEMBER_OF
+  REPORTS_TO
+  OWNS
+  WORKS_ON
+  USES
+  SUPPLIES
+  PARTNERS_ON
+  MANAGES_ACCOUNT
+}
+
+model GraphEntity {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  companyId      String          @map("company_id") @db.Uuid
+  kind           GraphEntityKind
+  name           String
+  description    String?
+  createdById    String          @map("created_by_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  outgoing GraphEdge[] @relation("GraphEdgeFrom")
+  incoming GraphEdge[] @relation("GraphEdgeTo")
+
+  // Edges reference (id, company_id): both ends of an edge are always in the edge's company.
+  @@unique([id, companyId])
+  @@unique([companyId, kind, name])
+  @@index([organizationId, companyId])
+  @@map("graph_entities")
+}
+
+model GraphEdge {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  fromId         String        @map("from_id") @db.Uuid
+  relation       GraphRelation
+  toId           String        @map("to_id") @db.Uuid
+  createdById    String        @map("created_by_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  from    GraphEntity @relation("GraphEdgeFrom", fields: [fromId, companyId], references: [id, companyId], onDelete: Cascade)
+  to      GraphEntity @relation("GraphEdgeTo", fields: [toId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([fromId, relation, toId])
+  @@index([companyId, toId])
+  @@map("graph_edges")
 }
 
 // ───────────────────────────── RBAC ─────────────────────────────

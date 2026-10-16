@@ -34,6 +34,8 @@ const TENANT_TABLES = [
   "invitations",
   "api_keys",
   "service_accounts",
+  "graph_edges",
+  "graph_entities",
   "projects",
   "workspaces",
   "companies",
