@@ -216,6 +216,26 @@ test("founder adds documents to Company Brain and finds cited passages", async (
   await expect(page.getByText("2 documents")).toBeVisible();
 });
 
+test("AI Workforce lists real profiles; AI Tasks says plainly when no AI provider is configured", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("link", { name: "AI Workforce" }).first().click();
+  await expect(page).toHaveURL(/\/en-US\/workforce$/);
+  await expect(page.getByRole("heading", { name: "Research Analyst" })).toBeVisible();
+  await expect(page.getByText("Search Company Brain").first()).toBeVisible();
+
+  await page.getByRole("link", { name: "Assign a task" }).first().click();
+  await expect(page).toHaveURL(/\/en-US\/tasks\?profile=research_analyst$/);
+  // This E2E environment has no ANTHROPIC_API_KEY: no form, no fake execution, an explicit notice instead.
+  await expect(page.getByText("AI execution isn't configured in this environment.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Assign task" })).toHaveCount(0);
+  await expect(page.getByText("No tasks yet.")).toBeVisible();
+
+  await page.goto("/en-US");
+  const counter = page.getByText("AI employee profiles").locator("..");
+  await expect(counter.getByRole("link", { name: "5" })).toBeVisible();
+  await shot(page, "07-ai-tasks-not-configured");
+});
+
 test("mobile layout keeps navigation reachable", async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();

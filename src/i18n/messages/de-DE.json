@@ -83,12 +83,12 @@
       "description": "Aus Zielen erzeugte Meilensteine und Abhängigkeiten, vor der Aktivierung bearbeitbar."
     },
     "tasks": {
-      "title": "Aufgaben",
-      "description": "Dauerhafte Aufgabenhierarchie für Menschen und digitale Mitarbeitende."
+      "title": "KI-Aufgaben",
+      "description": "Arbeit an KI-Mitarbeiter vergeben und ihre Ergebnisse prüfen."
     },
     "workforce": {
-      "title": "Belegschaft",
-      "description": "Digitale Mitarbeitende auf einer kontrollierten Laufzeit mit begrenzten Rechten und Budgets."
+      "title": "KI-Team",
+      "description": "KI-Mitarbeiterprofile auf einer gemeinsamen, kontrollierten Aufgaben-Laufzeit."
     },
     "activity": {
       "title": "Aktivität",
@@ -256,7 +256,10 @@
       "brain_too_large": "Das Dokument ist größer als 1 MB.",
       "brain_not_text": "Diese Datei ist kein lesbarer Text. Laden Sie eine .txt- oder .md-Datei hoch.",
       "brain_empty": "Das Dokument ist leer.",
-      "brain_duplicate": "Dieser Inhalt ist bereits in Company Brain."
+      "brain_duplicate": "Dieser Inhalt ist bereits in Company Brain.",
+      "ai_not_configured": "Die KI-Ausführung ist in dieser Umgebung noch nicht eingerichtet.",
+      "task_not_active": "Nur wartende oder laufende Aufgaben können abgebrochen werden.",
+      "task_not_retryable": "Nur fehlgeschlagene oder abgebrochene Aufgaben können wiederholt werden."
     }
   },
   "onboarding": {
@@ -304,7 +307,7 @@
     "counters": {
       "objectives": "Aktive Ziele",
       "tasks": "Aktive Aufgaben",
-      "workforce": "Digitale Mitarbeitende",
+      "workforce": "KI-Mitarbeiterprofile",
       "approvals": "Offene Freigaben"
     },
     "systemHealth": "Systemzustand",
@@ -688,5 +691,85 @@
     "addSubmit": "Hinzufügen und indexieren",
     "indexing": "Wird indexiert…",
     "tooLarge": "Die Datei ist größer als 1 MB."
+  },
+  "agentTasks": {
+    "subtitle": "Geben Sie einem KI-Mitarbeiter eine Aufgabe. Er arbeitet mit den Dokumenten und dem Graphen von {company} und liefert ein Ergebnis mit Quellen zur Prüfung.",
+    "notConfigured": "Die KI-Ausführung ist in dieser Umgebung nicht eingerichtet. Ein Administrator muss die Variable ANTHROPIC_API_KEY für Web-App und Worker setzen. Bestehende Aufgaben bleiben sichtbar.",
+    "new": "Neue Aufgabe",
+    "profile": "KI-Mitarbeiter",
+    "taskTitle": "Titel",
+    "instructions": "Anweisungen",
+    "instructionsHint": "Beschreiben Sie das Ergebnis: Zielgruppe, Format, Länge und Schwerpunkte.",
+    "submit": "Aufgabe vergeben",
+    "submitting": "Wird vergeben…",
+    "list": "Aufgaben",
+    "empty": "Noch keine Aufgaben.",
+    "count": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+    "columns": {
+      "title": "Aufgabe",
+      "employee": "KI-Mitarbeiter",
+      "status": "Status",
+      "created": "Erstellt"
+    },
+    "status": {
+      "QUEUED": "Wartend",
+      "RUNNING": "Läuft",
+      "COMPLETED": "Abgeschlossen",
+      "FAILED": "Fehlgeschlagen",
+      "CANCELLED": "Abgebrochen"
+    },
+    "back": "Alle Aufgaben",
+    "deliverable": "Ergebnis",
+    "reviewNote": "KI-generierter Entwurf – prüfen Sie ihn vor Verwendung oder Weitergabe.",
+    "sources": "Quellen",
+    "noSources": "Es wurden keine Dokumentstellen zitiert.",
+    "passage": "Abschnitt {n}",
+    "lookups": "Was die KI nachgeschlagen hat",
+    "noLookups": "Keine Abfragen.",
+    "lookupBrain": "Company Brain nach „{query}“ durchsucht – {count, plural, one {# Abschnitt} other {# Abschnitte}}",
+    "lookupGraph": "Unternehmensgraph gelesen – {count, plural, one {# Eintrag} other {# Einträge}}",
+    "lookupFailed": "{tool}: {error}",
+    "queued": "Wartet darauf, dass ein Worker die Aufgabe übernimmt…",
+    "running": "In Arbeit. Diese Seite aktualisiert sich automatisch.",
+    "failed": "Diese Aufgabe ist fehlgeschlagen: {message}",
+    "cancelled": "Diese Aufgabe wurde abgebrochen.",
+    "usage": "{model} · {input} Eingabe- und {output} Ausgabe-Tokens",
+    "attempts": "{count, plural, one {# Versuch} other {# Versuche}}",
+    "cancel": "Aufgabe abbrechen",
+    "retry": "Wiederholen",
+    "confirmCancel": "Diese Aufgabe abbrechen?"
+  },
+  "workforce": {
+    "subtitle": "KI-Mitarbeiterprofile auf einer gemeinsamen Aufgaben-Laufzeit. Jedes arbeitet nur mit den aufgeführten Werkzeugen und den Berechtigungen der Person, die die Aufgabe vergibt.",
+    "tools": "Werkzeuge",
+    "limits": "Bis zu {turns} Schritte und 5 Minuten pro Aufgabe.",
+    "assign": "Aufgabe vergeben",
+    "noActions": "Kann keine Nachrichten senden, nichts veröffentlichen, kaufen oder Unternehmensdaten ändern – Ergebnisse sind Entwürfe für Sie.",
+    "toolNames": {
+      "search_company_brain": "Company Brain durchsuchen",
+      "read_company_graph": "Unternehmensgraph lesen"
+    }
+  },
+  "profiles": {
+    "research_analyst": {
+      "name": "Research-Analyst",
+      "summary": "Briefings und Antworten auf Basis Ihrer Dokumente, mit Quellen."
+    },
+    "product_manager": {
+      "name": "Produktmanager",
+      "summary": "PRDs, Feature-Spezifikationen und Roadmaps aus Produkten, Kunden und Dokumenten."
+    },
+    "marketing_strategist": {
+      "name": "Marketingstratege",
+      "summary": "Positionierung, Botschaften, Kampagnenpläne und Content-Entwürfe."
+    },
+    "sales_researcher": {
+      "name": "Vertriebsrechercheur",
+      "summary": "Account-Briefings, Idealkundenprofile und Outreach-Entwürfe."
+    },
+    "operations_assistant": {
+      "name": "Operations-Assistent",
+      "summary": "Projektpläne, Checklisten, Prozesse und Statusberichte."
+    }
   }
 }

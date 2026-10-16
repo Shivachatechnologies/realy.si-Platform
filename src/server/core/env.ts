@@ -38,6 +38,9 @@ const schema = z.object({
   OAUTH_MICROSOFT_CLIENT_ID: optional,
   OAUTH_MICROSOFT_CLIENT_SECRET: optional,
   OAUTH_MICROSOFT_TENANT: z.string().regex(/^[A-Za-z0-9.-]{1,64}$/).default("common"),
+  // AI task execution (Claude API). Without a key, AI tasks report "not configured" and are never simulated.
+  ANTHROPIC_API_KEY: optional,
+  AGENT_MODEL: z.string().regex(/^[a-z0-9.-]{3,64}$/).default("claude-opus-5-5"),
   SENTRY_DSN: optional,
   SENTRY_ENVIRONMENT: optional,
   OTEL_EXPORTER_OTLP_ENDPOINT: optional,

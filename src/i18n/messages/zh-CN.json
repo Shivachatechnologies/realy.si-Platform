@@ -83,12 +83,12 @@
       "description": "由目标生成的里程碑和依赖关系，激活前可编辑。"
     },
     "tasks": {
-      "title": "任务",
-      "description": "分配给员工和数字员工的持久任务层级。"
+      "title": "AI 任务",
+      "description": "将工作分配给 AI 员工并审阅其成果。"
     },
     "workforce": {
-      "title": "员工队伍",
-      "description": "在同一受治理运行时上工作的数字员工，权限和预算均有限定。"
+      "title": "AI 团队",
+      "description": "运行在统一受控任务运行时上的 AI 员工角色。"
     },
     "activity": {
       "title": "动态",
@@ -256,7 +256,10 @@
       "brain_too_large": "文档大于 1 MB。",
       "brain_not_text": "此文件不是可读文本。请上传 .txt 或 .md 文件。",
       "brain_empty": "文档为空。",
-      "brain_duplicate": "此内容已在公司大脑中。"
+      "brain_duplicate": "此内容已在公司大脑中。",
+      "ai_not_configured": "此环境尚未配置 AI 执行。",
+      "task_not_active": "只能取消排队中或运行中的任务。",
+      "task_not_retryable": "只能重试失败或已取消的任务。"
     }
   },
   "onboarding": {
@@ -304,7 +307,7 @@
     "counters": {
       "objectives": "进行中的目标",
       "tasks": "进行中的任务",
-      "workforce": "数字员工",
+      "workforce": "AI 员工角色",
       "approvals": "待审批"
     },
     "systemHealth": "系统健康",
@@ -688,5 +691,85 @@
     "addSubmit": "添加并索引",
     "indexing": "正在索引…",
     "tooLarge": "文件大于 1 MB。"
+  },
+  "agentTasks": {
+    "subtitle": "给 AI 员工分配任务。它基于 {company} 的文档和图谱工作，并交付带引用来源的成果供你审阅。",
+    "notConfigured": "此环境未配置 AI 执行。管理员需要为网页应用和 worker 设置 ANTHROPIC_API_KEY 变量。已有任务仍可查看。",
+    "new": "新任务",
+    "profile": "AI 员工",
+    "taskTitle": "标题",
+    "instructions": "说明",
+    "instructionsHint": "描述你需要的成果：受众、格式、篇幅和重点。",
+    "submit": "分配任务",
+    "submitting": "正在分配…",
+    "list": "任务",
+    "empty": "暂无任务。",
+    "count": "{count, plural, other {# 个任务}}",
+    "columns": {
+      "title": "任务",
+      "employee": "AI 员工",
+      "status": "状态",
+      "created": "创建时间"
+    },
+    "status": {
+      "QUEUED": "排队中",
+      "RUNNING": "运行中",
+      "COMPLETED": "已完成",
+      "FAILED": "失败",
+      "CANCELLED": "已取消"
+    },
+    "back": "全部任务",
+    "deliverable": "成果",
+    "reviewNote": "AI 生成的草稿——使用或分享前请先审阅。",
+    "sources": "来源",
+    "noSources": "未引用任何文档段落。",
+    "passage": "第 {n} 段",
+    "lookups": "AI 查询了什么",
+    "noLookups": "没有查询。",
+    "lookupBrain": "在公司大脑中搜索“{query}”——{count, plural, other {# 个段落}}",
+    "lookupGraph": "读取了公司图谱——{count, plural, other {# 个实体}}",
+    "lookupFailed": "{tool}：{error}",
+    "queued": "正在等待 worker 接手此任务…",
+    "running": "正在处理。本页面会自动更新。",
+    "failed": "此任务失败：{message}",
+    "cancelled": "此任务已取消。",
+    "usage": "{model} · 输入 {input} 个 token，输出 {output} 个 token",
+    "attempts": "{count, plural, other {# 次尝试}}",
+    "cancel": "取消任务",
+    "retry": "重试",
+    "confirmCancel": "要取消此任务吗？"
+  },
+  "workforce": {
+    "subtitle": "共享同一任务运行时的 AI 员工角色。每个角色只能使用所列工具，并以分配任务者的权限工作。",
+    "tools": "工具",
+    "limits": "每个任务最多 {turns} 步、5 分钟。",
+    "assign": "分配任务",
+    "noActions": "不能发送消息、发布、购买或更改公司数据——成果都是供你使用的草稿。",
+    "toolNames": {
+      "search_company_brain": "搜索公司大脑",
+      "read_company_graph": "读取公司图谱"
+    }
+  },
+  "profiles": {
+    "research_analyst": {
+      "name": "研究分析师",
+      "summary": "基于你的文档撰写简报和回答，并注明来源。"
+    },
+    "product_manager": {
+      "name": "产品经理",
+      "summary": "根据产品、客户和文档撰写 PRD、功能规格和路线图。"
+    },
+    "marketing_strategist": {
+      "name": "营销策略师",
+      "summary": "定位、信息传达、活动计划和内容草稿。"
+    },
+    "sales_researcher": {
+      "name": "销售研究员",
+      "summary": "客户简报、理想客户画像和外联草稿。"
+    },
+    "operations_assistant": {
+      "name": "运营助理",
+      "summary": "项目计划、检查清单、流程和状态汇总。"
+    }
   }
 }
