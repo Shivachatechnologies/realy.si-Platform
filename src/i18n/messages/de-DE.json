@@ -251,7 +251,12 @@
     "reasons": {
       "already_subscribed": "Diese Organisation hat bereits ein Abonnement. Ändern Sie es über „Abrechnung verwalten“.",
       "checkout_in_progress": "Für diese Organisation wird bereits ein Bezahlvorgang gestartet. Versuchen Sie es gleich noch einmal.",
-      "payment_processing": "Eine Zahlung für diese Organisation wurde gerade abgeschlossen und wird bestätigt. Aktualisieren Sie die Seite gleich."
+      "payment_processing": "Eine Zahlung für diese Organisation wurde gerade abgeschlossen und wird bestätigt. Aktualisieren Sie die Seite gleich.",
+      "brain_unsupported_type": "Dieser Dateityp wird noch nicht unterstützt. Laden Sie eine .txt- oder .md-Datei hoch oder fügen Sie den Text ein.",
+      "brain_too_large": "Das Dokument ist größer als 1 MB.",
+      "brain_not_text": "Diese Datei ist kein lesbarer Text. Laden Sie eine .txt- oder .md-Datei hoch.",
+      "brain_empty": "Das Dokument ist leer.",
+      "brain_duplicate": "Dieser Inhalt ist bereits in Company Brain."
     }
   },
   "onboarding": {
@@ -646,5 +651,42 @@
       "PARTNERS_ON": "Partner bei",
       "MANAGES_ACCOUNT": "betreut"
     }
+  },
+  "brain": {
+    "subtitle": "Dokumente von {company}, für die Suche indexiert. Jedes Ergebnis nennt die Textstelle, aus der es stammt.",
+    "searchLabel": "Company Brain durchsuchen",
+    "searchPlaceholder": "Dokumente durchsuchen, z. B. Erstattung oder \"Launch-Plan\"",
+    "search": "Suchen",
+    "results": "Suchergebnisse",
+    "resultCount": "{count, plural, =0 {Keine Textstelle passt zu „{query}“.} one {# Textstelle passt zu „{query}“.} other {# Textstellen passen zu „{query}“.}}",
+    "source": "Quelle:",
+    "passage": "Abschnitt {n}",
+    "documents": "Dokumente",
+    "documentCount": "{count, plural, one {# Dokument} other {# Dokumente}}",
+    "empty": "Noch keine Dokumente. Fügen Sie Text- oder Markdown-Dateien hinzu, um sie durchsuchbar zu machen.",
+    "columns": {
+      "title": "Titel",
+      "type": "Typ",
+      "passages": "Abschnitte",
+      "status": "Status",
+      "added": "Hinzugefügt"
+    },
+    "status": {
+      "PROCESSING": "In Bearbeitung",
+      "READY": "Indexiert",
+      "FAILED": "Fehlgeschlagen"
+    },
+    "passageCount": "{count, plural, one {# Abschnitt} other {# Abschnitte}}",
+    "delete": "Dokument löschen",
+    "confirmDelete": "Dieses Dokument und seine Abschnitte aus Company Brain löschen?",
+    "add": "Dokument hinzufügen",
+    "addHint": "Laden Sie eine Textdatei hoch ({types}, bis 1 MB) oder fügen Sie Text ein. Sie wird sofort indexiert.",
+    "file": "Datei",
+    "titleLabel": "Titel",
+    "titleHint": "Optional – Standard ist der Dateiname oder die erste Zeile.",
+    "paste": "Oder Text einfügen",
+    "addSubmit": "Hinzufügen und indexieren",
+    "indexing": "Wird indexiert…",
+    "tooLarge": "Die Datei ist größer als 1 MB."
   }
 }
