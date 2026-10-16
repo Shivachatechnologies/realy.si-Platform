@@ -49,8 +49,8 @@ enable it under **Settings → Security**.
 
 ### Optional services
 
-Stripe billing, email delivery (Resend or Postmark), OAuth login (Google, GitHub, Microsoft), Sentry
-and OpenTelemetry are each enabled by setting their variables in `.env` (see `.env.example` for
+Stripe billing, email delivery (Resend or Postmark), OAuth login (Google, GitHub, Microsoft), AI task
+execution (`ANTHROPIC_API_KEY`; tasks run in the worker), Sentry and OpenTelemetry are each enabled by setting their variables in `.env` (see `.env.example` for
 names, webhook and redirect URLs). Until then the product says so — "Billing is not configured.",
 "OAuth provider not configured.", invitation delivery "Email not configured" — instead of simulating
 success. **Admin → System** shows which services are configured (booleans only, never values).

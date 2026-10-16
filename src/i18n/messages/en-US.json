@@ -83,12 +83,12 @@
       "description": "Milestones and dependencies generated from objectives, editable before activation."
     },
     "tasks": {
-      "title": "Tasks",
-      "description": "Persistent task hierarchy assigned to people and digital employees."
+      "title": "AI Tasks",
+      "description": "Assign work to AI employees and review their deliverables."
     },
     "workforce": {
-      "title": "Workforce",
-      "description": "Digital employees running on one governed runtime with scoped permissions and budgets."
+      "title": "AI Workforce",
+      "description": "AI employee profiles running on one governed task runtime."
     },
     "activity": {
       "title": "Activity",
@@ -256,7 +256,10 @@
       "brain_too_large": "The document is larger than 1 MB.",
       "brain_not_text": "This file isn't readable text. Upload a .txt or .md file.",
       "brain_empty": "The document is empty.",
-      "brain_duplicate": "This content is already in Company Brain."
+      "brain_duplicate": "This content is already in Company Brain.",
+      "ai_not_configured": "AI execution isn't configured in this environment yet.",
+      "task_not_active": "Only queued or running tasks can be cancelled.",
+      "task_not_retryable": "Only failed or cancelled tasks can be retried."
     }
   },
   "onboarding": {
@@ -304,7 +307,7 @@
     "counters": {
       "objectives": "Active objectives",
       "tasks": "Active tasks",
-      "workforce": "Digital employees",
+      "workforce": "AI employee profiles",
       "approvals": "Pending approvals"
     },
     "systemHealth": "System health",
@@ -688,5 +691,85 @@
     "addSubmit": "Add and index",
     "indexing": "Indexing…",
     "tooLarge": "The file is larger than 1 MB."
+  },
+  "agentTasks": {
+    "subtitle": "Give an AI employee a task. It works from {company}'s documents and graph and returns a deliverable for you to review, with citations.",
+    "notConfigured": "AI execution isn't configured in this environment. An administrator needs to set the ANTHROPIC_API_KEY variable for the web app and the worker. Existing tasks remain visible.",
+    "new": "New task",
+    "profile": "AI employee",
+    "taskTitle": "Title",
+    "instructions": "Instructions",
+    "instructionsHint": "Describe the deliverable: audience, format, length and what to focus on.",
+    "submit": "Assign task",
+    "submitting": "Assigning…",
+    "list": "Tasks",
+    "empty": "No tasks yet.",
+    "count": "{count, plural, one {# task} other {# tasks}}",
+    "columns": {
+      "title": "Task",
+      "employee": "AI employee",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "QUEUED": "Queued",
+      "RUNNING": "Running",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "back": "All tasks",
+    "deliverable": "Deliverable",
+    "reviewNote": "AI-generated draft — review it before you use or share it.",
+    "sources": "Sources",
+    "noSources": "No document passages were cited.",
+    "passage": "passage {n}",
+    "lookups": "What the AI looked up",
+    "noLookups": "No lookups.",
+    "lookupBrain": "Searched Company Brain for “{query}” — {count, plural, one {# passage} other {# passages}}",
+    "lookupGraph": "Read the Company Graph — {count, plural, one {# entity} other {# entities}}",
+    "lookupFailed": "{tool}: {error}",
+    "queued": "Waiting for a worker to pick up this task…",
+    "running": "Working on it. This page updates automatically.",
+    "failed": "This task failed: {message}",
+    "cancelled": "This task was cancelled.",
+    "usage": "{model} · {input} input and {output} output tokens",
+    "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+    "cancel": "Cancel task",
+    "retry": "Retry",
+    "confirmCancel": "Cancel this task?"
+  },
+  "workforce": {
+    "subtitle": "AI employee profiles that share one task runtime. Each works only through the tools listed, with the permissions of the person who assigns the task.",
+    "tools": "Tools",
+    "limits": "Up to {turns} steps and 5 minutes per task.",
+    "assign": "Assign a task",
+    "noActions": "Cannot send messages, publish, purchase or change company data — deliverables are drafts for you.",
+    "toolNames": {
+      "search_company_brain": "Search Company Brain",
+      "read_company_graph": "Read Company Graph"
+    }
+  },
+  "profiles": {
+    "research_analyst": {
+      "name": "Research Analyst",
+      "summary": "Briefs and answers grounded in your documents, with sources."
+    },
+    "product_manager": {
+      "name": "Product Manager",
+      "summary": "PRDs, feature specs and roadmaps from your products, customers and docs."
+    },
+    "marketing_strategist": {
+      "name": "Marketing Strategist",
+      "summary": "Positioning, messaging, campaign plans and content drafts."
+    },
+    "sales_researcher": {
+      "name": "Sales Researcher",
+      "summary": "Account briefs, ideal-customer profiles and outreach drafts."
+    },
+    "operations_assistant": {
+      "name": "Operations Assistant",
+      "summary": "Project plans, checklists, processes and status summaries."
+    }
   }
 }

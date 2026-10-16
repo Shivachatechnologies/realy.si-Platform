@@ -33,14 +33,8 @@ export function authEmailQueue(): Queue<PasswordResetJob> {
 
 const ENQUEUE_TIMEOUT_MS = 2500;
 
-/** Enqueue a password-reset job. Job data (an email address) is deleted on completion and 24 h after a failure. */
-export async function enqueuePasswordReset(job: PasswordResetJob): Promise<void> {
-  const add = authEmailQueue().add("password_reset", job, {
-    attempts: 5,
-    backoff: { type: "exponential", delay: 2000 },
-    removeOnComplete: true,
-    removeOnFail: { age: 24 * 60 * 60 },
-  });
+/** Wait for an enqueue at most ENQUEUE_TIMEOUT_MS; a Redis outage becomes a retryable 503, never a hung request. */
+async function enqueueWithTimeout(add: Promise<unknown>): Promise<void> {
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error("enqueue timed out")), ENQUEUE_TIMEOUT_MS);
@@ -54,8 +48,48 @@ export async function enqueuePasswordReset(job: PasswordResetJob): Promise<void>
   }
 }
 
+/** Enqueue a password-reset job. Job data (an email address) is deleted on completion and 24 h after a failure. */
+export async function enqueuePasswordReset(job: PasswordResetJob): Promise<void> {
+  await enqueueWithTimeout(
+    authEmailQueue().add("password_reset", job, {
+      attempts: 5,
+      backoff: { type: "exponential", delay: 2000 },
+      removeOnComplete: true,
+      removeOnFail: { age: 24 * 60 * 60 },
+    }),
+  );
+}
+
+export const AGENT_TASK_QUEUE = "agent-tasks";
+
+export interface AgentTaskJob {
+  taskId: string;
+}
+
+let agentQueue: Queue<AgentTaskJob> | null = null;
+
+export function agentTaskQueue(): Queue<AgentTaskJob> {
+  agentQueue ??= new Queue<AgentTaskJob>(AGENT_TASK_QUEUE, {
+    connection: new Redis(env().REDIS_URL, { maxRetriesPerRequest: 1, enableOfflineQueue: false, commandTimeout: 2000 }),
+    prefix: queuePrefix(),
+  });
+  return agentQueue;
+}
+
+/**
+ * Enqueue one execution of an AI task. `jobId` dedupes (one job per execution); transient model failures are
+ * retried by BullMQ with backoff, permanent ones are marked FAILED by the processor.
+ */
+export async function enqueueAgentTask(taskId: string, jobId: string): Promise<void> {
+  await enqueueWithTimeout(
+    agentTaskQueue().add("run", { taskId }, { jobId, attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: 1000, removeOnFail: 5000 }),
+  );
+}
+
 /** Test hook: close the producer so the next call builds a fresh one (e.g. after simulating an outage). */
 export async function resetJobQueuesForTests() {
   await queue?.close().catch(() => undefined);
+  await agentQueue?.close().catch(() => undefined);
   queue = null;
+  agentQueue = null;
 }

@@ -11,6 +11,9 @@ import { displayName, formatList, formatRelativeTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { redis } from "@/server/core/rate-limit";
 import { listAuditLogs } from "@/server/modules/audit/service";
+import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
+import { can } from "@/server/modules/rbac/service";
+import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,11 +34,17 @@ export default async function CommandCenterPage() {
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
 
-  const [activity, status, billing, memberCount] = await Promise.all([
+  // Active AI tasks, counted only for viewers allowed to see the company's tasks.
+  const activeTasks = async () =>
+    company && (await can(viewer.ctx, "agents.read", await companyChain(db(), org.id, company.id)))
+      ? db().agentTask.count({ where: { organizationId: org.id, companyId: company.id, status: { in: ["QUEUED", "RUNNING"] } } })
+      : null;
+  const [activity, status, billing, memberCount, taskCount] = await Promise.all([
     listAuditLogs(viewer.ctx, org.id, { limit: 8 }).catch(() => null),
     health(org.id),
     db().billingProfile.findUnique({ where: { organizationId: org.id }, select: { billingCountryConfirmedAt: true } }),
     db().membership.count({ where: { organizationId: org.id, status: "ACTIVE" } }),
+    activeTasks(),
   ]);
 
   const country = (code: string | null) => (code ? displayName(code, "region", locale) : t("command.notSet"));
@@ -46,10 +55,10 @@ export default async function CommandCenterPage() {
     { key: "team", done: memberCount > 1, href: "/settings/members" },
   ];
   const metrics = ["revenue", "mrr", "customers", "pipeline", "cash", "runway", "growth"] as const;
-  const counters = [
+  const counters: { key: string; phase?: number; value?: number | null; href?: string }[] = [
     { key: "objectives", phase: 3 },
-    { key: "tasks", phase: 3 },
-    { key: "workforce", phase: 4 },
+    { key: "tasks", value: taskCount, href: "/tasks" },
+    { key: "workforce", value: AGENT_PROFILES.length, href: "/workforce" },
     { key: "approvals", phase: 3 },
   ];
 
@@ -82,8 +91,16 @@ export default async function CommandCenterPage() {
             {counters.map((c) => (
               <div key={c.key} className="grid gap-1 rounded-md border bg-surface-2 p-3">
                 <span className="text-xs text-muted-foreground">{t(`command.counters.${c.key}`)}</span>
-                <span className="tabular text-xl font-semibold text-muted-foreground/60">—</span>
-                <Badge className="w-fit">{t("common.comingInPhase", { phase: c.phase })}</Badge>
+                {c.phase ? (
+                  <>
+                    <span className="tabular text-xl font-semibold text-muted-foreground/60">—</span>
+                    <Badge className="w-fit">{t("common.comingInPhase", { phase: c.phase })}</Badge>
+                  </>
+                ) : (
+                  <Link href={`/${locale}${c.href}`} className="tabular text-xl font-semibold hover:underline">
+                    {c.value ?? "—"}
+                  </Link>
+                )}
               </div>
             ))}
           </CardBody>
