@@ -196,6 +196,7 @@ model User {
   recoveryCodes MfaRecoveryCode[]
   oauthAccounts OAuthAccount[]
   memberships   Membership[]
+  ownedLeads    Lead[]                   @relation("LeadOwner")
   emailTokens   EmailVerificationToken[]
   resetTokens   PasswordResetToken[]
 
@@ -252,12 +253,12 @@ model MfaRecoveryCode {
 }
 
 model OAuthAccount {
-  id                String   @id @default(uuid(7)) @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
+  id                String    @id @default(uuid(7)) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
   provider          String
-  providerAccountId String   @map("provider_account_id")
-  providerEmail     String?  @map("provider_email")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  providerAccountId String    @map("provider_account_id")
+  providerEmail     String?   @map("provider_email")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -280,16 +281,16 @@ model Organization {
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  memberships     Membership[]
-  invitations     Invitation[]
-  companies       Company[]
-  workspaces      Workspace[]
-  projects        Project[]
-  serviceAccounts ServiceAccount[]
-  apiKeys         ApiKey[]
-  customRoles     Role[]
-  billingProfile  BillingProfile?
-  subscriptions   Subscription[]
+  memberships      Membership[]
+  invitations      Invitation[]
+  companies        Company[]
+  workspaces       Workspace[]
+  projects         Project[]
+  serviceAccounts  ServiceAccount[]
+  apiKeys          ApiKey[]
+  customRoles      Role[]
+  billingProfile   BillingProfile?
+  subscriptions    Subscription[]
   checkoutSessions CheckoutSession[]
 
   @@map("organizations")
@@ -311,21 +312,21 @@ model Membership {
 }
 
 model Invitation {
-  id             String    @id @default(uuid(7)) @db.Uuid
-  organizationId String    @map("organization_id") @db.Uuid
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
   email          String
-  roleId         String    @map("role_id") @db.Uuid
-  scopeType      ScopeType @default(ORGANIZATION) @map("scope_type")
-  scopeId        String    @map("scope_id")
-  tokenHash      String    @unique @map("token_hash")
-  invitedById    String    @map("invited_by_id") @db.Uuid
-  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
-  acceptedAt     DateTime? @map("accepted_at") @db.Timestamptz(3)
-  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  roleId         String       @map("role_id") @db.Uuid
+  scopeType      ScopeType    @default(ORGANIZATION) @map("scope_type")
+  scopeId        String       @map("scope_id")
+  tokenHash      String       @unique @map("token_hash")
+  invitedById    String       @map("invited_by_id") @db.Uuid
+  expiresAt      DateTime     @map("expires_at") @db.Timestamptz(3)
+  acceptedAt     DateTime?    @map("accepted_at") @db.Timestamptz(3)
+  revokedAt      DateTime?    @map("revoked_at") @db.Timestamptz(3)
   deliveryStatus EmailStatus? @map("delivery_status")
-  lastSentAt     DateTime? @map("last_sent_at") @db.Timestamptz(3)
-  sendCount      Int       @default(0) @map("send_count")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSentAt     DateTime?    @map("last_sent_at") @db.Timestamptz(3)
+  sendCount      Int          @default(0) @map("send_count")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   role         Role         @relation(fields: [roleId], references: [id])
@@ -388,16 +389,19 @@ model Company {
   updatedAt                DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt                DateTime?     @map("deleted_at") @db.Timestamptz(3)
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  workspaces   Workspace[]
-  projects     Project[]
-  graphEntities GraphEntity[]
-  graphEdges    GraphEdge[]
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspaces     Workspace[]
+  projects       Project[]
+  graphEntities  GraphEntity[]
+  graphEdges     GraphEdge[]
   brainDocuments BrainDocument[]
   agentTasks     AgentTask[]
   approvals      Approval[]
   objectives     Objective[]
   milestones     Milestone[]
+  leads          Lead[]
+  leadFollowUps  LeadFollowUp[]
+  leadActivities LeadActivity[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -598,16 +602,20 @@ model AgentTask {
   completedAt    DateTime?       @map("completed_at") @db.Timestamptz(3)
 
   /// Optional: the milestone this task advances.
-  milestoneId    String?         @map("milestone_id") @db.Uuid
+  milestoneId String? @map("milestone_id") @db.Uuid
+  /// Optional: the CRM lead this task is about (AI sales assistant).
+  leadId      String? @map("lead_id") @db.Uuid
 
   company   Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   milestone Milestone? @relation(fields: [milestoneId, companyId], references: [id, companyId], onDelete: NoAction)
+  lead      Lead?      @relation(fields: [leadId, companyId], references: [id, companyId], onDelete: NoAction)
   approvals Approval[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, createdAt])
   @@index([status])
   @@index([milestoneId])
+  @@index([leadId])
   @@map("agent_tasks")
 }
 
@@ -730,6 +738,125 @@ model Milestone {
   @@map("milestones")
 }
 
+// ───────────────────────────── CRM ─────────────────────────────
+// Leads and follow-ups per company (permissions: sales.read / sales.manage). Scoring, duplicate detection and merging
+// adapted from Shivacha OS; merged leads are archived, never deleted.
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+enum LeadScoreLabel {
+  HOT
+  WARM
+  NURTURE
+}
+
+model Lead {
+  id                String         @id @default(uuid(7)) @db.Uuid
+  organizationId    String         @map("organization_id") @db.Uuid
+  companyId         String         @map("company_id") @db.Uuid
+  name              String
+  email             String?
+  /// Lower-cased email, for duplicate detection.
+  emailNormalized   String?        @map("email_normalized")
+  phone             String?
+  /// Last 10 digits of the phone, for duplicate detection.
+  phoneNormalized   String?        @map("phone_normalized")
+  /// The lead's own organization ("Acme Retail").
+  account           String?
+  source            String?
+  notes             String?
+  /// Estimated deal value in minor units of `currency`.
+  valueMinor        BigInt?        @map("value_minor")
+  currency          String         @db.Char(3)
+  stage             LeadStage      @default(NEW)
+  score             Int
+  scoreLabel        LeadScoreLabel @map("score_label")
+  lastContactedAt   DateTime?      @map("last_contacted_at") @db.Timestamptz(3)
+  /// Team member responsible for the lead (an active member of the organization).
+  ownerId           String?        @map("owner_id") @db.Uuid
+  /// Win probability 0–100; null means the stage default.
+  probability       Int?
+  expectedCloseDate DateTime?      @map("expected_close_date") @db.Date
+  mergedIntoId      String?        @map("merged_into_id") @db.Uuid
+  archivedAt        DateTime?      @map("archived_at") @db.Timestamptz(3)
+  createdById       String         @map("created_by_id") @db.Uuid
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  owner      User?          @relation("LeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  followUps  LeadFollowUp[]
+  activities LeadActivity[]
+  agentTasks AgentTask[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, stage])
+  @@index([organizationId, companyId, ownerId])
+  @@index([companyId, emailNormalized])
+  @@index([companyId, phoneNormalized])
+  @@map("leads")
+}
+
+model LeadFollowUp {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  leadId         String           @map("lead_id") @db.Uuid
+  dueAt          DateTime         @map("due_at") @db.Timestamptz(3)
+  note           String
+  priority       FollowUpPriority @default(MEDIUM)
+  completedAt    DateTime?        @map("completed_at") @db.Timestamptz(3)
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([companyId, completedAt, dueAt])
+  @@index([leadId])
+  @@map("lead_follow_ups")
+}
+
+enum FollowUpPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LeadActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+}
+
+/// A logged interaction with a lead (call, email, meeting, note), shown as the lead's timeline.
+model LeadActivity {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  leadId         String           @map("lead_id") @db.Uuid
+  type           LeadActivityType
+  summary        String
+  occurredAt     DateTime         @map("occurred_at") @db.Timestamptz(3)
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([leadId, occurredAt])
+  @@index([organizationId, companyId, occurredAt])
+  @@map("lead_activities")
+}
+
 // ───────────────────────────── RBAC ─────────────────────────────
 
 model Permission {
@@ -746,16 +873,16 @@ model Permission {
 }
 
 model Role {
-  id             String    @id @default(uuid(7)) @db.Uuid
-  organizationId String?   @map("organization_id") @db.Uuid
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String?     @map("organization_id") @db.Uuid
   key            String
   name           String
-  description    String    @default("")
-  isSystem       Boolean   @default(false) @map("is_system")
+  description    String      @default("")
+  isSystem       Boolean     @default(false) @map("is_system")
   // Scope types at which this role may be assigned.
   assignableAt   ScopeType[] @map("assignable_at")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   permissions  RolePermission[]
@@ -801,15 +928,15 @@ model RoleAssignment {
 // ───────────────────────────── Globalization ─────────────────────────────
 
 model Region {
-  code           String       @id
-  name           String
-  defaultCurrency String      @map("default_currency") @db.Char(3)
-  defaultLocale  String       @map("default_locale")
-  timezone       String
-  dataRegion     DataRegion   @map("data_region")
-  status         ConfigStatus @default(ACTIVE)
-  config         Json         @default("{}")
-  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  code            String       @id
+  name            String
+  defaultCurrency String       @map("default_currency") @db.Char(3)
+  defaultLocale   String       @map("default_locale")
+  timezone        String
+  dataRegion      DataRegion   @map("data_region")
+  status          ConfigStatus @default(ACTIVE)
+  config          Json         @default("{}")
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   countries Country[]
 
@@ -1024,24 +1151,24 @@ model BillingProfile {
 }
 
 model Subscription {
-  id                   String             @id @default(uuid(7)) @db.Uuid
-  organizationId       String             @map("organization_id") @db.Uuid
-  planId               String             @map("plan_id") @db.Uuid
-  status               SubscriptionStatus
-  currency             String             @db.Char(3)
-  billingCountryCode   String             @map("billing_country_code") @db.Char(2)
-  interval             BillingInterval
-  currentPeriodStart   DateTime?          @map("current_period_start") @db.Timestamptz(3)
-  currentPeriodEnd     DateTime?          @map("current_period_end") @db.Timestamptz(3)
-  trialEndsAt          DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
-  cancelAt             DateTime?          @map("cancel_at") @db.Timestamptz(3)
-  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
-  canceledAt           DateTime?          @map("canceled_at") @db.Timestamptz(3)
-  lastPaymentFailedAt  DateTime?          @map("last_payment_failed_at") @db.Timestamptz(3)
-  lastPaymentSucceededAt DateTime?        @map("last_payment_succeeded_at") @db.Timestamptz(3)
-  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
-  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                     String             @id @default(uuid(7)) @db.Uuid
+  organizationId         String             @map("organization_id") @db.Uuid
+  planId                 String             @map("plan_id") @db.Uuid
+  status                 SubscriptionStatus
+  currency               String             @db.Char(3)
+  billingCountryCode     String             @map("billing_country_code") @db.Char(2)
+  interval               BillingInterval
+  currentPeriodStart     DateTime?          @map("current_period_start") @db.Timestamptz(3)
+  currentPeriodEnd       DateTime?          @map("current_period_end") @db.Timestamptz(3)
+  trialEndsAt            DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
+  cancelAt               DateTime?          @map("cancel_at") @db.Timestamptz(3)
+  cancelAtPeriodEnd      Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt             DateTime?          @map("canceled_at") @db.Timestamptz(3)
+  lastPaymentFailedAt    DateTime?          @map("last_payment_failed_at") @db.Timestamptz(3)
+  lastPaymentSucceededAt DateTime?          @map("last_payment_succeeded_at") @db.Timestamptz(3)
+  stripeSubscriptionId   String?            @unique @map("stripe_subscription_id")
+  createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   plan         Plan               @relation(fields: [planId], references: [id])
@@ -1053,15 +1180,15 @@ model Subscription {
 }
 
 model SubscriptionItem {
-  id              String   @id @default(uuid(7)) @db.Uuid
-  organizationId  String   @map("organization_id") @db.Uuid
-  subscriptionId  String   @map("subscription_id") @db.Uuid
-  priceVersionId  String   @map("price_version_id") @db.Uuid
-  quantity        Int      @default(1)
-  unitAmountMinor BigInt   @map("unit_amount_minor")
-  currency        String   @db.Char(3)
-  stripeSubscriptionItemId String? @unique @map("stripe_subscription_item_id")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  id                       String   @id @default(uuid(7)) @db.Uuid
+  organizationId           String   @map("organization_id") @db.Uuid
+  subscriptionId           String   @map("subscription_id") @db.Uuid
+  priceVersionId           String   @map("price_version_id") @db.Uuid
+  quantity                 Int      @default(1)
+  unitAmountMinor          BigInt   @map("unit_amount_minor")
+  currency                 String   @db.Char(3)
+  stripeSubscriptionItemId String?  @unique @map("stripe_subscription_item_id")
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   subscription Subscription @relation(fields: [subscriptionId, organizationId], references: [id, organizationId], onDelete: Cascade)
   priceVersion PriceVersion @relation(fields: [priceVersionId], references: [id], onDelete: Restrict)

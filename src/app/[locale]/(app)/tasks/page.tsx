@@ -10,7 +10,9 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { aiConfigured } from "@/server/modules/agents/runtime";
-import { listTasks } from "@/server/modules/agents/service";
+import { aiUsageToday, listTasks } from "@/server/modules/agents/service";
+import { listObjectives } from "@/server/modules/objectives/service";
+import { formatNumber } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -52,15 +54,31 @@ export default async function TasksPage({ searchParams }: PageProps<"/[locale]/t
       </div>
     );
   }
-  const tasks = (await listTasks(viewer.ctx, org.id, company.id, { limit: 100 })).data;
+  const [tasks, usage, objectives] = await Promise.all([
+    listTasks(viewer.ctx, org.id, company.id, { limit: 100 }).then((p) => p.data),
+    aiUsageToday(org.id, company.id),
+    can(viewer.ctx, "objectives.read", chain).then((ok) => (ok ? listObjectives(viewer.ctx, org.id, company.id) : [])),
+  ]);
   const configured = aiConfigured();
+  const milestoneLabel = new Map(objectives.flatMap((o) => o.milestones.map((m) => [m.id, `${o.title} — ${m.title}`] as const)));
+  const openMilestones = objectives
+    .filter((o) => o.status === "ACTIVE")
+    .flatMap((o) => o.milestones.filter((m) => !m.completedAt).map((m) => ({ id: m.id, label: `${o.title} — ${m.title}` })));
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
       <AutoRefresh active={tasks.some((x) => x.status === "QUEUED" || x.status === "RUNNING")} />
       {!configured ? <Notice tone="warning">{t("agentTasks.notConfigured")}</Notice> : null}
-      {canRun && configured ? <NewTaskForm organizationId={org.id} companyId={company.id} initialProfile={typeof profile === "string" ? profile : undefined} /> : null}
+      {usage.exhausted ? <Notice tone="warning">{t("agentTasks.budgetExhausted")}</Notice> : null}
+      {canRun && configured && !usage.exhausted ? (
+        <NewTaskForm organizationId={org.id} companyId={company.id} initialProfile={typeof profile === "string" ? profile : undefined} milestones={openMilestones} />
+      ) : null}
+      <p className="text-xs text-muted-foreground">
+        {usage.limit
+          ? t("agentTasks.usageToday", { used: formatNumber(usage.used, locale), limit: formatNumber(usage.limit, locale) })
+          : t("agentTasks.usageTodayUnlimited", { used: formatNumber(usage.used, locale) })}
+      </p>
 
       <Card>
         <CardHeader title={t("agentTasks.list")} description={t("agentTasks.count", { count: tasks.length })} />
@@ -83,6 +101,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/[locale]/t
                     <Link className="hover:underline" href={`/${locale}/tasks/${x.id}`}>
                       {x.title}
                     </Link>
+                    {x.milestoneId && milestoneLabel.has(x.milestoneId) ? <div className="text-xs font-normal text-muted-foreground">{milestoneLabel.get(x.milestoneId)}</div> : null}
                   </Td>
                   <Td>{t(`profiles.${x.profile}.name`)}</Td>
                   <Td>

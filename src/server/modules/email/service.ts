@@ -83,3 +83,44 @@ export async function sendEmail(args: {
 }
 
 export const emailConfigured = () => emailProvider() !== null;
+
+/**
+ * Send a plain-text message written by a person (or approved AI draft) and record the outcome in `email_messages`.
+ * Returns NOT_CONFIGURED when no provider is set up — callers must never report such a message as sent.
+ */
+export async function sendPlainEmail(args: { to: string; subject: string; text: string; template: string; organizationId: string; userId?: string | null; locale?: string }): Promise<SendResult> {
+  const configured = emailProvider();
+  let status: EmailStatus = "NOT_CONFIGURED";
+  let messageId: string | null = null;
+  let error: string | null = null;
+  if (configured) {
+    try {
+      const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">${args.text
+        .split(/\n{2,}/)
+        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+        .join("")}</body></html>`;
+      const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html });
+      status = "SENT";
+      messageId = r.messageId;
+    } catch (err) {
+      status = "FAILED";
+      error = err instanceof Error ? err.message.slice(0, 300) : "send failed";
+      logger.warn({ template: args.template, provider: configured.provider.id, error }, "email delivery failed");
+      captureException(err, { template: args.template });
+    }
+  }
+  await db().emailMessage.create({
+    data: {
+      organizationId: args.organizationId,
+      userId: args.userId ?? null,
+      toEmail: args.to,
+      template: args.template,
+      locale: closestLocale(args.locale ?? "en-US"),
+      status,
+      provider: configured?.provider.id ?? null,
+      providerMessageId: messageId,
+      error,
+    },
+  });
+  return { status, messageId };
+}

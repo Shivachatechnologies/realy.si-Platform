@@ -41,6 +41,8 @@ const schema = z.object({
   // AI task execution (Claude API). Without a key, AI tasks report "not configured" and are never simulated.
   ANTHROPIC_API_KEY: optional,
   AGENT_MODEL: z.string().regex(/^[a-z0-9.-]{3,64}$/).default("claude-opus-5-5"),
+  /** Daily AI token allowance per company (input + output, UTC day). 0 disables the limit. */
+  AI_DAILY_TOKEN_LIMIT: z.coerce.number().int().min(0).default(2_000_000),
   SENTRY_DSN: optional,
   SENTRY_ENVIRONMENT: optional,
   OTEL_EXPORTER_OTLP_ENDPOINT: optional,

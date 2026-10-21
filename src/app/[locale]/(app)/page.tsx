@@ -5,6 +5,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ObjectiveBar } from "@/components/command/objective-bar";
+import { MarkReadButton } from "@/components/command/mark-read-button";
+import { listMyNotifications } from "@/server/modules/notifications/service";
 import { LiveClock } from "@/components/live-clock";
 import { getLocale, getT } from "@/i18n/server";
 import { displayName, formatList, formatRelativeTime } from "@/i18n/format";
@@ -38,7 +40,7 @@ export default async function CommandCenterPage() {
   const chain = company ? await companyChain(db(), org.id, company.id) : null;
   const scoped = { organizationId: org.id, companyId: company?.id ?? "" };
   const countIf = async (permission: string, count: () => Promise<number>) => (chain && (await can(viewer.ctx, permission, chain)) ? count() : null);
-  const [activity, status, billing, memberCount, taskCount, objectiveCount, approvalCount] = await Promise.all([
+  const [activity, status, billing, memberCount, taskCount, objectiveCount, approvalCount, notifications] = await Promise.all([
     listAuditLogs(viewer.ctx, org.id, { limit: 8 }).catch(() => null),
     health(org.id),
     db().billingProfile.findUnique({ where: { organizationId: org.id }, select: { billingCountryConfirmedAt: true } }),
@@ -46,6 +48,7 @@ export default async function CommandCenterPage() {
     countIf("agents.read", () => db().agentTask.count({ where: { ...scoped, status: { in: ["QUEUED", "RUNNING"] } } })),
     countIf("objectives.read", () => db().objective.count({ where: { ...scoped, status: "ACTIVE" } })),
     countIf("approvals.read", () => db().approval.count({ where: { ...scoped, status: "PENDING", expiresAt: { gt: new Date() } } })),
+    listMyNotifications(viewer.ctx, org.id, { unreadOnly: true, limit: 10 }),
   ]);
 
   const country = (code: string | null) => (code ? displayName(code, "region", locale) : t("command.notSet"));
@@ -71,6 +74,26 @@ export default async function CommandCenterPage() {
       </div>
 
       <ObjectiveBar />
+
+      {notifications.length ? (
+        <Card>
+          <CardHeader title={t("notifications.title")} actions={<MarkReadButton organizationId={org.id} />} />
+          <CardBody>
+            <ul className="grid gap-1.5 text-sm">
+              {notifications.map((n) => {
+                const p = n.payload as { summary?: string };
+                return (
+                  <li key={n.id}>
+                    <Link className="hover:underline" href={`/${locale}/approvals`}>
+                      {t("notifications.approvalRequested", { summary: p.summary ?? "" })}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title={t("command.business")} description={t("command.metricsNotConnected")} actions={<Badge tone="warning">{t("common.comingInPhase", { phase: 6 })}</Badge>} />

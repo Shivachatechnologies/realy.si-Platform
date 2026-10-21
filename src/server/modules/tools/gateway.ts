@@ -3,6 +3,7 @@ import { db, transaction, type Prisma } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitEvent } from "@/server/modules/events/emit";
+import { notifyApprovers } from "@/server/modules/notifications/service";
 import { NEVER_FOR_AGENTS } from "@/server/modules/rbac/catalog";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
@@ -93,6 +94,7 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
       },
     });
     await writeAudit(tx, run.ctx, { category: "TENANT", organizationId: run.organizationId, action: "approval.requested", resourceType: "approval", resourceId: a.id, newValue: { tool: a.tool, summary, risk: a.risk, taskId: a.taskId } });
+    await notifyApprovers(tx, run.organizationId, { approvalId: a.id, companyId: run.companyId, summary });
     await emitEvent(tx, run.ctx, "approval.requested", { approvalId: a.id, companyId: run.companyId, tool: a.tool, risk: a.risk, taskId: a.taskId }, { organizationId: run.organizationId, companyId: run.companyId, aggregateType: "approval", aggregateId: a.id });
     return a;
   });

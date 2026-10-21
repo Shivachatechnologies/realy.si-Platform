@@ -42,7 +42,6 @@ export const MODULE_PHASE = {
   environments: 6,
   marketing: 6,
   sales: 6,
-  crm: 6,
   analytics: 6,
   finance: 6,
   operations: 6,
@@ -107,7 +106,7 @@ export const NAV: NavSection[] = [
   },
   {
     label: "nav.sections.growth",
-    items: [mod("marketing", Megaphone), mod("sales", Handshake), mod("crm", Layers), mod("analytics", BarChart3)],
+    items: [mod("marketing", Megaphone), mod("sales", Handshake), { label: "modules.crm.title", href: "/crm", icon: Layers }, mod("analytics", BarChart3)],
   },
   {
     label: "nav.sections.operations",

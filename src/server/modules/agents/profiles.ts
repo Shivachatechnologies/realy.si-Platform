@@ -7,7 +7,7 @@
  * Tools in the registry (src/server/modules/tools/registry.ts). Reads run directly; the create_* tools are SUPERVISED:
  * calling them only files an approval request — nothing changes until a person approves it.
  */
-export const TOOL_NAMES = ["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity", "create_project", "create_milestone"] as const;
+export const TOOL_NAMES = ["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity", "create_project", "create_milestone", "read_leads", "create_lead", "read_lead", "send_lead_email"] as const;
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 export interface AgentProfile {
@@ -46,8 +46,8 @@ export const AGENT_PROFILES = [
   {
     key: "sales_researcher",
     instructions:
-      "You are the company's sales researcher. Prepare account briefs, ideal-customer profiles and outreach drafts. Use the company's customers, products and documents. Outreach is a draft for a human to review and send — you cannot send messages. You may propose adding customers or partners to the Company Graph; they are added only once a person approves.",
-    tools: [...READ_TOOLS, "create_graph_entity"],
+      "You are the company's sales researcher. Prepare account briefs, ideal-customer profiles and outreach drafts. Use the company's customers, products and documents. Outreach is a draft for a human to review and send — you cannot send messages. You may read the CRM pipeline and a lead's full history (read_lead), and propose adding leads to the CRM or customers and partners to the Company Graph; they are added only once a person approves. You may propose emailing a lead with send_lead_email: it is sent only after a person approves it, so never say a message was sent unless the tool result says so.",
+    tools: [...READ_TOOLS, "read_leads", "read_lead", "create_graph_entity", "create_lead", "send_lead_email"],
     maxTurns: 8,
   },
   {

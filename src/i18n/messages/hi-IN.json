@@ -148,7 +148,7 @@
     },
     "crm": {
       "title": "CRM",
-      "description": "कंपनियाँ, संपर्क, लीड, डील, पाइपलाइन और पूर्वानुमान।"
+      "description": "लीड, स्कोरिंग, डुप्लिकेट पहचान, फ़ॉलो-अप और पाइपलाइन।"
     },
     "analytics": {
       "title": "एनालिटिक्स",
@@ -268,7 +268,10 @@
       "tool_changed": "यह कार्रवाई इस रूप में अब उपलब्ध नहीं है। इसे अस्वीकार करें।",
       "approver_lacks_permission": "इस कार्रवाई के लिए आवश्यक अनुमति आपके पास नहीं है, इसलिए आप इसे स्वीकृत नहीं कर सकते।",
       "founder_only": "इस कार्रवाई को केवल संगठन का मालिक स्वीकृत कर सकता है।",
-      "approval_failed": "स्वीकृत हुआ, पर कार्रवाई विफल रही। विवरण अनुरोध में देखें।"
+      "approval_failed": "स्वीकृत हुआ, पर कार्रवाई विफल रही। विवरण अनुरोध में देखें।",
+      "ai_budget_exhausted": "इस कंपनी की आज की AI उपयोग सीमा पूरी हो गई है। कल फिर प्रयास करें।",
+      "lead_duplicate": "इसी ईमेल या फ़ोन वाला लीड पहले से मौजूद है।",
+      "lead_owner_ineligible": "यह व्यक्ति इस कंपनी में लीड का ओनर नहीं हो सकता।"
     }
   },
   "onboarding": {
@@ -788,7 +791,13 @@
     "retry": "फिर से चलाएँ",
     "confirmCancel": "यह कार्य रद्द करें?",
     "lookupApproval": "अनुमोदन का अनुरोध: {tool}",
-    "lookupOther": "{tool} — {count, plural, one {# परिणाम} other {# परिणाम}}"
+    "lookupOther": "{tool} — {count, plural, one {# परिणाम} other {# परिणाम}}",
+    "milestone": "माइलस्टोन",
+    "milestoneHint": "वैकल्पिक। कार्य को किसी उद्देश्य के माइलस्टोन से जोड़ता है।",
+    "noMilestone": "कोई माइलस्टोन नहीं",
+    "budgetExhausted": "इस कंपनी की आज की AI उपयोग सीमा पूरी हो गई है। नए कार्य कल (UTC) फिर से दिए जा सकते हैं।",
+    "usageToday": "आज का AI उपयोग: {limit} में से {used} टोकन",
+    "usageTodayUnlimited": "आज का AI उपयोग: {used} टोकन"
   },
   "workforce": {
     "subtitle": "एक ही कार्य रनटाइम साझा करने वाले AI कर्मचारी प्रोफ़ाइल। प्रत्येक केवल सूचीबद्ध टूल से और कार्य सौंपने वाले व्यक्ति की अनुमतियों के साथ काम करता है।",
@@ -802,7 +811,11 @@
       "read_objectives": "लक्ष्य पढ़ें",
       "create_graph_entity": "कंपनी ग्राफ़ में जोड़ें",
       "create_project": "परियोजना बनाएँ",
-      "create_milestone": "माइलस्टोन जोड़ें"
+      "create_milestone": "माइलस्टोन जोड़ें",
+      "read_leads": "CRM लीड पढ़ें",
+      "create_lead": "CRM लीड जोड़ें",
+      "read_lead": "लीड इतिहास पढ़ें",
+      "send_lead_email": "लीड को ईमेल करें"
     },
     "needsApproval": "अनुमोदन आवश्यक"
   },
@@ -863,7 +876,8 @@
       "MEDIUM": "मध्यम जोखिम",
       "HIGH": "उच्च जोखिम",
       "CRITICAL": "गंभीर"
-    }
+    },
+    "messagePreview": "भेजा जाने वाला संदेश"
   },
   "objectives": {
     "subtitle": "लक्ष्य तय करें, उन्हें माइलस्टोन में बाँटें, माइलस्टोन को परियोजनाओं से जोड़ें, और AI कर्मचारियों को आपकी स्वीकृति के लिए माइलस्टोन सुझाने दें।",
@@ -887,6 +901,142 @@
       "ACTIVE": "सक्रिय",
       "ACHIEVED": "प्राप्त",
       "ABANDONED": "छोड़ा गया"
+    }
+  },
+  "notifications": {
+    "title": "आपके लिए",
+    "markAllRead": "सभी को पढ़ा हुआ चिह्नित करें",
+    "approvalRequested": "अनुमोदन का अनुरोध: {summary}",
+    "empty": "किसी चीज़ पर आपका ध्यान आवश्यक नहीं है।"
+  },
+  "crm": {
+    "subtitle": "अपनी पाइपलाइन में लीड ट्रैक करें। स्कोर अपने आप अपडेट होते हैं; डुप्लिकेट चिह्नित होते हैं।",
+    "leads": "लीड",
+    "count": "{count, plural, one {# लीड} other {# लीड}}",
+    "empty": "अभी कोई लीड नहीं।",
+    "openLeads": "खुले लीड",
+    "hotLeads": "हॉट लीड",
+    "pipelineValue": "खुली पाइपलाइन का मूल्य",
+    "dueToday": "बकाया फ़ॉलो-अप",
+    "followUpsDue": "आज के फ़ॉलो-अप",
+    "name": "नाम",
+    "email": "ईमेल",
+    "phone": "फ़ोन",
+    "account": "कंपनी",
+    "source": "स्रोत",
+    "sourcePlaceholder": "वेबसाइट, रेफ़रल, इवेंट…",
+    "value": "अनुमानित मूल्य",
+    "notes": "नोट्स",
+    "addLead": "लीड जोड़ें",
+    "createAnyway": "फिर भी बनाएँ",
+    "viewExisting": "मौजूदा लीड देखें",
+    "stage": "चरण",
+    "stages": {
+      "NEW": "नया",
+      "CONTACTED": "संपर्क किया",
+      "QUALIFIED": "योग्य",
+      "PROPOSAL": "प्रस्ताव",
+      "WON": "जीता",
+      "LOST": "खोया"
+    },
+    "scoreLabels": {
+      "HOT": "हॉट",
+      "WARM": "वार्म",
+      "NURTURE": "नर्चर"
+    },
+    "scoreHint": "लीड स्कोर 0–100, संपर्क विवरण, कंपनी, मूल्य, नोट्स और चरण से।",
+    "next": "अगला: {date}",
+    "complete": "फ़ॉलो-अप पूरा करें",
+    "back": "सभी लीड",
+    "lastContacted": "अंतिम संपर्क",
+    "created": "बनाया गया",
+    "followUps": "फ़ॉलो-अप",
+    "noFollowUps": "अभी कोई फ़ॉलो-अप नहीं।",
+    "dueDate": "नियत तिथि",
+    "followUpNote": "अगला कदम",
+    "followUpPlaceholder": "कीमत पर चर्चा के लिए कॉल",
+    "addFollowUp": "फ़ॉलो-अप जोड़ें",
+    "markContacted": "संपर्क किया चिह्नित करें",
+    "duplicates": "संभावित डुप्लिकेट",
+    "duplicatesHint": "समान ईमेल या फ़ोन वाले अन्य लीड। मर्ज करने पर यह लीड रहता है और दूसरा संग्रहित हो जाता है।",
+    "mergeInto": "इस लीड में मर्ज करें",
+    "mergeConfirm": "“{name}” को इस लीड में मर्ज करें? दूसरा लीड संग्रहित हो जाएगा।",
+    "mergedNotice": "यह लीड किसी अन्य लीड में मर्ज हो चुका है। उसे खोलें।",
+    "archivedNotice": "यह लीड संग्रहित है।",
+    "activityPlaceholder": "क्या हुआ? जैसे: कीमत पर चर्चा हुई, प्रस्ताव भेजेंगे",
+    "activitySummary": "सारांश",
+    "activityType": "प्रकार",
+    "allOwners": "सभी ओनर",
+    "allStages": "सभी चरण",
+    "allTemperatures": "सभी तापमान",
+    "applyFilters": "लागू करें",
+    "archive": "संग्रहित करें",
+    "archiveConfirm": "{count, plural, one {इस लीड को संग्रहित करें?} other {# लीड संग्रहित करें?}} संग्रहित लीड पाइपलाइन से हट जाते हैं।",
+    "assign": "असाइन करें",
+    "assistBrief": "सारांश और अगला कदम सुझाएँ",
+    "assistDraft": "फ़ॉलो-अप ड्राफ़्ट करें",
+    "assistGuidance": "AI के लिए निर्देश (वैकल्पिक)",
+    "assistHint": "AI इस लीड का रिकॉर्ड और टाइमलाइन पढ़ता है। ईमेल तभी भेजे जाते हैं जब कोई उन्हें अनुमोदन में स्वीकृत करे।",
+    "assistPlaceholder": "जैसे: वार्षिक प्लान की छूट का उल्लेख करें",
+    "assistSend": "ड्राफ़्ट करें और भेजने का अनुरोध करें",
+    "assistant": "AI सेल्स सहायक",
+    "assistantDescription": "इस लीड के इतिहास से सारांश, अगले कदम और फ़ॉलो-अप ड्राफ़्ट।",
+    "bulkActions": "बल्क कार्रवाइयाँ",
+    "byStage": "चरण के अनुसार लीड",
+    "clearFilters": "साफ़ करें",
+    "conversion": "चरण के अनुसार रूपांतरण",
+    "conversionHint": "वर्तमान चरणों पर आधारित: बाद के चरण वाला लीड पहले के चरण पार कर चुका है। खोए हुए लीड शामिल नहीं हैं।",
+    "dashboard": "डैशबोर्ड",
+    "dashboardSubtitle": "आपके लाइव CRM डेटा से पाइपलाइन, रूपांतरण और टीम का प्रदर्शन।",
+    "deal": "डील",
+    "expectedClose": "अपेक्षित क्लोज़",
+    "followUpCount": "{count, plural, one {# फ़ॉलो-अप} other {# फ़ॉलो-अप}}",
+    "fromPrevious": "पिछले से",
+    "logActivity": "गतिविधि दर्ज करें",
+    "myLeads": "मेरे लीड",
+    "newLeads": "नए लीड (7 दिन)",
+    "newLeadsHint": "पिछले 30 दिनों में {count}",
+    "nextFollowUp": "अगला फ़ॉलो-अप",
+    "noActivities": "अभी कोई गतिविधि दर्ज नहीं।",
+    "noEmail": "इस लीड का कोई ईमेल पता नहीं है।",
+    "noOverdue": "कोई बकाया फ़ॉलो-अप नहीं।",
+    "occurredAt": "कब",
+    "occurredAtHint": "अभी के लिए खाली छोड़ें।",
+    "overdueFollowUps": "बकाया फ़ॉलो-अप",
+    "overdueOn": "{date} से बकाया",
+    "owner": "ओनर",
+    "ownerPerformance": "ओनर का प्रदर्शन",
+    "priority": "प्राथमिकता",
+    "probability": "संभावना (%)",
+    "probabilityHint": "चरण का डिफ़ॉल्ट उपयोग करने के लिए खाली छोड़ें।",
+    "probabilityValue": "जीत की संभावना {value}%",
+    "reached": "पहुँचे",
+    "search": "लीड खोजें",
+    "searchPlaceholder": "नाम, ईमेल, कंपनी या ओनर खोजें",
+    "selectAll": "सभी चुनें",
+    "selected": "{count, plural, one {# चयनित} other {# चयनित}}",
+    "setStage": "चरण सेट करें",
+    "stageDefault": "चरण डिफ़ॉल्ट",
+    "statsFiltered": "कुल मौजूदा फ़िल्टर के अनुसार हैं।",
+    "temperature": "तापमान",
+    "timeline": "गतिविधि टाइमलाइन",
+    "timelineHint": "कॉल, ईमेल, मीटिंग और नोट्स, नए पहले।",
+    "unassigned": "असाइन नहीं",
+    "weighted": "भारित",
+    "weightedPipeline": "भारित पाइपलाइन",
+    "winRate": "जीत दर {rate}",
+    "winRateColumn": "जीत दर",
+    "wonValue": "जीता गया मूल्य",
+    "activityTypes": {
+      "CALL": "कॉल",
+      "EMAIL": "ईमेल",
+      "MEETING": "मीटिंग",
+      "NOTE": "नोट"
+    },
+    "priorities": {
+      "LOW": "कम",
+      "MEDIUM": "मध्यम",
+      "HIGH": "उच्च"
     }
   }
 }

@@ -148,7 +148,7 @@
     },
     "crm": {
       "title": "CRM",
-      "description": "Firmen, Kontakte, Leads, Deals, Pipelines und Prognosen."
+      "description": "Leads, Scoring, Dublettenerkennung, Follow-ups und Pipeline."
     },
     "analytics": {
       "title": "Analysen",
@@ -268,7 +268,10 @@
       "tool_changed": "Diese Aktion ist in dieser Form nicht mehr verfügbar. Lehnen Sie sie ab.",
       "approver_lacks_permission": "Ihnen fehlt die Berechtigung, die diese Aktion braucht – Sie können sie nicht freigeben.",
       "founder_only": "Nur ein Inhaber der Organisation kann diese Aktion freigeben.",
-      "approval_failed": "Freigegeben, aber die Aktion ist fehlgeschlagen. Details stehen bei der Anfrage."
+      "approval_failed": "Freigegeben, aber die Aktion ist fehlgeschlagen. Details stehen bei der Anfrage.",
+      "ai_budget_exhausted": "Das heutige KI-Nutzungslimit dieses Unternehmens ist erreicht. Versuchen Sie es morgen erneut.",
+      "lead_duplicate": "Ein Lead mit dieser E-Mail oder Telefonnummer existiert bereits.",
+      "lead_owner_ineligible": "Diese Person kann in diesem Unternehmen keine Leads verantworten."
     }
   },
   "onboarding": {
@@ -788,7 +791,13 @@
     "retry": "Wiederholen",
     "confirmCancel": "Diese Aufgabe abbrechen?",
     "lookupApproval": "Freigabe angefragt: {tool}",
-    "lookupOther": "{tool} – {count, plural, one {# Ergebnis} other {# Ergebnisse}}"
+    "lookupOther": "{tool} – {count, plural, one {# Ergebnis} other {# Ergebnisse}}",
+    "milestone": "Meilenstein",
+    "milestoneHint": "Optional. Verknüpft die Aufgabe mit einem Meilenstein eines Ziels.",
+    "noMilestone": "Kein Meilenstein",
+    "budgetExhausted": "Das heutige KI-Nutzungslimit dieses Unternehmens ist erreicht. Neue Aufgaben können morgen (UTC) wieder vergeben werden.",
+    "usageToday": "KI-Nutzung heute: {used} von {limit} Tokens",
+    "usageTodayUnlimited": "KI-Nutzung heute: {used} Tokens"
   },
   "workforce": {
     "subtitle": "KI-Mitarbeiterprofile auf einer gemeinsamen Aufgaben-Laufzeit. Jedes arbeitet nur mit den aufgeführten Werkzeugen und den Berechtigungen der Person, die die Aufgabe vergibt.",
@@ -802,7 +811,11 @@
       "read_objectives": "Ziele lesen",
       "create_graph_entity": "Zum Unternehmensgraphen hinzufügen",
       "create_project": "Projekt anlegen",
-      "create_milestone": "Meilenstein hinzufügen"
+      "create_milestone": "Meilenstein hinzufügen",
+      "read_leads": "CRM-Leads lesen",
+      "create_lead": "CRM-Lead hinzufügen",
+      "read_lead": "Lead-Verlauf lesen",
+      "send_lead_email": "Lead per E-Mail kontaktieren"
     },
     "needsApproval": "braucht Freigabe"
   },
@@ -863,7 +876,8 @@
       "MEDIUM": "Mittleres Risiko",
       "HIGH": "Hohes Risiko",
       "CRITICAL": "Kritisch"
-    }
+    },
+    "messagePreview": "Zu sendende Nachricht"
   },
   "objectives": {
     "subtitle": "Setzen Sie Ziele, gliedern Sie sie in Meilensteine, verknüpfen Sie Meilensteine mit Projekten und lassen Sie KI-Mitarbeiter Meilensteine zur Freigabe vorschlagen.",
@@ -887,6 +901,142 @@
       "ACTIVE": "Aktiv",
       "ACHIEVED": "Erreicht",
       "ABANDONED": "Aufgegeben"
+    }
+  },
+  "notifications": {
+    "title": "Für Sie",
+    "markAllRead": "Alle als gelesen markieren",
+    "approvalRequested": "Freigabe angefordert: {summary}",
+    "empty": "Nichts erfordert Ihre Aufmerksamkeit."
+  },
+  "crm": {
+    "subtitle": "Verfolgen Sie Leads durch Ihre Pipeline. Scores werden automatisch aktualisiert; Dubletten werden markiert.",
+    "leads": "Leads",
+    "count": "{count, plural, one {# Lead} other {# Leads}}",
+    "empty": "Noch keine Leads.",
+    "openLeads": "Offene Leads",
+    "hotLeads": "Heiße Leads",
+    "pipelineValue": "Wert der offenen Pipeline",
+    "dueToday": "Fällige Follow-ups",
+    "followUpsDue": "Heute fällige Follow-ups",
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "account": "Unternehmen",
+    "source": "Quelle",
+    "sourcePlaceholder": "Website, Empfehlung, Event…",
+    "value": "Geschätzter Wert",
+    "notes": "Notizen",
+    "addLead": "Lead hinzufügen",
+    "createAnyway": "Trotzdem anlegen",
+    "viewExisting": "Vorhandenen Lead ansehen",
+    "stage": "Phase",
+    "stages": {
+      "NEW": "Neu",
+      "CONTACTED": "Kontaktiert",
+      "QUALIFIED": "Qualifiziert",
+      "PROPOSAL": "Angebot",
+      "WON": "Gewonnen",
+      "LOST": "Verloren"
+    },
+    "scoreLabels": {
+      "HOT": "Heiß",
+      "WARM": "Warm",
+      "NURTURE": "Pflegen"
+    },
+    "scoreHint": "Lead-Score 0–100 aus Kontaktdaten, Unternehmen, Wert, Notizen und Phase.",
+    "next": "Nächster: {date}",
+    "complete": "Follow-up erledigt",
+    "back": "Alle Leads",
+    "lastContacted": "Zuletzt kontaktiert",
+    "created": "Angelegt",
+    "followUps": "Follow-ups",
+    "noFollowUps": "Noch keine Follow-ups.",
+    "dueDate": "Fällig",
+    "followUpNote": "Nächster Schritt",
+    "followUpPlaceholder": "Anruf zur Preisbesprechung",
+    "addFollowUp": "Follow-up hinzufügen",
+    "markContacted": "Als kontaktiert markieren",
+    "duplicates": "Mögliche Dubletten",
+    "duplicatesHint": "Andere Leads mit derselben E-Mail oder Telefonnummer. Beim Zusammenführen bleibt dieser Lead erhalten, der andere wird archiviert.",
+    "mergeInto": "In diesen Lead zusammenführen",
+    "mergeConfirm": "„{name}“ in diesen Lead zusammenführen? Der andere Lead wird archiviert.",
+    "mergedNotice": "Dieser Lead wurde in einen anderen zusammengeführt. Öffnen.",
+    "archivedNotice": "Dieser Lead ist archiviert.",
+    "activityPlaceholder": "Was ist passiert? z. B. Preise besprochen, Angebot folgt",
+    "activitySummary": "Zusammenfassung",
+    "activityType": "Art",
+    "allOwners": "Alle Verantwortlichen",
+    "allStages": "Alle Phasen",
+    "allTemperatures": "Alle Temperaturen",
+    "applyFilters": "Anwenden",
+    "archive": "Archivieren",
+    "archiveConfirm": "{count, plural, one {Diesen Lead archivieren?} other {# Leads archivieren?}} Archivierte Leads verlassen die Pipeline.",
+    "assign": "Zuweisen",
+    "assistBrief": "Zusammenfassen & nächsten Schritt vorschlagen",
+    "assistDraft": "Follow-up entwerfen",
+    "assistGuidance": "Hinweis für die KI (optional)",
+    "assistHint": "Die KI liest Datensatz und Verlauf dieses Leads. E-Mails werden erst gesendet, wenn jemand sie unter Freigaben genehmigt.",
+    "assistPlaceholder": "z. B. Rabatt für den Jahresplan erwähnen",
+    "assistSend": "Entwerfen & Versand anfragen",
+    "assistant": "KI-Vertriebsassistent",
+    "assistantDescription": "Zusammenfassungen, nächste Schritte und Follow-up-Entwürfe aus dem Verlauf dieses Leads.",
+    "bulkActions": "Massenaktionen",
+    "byStage": "Leads nach Phase",
+    "clearFilters": "Zurücksetzen",
+    "conversion": "Konversion nach Phase",
+    "conversionHint": "Basierend auf aktuellen Phasen: Ein Lead in einer späteren Phase hat die früheren durchlaufen. Verlorene Leads sind ausgenommen.",
+    "dashboard": "Dashboard",
+    "dashboardSubtitle": "Pipeline, Konversion und Team-Leistung aus Ihren aktuellen CRM-Daten.",
+    "deal": "Deal",
+    "expectedClose": "Voraussichtlicher Abschluss",
+    "followUpCount": "{count, plural, one {# Follow-up} other {# Follow-ups}}",
+    "fromPrevious": "Vom Vorherigen",
+    "logActivity": "Aktivität erfassen",
+    "myLeads": "Meine Leads",
+    "newLeads": "Neue Leads (7 Tage)",
+    "newLeadsHint": "{count} in den letzten 30 Tagen",
+    "nextFollowUp": "Nächstes Follow-up",
+    "noActivities": "Noch keine Aktivität erfasst.",
+    "noEmail": "Dieser Lead hat keine E-Mail-Adresse.",
+    "noOverdue": "Keine überfälligen Follow-ups.",
+    "occurredAt": "Wann",
+    "occurredAtHint": "Leer lassen für jetzt.",
+    "overdueFollowUps": "Überfällige Follow-ups",
+    "overdueOn": "Überfällig seit {date}",
+    "owner": "Verantwortlich",
+    "ownerPerformance": "Leistung nach Verantwortlichen",
+    "priority": "Priorität",
+    "probability": "Wahrscheinlichkeit (%)",
+    "probabilityHint": "Leer lassen, um den Phasen-Standard zu verwenden.",
+    "probabilityValue": "Abschlusswahrscheinlichkeit {value} %",
+    "reached": "Erreicht",
+    "search": "Leads suchen",
+    "searchPlaceholder": "Name, E-Mail, Unternehmen oder Verantwortliche suchen",
+    "selectAll": "Alle auswählen",
+    "selected": "{count, plural, one {# ausgewählt} other {# ausgewählt}}",
+    "setStage": "Phase setzen",
+    "stageDefault": "Phasen-Standard",
+    "statsFiltered": "Summen beziehen sich auf die aktuellen Filter.",
+    "temperature": "Temperatur",
+    "timeline": "Aktivitätsverlauf",
+    "timelineHint": "Anrufe, E-Mails, Meetings und Notizen, neueste zuerst.",
+    "unassigned": "Nicht zugewiesen",
+    "weighted": "Gewichtet",
+    "weightedPipeline": "Gewichtete Pipeline",
+    "winRate": "Abschlussquote {rate}",
+    "winRateColumn": "Abschlussquote",
+    "wonValue": "Gewonnener Wert",
+    "activityTypes": {
+      "CALL": "Anruf",
+      "EMAIL": "E-Mail",
+      "MEETING": "Meeting",
+      "NOTE": "Notiz"
+    },
+    "priorities": {
+      "LOW": "Niedrig",
+      "MEDIUM": "Mittel",
+      "HIGH": "Hoch"
     }
   }
 }

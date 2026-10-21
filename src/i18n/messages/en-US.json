@@ -148,7 +148,7 @@
     },
     "crm": {
       "title": "CRM",
-      "description": "Companies, contacts, leads, deals, pipelines and forecasts."
+      "description": "Leads, scoring, duplicate detection, follow-ups and pipeline."
     },
     "analytics": {
       "title": "Analytics",
@@ -268,7 +268,10 @@
       "tool_changed": "This action is no longer available in this form. Reject it.",
       "approver_lacks_permission": "You don't have the permission this action needs, so you can't approve it.",
       "founder_only": "Only an organization owner can approve this action.",
-      "approval_failed": "It was approved, but the action failed. See the details on the request."
+      "approval_failed": "It was approved, but the action failed. See the details on the request.",
+      "ai_budget_exhausted": "Today's AI usage limit for this company has been reached. Try again tomorrow.",
+      "lead_duplicate": "A lead with this email or phone already exists.",
+      "lead_owner_ineligible": "This person can't own leads in this company."
     }
   },
   "onboarding": {
@@ -788,7 +791,13 @@
     "retry": "Retry",
     "confirmCancel": "Cancel this task?",
     "lookupApproval": "Requested approval: {tool}",
-    "lookupOther": "{tool} — {count, plural, one {# result} other {# results}}"
+    "lookupOther": "{tool} — {count, plural, one {# result} other {# results}}",
+    "milestone": "Milestone",
+    "milestoneHint": "Optional. Links the task to an objective's milestone.",
+    "noMilestone": "No milestone",
+    "budgetExhausted": "Today's AI usage limit for this company has been reached. New tasks can be assigned again tomorrow (UTC).",
+    "usageToday": "AI usage today: {used} of {limit} tokens",
+    "usageTodayUnlimited": "AI usage today: {used} tokens"
   },
   "workforce": {
     "subtitle": "AI employee profiles that share one task runtime. Each works only through the tools listed, with the permissions of the person who assigns the task.",
@@ -802,7 +811,11 @@
       "read_objectives": "Read objectives",
       "create_graph_entity": "Add to Company Graph",
       "create_project": "Create project",
-      "create_milestone": "Add milestone"
+      "create_milestone": "Add milestone",
+      "read_leads": "Read CRM leads",
+      "create_lead": "Add CRM lead",
+      "read_lead": "Read lead history",
+      "send_lead_email": "Email a lead"
     },
     "needsApproval": "needs approval"
   },
@@ -863,7 +876,8 @@
       "MEDIUM": "Medium risk",
       "HIGH": "High risk",
       "CRITICAL": "Critical"
-    }
+    },
+    "messagePreview": "Message to be sent"
   },
   "objectives": {
     "subtitle": "Set objectives, break them into milestones, link milestones to projects, and let AI employees propose milestones for your approval.",
@@ -887,6 +901,142 @@
       "ACTIVE": "Active",
       "ACHIEVED": "Achieved",
       "ABANDONED": "Abandoned"
+    }
+  },
+  "notifications": {
+    "title": "For you",
+    "markAllRead": "Mark all read",
+    "approvalRequested": "Approval requested: {summary}",
+    "empty": "Nothing needs your attention."
+  },
+  "crm": {
+    "subtitle": "Track leads through your pipeline. Scores update automatically; duplicates are flagged.",
+    "leads": "Leads",
+    "count": "{count, plural, one {# lead} other {# leads}}",
+    "empty": "No leads yet.",
+    "openLeads": "Open leads",
+    "hotLeads": "Hot leads",
+    "pipelineValue": "Open pipeline value",
+    "dueToday": "Follow-ups due",
+    "followUpsDue": "Follow-ups due today",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "account": "Company",
+    "source": "Source",
+    "sourcePlaceholder": "Website, referral, event…",
+    "value": "Estimated value",
+    "notes": "Notes",
+    "addLead": "Add lead",
+    "createAnyway": "Create anyway",
+    "viewExisting": "View existing lead",
+    "stage": "Stage",
+    "stages": {
+      "NEW": "New",
+      "CONTACTED": "Contacted",
+      "QUALIFIED": "Qualified",
+      "PROPOSAL": "Proposal",
+      "WON": "Won",
+      "LOST": "Lost"
+    },
+    "scoreLabels": {
+      "HOT": "Hot",
+      "WARM": "Warm",
+      "NURTURE": "Nurture"
+    },
+    "scoreHint": "Lead score 0–100, from contact details, company, value, notes and stage.",
+    "next": "Next: {date}",
+    "complete": "Mark follow-up done",
+    "back": "All leads",
+    "lastContacted": "Last contacted",
+    "created": "Created",
+    "followUps": "Follow-ups",
+    "noFollowUps": "No follow-ups yet.",
+    "dueDate": "Due",
+    "followUpNote": "Next step",
+    "followUpPlaceholder": "Call to discuss pricing",
+    "addFollowUp": "Add follow-up",
+    "markContacted": "Mark contacted",
+    "duplicates": "Possible duplicates",
+    "duplicatesHint": "Other leads with the same email or phone. Merging keeps this lead and archives the other.",
+    "mergeInto": "Merge into this lead",
+    "mergeConfirm": "Merge “{name}” into this lead? The other lead will be archived.",
+    "mergedNotice": "This lead was merged into another lead. Open it.",
+    "archivedNotice": "This lead is archived.",
+    "activityPlaceholder": "What happened? e.g. Discussed pricing, sending proposal",
+    "activitySummary": "Summary",
+    "activityType": "Type",
+    "allOwners": "All owners",
+    "allStages": "All stages",
+    "allTemperatures": "All temperatures",
+    "applyFilters": "Apply",
+    "archive": "Archive",
+    "archiveConfirm": "{count, plural, one {Archive this lead?} other {Archive # leads?}} Archived leads leave the pipeline.",
+    "assign": "Assign",
+    "assistBrief": "Summarize & suggest next action",
+    "assistDraft": "Draft follow-up",
+    "assistGuidance": "Direction for the AI (optional)",
+    "assistHint": "The AI reads this lead's record and timeline. Emails are only sent after someone approves them in Approvals.",
+    "assistPlaceholder": "e.g. Mention the annual plan discount",
+    "assistSend": "Draft & request to send",
+    "assistant": "AI sales assistant",
+    "assistantDescription": "Summaries, next steps and follow-up drafts from this lead's history.",
+    "bulkActions": "Bulk actions",
+    "byStage": "Leads by stage",
+    "clearFilters": "Clear",
+    "conversion": "Conversion by stage",
+    "conversionHint": "Based on current stages: a lead at a later stage has passed the earlier ones. Lost leads are excluded.",
+    "dashboard": "Dashboard",
+    "dashboardSubtitle": "Pipeline, conversion and team performance from your live CRM data.",
+    "deal": "Deal",
+    "expectedClose": "Expected close",
+    "followUpCount": "{count, plural, one {# follow-up} other {# follow-ups}}",
+    "fromPrevious": "From previous",
+    "logActivity": "Log activity",
+    "myLeads": "My leads",
+    "newLeads": "New leads (7 days)",
+    "newLeadsHint": "{count} in the last 30 days",
+    "nextFollowUp": "Next follow-up",
+    "noActivities": "No activity logged yet.",
+    "noEmail": "This lead has no email address.",
+    "noOverdue": "No overdue follow-ups.",
+    "occurredAt": "When",
+    "occurredAtHint": "Leave empty for now.",
+    "overdueFollowUps": "Overdue follow-ups",
+    "overdueOn": "Overdue since {date}",
+    "owner": "Owner",
+    "ownerPerformance": "Owner performance",
+    "priority": "Priority",
+    "probability": "Probability (%)",
+    "probabilityHint": "Leave empty to use the stage default.",
+    "probabilityValue": "Win probability {value}%",
+    "reached": "Reached",
+    "search": "Search leads",
+    "searchPlaceholder": "Search name, email, company or owner",
+    "selectAll": "Select all",
+    "selected": "{count, plural, one {# selected} other {# selected}}",
+    "setStage": "Set stage",
+    "stageDefault": "stage default",
+    "statsFiltered": "Totals reflect the current filters.",
+    "temperature": "Temperature",
+    "timeline": "Activity timeline",
+    "timelineHint": "Calls, emails, meetings and notes, newest first.",
+    "unassigned": "Unassigned",
+    "weighted": "Weighted",
+    "weightedPipeline": "Weighted pipeline",
+    "winRate": "Win rate {rate}",
+    "winRateColumn": "Win rate",
+    "wonValue": "Won value",
+    "activityTypes": {
+      "CALL": "Call",
+      "EMAIL": "Email",
+      "MEETING": "Meeting",
+      "NOTE": "Note"
+    },
+    "priorities": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High"
     }
   }
 }

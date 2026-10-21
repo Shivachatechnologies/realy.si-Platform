@@ -6,6 +6,9 @@ import { searchDocuments } from "@/server/modules/brain/service";
 import { createEntity, getGraph } from "@/server/modules/graph/service";
 import { createProject, listWorkspaces } from "@/server/modules/companies/service";
 import { createMilestone, listObjectives } from "@/server/modules/objectives/service";
+import { addActivity, createLead, getLead, listLeads } from "@/server/modules/crm/service";
+import { sendPlainEmail } from "@/server/modules/email/service";
+import { AppError } from "@/server/core/errors";
 import { ENTITY_KINDS } from "@/server/modules/graph/relations";
 import type { ToolName } from "@/server/modules/agents/profiles";
 
@@ -214,6 +217,133 @@ export const TOOLS: Record<ToolName, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const m = await createMilestone(ctx, organizationId, companyId, input);
       return { content: `Added milestone "${m.title}".`, records: [`milestone:${m.id}`] };
+    },
+  }),
+
+  read_leads: def({
+    name: "read_leads",
+    version: 1,
+    description: "Returns the company's open CRM leads (name, account, stage, score, source, next follow-up), highest score first.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read CRM leads",
+    async execute(_input, { ctx, organizationId, companyId }) {
+      const leads = (await listLeads(ctx, organizationId, companyId)).filter((l) => l.stage !== "WON" && l.stage !== "LOST").slice(0, 100);
+      if (!leads.length) return { content: "The CRM has no open leads.", count: 0 };
+      const content = leads
+        .map(
+          (l) =>
+            `- ${l.name}${l.account ? ` (${l.account})` : ""} [${l.stage}] score ${l.score} ${l.scoreLabel}${l.source ? `, source ${l.source}` : ""}${l.followUps[0] ? `, next follow-up ${l.followUps[0].dueAt.toISOString().slice(0, 10)}: ${l.followUps[0].note}` : ""}`,
+        )
+        .join("\n");
+      return { content, count: leads.length, records: leads.map((l) => `lead:${l.id}`) };
+    },
+  }),
+
+  create_lead: def({
+    name: "create_lead",
+    version: 1,
+    description: "Propose adding a lead to the CRM. A human must approve it before it is added. Duplicates (same email or phone) are refused.",
+    input: z
+      .object({
+        name: z.string().trim().min(1).max(200),
+        email: z.string().trim().email().max(254).optional(),
+        account: z.string().trim().max(200).optional(),
+        source: z.string().trim().max(100).optional(),
+        notes: z.string().trim().max(2000).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Contact name" },
+        email: { type: "string" },
+        account: { type: "string", description: "Company / account name" },
+        source: { type: "string" },
+        notes: { type: "string" },
+      },
+      required: ["name"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ name, account }) => `Add lead "${name}"${account ? ` (${account})` : ""} to the CRM`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const l = await createLead(ctx, organizationId, companyId, { ...input, source: input.source ?? "AI agent" });
+      return { content: `Added lead "${l.name}" (score ${l.score}).`, records: [`lead:${l.id}`] };
+    },
+  }),
+
+  read_lead: def({
+    name: "read_lead",
+    version: 1,
+    description:
+      "Returns one CRM lead's full record: contact details, stage, score, owner, deal value, probability, expected close date, notes, the activity timeline (calls, emails, meetings, notes) and follow-ups. Use it to summarize a lead's history, suggest the next action or draft a follow-up.",
+    input: z.object({ leadId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { leadId: { type: "string", description: "Lead id" } }, required: ["leadId"], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read a CRM lead",
+    async execute({ leadId }, { ctx, organizationId, companyId }) {
+      const l = await getLead(ctx, organizationId, companyId, leadId);
+      const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "none");
+      const money = (m: bigint | null) => (m == null ? "none" : `${(Number(m) / 100).toFixed(2)} ${l.currency}`);
+      const lines = [
+        `Lead ${l.id}: ${l.name}${l.account ? ` (${l.account})` : ""}${l.archivedAt ? " [ARCHIVED]" : ""}`,
+        `Email: ${l.email ?? "none"} · Phone: ${l.phone ?? "none"} · Source: ${l.source ?? "unknown"}`,
+        `Stage: ${l.stage} · Score: ${l.score} (${l.scoreLabel}) · Owner: ${l.owner?.name ?? "unassigned"}`,
+        `Deal value: ${money(l.valueMinor)} · Probability: ${l.effectiveProbability}% · Weighted: ${money(l.weightedMinor)} · Expected close: ${day(l.expectedCloseDate)}`,
+        `Created: ${day(l.createdAt)} · Last contacted: ${day(l.lastContactedAt)}`,
+        `Notes: ${l.notes ?? "none"}`,
+        "",
+        "Activity timeline (newest first):",
+        ...(l.activities.length ? l.activities.slice(0, 50).map((a) => `- ${a.occurredAt.toISOString().slice(0, 16)} ${a.type}${a.author ? ` by ${a.author}` : ""}: ${a.summary}`) : ["- none"]),
+        "",
+        "Follow-ups:",
+        ...(l.followUps.length ? l.followUps.map((f) => `- ${day(f.dueAt)} [${f.completedAt ? "done" : "open"}, ${f.priority}] ${f.note}`) : ["- none"]),
+      ];
+      return { content: lines.join("\n"), count: 1, records: [`lead:${l.id}`] };
+    },
+  }),
+
+  send_lead_email: def({
+    name: "send_lead_email",
+    version: 1,
+    description:
+      "Propose sending an email to a CRM lead's email address on record. A human must approve the exact subject and body before anything is sent; the result says whether it was actually sent. Never claim an email was sent before that.",
+    input: z.object({ leadId: z.string().uuid(), subject: z.string().trim().min(1).max(200), body: z.string().trim().min(1).max(5000) }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        leadId: { type: "string", description: "Lead id" },
+        subject: { type: "string" },
+        body: { type: "string", description: "Plain-text email body" },
+      },
+      required: ["leadId", "subject", "body"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 20_000,
+    summarize: ({ subject }) => `Email a lead: "${subject}"`,
+    async execute({ leadId, subject, body }, { ctx, organizationId, companyId }) {
+      const lead = await getLead(ctx, organizationId, companyId, leadId);
+      if (lead.archivedAt) throw new AppError("conflict", "The lead is archived; nothing was sent.");
+      if (!lead.email) throw new AppError("conflict", "The lead has no email address; nothing was sent.");
+      const r = await sendPlainEmail({ to: lead.email, subject, text: body, template: "lead_message", organizationId, userId: ctx.actor.id ?? null });
+      if (r.status === "NOT_CONFIGURED") throw new AppError("not_configured", "Email delivery isn't configured; nothing was sent.");
+      if (r.status !== "SENT") throw new AppError("not_available", "The email provider rejected the message; nothing was sent.");
+      await addActivity(ctx, organizationId, companyId, leadId, { type: "EMAIL", summary: `Sent: ${subject}\n\n${body}`.slice(0, 5000) });
+      return { content: `Sent "${subject}" to ${lead.name}.`, records: [`lead:${lead.id}`] };
     },
   }),
 };

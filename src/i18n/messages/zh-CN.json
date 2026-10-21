@@ -148,7 +148,7 @@
     },
     "crm": {
       "title": "CRM",
-      "description": "公司、联系人、线索、商机、销售管道和预测。"
+      "description": "线索、评分、重复检测、跟进和销售管道。"
     },
     "analytics": {
       "title": "分析",
@@ -268,7 +268,10 @@
       "tool_changed": "此操作已不再以这种形式提供，请拒绝。",
       "approver_lacks_permission": "你没有此操作所需的权限，因此无法批准。",
       "founder_only": "只有组织所有者才能批准此操作。",
-      "approval_failed": "已批准，但操作失败。请在请求中查看详情。"
+      "approval_failed": "已批准，但操作失败。请在请求中查看详情。",
+      "ai_budget_exhausted": "该公司今日的 AI 用量已达上限，请明天再试。",
+      "lead_duplicate": "已存在相同邮箱或电话的线索。",
+      "lead_owner_ineligible": "此人无法在该公司负责线索。"
     }
   },
   "onboarding": {
@@ -788,7 +791,13 @@
     "retry": "重试",
     "confirmCancel": "要取消此任务吗？",
     "lookupApproval": "已请求审批：{tool}",
-    "lookupOther": "{tool}——{count, plural, other {# 条结果}}"
+    "lookupOther": "{tool}——{count, plural, other {# 条结果}}",
+    "milestone": "里程碑",
+    "milestoneHint": "可选。将任务关联到某个目标的里程碑。",
+    "noMilestone": "无里程碑",
+    "budgetExhausted": "该公司今日的 AI 用量已达上限。明天（UTC）可再分配新任务。",
+    "usageToday": "今日 AI 用量：{used} / {limit} 个 token",
+    "usageTodayUnlimited": "今日 AI 用量：{used} 个 token"
   },
   "workforce": {
     "subtitle": "共享同一任务运行时的 AI 员工角色。每个角色只能使用所列工具，并以分配任务者的权限工作。",
@@ -802,7 +811,11 @@
       "read_objectives": "读取目标",
       "create_graph_entity": "添加到公司图谱",
       "create_project": "创建项目",
-      "create_milestone": "添加里程碑"
+      "create_milestone": "添加里程碑",
+      "read_leads": "读取 CRM 线索",
+      "create_lead": "添加 CRM 线索",
+      "read_lead": "读取线索历史",
+      "send_lead_email": "向线索发送邮件"
     },
     "needsApproval": "需审批"
   },
@@ -863,7 +876,8 @@
       "MEDIUM": "中风险",
       "HIGH": "高风险",
       "CRITICAL": "关键"
-    }
+    },
+    "messagePreview": "待发送的消息"
   },
   "objectives": {
     "subtitle": "设定目标，拆分为里程碑，将里程碑关联到项目，并让 AI 员工提出里程碑供你批准。",
@@ -887,6 +901,142 @@
       "ACTIVE": "进行中",
       "ACHIEVED": "已达成",
       "ABANDONED": "已放弃"
+    }
+  },
+  "notifications": {
+    "title": "待办",
+    "markAllRead": "全部标为已读",
+    "approvalRequested": "请求审批：{summary}",
+    "empty": "暂无需要您处理的事项。"
+  },
+  "crm": {
+    "subtitle": "在销售管道中跟踪线索。评分自动更新，重复项会被标记。",
+    "leads": "线索",
+    "count": "{count, plural, other {# 条线索}}",
+    "empty": "暂无线索。",
+    "openLeads": "未关闭线索",
+    "hotLeads": "热线索",
+    "pipelineValue": "未关闭管道价值",
+    "dueToday": "到期跟进",
+    "followUpsDue": "今日到期跟进",
+    "name": "姓名",
+    "email": "邮箱",
+    "phone": "电话",
+    "account": "公司",
+    "source": "来源",
+    "sourcePlaceholder": "网站、推荐、活动…",
+    "value": "预估价值",
+    "notes": "备注",
+    "addLead": "添加线索",
+    "createAnyway": "仍然创建",
+    "viewExisting": "查看现有线索",
+    "stage": "阶段",
+    "stages": {
+      "NEW": "新建",
+      "CONTACTED": "已联系",
+      "QUALIFIED": "已确认",
+      "PROPOSAL": "方案",
+      "WON": "赢单",
+      "LOST": "丢单"
+    },
+    "scoreLabels": {
+      "HOT": "热",
+      "WARM": "温",
+      "NURTURE": "培育"
+    },
+    "scoreHint": "线索评分 0–100，依据联系方式、公司、价值、备注和阶段。",
+    "next": "下次：{date}",
+    "complete": "标记跟进完成",
+    "back": "全部线索",
+    "lastContacted": "最近联系",
+    "created": "创建于",
+    "followUps": "跟进",
+    "noFollowUps": "暂无跟进。",
+    "dueDate": "到期",
+    "followUpNote": "下一步",
+    "followUpPlaceholder": "致电讨论价格",
+    "addFollowUp": "添加跟进",
+    "markContacted": "标记为已联系",
+    "duplicates": "可能重复",
+    "duplicatesHint": "邮箱或电话相同的其他线索。合并会保留此线索并归档另一条。",
+    "mergeInto": "合并到此线索",
+    "mergeConfirm": "将“{name}”合并到此线索？另一条线索将被归档。",
+    "mergedNotice": "此线索已合并到另一条线索。打开它。",
+    "archivedNotice": "此线索已归档。",
+    "activityPlaceholder": "发生了什么？例如：讨论了价格，将发送方案",
+    "activitySummary": "摘要",
+    "activityType": "类型",
+    "allOwners": "全部负责人",
+    "allStages": "全部阶段",
+    "allTemperatures": "全部热度",
+    "applyFilters": "应用",
+    "archive": "归档",
+    "archiveConfirm": "{count, plural, other {归档 # 条线索？}}归档的线索将移出销售管道。",
+    "assign": "分配",
+    "assistBrief": "总结并建议下一步",
+    "assistDraft": "起草跟进",
+    "assistGuidance": "给 AI 的说明（可选）",
+    "assistHint": "AI 会读取此线索的记录和时间线。邮件只有在有人于审批中批准后才会发送。",
+    "assistPlaceholder": "例如：提及年度套餐折扣",
+    "assistSend": "起草并申请发送",
+    "assistant": "AI 销售助手",
+    "assistantDescription": "根据此线索的历史生成摘要、下一步建议和跟进草稿。",
+    "bulkActions": "批量操作",
+    "byStage": "各阶段线索",
+    "clearFilters": "清除",
+    "conversion": "各阶段转化",
+    "conversionHint": "基于当前阶段：处于后续阶段的线索已经过前面的阶段。不含丢单线索。",
+    "dashboard": "仪表板",
+    "dashboardSubtitle": "基于实时 CRM 数据的销售管道、转化和团队表现。",
+    "deal": "交易",
+    "expectedClose": "预计成交",
+    "followUpCount": "{count, plural, other {# 个跟进}}",
+    "fromPrevious": "较上一阶段",
+    "logActivity": "记录活动",
+    "myLeads": "我的线索",
+    "newLeads": "新线索（7 天）",
+    "newLeadsHint": "近 30 天 {count} 条",
+    "nextFollowUp": "下次跟进",
+    "noActivities": "尚无活动记录。",
+    "noEmail": "此线索没有邮箱地址。",
+    "noOverdue": "没有逾期跟进。",
+    "occurredAt": "时间",
+    "occurredAtHint": "留空表示现在。",
+    "overdueFollowUps": "逾期跟进",
+    "overdueOn": "自 {date} 起逾期",
+    "owner": "负责人",
+    "ownerPerformance": "负责人表现",
+    "priority": "优先级",
+    "probability": "概率（%）",
+    "probabilityHint": "留空则使用阶段默认值。",
+    "probabilityValue": "赢单概率 {value}%",
+    "reached": "到达",
+    "search": "搜索线索",
+    "searchPlaceholder": "搜索姓名、邮箱、公司或负责人",
+    "selectAll": "全选",
+    "selected": "{count, plural, other {已选 # 项}}",
+    "setStage": "设置阶段",
+    "stageDefault": "阶段默认",
+    "statsFiltered": "合计反映当前筛选条件。",
+    "temperature": "热度",
+    "timeline": "活动时间线",
+    "timelineHint": "电话、邮件、会议和备注，最新在前。",
+    "unassigned": "未分配",
+    "weighted": "加权",
+    "weightedPipeline": "加权管道",
+    "winRate": "赢单率 {rate}",
+    "winRateColumn": "赢单率",
+    "wonValue": "赢单金额",
+    "activityTypes": {
+      "CALL": "电话",
+      "EMAIL": "邮件",
+      "MEETING": "会议",
+      "NOTE": "备注"
+    },
+    "priorities": {
+      "LOW": "低",
+      "MEDIUM": "中",
+      "HIGH": "高"
     }
   }
 }
