@@ -160,6 +160,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       profile,
       title: task.title,
       instructions: task.instructions,
+      taskId: task.id,
       isCancelled: async () => !(await db().agentTask.count({ where: held })),
     });
     const stored = await transaction(async (tx) => {

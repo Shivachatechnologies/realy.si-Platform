@@ -10,6 +10,7 @@ import { GET as documentRoute } from "@/app/api/v1/organizations/[orgId]/compani
 import { GET as searchRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/brain/search/route";
 import { expectCode, makeUser, resetDb } from "../helpers";
 import { params, req } from "../http";
+import { makePdf } from "../pdf";
 
 beforeAll(resetDb);
 
@@ -80,15 +81,30 @@ describe("company brain", () => {
 
   it("rejects unsupported, empty, binary and duplicate content without persisting anything", async () => {
     const { owner, org, company } = await setup();
-    await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "deck.pdf", content: "%PDF-1.7" }), "validation_error");
+    await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "photo.png", content: "x" }), "validation_error");
+    await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "deck.pdf", content: "%PDF-1.7" }), "validation_error"); // PDFs come as bytes
     await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "empty.txt", content: " \n " }), "validation_error");
     await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "fake.txt", content: "\u0000\u0001\u0002ELF" }), "validation_error");
     await ingestDocument(owner.ctx, org.id, company.id, { filename: "a.txt", content: PLAN });
     const dup = (await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "copy.md", content: `${PLAN}\n` }), "conflict")) as { details?: { documentId?: string; reason?: string } };
     expect(dup.details).toMatchObject({ reason: "brain_duplicate", documentId: expect.any(String) });
-    const pdf = (await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "x.pdf", content: "x" }), "validation_error")) as { details?: { reason?: string } };
-    expect(pdf.details?.reason).toBe("brain_unsupported_type");
+    const png = (await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "x.png", content: "x" }), "validation_error")) as { details?: { reason?: string } };
+    expect(png.details?.reason).toBe("brain_unsupported_type");
+    const scanned = (await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "scan.pdf", contentBase64: makePdf([[]]).toString("base64") }), "validation_error")) as { details?: { reason?: string } };
+    expect(scanned.details?.reason).toBe("brain_no_text");
     expect(await db().brainDocument.count({ where: { companyId: company.id } })).toBe(1);
+  });
+
+  it("ingests PDFs: text layer indexed, searchable, cited by passage; file size recorded", async () => {
+    const { owner, org, company } = await setup();
+    const file = makePdf([["Security policy", "All laptops use full-disk encryption."], ["Incident response within 4 hours."]]);
+    const doc = await ingestDocument(owner.ctx, org.id, company.id, { filename: "security-policy.pdf", contentBase64: file.toString("base64") });
+    expect(doc).toMatchObject({ title: "security-policy", mimeType: "application/pdf", status: "READY", sizeBytes: file.byteLength, passages: 1 });
+    const { results } = await searchDocuments(owner.ctx, org.id, company.id, { q: "encryption" });
+    expect(results[0]!.citation).toMatchObject({ documentId: doc.id, mimeType: "application/pdf", passage: 1 });
+    expect((await getDocument(owner.ctx, org.id, company.id, doc.id)).passages[0]!.text).toContain("Incident response within 4 hours.");
+    // The same PDF again is a duplicate.
+    await expectCode(ingestDocument(owner.ctx, org.id, company.id, { filename: "copy.pdf", contentBase64: file.toString("base64") }), "conflict");
   });
 
   it("deletes a document with its passages", async () => {
@@ -150,7 +166,8 @@ describe("company brain", () => {
     expect(created.status).toBe(200);
     const doc = await created.json();
     expect((await ingestRoute(req(`${base}/documents`, { cookie, body: { filename: "x.exe", content: "MZ" } }), p)).status).toBe(400);
-    expect((await ingestRoute(req(`${base}/documents`, { cookie, body: { content: "a".repeat(2_100_000) } }), p)).status).toBe(413);
+    expect((await ingestRoute(req(`${base}/documents`, { cookie, body: { content: "a".repeat(2_100_000) } }), p)).status).toBe(400); // over the 1 MB text limit
+    expect((await ingestRoute(req(`${base}/documents`, { cookie, body: { filename: "big.pdf", contentBase64: "A".repeat(12_000_000) } }), p)).status).toBe(413); // over the body limit
     expect((await ingestRoute(req(`${base}/documents`, { body: { content: PLAN } }), p)).status).toBe(401);
 
     const list = await (await listRoute(req(`${base}/documents`, { cookie }), p)).json();

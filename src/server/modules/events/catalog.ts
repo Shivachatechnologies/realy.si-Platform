@@ -50,6 +50,10 @@ export const eventCatalog = {
   "feature_flag.updated": { 1: z.object({ flagId: id, key: z.string() }) },
   "globalization.country.updated": { 1: z.object({ countryCode: z.string() }) },
   "billing.profile.updated": { 1: z.object({ organizationId: id, billingCountryCode: z.string() }) },
+  "approval.requested": { 1: z.object({ approvalId: id, companyId: id, tool: z.string(), risk: z.string(), taskId: id.nullable() }) },
+  "approval.resolved": { 1: z.object({ approvalId: id, companyId: id, tool: z.string(), status: z.string() }) },
+  "objective.created": { 1: z.object({ objectiveId: id, companyId: id }) },
+  "milestone.completed": { 1: z.object({ milestoneId: id, objectiveId: id, companyId: id }) },
 } as const;
 
 export type EventType = keyof typeof eventCatalog;

@@ -184,3 +184,15 @@ export async function createProject(ctx: RequestContext, organizationId: string,
     return project;
   });
 }
+
+/** Projects of one company, newest first, with their workspace. */
+export async function listProjects(ctx: RequestContext, organizationId: string, companyId: string) {
+  const chain = await companyChain(db(), organizationId, companyId);
+  await requirePermission(ctx, "projects.read", chain);
+  return db().project.findMany({
+    where: { organizationId, companyId },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+    select: { id: true, name: true, createdAt: true, workspace: { select: { id: true, name: true } } },
+  });
+}

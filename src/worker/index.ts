@@ -17,6 +17,7 @@ import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
 import { processPasswordResetRequest, purgeExpiredAuthTokens } from "@/server/modules/auth/recovery";
 import { AGENT_TASK_QUEUE, AUTH_EMAIL_QUEUE, queuePrefix, type AgentTaskJob, type PasswordResetJob } from "@/server/core/jobs";
 import { failStaleTasks, processAgentTask } from "@/server/modules/agents/service";
+import { expireApprovals } from "@/server/modules/approvals/service";
 
 const POLL_MS = 500;
 let stopping = false;
@@ -29,7 +30,8 @@ async function maintenance(log: typeof logger) {
     const keys = await purgeExpiredIdempotencyKeys();
     const tokens = await purgeExpiredAuthTokens();
     const staleTasks = await failStaleTasks();
-    if (keys || tokens || staleTasks) log.info({ idempotencyKeys: keys, authTokens: tokens, staleTasks }, "maintenance purge");
+    const expiredApprovals = await expireApprovals();
+    if (keys || tokens || staleTasks || expiredApprovals) log.info({ idempotencyKeys: keys, authTokens: tokens, staleTasks, expiredApprovals }, "maintenance purge");
   } catch (err) {
     log.error({ err }, "maintenance failed");
     captureException(err, { job: "maintenance" });

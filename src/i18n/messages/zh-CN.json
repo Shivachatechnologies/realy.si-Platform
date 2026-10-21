@@ -76,7 +76,7 @@
     },
     "objectives": {
       "title": "目标",
-      "description": "包含负责人、截止日期、预算、风险和成功标准的成果。"
+      "description": "公司正在努力实现的目标，拆分为里程碑。"
     },
     "plans": {
       "title": "计划",
@@ -96,7 +96,7 @@
     },
     "approvals": {
       "title": "审批",
-      "description": "等待您决定的受监督操作和仅限创始人的操作。"
+      "description": "AI 员工提出、需要人工决定的操作。"
     },
     "overview": {
       "title": "概览",
@@ -112,7 +112,7 @@
     },
     "customers": {
       "title": "客户",
-      "description": "客户、订阅及其历史记录。"
+      "description": "客户、供应商和合作伙伴，以及他们与你的产品和团队的关系。"
     },
     "people": {
       "title": "人员",
@@ -252,14 +252,23 @@
       "already_subscribed": "该组织已有订阅。请通过“管理账单”进行更改。",
       "checkout_in_progress": "该组织的结账流程正在启动中，请稍后再试。",
       "payment_processing": "该组织的一笔付款刚刚完成，正在确认中。请稍后刷新。",
-      "brain_unsupported_type": "暂不支持此文件类型。请上传 .txt 或 .md 文件，或粘贴文本。",
+      "brain_unsupported_type": "暂不支持此文件类型。请上传 .txt、.md 或 .pdf 文件，或粘贴文本。",
       "brain_too_large": "文档大于 1 MB。",
       "brain_not_text": "此文件不是可读文本。请上传 .txt 或 .md 文件。",
       "brain_empty": "文档为空。",
       "brain_duplicate": "此内容已在公司大脑中。",
       "ai_not_configured": "此环境尚未配置 AI 执行。",
       "task_not_active": "只能取消排队中或运行中的任务。",
-      "task_not_retryable": "只能重试失败或已取消的任务。"
+      "task_not_retryable": "只能重试失败或已取消的任务。",
+      "platform_admin": "无法在此停用平台管理员。请先移除其平台角色。",
+      "brain_invalid_pdf": "此文件不是可读取的 PDF。",
+      "brain_no_text": "此 PDF 没有文字层——扫描版 PDF 需要 OCR，目前尚不支持。",
+      "approval_decided": "此请求已有决定。",
+      "approval_expired": "此请求已过期。",
+      "tool_changed": "此操作已不再以这种形式提供，请拒绝。",
+      "approver_lacks_permission": "你没有此操作所需的权限，因此无法批准。",
+      "founder_only": "只有组织所有者才能批准此操作。",
+      "approval_failed": "已批准，但操作失败。请在请求中查看详情。"
     }
   },
   "onboarding": {
@@ -486,7 +495,9 @@
       "countries": "国家与区域",
       "flags": "功能开关",
       "audit": "审计日志",
-      "system": "系统状态"
+      "system": "系统状态",
+      "users": "用户",
+      "organizations": "组织"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -588,6 +599,41 @@
         "otel": "链路追踪（OpenTelemetry）",
         "redis": "限流存储（Redis）"
       }
+    },
+    "users": {
+      "count": "{count, plural, other {# 个用户}}（最新优先，最多 100 个）",
+      "search": "按邮箱或姓名搜索",
+      "searchButton": "搜索",
+      "suspend": "停用",
+      "reactivate": "重新启用",
+      "suspendHint": "该用户会在所有设备上退出登录，重新启用前无法登录。",
+      "mfaOn": "已开启双重验证",
+      "mfaOff": "未开启双重验证",
+      "verified": "邮箱已验证",
+      "unverified": "邮箱未验证",
+      "columns": {
+        "user": "用户",
+        "status": "状态",
+        "security": "安全",
+        "organizations": "组织",
+        "created": "加入时间"
+      },
+      "status": {
+        "ACTIVE": "正常",
+        "SUSPENDED": "已停用",
+        "DELETED": "已删除"
+      }
+    },
+    "organizations": {
+      "hint": "平台上的所有组织。租户数据仍受租户权限保护。",
+      "search": "按名称或标识搜索",
+      "columns": {
+        "name": "组织",
+        "members": "成员",
+        "companies": "公司",
+        "subscription": "订阅",
+        "created": "创建时间"
+      }
     }
   },
   "email": {
@@ -653,7 +699,10 @@
       "SUPPLIES": "供应",
       "PARTNERS_ON": "合作于",
       "MANAGES_ACCOUNT": "管理客户"
-    }
+    },
+    "description": "描述",
+    "kindCount": "{count, plural, other {# 条}}",
+    "emptyKind": "暂无内容。"
   },
   "brain": {
     "subtitle": "{company} 的文档，已建立搜索索引。每条结果都注明其来源段落。",
@@ -683,14 +732,14 @@
     "delete": "删除文档",
     "confirmDelete": "要从公司大脑中删除此文档及其段落吗？",
     "add": "添加文档",
-    "addHint": "上传文本文件（{types}，最大 1 MB）或粘贴文本，系统会立即建立索引。",
+    "addHint": "上传文本、Markdown 或 PDF 文件（{types}；文本最大 1 MB，PDF 最大 8 MB），或粘贴文本，系统会立即建立索引。不支持没有文字层的扫描版 PDF。",
     "file": "文件",
     "titleLabel": "标题",
     "titleHint": "可选——默认为文件名或第一行。",
     "paste": "或粘贴文本",
     "addSubmit": "添加并索引",
     "indexing": "正在索引…",
-    "tooLarge": "文件大于 1 MB。"
+    "tooLarge": "文件过大（文本最大 1 MB，PDF 最大 8 MB）。"
   },
   "agentTasks": {
     "subtitle": "给 AI 员工分配任务。它基于 {company} 的文档和图谱工作，并交付带引用来源的成果供你审阅。",
@@ -737,18 +786,25 @@
     "attempts": "{count, plural, other {# 次尝试}}",
     "cancel": "取消任务",
     "retry": "重试",
-    "confirmCancel": "要取消此任务吗？"
+    "confirmCancel": "要取消此任务吗？",
+    "lookupApproval": "已请求审批：{tool}",
+    "lookupOther": "{tool}——{count, plural, other {# 条结果}}"
   },
   "workforce": {
     "subtitle": "共享同一任务运行时的 AI 员工角色。每个角色只能使用所列工具，并以分配任务者的权限工作。",
     "tools": "工具",
     "limits": "每个任务最多 {turns} 步、5 分钟。",
     "assign": "分配任务",
-    "noActions": "不能发送消息、发布、购买或更改公司数据——成果都是供你使用的草稿。",
+    "noActions": "不能发送消息、发布或购买。公司数据只有在有人批准后才会更改。",
     "toolNames": {
       "search_company_brain": "搜索公司大脑",
-      "read_company_graph": "读取公司图谱"
-    }
+      "read_company_graph": "读取公司图谱",
+      "read_objectives": "读取目标",
+      "create_graph_entity": "添加到公司图谱",
+      "create_project": "创建项目",
+      "create_milestone": "添加里程碑"
+    },
+    "needsApproval": "需审批"
   },
   "profiles": {
     "research_analyst": {
@@ -770,6 +826,67 @@
     "operations_assistant": {
       "name": "运营助理",
       "summary": "项目计划、检查清单、流程和状态汇总。"
+    }
+  },
+  "projects": {
+    "workspace": "工作区",
+    "name": "项目名称",
+    "create": "创建项目",
+    "created": "创建时间",
+    "empty": "暂无项目。",
+    "count": "{count, plural, other {# 个项目}}"
+  },
+  "approvals": {
+    "subtitle": "AI 员工可以提出变更——添加到公司图谱、创建项目或里程碑。在具备相应权限的人批准之前，什么都不会改变。请求在 72 小时后过期。",
+    "pending": "等待决定",
+    "history": "历史",
+    "count": "{count, plural, other {# 个请求}}",
+    "nonePending": "没有等待审批的请求。",
+    "approve": "批准",
+    "approveAndRun": "批准并执行",
+    "approveHint": "将立即以你的身份、按你的权限执行。",
+    "reject": "拒绝",
+    "forTask": "此任务的审批请求",
+    "expires": "{at} 过期",
+    "founderOnly": "仅限所有者",
+    "unknownRequester": "已请求",
+    "status": {
+      "PENDING": "待审批",
+      "APPROVED": "执行中",
+      "REJECTED": "已拒绝",
+      "EXPIRED": "已过期",
+      "EXECUTED": "已完成",
+      "FAILED": "失败"
+    },
+    "risk": {
+      "LOW": "低风险",
+      "MEDIUM": "中风险",
+      "HIGH": "高风险",
+      "CRITICAL": "关键"
+    }
+  },
+  "objectives": {
+    "subtitle": "设定目标，拆分为里程碑，将里程碑关联到项目，并让 AI 员工提出里程碑供你批准。",
+    "list": "目标",
+    "count": "{count, plural, other {# 个目标}}",
+    "empty": "暂无目标。添加公司要实现的第一个目标。",
+    "title": "目标",
+    "titlePlaceholder": "例如：在阿联酋获得首批 100 个客户",
+    "targetDate": "目标日期",
+    "create": "添加目标",
+    "milestone": "里程碑",
+    "dueDate": "截止",
+    "project": "项目",
+    "noProject": "无项目",
+    "addMilestone": "添加",
+    "noMilestones": "暂无里程碑。",
+    "target": "目标 {date}",
+    "progress": "已完成 {done}/{total} 个里程碑",
+    "tasks": "{count, plural, other {# 个 AI 任务}}",
+    "status": {
+      "ACTIVE": "进行中",
+      "ACHIEVED": "已达成",
+      "ABANDONED": "已放弃"
     }
   }
 }

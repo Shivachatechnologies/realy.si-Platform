@@ -395,6 +395,9 @@ model Company {
   graphEdges    GraphEdge[]
   brainDocuments BrainDocument[]
   agentTasks     AgentTask[]
+  approvals      Approval[]
+  objectives     Objective[]
+  milestones     Milestone[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -434,7 +437,9 @@ model Project {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   company      Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   workspace    Workspace    @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  milestones   Milestone[]
 
+  @@unique([id, companyId])
   @@index([organizationId, companyId, workspaceId])
   @@map("projects")
 }
@@ -592,11 +597,137 @@ model AgentTask {
   startedAt      DateTime?       @map("started_at") @db.Timestamptz(3)
   completedAt    DateTime?       @map("completed_at") @db.Timestamptz(3)
 
-  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  /// Optional: the milestone this task advances.
+  milestoneId    String?         @map("milestone_id") @db.Uuid
 
+  company   Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  milestone Milestone? @relation(fields: [milestoneId, companyId], references: [id, companyId], onDelete: NoAction)
+  approvals Approval[]
+
+  @@unique([id, companyId])
   @@index([organizationId, companyId, createdAt])
   @@index([status])
+  @@index([milestoneId])
   @@map("agent_tasks")
+}
+
+// ───────────────────────────── Approvals ─────────────────────────────
+// Tool calls that need a human decision (docs/tool-system.md §2 step 6, docs/agent-runtime.md). The tool runs only
+// after approval, under the approver's permissions; a request never executes twice.
+
+enum ToolRisk {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ToolAutonomy {
+  AUTONOMOUS
+  SUPERVISED
+  FOUNDER_ONLY
+}
+
+enum ApprovalStatus {
+  PENDING
+  /// Approved and claimed for execution (transient: becomes EXECUTED or FAILED).
+  APPROVED
+  REJECTED
+  EXPIRED
+  EXECUTED
+  FAILED
+}
+
+model Approval {
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  organizationId      String         @map("organization_id") @db.Uuid
+  companyId           String         @map("company_id") @db.Uuid
+  /// The AI task that requested the action (null for requests from other sources, e.g. workflows later).
+  taskId              String?        @map("task_id") @db.Uuid
+  /// Agent profile that requested it.
+  requestedByProfile  String?        @map("requested_by_profile")
+  /// The person on whose behalf the request was made (the task's requester).
+  requestedById       String         @map("requested_by_id") @db.Uuid
+  tool                String
+  toolVersion         Int            @map("tool_version")
+  /// Validated tool input that runs on approval.
+  input               Json
+  /// Human-readable description of what will happen.
+  summary             String
+  risk                ToolRisk
+  autonomy            ToolAutonomy
+  requiredPermissions String[]       @map("required_permissions")
+  status              ApprovalStatus @default(PENDING)
+  decidedById         String?        @map("decided_by_id") @db.Uuid
+  decidedAt           DateTime?      @map("decided_at") @db.Timestamptz(3)
+  decisionNote        String?        @map("decision_note")
+  executedAt          DateTime?      @map("executed_at") @db.Timestamptz(3)
+  result              Json?
+  error               String?
+  expiresAt           DateTime       @map("expires_at") @db.Timestamptz(3)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  task    AgentTask? @relation(fields: [taskId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([organizationId, companyId, status, createdAt])
+  @@index([taskId])
+  @@index([status, expiresAt])
+  @@map("approvals")
+}
+
+// ───────────────────────────── Objectives ─────────────────────────────
+// What the company is trying to achieve, broken into milestones; milestones can point at a project and AI tasks can
+// advance a milestone (docs/database.md Phase 3: objectives, milestones).
+
+enum ObjectiveStatus {
+  ACTIVE
+  ACHIEVED
+  ABANDONED
+}
+
+model Objective {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  companyId      String          @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  status         ObjectiveStatus @default(ACTIVE)
+  targetDate     DateTime?       @map("target_date") @db.Date
+  createdById    String          @map("created_by_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  milestones Milestone[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@map("objectives")
+}
+
+model Milestone {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  objectiveId    String    @map("objective_id") @db.Uuid
+  title          String
+  dueDate        DateTime? @map("due_date") @db.Date
+  /// Optional project carrying the work; must be in the same company.
+  projectId      String?   @map("project_id") @db.Uuid
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  objective Objective   @relation(fields: [objectiveId, companyId], references: [id, companyId], onDelete: Cascade)
+  project   Project?    @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
+  tasks     AgentTask[]
+
+  @@unique([id, companyId])
+  @@index([objectiveId])
+  @@map("milestones")
 }
 
 // ───────────────────────────── RBAC ─────────────────────────────

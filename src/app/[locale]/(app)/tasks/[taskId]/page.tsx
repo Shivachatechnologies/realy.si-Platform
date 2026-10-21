@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AutoRefresh } from "@/components/agents/auto-refresh";
+import { ApprovalList } from "@/components/approvals/approval-list";
 import { TaskActions } from "@/components/agents/task-actions";
 import { TaskStatusBadge } from "@/components/agents/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { db } from "@/server/core/db";
 import { isAppError } from "@/server/core/errors";
 import { aiConfigured, type Citation, type ToolCallRecord } from "@/server/modules/agents/runtime";
 import { getTask } from "@/server/modules/agents/service";
+import { listApprovals } from "@/server/modules/approvals/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -32,7 +34,13 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
     if (isAppError(err) && (err.code === "not_found" || err.code === "forbidden")) notFound();
     throw err;
   });
-  const canRun = await can(viewer.ctx, "agents.run", await companyChain(db(), org.id, company.id));
+  const chain = await companyChain(db(), org.id, company.id);
+  const [canRun, canReadApprovals, canDecide] = await Promise.all([
+    can(viewer.ctx, "agents.run", chain),
+    can(viewer.ctx, "approvals.read", chain),
+    can(viewer.ctx, "approvals.decide", chain),
+  ]);
+  const approvals = canReadApprovals ? (await listApprovals(viewer.ctx, org.id, company.id)).filter((a) => a.taskId === task.id) : [];
   const active = task.status === "QUEUED" || task.status === "RUNNING";
   const citations = task.citations as unknown as Citation[];
   const lookups = task.toolCalls as unknown as ToolCallRecord[];
@@ -118,6 +126,20 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
         </Card>
       ) : null}
 
+      {approvals.length ? (
+        <Card>
+          <CardHeader title={t("approvals.forTask")} />
+          <ApprovalList
+            approvals={approvals}
+            t={t}
+            locale={locale}
+            timeZone={tz}
+            apiBase={`/api/v1/organizations/${org.id}/companies/${company.id}`}
+            canDecide={canDecide}
+          />
+        </Card>
+      ) : null}
+
       {lookups.length ? (
         <Card>
           <CardHeader title={t("agentTasks.lookups")} />
@@ -127,9 +149,13 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
                 <li key={i}>
                   {l.error
                     ? t("agentTasks.lookupFailed", { tool: t(`workforce.toolNames.${l.tool}`), error: l.error })
-                    : l.tool === "search_company_brain"
-                      ? t("agentTasks.lookupBrain", { query: String(l.input.query ?? ""), count: l.results })
-                      : t("agentTasks.lookupGraph", { count: l.results })}
+                    : l.approvalId
+                      ? t("agentTasks.lookupApproval", { tool: t(`workforce.toolNames.${l.tool}`) })
+                      : l.tool === "search_company_brain"
+                        ? t("agentTasks.lookupBrain", { query: String(l.input.query ?? ""), count: l.results })
+                        : l.tool === "read_company_graph"
+                          ? t("agentTasks.lookupGraph", { count: l.results })
+                          : t("agentTasks.lookupOther", { tool: t(`workforce.toolNames.${l.tool}`), count: l.results })}
                 </li>
               ))}
             </ul>

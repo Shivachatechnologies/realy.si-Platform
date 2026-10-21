@@ -76,7 +76,7 @@
     },
     "objectives": {
       "title": "Objectives",
-      "description": "Outcomes with owners, deadlines, budgets, risks and success criteria."
+      "description": "What the company is working towards, broken into milestones."
     },
     "plans": {
       "title": "Plans",
@@ -96,7 +96,7 @@
     },
     "approvals": {
       "title": "Approvals",
-      "description": "Supervised and founder-only actions waiting for your decision."
+      "description": "Actions AI employees proposed that need a person's decision."
     },
     "overview": {
       "title": "Overview",
@@ -112,7 +112,7 @@
     },
     "customers": {
       "title": "Customers",
-      "description": "Customers, subscriptions and their history."
+      "description": "Customers, vendors and partners, and how they connect to your products and team."
     },
     "people": {
       "title": "People",
@@ -252,14 +252,23 @@
       "already_subscribed": "This organization already has a subscription. Use Manage billing to change it.",
       "checkout_in_progress": "A checkout for this organization is already being started. Try again in a moment.",
       "payment_processing": "A payment for this organization was just completed and is being confirmed. Refresh in a moment.",
-      "brain_unsupported_type": "This file type isn't supported yet. Upload a .txt or .md file, or paste the text.",
+      "brain_unsupported_type": "This file type isn't supported yet. Upload a .txt, .md or .pdf file, or paste the text.",
       "brain_too_large": "The document is larger than 1 MB.",
       "brain_not_text": "This file isn't readable text. Upload a .txt or .md file.",
       "brain_empty": "The document is empty.",
       "brain_duplicate": "This content is already in Company Brain.",
       "ai_not_configured": "AI execution isn't configured in this environment yet.",
       "task_not_active": "Only queued or running tasks can be cancelled.",
-      "task_not_retryable": "Only failed or cancelled tasks can be retried."
+      "task_not_retryable": "Only failed or cancelled tasks can be retried.",
+      "platform_admin": "Platform administrators can't be suspended here. Remove their platform role first.",
+      "brain_invalid_pdf": "This file isn't a readable PDF.",
+      "brain_no_text": "This PDF has no text layer — scanned PDFs need OCR, which isn't supported yet.",
+      "approval_decided": "This request has already been decided.",
+      "approval_expired": "This request has expired.",
+      "tool_changed": "This action is no longer available in this form. Reject it.",
+      "approver_lacks_permission": "You don't have the permission this action needs, so you can't approve it.",
+      "founder_only": "Only an organization owner can approve this action.",
+      "approval_failed": "It was approved, but the action failed. See the details on the request."
     }
   },
   "onboarding": {
@@ -486,7 +495,9 @@
       "countries": "Countries & regions",
       "flags": "Feature flags",
       "audit": "Audit log",
-      "system": "System status"
+      "system": "System status",
+      "users": "Users",
+      "organizations": "Organizations"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -588,6 +599,41 @@
         "otel": "Tracing (OpenTelemetry)",
         "redis": "Rate-limit store (Redis)"
       }
+    },
+    "users": {
+      "count": "{count, plural, one {# user} other {# users}} (newest first, up to 100)",
+      "search": "Search by email or name",
+      "searchButton": "Search",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "suspendHint": "The user is signed out everywhere and cannot sign in until reactivated.",
+      "mfaOn": "Two-factor on",
+      "mfaOff": "Two-factor off",
+      "verified": "Email verified",
+      "unverified": "Email not verified",
+      "columns": {
+        "user": "User",
+        "status": "Status",
+        "security": "Security",
+        "organizations": "Organizations",
+        "created": "Joined"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "DELETED": "Deleted"
+      }
+    },
+    "organizations": {
+      "hint": "Every organization on the platform. Tenant data stays behind tenant permissions.",
+      "search": "Search by name or slug",
+      "columns": {
+        "name": "Organization",
+        "members": "Members",
+        "companies": "Companies",
+        "subscription": "Subscription",
+        "created": "Created"
+      }
     }
   },
   "email": {
@@ -653,7 +699,10 @@
       "SUPPLIES": "supplies",
       "PARTNERS_ON": "partners on",
       "MANAGES_ACCOUNT": "manages account"
-    }
+    },
+    "description": "Description",
+    "kindCount": "{count, plural, one {# entry} other {# entries}}",
+    "emptyKind": "Nothing here yet."
   },
   "brain": {
     "subtitle": "Documents of {company}, indexed for search. Every result cites the passage it came from.",
@@ -683,14 +732,14 @@
     "delete": "Delete document",
     "confirmDelete": "Delete this document and its passages from Company Brain?",
     "add": "Add a document",
-    "addHint": "Upload a text file ({types}, up to 1 MB) or paste text. It is indexed immediately.",
+    "addHint": "Upload a text, Markdown or PDF file ({types}; text up to 1 MB, PDF up to 8 MB) or paste text. It is indexed immediately. Scanned PDFs without a text layer are not supported.",
     "file": "File",
     "titleLabel": "Title",
     "titleHint": "Optional — defaults to the file name or first line.",
     "paste": "Or paste text",
     "addSubmit": "Add and index",
     "indexing": "Indexing…",
-    "tooLarge": "The file is larger than 1 MB."
+    "tooLarge": "The file is too large (text up to 1 MB, PDF up to 8 MB)."
   },
   "agentTasks": {
     "subtitle": "Give an AI employee a task. It works from {company}'s documents and graph and returns a deliverable for you to review, with citations.",
@@ -737,18 +786,25 @@
     "attempts": "{count, plural, one {# attempt} other {# attempts}}",
     "cancel": "Cancel task",
     "retry": "Retry",
-    "confirmCancel": "Cancel this task?"
+    "confirmCancel": "Cancel this task?",
+    "lookupApproval": "Requested approval: {tool}",
+    "lookupOther": "{tool} — {count, plural, one {# result} other {# results}}"
   },
   "workforce": {
     "subtitle": "AI employee profiles that share one task runtime. Each works only through the tools listed, with the permissions of the person who assigns the task.",
     "tools": "Tools",
     "limits": "Up to {turns} steps and 5 minutes per task.",
     "assign": "Assign a task",
-    "noActions": "Cannot send messages, publish, purchase or change company data — deliverables are drafts for you.",
+    "noActions": "Cannot send messages, publish or purchase. Changes to company data happen only after a person approves them.",
     "toolNames": {
       "search_company_brain": "Search Company Brain",
-      "read_company_graph": "Read Company Graph"
-    }
+      "read_company_graph": "Read Company Graph",
+      "read_objectives": "Read objectives",
+      "create_graph_entity": "Add to Company Graph",
+      "create_project": "Create project",
+      "create_milestone": "Add milestone"
+    },
+    "needsApproval": "needs approval"
   },
   "profiles": {
     "research_analyst": {
@@ -770,6 +826,67 @@
     "operations_assistant": {
       "name": "Operations Assistant",
       "summary": "Project plans, checklists, processes and status summaries."
+    }
+  },
+  "projects": {
+    "workspace": "Workspace",
+    "name": "Project name",
+    "create": "Create project",
+    "created": "Created",
+    "empty": "No projects yet.",
+    "count": "{count, plural, one {# project} other {# projects}}"
+  },
+  "approvals": {
+    "subtitle": "AI employees can propose changes — adding to the Company Graph, creating projects or milestones. Nothing changes until someone with the right permissions approves. Requests expire after 72 hours.",
+    "pending": "Waiting for a decision",
+    "history": "History",
+    "count": "{count, plural, one {# request} other {# requests}}",
+    "nonePending": "Nothing is waiting for approval.",
+    "approve": "Approve",
+    "approveAndRun": "Approve and run",
+    "approveHint": "it runs now, as you, with your permissions.",
+    "reject": "Reject",
+    "forTask": "Approval requests from this task",
+    "expires": "Expires {at}",
+    "founderOnly": "Owner only",
+    "unknownRequester": "Requested",
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Running",
+      "REJECTED": "Rejected",
+      "EXPIRED": "Expired",
+      "EXECUTED": "Done",
+      "FAILED": "Failed"
+    },
+    "risk": {
+      "LOW": "Low risk",
+      "MEDIUM": "Medium risk",
+      "HIGH": "High risk",
+      "CRITICAL": "Critical"
+    }
+  },
+  "objectives": {
+    "subtitle": "Set objectives, break them into milestones, link milestones to projects, and let AI employees propose milestones for your approval.",
+    "list": "Objectives",
+    "count": "{count, plural, one {# objective} other {# objectives}}",
+    "empty": "No objectives yet. Add the first thing the company is working towards.",
+    "title": "Objective",
+    "titlePlaceholder": "e.g. Get our first 100 customers in the UAE",
+    "targetDate": "Target date",
+    "create": "Add objective",
+    "milestone": "Milestone",
+    "dueDate": "Due",
+    "project": "Project",
+    "noProject": "No project",
+    "addMilestone": "Add",
+    "noMilestones": "No milestones yet.",
+    "target": "Target {date}",
+    "progress": "{done} of {total} milestones done",
+    "tasks": "{count, plural, one {# AI task} other {# AI tasks}}",
+    "status": {
+      "ACTIVE": "Active",
+      "ACHIEVED": "Achieved",
+      "ABANDONED": "Abandoned"
     }
   }
 }

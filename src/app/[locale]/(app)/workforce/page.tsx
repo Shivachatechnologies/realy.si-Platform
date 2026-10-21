@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { getLocale, getT } from "@/i18n/server";
 import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
+import { TOOLS } from "@/server/modules/tools/registry";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,7 +36,10 @@ export default async function WorkforcePage() {
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {p.tools.map((tool) => (
-                    <Badge key={tool}>{t(`workforce.toolNames.${tool}`)}</Badge>
+                    <Badge key={tool} tone={TOOLS[tool].autonomy === "AUTONOMOUS" ? "neutral" : "warning"}>
+                      {t(`workforce.toolNames.${tool}`)}
+                      {TOOLS[tool].autonomy !== "AUTONOMOUS" ? ` · ${t("workforce.needsApproval")}` : ""}
+                    </Badge>
                   ))}
                 </div>
               </div>
