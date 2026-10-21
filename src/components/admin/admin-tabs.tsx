@@ -5,8 +5,17 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
-const TABS = ["", "/pricing", "/countries", "/flags", "/audit", "/system"] as const;
-const LABEL: Record<(typeof TABS)[number], string> = { "": "overview", "/pricing": "pricing", "/countries": "countries", "/flags": "flags", "/audit": "audit", "/system": "system" };
+const TABS = ["", "/users", "/organizations", "/pricing", "/countries", "/flags", "/audit", "/system"] as const;
+const LABEL: Record<(typeof TABS)[number], string> = {
+  "": "overview",
+  "/users": "users",
+  "/organizations": "organizations",
+  "/pricing": "pricing",
+  "/countries": "countries",
+  "/flags": "flags",
+  "/audit": "audit",
+  "/system": "system",
+};
 
 export function AdminTabs() {
   const { t, locale } = useI18n();

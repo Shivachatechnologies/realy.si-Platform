@@ -7,13 +7,21 @@ import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pag
 import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, mimeTypeFor } from "./extract";
+import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, MAX_PDF_BYTES, mimeTypeFor } from "./extract";
+import { extractPdfText } from "./pdf";
 
 export const ingestDocumentInput = z.object({
   title: z.string().trim().max(200).optional(),
   // Display only: the server derives the type from it and never uses it as a path.
   filename: z.string().trim().min(1).max(255).optional(),
-  content: z.string().max(MAX_DOCUMENT_BYTES),
+  /** Text and Markdown: the file's text. */
+  content: z.string().max(MAX_DOCUMENT_BYTES).optional(),
+  /** PDF: the file's bytes, base64-encoded. */
+  contentBase64: z
+    .string()
+    .max(Math.ceil(MAX_PDF_BYTES / 3) * 4 + 4)
+    .regex(/^[A-Za-z0-9+/]*={0,2}$/)
+    .optional(),
 });
 
 export const searchInput = z.object({
@@ -56,10 +64,19 @@ function titleFrom(input: z.infer<typeof ingestDocumentInput>, text: string) {
  */
 export async function ingestDocument(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof ingestDocumentInput>) {
   const input = ingestDocumentInput.parse(raw);
-  let mimeType, text;
+  let mimeType, text, sizeBytes;
   try {
     mimeType = mimeTypeFor(input.filename);
-    text = extractText(input.content);
+    if (mimeType === "application/pdf") {
+      if (!input.contentBase64) throw invalid("A PDF must be uploaded as a file");
+      const bytes = Buffer.from(input.contentBase64, "base64");
+      sizeBytes = bytes.byteLength;
+      text = extractText(await extractPdfText(bytes));
+    } else {
+      if (input.content === undefined) throw invalid("Document text is required");
+      text = extractText(input.content);
+      sizeBytes = Buffer.byteLength(text, "utf8");
+    }
   } catch (err) {
     if (err instanceof ExtractionError) throw invalid(err.message, { reason: err.reason });
     throw err;
@@ -76,7 +93,7 @@ export async function ingestDocument(ctx: RequestContext, organizationId: string
           title: titleFrom(input, text),
           filename: input.filename ?? null,
           mimeType,
-          sizeBytes: Buffer.byteLength(text, "utf8"),
+          sizeBytes,
           contentSha256: sha,
           status: "READY",
           createdById: ctx.actor.id ?? organizationId,

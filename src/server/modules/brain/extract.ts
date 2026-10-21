@@ -1,12 +1,15 @@
 /**
  * Text extraction and chunking for Company Brain (pure functions, no I/O).
- * v1 accepts plain text and Markdown only: both are indexed as the UTF-8 text the user supplied.
+ * Plain text and Markdown are indexed as the UTF-8 text supplied; PDFs as the text layer extracted by ./pdf.ts
+ * (scanned PDFs without a text layer are refused — no OCR).
  */
 
 /** Largest document accepted, in UTF-8 bytes of extracted text. */
 export const MAX_DOCUMENT_BYTES = 1_000_000;
+/** Largest PDF accepted, in bytes of the file itself. */
+export const MAX_PDF_BYTES = 8_000_000;
 
-const TYPES = { ".txt": "text/plain", ".text": "text/plain", ".md": "text/markdown", ".markdown": "text/markdown" } as const;
+const TYPES = { ".txt": "text/plain", ".text": "text/plain", ".md": "text/markdown", ".markdown": "text/markdown", ".pdf": "application/pdf" } as const;
 export type BrainMimeType = (typeof TYPES)[keyof typeof TYPES];
 export const ACCEPTED_EXTENSIONS = Object.keys(TYPES);
 
@@ -14,7 +17,7 @@ export const ACCEPTED_EXTENSIONS = Object.keys(TYPES);
 export class ExtractionError extends Error {
   constructor(
     message: string,
-    readonly reason: "brain_unsupported_type" | "brain_too_large" | "brain_not_text" | "brain_empty",
+    readonly reason: "brain_unsupported_type" | "brain_too_large" | "brain_not_text" | "brain_empty" | "brain_invalid_pdf" | "brain_no_text",
   ) {
     super(message);
   }

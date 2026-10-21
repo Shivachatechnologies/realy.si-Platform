@@ -34,17 +34,18 @@ export default async function CommandCenterPage() {
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
 
-  // Active AI tasks, counted only for viewers allowed to see the company's tasks.
-  const activeTasks = async () =>
-    company && (await can(viewer.ctx, "agents.read", await companyChain(db(), org.id, company.id)))
-      ? db().agentTask.count({ where: { organizationId: org.id, companyId: company.id, status: { in: ["QUEUED", "RUNNING"] } } })
-      : null;
-  const [activity, status, billing, memberCount, taskCount] = await Promise.all([
+  // Real counts from the company's records, each shown only to viewers allowed to read that area.
+  const chain = company ? await companyChain(db(), org.id, company.id) : null;
+  const scoped = { organizationId: org.id, companyId: company?.id ?? "" };
+  const countIf = async (permission: string, count: () => Promise<number>) => (chain && (await can(viewer.ctx, permission, chain)) ? count() : null);
+  const [activity, status, billing, memberCount, taskCount, objectiveCount, approvalCount] = await Promise.all([
     listAuditLogs(viewer.ctx, org.id, { limit: 8 }).catch(() => null),
     health(org.id),
     db().billingProfile.findUnique({ where: { organizationId: org.id }, select: { billingCountryConfirmedAt: true } }),
     db().membership.count({ where: { organizationId: org.id, status: "ACTIVE" } }),
-    activeTasks(),
+    countIf("agents.read", () => db().agentTask.count({ where: { ...scoped, status: { in: ["QUEUED", "RUNNING"] } } })),
+    countIf("objectives.read", () => db().objective.count({ where: { ...scoped, status: "ACTIVE" } })),
+    countIf("approvals.read", () => db().approval.count({ where: { ...scoped, status: "PENDING", expiresAt: { gt: new Date() } } })),
   ]);
 
   const country = (code: string | null) => (code ? displayName(code, "region", locale) : t("command.notSet"));
@@ -56,10 +57,10 @@ export default async function CommandCenterPage() {
   ];
   const metrics = ["revenue", "mrr", "customers", "pipeline", "cash", "runway", "growth"] as const;
   const counters: { key: string; phase?: number; value?: number | null; href?: string }[] = [
-    { key: "objectives", phase: 3 },
+    { key: "objectives", value: objectiveCount, href: "/objectives" },
     { key: "tasks", value: taskCount, href: "/tasks" },
     { key: "workforce", value: AGENT_PROFILES.length, href: "/workforce" },
-    { key: "approvals", phase: 3 },
+    { key: "approvals", value: approvalCount, href: "/approvals" },
   ];
 
   return (

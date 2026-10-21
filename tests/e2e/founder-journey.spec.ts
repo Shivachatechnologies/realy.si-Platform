@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { execFileSync } from "node:child_process";
 import { currentStep, hotp } from "../../src/server/modules/auth/totp";
+import { makePdf } from "../pdf";
 
 const SHOTS = process.env.E2E_SCREENSHOTS;
 const shot = async (page: Page, name: string) => {
@@ -130,8 +131,8 @@ test("Arabic switches the whole UI to RTL, and unbuilt modules are honest about 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.getByRole("heading", { name: "مركز القيادة" })).toBeVisible();
   await shot(page, "04-command-center-ar");
-  await page.goto("/ar-AE/objectives");
-  await expect(page.getByText("تصدر هذه الوحدة في المرحلة 3")).toBeVisible();
+  await page.goto("/ar-AE/marketing");
+  await expect(page.getByText("تصدر هذه الوحدة في المرحلة 6")).toBeVisible();
   // Back to English for the remaining steps (preference is stored on the profile).
   await page.goto("/ar-AE/settings");
   await page.locator("#locale").selectOption("en-US");
@@ -209,9 +210,9 @@ test("founder adds documents to Company Brain and finds cited passages", async (
 
   // Unsupported files are refused with a clear error and nothing is stored.
   await page.goto("/en-US/brain");
-  await page.getByLabel("File").setInputFiles({ name: "deck.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.7") });
+  await page.getByLabel("File").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from("PNG") });
   await page.getByRole("button", { name: "Add and index" }).click();
-  await expect(page.getByText("This file type isn't supported yet. Upload a .txt or .md file, or paste the text.")).toBeVisible();
+  await expect(page.getByText("This file type isn't supported yet. Upload a .txt, .md or .pdf file, or paste the text.")).toBeVisible();
   await page.reload();
   await expect(page.getByText("2 documents")).toBeVisible();
 });
@@ -234,6 +235,36 @@ test("AI Workforce lists real profiles; AI Tasks says plainly when no AI provide
   const counter = page.getByText("AI employee profiles").locator("..");
   await expect(counter.getByRole("link", { name: "5" })).toBeVisible();
   await shot(page, "07-ai-tasks-not-configured");
+});
+
+test("People, Products, Customers and Projects are working pages; Documents opens Company Brain", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/en-US/people");
+  await expect(page.getByRole("heading", { name: "People", exact: true })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "member of Growth" })).toContainText("Priya"); // from the Company Graph step
+  await expect(page.getByRole("row").filter({ hasText: "Priya member of" })).toContainText("Growth"); // the team's side of the relation
+  await page.goto("/en-US/products");
+  await expect(page.getByRole("row").filter({ hasText: "Gulf App" })).toBeVisible();
+  await page.goto("/en-US/customers");
+  const customers = page.locator("section").filter({ has: page.getByRole("heading", { name: "Customer", exact: true }) });
+  await customers.getByLabel("Name").fill("Dubai Retail Group");
+  await customers.getByRole("button", { name: "Add" }).click();
+  await expect(customers.getByRole("row").filter({ hasText: "Dubai Retail Group" })).toBeVisible();
+
+  await page.goto("/en-US/projects");
+  await page.getByLabel("Project name").fill("UAE launch");
+  await page.getByRole("button", { name: "Create project" }).click();
+  await expect(page.getByRole("row").filter({ hasText: "UAE launch" })).toContainText("General");
+
+  await page.goto("/en-US/documents");
+  await expect(page).toHaveURL(/\/en-US\/brain$/);
+
+  // PDF upload through the browser: the text layer is indexed and searchable.
+  await page.getByLabel("File").setInputFiles({ name: "security-policy.pdf", mimeType: "application/pdf", buffer: makePdf([["Security policy", "All laptops use full-disk encryption."]]) });
+  await page.getByRole("button", { name: "Add and index" }).click();
+  await expect(page).toHaveURL(/\/en-US\/brain\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("region", { name: "Passage 1" })).toContainText("full-disk encryption");
+  await expect(page.getByText("application/pdf")).toBeVisible();
 });
 
 test("mobile layout keeps navigation reachable", async ({ browser }) => {
@@ -278,6 +309,14 @@ test("platform admin changes the India Founder price; history and audit are pres
   // US is untouched.
   await expect(page.getByRole("row").filter({ hasText: "United States" }).filter({ hasText: "Monthly" })).toContainText("$99.00");
   await shot(page, "05-pricing-console");
+
+  // User directory: the founder is listed with their platform role; a super admin can't suspend themselves.
+  await page.goto("/en-US/admin/users");
+  const me = page.getByRole("row").filter({ hasText: email });
+  await expect(me).toContainText("SUPER_ADMIN");
+  await expect(me.getByRole("button", { name: "Suspend" })).toHaveCount(0);
+  await page.goto("/en-US/admin/organizations");
+  await expect(page.getByRole("row").filter({ hasText: "Priya Holdings" })).toBeVisible();
 
   await page.goto("/en-US/admin/audit?category=ADMIN");
   await expect(page.getByRole("cell", { name: "pricing.price_version.created" }).first()).toBeVisible();

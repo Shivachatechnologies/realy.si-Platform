@@ -92,7 +92,7 @@ describe("AI tasks", () => {
     // System prompt carries the role and the company; tools are the profile's.
     expect(calls[0]!.system).toContain("sales researcher");
     expect(calls[0]!.system).toContain("Acme Robotics");
-    expect(calls[0]!.tools!.map((t) => (t as { name: string }).name)).toEqual(["search_company_brain", "read_company_graph"]);
+    expect(calls[0]!.tools!.map((t) => (t as { name: string }).name)).toEqual(["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity"]);
 
     const done = await getTask(owner.ctx, org.id, company.id, task.id);
     expect(done).toMatchObject({ status: "COMPLETED", attempts: 1, model: "claude-opus-5-5", inputTokens: 300, outputTokens: 150, errorCode: null });
@@ -160,7 +160,7 @@ describe("AI tasks", () => {
     const calls = script(toolUse("delete_everything", {}), answer("ok"));
     const task = await createTask(owner.ctx, org.id, company.id, { profile: "research_analyst", title: "tool", instructions: "x" });
     await run(task.id);
-    expect(lastToolResult(calls, 1)).toMatchObject({ is_error: true, content: "Tool delete_everything is not available to this role" });
+    expect(lastToolResult(calls, 1)).toMatchObject({ is_error: true, content: "Unknown tool delete_everything" });
   });
 
   it("cancels queued and running tasks; a running execution never overwrites the cancellation", async () => {

@@ -76,7 +76,7 @@
     },
     "objectives": {
       "title": "Ziele",
-      "description": "Ergebnisse mit Verantwortlichen, Fristen, Budgets, Risiken und Erfolgskriterien."
+      "description": "Worauf das Unternehmen hinarbeitet, in Meilensteine gegliedert."
     },
     "plans": {
       "title": "Pläne",
@@ -96,7 +96,7 @@
     },
     "approvals": {
       "title": "Freigaben",
-      "description": "Überwachte und gründerpflichtige Aktionen, die auf Ihre Entscheidung warten."
+      "description": "Von KI-Mitarbeitern vorgeschlagene Aktionen, die eine Entscheidung brauchen."
     },
     "overview": {
       "title": "Übersicht",
@@ -112,7 +112,7 @@
     },
     "customers": {
       "title": "Kunden",
-      "description": "Kunden, Abonnements und ihre Historie."
+      "description": "Kunden, Lieferanten und Partner und ihre Verbindungen zu Produkten und Team."
     },
     "people": {
       "title": "Personen",
@@ -252,14 +252,23 @@
       "already_subscribed": "Diese Organisation hat bereits ein Abonnement. Ändern Sie es über „Abrechnung verwalten“.",
       "checkout_in_progress": "Für diese Organisation wird bereits ein Bezahlvorgang gestartet. Versuchen Sie es gleich noch einmal.",
       "payment_processing": "Eine Zahlung für diese Organisation wurde gerade abgeschlossen und wird bestätigt. Aktualisieren Sie die Seite gleich.",
-      "brain_unsupported_type": "Dieser Dateityp wird noch nicht unterstützt. Laden Sie eine .txt- oder .md-Datei hoch oder fügen Sie den Text ein.",
+      "brain_unsupported_type": "Dieser Dateityp wird noch nicht unterstützt. Laden Sie eine .txt-, .md- oder .pdf-Datei hoch oder fügen Sie den Text ein.",
       "brain_too_large": "Das Dokument ist größer als 1 MB.",
       "brain_not_text": "Diese Datei ist kein lesbarer Text. Laden Sie eine .txt- oder .md-Datei hoch.",
       "brain_empty": "Das Dokument ist leer.",
       "brain_duplicate": "Dieser Inhalt ist bereits in Company Brain.",
       "ai_not_configured": "Die KI-Ausführung ist in dieser Umgebung noch nicht eingerichtet.",
       "task_not_active": "Nur wartende oder laufende Aufgaben können abgebrochen werden.",
-      "task_not_retryable": "Nur fehlgeschlagene oder abgebrochene Aufgaben können wiederholt werden."
+      "task_not_retryable": "Nur fehlgeschlagene oder abgebrochene Aufgaben können wiederholt werden.",
+      "platform_admin": "Plattform-Administratoren können hier nicht gesperrt werden. Entfernen Sie zuerst ihre Plattformrolle.",
+      "brain_invalid_pdf": "Diese Datei ist kein lesbares PDF.",
+      "brain_no_text": "Dieses PDF hat keine Textebene – gescannte PDFs benötigen OCR, das noch nicht unterstützt wird.",
+      "approval_decided": "Über diese Anfrage wurde bereits entschieden.",
+      "approval_expired": "Diese Anfrage ist abgelaufen.",
+      "tool_changed": "Diese Aktion ist in dieser Form nicht mehr verfügbar. Lehnen Sie sie ab.",
+      "approver_lacks_permission": "Ihnen fehlt die Berechtigung, die diese Aktion braucht – Sie können sie nicht freigeben.",
+      "founder_only": "Nur ein Inhaber der Organisation kann diese Aktion freigeben.",
+      "approval_failed": "Freigegeben, aber die Aktion ist fehlgeschlagen. Details stehen bei der Anfrage."
     }
   },
   "onboarding": {
@@ -486,7 +495,9 @@
       "countries": "Länder & Regionen",
       "flags": "Feature-Flags",
       "audit": "Audit-Protokoll",
-      "system": "Systemstatus"
+      "system": "Systemstatus",
+      "users": "Benutzer",
+      "organizations": "Organisationen"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -588,6 +599,41 @@
         "otel": "Tracing (OpenTelemetry)",
         "redis": "Rate-Limit-Speicher (Redis)"
       }
+    },
+    "users": {
+      "count": "{count, plural, one {# Benutzer} other {# Benutzer}} (neueste zuerst, bis zu 100)",
+      "search": "Nach E-Mail oder Name suchen",
+      "searchButton": "Suchen",
+      "suspend": "Sperren",
+      "reactivate": "Reaktivieren",
+      "suspendHint": "Der Benutzer wird überall abgemeldet und kann sich bis zur Reaktivierung nicht anmelden.",
+      "mfaOn": "Zwei-Faktor an",
+      "mfaOff": "Zwei-Faktor aus",
+      "verified": "E-Mail bestätigt",
+      "unverified": "E-Mail nicht bestätigt",
+      "columns": {
+        "user": "Benutzer",
+        "status": "Status",
+        "security": "Sicherheit",
+        "organizations": "Organisationen",
+        "created": "Beigetreten"
+      },
+      "status": {
+        "ACTIVE": "Aktiv",
+        "SUSPENDED": "Gesperrt",
+        "DELETED": "Gelöscht"
+      }
+    },
+    "organizations": {
+      "hint": "Alle Organisationen der Plattform. Mandantendaten bleiben hinter Mandantenberechtigungen.",
+      "search": "Nach Name oder Slug suchen",
+      "columns": {
+        "name": "Organisation",
+        "members": "Mitglieder",
+        "companies": "Unternehmen",
+        "subscription": "Abonnement",
+        "created": "Erstellt"
+      }
     }
   },
   "email": {
@@ -653,7 +699,10 @@
       "SUPPLIES": "beliefert",
       "PARTNERS_ON": "Partner bei",
       "MANAGES_ACCOUNT": "betreut"
-    }
+    },
+    "description": "Beschreibung",
+    "kindCount": "{count, plural, one {# Eintrag} other {# Einträge}}",
+    "emptyKind": "Noch nichts vorhanden."
   },
   "brain": {
     "subtitle": "Dokumente von {company}, für die Suche indexiert. Jedes Ergebnis nennt die Textstelle, aus der es stammt.",
@@ -683,14 +732,14 @@
     "delete": "Dokument löschen",
     "confirmDelete": "Dieses Dokument und seine Abschnitte aus Company Brain löschen?",
     "add": "Dokument hinzufügen",
-    "addHint": "Laden Sie eine Textdatei hoch ({types}, bis 1 MB) oder fügen Sie Text ein. Sie wird sofort indexiert.",
+    "addHint": "Laden Sie eine Text-, Markdown- oder PDF-Datei hoch ({types}; Text bis 1 MB, PDF bis 8 MB) oder fügen Sie Text ein. Sie wird sofort indexiert. Gescannte PDFs ohne Textebene werden nicht unterstützt.",
     "file": "Datei",
     "titleLabel": "Titel",
     "titleHint": "Optional – Standard ist der Dateiname oder die erste Zeile.",
     "paste": "Oder Text einfügen",
     "addSubmit": "Hinzufügen und indexieren",
     "indexing": "Wird indexiert…",
-    "tooLarge": "Die Datei ist größer als 1 MB."
+    "tooLarge": "Die Datei ist zu groß (Text bis 1 MB, PDF bis 8 MB)."
   },
   "agentTasks": {
     "subtitle": "Geben Sie einem KI-Mitarbeiter eine Aufgabe. Er arbeitet mit den Dokumenten und dem Graphen von {company} und liefert ein Ergebnis mit Quellen zur Prüfung.",
@@ -737,18 +786,25 @@
     "attempts": "{count, plural, one {# Versuch} other {# Versuche}}",
     "cancel": "Aufgabe abbrechen",
     "retry": "Wiederholen",
-    "confirmCancel": "Diese Aufgabe abbrechen?"
+    "confirmCancel": "Diese Aufgabe abbrechen?",
+    "lookupApproval": "Freigabe angefragt: {tool}",
+    "lookupOther": "{tool} – {count, plural, one {# Ergebnis} other {# Ergebnisse}}"
   },
   "workforce": {
     "subtitle": "KI-Mitarbeiterprofile auf einer gemeinsamen Aufgaben-Laufzeit. Jedes arbeitet nur mit den aufgeführten Werkzeugen und den Berechtigungen der Person, die die Aufgabe vergibt.",
     "tools": "Werkzeuge",
     "limits": "Bis zu {turns} Schritte und 5 Minuten pro Aufgabe.",
     "assign": "Aufgabe vergeben",
-    "noActions": "Kann keine Nachrichten senden, nichts veröffentlichen, kaufen oder Unternehmensdaten ändern – Ergebnisse sind Entwürfe für Sie.",
+    "noActions": "Kann keine Nachrichten senden, nichts veröffentlichen oder kaufen. Änderungen an Unternehmensdaten erfolgen erst nach Freigabe durch eine Person.",
     "toolNames": {
       "search_company_brain": "Company Brain durchsuchen",
-      "read_company_graph": "Unternehmensgraph lesen"
-    }
+      "read_company_graph": "Unternehmensgraph lesen",
+      "read_objectives": "Ziele lesen",
+      "create_graph_entity": "Zum Unternehmensgraphen hinzufügen",
+      "create_project": "Projekt anlegen",
+      "create_milestone": "Meilenstein hinzufügen"
+    },
+    "needsApproval": "braucht Freigabe"
   },
   "profiles": {
     "research_analyst": {
@@ -770,6 +826,67 @@
     "operations_assistant": {
       "name": "Operations-Assistent",
       "summary": "Projektpläne, Checklisten, Prozesse und Statusberichte."
+    }
+  },
+  "projects": {
+    "workspace": "Arbeitsbereich",
+    "name": "Projektname",
+    "create": "Projekt anlegen",
+    "created": "Erstellt",
+    "empty": "Noch keine Projekte.",
+    "count": "{count, plural, one {# Projekt} other {# Projekte}}"
+  },
+  "approvals": {
+    "subtitle": "KI-Mitarbeiter können Änderungen vorschlagen – Einträge im Unternehmensgraphen, Projekte oder Meilensteine. Nichts ändert sich, bevor jemand mit den nötigen Berechtigungen zustimmt. Anfragen verfallen nach 72 Stunden.",
+    "pending": "Wartet auf Entscheidung",
+    "history": "Verlauf",
+    "count": "{count, plural, one {# Anfrage} other {# Anfragen}}",
+    "nonePending": "Nichts wartet auf eine Freigabe.",
+    "approve": "Freigeben",
+    "approveAndRun": "Freigeben und ausführen",
+    "approveHint": "Die Aktion läuft jetzt in Ihrem Namen und mit Ihren Berechtigungen.",
+    "reject": "Ablehnen",
+    "forTask": "Freigabeanfragen dieser Aufgabe",
+    "expires": "Läuft ab {at}",
+    "founderOnly": "Nur Inhaber",
+    "unknownRequester": "Angefragt",
+    "status": {
+      "PENDING": "Offen",
+      "APPROVED": "Läuft",
+      "REJECTED": "Abgelehnt",
+      "EXPIRED": "Abgelaufen",
+      "EXECUTED": "Erledigt",
+      "FAILED": "Fehlgeschlagen"
+    },
+    "risk": {
+      "LOW": "Geringes Risiko",
+      "MEDIUM": "Mittleres Risiko",
+      "HIGH": "Hohes Risiko",
+      "CRITICAL": "Kritisch"
+    }
+  },
+  "objectives": {
+    "subtitle": "Setzen Sie Ziele, gliedern Sie sie in Meilensteine, verknüpfen Sie Meilensteine mit Projekten und lassen Sie KI-Mitarbeiter Meilensteine zur Freigabe vorschlagen.",
+    "list": "Ziele",
+    "count": "{count, plural, one {# Ziel} other {# Ziele}}",
+    "empty": "Noch keine Ziele. Legen Sie fest, worauf das Unternehmen zuerst hinarbeitet.",
+    "title": "Ziel",
+    "titlePlaceholder": "z. B. Die ersten 100 Kunden in den VAE gewinnen",
+    "targetDate": "Zieldatum",
+    "create": "Ziel hinzufügen",
+    "milestone": "Meilenstein",
+    "dueDate": "Fällig",
+    "project": "Projekt",
+    "noProject": "Kein Projekt",
+    "addMilestone": "Hinzufügen",
+    "noMilestones": "Noch keine Meilensteine.",
+    "target": "Ziel {date}",
+    "progress": "{done} von {total} Meilensteinen erledigt",
+    "tasks": "{count, plural, one {# KI-Aufgabe} other {# KI-Aufgaben}}",
+    "status": {
+      "ACTIVE": "Aktiv",
+      "ACHIEVED": "Erreicht",
+      "ABANDONED": "Aufgegeben"
     }
   }
 }
