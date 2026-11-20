@@ -1337,6 +1337,10 @@
       "aiCostUsd": "AI cost (USD, est.)",
       "approvalsPending": "Approvals pending",
       "aiEmployeesActive": "Active AI employees"
+    },
+    "starterTeam": {
+      "action": "Hire core AI team",
+      "confirm": "Hire the core AI team (CEO, Sales, Marketing, Finance, HR, Projects, Support, Research)? Roles you already have are skipped."
     }
   },
   "profiles": {

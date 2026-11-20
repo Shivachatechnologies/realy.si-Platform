@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pause, Play, UserPlus } from "lucide-react";
+import { Pause, Play, UserPlus, Users } from "lucide-react";
 import { ActionButton } from "@/components/workforce/action-button";
 import { AiAvatar } from "@/components/workforce/avatar";
 import { PageHeader } from "@/components/workforce/page-header";
@@ -56,12 +56,18 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
         subtitle={t("workforce.subtitle")}
         actions={
           canManage ? (
-            <Button asChild size="sm">
-              <Link href={`/${locale}/workforce/hire`}>
-                <UserPlus aria-hidden />
-                {t("workforce.hire.title")}
-              </Link>
-            </Button>
+            <span className="flex flex-wrap items-start gap-2">
+              <ActionButton path={`${apiBase}/workforce/starter-team`} confirm={t("workforce.starterTeam.confirm")}>
+                <Users aria-hidden />
+                {t("workforce.starterTeam.action")}
+              </ActionButton>
+              <Button asChild size="sm">
+                <Link href={`/${locale}/workforce/hire`}>
+                  <UserPlus aria-hidden />
+                  {t("workforce.hire.title")}
+                </Link>
+              </Button>
+            </span>
           ) : null
         }
       />

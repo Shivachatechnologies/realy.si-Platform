@@ -1337,6 +1337,10 @@
       "aiCostUsd": "KI-Kosten (USD, geschätzt)",
       "approvalsPending": "Offene Freigaben",
       "aiEmployeesActive": "Aktive KI-Mitarbeiter"
+    },
+    "starterTeam": {
+      "action": "KI-Kernteam einstellen",
+      "confirm": "Das KI-Kernteam einstellen (CEO, Vertrieb, Marketing, Finanzen, HR, Projekte, Support, Research)? Bereits besetzte Rollen werden übersprungen."
     }
   },
   "profiles": {
