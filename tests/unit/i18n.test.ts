@@ -5,7 +5,7 @@ import { IntlMessageFormat } from "intl-messageformat";
 import { LOCALES, closestLocale, directionOf } from "@/i18n/config";
 import { createTranslator } from "@/i18n/translate";
 
-const dir = path.resolve(import.meta.dirname, "../../src/i18n/messages");
+const dir = path.resolve(import.meta.dirname, "../../apps/user/src/i18n/messages");
 const load = (l: string) => JSON.parse(readFileSync(path.join(dir, `${l}.json`), "utf8")) as Record<string, unknown>;
 
 function flatten(obj: unknown, prefix = ""): Record<string, string> {
@@ -80,7 +80,7 @@ function sourceFiles(root: string): string[] {
   return out;
 }
 
-const uiRoots = ["src/app", "src/components"].map((r) => path.resolve(import.meta.dirname, "../..", r));
+const uiRoots = ["apps/user/src/app", "apps/user/src/components", "apps/admin/src/app", "apps/admin/src/components"].map((r) => path.resolve(import.meta.dirname, "../..", r));
 const uiFiles = uiRoots.flatMap((r) => {
   try {
     return sourceFiles(r);

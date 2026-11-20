@@ -1,0 +1,14 @@
+{
+  "name": "@realy/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser API client. Two entry points: src/user.ts (apps/user only) and src/admin.ts (apps/admin only).",
+  "exports": {
+    "./user": "./src/user.ts",
+    "./admin": "./src/admin.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

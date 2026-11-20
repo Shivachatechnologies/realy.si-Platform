@@ -1,0 +1,59 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/server/*": [
+        "../../packages/backend/src/server/*"
+      ],
+      "@/worker/*": [
+        "../../packages/backend/src/worker/*"
+      ],
+      "@/generated/*": [
+        "../../packages/database/src/generated/*"
+      ],
+      "@/lib/*": [
+        "../../packages/shared-utils/src/lib/*"
+      ],
+      "@/i18n/*": [
+        "../../packages/shared-utils/src/i18n/*"
+      ],
+      "@realy/auth-core": [
+        "../../packages/auth-core/src/index.ts"
+      ],
+      "@realy/shared-types/*": [
+        "../../packages/shared-types/src/*"
+      ],
+      "@/lib/api-client": [
+        "../../packages/api-client/src/admin.ts"
+      ],
+      "@/i18n/server": [
+        "./src/i18n/server.ts"
+      ],
+      "@/i18n/messages/*": [
+        "./src/i18n/messages/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "**/*.mts"],
+  "exclude": ["node_modules"]
+}

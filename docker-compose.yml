@@ -30,6 +30,7 @@ services:
     profiles: [app]
     build: { context: ., target: runtime }
     command: ["node_modules/.bin/prisma", "migrate", "deploy"]
+    working_dir: /app/packages/database
     environment: &app-env
       DATABASE_URL: postgresql://realy:realy@postgres:5432/realy
       REDIS_URL: redis://redis:6379

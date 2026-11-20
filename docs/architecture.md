@@ -33,7 +33,8 @@ decisions below are made fresh rather than constrained by legacy code.
                                                                  └───────────────────┘
 ```
 
-* **One deployable web app** (Next.js App Router) serving the UI and the versioned HTTP API.
+* **Two deployable web apps** (Next.js App Router) over one shared backend: the founder product `apps/user`
+  (UI + versioned HTTP API) and the Control Center `apps/admin` — see [architecture/apps.md](architecture/apps.md).
 * **One worker image** (same codebase, different entrypoint `src/worker/index.ts`) for every
   long-running or retryable job: outbox relay, workflow steps, agent runs, ingestion, webhooks,
   billing sync. Workers scale horizontally and independently.
@@ -124,15 +125,14 @@ regardless of what the model asked for.
 
 ```
 docs/                     architecture docs (this folder)
-prisma/schema.prisma      single source of truth for the relational model
-prisma/migrations/        SQL migrations (committed, applied by CI/CD)
-prisma/seed.ts            reference data (countries, regions, currencies, languages, permissions, roles)
-src/app/                  Next.js routes: (auth), (app), (admin), api/v1
-src/components/           UI primitives (ui/) and composite components
-src/i18n/                 locale config, message catalogs (messages/<locale>.json), formatting
-src/server/core/          db, errors, request context, logging, crypto, http helpers
-src/server/modules/<m>/   domain modules: service.ts, schemas.ts, (repository.ts), index.ts
-src/worker/               worker entrypoint and job processors
+packages/database/prisma/ schema (single source of truth), migrations (applied by the user app's release), seed
+apps/user/src/app/        user app routes: (auth), (app), public site, api/v1
+apps/admin/src/app/       Control Center routes: (console), (auth), api/v1/admin
+apps/*/src/components/    UI primitives (ui/, one copy per app) and composite components
+apps/*/src/i18n/          message catalogs (messages/<locale>.json); runtime in packages/shared-utils/src/i18n
+packages/backend/src/server/core/         db, errors, request context, logging, crypto, http helpers
+packages/backend/src/server/modules/<m>/  domain modules: service.ts, schemas.ts, (repository.ts), index.ts
+packages/backend/src/worker/              worker entrypoint and job processors
 tests/                    unit/, integration/ (real Postgres), e2e/
 ```
 

@@ -2,8 +2,8 @@ import type { APIRequestContext, Browser, BrowserContext, Page } from "@playwrig
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, test } from "./fixtures";
-import { displayName, formatMoney } from "../../src/i18n/format";
-import { currentStep, hotp } from "../../src/server/modules/auth/totp";
+import { displayName, formatMoney } from "../../packages/shared-utils/src/i18n/format";
+import { currentStep, hotp } from "../../packages/backend/src/server/modules/auth/totp";
 
 /**
  * Global SaaS regression (Phase 1.1 §14/§15): four founders in four markets, each in their own
@@ -35,7 +35,7 @@ type Messages = Record<string, unknown>;
 const catalogs = new Map<string, Messages>();
 /** Expected UI copy comes from the shipped catalogs, so the test checks the real translation is rendered. */
 function msg(locale: string, key: string): string {
-  if (!catalogs.has(locale)) catalogs.set(locale, JSON.parse(readFileSync(`src/i18n/messages/${locale}.json`, "utf8")));
+  if (!catalogs.has(locale)) catalogs.set(locale, JSON.parse(readFileSync(`apps/user/src/i18n/messages/${locale}.json`, "utf8")));
   const v = key.split(".").reduce<unknown>((o, k) => (o as Messages | undefined)?.[k], catalogs.get(locale));
   if (typeof v !== "string") throw new Error(`missing message ${locale}:${key}`);
   return v;

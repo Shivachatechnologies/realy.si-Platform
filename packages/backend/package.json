@@ -1,0 +1,39 @@
+{
+  "name": "@realy/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server core, domain modules and the background worker (src/server, src/worker). Imported by both apps as source.",
+  "scripts": {
+    "worker": "DOTENV_CONFIG_PATH=../../.env tsx src/worker/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
+    "@node-rs/argon2": "^2.2.2",
+    "@opentelemetry/api": "^1.9.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@realy/auth-core": "workspace:*",
+    "@realy/database": "workspace:*",
+    "@realy/shared-types": "workspace:*",
+    "@realy/shared-utils": "workspace:*",
+    "@sentry/node": "^11.7.0",
+    "@vercel/otel": "^2.1.3",
+    "bullmq": "^6.3.15",
+    "dotenv": "^18.0.7",
+    "ioredis": "^6.0.0",
+    "next": "16.4.0",
+    "pino": "^10.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "stripe": "^23.0.0",
+    "unpdf": "1.8.1",
+    "zod": "^4.6.7"
+  }
+}

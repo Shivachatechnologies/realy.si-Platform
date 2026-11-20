@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { execFileSync } from "node:child_process";
-import { currentStep, hotp } from "../../src/server/modules/auth/totp";
+import { currentStep, hotp } from "../../packages/backend/src/server/modules/auth/totp";
 import { makePdf } from "../pdf";
 
 const SHOTS = process.env.E2E_SCREENSHOTS;

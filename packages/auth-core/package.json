@@ -1,0 +1,13 @@
+{
+  "name": "@realy/auth-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Session primitives shared by both apps' proxies and the backend: per-app cookie names and options.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}
