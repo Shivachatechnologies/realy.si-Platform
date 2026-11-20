@@ -10,7 +10,7 @@ export default async function SignInPage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-1">
-        <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("auth.signInTitle")}</h1>
+        <h1 className="font-display text-display-lg">{t("auth.signInTitle")}</h1>
         <p className="text-muted-foreground">{t("auth.signInSubtitle")}</p>
       </div>
       <OAuthErrorNotice />

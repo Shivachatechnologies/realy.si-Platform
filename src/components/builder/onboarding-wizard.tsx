@@ -16,7 +16,9 @@ import { displayName, formatDate, formatMoney } from "@/i18n/format";
 import { LOCALES, LOCALE_NAMES } from "@/i18n/config";
 import { api, ApiError, setCookie } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { AiCore, Aurora, Reveal, TypingText } from "@/components/motion";
+import { Aurora, Reveal, TypingText } from "@/components/motion";
+import { AiCoreStage } from "@/components/graphics/ai-core-stage";
+import { ParticleField } from "@/components/graphics/particle-field";
 import { BriefForm, type BriefMode, type BriefValue } from "./brief-form";
 
 export const WIZARD_STEPS = ["profile", "workspace", "plan", "business", "questions"] as const;
@@ -62,16 +64,19 @@ export function OnboardingWizard(p: Props) {
   return (
     <div className="grid gap-4">
       {welcome ? (
-        <Card variant="glass" className="relative overflow-hidden">
+        <Card variant="glass" className="grain relative overflow-hidden rounded-3xl">
           <Aurora className="pointer-events-none absolute inset-0 opacity-70" />
-          <CardBody className="relative grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_8rem]">
+          <div aria-hidden className="absolute inset-0 opacity-80">
+            <ParticleField density={0.7} intensity={0.35} />
+          </div>
+          <CardBody className="relative grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_15rem]">
             <Reveal className="grid gap-1.5">
-              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              <h2 className="font-display text-display-xl">
                 <TypingText text={t("builder.journey.stages.welcome.title")} />
               </h2>
               <p className="text-sm text-muted-foreground">{t("builder.journey.stages.welcome.what")}</p>
             </Reveal>
-            <AiCore className="mx-auto size-24 sm:size-32" />
+            <AiCoreStage activity={0.3} nodes={8} className="mx-auto aspect-square w-48 sm:w-60" />
           </CardBody>
         </Card>
       ) : null}

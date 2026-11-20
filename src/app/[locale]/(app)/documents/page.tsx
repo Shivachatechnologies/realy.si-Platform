@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { BrainTabs } from "@/components/brain/brain-tabs";
 import { DocumentTable } from "@/components/brain/document-table";
@@ -28,10 +29,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/[local
   const values = Object.fromEntries(["q", "departmentId", "tag", "source", "sort", "cursor"].map((k) => [k, typeof sp[k] === "string" ? (sp[k] as string).slice(0, 200) : undefined])) as Record<string, string | undefined>;
 
   const header = (
-    <div className="grid gap-1">
-      <h1 className="text-lg font-semibold tracking-tight">{t("modules.documents.title")}</h1>
-      <p className="text-muted-foreground">{t("modules.documents.description")}</p>
-    </div>
+    <PageHeader variant="editorial" world="brain" eyebrow={t("dna.worlds.brain")} title={t("modules.documents.title")} description={t("modules.documents.description")} />
   );
   if (!company) {
     return (

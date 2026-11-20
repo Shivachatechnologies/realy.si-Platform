@@ -9,6 +9,7 @@ import { CancelRunButton, LiveRefresh, RetryStep, StartRunButton } from "@/compo
 import { CsvImport as CrmCsvImport } from "@/components/crm/import-export";
 import { CsvImport as HrCsvImport } from "@/components/hr/csv-import";
 import { Badge } from "@/components/ui/badge";
+import { MaterializeScene, type SceneItem } from "@/components/graphics/journey-scenes";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -86,6 +87,17 @@ export default async function BuilderRunPage({ params }: PageProps<"/[locale]/bu
       <LiveRefresh base={base} active={live} />
       {activeCompany?.id !== run.companyId ? <Notice tone="info">{t("builder.run.otherCompany", { name: run.company.name })}</Notice> : null}
 
+      {steps.length ? (
+        <MaterializeScene
+          className="aspect-[16/7] max-h-[26rem]"
+          center={run.company.name}
+          ariaLabel={t("builder.run.progress")}
+          items={[
+            ...steps.map((s): SceneItem => ({ id: s.id, label: t(`builder.steps.${s.key}`), ring: s.status === "COMPLETED" || s.status === "SKIPPED" ? 1 : s.status === "RUNNING" || s.status === "APPLYING" ? 0 : 2, active: s.status === "RUNNING" || s.status === "APPLYING", done: s.status === "COMPLETED" || s.status === "SKIPPED" })),
+          ]}
+        />
+      ) : null}
+
       <Card>
         <CardBody className="grid gap-3">
           <div className="flex items-center justify-between gap-2 text-sm">
@@ -93,7 +105,7 @@ export default async function BuilderRunPage({ params }: PageProps<"/[locale]/bu
             <span className="tabular-nums text-muted-foreground">{pct}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={done} aria-label={t("builder.run.progress")}>
-            <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${pct}%` }} />
+            <div className="progress-sheen h-full rounded-full bg-brand-gradient transition-[width] duration-700" style={{ width: `${pct}%` }} />
           </div>
           {current && run.status !== "DRAFT" && run.status !== "CANCELLED" ? (
             <div className="flex flex-wrap items-center gap-2 text-sm">

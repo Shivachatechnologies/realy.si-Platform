@@ -665,6 +665,7 @@ model Company {
   marketingEngagements            MarketingEngagement[]
   marketingInfluencers            MarketingInfluencer[]
   marketingJourneys               MarketingJourney[]
+  visualAssets                    VisualAsset[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

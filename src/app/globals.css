@@ -57,6 +57,7 @@
 /* Derived tokens: re-declared on every token scope so they resolve against that scope's palette. */
 :root,
 [data-surface],
+[data-world],
 .control-room,
 .auth-shell {
   --glass: color-mix(in oklch, var(--surface) 74%, transparent);
@@ -272,10 +273,16 @@
   --color-danger-foreground: var(--danger-foreground);
   --font-sans: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument), var(--font-locale, var(--font-geist-sans)), ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 3px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 3px);
   --radius-xl: calc(var(--radius) + 7px);
+  --radius-2xl: calc(var(--radius) + 11px);
+  --radius-3xl: calc(var(--radius) + 19px);
+  --color-world: var(--world-accent, var(--primary));
+  --color-world-2: var(--world-accent-2, var(--primary-2));
+  --shadow-float: var(--elev-float);
   --shadow-elev-1: var(--elev-1);
   --shadow-elev-2: var(--elev-2);
   --shadow-elev-3: var(--elev-3);
@@ -301,6 +308,35 @@
   --text-eyebrow--line-height: 1;
   --text-eyebrow--letter-spacing: 0.08em;
   --text-eyebrow--font-weight: 600;
+  /* Design DNA v2 — editorial display scale (use with `font-display`). */
+  --text-hero: clamp(2.6rem, 1.5rem + 3.4vw, 4.9rem);
+  --text-hero--line-height: 0.98;
+  --text-hero--letter-spacing: -0.022em;
+  --text-hero--font-weight: 400;
+  --text-display-xl: clamp(2.1rem, 1.45rem + 2.1vw, 3.4rem);
+  --text-display-xl--line-height: 1.02;
+  --text-display-xl--letter-spacing: -0.018em;
+  --text-display-xl--font-weight: 400;
+  --text-display-lg: clamp(1.7rem, 1.3rem + 1.2vw, 2.4rem);
+  --text-display-lg--line-height: 1.06;
+  --text-display-lg--letter-spacing: -0.015em;
+  --text-display-lg--font-weight: 400;
+  --text-numeral: clamp(2rem, 1.5rem + 1.6vw, 3rem);
+  --text-numeral--line-height: 1;
+  --text-numeral--letter-spacing: -0.035em;
+  --text-numeral--font-weight: 500;
+  --text-micro: 0.625rem;
+  --text-micro--line-height: 1.2;
+  --text-micro--letter-spacing: 0.12em;
+  --text-micro--font-weight: 600;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-cinematic: cubic-bezier(0.65, 0, 0.35, 1);
+  --animate-float: float-y 9s ease-in-out infinite;
+  --animate-shine: shine-sweep 5.5s var(--ease-cinematic) infinite;
+  --animate-scan: scan-line 6s linear infinite;
 
   --animate-fade-up: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-fade-in: fade-in 0.4s ease-out backwards;
@@ -453,6 +489,42 @@
 @keyframes caret {
   50% {
     opacity: 0;
+  }
+}
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+@keyframes shine-sweep {
+  0%,
+  60% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+@keyframes scan-line {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(400%);
+  }
+}
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: var(--len, 400);
   }
 }
 @keyframes pulse-bar {
@@ -777,6 +849,286 @@
 .auth-shell:has([data-surface="admin"]) .auth-variant-admin {
   display: contents;
 }
+}
+
+
+/* ═════════════════════════ Design DNA v2 ═════════════════════════
+ * Motion tokens, spacing rhythm, floating elevation and MODULE WORLDS.
+ *
+ * Module worlds: `<World name="finance">` (src/components/ui/world.tsx) sets `data-world="finance"`. Inside it:
+ *   --world-accent / --world-accent-2   the world's two accent hues (also remapped onto --primary/--primary-2/--ring/
+ *                                       --accent/--glow, so every component inherits the world's identity),
+ *   --world-ambient-1 / -2              ambient light colours for the scene glow,
+ *   --world-texture                     a background texture unique to the world (ledger lines, constellation dots…).
+ * "command" keeps the brand (and white-label) palette.
+ */
+:root {
+  --dur-instant: 90ms;
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
+  --dur-scene: 720ms;
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-cinematic: cubic-bezier(0.65, 0, 0.35, 1);
+  --space-section: clamp(2rem, 1.2rem + 2.4vw, 3.5rem);
+  --space-gutter: clamp(1rem, 0.6rem + 1.2vw, 1.75rem);
+  --world-l: 0.55;
+  --world-l2: 0.58;
+  --amb-l: 0.78;
+  --amb-a: 0.24;
+  --amb-a2: 0.16;
+  --texture-ink: oklch(0.25 0.03 275 / 0.07);
+  --elev-float: 0 1px 0 oklch(1 0 0 / 0.5) inset, 0 2px 6px oklch(0.2 0.02 275 / 0.05), 0 22px 48px -18px oklch(0.25 0.06 275 / 0.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --world-l: 0.72;
+    --world-l2: 0.74;
+    --amb-l: 0.55;
+    --amb-a: 0.26;
+    --amb-a2: 0.18;
+    --texture-ink: oklch(1 0 0 / 0.055);
+    --elev-float: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 2px 8px oklch(0 0 0 / 0.35), 0 28px 60px -20px oklch(0 0 0 / 0.75);
+  }
+}
+:root[data-theme="dark"] {
+  --world-l: 0.72;
+  --world-l2: 0.74;
+  --amb-l: 0.55;
+  --amb-a: 0.26;
+  --amb-a2: 0.18;
+  --texture-ink: oklch(1 0 0 / 0.055);
+  --elev-float: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 2px 8px oklch(0 0 0 / 0.35), 0 28px 60px -20px oklch(0 0 0 / 0.75);
+}
+
+/* World hue sets: --wh/--wh2 hue angles, --wc/--wc2 chroma. */
+[data-world="command"] { --wh: 276; --wh2: 305; --wc: 0.2; --wc2: 0.2; }
+[data-world="brain"] { --wh: 292; --wh2: 248; --wc: 0.19; --wc2: 0.15; }
+[data-world="sales"] { --wh: 158; --wh2: 195; --wc: 0.15; --wc2: 0.12; }
+[data-world="marketing"] { --wh: 352; --wh2: 32; --wc: 0.2; --wc2: 0.17; }
+[data-world="finance"] { --wh: 82; --wh2: 162; --wc: 0.14; --wc2: 0.12; }
+[data-world="people"] { --wh: 28; --wh2: 62; --wc: 0.16; --wc2: 0.14; }
+[data-world="projects"] { --wh: 238; --wh2: 205; --wc: 0.16; --wc2: 0.13; }
+[data-world="product"] { --wh: 205; --wh2: 272; --wc: 0.14; --wc2: 0.17; }
+[data-world="support"] { --wh: 178; --wh2: 222; --wc: 0.13; --wc2: 0.12; }
+[data-world="automation"] { --wh: 128; --wh2: 178; --wc: 0.17; --wc2: 0.13; }
+[data-world="integrations"] { --wh: 228; --wh2: 168; --wc: 0.17; --wc2: 0.13; }
+[data-world="marketplace"] { --wh: 48; --wh2: 330; --wc: 0.16; --wc2: 0.16; }
+[data-world="settings"] { --wh: 258; --wh2: 280; --wc: 0.07; --wc2: 0.1; }
+
+[data-world] {
+  --world-accent: oklch(var(--world-l) var(--wc) var(--wh));
+  --world-accent-2: oklch(var(--world-l2) var(--wc2) var(--wh2));
+  --world-ambient-1: oklch(var(--amb-l) calc(var(--wc) * 1.05) var(--wh) / var(--amb-a));
+  --world-ambient-2: oklch(var(--amb-l) var(--wc2) var(--wh2) / var(--amb-a2));
+  --world-soft: color-mix(in oklch, var(--world-accent) 10%, var(--surface));
+  --world-line: color-mix(in oklch, var(--world-accent) 28%, var(--border));
+  --world-texture: none;
+}
+[data-world]:not([data-world="command"]) {
+  --primary: var(--world-accent);
+  --primary-2: var(--world-accent-2);
+  --ring: var(--world-accent);
+  --accent: color-mix(in oklch, var(--world-accent) 13%, var(--surface));
+  --accent-foreground: color-mix(in oklch, var(--world-accent) 72%, var(--foreground));
+  --glow: oklch(var(--world-l) var(--wc) var(--wh) / 0.36);
+}
+[data-world="command"] {
+  --world-accent: var(--primary);
+  --world-accent-2: var(--primary-2);
+}
+
+/* Textures — each world has its own pattern (drawn with --texture-ink so it works in light and dark). */
+[data-world="command"] { --world-texture: repeating-radial-gradient(circle at 70% 20%, transparent 0 22px, var(--texture-ink) 22px 23px); }
+[data-world="brain"] { --world-texture: radial-gradient(var(--texture-ink) 1.2px, transparent 1.6px) 0 0 / 22px 22px, radial-gradient(var(--texture-ink) 0.8px, transparent 1.2px) 11px 11px / 22px 22px; }
+[data-world="sales"] { --world-texture: repeating-linear-gradient(-32deg, transparent 0 18px, var(--texture-ink) 18px 19px); }
+[data-world="marketing"] { --world-texture: repeating-radial-gradient(circle at 15% 110%, transparent 0 26px, var(--texture-ink) 26px 27px); }
+[data-world="finance"] { --world-texture: repeating-linear-gradient(0deg, transparent 0 23px, var(--texture-ink) 23px 24px), repeating-linear-gradient(90deg, transparent 0 119px, var(--texture-ink) 119px 120px); }
+[data-world="people"] { --world-texture: radial-gradient(circle at 50% 50%, var(--texture-ink) 2px, transparent 2.5px) 0 0 / 28px 24px, radial-gradient(circle at 50% 50%, var(--texture-ink) 2px, transparent 2.5px) 14px 12px / 28px 24px; }
+[data-world="projects"] { --world-texture: linear-gradient(var(--texture-ink) 1px, transparent 1px) 0 0 / 40px 40px, linear-gradient(90deg, var(--texture-ink) 1px, transparent 1px) 0 0 / 40px 40px, linear-gradient(var(--texture-ink) 1px, transparent 1px) 0 0 / 8px 8px; }
+[data-world="product"] { --world-texture: repeating-linear-gradient(60deg, transparent 0 21px, var(--texture-ink) 21px 22px), repeating-linear-gradient(-60deg, transparent 0 21px, var(--texture-ink) 21px 22px); }
+[data-world="support"] { --world-texture: repeating-radial-gradient(circle at 85% 30%, transparent 0 14px, var(--texture-ink) 14px 15px, transparent 15px 34px); }
+[data-world="automation"] { --world-texture: linear-gradient(90deg, var(--texture-ink) 1px, transparent 1px) 0 0 / 36px 36px, radial-gradient(var(--texture-ink) 2.2px, transparent 2.6px) 0 0 / 36px 36px; }
+[data-world="integrations"] { --world-texture: linear-gradient(var(--texture-ink) 1px, transparent 1px) 12px 0 / 24px 24px, linear-gradient(90deg, var(--texture-ink) 1px, transparent 1px) 0 12px / 24px 24px; }
+[data-world="marketplace"] { --world-texture: linear-gradient(45deg, var(--texture-ink) 25%, transparent 25% 75%, var(--texture-ink) 75%) 0 0 / 30px 30px; }
+[data-world="settings"] { --world-texture: linear-gradient(var(--texture-ink) 1px, transparent 1px) 0 0 / 16px 16px, linear-gradient(90deg, var(--texture-ink) 1px, transparent 1px) 0 0 / 16px 16px; }
+
+@layer components {
+  /* Ambient scene light + texture painted behind a world's page (rendered by <World>). */
+  .world-ambient {
+    position: absolute;
+    /* Bleeds over the AppFrame main padding (px-3 py-5 / lg:px-6 lg:py-6). */
+    inset-inline: -0.75rem;
+    inset-block-start: -1.25rem;
+    block-size: min(720px, 90vh);
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    contain: strict;
+  }
+  @media (min-width: 1024px) {
+    .world-ambient {
+      inset-inline: -1.5rem;
+      inset-block-start: -1.5rem;
+    }
+  }
+  .world-ambient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 60% at 12% 0%, var(--world-ambient-1), transparent 70%),
+      radial-gradient(ellipse 45% 55% at 92% 8%, var(--world-ambient-2), transparent 70%);
+  }
+  .world-ambient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--world-texture);
+    mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, #000 0%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, #000 0%, transparent 78%);
+  }
+
+  /* Floating glass panel with a world-tinted hairline (premium overlays on scenes). */
+  .panel-float {
+    border: 1px solid transparent;
+    border-radius: var(--radius-2xl, 1.25rem);
+    background:
+      linear-gradient(color-mix(in oklch, var(--surface) 80%, transparent), color-mix(in oklch, var(--surface) 72%, transparent)) padding-box,
+      linear-gradient(140deg, color-mix(in oklch, var(--world-accent, var(--primary)) 45%, transparent), var(--border) 40%, color-mix(in oklch, var(--world-accent-2, var(--primary-2)) 30%, transparent)) border-box;
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    box-shadow: var(--elev-float);
+  }
+
+  /* Full-bleed immersive section: breaks out of the main padding (matches AppFrame px-3 / lg:px-6). */
+  .scene-bleed {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+  }
+  @media (min-width: 1024px) {
+    .scene-bleed {
+      margin-inline: -1.5rem;
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* Film grain overlay (static SVG noise). */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Editorial eyebrow with a leading rule. */
+  .eyebrow-rule {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--world-accent, var(--primary));
+  }
+  .eyebrow-rule::before {
+    content: "";
+    inline-size: 1.75rem;
+    block-size: 1px;
+    background: linear-gradient(90deg, transparent, currentColor);
+  }
+  [dir="rtl"] .eyebrow-rule::before {
+    background: linear-gradient(-90deg, transparent, currentColor);
+  }
+
+  /* World-tinted display text (hero words). */
+  .text-world {
+    background-image: linear-gradient(110deg, var(--foreground) 15%, color-mix(in oklch, var(--world-accent, var(--primary)) 80%, var(--foreground)) 55%, var(--world-accent-2, var(--primary-2)) 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-shine {
+    background-image: linear-gradient(100deg, currentColor 40%, color-mix(in oklch, var(--world-accent, var(--primary)) 70%, white) 50%, currentColor 60%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-sweep 6s var(--ease-cinematic) infinite;
+  }
+
+  /* Numerals: lining, tabular, slashed zero. */
+  .numeral {
+    font-variant-numeric: tabular-nums lining-nums slashed-zero;
+    font-feature-settings: "tnum", "lnum", "zero";
+  }
+
+  /* Masks. */
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+  .mask-radial {
+    mask-image: radial-gradient(closest-side, #000 65%, transparent);
+    -webkit-mask-image: radial-gradient(closest-side, #000 65%, transparent);
+  }
+
+  /* SVG helpers for illustrations and graphs. */
+  .dash-flow {
+    stroke-dasharray: 4 8;
+    animation: dash-flow 2.4s linear infinite;
+  }
+  .draw-in {
+    stroke-dasharray: var(--len, 400);
+    animation: draw-in 1.6s var(--ease-expo, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+  .float-slow {
+    animation: float-y 9s ease-in-out infinite;
+  }
+  .spin-local {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: orbit 16s linear infinite;
+  }
+  .blink-soft {
+    animation: core-breathe 3.2s ease-in-out infinite;
+  }
+
+  /* Data rail: a hairline divider with a travelling light (section separators on scenes). */
+  .data-rail {
+    position: relative;
+    block-size: 1px;
+    overflow: hidden;
+    background: linear-gradient(90deg, transparent, var(--world-line, var(--border)) 20%, var(--world-line, var(--border)) 80%, transparent);
+  }
+  .data-rail::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inline-size: 18%;
+    background: linear-gradient(90deg, transparent, var(--world-accent, var(--primary)), transparent);
+    animation: progress-sheen 4.5s var(--ease-cinematic) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shine,
+  .spin-local,
+  .blink-soft,
+  .dash-flow,
+  .draw-in,
+  .float-slow,
+  .data-rail::after {
+    animation: none !important;
+  }
 }
 
 /* ───────────────────────── Reduced motion ───────────────────────── */

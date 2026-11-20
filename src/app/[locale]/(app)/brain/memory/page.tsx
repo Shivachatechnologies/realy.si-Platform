@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { BrainTabs } from "@/components/brain/brain-tabs";
 import { FilterBar } from "@/components/brain/filter-bar";
@@ -29,10 +30,7 @@ export default async function CompanyMemoryPage({ searchParams }: PageProps<"/[l
   const values = Object.fromEntries(["q", "departmentId", "pinned", "cursor"].map((k) => [k, typeof sp[k] === "string" ? (sp[k] as string).slice(0, 200) : undefined])) as Record<string, string | undefined>;
 
   const header = (
-    <div className="grid gap-1">
-      <h1 className="text-lg font-semibold tracking-tight">{t("modules.brain.title")}</h1>
-      <p className="text-muted-foreground">{t("brain.memory.subtitle")}</p>
-    </div>
+    <PageHeader variant="editorial" world="brain" eyebrow={t("dna.worlds.brain")} title={t("modules.brain.title")} description={t("brain.memory.subtitle")} />
   );
   if (!company) {
     return (

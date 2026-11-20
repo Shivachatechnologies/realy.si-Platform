@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Marketplace, type MarketplaceItem } from "@/components/integrations/marketplace";
 import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
-import { Forbidden, NoCompany, PageFrame, Stat } from "@/components/automation/page-frame";
+import { Forbidden, NoCompany, Stat } from "@/components/automation/page-frame";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { integrationsHealth, listIntegrations, usageSummary } from "@/server/modules/integrations/service";
@@ -10,6 +10,9 @@ import { formatNumber } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
+import { Section } from "@/components/ui/scene";
+import { PageHeader } from "@/components/ui/page-header";
+import { ProviderConstellation } from "@/components/graphics/provider-constellation";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.integrations.title") };
@@ -20,9 +23,10 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
   const frame = (children: React.ReactNode) => (
-    <PageFrame title={t("modules.integrations.title")} subtitle={t("integrations.subtitle")}>
+    <div className="mx-auto grid max-w-[1400px] gap-6">
+      <PageHeader variant="editorial" world="integrations" eyebrow={t("dna.worlds.integrations")} title={t("modules.integrations.title")} description={t("integrations.subtitle")} />
       {children}
-    </PageFrame>
+    </div>
   );
   if (!company) return frame(<NoCompany message={t("company.empty")} />);
   const chain = await companyChain(db(), org.id, company.id);
@@ -56,6 +60,14 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
         <Stat label={t("integrations.usage.calls")} value={formatNumber(usage.totals.calls, locale)} hint={t("integrations.usage.failedHint", { count: usage.totals.failed })} />
         <Stat label={t("integrations.usage.estimatedCost")} value={formatCostMicros(usage.totals.costMicros, locale)} hint={t("integrations.last30Days")} />
       </div>
+      <Section eyebrow={t("dna.integrations.eyebrow")} title={t("dna.integrations.title")} description={t("dna.integrations.description", { connected, total: items.length })}>
+        <div className="overflow-hidden rounded-3xl border bg-[radial-gradient(ellipse_at_center,var(--world-soft),var(--surface)_75%)] p-3">
+          <ProviderConstellation
+            companyName={company.name}
+            providers={items.map((i) => ({ key: i.key, name: i.name, category: i.category, categoryLabel: t(`integrations.categories.${i.category}`), status: i.status, href: `/${locale}/integrations/${i.key}` }))}
+          />
+        </div>
+      </Section>
       <Marketplace key={view} locale={locale} items={items} initialView={view} />
     </>,
   );

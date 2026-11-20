@@ -197,6 +197,14 @@
     "builder": {
       "title": "Unternehmens-Builder",
       "description": "Aus einer Idee oder einem bestehenden Unternehmen mit KI ein vollständig eingerichtetes Unternehmen machen."
+    },
+    "command": {
+      "title": "KI-Befehl",
+      "description": "Sagen Sie Realy.si, was Sie brauchen – KI-Mitarbeitende planen und erledigen es."
+    },
+    "assets": {
+      "title": "Visuelle Assets",
+      "description": "Marken-, Abteilungs- und Kampagnenbilder – generiert oder hochgeladen."
     }
   },
   "auth": {
@@ -706,7 +714,14 @@
       "marketing_reply_empty": "Schreiben Sie zuerst eine Antwort.",
       "marketing_reply_failed": "Die Plattform hat die Antwort abgelehnt.",
       "marketing_reply_not_connected": "Das Konto ist nicht verbunden.",
-      "marketing_seo_no_keywords": "Fügen Sie zuerst Keywords hinzu."
+      "marketing_seo_no_keywords": "Fügen Sie zuerst Keywords hinzu.",
+      "assets_image_not_connected": "Kein Bildanbieter verbunden. Verbinden Sie OpenAI, Stability AI oder Replicate unter Integrationen.",
+      "assets_provider_rate_limited": "Der Bildanbieter ist ausgelastet (Ratenlimit). Bitte in einer Minute erneut versuchen.",
+      "assets_provider_failed": "Der Bildanbieter konnte das Bild nicht erstellen.",
+      "assets_scope_required": "Wählen Sie, für welchen Datensatz das Artwork ist.",
+      "assets_upload_too_large": "Das Bild ist größer als 8 MB.",
+      "assets_upload_type": "Die Datei ist kein gültiges PNG-, JPEG- oder WebP-Bild.",
+      "assets_storage_failed": "Das Artwork konnte nicht gespeichert oder gelesen werden. Prüfen Sie Ihre Speicherverbindung."
     }
   },
   "onboarding": {
@@ -15015,6 +15030,215 @@
         "FAILED": "Fehlgeschlagen",
         "CANCELLED": "Abgebrochen"
       }
+    }
+  },
+  "dna": {
+    "worlds": {
+      "command": "Steuerung",
+      "brain": "Company Brain",
+      "sales": "Vertrieb",
+      "marketing": "Marketing",
+      "finance": "Finanzen",
+      "people": "Menschen",
+      "projects": "Projekte & Ziele",
+      "product": "Produkt",
+      "support": "Support",
+      "automation": "Automatisierung",
+      "integrations": "Integrationen",
+      "marketplace": "Marktplatz",
+      "settings": "Einstellungen",
+      "communication": "Kommunikation"
+    },
+    "settings": {
+      "description": "Organisation, Personen, Sicherheit, Abrechnung und Daten – die Steuerung hinter Ihrem Unternehmen."
+    },
+    "universe": {
+      "eyebrow": "Live-Karte",
+      "title": "Unternehmensuniversum",
+      "description": "Abteilungen, KI-Mitarbeitende, Produkte, Kunden und Umsatzströme – aus Ihren echten Daten. Klicken Sie auf einen Knoten.",
+      "aria": "Netzwerk aus Abteilungen, KI-Mitarbeitenden, Produkten, Kunden und Umsatzströmen des Unternehmens",
+      "groups": {
+        "company": "Unternehmen",
+        "department": "Abteilungen",
+        "ai": "KI-Mitarbeitende",
+        "product": "Produkte",
+        "customer": "Kunden",
+        "revenue": "Umsatzströme"
+      },
+      "connections": "{count, plural, one {# Verbindung} other {# Verbindungen}}",
+      "open": "Öffnen",
+      "empty": "Ihr Universum entsteht, sobald Sie Abteilungen, KI-Mitarbeitende, Produkte und Kunden anlegen.",
+      "build": "Unternehmen mit KI aufbauen",
+      "hire": "KI-Mitarbeitende einstellen",
+      "meta": {
+        "people": "{count, plural, one {# Person} other {# Personen}}",
+        "tasks": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+        "paused": "Pausiert",
+        "relations": "{count, plural, one {# Beziehung} other {# Beziehungen}}"
+      }
+    },
+    "command": {
+      "morning": "Guten Morgen, {name}.",
+      "afternoon": "Guten Tag, {name}.",
+      "evening": "Guten Abend, {name}.",
+      "headlineTail": "Ihr Unternehmen läuft.",
+      "sub": "{running, plural, one {# KI-Aufgabe läuft} other {# KI-Aufgaben laufen}}, {queued} warten und {approvals, plural, one {# Freigabe wartet} other {# Freigaben warten}} auf Sie.",
+      "subNoAi": "Setzen Sie unten ein Ziel – Ihr KI-Team macht daraus einen Plan.",
+      "running": "laufen",
+      "queued": "in Warteschlange",
+      "employees": "KI-Mitarbeitende",
+      "idle": "Alles ruhig – der Kern ist im Leerlauf.",
+      "coreStatus": "KI-Kern: {running} laufend, {queued} wartend, {employees} aktive KI-Mitarbeitende.",
+      "entryLabel": "Steuern Sie Ihr Unternehmen",
+      "entryPlaceholder": "Steuern Sie Ihr Unternehmen … z. B. „Vertriebsplan für nächste Woche vorbereiten“",
+      "entryGo": "Ausführen",
+      "nextEyebrow": "Empfohlen",
+      "nextTitle": "Was als Nächstes zu tun ist",
+      "growth": "Wachstum",
+      "last90": "letzte 90 Tage",
+      "growthAria": "{metric} in den letzten 90 Tagen",
+      "growthEmpty": "Wachstum erscheint, sobald Ihr Unternehmen Umsatz oder Aktivität erfasst.",
+      "health": "Geschäftszustand",
+      "healthy": "Alle Systeme betriebsbereit",
+      "degraded": "Aufmerksamkeit nötig",
+      "priorities": "Strategische Prioritäten",
+      "recommendations": "KI-Empfehlungen",
+      "recsForbidden": "Sie haben keinen Zugriff auf KI-Einblicke.",
+      "recsClear": "Das letzte KI-Briefing hat nichts Dringendes gefunden.",
+      "recsNone": "Noch kein KI-Briefing. Fordern Sie eines vom KI-CEO unter Intelligenz an.",
+      "recsOpen": "Intelligenz öffnen",
+      "recsFrom": "Aus dem KI-Briefing {when}",
+      "recsTask": "Analyse ansehen",
+      "live": "Live-Aktivität",
+      "setupProgress": "{done} von {total} erledigt"
+    },
+    "brain": {
+      "eyebrow": "Wissen",
+      "documents": "{count, plural, one {# Dokument} other {# Dokumente}}",
+      "constellationEyebrow": "Wissenskarte",
+      "constellation": "Wissenskonstellation",
+      "constellationHint": "Ihre {count} neuesten Dokumente, verknüpft mit Abteilungen, Datensätzen und gemeinsamen Tags.",
+      "aria": "Karte der Dokumente und ihrer Verknüpfungen",
+      "groups": {
+        "department": "Abteilungen",
+        "tag": "Gemeinsame Tags",
+        "document": "Dokumente",
+        "subject": "Verknüpfte Datensätze"
+      }
+    },
+    "integrations": {
+      "eyebrow": "Verbindungen",
+      "title": "Anbieter-Konstellation",
+      "description": "{connected} von {total} Anbietern verbunden, geordnet nach ihrer Funktion.",
+      "aria": "Karte der Integrationsanbieter nach Kategorie und Verbindungsstatus",
+      "connectedCount": "{count} verbunden",
+      "groups": {
+        "category": "Kategorien",
+        "connected": "Verbunden",
+        "error": "Braucht Aufmerksamkeit",
+        "available": "Verfügbar"
+      }
+    }
+  },
+  "assets": {
+    "title": "Bildmaterial",
+    "tab": "Assets",
+    "eyebrow": "Artwork-Bibliothek",
+    "description": "Unternehmensspezifisches Artwork für Marke, Abteilungen, Kampagnen, Projekte, KI-Mitarbeitende und Produkte – mit Ihrem verbundenen Bildanbieter erzeugt oder hochgeladen.",
+    "generate": "Artwork erzeugen",
+    "search": "Artwork suchen",
+    "filterByScope": "Nach Verwendung filtern",
+    "loadMore": "Mehr laden",
+    "untitled": "Unbenanntes Artwork",
+    "noCompany": "Legen Sie zuerst ein Unternehmen an, um seine Artwork-Bibliothek aufzubauen.",
+    "forbidden": "Sie haben keinen Zugriff auf die Assets dieses Unternehmens.",
+    "connectedVia": "Erzeugt mit {providers}",
+    "notConnected": {
+      "title": "Kein Bildanbieter verbunden",
+      "body": "Verbinden Sie OpenAI, Stability AI oder Replicate unter Integrationen, um Artwork zu erzeugen. Ohne verbundenen Anbieter wird nichts erzeugt.",
+      "action": "Anbieter verbinden"
+    },
+    "scopes": {
+      "ALL": "Alle",
+      "BRAND": "Marke",
+      "DEPARTMENT": "Abteilungen",
+      "CAMPAIGN": "Kampagnen",
+      "PROJECT": "Projekte",
+      "AI_EMPLOYEE": "KI-Mitarbeitende",
+      "PRODUCT": "Produkte"
+    },
+    "styles": {
+      "cinematic": "Filmisch",
+      "editorial": "Editorial",
+      "isometric": "Isometrisch",
+      "abstract": "Abstrakt",
+      "blueprint": "Bauplan",
+      "product": "Produktfoto",
+      "illustration": "Illustration",
+      "portrait": "KI-Porträt"
+    },
+    "aspects": {
+      "landscape": "Querformat",
+      "square": "Quadrat",
+      "portrait": "Hochformat"
+    },
+    "empty": {
+      "title": "Noch kein Artwork",
+      "body": "Erzeugen Sie Artwork für Ihre Marke oder eine Abteilung – es wird hier gespeichert und auf der ganzen Plattform angezeigt."
+    },
+    "dialog": {
+      "title": "Artwork erzeugen",
+      "varyTitle": "Varianten erstellen",
+      "description": "Beschreiben Sie, was Sie möchten; der KI-Bildanbieter erstellt es für Ihr Unternehmen.",
+      "prompt": "Was soll zu sehen sein?",
+      "promptPlaceholder": "Ein ruhiger, futuristischer Kontrollraum über einer Stadt im Morgengrauen",
+      "promptHint": "Beschreiben Sie Szene, Stimmung und Motiv. Firmenname und Stil werden automatisch ergänzt.",
+      "style": "Stil",
+      "aspect": "Format",
+      "count": "Varianten",
+      "countOption": "{count, plural, one {# Bild} other {# Bilder}}",
+      "scope": "Verwenden für",
+      "scopeRecord": "Welche/r",
+      "scopeChoose": "Auswählen …",
+      "scopeEmpty": "Davon gibt es noch nichts.",
+      "titleLabel": "Titel",
+      "generate": "Erzeugen",
+      "generating": "Ihr Artwork entsteht",
+      "steps": {
+        "compose": "Prompt mit Ihrem Stil zusammenstellen",
+        "provider": "{count, plural, one {# Bild wird} other {# Bilder werden}} mit Ihrem Anbieter erzeugt",
+        "store": "In Ihrer Bibliothek speichern"
+      },
+      "done": "{count, plural, one {# Bild erstellt} other {# Bilder erstellt}}",
+      "download": "Herunterladen",
+      "saveToScope": "Als Artwork verwenden",
+      "saved": "In Verwendung",
+      "vary": "Varianten",
+      "regenerate": "Neu erzeugen",
+      "newPrompt": "Neuer Prompt"
+    },
+    "detail": {
+      "prompt": "Prompt",
+      "scope": "Verwendet für",
+      "pinned": "gewähltes Artwork",
+      "style": "Stil",
+      "source": "Erstellt mit",
+      "uploaded": "Hochgeladen",
+      "created": "Erstellt",
+      "rename": "Umbenennen",
+      "moveTo": "Verschieben nach",
+      "pin": "Als Artwork verwenden",
+      "unpin": "Nicht mehr verwenden",
+      "delete": "Löschen",
+      "deleteConfirm": "Dieses Artwork löschen? Das kann nicht rückgängig gemacht werden."
+    },
+    "picker": {
+      "button": "Artwork",
+      "title": "Artwork wählen",
+      "description": "Aus Ihrer Bibliothek wählen oder neu erzeugen.",
+      "empty": "Ihre Bibliothek ist leer – erzeugen Sie das erste Artwork.",
+      "use": "Verwenden",
+      "generateNew": "Neu erzeugen"
     }
   }
 }

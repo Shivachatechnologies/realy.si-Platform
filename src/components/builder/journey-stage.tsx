@@ -13,9 +13,19 @@ import type { RunMode } from "@/server/modules/builder/brief";
 import { JOURNEY, stageSteps, type JourneyStage } from "@/server/modules/builder/journey";
 import { getRunView } from "@/server/modules/builder/service";
 import { DecisionCard } from "./decision-card";
+import { IdeaReactor, LaunchButton, MaterializeScene, type SceneItem } from "@/components/graphics/journey-scenes";
+import { worldOfDepartment } from "@/components/ui/world";
 import { STEP_TONE } from "./frame";
 import { JourneyNav } from "./journey-nav";
 import { LiveRefresh, RetryStep } from "./run-controls";
+
+const hostOf = (u: string | null) => {
+  try {
+    return u ? new URL(u).hostname.replace(/^www\./, "") : null;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * One stage (3–10) of the onboarding journey, from the builder run's real rows: the steps that belong to the stage,
@@ -44,15 +54,34 @@ export async function JourneyStageView({ ctx, t, locale, organizationId, company
   const docs = steps.filter((s) => s.brainDocumentId && v.docs.has(s.brainDocumentId));
   const stageDone = key === "command" || (steps.length > 0 && done === steps.length);
 
+  // The stage scene — built only from the run's real rows.
+  const stepItems: SceneItem[] = steps.map((s) => ({ id: `step:${s.id}`, label: t(`builder.steps.${s.key}`), ring: 0, active: s.status === "RUNNING" || s.status === "APPLYING", done: s.status === "COMPLETED" || s.status === "SKIPPED" }));
+  const deptItems: SceneItem[] = v.departments.slice(0, 8).map((d) => ({ id: `dept:${d.id}`, label: d.name, ring: 0, done: true }));
+  const deptFor = (hint: string) => deptItems.find((d) => worldOfDepartment(d.label) === worldOfDepartment(hint) && worldOfDepartment(hint) !== "command")?.id;
+  const sceneItems: SceneItem[] | null =
+    key === "market"
+      ? [...stepItems, ...v.sources.filter((x) => x.status === "INGESTED").slice(0, 8).map((x, i): SceneItem => ({ id: `src:${x.id}`, label: hostOf(x.url) ?? t("builder.journey.pagesRead", { count: i + 1 }), ring: 2, done: true }))]
+      : key === "blueprint" || key === "products"
+        ? [...stepItems, ...v.products.slice(0, 10).map((x): SceneItem => ({ id: `p:${x.id}`, label: x.name, ring: 1, done: true }))]
+        : key === "structure"
+          ? [...deptItems, ...v.projects.slice(0, 8).map((x): SceneItem => ({ id: `pr:${x.id}`, label: x.name, ring: 1, done: true })), ...stepItems.map((x) => ({ ...x, ring: 2 as const }))]
+          : key === "workforce"
+            ? [...deptItems, ...v.aiEmployees.slice(0, 12).map((e): SceneItem => ({ id: `ai:${e.id}`, label: e.name, ring: 2, active: e.status !== "PAUSED", done: true, avatar: { seed: e.id, department: e.profileKey }, parentId: deptFor(e.profileKey) }))]
+            : key === "goals"
+              ? [...stepItems, ...v.objectives.slice(0, 10).map((o): SceneItem => ({ id: `o:${o.id}`, label: o.title, ring: 1, done: true }))]
+              : key === "command"
+                ? [...deptItems, ...v.products.slice(0, 6).map((x): SceneItem => ({ id: `p:${x.id}`, label: x.name, ring: 1, done: true })), ...v.aiEmployees.slice(0, 8).map((e): SceneItem => ({ id: `ai:${e.id}`, label: e.name, ring: 2, active: true, done: true, avatar: { seed: e.id, department: e.profileKey }, parentId: deptFor(e.profileKey) }))]
+                : null;
+
   return (
     <div className="grid gap-4">
       <LiveRefresh base={base} active={v.run.status === "RUNNING"} />
       <Card variant="glass" className="relative overflow-hidden">
         <Aurora className="pointer-events-none absolute inset-0 opacity-60" />
-        <CardBody className="relative grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem] sm:items-center">
+        <CardBody className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center">
           <Reveal className="grid gap-2">
             <p className="text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">{t("builder.journey.stageOf", { n: stage, total: JOURNEY.length })}</p>
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t(`builder.journey.stages.${key}.title`)}</h2>
+            <h2 className="font-display text-display-xl text-balance">{t(`builder.journey.stages.${key}.title`)}</h2>
             <p className="text-sm text-muted-foreground">{t(`builder.journey.stages.${key}.what`)}</p>
             <p className="text-sm">
               <span className="font-medium">{t("builder.journey.why")}</span> {t(`builder.journey.stages.${key}.why`)}
@@ -68,7 +97,18 @@ export async function JourneyStageView({ ctx, t, locale, organizationId, company
               <p className="text-sm text-muted-foreground">{t("builder.journey.queued")}</p>
             ) : null}
           </Reveal>
-          <AiCore className="mx-auto size-28 sm:size-36" />
+          {key === "vision" && v.run.brief.idea ? (
+            <IdeaReactor text={v.run.brief.idea} className="mx-auto max-w-sm" />
+          ) : sceneItems && sceneItems.length ? (
+            <MaterializeScene items={sceneItems} center={v.run.company.name} ariaLabel={t(`builder.journey.stages.${key}.title`)} />
+          ) : (
+            <AiCore className="mx-auto size-28 sm:size-36" />
+          )}
+          {key === "command" ? (
+            <div className="lg:col-span-2">
+              <LaunchButton href={`/${locale}`}>{t("builder.journey.enter")}</LaunchButton>
+            </div>
+          ) : null}
         </CardBody>
       </Card>
 

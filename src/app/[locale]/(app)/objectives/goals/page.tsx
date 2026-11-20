@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { EditGoalDialog, GoalStatusSelect, NewGoalForm } from "@/components/objectives/goal-forms";
 import { DeleteButton } from "@/components/objectives/objective-forms";
@@ -36,10 +37,7 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{t("objectives.goals.heading")}</h1>
-        <p className="text-muted-foreground">{t("objectives.goals.subtitle")}</p>
-      </div>
+      <PageHeader variant="editorial" world="projects" eyebrow={t("dna.worlds.projects")} title={t("objectives.goals.heading")} description={t("objectives.goals.subtitle")} />
       <ObjectivesTabs locale={locale} active="goals" />
     </div>
   );

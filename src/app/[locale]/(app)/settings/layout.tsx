@@ -1,3 +1,5 @@
+import { World } from "@/components/ui/world";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { SettingsTabs } from "@/components/settings/tabs";
 import { Notice } from "@/components/ui/notice";
@@ -17,8 +19,8 @@ export default async function SettingsLayout({ children }: LayoutProps<"/[locale
     if (org) violations = await orgAccessViolations(viewer.ctx, org.id);
   }
   return (
-    <div className="mx-auto grid max-w-6xl gap-4">
-      <h1 className="text-lg font-semibold tracking-tight">{t("settings.title")}</h1>
+    <World name="settings" className="mx-auto grid max-w-6xl gap-5">
+      <PageHeader variant="editorial" world="settings" eyebrow={t("dna.worlds.settings")} title={t("settings.title")} description={t("dna.settings.description")} />
       <SettingsTabs />
       {violations.includes("mfa_required") ? (
         <Notice tone="warning">
@@ -31,6 +33,6 @@ export default async function SettingsLayout({ children }: LayoutProps<"/[locale
       {violations.includes("session_expired") ? <Notice tone="warning">{t("enterprise.policy.sessionExpired")}</Notice> : null}
       {violations.includes("ip_blocked") ? <Notice tone="danger">{t("enterprise.policy.ipBlocked")}</Notice> : null}
       {children}
-    </div>
+    </World>
   );
 }

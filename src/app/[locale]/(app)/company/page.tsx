@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
+import { ScopeArtwork } from "@/components/assets/scope-artwork";
+import { WorldIllustration } from "@/components/graphics/illustrations";
 import { CompanyProfileForm, SwitchCompanyButton, Workspaces } from "@/components/enterprise/company-profile";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,10 +51,7 @@ export default async function CompaniesPage() {
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       <div className="flex items-start justify-between gap-4">
-        <div className="grid gap-1">
-          <h1 className="text-lg font-semibold tracking-tight">{t("company.title")}</h1>
-          <p className="text-muted-foreground">{t("company.subtitle")}</p>
-        </div>
+        <PageHeader variant="editorial" world="command" illustration={<ScopeArtwork scopeType="BRAND" ratio="3:2" className="w-full max-w-[19rem]" fallback={<WorldIllustration world="command" className="w-full max-w-[19rem]" />} />} eyebrow={t("dna.worlds.command")} title={t("company.title")} description={t("company.subtitle")} />
         {canCreate && !atLimit ? <NewCompanyDialog countries={options.countries} currencies={options.currencies} organizationId={org.id} /> : null}
       </div>
       {company ? <CompanyTabs locale={locale} active="profile" /> : null}

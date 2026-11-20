@@ -40,7 +40,7 @@ export default async function GoalPlanPage({ params, searchParams }: { params: P
           <Link href={`/${locale}/objectives/goals`} className="text-xs text-muted-foreground hover:underline">
             {t("objectives.goals.heading")}
           </Link>
-          <h1 className="text-lg font-semibold tracking-tight">{title ?? t("objectives.plan.heading")}</h1>
+          <h1 className="font-display text-display-lg">{title ?? t("objectives.plan.heading")}</h1>
           <p className="text-muted-foreground">{t("objectives.plan.subtitle")}</p>
         </div>
         <ObjectivesTabs locale={locale} active="goals" />

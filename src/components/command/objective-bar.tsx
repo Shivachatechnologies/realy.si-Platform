@@ -37,17 +37,19 @@ export function ObjectiveBar({ base, locale, canManage, canPlan, note }: { base:
   }
 
   return (
-    <div className="rounded-lg border bg-surface p-4">
+    <div className="panel-float p-4 sm:p-5">
       <div className="mb-3 flex items-center gap-2">
-        <Sparkles className="size-4 text-primary" aria-hidden />
-        <h2 className="text-base font-semibold tracking-tight">{t("command.objectivePrompt")}</h2>
+        <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-brand-gradient text-primary-foreground shadow-glow">
+          <Sparkles className="size-3.5" />
+        </span>
+        <h2 className="text-[15px] font-semibold tracking-tight">{t("command.objectivePrompt")}</h2>
         <Link href={`/${locale}/objectives/goals`} className="ms-auto text-xs text-muted-foreground hover:underline">
           {t("command.allGoals")}
         </Link>
       </div>
       {enabled ? (
         <form onSubmit={submit} className="grid gap-2" aria-describedby="objective-note">
-          <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 focus-within:border-ring">
+          <div className="flex items-center gap-2 rounded-xl border bg-background/70 px-3.5 py-2.5 shadow-elev-1 transition-shadow focus-within:border-ring focus-within:shadow-glow">
             <label htmlFor="objective" className="sr-only">
               {t("command.objectivePrompt")}
             </label>
@@ -57,13 +59,13 @@ export function ObjectiveBar({ base, locale, canManage, canPlan, note }: { base:
               maxLength={300}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("command.objectivePlaceholder")}
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
             />
             <select aria-label={t("objectives.goals.horizon")} value={horizon} onChange={(e) => setHorizon(e.target.value as "QUARTER" | "YEAR")} className="rounded-sm bg-transparent text-xs text-muted-foreground outline-none">
               <option value="QUARTER">{t("objectives.goals.horizons.QUARTER")}</option>
               <option value="YEAR">{t("objectives.goals.horizons.YEAR")}</option>
             </select>
-            <button type="submit" disabled={busy || !title.trim()} className="inline-flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground disabled:opacity-40" aria-label={t("command.planObjective")}>
+            <button type="submit" disabled={busy || !title.trim()} className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-gradient text-primary-foreground shadow-glow transition-transform hover:scale-105 disabled:opacity-40 disabled:shadow-none" aria-label={t("command.planObjective")}>
               {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <ArrowUp className="size-4" aria-hidden />}
             </button>
           </div>

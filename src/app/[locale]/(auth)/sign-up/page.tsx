@@ -16,7 +16,7 @@ export default async function SignUpPage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-1">
-        <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("auth.signUpTitle")}</h1>
+        <h1 className="font-display text-display-lg">{t("auth.signUpTitle")}</h1>
         <p className="text-muted-foreground">{t("common.promise")}</p>
       </div>
       <OAuthErrorNotice />

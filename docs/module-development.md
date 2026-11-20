@@ -46,3 +46,21 @@ analytics, marketplace, enterprise) follows the same shape so modules stay isola
 - **UI.** Server components load data; small client components (`"use client"`) do mutations via `api()` and
   `router.refresh()`. Reuse `src/components/ui/*`. Every page handles: no company, forbidden, empty, error
   (`FormError`), and success. Logical CSS properties (`ms-`, `pe-`, `start`/`end`) keep RTL correct.
+
+## Design DNA v2 (visual identity)
+
+- **Module worlds.** Wrap a department page in `<World name="finance">` (`src/components/ui/world.tsx`; names: command,
+  brain, sales, marketing, finance, people, projects, product, support, automation, integrations, marketplace, settings).
+  Every component inside inherits the world's accent hues, ambient light and background texture. A route-level
+  `layout.tsx` returning `<World name="…">{children}</World>` themes a whole area at once.
+- **Headers.** `<PageHeader variant="editorial" world="finance" eyebrow=… title=… description=… />` — serif display title
+  plus the world's hand-drawn illustration (`WorldIllustration`, `src/components/graphics/illustrations.tsx`).
+- **Graphics** (`src/components/graphics`): `AiCoreStage` (3D, client-only via next/dynamic, SVG/reduced-motion
+  fallback — use only where it carries meaning), `CompanyUniverse` / `NetworkGraph` (force layout from real records),
+  `DataFlow`, `ParticleField`, `GrowthChart`, `AiAvatar` (deterministic per AI employee, role-specific shape).
+- **Motion** (`src/components/motion`, `motion/react`): `Stagger`/`StaggerItem`, `Magnetic` (or `<Button magnetic>`),
+  `Parallax`, `DepthScene`/`DepthLayer`, `AnimatedNumber`, `SuccessBurst`, `LoadingSequence` (never invent progress).
+  All are reduced-motion aware. Page transitions are handled by the app shell.
+- **Artwork.** `<ScopeArtwork scopeType="DEPARTMENT" scopeId={id} fallback={<WorldIllustration world="people" />} />`
+  (server) shows a scope's generated artwork; `<AssetPicker …/>` (client) lets users choose or generate it
+  (`src/components/assets`, module `src/server/modules/assets`).

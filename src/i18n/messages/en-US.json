@@ -197,6 +197,14 @@
     "builder": {
       "title": "Company Builder",
       "description": "Turn an idea or an existing business into a fully configured company with AI."
+    },
+    "command": {
+      "title": "AI Command",
+      "description": "Tell Realy.si what you need — AI employees plan and execute it."
+    },
+    "assets": {
+      "title": "Visual assets",
+      "description": "Brand, department and campaign artwork — generated or uploaded."
     }
   },
   "auth": {
@@ -706,7 +714,14 @@
       "marketing_reply_empty": "Write a reply first.",
       "marketing_reply_failed": "The platform refused the reply.",
       "marketing_reply_not_connected": "The account is not connected.",
-      "marketing_seo_no_keywords": "Add keywords first."
+      "marketing_seo_no_keywords": "Add keywords first.",
+      "assets_image_not_connected": "No image provider is connected. Connect OpenAI, Stability AI or Replicate in Integrations.",
+      "assets_provider_rate_limited": "The image provider is busy (rate limited). Try again in a minute.",
+      "assets_provider_failed": "The image provider could not create the image.",
+      "assets_scope_required": "Choose which record the artwork is for.",
+      "assets_upload_too_large": "The image is larger than 8 MB.",
+      "assets_upload_type": "The file is not a valid PNG, JPEG or WebP image.",
+      "assets_storage_failed": "The artwork could not be stored or read. Check your storage connection."
     }
   },
   "onboarding": {
@@ -15015,6 +15030,215 @@
         "FAILED": "Failed",
         "CANCELLED": "Cancelled"
       }
+    }
+  },
+  "dna": {
+    "worlds": {
+      "command": "Command",
+      "brain": "Company Brain",
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "people": "People",
+      "projects": "Projects & goals",
+      "product": "Product",
+      "support": "Support",
+      "automation": "Automation",
+      "integrations": "Integrations",
+      "marketplace": "Marketplace",
+      "settings": "Settings",
+      "communication": "Communication"
+    },
+    "settings": {
+      "description": "Your organization, people, security, billing and data — the controls behind the company."
+    },
+    "universe": {
+      "eyebrow": "Live map",
+      "title": "Company universe",
+      "description": "Departments, AI employees, products, customers and revenue streams — drawn from your real records. Click any node.",
+      "aria": "Network of the company's departments, AI employees, products, customers and revenue streams",
+      "groups": {
+        "company": "Company",
+        "department": "Departments",
+        "ai": "AI employees",
+        "product": "Products",
+        "customer": "Customers",
+        "revenue": "Revenue streams"
+      },
+      "connections": "{count, plural, one {# connection} other {# connections}}",
+      "open": "Open",
+      "empty": "Your universe appears as you add departments, AI employees, products and customers.",
+      "build": "Build my company with AI",
+      "hire": "Hire AI employees",
+      "meta": {
+        "people": "{count, plural, one {# person} other {# people}}",
+        "tasks": "{count, plural, one {# task} other {# tasks}}",
+        "paused": "Paused",
+        "relations": "{count, plural, one {# relation} other {# relations}}"
+      }
+    },
+    "command": {
+      "morning": "Good morning, {name}.",
+      "afternoon": "Good afternoon, {name}.",
+      "evening": "Good evening, {name}.",
+      "headlineTail": "Your company is live.",
+      "sub": "{running, plural, one {# AI task is} other {# AI tasks are}} running, {queued} queued and {approvals, plural, one {# approval waits} other {# approvals wait}} for you.",
+      "subNoAi": "Set a goal below and your AI team turns it into a plan.",
+      "running": "running",
+      "queued": "queued",
+      "employees": "AI employees",
+      "idle": "All quiet — the core is idle.",
+      "coreStatus": "AI core: {running} running, {queued} queued, {employees} active AI employees.",
+      "entryLabel": "Command your company",
+      "entryPlaceholder": "Command your company… e.g. “Prepare next week's sales plan”",
+      "entryGo": "Command",
+      "nextEyebrow": "Recommended",
+      "nextTitle": "What to do next",
+      "growth": "Growth",
+      "last90": "last 90 days",
+      "growthAria": "{metric} over the last 90 days",
+      "growthEmpty": "Growth appears once your company records revenue or activity.",
+      "health": "Business health",
+      "healthy": "All systems operational",
+      "degraded": "Attention needed",
+      "priorities": "Strategic priorities",
+      "recommendations": "AI recommendations",
+      "recsForbidden": "You don't have access to AI insights.",
+      "recsClear": "The latest AI briefing found nothing that needs attention.",
+      "recsNone": "No AI briefing yet. Ask the AI CEO for one in Intelligence.",
+      "recsOpen": "Open Intelligence",
+      "recsFrom": "From the AI briefing {when}",
+      "recsTask": "See the analysis",
+      "live": "Live activity",
+      "setupProgress": "{done} of {total} done"
+    },
+    "brain": {
+      "eyebrow": "Knowledge",
+      "documents": "{count, plural, one {# document} other {# documents}}",
+      "constellationEyebrow": "Knowledge map",
+      "constellation": "Knowledge constellation",
+      "constellationHint": "Your {count} most recent documents, linked to departments, records and shared tags.",
+      "aria": "Map of documents and what they are linked to",
+      "groups": {
+        "department": "Departments",
+        "tag": "Shared tags",
+        "document": "Documents",
+        "subject": "Linked records"
+      }
+    },
+    "integrations": {
+      "eyebrow": "Connections",
+      "title": "Provider constellation",
+      "description": "{connected} of {total} providers connected, arranged by what they do.",
+      "aria": "Map of integration providers by category and connection state",
+      "connectedCount": "{count} connected",
+      "groups": {
+        "category": "Categories",
+        "connected": "Connected",
+        "error": "Needs attention",
+        "available": "Available"
+      }
+    }
+  },
+  "assets": {
+    "title": "Visual assets",
+    "tab": "Assets",
+    "eyebrow": "Artwork library",
+    "description": "Company-specific artwork for your brand, departments, campaigns, projects, AI employees and products — generated with your connected image provider or uploaded.",
+    "generate": "Generate artwork",
+    "search": "Search artwork",
+    "filterByScope": "Filter by where artwork is used",
+    "loadMore": "Load more",
+    "untitled": "Untitled artwork",
+    "noCompany": "Create a company first to build its artwork library.",
+    "forbidden": "You don't have access to this company's assets.",
+    "connectedVia": "Generates with {providers}",
+    "notConnected": {
+      "title": "No image provider connected",
+      "body": "Connect OpenAI, Stability AI or Replicate in Integrations to generate artwork. Nothing is generated until a provider is connected.",
+      "action": "Connect a provider"
+    },
+    "scopes": {
+      "ALL": "All",
+      "BRAND": "Brand",
+      "DEPARTMENT": "Departments",
+      "CAMPAIGN": "Campaigns",
+      "PROJECT": "Projects",
+      "AI_EMPLOYEE": "AI employees",
+      "PRODUCT": "Products"
+    },
+    "styles": {
+      "cinematic": "Cinematic",
+      "editorial": "Editorial",
+      "isometric": "Isometric",
+      "abstract": "Abstract",
+      "blueprint": "Blueprint",
+      "product": "Product shot",
+      "illustration": "Illustration",
+      "portrait": "AI portrait"
+    },
+    "aspects": {
+      "landscape": "Landscape",
+      "square": "Square",
+      "portrait": "Portrait"
+    },
+    "empty": {
+      "title": "No artwork yet",
+      "body": "Generate artwork for your brand or a department — it is saved here and shown across the platform."
+    },
+    "dialog": {
+      "title": "Generate artwork",
+      "varyTitle": "Create variations",
+      "description": "Describe what you want; the AI image provider creates it for your company.",
+      "prompt": "What should it show?",
+      "promptPlaceholder": "A calm, futuristic control room overlooking a city at dawn",
+      "promptHint": "Describe the scene, mood and subject. Your company name and style are added automatically.",
+      "style": "Style",
+      "aspect": "Shape",
+      "count": "Variations",
+      "countOption": "{count, plural, one {# image} other {# images}}",
+      "scope": "Use it for",
+      "scopeRecord": "Which one",
+      "scopeChoose": "Choose…",
+      "scopeEmpty": "Nothing of this kind exists yet.",
+      "titleLabel": "Title",
+      "generate": "Generate",
+      "generating": "Creating your artwork",
+      "steps": {
+        "compose": "Composing the prompt with your style",
+        "provider": "{count, plural, one {Generating # image} other {Generating # images}} with your provider",
+        "store": "Saving to your library"
+      },
+      "done": "{count, plural, one {# image created} other {# images created}}",
+      "download": "Download",
+      "saveToScope": "Use as artwork",
+      "saved": "In use",
+      "vary": "Variations",
+      "regenerate": "Regenerate",
+      "newPrompt": "New prompt"
+    },
+    "detail": {
+      "prompt": "Prompt",
+      "scope": "Used for",
+      "pinned": "chosen artwork",
+      "style": "Style",
+      "source": "Made with",
+      "uploaded": "Uploaded",
+      "created": "Created",
+      "rename": "Rename",
+      "moveTo": "Move to",
+      "pin": "Use as artwork",
+      "unpin": "Stop using",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this artwork? This cannot be undone."
+    },
+    "picker": {
+      "button": "Artwork",
+      "title": "Choose artwork",
+      "description": "Pick from your asset library or generate something new.",
+      "empty": "Your library is empty — generate the first artwork.",
+      "use": "Use",
+      "generateNew": "Generate new"
     }
   }
 }

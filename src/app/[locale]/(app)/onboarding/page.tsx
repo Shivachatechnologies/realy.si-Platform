@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/page-header";
 import { JourneyRail } from "@/components/builder/journey-rail";
 import { JourneyStageView } from "@/components/builder/journey-stage";
 import { getProgress, JOURNEY, SETUP_STEPS } from "@/server/modules/builder/journey";
@@ -24,10 +25,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const labels = JOURNEY.map((k) => t(`builder.journey.stages.${k}.short`));
   const header = (current: number, reachable: number) => (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{t("builder.onboarding.title")}</h1>
-        <p className="text-muted-foreground">{t("builder.onboarding.subtitle")}</p>
-      </div>
+      <PageHeader variant="editorial" world="command" eyebrow={t("dna.worlds.command")} title={t("builder.onboarding.title")} description={t("builder.onboarding.subtitle")} />
       <JourneyRail locale={locale} stages={JOURNEY} current={current} reachable={reachable} labels={labels} progressLabel={t("builder.onboarding.progress")} />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { IdeaReactor } from "@/components/graphics/journey-scenes";
 import { useMemo, useState, type FormEvent } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -145,6 +146,7 @@ export function BriefForm({
 
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
+      <div className={existing ? "grid" : "grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_16rem]"}>
       <Field
         label={existing ? t("builder.brief.describe") : t("builder.brief.idea")}
         htmlFor="b-idea"
@@ -164,6 +166,8 @@ export function BriefForm({
           maxLength={4000}
         />
       </Field>
+        {existing ? null : <IdeaReactor text={v.idea} className="hidden lg:block" />}
+      </div>
       {existing ? (
         <Field
           label={t("builder.brief.website")}

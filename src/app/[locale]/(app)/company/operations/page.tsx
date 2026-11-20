@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { KrStatusBadge, ProgressBar } from "@/components/objectives/progress";
 import { CompanyTabs } from "@/components/objectives/tabs";
@@ -24,10 +25,7 @@ export default async function CompanyOperationsPage() {
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{t("strategy.operations.title")}</h1>
-        <p className="text-muted-foreground">{t("strategy.operations.subtitle")}</p>
-      </div>
+      <PageHeader variant="editorial" world="command" eyebrow={t("dna.worlds.command")} title={t("strategy.operations.title")} description={t("strategy.operations.subtitle")} />
       <CompanyTabs locale={locale} active="operations" />
     </div>
   );

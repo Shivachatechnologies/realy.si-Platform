@@ -197,6 +197,14 @@
     "builder": {
       "title": "公司构建器",
       "description": "借助 AI 将想法或现有业务打造成完整配置的公司。"
+    },
+    "command": {
+      "title": "AI 指令",
+      "description": "告诉 Realy.si 您的需求——AI 员工会规划并执行。"
+    },
+    "assets": {
+      "title": "视觉素材",
+      "description": "品牌、部门和活动的图片素材——生成或上传。"
     }
   },
   "auth": {
@@ -706,7 +714,14 @@
       "marketing_reply_empty": "请先填写回复。",
       "marketing_reply_failed": "平台拒绝了该回复。",
       "marketing_reply_not_connected": "该账号未连接。",
-      "marketing_seo_no_keywords": "请先添加关键词。"
+      "marketing_seo_no_keywords": "请先添加关键词。",
+      "assets_image_not_connected": "未连接图像服务商。请在集成中连接 OpenAI、Stability AI 或 Replicate。",
+      "assets_provider_rate_limited": "图像服务商繁忙（触发限流），请一分钟后重试。",
+      "assets_provider_failed": "图像服务商未能生成图片。",
+      "assets_scope_required": "请选择作品对应的记录。",
+      "assets_upload_too_large": "图片超过 8 MB。",
+      "assets_upload_type": "该文件不是有效的 PNG、JPEG 或 WebP 图片。",
+      "assets_storage_failed": "无法保存或读取作品，请检查存储连接。"
     }
   },
   "onboarding": {
@@ -15015,6 +15030,215 @@
         "FAILED": "失败",
         "CANCELLED": "已取消"
       }
+    }
+  },
+  "dna": {
+    "worlds": {
+      "command": "指挥",
+      "brain": "公司大脑",
+      "sales": "销售",
+      "marketing": "市场营销",
+      "finance": "财务",
+      "people": "人员",
+      "projects": "项目与目标",
+      "product": "产品",
+      "support": "支持",
+      "automation": "自动化",
+      "integrations": "集成",
+      "marketplace": "市场",
+      "settings": "设置",
+      "communication": "沟通"
+    },
+    "settings": {
+      "description": "您的组织、成员、安全、账单与数据——公司背后的控制中心。"
+    },
+    "universe": {
+      "eyebrow": "实时地图",
+      "title": "公司宇宙",
+      "description": "部门、AI 员工、产品、客户和收入来源——全部来自您的真实记录。点击任意节点。",
+      "aria": "公司部门、AI 员工、产品、客户和收入来源的网络",
+      "groups": {
+        "company": "公司",
+        "department": "部门",
+        "ai": "AI 员工",
+        "product": "产品",
+        "customer": "客户",
+        "revenue": "收入来源"
+      },
+      "connections": "{count, plural, other {# 个连接}}",
+      "open": "打开",
+      "empty": "添加部门、AI 员工、产品和客户后，您的宇宙就会出现。",
+      "build": "用 AI 构建我的公司",
+      "hire": "招聘 AI 员工",
+      "meta": {
+        "people": "{count, plural, other {# 人}}",
+        "tasks": "{count, plural, other {# 个任务}}",
+        "paused": "已暂停",
+        "relations": "{count, plural, other {# 个关系}}"
+      }
+    },
+    "command": {
+      "morning": "早上好，{name}。",
+      "afternoon": "下午好，{name}。",
+      "evening": "晚上好，{name}。",
+      "headlineTail": "您的公司正在运行。",
+      "sub": "{running, plural, other {# 个 AI 任务}}正在运行，{queued} 个排队中，{approvals, plural, other {# 个审批}}等待您处理。",
+      "subNoAi": "在下方设定一个目标，您的 AI 团队会把它变成计划。",
+      "running": "运行中",
+      "queued": "排队中",
+      "employees": "AI 员工",
+      "idle": "一切平静——核心处于空闲。",
+      "coreStatus": "AI 核心：{running} 个运行中，{queued} 个排队，{employees} 名活跃 AI 员工。",
+      "entryLabel": "指挥您的公司",
+      "entryPlaceholder": "指挥您的公司……例如“准备下周的销售计划”",
+      "entryGo": "执行",
+      "nextEyebrow": "推荐",
+      "nextTitle": "下一步做什么",
+      "growth": "增长",
+      "last90": "最近 90 天",
+      "growthAria": "最近 90 天的{metric}",
+      "growthEmpty": "公司记录收入或活动后，增长曲线就会出现。",
+      "health": "业务健康",
+      "healthy": "所有系统运行正常",
+      "degraded": "需要关注",
+      "priorities": "战略重点",
+      "recommendations": "AI 建议",
+      "recsForbidden": "您无权查看 AI 洞察。",
+      "recsClear": "最新的 AI 简报没有发现需要关注的问题。",
+      "recsNone": "还没有 AI 简报。请在智能中心向 AI CEO 请求一份。",
+      "recsOpen": "打开智能中心",
+      "recsFrom": "来自 {when} 的 AI 简报",
+      "recsTask": "查看分析",
+      "live": "实时动态",
+      "setupProgress": "已完成 {done}/{total}"
+    },
+    "brain": {
+      "eyebrow": "知识",
+      "documents": "{count, plural, other {# 份文档}}",
+      "constellationEyebrow": "知识地图",
+      "constellation": "知识星图",
+      "constellationHint": "您最近的 {count} 份文档，与部门、记录和共享标签相连。",
+      "aria": "文档及其关联对象的地图",
+      "groups": {
+        "department": "部门",
+        "tag": "共享标签",
+        "document": "文档",
+        "subject": "关联记录"
+      }
+    },
+    "integrations": {
+      "eyebrow": "连接",
+      "title": "服务商星图",
+      "description": "已连接 {connected}/{total} 个服务商，按用途排列。",
+      "aria": "按类别和连接状态排列的集成服务商地图",
+      "connectedCount": "已连接 {count} 个",
+      "groups": {
+        "category": "类别",
+        "connected": "已连接",
+        "error": "需要处理",
+        "available": "可用"
+      }
+    }
+  },
+  "assets": {
+    "title": "视觉素材",
+    "tab": "素材",
+    "eyebrow": "作品库",
+    "description": "为品牌、部门、营销活动、项目、AI 员工和产品打造的专属作品——由您已连接的图像服务商生成或手动上传。",
+    "generate": "生成作品",
+    "search": "搜索作品",
+    "filterByScope": "按用途筛选",
+    "loadMore": "加载更多",
+    "untitled": "未命名作品",
+    "noCompany": "请先创建公司，再建立其作品库。",
+    "forbidden": "您无权访问该公司的素材。",
+    "connectedVia": "使用 {providers} 生成",
+    "notConnected": {
+      "title": "未连接图像服务商",
+      "body": "请在集成中连接 OpenAI、Stability AI 或 Replicate 以生成作品。连接服务商之前不会生成任何内容。",
+      "action": "连接服务商"
+    },
+    "scopes": {
+      "ALL": "全部",
+      "BRAND": "品牌",
+      "DEPARTMENT": "部门",
+      "CAMPAIGN": "营销活动",
+      "PROJECT": "项目",
+      "AI_EMPLOYEE": "AI 员工",
+      "PRODUCT": "产品"
+    },
+    "styles": {
+      "cinematic": "电影感",
+      "editorial": "杂志风",
+      "isometric": "等距",
+      "abstract": "抽象",
+      "blueprint": "蓝图",
+      "product": "产品图",
+      "illustration": "插画",
+      "portrait": "AI 肖像"
+    },
+    "aspects": {
+      "landscape": "横版",
+      "square": "方形",
+      "portrait": "竖版"
+    },
+    "empty": {
+      "title": "还没有作品",
+      "body": "为品牌或某个部门生成作品——它会保存在这里，并在整个平台展示。"
+    },
+    "dialog": {
+      "title": "生成作品",
+      "varyTitle": "生成变体",
+      "description": "描述您想要的内容，AI 图像服务商会为您的公司创作。",
+      "prompt": "画面要展示什么？",
+      "promptPlaceholder": "黎明时分俯瞰城市的宁静未来感控制室",
+      "promptHint": "描述场景、氛围和主体。公司名称和风格会自动加入。",
+      "style": "风格",
+      "aspect": "比例",
+      "count": "变体数量",
+      "countOption": "{count, plural, other {# 张图片}}",
+      "scope": "用于",
+      "scopeRecord": "具体对象",
+      "scopeChoose": "请选择…",
+      "scopeEmpty": "暂无此类对象。",
+      "titleLabel": "标题",
+      "generate": "生成",
+      "generating": "正在创作您的作品",
+      "steps": {
+        "compose": "结合您的风格编写提示词",
+        "provider": "通过您的服务商生成 {count, plural, other {# 张图片}}",
+        "store": "保存到您的作品库"
+      },
+      "done": "{count, plural, other {已生成 # 张图片}}",
+      "download": "下载",
+      "saveToScope": "设为作品",
+      "saved": "使用中",
+      "vary": "变体",
+      "regenerate": "重新生成",
+      "newPrompt": "新提示词"
+    },
+    "detail": {
+      "prompt": "提示词",
+      "scope": "用于",
+      "pinned": "已选作品",
+      "style": "风格",
+      "source": "生成方式",
+      "uploaded": "已上传",
+      "created": "创建时间",
+      "rename": "重命名",
+      "moveTo": "移动到",
+      "pin": "设为作品",
+      "unpin": "停止使用",
+      "delete": "删除",
+      "deleteConfirm": "删除此作品？此操作无法撤销。"
+    },
+    "picker": {
+      "button": "作品",
+      "title": "选择作品",
+      "description": "从素材库中选择，或生成新的作品。",
+      "empty": "素材库为空——生成第一件作品吧。",
+      "use": "使用",
+      "generateNew": "生成新作品"
     }
   }
 }
