@@ -134,33 +134,7 @@ export function Pager({ path, params, page, total, pageSize, t }: { path: string
   );
 }
 
-const TONES: Record<string, "neutral" | "accent" | "success" | "warning" | "danger"> = {
-  DRAFT: "neutral",
-  PLANNED: "accent",
-  ACTIVE: "success",
-  PAUSED: "warning",
-  COMPLETED: "neutral",
-  IN_REVIEW: "warning",
-  APPROVED: "accent",
-  SCHEDULED: "accent",
-  PUBLISHED: "success",
-  PUBLISHING: "accent",
-  PARTIAL: "warning",
-  FAILED: "danger",
-  CANCELLED: "neutral",
-  PENDING: "neutral",
-  SENT: "success",
-  SENDING: "accent",
-  NOT_CONFIGURED: "warning",
-  STOPPED: "neutral",
-  UNSUBSCRIBED: "warning",
-  QUEUED: "neutral",
-  RUNNING: "accent",
-};
-
-export function StatusBadge({ status, label }: { status: string; label: string }) {
-  return <Badge tone={TONES[status] ?? "neutral"}>{label}</Badge>;
-}
+export { StatusBadge } from "./status-badge";
 
 /** Thin horizontal progress bar (0–100+). */
 export function Meter({ value, label }: { value: number | null; label: string }) {

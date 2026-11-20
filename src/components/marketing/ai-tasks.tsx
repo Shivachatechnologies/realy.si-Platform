@@ -4,7 +4,7 @@ import { Notice } from "@/components/ui/notice";
 import { AutoRefresh } from "@/components/agents/auto-refresh";
 import type { Translate } from "@/i18n/translate";
 import { formatDateTime } from "@/i18n/format";
-import { StatusBadge } from "./shell";
+import { StatusBadge } from "./status-badge";
 
 export interface AiTaskRow {
   id: string;
