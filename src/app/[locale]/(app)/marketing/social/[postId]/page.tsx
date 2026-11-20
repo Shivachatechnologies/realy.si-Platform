@@ -6,6 +6,11 @@ import { Notice } from "@/components/ui/notice";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AutoRefresh } from "@/components/agents/auto-refresh";
 import { PostActions, PostComposer } from "@/components/marketing/social-forms";
+import { PlatformPreview } from "@/components/marketing/studio";
+import { assetOptions, assetPublicUrl } from "@/server/modules/marketing/assets";
+import { listHashtagSets } from "@/server/modules/marketing/intelligence";
+import { loadBrandKit } from "@/server/modules/marketing/brand";
+import { db } from "@/server/core/db";
 import { MarketingShell, StatusBadge, loadMarketing } from "@/components/marketing/shell";
 import { ActionButton } from "@/components/marketing/ui";
 import { getT } from "@/i18n/server";
@@ -30,7 +35,14 @@ export default async function SocialPostPage({ params }: PageProps<"/[locale]/ma
     throw err;
   });
   const editable = canManage && ["DRAFT", "SCHEDULED", "FAILED"].includes(p.status);
-  const [accounts, campaigns] = editable ? await Promise.all([listAccounts(viewer.ctx, org.id, company.id), campaignOptions(viewer.ctx, org.id, company.id)]) : [null, []];
+  const [accounts, campaigns, assets, hashtagSets, kit] = await Promise.all([
+    editable ? listAccounts(viewer.ctx, org.id, company.id) : null,
+    editable ? campaignOptions(viewer.ctx, org.id, company.id) : [],
+    editable ? assetOptions(viewer.ctx, org.id, company.id) : [],
+    editable ? listHashtagSets(viewer.ctx, org.id, company.id) : [],
+    loadBrandKit(db(), company.id),
+  ]);
+  const mediaUrl = p.mediaAsset && p.mediaAsset.status === "READY" ? assetPublicUrl(p.mediaAsset) : p.mediaUrl;
   const notConnected = p.targets.filter((x) => !connected[x.account.provider]);
 
   return (
@@ -141,6 +153,14 @@ export default async function SocialPostPage({ params }: PageProps<"/[locale]/ma
           </ul>
         </Card>
       ) : null}
+      <Card>
+        <CardHeader title={t("marketing.studio.social.preview")} />
+        <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
+          {p.targets.map((x) => (
+            <PlatformPreview key={x.id} platform={x.account.provider} brand={kit?.brandName ?? x.account.name} handle={x.account.handle} text={x.text ?? p.text} hashtags={p.hashtags} mediaUrl={mediaUrl} video={p.mediaAsset?.kind === "VIDEO"} t={t} />
+          ))}
+        </div>
+      </Card>
       {editable && accounts ? (
         <Card>
           <details>
@@ -150,7 +170,9 @@ export default async function SocialPostPage({ params }: PageProps<"/[locale]/ma
               locale={locale}
               accounts={accounts.accounts.map((a) => ({ id: a.id, name: a.name, provider: a.provider, connected: a.connected }))}
               campaigns={campaigns}
-              initial={{ id: p.id, title: p.title, text: p.text, mediaUrl: p.mediaUrl ?? "", campaignId: p.campaignId ?? "", targets: p.targets.map((x) => ({ accountId: x.accountId, text: x.text ?? "", custom: x.text != null })) }}
+              assets={assets}
+              hashtagSets={hashtagSets}
+              initial={{ id: p.id, title: p.title, text: p.text, mediaUrl: p.mediaUrl ?? "", mediaAssetId: p.mediaAssetId ?? "", hashtags: p.hashtags.join(" "), campaignId: p.campaignId ?? "", targets: p.targets.map((x) => ({ accountId: x.accountId, text: x.text ?? "", custom: x.text != null })) }}
             />
           </details>
         </Card>

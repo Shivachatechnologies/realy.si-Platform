@@ -38,6 +38,8 @@ export function sourceHref(sourceType: string | null, sourceId: string | null): 
       return `/product/releases`;
     case "product_feature":
       return `/product/features/${sourceId}`;
+    case "product_doc":
+      return `/product/docs/${sourceId}`;
     default:
       return null;
   }

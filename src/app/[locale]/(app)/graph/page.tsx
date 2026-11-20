@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import { GraphEditor } from "@/components/graph/graph-editor";
 import { Card } from "@/components/ui/card";
 import { getLocale, getT } from "@/i18n/server";
@@ -17,10 +18,7 @@ export default async function GraphPage() {
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
-    <div className="grid gap-1">
-      <h1 className="text-lg font-semibold tracking-tight">{t("graph.title")}</h1>
-      <p className="text-muted-foreground">{t("graph.subtitle", { company: company?.name ?? "—" })}</p>
-    </div>
+    <PageHeader variant="editorial" world="brain" eyebrow={t("dna.worlds.brain")} title={t("graph.title")} description={t("graph.subtitle", { company: company?.name ?? "—" })} />
   );
   if (!company) {
     return (

@@ -20,6 +20,7 @@ const CRM_TABS = [
 ] as const;
 const SALES_TABS = [
   { key: "overview", path: "/sales" },
+  { key: "start", path: "/sales/start" },
   { key: "targets", path: "/sales/targets" },
   { key: "commissions", path: "/sales/commissions" },
   { key: "reports", path: "/sales/reports" },

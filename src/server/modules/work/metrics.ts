@@ -1,5 +1,6 @@
 import type { MetricDefinition } from "@/server/core/metrics";
 import { db } from "@/server/core/db";
+import { PRODUCT_METRICS } from "./product-metrics";
 
 const OPEN = { notIn: ["DONE", "CANCELLED"] } as { notIn: ("DONE" | "CANCELLED")[] };
 const dayOf = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -110,4 +111,5 @@ export const WORK_METRICS: MetricDefinition[] = [
         where: { organizationId, companyId, occurredAt: { lt: to }, OR: [{ status: { in: ["OPEN", "INVESTIGATING", "MITIGATED"] } }, { resolvedAt: { gte: to } }] },
       }),
   },
+  ...PRODUCT_METRICS,
 ];

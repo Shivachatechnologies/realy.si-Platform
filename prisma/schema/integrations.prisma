@@ -53,6 +53,11 @@ model IntegrationConnection {
   lastError           String?                     @map("last_error")
   lastErrorAt         DateTime?                   @map("last_error_at") @db.Timestamptz(3)
   lastTestedAt        DateTime?                   @map("last_tested_at") @db.Timestamptz(3)
+  /// Health of provider calls (any module's calls through providerFetch / the provider services).
+  lastSuccessAt       DateTime?                   @map("last_success_at") @db.Timestamptz(3)
+  lastFailureAt       DateTime?                   @map("last_failure_at") @db.Timestamptz(3)
+  /// Consecutive failed calls; the connection is marked ERROR (and managers notified) at the threshold.
+  errorStreak         Int                         @default(0) @map("error_streak")
   connectedById       String                      @map("connected_by_id") @db.Uuid
   connectedAt         DateTime                    @default(now()) @map("connected_at") @db.Timestamptz(3)
   createdAt           DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -241,4 +246,54 @@ model IntegrationExternalRef {
 
   @@unique([connectionId, kind, externalId])
   @@map("integration_external_refs")
+}
+
+enum IntegrationUsageStatus {
+  SUCCEEDED
+  FAILED
+}
+
+/// Metered use of a provider by the generic provider services (research, AI text, images, video, storage, SMS,
+/// payments, email). Cost is an estimate in micro-USD from public list prices; null when unknown.
+model IntegrationUsage {
+  id                  String                 @id @default(uuid(7)) @db.Uuid
+  organizationId      String                 @map("organization_id") @db.Uuid
+  companyId           String                 @map("company_id") @db.Uuid
+  connectionId        String?                @map("connection_id") @db.Uuid
+  provider            String
+  /// e.g. "research.search", "ai.text", "images.generate", "video.start", "storage.put", "sms.send".
+  operation           String
+  units               Int                    @default(1)
+  /// What `units` counts: "request", "token", "image", "second", "byte", "message".
+  unit                String                 @default("request")
+  estimatedCostMicros Int?                   @map("estimated_cost_micros")
+  status              IntegrationUsageStatus
+  error               String?
+  /// Non-secret details (model, size, job id...).
+  meta                Json                   @default("{}")
+  createdAt           DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, createdAt])
+  @@index([connectionId, createdAt])
+  @@map("integration_usage")
+}
+
+/// Database fallback of the storage service when no S3-compatible bucket is connected (bounded object size).
+model IntegrationStoredObject {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  key            String
+  contentType    String   @map("content_type")
+  size           Int
+  data           Bytes
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, key])
+  @@index([organizationId, companyId, createdAt])
+  @@map("integration_stored_objects")
 }

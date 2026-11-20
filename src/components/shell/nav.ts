@@ -61,6 +61,7 @@ export const NAV: NavSection[] = [
   {
     label: "nav.sections.intelligence",
     items: [
+      item("modules.command.title", "/command", Sparkles),
       item("modules.builder.title", "/builder", Rocket),
       item("modules.intelligence.title", "/intelligence", Sparkles),
       item("modules.analytics.title", "/analytics", BarChart3),
@@ -79,6 +80,7 @@ export const NAV: NavSection[] = [
       item("modules.organization.title", "/organization", Network),
       item("graph.title", "/graph", Network),
       item("modules.brain.title", "/brain", Brain),
+      item("modules.assets.title", "/assets", Boxes),
       item("modules.documents.title", "/documents", FolderKanban),
       item("modules.products.title", "/products", Boxes),
       item("modules.customers.title", "/customers", Contact),

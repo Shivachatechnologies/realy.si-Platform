@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { workContext } from "@/components/work/context";
@@ -22,6 +24,7 @@ export default async function TemplatesPage() {
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
       {w.header}
       <ProjectsAreaTabs t={t} locale={locale} active="templates" />
+      <PageIntro labels={introLabels(t)} what={t("work.intro.templates.what")} why={t("work.intro.templates.why")} can={t("work.intro.templates.can")} next={{ label: t("work.intro.templates.next"), href: `/${locale}/projects/start` }} accent="info" />
       <Card>
         <CardHeader title={t("work.template.builtIn")} description={t("work.template.builtInHint")} />
         <ul className="grid divide-y">

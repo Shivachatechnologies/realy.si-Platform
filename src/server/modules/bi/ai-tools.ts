@@ -2,6 +2,7 @@ import { z } from "zod";
 import { formatMoney } from "@/i18n/format";
 import type { MetricDefinition } from "@/server/core/metrics";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
+import { GROWTH_TOOLS } from "@/server/modules/growth/ai-tools";
 import { criticalIssues, issueText } from "./issues";
 import { englishT } from "./labels";
 import { RANGE_KEYS, isoDay, resolveRange, type RangeKey } from "./range";
@@ -30,6 +31,7 @@ async function kpiLines(x: Parameters<ToolDefinition["execute"]>[1], range: Rang
 
 /** AI tools of the bi module, registered in src/server/modules/tools/modules.ts. */
 export const BI_TOOLS: Record<string, ToolDefinition> = {
+  ...GROWTH_TOOLS,
   read_company_kpis: def({
     name: "read_company_kpis",
     version: 1,

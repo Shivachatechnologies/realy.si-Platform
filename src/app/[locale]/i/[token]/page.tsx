@@ -22,7 +22,14 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
       <div className="mx-auto grid max-w-3xl gap-3">
         <div className="flex items-center justify-between gap-2 print:hidden">
           <p className="text-xs text-muted-foreground">{t("finance.document.publicNote", { company: inv.company.legalName || inv.company.name })}</p>
-          <PrintButton />
+          <span className="flex items-center gap-2">
+            {inv.paymentLinkUrl && inv.status !== "PAID" && inv.status !== "VOID" ? (
+              <a href={inv.paymentLinkUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">
+                {t("finance.os.payOnline")}
+              </a>
+            ) : null}
+            <PrintButton />
+          </span>
         </div>
         <InvoiceDocument t={t} locale={locale} doc={{ kind: "invoice", ...inv, company: inv.company, customer: inv.account, footer: inv.footer }} />
       </div>

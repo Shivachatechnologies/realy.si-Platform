@@ -1,0 +1,64 @@
+// ───────────────────────────── Visual assets (src/server/modules/assets) ─────────────────────────────
+// Company-specific artwork: AI-generated images (Integrations image service: OpenAI → Stability → Replicate) and
+// uploads, stored through the Integrations storage service (company S3 bucket or the database fallback) and
+// attached to a scope (brand, department, campaign, project, AI employee, product).
+
+enum VisualAssetScope {
+  BRAND
+  DEPARTMENT
+  CAMPAIGN
+  PROJECT
+  AI_EMPLOYEE
+  PRODUCT
+}
+
+enum VisualAssetKind {
+  IMAGE
+  VIDEO
+  SVG
+}
+
+enum VisualAssetSource {
+  GENERATED
+  UPLOADED
+}
+
+model VisualAsset {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  scopeType      VisualAssetScope  @default(BRAND) @map("scope_type")
+  /// The scoped record (department, campaign, project, AI employee, product graph entity); null for BRAND.
+  scopeId        String?           @map("scope_id") @db.Uuid
+  kind           VisualAssetKind   @default(IMAGE)
+  source         VisualAssetSource @default(GENERATED)
+  title          String?
+  /// Integrations storage reference ("s3:<key>" or "db:<objectId>").
+  storageRef     String            @map("storage_ref")
+  contentType    String            @map("content_type")
+  sizeBytes      Int               @map("size_bytes")
+  prompt         String?
+  stylePreset    String?           @map("style_preset")
+  /// "1:1", "3:2" or "2:3".
+  aspectRatio    String            @default("1:1") @map("aspect_ratio")
+  width          Int?
+  height         Int?
+  provider       String?
+  model          String?
+  /// The asset this one is a variation / regeneration of.
+  parentId       String?           @map("parent_id") @db.Uuid
+  /// The scope's chosen artwork (shown by <ScopeArtwork>); at most one pinned per scope.
+  pinned         Boolean           @default(false)
+  createdById    String            @map("created_by_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  parent     VisualAsset?  @relation("VisualAssetVariations", fields: [parentId, companyId], references: [id, companyId], onDelete: NoAction, onUpdate: NoAction)
+  variations VisualAsset[] @relation("VisualAssetVariations")
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([companyId, scopeType, scopeId])
+  @@map("visual_assets")
+}

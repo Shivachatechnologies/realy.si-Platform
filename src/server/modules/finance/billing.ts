@@ -464,7 +464,10 @@ export async function emailInvoice(ctx: RequestContext, organizationId: string, 
     return { inv, to, token };
   });
   const link = publicInvoiceUrl(prepared.token, input.locale);
-  const text = input.message.includes(link) ? input.message : `${input.message}\n\n${link}`;
+  const withView = input.message.includes(link) ? input.message : `${input.message}\n\n${link}`;
+  // Online payment link (when one was created through the connected payment provider).
+  const payLink = prepared.inv.paymentLinkUrl;
+  const text = payLink && !withView.includes(payLink) ? `${withView}\n\nPay online: ${payLink}` : withView;
   const result = await sendPlainEmail({ to: prepared.to, subject: input.subject, text, template: kind === "INVOICE" ? "finance_invoice" : "finance_invoice_reminder", organizationId, userId: ctx.actor.id ?? null, locale: input.locale });
   await transaction(async (tx) => {
     await tx.financeEmailLog.create({ data: { organizationId, companyId, invoiceId: id, kind, toEmail: prepared.to, status: result.status, sentById: ctx.actor.id ?? null } });

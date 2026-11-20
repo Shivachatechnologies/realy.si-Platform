@@ -4,6 +4,7 @@ import { AppError } from "@/server/core/errors";
 import type { RequestContext } from "@/server/core/context";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { createTask, getTask } from "@/server/modules/agents/service";
+import { canDelegate, currentEmployee, escalate, fileStatusReport } from "./hierarchy";
 import { listEmployees } from "./service";
 
 /** The task a tool call runs inside: task executions use the request id `task_<taskId>` (agents/service.ts). */
@@ -29,7 +30,10 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
       const rows = await listEmployees(ctx, organizationId, companyId);
       if (!rows.length) return { content: "The company has no AI employees yet.", count: 0 };
       const content = rows
-        .map((e) => `- ${e.id}: ${e.name} — role ${e.profileKey}, department ${e.department}, ${e.status.toLowerCase()}${e.skills.length ? `, skills: ${e.skills.join(", ")}` : ""}`)
+        .map(
+          (e) =>
+            `- ${e.id}: ${e.name}${e.jobTitle ? ` (${e.jobTitle})` : ""} — role ${e.profileKey}, ${e.level.toLowerCase()}, department ${e.department}, ${e.status.toLowerCase()}${e.manager ? `, reports to ${e.manager.name} (${e.manager.id})` : ", reports to the founder"}${e.skills.length ? `, skills: ${e.skills.join(", ")}` : ""}`,
+        )
         .join("\n");
       return { content, count: rows.length, records: rows.map((e) => `ai_employee:${e.id}`) };
     },
@@ -38,7 +42,8 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
   delegate_to_ai_employee: def({
     name: "delegate_to_ai_employee",
     version: 1,
-    description: "Delegate a sub-task to another active AI employee (use read_ai_employees for ids). Creates a separate task that runs in the background; read its result later with read_task_result. Delegation is limited to two levels. Give complete, self-contained instructions.",
+    description:
+      "Delegate a sub-task to another active AI employee (use read_ai_employees for ids). Managers delegate to their own reports (direct or indirect); executives to anyone. Creates a separate task that runs in the background; read its result later with read_task_result. Delegation is limited to two levels. Give complete, self-contained instructions.",
     input: z.object({ aiEmployeeId: z.string().uuid(), title: z.string().trim().min(1).max(200), instructions: z.string().trim().min(1).max(6000) }).strict(),
     modelSchema: {
       type: "object",
@@ -58,6 +63,10 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
     async execute({ aiEmployeeId, title, instructions }, { ctx, organizationId, companyId }) {
       const parentTaskId = currentTaskId(ctx);
       if (!parentTaskId) throw new AppError("conflict", "Delegation is only possible from inside a task");
+      const me = await currentEmployee(organizationId, companyId, parentTaskId);
+      if (me && !(await canDelegate(organizationId, companyId, me, aiEmployeeId))) {
+        return { content: "Not delegated: you can only delegate to AI employees who report to you (see read_ai_employees). Escalate to your manager with escalate_to_manager if someone else must do it.", count: 0 };
+      }
       const child = await createTask(ctx, organizationId, companyId, { aiEmployeeId, title, instructions }, { parentTaskId });
       return { content: `Delegated as task ${child.id} (status ${child.status}). Read its result later with read_task_result; it may take a few minutes.`, records: [`agent_task:${child.id}`] };
     },
@@ -81,6 +90,59 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
       if (t.status === "COMPLETED") return { content: `${head}\n\n${(t.output ?? "").slice(0, 20_000)}`, count: 1, records: [`agent_task:${t.id}`] };
       if (t.status === "FAILED") return { content: `${head} — ${t.errorMessage ?? t.errorCode ?? "failed"}`, count: 1 };
       return { content: `${head} — not finished yet. Continue with other work and check again later, or report it as in progress.`, count: 0 };
+    },
+  }),
+
+  report_to_manager: def({
+    name: "report_to_manager",
+    version: 1,
+    description:
+      "File a short status report with your manager (another AI employee, or the founder at the top of the org chart). It appears on your manager's page. Use it at the end of significant work: what was done, results with numbers, open points.",
+    input: z.object({ title: z.string().trim().min(1).max(200), body: z.string().trim().min(1).max(6000) }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { title: { type: "string" }, body: { type: "string", description: "Markdown: done, results, open points" } },
+      required: ["title", "body"],
+      additionalProperties: false,
+    },
+    permissions: ["agents.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: ({ title }) => `Report "${title}" to the manager`,
+    async execute({ title, body }, { ctx, organizationId, companyId }) {
+      const taskId = currentTaskId(ctx);
+      if (!taskId) throw new AppError("conflict", "Reports can only be filed from inside a task");
+      const r = await fileStatusReport(ctx, organizationId, companyId, taskId, { title, body });
+      if (!r) return { content: "Only AI employees have a manager to report to; include the report in your deliverable instead.", count: 0 };
+      return { content: `Report filed with ${r.to}.`, records: [`ai_employee_report:${r.id}`] };
+    },
+  }),
+
+  escalate_to_manager: def({
+    name: "escalate_to_manager",
+    version: 1,
+    description:
+      "Escalate a blocker or a failure you cannot resolve to your manager: creates a task for your AI manager with your explanation, or notifies the founder when you are at the top of the org chart. State what you tried, what blocks you and what decision or help you need.",
+    input: z.object({ title: z.string().trim().min(1).max(200), details: z.string().trim().min(1).max(6000) }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { title: { type: "string", description: "The blocker in one line" }, details: { type: "string", description: "What you tried, what blocks you, what you need" } },
+      required: ["title", "details"],
+      additionalProperties: false,
+    },
+    permissions: ["agents.run"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ title }) => `Escalate "${title}" to the manager`,
+    async execute({ title, details }, { ctx, organizationId, companyId }) {
+      const taskId = currentTaskId(ctx);
+      if (!taskId) throw new AppError("conflict", "Escalation is only possible from inside a task");
+      const r = await escalate(ctx, organizationId, companyId, taskId, { title, details });
+      if (!r) return { content: "Only AI employees can escalate; describe the blocker in your deliverable instead.", count: 0 };
+      if (r.taskId) return { content: `Escalated to ${r.to} as task ${r.taskId}. Continue with what you can do and mention the escalation in your deliverable.`, records: [`agent_task:${r.taskId}`, `ai_employee_report:${r.id}`] };
+      return { content: `Escalated to ${r.to}${r.notified ? " (notified)" : ""}. Mention the escalation in your deliverable.`, records: [`ai_employee_report:${r.id}`] };
     },
   }),
 };

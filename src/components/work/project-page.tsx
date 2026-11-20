@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import { getT } from "@/i18n/server";
 import { AppError } from "@/server/core/errors";
 import { projectSummary } from "@/server/modules/work/projects";
@@ -32,6 +34,9 @@ export async function projectPage(projectId: string, active: string) {
       </div>
       {project.archivedAt ? <Notice tone="warning">{t("work.project.archivedNotice")}</Notice> : null}
       <ProjectTabs t={t} locale={locale} projectId={project.id} active={active} />
+      {["board", "list", "timeline", "calendar", "sprints"].includes(active) ? (
+        <PageIntro labels={introLabels(t)} what={t(`work.intro.${active}.what`)} why={t(`work.intro.${active}.why`)} can={t(`work.intro.${active}.can`)} accent="info" />
+      ) : null}
     </>
   );
   return { ...w, project, top } as const;

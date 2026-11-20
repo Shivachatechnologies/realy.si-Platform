@@ -208,6 +208,10 @@ model User {
   ownedObjectives   Objective[]              @relation("ObjectiveOwner")
   ownedCompanyGoals CompanyGoal[]            @relation("CompanyGoalOwner")
   projectMembers    ProjectMember[]          @relation("ProjectMemberUser")
+  builderOnboarding BuilderOnboarding?
+  guideProgresses   GuideProgress[]
+  guideRequests     GuideRequest[]
+  commandSessions   CommandSession[]
 
   @@map("users")
 }
@@ -614,6 +618,54 @@ model Company {
   strategyPillars                 StrategyPillar[]
   companyGoals                    CompanyGoal[]
   objectiveKeyResults             ObjectiveKeyResult[]
+  integrationUsages               IntegrationUsage[]
+  integrationStoredObjects        IntegrationStoredObject[]
+  builderRuns                     BuilderRun[]
+  builderSteps                    BuilderStep[]
+  builderDecisions                BuilderDecision[]
+  builderSources                  BuilderSource[]
+  growthSettings                  GrowthSettings[]
+  growthInsights                  GrowthInsight[]
+  aiEmployeeReports               AiEmployeeReport[]
+  ceoConversations                CeoConversation[]
+  ceoMessages                     CeoMessage[]
+  products                        Product[]
+  productStageGates               ProductStageGate[]
+  productStageChanges             ProductStageChange[]
+  productCompetitors              ProductCompetitor[]
+  productValidations              ProductValidation[]
+  productPersonas                 ProductPersona[]
+  productDocs                     ProductDoc[]
+  productDocVersions              ProductDocVersion[]
+  productPlanRuns                 ProductPlanRun[]
+  guideProgresses                 GuideProgress[]
+  guideRequests                   GuideRequest[]
+  commandSessions                 CommandSession[]
+  commandMessages                 CommandMessage[]
+  guidedFlowProgresses            GuidedFlowProgress[]
+  hrHiringJourneys                HrHiringJourney[]
+  workProjectKickoffs             WorkProjectKickoff[]
+  marketingAutopilots             MarketingAutopilot[]
+  marketingAutopilotItems         MarketingAutopilotItem[]
+  marketingAssets                 MarketingAsset[]
+  marketingHashtagSets            MarketingHashtagSet[]
+  marketingLearnings              MarketingLearning[]
+  marketingRecommendations        MarketingRecommendation[]
+  marketingGoals                  MarketingGoal[]
+  marketingCmsPublications        MarketingCmsPublication[]
+  seoTopicClusters                SeoTopicCluster[]
+  seoSearchMetrics                SeoSearchMetric[]
+  marketingEmailVariants          MarketingEmailVariant[]
+  marketingAdAccounts             MarketingAdAccount[]
+  marketingAdCampaigns            MarketingAdCampaign[]
+  marketingAdGroups               MarketingAdGroup[]
+  marketingAds                    MarketingAd[]
+  marketingAdAudiences            MarketingAdAudience[]
+  marketingAdMetrics              MarketingAdMetric[]
+  marketingEngagements            MarketingEngagement[]
+  marketingInfluencers            MarketingInfluencer[]
+  marketingJourneys               MarketingJourney[]
+  visualAssets                    VisualAsset[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -681,6 +733,7 @@ model Project {
   financeTransactions  FinanceTransaction[]
   financeBillLines     FinanceBillLine[]
   financeExpenseClaims FinanceExpenseClaim[]
+  products             Product[]             @relation("ProductDevelopmentProject")
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, workspaceId])

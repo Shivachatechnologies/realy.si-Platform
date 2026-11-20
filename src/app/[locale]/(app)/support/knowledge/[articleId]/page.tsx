@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,8 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/suppo
   const categories = await listKbCategories(viewer.ctx, org.id, company.id);
   const path = `${base}/support/kb/articles/${a.id}`;
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.article.what")} why={t("support.intro.article.why")} can={t("support.intro.article.can")} accent="warning" />
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="grid content-start gap-4">
         <Card>
@@ -68,6 +72,7 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/suppo
           ← {t("support.kb.back")}
         </Link>
       </div>
-    </div>,
+    </div>
+    </>,
   );
 }

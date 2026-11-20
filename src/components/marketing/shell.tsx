@@ -11,6 +11,9 @@ import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { requireOrgContext } from "@/server/workspace";
+import { Megaphone } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { Aurora } from "@/components/motion/aurora";
 import { MARKETING_TABS, MarketingTabs, type MarketingTab } from "./marketing-tabs";
 
 export type MarketingContext = Awaited<ReturnType<typeof loadMarketing>>;
@@ -71,19 +74,15 @@ export function MarketingShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-[1400px] gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="grid min-w-0 gap-1">
-          {back ? (
-            <Link href={back.href} className="text-xs text-muted-foreground hover:underline">
-              ← {back.label}
-            </Link>
-          ) : null}
-          <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
-          {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
-        </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-      </div>
+    <div className="relative mx-auto grid w-full max-w-[1400px] gap-4">
+      <Aurora />
+      {back ? (
+        <Link href={back.href} className="text-xs text-muted-foreground hover:underline">
+          <span className="rtl:hidden">←</span>
+          <span className="hidden rtl:inline">→</span> {back.label}
+        </Link>
+      ) : null}
+      <PageHeader eyebrow={t("marketing.studio.eyebrow")} icon={<Megaphone />} title={title} description={subtitle} actions={actions} />
       <MarketingTabs locale={locale} active={tab} labels={tabLabels(t)} />
       {blocked === "no_company" ? (
         <Card>

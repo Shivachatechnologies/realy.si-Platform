@@ -3,7 +3,23 @@
  * OAuth endpoints, token handling and connection tests live in ./providers.ts (server only).
  */
 
-export const PROVIDER_CATEGORIES = ["productivity", "communication", "payments", "crm", "social", "accounting", "developer"] as const;
+export const PROVIDER_CATEGORIES = [
+  "ai",
+  "research",
+  "creative",
+  "social",
+  "ads",
+  "search",
+  "cms",
+  "email",
+  "messaging",
+  "payments",
+  "storage",
+  "crm",
+  "accounting",
+  "productivity",
+  "developer",
+] as const;
 export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number];
 
 export type AuthType = "oauth2" | "api_key" | "none";
@@ -16,6 +32,8 @@ export interface CredentialField {
   placeholder?: string;
   /** Regex the value must match (checked on the server). */
   pattern?: string;
+  /** i18n key under integrations.fields when it differs from `key` (e.g. the apiKey of Twilio is its "authToken"). */
+  labelKey?: string;
 }
 
 export interface ProviderInfo {
@@ -33,9 +51,125 @@ export interface ProviderInfo {
   syncKinds?: string[];
   /** Workflow actions / platform features this provider powers (i18n keys under integrations.capabilities). */
   capabilities: string[];
+  /** An api_key provider that can alternatively be connected with OAuth when the platform configured the app. */
+  oauthAlternative?: boolean;
+  /** Settings editable after connecting (OAuth providers too); secret ones are stored encrypted with the credentials. */
+  configFields?: CredentialField[];
+  /** The provider exposes several selectable sub-accounts (pages, channels, ad accounts, sites...): config.accounts + config.activeAccountId. */
+  multiAccount?: boolean;
+}
+
+/** A selectable sub-account of a connection, stored in config.accounts (non-secret). */
+export interface ConnectionAccount {
+  id: string;
+  name: string;
+  /** e.g. "page", "instagram", "channel", "ad_account", "site", "board", "audience", "account". */
+  type: string;
 }
 
 export const PROVIDERS: ProviderInfo[] = [
+  // ───────────── AI ─────────────
+  {
+    key: "openai",
+    name: "OpenAI",
+    category: "ai",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://platform.openai.com/api-keys",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "sk-…", pattern: "^sk-[A-Za-z0-9_\\-]{20,}$" },
+      { key: "organization", secret: false, required: false, placeholder: "org-…", pattern: "^org-[A-Za-z0-9]{6,}$" },
+      { key: "model", secret: false, required: false, placeholder: "gpt-4.1-mini", pattern: "^[A-Za-z0-9.:_-]{2,64}$" },
+    ],
+    capabilities: ["ai_text", "image_generation"],
+  },
+  {
+    key: "gemini",
+    name: "Google Gemini",
+    category: "ai",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://ai.google.dev/gemini-api/docs/api-key",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "AIza…", pattern: "^[A-Za-z0-9_\\-]{30,}$" },
+      { key: "model", secret: false, required: false, placeholder: "gemini-2.5-flash", pattern: "^[A-Za-z0-9.:_-]{2,64}$" },
+    ],
+    capabilities: ["ai_text"],
+  },
+  // ───────────── Research ─────────────
+  {
+    key: "tavily",
+    name: "Tavily",
+    category: "research",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.tavily.com/documentation/quickstart",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "tvly-…", pattern: "^tvly-[A-Za-z0-9_\\-]{10,}$" }],
+    capabilities: ["research"],
+  },
+  {
+    key: "exa",
+    name: "Exa",
+    category: "research",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.exa.ai/reference/getting-started",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "xxxxxxxx-xxxx-…", pattern: "^[A-Za-z0-9_\\-]{16,}$" }],
+    capabilities: ["research"],
+  },
+  {
+    key: "serpapi",
+    name: "SerpApi",
+    category: "research",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://serpapi.com/manage-api-key",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "64 hex characters", pattern: "^[A-Za-z0-9]{32,128}$" }],
+    capabilities: ["research"],
+  },
+  // ───────────── Creative ─────────────
+  {
+    key: "stability",
+    name: "Stability AI",
+    category: "creative",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://platform.stability.ai/account/keys",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "sk-…", pattern: "^sk-[A-Za-z0-9]{20,}$" }],
+    capabilities: ["image_generation"],
+  },
+  {
+    key: "replicate",
+    name: "Replicate",
+    category: "creative",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://replicate.com/account/api-tokens",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "r8_…", pattern: "^r8_[A-Za-z0-9]{20,}$" },
+      { key: "imageModel", secret: false, required: false, placeholder: "black-forest-labs/flux-schnell", pattern: "^[a-z0-9_.-]{1,64}/[a-z0-9_.-]{1,64}$" },
+      { key: "videoModel", secret: false, required: false, placeholder: "minimax/video-01", pattern: "^[a-z0-9_.-]{1,64}/[a-z0-9_.-]{1,64}$" },
+    ],
+    capabilities: ["image_generation", "video_generation"],
+  },
+  {
+    key: "runway",
+    name: "Runway",
+    category: "creative",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.dev.runwayml.com/guides/setup/",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "key_…", pattern: "^key_[A-Za-z0-9]{20,}$" }],
+    capabilities: ["video_generation"],
+  },
   {
     key: "google",
     name: "Google Workspace",
@@ -69,7 +203,7 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     key: "slack",
     name: "Slack",
-    category: "communication",
+    category: "messaging",
     authType: "oauth2",
     scopes: ["chat:write", "chat:write.public", "channels:read", "users:read"],
     envVars: ["SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET"],
@@ -91,7 +225,7 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     key: "whatsapp",
     name: "WhatsApp Business",
-    category: "communication",
+    category: "messaging",
     authType: "api_key",
     scopes: [],
     envVars: [],
@@ -154,6 +288,7 @@ export const PROVIDERS: ProviderInfo[] = [
     envVars: ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
     docsUrl: "https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow",
     capabilities: ["social_publishing"],
+    multiAccount: true,
   },
   {
     key: "instagram",
@@ -164,6 +299,248 @@ export const PROVIDERS: ProviderInfo[] = [
     envVars: ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
     docsUrl: "https://developers.facebook.com/docs/instagram-platform/instagram-graph-api",
     capabilities: ["social_publishing"],
+    multiAccount: true,
+  },
+  {
+    key: "youtube",
+    name: "YouTube",
+    category: "social",
+    authType: "oauth2",
+    scopes: ["openid", "email", "https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube.readonly"],
+    envVars: ["OAUTH_GOOGLE_CLIENT_ID", "OAUTH_GOOGLE_CLIENT_SECRET"],
+    docsUrl: "https://developers.google.com/youtube/v3/guides/authentication",
+    capabilities: ["social_publishing", "video_publishing"],
+    multiAccount: true,
+  },
+  {
+    key: "tiktok",
+    name: "TikTok",
+    category: "social",
+    authType: "oauth2",
+    scopes: ["user.info.basic", "video.upload", "video.publish", "video.list"],
+    envVars: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"],
+    docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
+    capabilities: ["social_publishing", "video_publishing"],
+  },
+  {
+    key: "threads",
+    name: "Threads",
+    category: "social",
+    authType: "oauth2",
+    scopes: ["threads_basic", "threads_content_publish", "threads_manage_insights"],
+    envVars: ["THREADS_APP_ID", "THREADS_APP_SECRET"],
+    docsUrl: "https://developers.facebook.com/docs/threads/get-started",
+    capabilities: ["social_publishing"],
+  },
+  {
+    key: "pinterest",
+    name: "Pinterest",
+    category: "social",
+    authType: "oauth2",
+    scopes: ["user_accounts:read", "boards:read", "pins:read", "pins:write"],
+    envVars: ["PINTEREST_CLIENT_ID", "PINTEREST_CLIENT_SECRET"],
+    docsUrl: "https://developers.pinterest.com/docs/getting-started/authentication-and-scopes/",
+    capabilities: ["social_publishing"],
+    multiAccount: true,
+  },
+  // ───────────── Ads ─────────────
+  {
+    key: "meta_ads",
+    name: "Meta Ads",
+    category: "ads",
+    authType: "oauth2",
+    scopes: ["ads_read", "ads_management", "business_management"],
+    envVars: ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
+    docsUrl: "https://developers.facebook.com/docs/marketing-apis/get-started",
+    capabilities: ["ads"],
+    multiAccount: true,
+  },
+  {
+    key: "google_ads",
+    name: "Google Ads",
+    category: "ads",
+    authType: "oauth2",
+    scopes: ["openid", "email", "https://www.googleapis.com/auth/adwords"],
+    envVars: ["OAUTH_GOOGLE_CLIENT_ID", "OAUTH_GOOGLE_CLIENT_SECRET", "GOOGLE_ADS_DEVELOPER_TOKEN"],
+    docsUrl: "https://developers.google.com/google-ads/api/docs/get-started/introduction",
+    capabilities: ["ads"],
+    multiAccount: true,
+    configFields: [
+      { key: "developerToken", secret: true, required: false, placeholder: "22 characters", pattern: "^[A-Za-z0-9_\\-]{10,64}$" },
+      { key: "loginCustomerId", secret: false, required: false, placeholder: "1234567890", pattern: "^\\d{10}$" },
+    ],
+  },
+  {
+    key: "linkedin_ads",
+    name: "LinkedIn Ads",
+    category: "ads",
+    authType: "oauth2",
+    scopes: ["r_ads", "rw_ads", "r_ads_reporting"],
+    envVars: ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"],
+    docsUrl: "https://learn.microsoft.com/linkedin/marketing/getting-started",
+    capabilities: ["ads"],
+    multiAccount: true,
+  },
+  {
+    key: "tiktok_ads",
+    name: "TikTok Ads",
+    category: "ads",
+    authType: "oauth2",
+    scopes: [],
+    envVars: ["TIKTOK_ADS_APP_ID", "TIKTOK_ADS_APP_SECRET"],
+    docsUrl: "https://business-api.tiktok.com/portal/docs?id=1738373164380162",
+    capabilities: ["ads"],
+    multiAccount: true,
+  },
+  // ───────────── Search ─────────────
+  {
+    key: "google_search_console",
+    name: "Google Search Console",
+    category: "search",
+    authType: "oauth2",
+    scopes: ["openid", "email", "https://www.googleapis.com/auth/webmasters.readonly"],
+    envVars: ["OAUTH_GOOGLE_CLIENT_ID", "OAUTH_GOOGLE_CLIENT_SECRET"],
+    docsUrl: "https://developers.google.com/webmaster-tools/v1/how-tos/authorizing",
+    capabilities: ["search_analytics"],
+    multiAccount: true,
+  },
+  // ───────────── CMS ─────────────
+  {
+    key: "wordpress",
+    name: "WordPress",
+    category: "cms",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/",
+    fields: [
+      { key: "siteUrl", secret: false, required: true, placeholder: "https://blog.example.com", pattern: "^https?://[^\\s/]{3,253}(/[^\\s]{0,200})?$" },
+      { key: "username", secret: false, required: true, placeholder: "editor", pattern: "^[^\\s:]{1,120}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "applicationPassword", placeholder: "xxxx xxxx xxxx xxxx xxxx xxxx", pattern: "^[A-Za-z0-9 ]{16,64}$" },
+    ],
+    capabilities: ["cms_publishing"],
+  },
+  {
+    key: "webflow",
+    name: "Webflow",
+    category: "cms",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developers.webflow.com/data/reference/authentication/site-token",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "site API token", pattern: "^[A-Za-z0-9_\\-]{20,}$" }],
+    capabilities: ["cms_publishing"],
+    multiAccount: true,
+  },
+  {
+    key: "shopify",
+    name: "Shopify",
+    category: "cms",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/generate-app-access-tokens-admin",
+    fields: [
+      { key: "shopDomain", secret: false, required: true, placeholder: "your-store.myshopify.com", pattern: "^[a-z0-9][a-z0-9-]{0,60}\\.myshopify\\.com$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "adminToken", placeholder: "shpat_…", pattern: "^shp(at|ca|pa)_[A-Za-z0-9]{20,}$" },
+    ],
+    capabilities: ["cms_publishing", "ecommerce"],
+  },
+  // ───────────── Email ─────────────
+  {
+    key: "sendgrid",
+    name: "SendGrid",
+    category: "email",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "SG.…", pattern: "^SG\\.[A-Za-z0-9_\\-.]{20,}$" },
+      { key: "fromEmail", secret: false, required: true, placeholder: "hello@example.com", pattern: "^[^\\s@]{1,64}@[^\\s@]{1,190}\\.[^\\s@]{2,}$" },
+      { key: "fromName", secret: false, required: false, placeholder: "Example Inc." },
+    ],
+    capabilities: ["email_sending"],
+  },
+  {
+    key: "mailchimp",
+    name: "Mailchimp",
+    category: "email",
+    authType: "api_key",
+    oauthAlternative: true,
+    scopes: [],
+    envVars: ["MAILCHIMP_CLIENT_ID", "MAILCHIMP_CLIENT_SECRET"],
+    docsUrl: "https://mailchimp.com/developer/marketing/guides/quick-start/",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "…-us21", pattern: "^[a-f0-9]{32}-[a-z]{2,4}\\d{1,3}$" },
+      { key: "serverPrefix", secret: false, required: false, placeholder: "us21", pattern: "^[a-z]{2,4}\\d{1,3}$" },
+    ],
+    capabilities: ["email_marketing"],
+    multiAccount: true,
+  },
+  // ───────────── Messaging ─────────────
+  {
+    key: "twilio",
+    name: "Twilio",
+    category: "messaging",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://www.twilio.com/docs/iam/api/authtoken",
+    fields: [
+      { key: "accountSid", secret: false, required: true, placeholder: "AC…", pattern: "^AC[a-f0-9]{32}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "authToken", placeholder: "32 hex characters", pattern: "^[a-f0-9]{32}$" },
+      { key: "fromNumber", secret: false, required: false, placeholder: "+15551234567 or MG…", pattern: "^(\\+[1-9]\\d{6,14}|MG[a-f0-9]{32})$" },
+      { key: "whatsappFrom", secret: false, required: false, placeholder: "+15551234567", pattern: "^\\+[1-9]\\d{6,14}$" },
+    ],
+    capabilities: ["sms", "chat"],
+  },
+  {
+    key: "razorpay",
+    name: "Razorpay",
+    category: "payments",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://razorpay.com/docs/api/authentication/",
+    fields: [
+      { key: "keyId", secret: false, required: true, placeholder: "rzp_live_…", pattern: "^rzp_(live|test)_[A-Za-z0-9]{10,}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "keySecret", placeholder: "…", pattern: "^[A-Za-z0-9]{16,64}$" },
+    ],
+    capabilities: ["payments"],
+  },
+  // ───────────── Storage / infra ─────────────
+  {
+    key: "s3",
+    name: "S3-compatible storage",
+    category: "storage",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html",
+    fields: [
+      { key: "endpoint", secret: false, required: false, placeholder: "https://<account>.r2.cloudflarestorage.com", pattern: "^https://[^\\s/]{3,253}/?$" },
+      { key: "region", secret: false, required: true, placeholder: "eu-central-1 / auto", pattern: "^[a-z0-9-]{2,40}$" },
+      { key: "bucket", secret: false, required: true, placeholder: "my-bucket", pattern: "^[a-z0-9][a-z0-9.\\-]{1,61}[a-z0-9]$" },
+      { key: "accessKeyId", secret: false, required: true, placeholder: "AKIA…", pattern: "^[A-Za-z0-9]{16,128}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "secretAccessKey", placeholder: "…", pattern: "^[A-Za-z0-9/+=]{16,128}$" },
+    ],
+    capabilities: ["storage"],
+  },
+  {
+    key: "cloudflare",
+    name: "Cloudflare",
+    category: "storage",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developers.cloudflare.com/fundamentals/api/get-started/create-token/",
+    fields: [
+      { key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "…", pattern: "^[A-Za-z0-9_\\-]{30,}$" },
+      { key: "accountId", secret: false, required: false, placeholder: "32 hex characters", pattern: "^[a-f0-9]{32}$" },
+    ],
+    capabilities: ["infrastructure", "storage"],
+    multiAccount: true,
   },
   {
     key: "quickbooks",

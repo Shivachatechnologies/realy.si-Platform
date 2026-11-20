@@ -8,6 +8,7 @@ import { PublicShell } from "@/components/support/public-shell";
 import { getLocale, getT } from "@/i18n/server";
 import { isAppError } from "@/server/core/errors";
 import { publicHelpCenter } from "@/server/modules/support/kb";
+import { db } from "@/server/core/db";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,8 +27,22 @@ export default async function HelpCenterPage({ params, searchParams }: PageProps
     throw err;
   });
   const path = `/${locale}/help/${companyId}`;
+  const contact = await db().supportSettings.findUnique({ where: { companyId }, select: { emailChannelEnabled: true, supportEmail: true } });
   return (
-    <PublicShell title={t("support.help.heading", { company: hc.company.name })} home={path}>
+    <PublicShell
+      title={t("support.help.heading", { company: hc.company.name })}
+      home={path}
+      footer={
+        contact?.emailChannelEnabled && contact.supportEmail ? (
+          <>
+            {t("support.public.emailUs")}{" "}
+            <a href={`mailto:${contact.supportEmail}`} className="underline">
+              {contact.supportEmail}
+            </a>
+          </>
+        ) : undefined
+      }
+    >
       <div className="grid gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t("support.help.howCanWeHelp")}</h1>
         <form className="mx-auto flex w-full max-w-xl gap-2" action={path}>

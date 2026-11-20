@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { ProductTabs } from "@/components/work/area-tabs";
+import { ProductAreaTabs } from "@/components/work/product-nav";
+import { HelpStrip } from "@/components/work/product-studio";
 import { workContext } from "@/components/work/context";
 import { FeatureForm } from "@/components/work/product-forms";
 import { Empty, Pagination } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
 import { featurePickers, ITEM_STATUSES, listFeatures, parseFeatureFilters, quarterOptions } from "@/server/modules/work/product";
+import { productOptions } from "@/server/modules/work/product-core";
 import { ITEM_TONE } from "@/components/work/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,15 +27,16 @@ export default async function FeaturesPage({ searchParams }: PageProps<"/[locale
   const raw = await searchParams;
   const filters = parseFeatureFilters(raw);
   const path = `/${locale}/product/features`;
-  const [list, pickers] = await Promise.all([listFeatures(viewer.ctx, org.id, company.id, filters), featurePickers(org.id, company.id)]);
-  const filtered = !!(filters.q || filters.status || filters.initiativeId);
+  const [list, pickers, products] = await Promise.all([listFeatures(viewer.ctx, org.id, company.id, filters), featurePickers(org.id, company.id), productOptions(org.id, company.id)]);
+  const filtered = !!(filters.q || filters.status || filters.initiativeId || filters.productId);
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
       {w.header}
-      <ProductTabs t={t} locale={locale} active="features" />
+      <ProductAreaTabs t={t} locale={locale} active="features" />
+      <HelpStrip t={t} area="featuresAll" />
       <Card>
         <CardHeader title={t("work.product.tabs.features")} description={t("work.product.featureCount", { count: list.total })} />
-        <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_12rem_10rem_auto]" action={path}>
+        <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_12rem_12rem_10rem_auto]" action={path}>
           <Input name="q" type="search" defaultValue={filters.q ?? ""} maxLength={200} aria-label={t("work.search")} placeholder={t("work.product.searchFeatures")} />
           <Select name="status" defaultValue={filters.status ?? ""} aria-label={t("work.task.status")}>
             <option value="">{t("work.allStatuses")}</option>
@@ -48,6 +51,14 @@ export default async function FeaturesPage({ searchParams }: PageProps<"/[locale
             {pickers.initiatives.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.name}
+              </option>
+            ))}
+          </Select>
+          <Select name="product" defaultValue={filters.productId ?? ""} aria-label={t("product.product")}>
+            <option value="">{t("product.allProducts")}</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
           </Select>
@@ -72,7 +83,7 @@ export default async function FeaturesPage({ searchParams }: PageProps<"/[locale
           <details className="border-b">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.product.addFeature")}</summary>
             <div className="p-3">
-              <FeatureForm base={base} locale={locale} quarters={quarterOptions()} {...pickers} />
+              <FeatureForm base={base} locale={locale} quarters={quarterOptions()} {...pickers} products={products} />
             </div>
           </details>
         ) : null}
@@ -82,6 +93,7 @@ export default async function FeaturesPage({ searchParams }: PageProps<"/[locale
               <Tr>
                 <Th>{t("work.product.featureTitle")}</Th>
                 <Th>{t("work.task.status")}</Th>
+                <Th>{t("product.product")}</Th>
                 <Th>{t("work.product.initiative")}</Th>
                 <Th>{t("work.product.quarter")}</Th>
                 <Th>{t("work.product.release")}</Th>
@@ -99,6 +111,15 @@ export default async function FeaturesPage({ searchParams }: PageProps<"/[locale
                   </Td>
                   <Td>
                     <Badge tone={ITEM_TONE[f.status]}>{t(`work.itemStatus.${f.status}`)}</Badge>
+                  </Td>
+                  <Td className="text-muted-foreground">
+                    {f.product ? (
+                      <Link href={`/${locale}/product/${f.product.id}`} className="hover:underline">
+                        {f.product.name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </Td>
                   <Td className="text-muted-foreground">{f.initiative?.title ?? "—"}</Td>
                   <Td className="text-muted-foreground">{f.quarter ?? "—"}</Td>

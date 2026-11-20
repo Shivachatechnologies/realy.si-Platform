@@ -26,14 +26,20 @@ enum SupportTicketStatus {
 
 /// Per-company support settings and the ticket number sequence.
 model SupportSettings {
-  companyId          String   @id @map("company_id") @db.Uuid
-  organizationId     String   @map("organization_id") @db.Uuid
-  nextTicketNumber   Int      @default(1) @map("next_ticket_number")
-  helpCenterEnabled  Boolean  @default(true) @map("help_center_enabled")
-  supportFormEnabled Boolean  @default(true) @map("support_form_enabled")
+  companyId           String    @id @map("company_id") @db.Uuid
+  organizationId      String    @map("organization_id") @db.Uuid
+  nextTicketNumber    Int       @default(1) @map("next_ticket_number")
+  helpCenterEnabled   Boolean   @default(true) @map("help_center_enabled")
+  supportFormEnabled  Boolean   @default(true) @map("support_form_enabled")
   /// Queue an AI classification task (support_agent) for new tickets created by staff.
-  aiTriageEnabled    Boolean  @default(false) @map("ai_triage_enabled")
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  aiTriageEnabled     Boolean   @default(false) @map("ai_triage_enabled")
+  /// Customers may write to this address; it is shown on the help center and the support form.
+  emailChannelEnabled Boolean   @default(false) @map("email_channel_enabled")
+  supportEmail        String?   @map("support_email")
+  /// Guided setup (/support/setup): last step reached (channels | promises | articles | done) and completion time.
+  setupStep           String?   @map("setup_step")
+  setupCompletedAt    DateTime? @map("setup_completed_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
 

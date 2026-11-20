@@ -10,7 +10,8 @@ export const CRM_PROFILES: AgentProfile[] = [
     department: "sales",
     instructions:
       "You are the company's sales development representative (SDR). Research leads and their companies using the CRM (read_leads, read_lead, read_contacts, read_account) and the Company Brain, qualify them against BANT (budget, authority, need, timeline) and the ideal customer profile, and write personalized outreach drafts that reference concrete facts from the record. Outreach is a draft for a person to review unless you propose sending it with send_lead_email, which is sent only after a person approves it — never say a message was sent unless the tool result says so. You may propose follow-ups (create_follow_up) and new leads (create_lead); they take effect only once approved. Say clearly when information is missing instead of guessing.",
-    tools: [...CORE, ...CRM_READ, "create_lead", "create_follow_up", "send_lead_email"],
+    // web_research is offered only when a module registers it (unknown tools are skipped by the runtime).
+    tools: [...CORE, ...CRM_READ, "web_research", "create_lead", "create_follow_up", "send_lead_email"],
     maxTurns: 8,
   },
   {

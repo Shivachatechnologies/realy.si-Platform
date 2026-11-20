@@ -6,6 +6,11 @@ import { AiAvatar } from "@/components/workforce/avatar";
 import { PageHeader } from "@/components/workforce/page-header";
 import { PageState } from "@/components/workforce/states";
 import { WorkforceTabs } from "@/components/workforce/workforce-tabs";
+import { HeaderStrip } from "@/components/workforce/header-strip";
+import { HelpMeButton } from "@/components/workforce/help-me-button";
+import { AutoRefresh } from "@/components/agents/auto-refresh";
+import { Sparkline } from "@/components/bi/charts";
+import { LiveDot, SystemPulse, TypingText } from "@/components/motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -15,7 +20,7 @@ import { formatMoney, formatNumber } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { DEPARTMENTS, employeeFilters, employeeStats, listEmployees } from "@/server/modules/workforce/service";
+import { DEPARTMENTS, employeeFilters, employeeStats, listEmployees, liveActivity } from "@/server/modules/workforce/service";
 import { microsToCents } from "@/server/modules/workforce/pricing";
 import { requireOrgContext } from "@/server/workspace";
 
@@ -27,7 +32,7 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
   const locale = await getLocale();
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
-  const tabs = <WorkforceTabs locale={locale} active="employees" labels={{ employees: t("workforce.tabs.employees"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />;
+  const tabs = <WorkforceTabs locale={locale} active="employees" labels={{ employees: t("workforce.tabs.employees"), org: t("workforce.tabs.org"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />;
   const header = (
     <>
       <PageHeader title={t("modules.workforce.title")} subtitle={t("workforce.subtitle")} />
@@ -43,7 +48,9 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
   const raw = Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const filters = employeeFilters.parse(raw);
   const employees = await listEmployees(viewer.ctx, org.id, company.id, raw);
-  const stats = await employeeStats(org.id, company.id, employees.map((e) => e.id));
+  const [stats, live] = await Promise.all([employeeStats(org.id, company.id, employees.map((e) => e.id)), liveActivity(org.id, company.id, employees.map((e) => e.id))]);
+  const running = [...live.values()].filter((l) => l.current?.status === "RUNNING").length;
+  const busy = [...live.values()].filter((l) => l.current).length;
   const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const filtered = !!(filters.q || filters.status || filters.department);
   const groups = DEPARTMENTS.map((d) => ({ d, list: employees.filter((e) => e.department === d) })).filter((g) => g.list.length);
@@ -72,6 +79,24 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
         }
       />
       {tabs}
+      <AutoRefresh active={busy > 0} intervalMs={8000} />
+      <HeaderStrip
+        t={t}
+        what={t("workforce.strip.whatText")}
+        why={t("workforce.strip.whyText")}
+        can={t("workforce.strip.canText")}
+        next={employees.length ? t("workforce.strip.nextAssign") : t("workforce.strip.nextHire")}
+        action={
+          <span className="flex flex-wrap items-center gap-2">
+            <SystemPulse active={running > 0} label={t("workforce.live.working", { count: running })} detail={busy - running ? t("workforce.live.queued", { count: busy - running }) : undefined} />
+            {canManage ? (
+              <Button asChild size="sm">
+                <Link href={`/${locale}/workforce/hire`}>{t("workforce.hire.title")}</Link>
+              </Button>
+            ) : null}
+          </span>
+        }
+      />
       <form method="get" className="flex flex-wrap items-end gap-2">
         <label className="grid gap-1 text-xs text-muted-foreground">
           {t("workforce.filters.search")}
@@ -110,10 +135,23 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
         <Card>
           <CardBody className="grid justify-items-start gap-3">
             <p className="text-muted-foreground">{filtered ? t("common.noResults") : t("workforce.empty")}</p>
+            {!filtered ? <p className="text-sm text-muted-foreground">{t("workforce.emptyExplain")}</p> : null}
             {canManage && !filtered ? (
-              <Button asChild size="sm">
-                <Link href={`/${locale}/workforce/hire`}>{t("workforce.hire.title")}</Link>
-              </Button>
+              <span className="flex flex-wrap gap-2">
+                <Button asChild size="sm">
+                  <Link href={`/${locale}/workforce/hire`}>{t("workforce.hire.title")}</Link>
+                </Button>
+                <ActionButton path={`${apiBase}/workforce/starter-team`} confirm={t("workforce.starterTeam.confirm")}>
+                  <Users aria-hidden />
+                  {t("workforce.starterTeam.action")}
+                </ActionButton>
+                <HelpMeButton
+                  apiBase={apiBase}
+                  profile="research_analyst"
+                  title={t("workforce.help.firstHiresTitle")}
+                  instructions="The founder is about to build an AI workforce in Realy. From the company's documents, structure and objectives, recommend the first three to five AI employees to hire (choose from these roles: AI CEO, sales manager, marketing manager (CMO), finance analyst (CFO), project manager, customer support, HR analyst, research analyst), what each should own, and the order to hire them. Plain language, one short paragraph per role."
+                />
+              </span>
             ) : null}
           </CardBody>
         </Card>
@@ -126,20 +164,37 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {g.list.map((e) => {
                 const s = stats.get(e.id)!;
+                const act = live.get(e.id)!;
                 const pct = e.monthlyTokenBudget ? Math.min(100, Math.round((s.monthTokens / e.monthlyTokenBudget) * 100)) : null;
                 return (
-                  <Card key={e.id} className="flex flex-col">
+                  <Card key={e.id} variant={act.current?.status === "RUNNING" ? "highlight" : "elevated"} interactive className="flex flex-col">
                     <CardHeader
                       title={
                         <Link href={`/${locale}/workforce/${e.id}`} className="flex items-center gap-2 hover:underline">
-                          <AiAvatar id={e.id} initials={e.initials} paused={e.status === "PAUSED"} />
+                          <AiAvatar id={e.id} initials={e.initials} paused={e.status === "PAUSED"} working={act.current?.status === "RUNNING"} />
                           <span className="truncate">{e.name}</span>
                         </Link>
                       }
-                      description={t(`profiles.${e.profileKey}.name`)}
-                      actions={<Badge tone={e.status === "ACTIVE" ? "success" : "neutral"}>{t(`workforce.status.${e.status}`)}</Badge>}
+                      description={`${e.jobTitle ? `${e.jobTitle} · ` : ""}${t(`profiles.${e.profileKey}.name`)}${e.manager ? ` · ${t("workforce.profile.reportsTo")} ${e.manager.name}` : ""}`}
+                      actions={
+                        <span className="flex items-center gap-1.5 text-xs">
+                          <LiveDot tone={e.status === "PAUSED" ? "neutral" : act.current?.status === "RUNNING" ? "primary" : "success"} pulse={act.current?.status === "RUNNING"} />
+                          {e.status === "PAUSED" ? t("workforce.status.PAUSED") : act.current?.status === "RUNNING" ? t("workforce.live.workingNow") : act.current ? t("workforce.live.hasQueue") : t("workforce.live.available")}
+                        </span>
+                      }
                     />
                     <CardBody className="grid flex-1 content-start gap-2 text-sm">
+                      <p className="text-xs italic text-muted-foreground">{t(`workforce.personality.${e.department}`)}</p>
+                      {act.current ? (
+                        <Link href={`/${locale}/tasks/${act.current.id}`} className="grid gap-0.5 rounded-md border border-primary/30 bg-primary/5 p-2 text-xs hover:bg-primary/10">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">{act.current.status === "RUNNING" ? t("workforce.live.workingOn") : t("workforce.live.next")}</span>
+                          {act.current.status === "RUNNING" ? <TypingText text={act.current.title} className="truncate" /> : <span className="truncate">{act.current.title}</span>}
+                        </Link>
+                      ) : null}
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span>{t("workforce.live.weekly")}</span>
+                        <Sparkline values={act.weekly} />
+                      </div>
                       <dl className="grid grid-cols-3 gap-2 text-center">
                         <div className="rounded-md bg-surface-2 p-2">
                           <dt className="text-[11px] text-muted-foreground">{t("workforce.stats.completed")}</dt>
@@ -166,6 +221,11 @@ export default async function WorkforcePage({ searchParams }: PageProps<"/[local
                         </div>
                       ) : null}
                       <p className="text-xs text-muted-foreground">{t(`workforce.autonomy.${e.autonomy}.name`)}</p>
+                      {!e.setupCompletedAt && canManage ? (
+                        <Link className="text-xs text-primary hover:underline" href={`/${locale}/workforce/${e.id}/setup`}>
+                          {t("workforce.setup.continue")}
+                        </Link>
+                      ) : null}
                       {e.skills.length ? (
                         <div className="flex flex-wrap gap-1">
                           {e.skills.map((sk) => (

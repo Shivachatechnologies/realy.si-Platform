@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FolderKanban, Sparkles } from "lucide-react";
+import { HelpMeButton } from "@/components/guide-kit/help-me";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { DelayBadge, WorkloadHeatmap } from "@/components/work/insights";
+import { aiConfigured } from "@/server/modules/agents/runtime";
+import { projectDelays, workloadHeatmap } from "@/server/modules/work/kickoff";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -23,7 +31,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
   const t = await getT();
   const w = await workContext("projects", t("modules.projects.title"), t("work.projectsSubtitle"));
   if (w.gate) return w.gate;
-  const { locale, viewer, org, company, canManage, base } = w;
+  const { locale, viewer, org, company, canManage, canRunAgents, base } = w;
   const raw = await searchParams;
   const filters = parseProjectFilters(raw);
   const filtered = !!(filters.q || filters.status || filters.owner || filters.archived);
@@ -33,6 +41,12 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
     canManage ? listTemplates(viewer.ctx, org.id, company.id) : null,
     workload(viewer.ctx, org.id, company.id),
   ]);
+  const [delays, heat, helpTask] = await Promise.all([
+    projectDelays(viewer.ctx, org.id, company.id, list.data.map((p) => p.id)),
+    workloadHeatmap(viewer.ctx, org.id, company.id),
+    latestSubjectTask(viewer.ctx, org.id, company.id, "projects_overview", company.id),
+  ]);
+  const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const active = list.data.filter((p) => p.status === "ACTIVE").length;
   const overdue = list.data.reduce((n, p) => n + p.overdue, 0);
   const risks = list.data.reduce((n, p) => n + p.openRisks, 0);
@@ -55,6 +69,25 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
       {w.header}
       <ProjectsAreaTabs t={t} locale={locale} active="projects" />
+      <PageIntro
+        labels={introLabels(t)}
+        what={t("work.intro.projects.what")}
+        why={t("work.intro.projects.why")}
+        can={t("work.intro.projects.can")}
+        next={canManage ? { label: t("work.intro.projects.next"), href: `/${locale}/projects/start` } : { label: t("work.intro.projects.nextMine"), href: `/${locale}/projects/my-tasks` }}
+        accent="info"
+        extra={
+          <HelpMeButton
+            base={apiBase}
+            aiReady={aiConfigured() && canRunAgents}
+            profile="delivery_analyst"
+            subject={{ type: "projects_overview", id: company.id }}
+            title="Help me with my projects"
+            instructions="The person is on the projects overview and is not a project-management expert. Call read_projects and read_team_workload, then explain in plain words which projects need attention (late tasks, overloaded people, missing owners or dates) and the 3 most useful next actions, each pointing to the project page (/projects/<id>) where they can do it. Do not create anything without proposing it for approval."
+            initial={helpTask}
+          />
+        }
+      />
       <div className="grid gap-3 sm:grid-cols-4">
         <StatCard label={t("work.stats.projects")} value={list.total} />
         <StatCard label={t("work.stats.activeOnPage")} value={active} />
@@ -106,7 +139,17 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
           </details>
         ) : null}
         {list.data.length === 0 ? (
-          <Empty>{filtered ? t("common.noResults") : t("projects.empty")}</Empty>
+          filtered ? (
+            <Empty>{t("common.noResults")}</Empty>
+          ) : (
+            <SmartEmpty
+              icon={<FolderKanban />}
+              title={t("work.empty.projects.title")}
+              body={t("work.empty.projects.body")}
+              primary={canManage ? <Link href={`/${locale}/projects/start`} className={buttonVariants({ size: "sm" })}><Sparkles aria-hidden /> {t("work.empty.projects.ai")}</Link> : undefined}
+              ai={canManage ? <span className="self-center text-xs text-muted-foreground">{t("work.empty.projects.manual")}</span> : undefined}
+            />
+          )
         ) : (
           <Table>
             <THead>
@@ -129,7 +172,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
                     {t("work.project.dueDate")}
                   </Link>
                 </Th>
-                <Th className="text-end">{t("work.stats.overdueTasks")}</Th>
+                <Th>{t("work.delay.column")}</Th>
                 <Th className="text-end">{t("work.stats.openRisks")}</Th>
               </Tr>
             </THead>
@@ -153,7 +196,9 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
                     <Progress value={p.progress} label={t("work.project.progressOf", { done: p.tasksDone, total: p.tasksTotal })} />
                   </Td>
                   <Td className="whitespace-nowrap text-muted-foreground">{p.dueDate ? formatDate(p.dueDate, locale, "UTC") : "—"}</Td>
-                  <Td className={`text-end tabular-nums ${p.overdue ? "text-danger" : "text-muted-foreground"}`}>{p.overdue}</Td>
+                  <Td>
+                    <DelayBadge t={t} delay={delays.get(p.id)} />
+                  </Td>
                   <Td className={`text-end tabular-nums ${p.openRisks ? "text-warning" : "text-muted-foreground"}`}>{p.openRisks}</Td>
                 </Tr>
               ))}
@@ -168,6 +213,11 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
           total={list.total}
           labels={{ prev: t("common.previous"), next: t("common.next"), summary: t("work.pageOf", { page: list.page, pages: Math.max(1, Math.ceil(list.total / list.pageSize)) }) }}
         />
+      </Card>
+
+      <Card>
+        <CardHeader title={t("work.heatmap.title")} description={t("work.heatmap.hint")} />
+        <WorkloadHeatmap t={t} locale={locale} data={heat} />
       </Card>
 
       {load.length ? (

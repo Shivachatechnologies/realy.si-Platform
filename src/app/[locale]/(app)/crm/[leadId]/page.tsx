@@ -12,6 +12,7 @@ import {
   MergeButton,
   NewFollowUpForm,
 } from "@/components/crm/lead-forms";
+import { HelpMeButton } from "@/components/crm/guided-kit";
 import { SCORE_TONE } from "@/components/crm/score";
 import { AttachmentList } from "@/components/crm/activity-cards";
 import { EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
@@ -102,7 +103,10 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
         <Link href={`/${locale}/crm`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.back")}
         </Link>
-        {canManage && active ? <ArchiveLeadButton base={base} locale={locale} leadId={lead.id} /> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {canRunAgents && aiConfigured() && active ? <HelpMeButton base={base} url={`${base}/crm/help`} body={{ kind: "lead", id: lead.id, page: "crm.lead" }} locale={locale} /> : null}
+          {canManage && active ? <ArchiveLeadButton base={base} locale={locale} leadId={lead.id} /> : null}
+        </div>
       </div>
       {!active ? (
         <Notice tone="warning">

@@ -10,6 +10,7 @@ const TABS = [
   { key: "documents", path: "/documents" },
   { key: "memory", path: "/brain/memory" },
   { key: "ask", path: "/brain/ask" },
+  { key: "assets", path: "/assets" },
 ] as const;
 export type BrainTab = (typeof TABS)[number]["key"];
 
@@ -24,7 +25,7 @@ export function BrainTabs({ locale, active }: { locale: string; active: BrainTab
           aria-current={active === tab.key ? "page" : undefined}
           className={cn("-mb-px shrink-0 border-b-2 px-3 py-2 whitespace-nowrap", active === tab.key ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}
         >
-          {t(`brain.tabs.${tab.key}`)}
+          {tab.key === "assets" ? t("assets.tab") : t(`brain.tabs.${tab.key}`)}
         </Link>
       ))}
     </nav>

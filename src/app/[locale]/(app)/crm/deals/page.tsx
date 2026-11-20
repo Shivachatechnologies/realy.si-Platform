@@ -1,3 +1,4 @@
+import { SmartEmpty } from "@/components/crm/page-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -138,7 +139,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
           </div>
         </form>
         {c.canManage ? (
-          <details className="border-b" open={query.new === "1"}>
+          <details id="new-item" className="border-b" open={query.new === "1" || (list.rows.length === 0 && !filtered)}>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("crm.deals.add")}</summary>
             <DealForm
               base={base}
@@ -156,7 +157,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
           </details>
         ) : null}
         {list.rows.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("crm.deals.empty")}</p>
+          filtered ? <p className="p-4 text-muted-foreground">{t("common.noResults")}</p> : <SmartEmpty ns="crm.smartEmpty.deals" primaryHref="#new-item" aiHref={`/${locale}/sales/start`} />
         ) : (
           <BulkTable
             url={`${base}/crm/deals/bulk`}

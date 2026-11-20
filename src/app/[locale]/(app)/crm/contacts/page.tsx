@@ -1,3 +1,4 @@
+import { SmartEmpty } from "@/components/crm/page-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -106,13 +107,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           </div>
         </form>
         {c.canManage ? (
-          <details className="border-b">
+          <details id="new-item" className="border-b" open={list.rows.length === 0 && !filtered}>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("crm.contacts.add")}</summary>
             <ContactForm base={base} locale={locale} owners={owners} accounts={accounts} fields={fields} viewerId={viewer.user.id} />
           </details>
         ) : null}
         {list.rows.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("crm.contacts.empty")}</p>
+          filtered ? <p className="p-4 text-muted-foreground">{t("common.noResults")}</p> : <SmartEmpty ns="crm.smartEmpty.contacts" primaryHref="#new-item" aiHref={`/${locale}/sales/start`} />
         ) : (
           <BulkTable
             url={`${base}/crm/contacts/bulk`}

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { workContext } from "@/components/work/context";
@@ -35,6 +37,7 @@ export default async function MyTasksPage({ searchParams }: PageProps<"/[locale]
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
       {w.header}
       <ProjectsAreaTabs t={t} locale={locale} active="my" />
+      <PageIntro labels={introLabels(t)} what={t("work.intro.my.what")} why={t("work.intro.my.why")} can={t("work.intro.my.can")} next={{ label: t("work.intro.my.next"), href: `/${locale}/projects/tasks` }} accent="info" />
       <div className="grid gap-3 sm:grid-cols-4">
         <StatCard label={t("work.my.overdue")} value={mine.overdue.length} tone={mine.overdue.length ? "danger" : undefined} />
         <StatCard label={t("work.my.today")} value={mine.today.length} />

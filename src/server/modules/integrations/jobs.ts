@@ -1,6 +1,6 @@
 import type { ModuleJobs } from "@/server/core/module-jobs";
 import { logger } from "@/server/core/logger";
-import { pruneRequestLogs } from "./service";
+import { pruneRequestLogs, pruneUsage } from "./service";
 import { runDueSyncs } from "./sync";
 import { fanOutEvent, retryDueDeliveries } from "./webhooks";
 
@@ -10,6 +10,7 @@ export const INTEGRATIONS_JOBS: ModuleJobs = {
     { name: "integrations.sync", everyMs: 60_000, run: () => runDueSyncs() },
     { name: "integrations.webhook_retries", everyMs: 30_000, run: () => retryDueDeliveries() },
     { name: "integrations.prune_request_logs", everyMs: 6 * 3_600_000, run: () => pruneRequestLogs() },
+    { name: "integrations.prune_usage", everyMs: 24 * 3_600_000, run: () => pruneUsage() },
   ],
   onEvent: [
     {

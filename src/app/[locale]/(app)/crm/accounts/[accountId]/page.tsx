@@ -1,3 +1,5 @@
+import { aiConfigured } from "@/server/modules/agents/runtime";
+import { HelpMeButton } from "@/components/crm/guided-kit";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -43,7 +45,7 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
   const won = base$.filter((d) => d.status === "WON");
   const custom = (a.customFields ?? {}) as Record<string, string | number | null>;
   return (
-    <CrmFrame active="accounts" title={a.name} subtitle={[t(`crm.accountTypes.${a.type}`), a.industry].filter(Boolean).join(" · ")}>
+    <CrmFrame active="accounts" intro={false} actions={c.canRunAgents && aiConfigured() ? <HelpMeButton base={base} url={`${base}/crm/help`} body={{ kind: "account", id: a.id, page: "crm.account" }} locale={locale} /> : undefined} title={a.name} subtitle={[t(`crm.accountTypes.${a.type}`), a.industry].filter(Boolean).join(" · ")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm/accounts`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.accounts.back")}

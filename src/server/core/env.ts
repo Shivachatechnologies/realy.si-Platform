@@ -67,6 +67,21 @@ const schema = z.object({
   QUICKBOOKS_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
   XERO_CLIENT_ID: optional,
   XERO_CLIENT_SECRET: optional,
+  // Provider OAuth apps added for social, ads and email (YouTube, Search Console and Google Ads reuse OAUTH_GOOGLE_*;
+  // Meta Ads reuses FACEBOOK_APP_*; LinkedIn Ads reuses LINKEDIN_*).
+  TIKTOK_CLIENT_KEY: optional,
+  TIKTOK_CLIENT_SECRET: optional,
+  THREADS_APP_ID: optional,
+  THREADS_APP_SECRET: optional,
+  PINTEREST_CLIENT_ID: optional,
+  PINTEREST_CLIENT_SECRET: optional,
+  TIKTOK_ADS_APP_ID: optional,
+  TIKTOK_ADS_APP_SECRET: optional,
+  MAILCHIMP_CLIENT_ID: optional,
+  MAILCHIMP_CLIENT_SECRET: optional,
+  /** Google Ads API developer token of the platform's manager account (a company may override it on its connection). */
+  GOOGLE_ADS_DEVELOPER_TOKEN: optional,
+  GOOGLE_ADS_API_VERSION: z.string().regex(/^v\d{2}$/).default("v21"),
   // AI task execution (Claude API). Without a key, AI tasks report "not configured" and are never simulated.
   ANTHROPIC_API_KEY: optional,
   AGENT_MODEL: z.string().regex(/^[a-z0-9.-]{3,64}$/).default("claude-opus-5-5"),

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WorkflowBuilder, type BuilderOptions } from "@/components/automation/builder";
@@ -104,6 +106,7 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
           {canManage ? <WorkflowStatusControls base={base} workflowId={wf.id} status={wf.status} published={!!wf.currentVersionId} /> : null}
         </div>
       </div>
+      <PageIntro labels={introLabels(t)} what={t("workflows.intro.detail.what")} why={t("workflows.intro.detail.why")} can={t("workflows.intro.detail.can")} />
       {archived ? <Notice tone="warning">{t("workflows.archivedNotice")}</Notice> : null}
       {wf.status === "DRAFT" && wf.currentVersionId ? <Notice>{t("workflows.enableHint")}</Notice> : null}
 

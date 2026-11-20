@@ -13,6 +13,10 @@ export const cardVariants = cva("min-w-0 rounded-lg border bg-surface", {
       glass: "glass shadow-elev-2",
       /** Highlighted: gradient hairline border and a soft accent glow. */
       highlight: "border-gradient shadow-glow [--gradient-fill:linear-gradient(180deg,color-mix(in_oklch,var(--primary)_6%,var(--surface)),var(--surface)_55%)]",
+      /** Floating glass panel with a world-tinted hairline (over scenes and illustrations). */
+      floating: "panel-float border-0 bg-transparent",
+      /** Borderless immersive surface: soft world wash, no chrome. */
+      immersive: "rounded-2xl border-transparent bg-[linear-gradient(160deg,var(--world-soft,var(--accent)),transparent_70%)]",
     },
     /** Hover lift for clickable cards. */
     interactive: { true: "hover-lift", false: "" },

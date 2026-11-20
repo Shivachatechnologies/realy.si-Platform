@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { Aurora } from "@/components/motion/aurora";
+import { PageTransition } from "@/components/motion/page-transition";
 import { Sidebar } from "./sidebar";
 
 export { Aurora };
@@ -114,8 +115,8 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
           {topbar}
           {activity ? <div className="hidden shrink-0 items-center border-s ps-3 md:flex">{activity}</div> : null}
         </header>
-        <main id="main" className="min-w-0 flex-1 px-3 py-5 animate-fade-in lg:px-6 lg:py-6">
-          {children}
+        <main id="main" className="min-w-0 flex-1 px-3 py-5 lg:px-6 lg:py-6">
+          <PageTransition>{children}</PageTransition>
         </main>
       </div>
     </div>

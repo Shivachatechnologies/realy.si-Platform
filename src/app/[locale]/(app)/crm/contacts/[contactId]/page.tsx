@@ -40,7 +40,7 @@ export default async function ContactPage({ params }: { params: Promise<{ contac
   const name = contactName(contact);
   const custom = (contact.customFields ?? {}) as Record<string, string | number | null>;
   return (
-    <CrmFrame active="contacts" title={name} subtitle={[contact.title, contact.account?.name].filter(Boolean).join(" · ") || undefined}>
+    <CrmFrame active="contacts" intro={false} title={name} subtitle={[contact.title, contact.account?.name].filter(Boolean).join(" · ") || undefined}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm/contacts`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.contacts.back")}

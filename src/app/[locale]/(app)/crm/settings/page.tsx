@@ -9,6 +9,8 @@ import { getT } from "@/i18n/server";
 import { listConfig } from "@/server/modules/crm/config";
 import { listPipelines } from "@/server/modules/crm/pipelines";
 import { listOwners } from "@/server/modules/crm/service";
+import { idealCustomerProfile } from "@/server/modules/crm/guided";
+import { IcpEditor } from "@/components/crm/journey-buttons";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("crm.tabs.settings") };
@@ -21,7 +23,7 @@ export default async function CrmSettingsPage() {
   if (!c.company || !c.canRead) return <CrmFrame active="settings">{null}</CrmFrame>;
   const { t, locale, base, org, company, viewer } = c;
   const ctx = viewer.ctx;
-  const [pipelines, owners, sources, fields, segments, assignment, stageRules] = await Promise.all([
+  const [pipelines, owners, sources, fields, segments, assignment, stageRules, icp] = await Promise.all([
     listPipelines(ctx, org.id, company.id),
     listOwners(ctx, org.id, company.id),
     listConfig(ctx, org.id, company.id, "sources"),
@@ -29,12 +31,29 @@ export default async function CrmSettingsPage() {
     listConfig(ctx, org.id, company.id, "segments"),
     listConfig(ctx, org.id, company.id, "assignment-rules"),
     listConfig(ctx, org.id, company.id, "stage-rules"),
+    idealCustomerProfile(ctx, org.id, company.id),
   ]);
   const src = sources as { id: string; name: string }[];
   const stageOptions = pipelines.flatMap((p) => p.stages.map((s) => ({ id: s.id, label: pipelines.length > 1 ? `${p.name} · ${s.name}` : s.name })));
   return (
     <CrmFrame active="settings" subtitle={t("crm.settings.subtitle")}>
       {!c.canManage ? <Notice tone="info">{t("crm.settings.readOnly")}</Notice> : null}
+      <Card id="icp">
+        <CardHeader
+          title={t("crm.settings.icpTitle")}
+          description={t("crm.settings.icpHint")}
+          actions={
+            <Link href={`/${locale}/sales/start`} className="text-xs hover:underline">
+              {t("crm.settings.icpGuided")}
+            </Link>
+          }
+        />
+        {c.canManage ? (
+          <IcpEditor base={base} initial={icp ?? ""} />
+        ) : (
+          <p className="whitespace-pre-wrap p-4 text-sm">{icp ?? t("crm.settings.icpNone")}</p>
+        )}
+      </Card>
       <Card>
         <CardHeader title={t("crm.settings.pipelines")} description={t("crm.settings.pipelinesHint")} />
         {c.canManage ? (

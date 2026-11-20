@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { ApplyCreditForm, CopyLink, PaymentForm, SendEmailForm } from "@/components/finance/billing-actions";
+import { PaymentLinkPanel } from "@/components/finance/payment-link";
 import { InvoiceDocument } from "@/components/finance/invoice-document";
 import { financePage } from "@/components/finance/page-context";
 import { ActionButton, FormDialog } from "@/components/finance/ui";
@@ -56,6 +57,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <span className="ms-auto font-semibold tabular-nums">{money(inv.totalMinor, inv.currency)}</span>
       </div>
 
+      {inv.paymentLinkUrl || (p.canManage && inv.status !== "VOID" && inv.status !== "PAID") ? (
+        <Card>
+          <CardHeader title={t("finance.os.payLinkTitle")} />
+          <CardBody>
+            <PaymentLinkPanel endpoint={`${base}/invoices/${inv.id}/payment-link`} locale={locale} url={inv.paymentLinkUrl} provider={inv.paymentLinkProvider} canCreate={p.canManage && inv.status !== "VOID" && inv.status !== "PAID"} />
+          </CardBody>
+        </Card>
+      ) : null}
       {p.canManage ? (
         <Card>
           <CardBody className="flex flex-wrap items-start gap-2">

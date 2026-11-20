@@ -11,7 +11,7 @@ import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, MAX_PDF_BY
 import { extractPdfText } from "./pdf";
 
 /** Source types of documents indexed from other modules (brain/sources.ts); "upload" = added in Company Brain. */
-export const SOURCE_TYPES = ["support_kb_article", "hr_policy", "ops_process", "product_release", "product_feature"] as const;
+export const SOURCE_TYPES = ["support_kb_article", "hr_policy", "ops_process", "product_release", "product_feature", "product_doc"] as const;
 export type BrainSourceType = (typeof SOURCE_TYPES)[number];
 
 /** Module/area tags: lowercase words, digits, "-" and "_" (at most 10 per document). */

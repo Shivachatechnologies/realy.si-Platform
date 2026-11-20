@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InfoStrip } from "@/components/marketing/studio";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -29,6 +30,7 @@ export default async function CampaignsPage({ searchParams }: PageProps<"/[local
 
   return (
     <MarketingShell {...shell}>
+      <InfoStrip t={t} k="campaigns" />
       {canManage ? (
         <Card>
           <details>

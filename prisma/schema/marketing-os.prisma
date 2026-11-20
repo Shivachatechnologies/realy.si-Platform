@@ -1,0 +1,601 @@
+// Autonomous Marketing Department (extends marketing.prisma): autopilot plans + pipeline, creative studio / media library,
+// hashtag sets, learning loop, goals, CMS publishing, SEO clusters + Search Console, email A/B, paid ads, community, influencers.
+
+enum MarketingAutonomy {
+  /// Pipeline stops at READY; nothing is scheduled automatically.
+  DRAFT_ONLY
+  /// READY items wait for a person's approval before they are scheduled.
+  REVIEW_REQUIRED
+  /// Items that pass the AI quality review are scheduled automatically (approval rules may still require review).
+  AUTO_PUBLISH
+}
+
+enum MarketingAutopilotStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum MarketingPipelineStage {
+  IDEA
+  RESEARCH
+  DRAFT
+  AI_REVIEW
+  READY
+  SCHEDULED
+  PUBLISHED
+  ANALYZED
+  REJECTED
+  FAILED
+}
+
+/// A marketing autopilot plan for a company/brand: objective, audience, pillars, cadence, windows, autonomy and caps.
+model MarketingAutopilot {
+  id                 String                   @id @default(uuid(7)) @db.Uuid
+  organizationId     String                   @map("organization_id") @db.Uuid
+  companyId          String                   @map("company_id") @db.Uuid
+  name               String
+  brandName          String?                  @map("brand_name")
+  objective          String
+  audience           String?
+  regions            String[]                 @default([])
+  /// Content pillars / topics the plan rotates through.
+  pillars            String[]                 @default([])
+  /// Per platform posts per day: { "LINKEDIN": 3, "INSTAGRAM": 2, "X": 5 } plus formats { "INSTAGRAM:reel": 1 }.
+  cadence            Json                     @default("{}")
+  /// Social account ids (marketing_social_accounts) the plan publishes to.
+  accountIds         String[]                 @default([]) @map("account_ids")
+  timezone           String                   @default("UTC")
+  /// Per platform posting windows ["09:00", "12:30"]; empty → learned optimal times, else platform defaults.
+  postingWindows     Json                     @default("{}") @map("posting_windows")
+  autonomy           MarketingAutonomy        @default(REVIEW_REQUIRED)
+  /// { "LINKEDIN": "auto" | "review", "video": "review" } — overrides the autonomy level per platform or format.
+  approvalRules      Json                     @default("{}") @map("approval_rules")
+  complianceRules    String[]                 @default([]) @map("compliance_rules")
+  /// How many days ahead the scheduler fills slots.
+  horizonDays        Int                      @default(3) @map("horizon_days")
+  /// Minimum AI review score (0-100) for an item to become READY.
+  minReviewScore     Int                      @default(70) @map("min_review_score")
+  /// Monthly cap for paid generation (images/video) in minor units of `currency`; null = no paid generation.
+  monthlyBudgetMinor BigInt?                  @map("monthly_budget_minor")
+  spentMinor         BigInt                   @default(0) @map("spent_minor")
+  spentMonth         String?                  @map("spent_month")
+  currency           String                   @default("USD") @db.Char(3)
+  /// Use a research provider (tavily/exa/serpapi) when connected.
+  useResearch        Boolean                  @default(true) @map("use_research")
+  generateImages     Boolean                  @default(true) @map("generate_images")
+  campaignId         String?                  @map("campaign_id") @db.Uuid
+  /// Responsible AI employee (notified via tasks) and owner (notified in-app).
+  aiEmployeeId       String?                  @map("ai_employee_id") @db.Uuid
+  ownerId            String?                  @map("owner_id") @db.Uuid
+  status             MarketingAutopilotStatus @default(PAUSED)
+  lastPlannedAt      DateTime?                @map("last_planned_at") @db.Timestamptz(3)
+  archivedAt         DateTime?                @map("archived_at") @db.Timestamptz(3)
+  createdById        String                   @map("created_by_id") @db.Uuid
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  items   MarketingAutopilotItem[]
+
+  @@unique([id, companyId])
+  @@index([status])
+  @@map("marketing_autopilots")
+}
+
+/// One slot of an autopilot plan travelling through the pipeline (Idea → … → Performance Analysis).
+model MarketingAutopilotItem {
+  id             String                  @id @default(uuid(7)) @db.Uuid
+  organizationId String                  @map("organization_id") @db.Uuid
+  companyId      String                  @map("company_id") @db.Uuid
+  autopilotId    String                  @map("autopilot_id") @db.Uuid
+  platform       MarketingSocialProvider
+  /// post | reel | short | carousel | thread | video
+  format         String                  @default("post")
+  accountId      String?                 @map("account_id") @db.Uuid
+  slotAt         DateTime                @map("slot_at") @db.Timestamptz(3)
+  stage          MarketingPipelineStage  @default(IDEA)
+  topic          String?
+  angle          String?
+  pillar         String?
+  research       String?
+  /// Assumptions the AI stated when no research provider was available.
+  assumptions    String?
+  /// Sources from the research provider: [{ title, url }].
+  sources        Json                    @default("[]")
+  copy           String?
+  hashtags       String[]                @default([])
+  cta            String?
+  creativeBrief  String?                 @map("creative_brief")
+  videoScript    String?                 @map("video_script")
+  assetId        String?                 @map("asset_id") @db.Uuid
+  /// { score, passed, issues: [{ check, severity, message }], similarity }
+  review         Json?
+  reviewScore    Int?                    @map("review_score")
+  contentHash    String?                 @map("content_hash")
+  needsApproval  Boolean                 @default(false) @map("needs_approval")
+  approvedById   String?                 @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?               @map("approved_at") @db.Timestamptz(3)
+  postId         String?                 @map("post_id") @db.Uuid
+  contentId      String?                 @map("content_id") @db.Uuid
+  /// The agent task currently working on this item and which step it is for.
+  pendingTaskId  String?                 @map("pending_task_id") @db.Uuid
+  pendingStep    String?                 @map("pending_step")
+  attempts       Int                     @default(0)
+  error          String?
+  /// Performance snapshot after analysis: { impressions, likes, comments, shares, clicks, engagementRate }.
+  performance    Json?
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  autopilot MarketingAutopilot @relation(fields: [autopilotId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([autopilotId, platform, format, slotAt])
+  @@index([stage, updatedAt])
+  @@index([companyId, slotAt])
+  @@map("marketing_autopilot_items")
+}
+
+enum MarketingAssetKind {
+  IMAGE
+  VIDEO
+  LOGO
+  DOCUMENT
+}
+
+enum MarketingAssetStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+/// Media library / Creative Studio asset. Small files are stored as bytes and served through a signed public URL.
+model MarketingAsset {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  kind           MarketingAssetKind
+  status         MarketingAssetStatus @default(READY)
+  name           String
+  mimeType       String?              @map("mime_type")
+  data           Bytes?
+  sizeBytes      Int?                 @map("size_bytes")
+  /// External URL (provider output, CDN) when not stored as bytes.
+  url            String?
+  width          Int?
+  height         Int?
+  /// Platform dimension preset key (e.g. "instagram_square").
+  preset         String?
+  /// Generation provider (openai, stability, runway, replicate) and its job id, for video polling.
+  provider       String?
+  providerJobId  String?              @map("provider_job_id")
+  prompt         String?
+  /// Text overlay spec: { headline, subline, position, color, font }.
+  overlay        Json?
+  tags           String[]             @default([])
+  campaignId     String?              @map("campaign_id") @db.Uuid
+  /// Variation of another asset (regeneration / variations).
+  parentId       String?              @map("parent_id") @db.Uuid
+  error          String?
+  createdById    String               @map("created_by_id") @db.Uuid
+  archivedAt     DateTime?            @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company     Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  posts       MarketingSocialPost[]
+  featuredFor MarketingContent[]
+  ads         MarketingAd[]
+
+  @@unique([id, companyId])
+  @@index([companyId, kind, createdAt])
+  @@index([status, provider])
+  @@map("marketing_assets")
+}
+
+model MarketingHashtagSet {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  /// Optional platform (MarketingSocialProvider value) the set is meant for.
+  platform       String?
+  tags           String[] @default([])
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, name])
+  @@map("marketing_hashtag_sets")
+}
+
+/// What the self-optimizing loop learned from real performance (injected into future generation prompts).
+model MarketingLearning {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  /// topic | format | time | platform | cta | hashtag
+  kind           String
+  platform       String?
+  key            String
+  insight        String
+  /// Engagement rate (or lift) of the winner, for ordering.
+  score          Float
+  sampleSize     Int      @map("sample_size")
+  periodStart    DateTime @map("period_start") @db.Timestamptz(3)
+  periodEnd      DateTime @map("period_end") @db.Timestamptz(3)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, active, kind])
+  @@map("marketing_learnings")
+}
+
+/// "What to do next" items produced by the loop (and by people).
+model MarketingRecommendation {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  title          String
+  detail         String?
+  /// high | medium | low
+  priority       String   @default("medium")
+  source         String   @default("loop")
+  href           String?
+  /// OPEN | DONE | DISMISSED
+  status         String   @default("OPEN")
+  /// Stable key so the loop does not duplicate an open recommendation.
+  dedupeKey      String?  @map("dedupe_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, dedupeKey])
+  @@index([companyId, status])
+  @@map("marketing_recommendations")
+}
+
+model MarketingGoal {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  name           String
+  /// leads | impressions | engagement | clicks | posts | emails_sent | spend | traffic
+  metric         String
+  target         Float
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime  @map("end_date") @db.Date
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("marketing_goals")
+}
+
+/// A content item published to a CMS (wordpress, webflow, shopify) or the Realy-hosted blog ("realy").
+model MarketingCmsPublication {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  contentId      String    @map("content_id") @db.Uuid
+  provider       String
+  externalId     String?   @map("external_id")
+  url            String?
+  /// PUBLISHED | FAILED | SCHEDULED
+  status         String
+  error          String?
+  scheduledAt    DateTime? @map("scheduled_at") @db.Timestamptz(3)
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(3)
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamptz(3)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  content MarketingContent @relation(fields: [contentId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([contentId])
+  @@index([status, scheduledAt])
+  @@map("marketing_cms_publications")
+}
+
+model SeoTopicCluster {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  name           String
+  pillarKeyword  String   @map("pillar_keyword")
+  intent         String?
+  /// AI brief for the pillar page.
+  brief          String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([projectId, name])
+  @@map("seo_topic_clusters")
+}
+
+/// Google Search Console daily metrics per page + query.
+model SeoSearchMetric {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  date           DateTime @db.Date
+  page           String
+  query          String
+  clicks         Int
+  impressions    Int
+  ctr            Float
+  position       Float
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([projectId, date, page, query])
+  @@index([projectId, date])
+  @@map("seo_search_metrics")
+}
+
+/// A/B variant of an email campaign.
+model MarketingEmailVariant {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  emailCampaignId String   @map("email_campaign_id") @db.Uuid
+  label           String
+  subject         String
+  body            String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company                @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaign MarketingEmailCampaign @relation(fields: [emailCampaignId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([emailCampaignId, label])
+  @@map("marketing_email_variants")
+}
+
+// ───────────────────────────── Paid Ads OS ─────────────────────────────
+
+/// An ad account of a provider connection (meta_ads, google_ads, linkedin_ads, tiktok_ads) with hard spending caps.
+model MarketingAdAccount {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  provider        String
+  externalId      String    @map("external_id")
+  name            String
+  currency        String    @db.Char(3)
+  /// Hard caps: no budget above these is ever sent to the provider.
+  dailyCapMinor   BigInt    @default(0) @map("daily_cap_minor")
+  monthlyCapMinor BigInt    @default(0) @map("monthly_cap_minor")
+  lastSyncedAt    DateTime? @map("last_synced_at") @db.Timestamptz(3)
+  lastSyncError   String?   @map("last_sync_error")
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById     String    @map("created_by_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaigns MarketingAdCampaign[]
+  audiences MarketingAdAudience[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, provider, externalId])
+  @@map("marketing_ad_accounts")
+}
+
+model MarketingAdCampaign {
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  organizationId      String    @map("organization_id") @db.Uuid
+  companyId           String    @map("company_id") @db.Uuid
+  adAccountId         String    @map("ad_account_id") @db.Uuid
+  /// Provider id once it exists at the provider; null for local drafts.
+  externalId          String?   @map("external_id")
+  name                String
+  objective           String?
+  /// DRAFT (local) | PAUSED | ACTIVE | ARCHIVED | provider status text
+  status              String    @default("DRAFT")
+  dailyBudgetMinor    BigInt?   @map("daily_budget_minor")
+  startDate           DateTime? @map("start_date") @db.Date
+  endDate             DateTime? @map("end_date") @db.Date
+  marketingCampaignId String?   @map("marketing_campaign_id") @db.Uuid
+  /// AI plan / notes.
+  plan                String?
+  spendMinor          BigInt    @default(0) @map("spend_minor")
+  impressions         Int       @default(0)
+  clicks              Int       @default(0)
+  conversions         Float     @default(0)
+  revenueMinor        BigInt    @default(0) @map("revenue_minor")
+  syncedAt            DateTime? @map("synced_at") @db.Timestamptz(3)
+  createdById         String    @map("created_by_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  adAccount MarketingAdAccount  @relation(fields: [adAccountId, companyId], references: [id, companyId], onDelete: Cascade)
+  groups    MarketingAdGroup[]
+  metrics   MarketingAdMetric[]
+
+  @@unique([id, companyId])
+  @@unique([adAccountId, externalId])
+  @@map("marketing_ad_campaigns")
+}
+
+model MarketingAdGroup {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  adCampaignId   String   @map("ad_campaign_id") @db.Uuid
+  externalId     String?  @map("external_id")
+  name           String
+  status         String   @default("DRAFT")
+  /// Targeting: { locations, ageMin, ageMax, interests, keywords }.
+  targeting      Json     @default("{}")
+  bidMinor       BigInt?  @map("bid_minor")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaign MarketingAdCampaign @relation(fields: [adCampaignId, companyId], references: [id, companyId], onDelete: Cascade)
+  ads      MarketingAd[]
+
+  @@unique([id, companyId])
+  @@map("marketing_ad_groups")
+}
+
+model MarketingAd {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  adGroupId      String   @map("ad_group_id") @db.Uuid
+  externalId     String?  @map("external_id")
+  headline       String
+  body           String
+  cta            String?
+  url            String?
+  assetId        String?  @map("asset_id") @db.Uuid
+  status         String   @default("DRAFT")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  group   MarketingAdGroup @relation(fields: [adGroupId, companyId], references: [id, companyId], onDelete: Cascade)
+  asset   MarketingAsset?  @relation(fields: [assetId, companyId], references: [id, companyId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("marketing_ads")
+}
+
+model MarketingAdAudience {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  adAccountId    String   @map("ad_account_id") @db.Uuid
+  name           String
+  definition     Json     @default("{}")
+  externalId     String?  @map("external_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  adAccount MarketingAdAccount @relation(fields: [adAccountId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@map("marketing_ad_audiences")
+}
+
+/// Daily performance of an ad campaign from the provider.
+model MarketingAdMetric {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  adCampaignId   String   @map("ad_campaign_id") @db.Uuid
+  date           DateTime @db.Date
+  spendMinor     BigInt   @map("spend_minor")
+  impressions    Int
+  clicks         Int
+  conversions    Float
+  revenueMinor   BigInt   @default(0) @map("revenue_minor")
+
+  company  Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaign MarketingAdCampaign @relation(fields: [adCampaignId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([adCampaignId, date])
+  @@map("marketing_ad_metrics")
+}
+
+// ───────────────────────────── Community & influencers ─────────────────────────────
+
+/// A comment or mention synced from a platform.
+model MarketingEngagement {
+  id              String                  @id @default(uuid(7)) @db.Uuid
+  organizationId  String                  @map("organization_id") @db.Uuid
+  companyId       String                  @map("company_id") @db.Uuid
+  accountId       String                  @map("account_id") @db.Uuid
+  targetId        String?                 @map("target_id") @db.Uuid
+  provider        MarketingSocialProvider
+  externalId      String                  @map("external_id")
+  /// COMMENT | MENTION
+  kind            String                  @default("COMMENT")
+  authorName      String?                 @map("author_name")
+  text            String
+  /// positive | neutral | negative (keyword heuristic until an AI pass sets it)
+  sentiment       String?
+  /// NEW | DRAFTED | REPLIED | IGNORED
+  status          String                  @default("NEW")
+  replyDraft      String?                 @map("reply_draft")
+  replyText       String?                 @map("reply_text")
+  replyExternalId String?                 @map("reply_external_id")
+  repliedAt       DateTime?               @map("replied_at") @db.Timestamptz(3)
+  postedAt        DateTime?               @map("posted_at") @db.Timestamptz(3)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([accountId, externalId])
+  @@index([companyId, status])
+  @@map("marketing_engagements")
+}
+
+model MarketingInfluencer {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  name            String
+  platform        String
+  handle          String?
+  profileUrl      String?   @map("profile_url")
+  email           String?
+  followers       Int?
+  niche           String?
+  /// PROSPECT | CONTACTED | NEGOTIATING | ACTIVE | DECLINED
+  status          String    @default("PROSPECT")
+  notes           String?
+  outreachSubject String?   @map("outreach_subject")
+  outreachDraft   String?   @map("outreach_draft")
+  /// DRAFT | PENDING_APPROVAL | SENT | FAILED
+  outreachStatus  String?   @map("outreach_status")
+  lastContactAt   DateTime? @map("last_contact_at") @db.Timestamptz(3)
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById     String    @map("created_by_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, status])
+  @@map("marketing_influencers")
+}
+
+/// Guided "Start here" journey of the Marketing Studio (save & resume, one per company).
+model MarketingJourney {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  /// 1 promote · 2 offer · 3 customers · 4 objective · 5 strategy · 6 review · 7 schedule · 8 monitor
+  step           Int       @default(1)
+  /// { promote, offerName, offerDescription, productId, customers, regions, objective, cadence, autonomy }
+  answers        Json      @default("{}")
+  strategyTaskId String?   @map("strategy_task_id") @db.Uuid
+  campaignId     String?   @map("campaign_id") @db.Uuid
+  autopilotId    String?   @map("autopilot_id") @db.Uuid
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  updatedById    String    @map("updated_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId])
+  @@map("marketing_journeys")
+}

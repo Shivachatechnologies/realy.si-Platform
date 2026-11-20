@@ -482,37 +482,42 @@ model Reconciliation {
 }
 
 model Invoice {
-  id                 String        @id @default(uuid(7)) @db.Uuid
-  organizationId     String        @map("organization_id") @db.Uuid
-  companyId          String        @map("company_id") @db.Uuid
-  number             String
-  accountId          String        @map("account_id") @db.Uuid
-  status             InvoiceStatus @default(DRAFT)
-  issueDate          DateTime      @map("issue_date") @db.Date
-  dueDate            DateTime      @map("due_date") @db.Date
-  currency           String        @db.Char(3)
+  id                  String        @id @default(uuid(7)) @db.Uuid
+  organizationId      String        @map("organization_id") @db.Uuid
+  companyId           String        @map("company_id") @db.Uuid
+  number              String
+  accountId           String        @map("account_id") @db.Uuid
+  status              InvoiceStatus @default(DRAFT)
+  issueDate           DateTime      @map("issue_date") @db.Date
+  dueDate             DateTime      @map("due_date") @db.Date
+  currency            String        @db.Char(3)
   /// Invoice-wide discount in basis points, applied to every line before tax.
-  discountBps        Int           @default(0) @map("discount_bps")
-  subtotalMinor      BigInt        @default(0) @map("subtotal_minor")
-  discountMinor      BigInt        @default(0) @map("discount_minor")
-  taxMinor           BigInt        @default(0) @map("tax_minor")
-  totalMinor         BigInt        @default(0) @map("total_minor")
-  paidMinor          BigInt        @default(0) @map("paid_minor")
-  creditedMinor      BigInt        @default(0) @map("credited_minor")
-  notes              String?
-  terms              String?
+  discountBps         Int           @default(0) @map("discount_bps")
+  subtotalMinor       BigInt        @default(0) @map("subtotal_minor")
+  discountMinor       BigInt        @default(0) @map("discount_minor")
+  taxMinor            BigInt        @default(0) @map("tax_minor")
+  totalMinor          BigInt        @default(0) @map("total_minor")
+  paidMinor           BigInt        @default(0) @map("paid_minor")
+  creditedMinor       BigInt        @default(0) @map("credited_minor")
+  notes               String?
+  terms               String?
   /// Unguessable token for the public view link (/i/<token>).
-  publicToken        String?       @unique @map("public_token")
-  estimateId         String?       @map("estimate_id") @db.Uuid
-  recurringInvoiceId String?       @map("recurring_invoice_id") @db.Uuid
-  issuedAt           DateTime?     @map("issued_at") @db.Timestamptz(3)
-  sentAt             DateTime?     @map("sent_at") @db.Timestamptz(3)
-  lastReminderAt     DateTime?     @map("last_reminder_at") @db.Timestamptz(3)
-  paidAt             DateTime?     @map("paid_at") @db.Timestamptz(3)
-  voidedAt           DateTime?     @map("voided_at") @db.Timestamptz(3)
-  createdById        String        @map("created_by_id") @db.Uuid
-  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  publicToken         String?       @unique @map("public_token")
+  estimateId          String?       @map("estimate_id") @db.Uuid
+  recurringInvoiceId  String?       @map("recurring_invoice_id") @db.Uuid
+  issuedAt            DateTime?     @map("issued_at") @db.Timestamptz(3)
+  sentAt              DateTime?     @map("sent_at") @db.Timestamptz(3)
+  lastReminderAt      DateTime?     @map("last_reminder_at") @db.Timestamptz(3)
+  paidAt              DateTime?     @map("paid_at") @db.Timestamptz(3)
+  voidedAt            DateTime?     @map("voided_at") @db.Timestamptz(3)
+  /// Online payment link created through the Integrations module (Razorpay / Stripe Payment Links).
+  paymentLinkUrl      String?       @map("payment_link_url")
+  paymentLinkId       String?       @map("payment_link_id")
+  paymentLinkProvider String?       @map("payment_link_provider")
+  paymentLinkAt       DateTime?     @map("payment_link_at") @db.Timestamptz(3)
+  createdById         String        @map("created_by_id") @db.Uuid
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company          Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   account          Account                 @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)

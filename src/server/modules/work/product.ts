@@ -11,6 +11,7 @@ import { actorId, authorize, blank, isUuid, oneOf, optDay, optText, optUuid, PAG
 export const ITEM_STATUSES = ["PROPOSED", "PLANNED", "IN_PROGRESS", "SHIPPED", "CANCELLED"] as const;
 export const IDEA_STATUSES = ["NEW", "UNDER_REVIEW", "PLANNED", "DECLINED", "DONE"] as const;
 export const RELEASE_STATUSES = ["PLANNED", "IN_PROGRESS", "RELEASED"] as const;
+export const SENTIMENTS = ["POSITIVE", "NEUTRAL", "NEGATIVE"] as const;
 export const IMPACT_VALUES = [0.25, 0.5, 1, 2, 3] as const;
 const optQuarter = quarter.or(z.literal("")).nullable().optional();
 
@@ -19,6 +20,7 @@ export const initiativeInput = z.object({
   description: optText(5000),
   quarter: optQuarter,
   status: z.enum(ITEM_STATUSES).default("PLANNED"),
+  productId: optUuid,
 });
 export const updateInitiativeInput = initiativeInput.partial().extend({ archived: z.boolean().optional() });
 
@@ -41,12 +43,15 @@ export const featureInput = z.object({
   initiativeId: optUuid,
   projectId: optUuid,
   releaseId: optUuid,
+  productId: optUuid,
+  requirements: optText(50_000),
+  acceptanceCriteria: optText(20_000),
   ...rice,
 });
 export const updateFeatureInput = featureInput.partial().extend({ archived: z.boolean().optional() });
 
-export const ideaInput = z.object({ title: z.string().trim().min(1).max(200), description: optText(5000) });
-export const updateIdeaInput = z.object({ title: z.string().trim().min(1).max(200).optional(), description: optText(5000), status: z.enum(IDEA_STATUSES).optional() });
+export const ideaInput = z.object({ title: z.string().trim().min(1).max(200), description: optText(5000), productId: optUuid });
+export const updateIdeaInput = z.object({ title: z.string().trim().min(1).max(200).optional(), description: optText(5000), status: z.enum(IDEA_STATUSES).optional(), productId: optUuid });
 
 export const feedbackInput = z.object({
   source: z.string().trim().min(1).max(60),
@@ -54,8 +59,10 @@ export const feedbackInput = z.object({
   accountId: optUuid,
   contactId: optUuid,
   featureId: optUuid,
+  productId: optUuid,
+  sentiment: z.enum(SENTIMENTS).or(z.literal("")).nullable().optional(),
 });
-export const updateFeedbackInput = z.object({ featureId: optUuid, archived: z.boolean().optional() });
+export const updateFeedbackInput = z.object({ featureId: optUuid, productId: optUuid, sentiment: z.enum(SENTIMENTS).or(z.literal("")).nullable().optional(), archived: z.boolean().optional() });
 
 export const releaseInput = z.object({
   version: z
@@ -67,6 +74,7 @@ export const releaseInput = z.object({
   status: z.enum(RELEASE_STATUSES).default("PLANNED"),
   notes: optText(20_000),
   featureIds: z.array(z.string().uuid()).max(200).optional(),
+  productId: optUuid,
 });
 export const updateReleaseInput = releaseInput.partial().extend({ published: z.boolean().optional() });
 
@@ -86,7 +94,13 @@ async function findIn<T>(fn: () => Promise<T | null>, what: string, id: string) 
   return r;
 }
 
-async function checkFeatureRefs(tx: Tx, organizationId: string, companyId: string, refs: { initiativeId?: string | null; projectId?: string | null; releaseId?: string | null }) {
+/** A product of this company (not found otherwise). */
+export async function checkProductRef(tx: Tx, organizationId: string, companyId: string, productId: string | null | undefined) {
+  if (productId && !(await tx.product.findFirst({ where: { id: productId, organizationId, companyId }, select: { id: true } }))) throw notFound("Product");
+}
+
+async function checkFeatureRefs(tx: Tx, organizationId: string, companyId: string, refs: { initiativeId?: string | null; projectId?: string | null; releaseId?: string | null; productId?: string | null }) {
+  await checkProductRef(tx, organizationId, companyId, refs.productId);
   if (refs.initiativeId && !(await tx.productInitiative.findFirst({ where: { id: refs.initiativeId, organizationId, companyId }, select: { id: true } }))) throw notFound("Initiative");
   if (refs.projectId && !(await tx.project.findFirst({ where: { id: refs.projectId, organizationId, companyId }, select: { id: true } }))) throw notFound("Project");
   if (refs.releaseId && !(await tx.productRelease.findFirst({ where: { id: refs.releaseId, organizationId, companyId }, select: { id: true } }))) throw notFound("Release");
@@ -98,7 +112,9 @@ export async function createInitiative(ctx: RequestContext, organizationId: stri
   const input = initiativeInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
-    const i = await tx.productInitiative.create({ data: { organizationId, companyId, title: input.title, description: blank(input.description) ?? null, quarter: blank(input.quarter) ?? null, status: input.status } });
+    const productId = blank(input.productId) ?? null;
+    await checkProductRef(tx, organizationId, companyId, productId);
+    const i = await tx.productInitiative.create({ data: { organizationId, companyId, productId, title: input.title, description: blank(input.description) ?? null, quarter: blank(input.quarter) ?? null, status: input.status } });
     await audit(tx, ctx, organizationId, "product_initiative.created", "product_initiative", i.id, { title: i.title });
     return i;
   });
@@ -109,9 +125,11 @@ export async function updateInitiative(ctx: RequestContext, organizationId: stri
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
     const before = await findIn(() => tx.productInitiative.findFirst({ where: { id, organizationId, companyId } }), "Initiative", id);
+    if (input.productId !== undefined) await checkProductRef(tx, organizationId, companyId, blank(input.productId));
     const i = await tx.productInitiative.update({
       where: { id },
       data: {
+        ...(input.productId !== undefined ? { productId: blank(input.productId) ?? null } : {}),
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.description !== undefined ? { description: blank(input.description) ?? null } : {}),
         ...(input.quarter !== undefined ? { quarter: blank(input.quarter) ?? null } : {}),
@@ -128,7 +146,7 @@ export async function updateInitiative(ctx: RequestContext, organizationId: stri
 export const quarterOf = (d: Date) => `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`;
 
 /** Roadmap: initiatives and features grouped by quarter (current quarter and the next `span - 1`, plus unscheduled). */
-export async function getRoadmap(ctx: RequestContext, organizationId: string, companyId: string, opts: { start?: string; span?: number } = {}) {
+export async function getRoadmap(ctx: RequestContext, organizationId: string, companyId: string, opts: { start?: string; span?: number; productId?: string } = {}) {
   await authorize(ctx, organizationId, companyId, "projects.read");
   const span = Math.min(Math.max(opts.span ?? 4, 1), 8);
   const first = opts.start && /^\d{4}-Q[1-4]$/.test(opts.start) ? opts.start : quarterOf(new Date());
@@ -140,9 +158,9 @@ export async function getRoadmap(ctx: RequestContext, organizationId: string, co
     if (q === 1) y++;
   }
   const [initiatives, features] = await Promise.all([
-    db().productInitiative.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: [{ quarter: "asc" }, { title: "asc" }], take: 500 }),
+    db().productInitiative.findMany({ where: { organizationId, companyId, archivedAt: null, ...(opts.productId ? { productId: opts.productId } : {}) }, orderBy: [{ quarter: "asc" }, { title: "asc" }], take: 500 }),
     db().productFeature.findMany({
-      where: { organizationId, companyId, archivedAt: null, status: { not: "CANCELLED" } },
+      where: { organizationId, companyId, archivedAt: null, status: { not: "CANCELLED" }, ...(opts.productId ? { productId: opts.productId } : {}) },
       orderBy: [{ riceScore: { sort: "desc", nulls: "last" } }],
       take: 1000,
       select: { id: true, title: true, status: true, quarter: true, initiativeId: true, riceScore: true, release: { select: { id: true, version: true } } },
@@ -158,6 +176,7 @@ export interface FeatureFilters {
   status?: ProductItemStatus;
   initiativeId?: string;
   releaseId?: string;
+  productId?: string;
   sort: "rice" | "created" | "title" | "status";
   page: number;
 }
@@ -165,7 +184,9 @@ export interface FeatureFilters {
 export function parseFeatureFilters(raw: Record<string, string | string[] | undefined>): FeatureFilters {
   const initiative = param(raw, "initiative");
   const release = param(raw, "release");
+  const product = param(raw, "product");
   return {
+    productId: isUuid(product) ? product : undefined,
     q: param(raw, "q")?.slice(0, 200),
     status: oneOf(ITEM_STATUSES, param(raw, "status")),
     initiativeId: isUuid(initiative) ? initiative : undefined,
@@ -181,6 +202,7 @@ export async function listFeatures(ctx: RequestContext, organizationId: string, 
   if (f.status) where.status = f.status;
   if (f.initiativeId) where.initiativeId = f.initiativeId;
   if (f.releaseId) where.releaseId = f.releaseId;
+  if (f.productId) where.productId = f.productId;
   if (f.q) where.OR = [{ title: { contains: f.q, mode: "insensitive" } }, { spec: { contains: f.q, mode: "insensitive" } }];
   const orderBy: Prisma.ProductFeatureOrderByWithRelationInput[] =
     f.sort === "rice" ? [{ riceScore: { sort: "desc", nulls: "last" } }] : f.sort === "title" ? [{ title: "asc" }] : f.sort === "status" ? [{ status: "asc" }, { title: "asc" }] : [{ createdAt: "desc" }];
@@ -195,6 +217,7 @@ export async function listFeatures(ctx: RequestContext, organizationId: string, 
         initiative: { select: { id: true, title: true } },
         release: { select: { id: true, version: true } },
         project: { select: { id: true, name: true } },
+        product: { select: { id: true, name: true } },
         _count: { select: { tasks: true, feedback: true, ideas: true } },
       },
     }),
@@ -212,6 +235,7 @@ export async function getFeature(ctx: RequestContext, organizationId: string, co
           initiative: { select: { id: true, title: true } },
           release: { select: { id: true, version: true, status: true } },
           project: { select: { id: true, name: true } },
+          product: { select: { id: true, name: true, developmentProjectId: true } },
           tasks: { where: { archivedAt: null }, orderBy: { createdAt: "asc" }, take: 200, select: { id: true, title: true, status: true, dueDate: true, assignee: { select: { id: true, name: true } } } },
           feedback: { where: { archivedAt: null }, orderBy: { createdAt: "desc" }, take: 100 },
           ideas: { select: { id: true, title: true, voteCount: true, status: true } },
@@ -227,7 +251,7 @@ export async function createFeature(ctx: RequestContext, organizationId: string,
   const input = featureInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
-    const refs = { initiativeId: blank(input.initiativeId) ?? null, projectId: blank(input.projectId) ?? null, releaseId: blank(input.releaseId) ?? null };
+    const refs = { initiativeId: blank(input.initiativeId) ?? null, projectId: blank(input.projectId) ?? null, releaseId: blank(input.releaseId) ?? null, productId: blank(input.productId) ?? null };
     await checkFeatureRefs(tx, organizationId, companyId, refs);
     const f = await tx.productFeature.create({
       data: {
@@ -236,6 +260,8 @@ export async function createFeature(ctx: RequestContext, organizationId: string,
         ...refs,
         title: input.title,
         spec: blank(input.spec) ?? null,
+        requirements: blank(input.requirements) ?? null,
+        acceptanceCriteria: blank(input.acceptanceCriteria) ?? null,
         status: input.status,
         quarter: blank(input.quarter) ?? null,
         reach: input.reach ?? null,
@@ -261,6 +287,9 @@ export async function updateFeature(ctx: RequestContext, organizationId: string,
     if (input.initiativeId !== undefined) refs.initiativeId = data.initiativeId = blank(input.initiativeId) ?? null;
     if (input.projectId !== undefined) refs.projectId = data.projectId = blank(input.projectId) ?? null;
     if (input.releaseId !== undefined) refs.releaseId = data.releaseId = blank(input.releaseId) ?? null;
+    if (input.productId !== undefined) refs.productId = data.productId = blank(input.productId) ?? null;
+    if (input.requirements !== undefined) data.requirements = blank(input.requirements) ?? null;
+    if (input.acceptanceCriteria !== undefined) data.acceptanceCriteria = blank(input.acceptanceCriteria) ?? null;
     await checkFeatureRefs(tx, organizationId, companyId, refs);
     if (input.title !== undefined) data.title = input.title;
     if (input.spec !== undefined) data.spec = blank(input.spec) ?? null;
@@ -285,19 +314,22 @@ export async function updateFeature(ctx: RequestContext, organizationId: string,
 
 export interface IdeaFilters {
   q?: string;
+  productId?: string;
   status?: ProductIdeaStatus;
   sort: "votes" | "created";
   page: number;
 }
 
 export function parseIdeaFilters(raw: Record<string, string | string[] | undefined>): IdeaFilters {
-  return { q: param(raw, "q")?.slice(0, 200), status: oneOf(IDEA_STATUSES, param(raw, "status")), sort: param(raw, "sort") === "created" ? "created" : "votes", page: pageParam(raw) };
+  const product = param(raw, "product");
+  return { productId: isUuid(product) ? product : undefined, q: param(raw, "q")?.slice(0, 200), status: oneOf(IDEA_STATUSES, param(raw, "status")), sort: param(raw, "sort") === "created" ? "created" : "votes", page: pageParam(raw) };
 }
 
 export async function listIdeas(ctx: RequestContext, organizationId: string, companyId: string, f: IdeaFilters) {
   await authorize(ctx, organizationId, companyId, "projects.read");
   const where: Prisma.ProductIdeaWhereInput = { organizationId, companyId };
   if (f.status) where.status = f.status;
+  if (f.productId) where.productId = f.productId;
   if (f.q) where.OR = [{ title: { contains: f.q, mode: "insensitive" } }, { description: { contains: f.q, mode: "insensitive" } }];
   const [total, rows] = await Promise.all([
     db().productIdea.count({ where }),
@@ -318,7 +350,9 @@ export async function submitIdea(ctx: RequestContext, organizationId: string, co
   const input = ideaInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.read", tx);
-    const idea = await tx.productIdea.create({ data: { organizationId, companyId, title: input.title, description: blank(input.description) ?? null, submittedById: actorId(ctx, organizationId) } });
+    const productId = blank(input.productId) ?? null;
+    await checkProductRef(tx, organizationId, companyId, productId);
+    const idea = await tx.productIdea.create({ data: { organizationId, companyId, productId, title: input.title, description: blank(input.description) ?? null, submittedById: actorId(ctx, organizationId) } });
     await audit(tx, ctx, organizationId, "product_idea.submitted", "product_idea", idea.id, { title: idea.title });
     return idea;
   });
@@ -329,9 +363,11 @@ export async function updateIdea(ctx: RequestContext, organizationId: string, co
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
     const before = await findIn(() => tx.productIdea.findFirst({ where: { id, organizationId, companyId } }), "Idea", id);
+    if (input.productId !== undefined) await checkProductRef(tx, organizationId, companyId, blank(input.productId));
     const idea = await tx.productIdea.update({
       where: { id },
       data: {
+        ...(input.productId !== undefined ? { productId: blank(input.productId) ?? null } : {}),
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.description !== undefined ? { description: blank(input.description) ?? null } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
@@ -366,7 +402,7 @@ export async function ideaToFeature(ctx: RequestContext, organizationId: string,
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
     const idea = await findIn(() => tx.productIdea.findFirst({ where: { id, organizationId, companyId } }), "Idea", id);
     if (idea.featureId) throw conflict("The idea already has a feature", { reason: "work_idea_has_feature" });
-    const f = await tx.productFeature.create({ data: { organizationId, companyId, title: idea.title, spec: idea.description, status: "PROPOSED", createdById: actorId(ctx, organizationId) } });
+    const f = await tx.productFeature.create({ data: { organizationId, companyId, productId: idea.productId, title: idea.title, spec: idea.description, status: "PROPOSED", createdById: actorId(ctx, organizationId) } });
     await tx.productIdea.update({ where: { id }, data: { featureId: f.id, status: "PLANNED" } });
     await audit(tx, ctx, organizationId, "product_idea.converted", "product_idea", id, { featureId: f.id });
     return f;
@@ -380,8 +416,12 @@ export async function listFeedback(ctx: RequestContext, organizationId: string, 
   const q = param(raw, "q")?.slice(0, 200);
   const source = param(raw, "source")?.slice(0, 60);
   const feature = param(raw, "feature");
+  const product = param(raw, "product");
+  const sentiment = oneOf(SENTIMENTS, param(raw, "sentiment"));
   const page = pageParam(raw);
   const where: Prisma.ProductFeedbackWhereInput = { organizationId, companyId, archivedAt: null };
+  if (isUuid(product)) where.productId = product;
+  if (sentiment) where.sentiment = sentiment;
   if (q) where.body = { contains: q, mode: "insensitive" };
   if (source) where.source = source;
   if (feature === "none") where.featureId = null;
@@ -415,6 +455,8 @@ export async function createFeedback(ctx: RequestContext, organizationId: string
     const accountId = blank(input.accountId) ?? null;
     const contactId = blank(input.contactId) ?? null;
     const featureId = blank(input.featureId) ?? null;
+    const productId = blank(input.productId) ?? null;
+    await checkProductRef(tx, organizationId, companyId, productId);
     if (accountId && !(await tx.account.findFirst({ where: { id: accountId, organizationId, companyId }, select: { id: true } }))) throw notFound("Account");
     if (contactId) {
       const c = await tx.contact.findFirst({ where: { id: contactId, organizationId, companyId }, select: { accountId: true } });
@@ -422,7 +464,7 @@ export async function createFeedback(ctx: RequestContext, organizationId: string
       if (accountId && c.accountId && c.accountId !== accountId) throw invalid("The contact belongs to another account", { reason: "work_contact_account" });
     }
     if (featureId && !(await tx.productFeature.findFirst({ where: { id: featureId, organizationId, companyId }, select: { id: true } }))) throw notFound("Feature");
-    const f = await tx.productFeedback.create({ data: { organizationId, companyId, source: input.source, body: input.body, accountId, contactId, featureId, createdById: actorId(ctx, organizationId) } });
+    const f = await tx.productFeedback.create({ data: { organizationId, companyId, productId, sentiment: blank(input.sentiment) ?? null, source: input.source, body: input.body, accountId, contactId, featureId, createdById: actorId(ctx, organizationId) } });
     await audit(tx, ctx, organizationId, "product_feedback.created", "product_feedback", f.id, { source: f.source, featureId });
     return f;
   });
@@ -435,9 +477,13 @@ export async function updateFeedback(ctx: RequestContext, organizationId: string
     await findIn(() => tx.productFeedback.findFirst({ where: { id, organizationId, companyId }, select: { id: true } }), "Feedback", id);
     const featureId = input.featureId === undefined ? undefined : (blank(input.featureId) ?? null);
     if (featureId && !(await tx.productFeature.findFirst({ where: { id: featureId, organizationId, companyId }, select: { id: true } }))) throw notFound("Feature");
+    if (input.productId !== undefined) await checkProductRef(tx, organizationId, companyId, blank(input.productId));
     const f = await tx.productFeedback.update({
       where: { id },
-      data: { ...(featureId !== undefined ? { featureId } : {}), ...(input.archived !== undefined ? { archivedAt: input.archived ? new Date() : null } : {}) },
+      data: {
+        ...(input.productId !== undefined ? { productId: blank(input.productId) ?? null } : {}),
+        ...(input.sentiment !== undefined ? { sentiment: blank(input.sentiment) ?? null } : {}),
+        ...(featureId !== undefined ? { featureId } : {}), ...(input.archived !== undefined ? { archivedAt: input.archived ? new Date() : null } : {}) },
     });
     await audit(tx, ctx, organizationId, "product_feedback.updated", "product_feedback", id, input);
     return f;
@@ -465,9 +511,13 @@ const versionKey = (v: string) =>
     .map((n) => n.padStart(6, "0"))
     .join(".");
 
-export async function listReleases(ctx: RequestContext, organizationId: string, companyId: string) {
+export async function listReleases(ctx: RequestContext, organizationId: string, companyId: string, opts: { productId?: string } = {}) {
   await authorize(ctx, organizationId, companyId, "projects.read");
-  const rows = await db().productRelease.findMany({ where: { organizationId, companyId }, take: 500, include: { features: { select: { id: true, title: true, status: true } } } });
+  const rows = await db().productRelease.findMany({
+    where: { organizationId, companyId, ...(opts.productId ? { productId: opts.productId } : {}) },
+    take: 500,
+    include: { features: { select: { id: true, title: true, status: true } }, product: { select: { id: true, name: true } } },
+  });
   return rows.sort((a, b) => versionKey(b.version).localeCompare(versionKey(a.version)));
 }
 
@@ -480,9 +530,11 @@ export async function createRelease(ctx: RequestContext, organizationId: string,
   const input = releaseInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
-    if (await tx.productRelease.findFirst({ where: { companyId, version: input.version }, select: { id: true } })) throw conflict("This version exists", { reason: "work_release_exists" });
+    const productId = blank(input.productId) ?? null;
+    await checkProductRef(tx, organizationId, companyId, productId);
+    if (await tx.productRelease.findFirst({ where: { companyId, productId, version: input.version }, select: { id: true } })) throw conflict("This version exists", { reason: "work_release_exists" });
     const r = await tx.productRelease.create({
-      data: { organizationId, companyId, version: input.version, name: blank(input.name) ?? null, releaseDate: toDay(blank(input.releaseDate)), status: input.status, notes: blank(input.notes) ?? null },
+      data: { organizationId, companyId, productId, version: input.version, name: blank(input.name) ?? null, releaseDate: toDay(blank(input.releaseDate)), status: input.status, notes: blank(input.notes) ?? null },
     });
     if (input.featureIds) await setReleaseFeatures(tx, organizationId, companyId, r.id, input.featureIds);
     await audit(tx, ctx, organizationId, "product_release.created", "product_release", r.id, { version: r.version });
@@ -495,8 +547,10 @@ export async function updateRelease(ctx: RequestContext, organizationId: string,
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
     const before = await findIn(() => tx.productRelease.findFirst({ where: { id, organizationId, companyId } }), "Release", id);
-    if (input.version && input.version !== before.version && (await tx.productRelease.findFirst({ where: { companyId, version: input.version }, select: { id: true } }))) {
-      throw conflict("This version exists", { reason: "work_release_exists" });
+    const productId = input.productId !== undefined ? (blank(input.productId) ?? null) : before.productId;
+    if (input.productId !== undefined) await checkProductRef(tx, organizationId, companyId, productId);
+    if ((input.version ?? before.version) !== before.version || productId !== before.productId) {
+      if (await tx.productRelease.findFirst({ where: { companyId, productId, version: input.version ?? before.version, id: { not: id } }, select: { id: true } })) throw conflict("This version exists", { reason: "work_release_exists" });
     }
     const status = (input.status ?? before.status) as ProductReleaseStatus;
     if (input.published && status !== "RELEASED") throw conflict("Only released versions can be published", { reason: "work_release_not_released" });
@@ -504,6 +558,7 @@ export async function updateRelease(ctx: RequestContext, organizationId: string,
       where: { id },
       data: {
         ...(input.version !== undefined ? { version: input.version } : {}),
+        ...(input.productId !== undefined ? { productId } : {}),
         ...(input.name !== undefined ? { name: blank(input.name) ?? null } : {}),
         ...(input.releaseDate !== undefined ? { releaseDate: toDay(blank(input.releaseDate)) } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),

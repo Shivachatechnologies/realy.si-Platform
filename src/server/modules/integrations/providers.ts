@@ -1,6 +1,7 @@
 import "server-only";
 import { env } from "@/server/core/env";
-import { providerInfo, type ProviderInfo } from "./catalog";
+import { providerInfo, type ConnectionAccount, type ProviderInfo } from "./catalog";
+import { objectUrl, s3TargetOf, signS3Request } from "./sigv4";
 
 /**
  * Server-side provider definitions: OAuth endpoints and token handling, revocation and a lightweight "test connection"
@@ -21,7 +22,15 @@ export interface OAuthDef {
   /** Token endpoint client authentication: HTTP Basic or client_id/secret in the form body. */
   tokenAuth: "basic" | "body";
   extraAuthorizeParams?: Record<string, string>;
+  /** Name of the client id parameter (TikTok: client_key, TikTok for Business: app_id). */
+  clientIdParam?: string;
   revoke?: (token: string, client: OAuthClient) => Promise<void>;
+  /** Non-standard code exchange (TikTok for Business). */
+  exchange?: (code: string, client: OAuthClient) => Promise<TokenSet>;
+  /** Runs after the code exchange, e.g. to swap a short-lived token for a long-lived one (Meta, Threads) or read metadata. */
+  upgrade?: (tokens: TokenSet, client: OAuthClient) => Promise<TokenSet>;
+  /** Non-standard refresh (Threads refreshes the long-lived token itself). */
+  refresh?: (refreshToken: string, client: OAuthClient) => Promise<TokenSet>;
 }
 
 export interface TokenSet {
@@ -37,6 +46,8 @@ export interface ConnectionCredentials {
   accessToken?: string | null;
   refreshToken?: string | null;
   apiKey?: string | null;
+  /** Secret settings besides the key (e.g. Google Ads developer token); merged into Connection.config by getConnection. */
+  secrets?: Record<string, string>;
 }
 
 export interface TestTarget {
@@ -71,6 +82,16 @@ export function oauthClient(provider: string): OAuthClient | null {
     instagram: [e.FACEBOOK_APP_ID, e.FACEBOOK_APP_SECRET],
     quickbooks: [e.QUICKBOOKS_CLIENT_ID, e.QUICKBOOKS_CLIENT_SECRET],
     xero: [e.XERO_CLIENT_ID, e.XERO_CLIENT_SECRET],
+    youtube: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
+    google_search_console: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
+    google_ads: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
+    meta_ads: [e.FACEBOOK_APP_ID, e.FACEBOOK_APP_SECRET],
+    linkedin_ads: [e.LINKEDIN_CLIENT_ID, e.LINKEDIN_CLIENT_SECRET],
+    tiktok: [e.TIKTOK_CLIENT_KEY, e.TIKTOK_CLIENT_SECRET],
+    threads: [e.THREADS_APP_ID, e.THREADS_APP_SECRET],
+    pinterest: [e.PINTEREST_CLIENT_ID, e.PINTEREST_CLIENT_SECRET],
+    tiktok_ads: [e.TIKTOK_ADS_APP_ID, e.TIKTOK_ADS_APP_SECRET],
+    mailchimp: [e.MAILCHIMP_CLIENT_ID, e.MAILCHIMP_CLIENT_SECRET],
   };
   const pair = pairs[provider];
   return pair?.[0] && pair[1] ? { clientId: pair[0], clientSecret: pair[1] } : null;
@@ -195,7 +216,86 @@ export function oauthDef(provider: string): OAuthDef | null {
       revoke: (token, c) => revokeForm("https://identity.xero.com/connect/revocation", { token }, { authorization: basic(c) }),
     },
   };
+  // Meta: swap the short-lived user token (1-2 h) for a long-lived one (~60 days, not refreshable: reconnect to renew).
+  const metaUpgrade = async (tokens: TokenSet, c: OAuthClient): Promise<TokenSet> => {
+    const url = `${graph}/oauth/access_token?${new URLSearchParams({ grant_type: "fb_exchange_token", client_id: c.clientId, client_secret: c.clientSecret, fb_exchange_token: tokens.accessToken })}`;
+    const body = await getJson(url, {}).catch(() => null);
+    if (!body || typeof body.access_token !== "string") return tokens;
+    const expiresIn = Number(body.expires_in ?? 0);
+    return { ...tokens, accessToken: body.access_token, refreshToken: null, expiresAt: expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000) : tokens.expiresAt };
+  };
+  defs.facebook!.upgrade = metaUpgrade;
   defs.instagram = { ...defs.facebook! };
+  defs.meta_ads = { ...defs.facebook! };
+  defs.youtube = { ...defs.google! };
+  defs.google_search_console = { ...defs.google! };
+  defs.google_ads = { ...defs.google! };
+  defs.linkedin_ads = { ...defs.linkedin! };
+  defs.tiktok = {
+    authorizeUrl: "https://www.tiktok.com/v2/auth/authorize/",
+    tokenUrl: "https://open.tiktokapis.com/v2/oauth/token/",
+    scopeSeparator: ",",
+    pkce: false,
+    tokenAuth: "body",
+    clientIdParam: "client_key",
+    revoke: (token, c) => revokeForm("https://open.tiktokapis.com/v2/oauth/revoke/", { client_key: c.clientId, client_secret: c.clientSecret, token }),
+  };
+  const threadsLong = async (url: string, previous: TokenSet | null): Promise<TokenSet> => {
+    const body = await getJson(url, {});
+    if (typeof body.access_token !== "string") throw new ProviderError("Threads returned no long-lived token");
+    const expiresIn = Number(body.expires_in ?? 0);
+    // The long-lived token is refreshed with itself, so it doubles as the refresh token.
+    return { accessToken: body.access_token, refreshToken: body.access_token, expiresAt: expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000) : null, scopes: previous?.scopes ?? null, extra: previous?.extra ?? {} };
+  };
+  defs.threads = {
+    authorizeUrl: "https://threads.net/oauth/authorize",
+    tokenUrl: "https://graph.threads.net/oauth/access_token",
+    scopeSeparator: ",",
+    pkce: false,
+    tokenAuth: "body",
+    upgrade: (tokens, c) =>
+      threadsLong(`https://graph.threads.net/access_token?${new URLSearchParams({ grant_type: "th_exchange_token", client_secret: c.clientSecret, access_token: tokens.accessToken })}`, tokens),
+    refresh: (token) => threadsLong(`https://graph.threads.net/refresh_access_token?${new URLSearchParams({ grant_type: "th_refresh_token", access_token: token })}`, null),
+  };
+  defs.pinterest = {
+    authorizeUrl: "https://www.pinterest.com/oauth/",
+    tokenUrl: "https://api.pinterest.com/v5/oauth/token",
+    scopeSeparator: ",",
+    pkce: false,
+    tokenAuth: "basic",
+  };
+  defs.mailchimp = {
+    authorizeUrl: "https://login.mailchimp.com/oauth2/authorize",
+    tokenUrl: "https://login.mailchimp.com/oauth2/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "body",
+    // Mailchimp tokens never expire; the data center (API host) comes from the metadata endpoint.
+    upgrade: async (tokens) => {
+      const meta = await getJson("https://login.mailchimp.com/oauth2/metadata", { authorization: `OAuth ${tokens.accessToken}` });
+      return { ...tokens, extra: { ...tokens.extra, authMode: "oauth", serverPrefix: str(meta.dc), accountName: str(meta.accountname) } };
+    },
+  };
+  defs.tiktok_ads = {
+    authorizeUrl: "https://business-api.tiktok.com/portal/auth",
+    tokenUrl: "https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/",
+    scopeSeparator: ",",
+    pkce: false,
+    tokenAuth: "body",
+    clientIdParam: "app_id",
+    // Marketing API tokens do not expire; the callback carries `auth_code`.
+    exchange: async (code, c) => {
+      const res = await fetch("https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/", {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ app_id: c.clientId, secret: c.clientSecret, auth_code: code }),
+        signal: AbortSignal.timeout(TIMEOUT),
+      });
+      const body = (await res.json().catch(() => ({}))) as { code?: number; message?: string; data?: { access_token?: string; advertiser_ids?: string[]; scope?: number[] } };
+      if (!res.ok || body.code !== 0 || !body.data?.access_token) throw new ProviderError(`token exchange failed (${body.message ?? res.status})`, res.status);
+      return { accessToken: body.data.access_token, refreshToken: null, expiresAt: null, scopes: null, extra: { advertiserIds: body.data.advertiser_ids ?? [] } };
+    },
+  };
   return defs[provider] ?? null;
 }
 
@@ -215,6 +315,8 @@ function toTokenSet(provider: string, body: Record<string, unknown>, previousRef
     if (team?.id) extra.teamId = team.id;
   }
   if (provider === "hubspot" && body.hub_id) extra.hubId = String(body.hub_id);
+  if (provider === "tiktok" && typeof body.open_id === "string") extra.openId = body.open_id;
+  if (provider === "threads" && body.user_id) extra.userId = String(body.user_id);
   return {
     accessToken,
     refreshToken: typeof body.refresh_token === "string" ? body.refresh_token : previousRefresh,
@@ -226,27 +328,34 @@ function toTokenSet(provider: string, body: Record<string, unknown>, previousRef
 }
 
 function clientAuth(def: OAuthDef, c: OAuthClient): { form: Record<string, string>; headers: Record<string, string> } {
-  return def.tokenAuth === "basic" ? { form: { client_id: c.clientId }, headers: { authorization: basic(c) } } : { form: { client_id: c.clientId, client_secret: c.clientSecret }, headers: {} };
+  const idParam = def.clientIdParam ?? "client_id";
+  return def.tokenAuth === "basic" ? { form: { [idParam]: c.clientId }, headers: { authorization: basic(c) } } : { form: { [idParam]: c.clientId, client_secret: c.clientSecret }, headers: {} };
 }
 
 export async function exchangeCode(provider: string, code: string, verifier: string | null): Promise<TokenSet> {
   const def = oauthDef(provider);
   const client = oauthClient(provider);
   if (!def || !client) throw new ProviderError("provider not configured");
-  const auth = clientAuth(def, client);
-  const r = await postForm(
-    def.tokenUrl,
-    { grant_type: "authorization_code", code, redirect_uri: integrationRedirectUri(provider), ...auth.form, ...(def.pkce && verifier ? { code_verifier: verifier } : {}) },
-    auth.headers,
-  );
-  if (!r.ok || r.body.ok === false) throw new ProviderError(`token exchange failed (${r.status})`, r.status);
-  return toTokenSet(provider, r.body);
+  let tokens: TokenSet;
+  if (def.exchange) tokens = await def.exchange(code, client);
+  else {
+    const auth = clientAuth(def, client);
+    const r = await postForm(
+      def.tokenUrl,
+      { grant_type: "authorization_code", code, redirect_uri: integrationRedirectUri(provider), ...auth.form, ...(def.pkce && verifier ? { code_verifier: verifier } : {}) },
+      auth.headers,
+    );
+    if (!r.ok || r.body.ok === false) throw new ProviderError(`token exchange failed (${r.status})`, r.status);
+    tokens = toTokenSet(provider, r.body);
+  }
+  return def.upgrade ? def.upgrade(tokens, client) : tokens;
 }
 
 export async function refreshAccessToken(provider: string, refreshToken: string): Promise<TokenSet> {
   const def = oauthDef(provider);
   const client = oauthClient(provider);
   if (!def || !client) throw new ProviderError("provider not configured");
+  if (def.refresh) return def.refresh(refreshToken, client);
   const auth = clientAuth(def, client);
   const r = await postForm(def.tokenUrl, { grant_type: "refresh_token", refresh_token: refreshToken, ...auth.form }, auth.headers);
   if (!r.ok || r.body.ok === false) throw new ProviderError(`token refresh failed (${r.status})`, r.status);
@@ -276,20 +385,91 @@ async function getJson(url: string, headers: Record<string, string>): Promise<Re
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
 
-/** Authorization header for a provider token (custom APIs use their configured header). */
-export function authHeaders(provider: string, token: string, config: Record<string, unknown>): Record<string, string> {
-  if (provider === "custom_api") {
-    const name = str(config.headerName) ?? "Authorization";
-    const prefix = str(config.headerPrefix);
-    return { [name]: prefix ? `${prefix} ${token}` : token };
+async function postJsonChecked(url: string, headers: Record<string, string>, json: unknown): Promise<Record<string, unknown>> {
+  const res = await fetch(url, { method: "POST", headers: { accept: "application/json", "content-type": "application/json", "user-agent": "Realy", ...headers }, body: JSON.stringify(json), signal: AbortSignal.timeout(TIMEOUT) });
+  const text = await res.text();
+  if (!res.ok) throw new ProviderError(`${new URL(url).host} responded ${res.status}`, res.status);
+  try {
+    return text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  } catch {
+    return {};
   }
-  return { authorization: `Bearer ${token}` };
 }
 
+const b64 = (v: string) => Buffer.from(v).toString("base64");
+export const LINKEDIN_API_VERSION = "202605";
+export const RUNWAY_API_VERSION = "2024-11-06";
+export const SHOPIFY_API_VERSION = "2025-07";
+
+/** Developer token for Google Ads: the company's own (stored encrypted) or the platform's. */
+export const googleAdsDeveloperToken = (config: Record<string, unknown>) => str(config.developerToken) ?? env().GOOGLE_ADS_DEVELOPER_TOKEN ?? null;
+
 /**
- * Lightweight authenticated call proving the credentials work. Returns the connected account's display label.
- * Throws ProviderError with the HTTP status on failure.
+ * Authentication headers for a provider token/key (custom APIs use their configured header). Providers that
+ * authenticate in the URL (SerpApi) or with signatures (S3) return no header; their callers add it.
  */
+export function authHeaders(provider: string, token: string, config: Record<string, unknown>): Record<string, string> {
+  const bearer = { authorization: `Bearer ${token}` };
+  switch (provider) {
+    case "custom_api": {
+      const name = str(config.headerName) ?? "Authorization";
+      const prefix = str(config.headerPrefix);
+      return { [name]: prefix ? `${prefix} ${token}` : token };
+    }
+    case "openai":
+      return { ...bearer, ...(str(config.organization) ? { "openai-organization": str(config.organization)! } : {}) };
+    case "gemini":
+      return { "x-goog-api-key": token };
+    case "exa":
+      return { "x-api-key": token };
+    case "serpapi":
+    case "s3":
+      return {};
+    case "runway":
+      return { ...bearer, "x-runway-version": RUNWAY_API_VERSION };
+    case "wordpress":
+      return { authorization: `Basic ${b64(`${str(config.username) ?? ""}:${token.replace(/\s+/g, "")}`)}` };
+    case "shopify":
+      return { "x-shopify-access-token": token };
+    case "twilio":
+      return { authorization: `Basic ${b64(`${str(config.accountSid) ?? ""}:${token}`)}` };
+    case "razorpay":
+      return { authorization: `Basic ${b64(`${str(config.keyId) ?? ""}:${token}`)}` };
+    case "mailchimp":
+      return config.authMode === "oauth" ? bearer : { authorization: `Basic ${b64(`realy:${token}`)}` };
+    case "tiktok_ads":
+      return { "access-token": token };
+    case "google_ads": {
+      const dev = googleAdsDeveloperToken(config);
+      const login = str(config.loginCustomerId);
+      return { ...bearer, ...(dev ? { "developer-token": dev } : {}), ...(login ? { "login-customer-id": login } : {}) };
+    }
+    case "linkedin_ads":
+      return { ...bearer, "linkedin-version": LINKEDIN_API_VERSION, "x-restli-protocol-version": "2.0.0" };
+    default:
+      return bearer;
+  }
+}
+
+/** Mailchimp data center: the configured server prefix or the API key suffix ("…-us21"). */
+export function mailchimpServer(token: string, config: Record<string, unknown>): string | null {
+  const dc = str(config.serverPrefix) ?? (config.authMode === "oauth" ? null : (token.split("-").pop() ?? null));
+  return dc && /^[a-z]{2,4}\d{1,3}$/.test(dc) ? dc : null;
+}
+
+/** Shop domain of a Shopify connection, validated (it is interpolated into URLs). */
+export function shopifyHost(config: Record<string, unknown>): string | null {
+  const d = str(config.shopDomain);
+  return d && /^[a-z0-9][a-z0-9-]{0,60}\.myshopify\.com$/.test(d) ? d : null;
+}
+
+const accountsOf = (items: unknown, type: string, idKey = "id", nameKey = "name"): ConnectionAccount[] =>
+  (Array.isArray(items) ? items : [])
+    .map((i) => i as Record<string, unknown>)
+    .filter((i) => i[idKey] !== undefined && i[idKey] !== null)
+    .slice(0, 100)
+    .map((i) => ({ id: String(i[idKey]), name: String(i[nameKey] ?? i[idKey]).slice(0, 200), type }));
+
 export async function testConnection({ provider, token, config }: TestTarget): Promise<{ account: string | null; extra?: Record<string, unknown> }> {
   const bearer = { authorization: `Bearer ${token}` };
   switch (provider) {
@@ -338,10 +518,19 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const data = u.data as { username?: string; id?: string } | undefined;
       return { account: data?.username ? `@${data.username}` : null, extra: data?.id ? { userId: data.id } : undefined };
     }
-    case "facebook":
+    case "facebook": {
+      const u = await getJson("https://graph.facebook.com/v21.0/me?fields=id,name", bearer);
+      const pages = await getJson("https://graph.facebook.com/v21.0/me/accounts?fields=id,name&limit=100", bearer).catch(() => ({}) as Record<string, unknown>);
+      return { account: str(u.name) ?? str(u.id), extra: { accounts: accountsOf(pages.data, "page") } };
+    }
     case "instagram": {
       const u = await getJson("https://graph.facebook.com/v21.0/me?fields=id,name", bearer);
-      return { account: str(u.name) ?? str(u.id) };
+      const pages = await getJson("https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&limit=100", bearer).catch(() => ({}) as Record<string, unknown>);
+      const accounts = (Array.isArray(pages.data) ? pages.data : [])
+        .map((p) => (p as { name?: string; instagram_business_account?: { id?: string; username?: string } }))
+        .filter((p) => p.instagram_business_account?.id)
+        .map((p) => ({ id: p.instagram_business_account!.id!, name: p.instagram_business_account!.username ? `@${p.instagram_business_account!.username}` : (p.name ?? p.instagram_business_account!.id!), type: "instagram" }));
+      return { account: str(u.name) ?? str(u.id), extra: { accounts } };
     }
     case "quickbooks": {
       const realm = str(config.realmId);
@@ -365,6 +554,155 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const res = await fetch(url, { headers: { accept: "application/json", "user-agent": "Realy", ...authHeaders(provider, token, config) }, signal: AbortSignal.timeout(TIMEOUT), redirect: "manual" });
       if (res.status === 401 || res.status === 403 || res.status >= 500) throw new ProviderError(`${new URL(url).host} responded ${res.status}`, res.status);
       return { account: new URL(base).host };
+    }
+    case "openai": {
+      const u = await getJson("https://api.openai.com/v1/models", authHeaders(provider, token, config));
+      return { account: `OpenAI · ${Array.isArray(u.data) ? u.data.length : 0} models` };
+    }
+    case "gemini": {
+      const u = await getJson("https://generativelanguage.googleapis.com/v1beta/models?pageSize=50", authHeaders(provider, token, config));
+      return { account: `Gemini · ${Array.isArray(u.models) ? u.models.length : 0} models` };
+    }
+    case "tavily": {
+      await postJsonChecked("https://api.tavily.com/search", bearer, { query: "connection test", max_results: 1, search_depth: "basic" });
+      return { account: "Tavily" };
+    }
+    case "exa": {
+      await postJsonChecked("https://api.exa.ai/search", authHeaders(provider, token, config), { query: "connection test", numResults: 1 });
+      return { account: "Exa" };
+    }
+    case "serpapi": {
+      // account.json does not consume search credits.
+      const u = await getJson(`https://serpapi.com/account.json?${new URLSearchParams({ api_key: token })}`, {});
+      return { account: str(u.account_email) ?? "SerpApi", extra: { plan: str(u.plan_name), searchesLeft: typeof u.total_searches_left === "number" ? u.total_searches_left : null } };
+    }
+    case "stability": {
+      const u = await getJson("https://api.stability.ai/v1/user/account", bearer);
+      return { account: str(u.email) ?? str(u.id) ?? "Stability AI" };
+    }
+    case "replicate": {
+      const u = await getJson("https://api.replicate.com/v1/account", bearer);
+      return { account: str(u.username) ?? str(u.name) ?? "Replicate" };
+    }
+    case "runway": {
+      const u = await getJson("https://api.dev.runwayml.com/v1/organization", authHeaders(provider, token, config));
+      return { account: typeof u.creditBalance === "number" ? `Runway · ${u.creditBalance} credits` : "Runway" };
+    }
+    case "youtube": {
+      const u = await getJson("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true&maxResults=50", bearer);
+      const accounts = (Array.isArray(u.items) ? u.items : []).map((c) => c as { id: string; snippet?: { title?: string } }).map((c) => ({ id: c.id, name: c.snippet?.title ?? c.id, type: "channel" }));
+      if (!accounts.length) throw new ProviderError("this Google account has no YouTube channel");
+      return { account: accounts[0]!.name, extra: { accounts } };
+    }
+    case "google_search_console": {
+      const u = await getJson("https://www.googleapis.com/webmasters/v3/sites", bearer);
+      const accounts = (Array.isArray(u.siteEntry) ? u.siteEntry : [])
+        .map((x) => x as { siteUrl: string; permissionLevel?: string })
+        .filter((x) => x.permissionLevel !== "siteUnverifiedUser")
+        .map((x) => ({ id: x.siteUrl, name: x.siteUrl, type: "site" }));
+      return { account: `${accounts.length} sites`, extra: { accounts } };
+    }
+    case "google_ads": {
+      if (!googleAdsDeveloperToken(config)) throw new ProviderError("Google Ads developer token missing: set GOOGLE_ADS_DEVELOPER_TOKEN or the connection's developer token");
+      const u = await getJson(`https://googleads.googleapis.com/${env().GOOGLE_ADS_API_VERSION}/customers:listAccessibleCustomers`, authHeaders(provider, token, config));
+      const accounts = (Array.isArray(u.resourceNames) ? u.resourceNames : []).map(String).map((r) => r.replace("customers/", "")).map((id) => ({ id, name: id.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3"), type: "ad_account" }));
+      return { account: `${accounts.length} customer accounts`, extra: { accounts } };
+    }
+    case "meta_ads": {
+      const u = await getJson("https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name,account_status&limit=100", bearer);
+      const accounts = accountsOf(u.data, "ad_account", "account_id");
+      return { account: `${accounts.length} ad accounts`, extra: { accounts } };
+    }
+    case "linkedin_ads": {
+      const u = await getJson("https://api.linkedin.com/rest/adAccounts?q=search&count=100", authHeaders(provider, token, config));
+      const accounts = accountsOf(u.elements, "ad_account");
+      return { account: `${accounts.length} ad accounts`, extra: { accounts } };
+    }
+    case "tiktok_ads": {
+      const c = oauthClient("tiktok_ads");
+      if (!c) throw new ProviderError("TikTok for Business app not configured");
+      const res = await fetch(`https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/?${new URLSearchParams({ app_id: c.clientId, secret: c.clientSecret })}`, {
+        headers: { accept: "application/json", "access-token": token },
+        signal: AbortSignal.timeout(TIMEOUT),
+      });
+      const body = (await res.json().catch(() => ({}))) as { code?: number; message?: string; data?: { list?: { advertiser_id: string; advertiser_name?: string }[] } };
+      if (!res.ok || body.code !== 0) throw new ProviderError(`TikTok advertiser lookup failed: ${body.message ?? res.status}`, res.ok ? 401 : res.status);
+      const accounts = accountsOf(body.data?.list, "ad_account", "advertiser_id", "advertiser_name");
+      return { account: `${accounts.length} advertisers`, extra: { accounts } };
+    }
+    case "tiktok": {
+      const u = await getJson("https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name", bearer);
+      const user = (u.data as { user?: { display_name?: string; open_id?: string } } | undefined)?.user;
+      return { account: str(user?.display_name) ?? str(user?.open_id), extra: user?.open_id ? { openId: user.open_id } : undefined };
+    }
+    case "threads": {
+      const u = await getJson("https://graph.threads.net/v1.0/me?fields=id,username", bearer);
+      return { account: str(u.username) ? `@${u.username}` : str(u.id), extra: str(u.id) ? { userId: u.id } : undefined };
+    }
+    case "pinterest": {
+      const u = await getJson("https://api.pinterest.com/v5/user_account", bearer);
+      const boards = await getJson("https://api.pinterest.com/v5/boards?page_size=100", bearer).catch(() => ({}) as Record<string, unknown>);
+      return { account: str(u.username), extra: { accounts: accountsOf(boards.items, "board") } };
+    }
+    case "wordpress": {
+      const site = str(config.siteUrl);
+      if (!site) throw new ProviderError("site URL missing");
+      const u = await getJson(`${site.replace(/\/+$/, "")}/wp-json/wp/v2/users/me?context=edit`, authHeaders(provider, token, config));
+      return { account: `${str(u.name) ?? str(u.slug) ?? "user"} · ${new URL(site).host}` };
+    }
+    case "webflow": {
+      const u = await getJson("https://api.webflow.com/v2/sites", bearer);
+      const accounts = accountsOf(u.sites, "site", "id", "displayName");
+      return { account: accounts[0]?.name ?? "Webflow", extra: { accounts } };
+    }
+    case "shopify": {
+      const host = shopifyHost(config);
+      if (!host) throw new ProviderError("shop domain missing");
+      const u = await getJson(`https://${host}/admin/api/${SHOPIFY_API_VERSION}/shop.json`, authHeaders(provider, token, config));
+      const shop = u.shop as { name?: string; currency?: string } | undefined;
+      return { account: str(shop?.name) ?? host, extra: shop?.currency ? { currency: shop.currency } : undefined };
+    }
+    case "sendgrid": {
+      const u = await getJson("https://api.sendgrid.com/v3/scopes", bearer);
+      const scopes = Array.isArray(u.scopes) ? u.scopes.map(String) : [];
+      if (!scopes.includes("mail.send")) throw new ProviderError("the API key lacks the mail.send permission", 403);
+      return { account: str(config.fromEmail) ?? "SendGrid", extra: { canSend: true } };
+    }
+    case "mailchimp": {
+      const dc = mailchimpServer(token, config);
+      if (!dc) throw new ProviderError("Mailchimp server prefix missing (e.g. us21)");
+      const h = authHeaders(provider, token, config);
+      await getJson(`https://${dc}.api.mailchimp.com/3.0/ping`, h);
+      const lists = await getJson(`https://${dc}.api.mailchimp.com/3.0/lists?count=100&fields=lists.id,lists.name`, h).catch(() => ({}) as Record<string, unknown>);
+      return { account: str(config.accountName) ?? `Mailchimp · ${dc}`, extra: { serverPrefix: dc, accounts: accountsOf(lists.lists, "audience") } };
+    }
+    case "twilio": {
+      const sid = str(config.accountSid);
+      if (!sid || !/^AC[a-f0-9]{32}$/.test(sid)) throw new ProviderError("account SID missing");
+      const u = await getJson(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`, authHeaders(provider, token, config));
+      if (str(u.status) && u.status !== "active") throw new ProviderError(`Twilio account is ${String(u.status)}`, 403);
+      return { account: str(u.friendly_name) ?? sid };
+    }
+    case "razorpay": {
+      await getJson("https://api.razorpay.com/v1/payments?count=1", authHeaders(provider, token, config));
+      const keyId = str(config.keyId) ?? "";
+      return { account: `Razorpay · ${keyId.startsWith("rzp_test_") ? "test" : "live"} mode` };
+    }
+    case "s3": {
+      const target = s3TargetOf(config, token);
+      if (!target) throw new ProviderError("bucket, region or access key missing");
+      const url = objectUrl(target);
+      const res = await fetch(url, { method: "HEAD", headers: signS3Request(target, { method: "HEAD", url }), signal: AbortSignal.timeout(TIMEOUT) });
+      if (!res.ok) throw new ProviderError(`HeadBucket failed (${res.status}${res.status === 301 ? ": wrong region" : res.status === 403 ? ": access denied" : res.status === 404 ? ": no such bucket" : ""})`, res.status);
+      return { account: `${target.bucket} · ${target.endpoint ? new URL(target.endpoint).host : target.region}` };
+    }
+    case "cloudflare": {
+      const v = await getJson("https://api.cloudflare.com/client/v4/user/tokens/verify", bearer);
+      const status = (v.result as { status?: string } | undefined)?.status;
+      if (status !== "active") throw new ProviderError(`Cloudflare token is ${status ?? "invalid"}`, 401);
+      const acc = await getJson("https://api.cloudflare.com/client/v4/accounts?per_page=50", bearer).catch(() => ({}) as Record<string, unknown>);
+      const accounts = accountsOf(acc.result, "account");
+      return { account: accounts.find((a) => a.id === str(config.accountId))?.name ?? accounts[0]?.name ?? "Cloudflare", extra: { accounts } };
     }
     default:
       throw new ProviderError("this provider has no connection test");

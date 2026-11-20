@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { AutoRefresh } from "@/components/agents/auto-refresh";
 import { TaskStatusBadge } from "@/components/agents/status-badge";
@@ -25,10 +26,7 @@ export default async function AskBrainPage() {
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
-    <div className="grid gap-1">
-      <h1 className="text-lg font-semibold tracking-tight">{t("modules.brain.title")}</h1>
-      <p className="text-muted-foreground">{t("brain.ask.subtitle")}</p>
-    </div>
+    <PageHeader variant="editorial" world="brain" eyebrow={t("dna.worlds.brain")} title={t("modules.brain.title")} description={t("brain.ask.subtitle")} />
   );
   if (!company) {
     return (

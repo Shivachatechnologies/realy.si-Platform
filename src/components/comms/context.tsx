@@ -1,3 +1,5 @@
+import { PageHeader as EditorialHeader } from "@/components/ui/page-header";
+import { WorldIllustration } from "@/components/graphics/illustrations";
 import "server-only";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
@@ -35,10 +37,14 @@ export async function areaPage(area: Area, active: string, opts: { title?: strin
       : SUPPORT_TABS.map((k) => ({ key: k, href: `/${locale}/support${k === "inbox" ? "" : `/${k}`}`, label: t(`support.tabs.${k}`) }));
   const header = (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{opts.title ?? t(titleKey)}</h1>
-        <p className="text-muted-foreground">{t(`${area}.subtitle`)}</p>
-      </div>
+      {area === "communication" ? (
+        <EditorialHeader variant="editorial" world="people" eyebrow={t("dna.worlds.communication")} title={opts.title ?? t(titleKey)} description={t(`${area}.subtitle`)} illustration={<WorldIllustration world="support" className="w-full max-w-[17rem]" />} />
+      ) : (
+        <div className="grid gap-1">
+          <h1 className="text-lg font-semibold tracking-tight">{opts.title ?? t(titleKey)}</h1>
+          <p className="text-muted-foreground">{t(`${area}.subtitle`)}</p>
+        </div>
+      )}
       <SectionTabs label={t(titleKey)} tabs={tabs} active={active} />
     </div>
   );

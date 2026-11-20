@@ -7,12 +7,17 @@ import { conflict, invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { notifyUsers } from "@/server/modules/notifications/service";
+import { emitDomainEvent } from "@/server/modules/events/emit";
 import { actorId, authorize, enumParam, instant, isUuid, PAGE_SIZE, pageParam, param, requireOwned, toInstant, uuid } from "./common";
-import { getMarketingConnection, isUsable, SOCIAL_PROVIDER_KEYS } from "./connections-bridge";
-import { fetchMetrics, ProviderError, publishTo, TEXT_LIMITS } from "./social-providers";
+import { sha256 } from "@/server/core/crypto";
+import { connectionAccounts, getMarketingConnection, isUsable, SOCIAL_PROVIDER_KEYS } from "./connections-bridge";
+import { checkPending, fetchMetrics, MEDIA_REQUIRED, ProviderError, publishTo, TEXT_LIMITS, type PublishResult } from "./social-providers";
+import { isTransient } from "./providers/http";
+import { assetMedia, assetPublicUrl } from "./assets";
 import { markContentPublished } from "./content";
 
-export const SOCIAL_PROVIDERS = ["LINKEDIN", "X", "INSTAGRAM", "FACEBOOK"] as const;
+export const SOCIAL_PROVIDERS = ["LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK", "THREADS", "PINTEREST"] as const;
+export const MAX_PUBLISH_ATTEMPTS = 5;
 export const POST_STATUSES = ["DRAFT", "SCHEDULED", "PUBLISHING", "PUBLISHED", "PARTIAL", "FAILED", "CANCELLED"] as const;
 
 export const accountInput = z.object({
@@ -29,6 +34,8 @@ export const postInput = z.object({
   title: z.string().trim().min(1).max(200),
   text: z.string().max(70_000).default(""),
   mediaUrl,
+  mediaAssetId: uuid.or(z.literal("")).nullable().optional(),
+  hashtags: z.array(z.string().trim().regex(/^#?[\p{L}\p{N}_]{1,60}$/u)).max(30).optional(),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
   contentId: uuid.or(z.literal("")).nullable().optional(),
   targets: z.array(target).min(1).max(20),
@@ -39,6 +46,8 @@ export const updatePostInput = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   text: z.string().max(70_000).optional(),
   mediaUrl,
+  mediaAssetId: uuid.or(z.literal("")).nullable().optional(),
+  hashtags: z.array(z.string().trim().regex(/^#?[\p{L}\p{N}_]{1,60}$/u)).max(30).optional(),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
   targets: z.array(target).min(1).max(20).optional(),
 });
@@ -76,6 +85,13 @@ export async function listAccounts(ctx: RequestContext, organizationId: string, 
     connectionStatus(organizationId, companyId),
   ]);
   return { accounts: accounts.map((a) => ({ ...a, connected: connected[a.provider] })), connected };
+}
+
+/** Sub-accounts (pages, boards, channels, organizations) each connected provider exposes in connection.config.accounts. */
+export async function accountChoices(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "marketing.read");
+  const entries = await Promise.all(SOCIAL_PROVIDERS.map(async (p) => [p, connectionAccounts(await getMarketingConnection(organizationId, companyId, SOCIAL_PROVIDER_KEYS[p]))] as const));
+  return Object.fromEntries(entries) as Record<MarketingSocialProvider, { id: string; name: string }[]>;
 }
 
 export async function createAccount(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof accountInput>) {
@@ -141,6 +157,7 @@ export async function getPost(ctx: RequestContext, organizationId: string, compa
     include: {
       campaign: { select: { id: true, name: true, code: true } },
       content: { select: { id: true, title: true } },
+      mediaAsset: { select: { id: true, name: true, kind: true, url: true, mimeType: true, sizeBytes: true, status: true } },
       targets: { include: { account: true, snapshots: { orderBy: { capturedAt: "desc" }, take: 10 } } },
     },
   });
@@ -158,13 +175,34 @@ async function validTargets(tx: Tx, companyId: string, targets: TargetIn[]) {
 }
 
 /** Text and media rules per platform; checked before anything is queued. */
-function checkPublishable(post: { text: string; mediaUrl: string | null }, targets: { text: string | null; account: { provider: MarketingSocialProvider; name: string } }[]) {
+export function withHashtags(text: string, hashtags: string[]) {
+  const tags = hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`)).filter((h) => !text.includes(h));
+  return tags.length ? `${text.trimEnd()}\n\n${tags.join(" ")}` : text;
+}
+
+function checkPublishable(
+  post: { text: string; mediaUrl: string | null; mediaAssetId?: string | null; hashtags?: string[] },
+  targets: { text: string | null; account: { provider: MarketingSocialProvider; name: string } }[],
+  mediaKind?: "IMAGE" | "VIDEO" | "LOGO" | "DOCUMENT" | null,
+) {
+  const hasMedia = !!post.mediaUrl || !!post.mediaAssetId;
   for (const t of targets) {
-    const text = t.text ?? post.text;
-    if (!text.trim() && !post.mediaUrl) throw invalid("Post text is empty", { reason: "marketing_post_empty", account: t.account.name });
+    const text = withHashtags(t.text ?? post.text, post.hashtags ?? []);
+    if (!text.trim() && !hasMedia) throw invalid("Post text is empty", { reason: "marketing_post_empty", account: t.account.name });
     if (text.length > TEXT_LIMITS[t.account.provider]) throw invalid("Text too long for this platform", { reason: "marketing_post_too_long", account: t.account.name, limit: TEXT_LIMITS[t.account.provider] });
-    if (t.account.provider === "INSTAGRAM" && !post.mediaUrl) throw invalid("Instagram needs an image", { reason: "marketing_post_media_required" });
+    const need = MEDIA_REQUIRED[t.account.provider];
+    if (need && !hasMedia) throw invalid("This platform needs media", { reason: "marketing_post_media_required", account: t.account.name });
+    if (need === "video" && mediaKind && mediaKind !== "VIDEO") throw invalid("This platform needs a video", { reason: "marketing_post_video_required", account: t.account.name });
+    if (need === "video" && !post.mediaAssetId) throw invalid("Upload the video to the media library first", { reason: "marketing_post_video_required", account: t.account.name });
   }
+}
+
+async function mediaKindOf(tx: Tx, companyId: string, id: string | null | undefined) {
+  if (!id) return null;
+  const a = await tx.marketingAsset.findFirst({ where: { id, companyId, archivedAt: null }, select: { kind: true, status: true } });
+  if (!a) throw notFound("Asset");
+  if (a.status !== "READY") throw conflict("The media is not ready yet", { reason: "marketing_asset_not_ready" });
+  return a.kind;
 }
 
 /** Create a post (draft, or scheduled when `scheduledAt` is given). Also used by content distribution and the AI tool. */
@@ -176,7 +214,8 @@ export async function createPost(ctx: RequestContext, organizationId: string, co
     const accounts = await validTargets(tx, companyId, input.targets);
     const byId = new Map(accounts.map((a) => [a.id, a]));
     const targets = input.targets.map((t) => ({ accountId: t.accountId, text: t.text?.trim() ? t.text : null, account: byId.get(t.accountId)! }));
-    if (scheduledAt) checkPublishable({ text: input.text, mediaUrl: input.mediaUrl || null }, targets);
+    const mediaKind = await mediaKindOf(tx, companyId, input.mediaAssetId || null);
+    if (scheduledAt) checkPublishable({ text: input.text, mediaUrl: input.mediaUrl || null, mediaAssetId: input.mediaAssetId || null, hashtags: input.hashtags }, targets, mediaKind);
     const p = await tx.marketingSocialPost.create({
       data: {
         organizationId,
@@ -184,6 +223,8 @@ export async function createPost(ctx: RequestContext, organizationId: string, co
         title: input.title,
         text: input.text,
         mediaUrl: input.mediaUrl || null,
+        mediaAssetId: input.mediaAssetId || null,
+        hashtags: (input.hashtags ?? []).map((h) => (h.startsWith("#") ? h : `#${h}`)),
         campaignId: await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign"),
         contentId: await requireOwned(tx, "marketingContent", companyId, input.contentId || null, "Content"),
         status: scheduledAt ? "SCHEDULED" : "DRAFT",
@@ -209,6 +250,11 @@ export async function updatePost(ctx: RequestContext, organizationId: string, co
     if (input.title !== undefined) data.title = input.title;
     if (input.text !== undefined) data.text = input.text;
     if (input.mediaUrl !== undefined) data.mediaUrl = input.mediaUrl || null;
+    if (input.mediaAssetId !== undefined) {
+      await mediaKindOf(tx, companyId, input.mediaAssetId || null);
+      data.mediaAssetId = input.mediaAssetId || null;
+    }
+    if (input.hashtags !== undefined) data.hashtags = input.hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`));
     if (input.campaignId !== undefined) data.campaignId = await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign");
     let targets = p.targets.map((t) => ({ accountId: t.accountId, text: t.text, account: t.account }));
     if (input.targets) {
@@ -218,7 +264,14 @@ export async function updatePost(ctx: RequestContext, organizationId: string, co
       await tx.marketingSocialPostTarget.deleteMany({ where: { postId, companyId } });
       await tx.marketingSocialPostTarget.createMany({ data: targets.map((t) => ({ organizationId, companyId, postId, accountId: t.accountId, text: t.text })) });
     }
-    if (p.status === "SCHEDULED") checkPublishable({ text: (data.text as string | undefined) ?? p.text, mediaUrl: data.mediaUrl !== undefined ? (data.mediaUrl as string | null) : p.mediaUrl }, targets);
+    if (p.status === "SCHEDULED") {
+      const mediaAssetId = data.mediaAssetId !== undefined ? (data.mediaAssetId as string | null) : p.mediaAssetId;
+      checkPublishable(
+        { text: (data.text as string | undefined) ?? p.text, mediaUrl: data.mediaUrl !== undefined ? (data.mediaUrl as string | null) : p.mediaUrl, mediaAssetId, hashtags: (data.hashtags as string[] | undefined) ?? p.hashtags },
+        targets,
+        await mediaKindOf(tx, companyId, mediaAssetId),
+      );
+    }
     if (p.status === "FAILED") data.status = "DRAFT";
     const updated = await tx.marketingSocialPost.update({ where: { id: postId }, data });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.social_post.updated", resourceType: "marketing_social_post", resourceId: postId, newValue: { title: input.title, targets: input.targets?.length } });
@@ -258,7 +311,7 @@ export async function postAction(ctx: RequestContext, organizationId: string, co
       case "schedule":
       case "publish_now": {
         if (p.status !== "DRAFT" && p.status !== "SCHEDULED") throw bad();
-        checkPublishable(p, p.targets);
+        checkPublishable(p, p.targets, await mediaKindOf(tx, companyId, p.mediaAssetId));
         const at = input.action === "schedule" ? toInstant(input.scheduledAt) : new Date();
         if (!at) throw invalid("Invalid date");
         data = { status: "SCHEDULED", scheduledAt: at };
@@ -274,7 +327,7 @@ export async function postAction(ctx: RequestContext, organizationId: string, co
         break;
       case "retry":
         if (p.status !== "FAILED" && p.status !== "PARTIAL") throw bad();
-        await tx.marketingSocialPostTarget.updateMany({ where: { postId, status: "FAILED" }, data: { status: "PENDING", error: null } });
+        await tx.marketingSocialPostTarget.updateMany({ where: { postId, status: "FAILED" }, data: { status: "PENDING", error: null, attempts: 0, nextAttemptAt: null, providerPostId: null } });
         data = { status: "SCHEDULED", scheduledAt: new Date() };
         break;
     }
@@ -303,51 +356,106 @@ export async function distributeContent(ctx: RequestContext, organizationId: str
   });
 }
 
+export const contentHashOf = (text: string, media: string | null) => sha256(`${text.replace(/\s+/g, " ").trim().toLowerCase()}|${media ?? ""}`);
+const backoffMs = (attempts: number, retryAfter?: number) => (retryAfter ? retryAfter * 1000 : Math.min(6 * 3_600_000, 2 ** attempts * 60_000));
+
 /**
- * Publish a due post through each target's provider. A target is PUBLISHED only with a provider post id; a missing
- * connection fails it with `not_connected`. The post ends PUBLISHED, PARTIAL or FAILED.
+ * Publish a due post through each target's provider. A target is PUBLISHED only with a provider post id (asynchronous
+ * publishes are verified first). Missing connections fail with `not_connected`; the same text+media already published
+ * on the account fails with `duplicate_content`; rate limits and transient errors retry with exponential backoff up to
+ * MAX_PUBLISH_ATTEMPTS. The post ends PUBLISHED, PARTIAL or FAILED, or goes back to SCHEDULED while retries are pending.
  */
 export async function processPost(postId: string): Promise<number> {
-  const claimed = await db().marketingSocialPost.updateMany({ where: { id: postId, status: "SCHEDULED", scheduledAt: { lte: new Date() } }, data: { status: "PUBLISHING" } });
+  const now = new Date();
+  const claimed = await db().marketingSocialPost.updateMany({ where: { id: postId, status: "SCHEDULED", scheduledAt: { lte: now } }, data: { status: "PUBLISHING" } });
   if (!claimed.count) return 0;
-  const post = await db().marketingSocialPost.findUniqueOrThrow({ where: { id: postId }, include: { targets: { include: { account: true } } } });
+  const post = await db().marketingSocialPost.findUniqueOrThrow({ where: { id: postId }, include: { targets: { include: { account: true } }, mediaAsset: { select: { id: true, kind: true, url: true, mimeType: true, sizeBytes: true, status: true } } } });
   const connections = new Map<MarketingSocialProvider, Awaited<ReturnType<typeof getMarketingConnection>>>();
+  const mediaUrl = post.mediaAsset && post.mediaAsset.status === "READY" ? assetPublicUrl(post.mediaAsset) : post.mediaUrl;
+  const mediaType = post.mediaAsset ? (post.mediaAsset.kind === "VIDEO" ? "video" : "image") : null;
+  let mediaBytes: Awaited<ReturnType<typeof assetMedia>> | undefined;
   let published = 0;
   for (const t of post.targets) {
-    if (t.status === "PUBLISHED") continue;
+    if (t.status === "PUBLISHED" || t.status === "FAILED") continue;
+    if (t.nextAttemptAt && t.nextAttemptAt > now) continue;
     const provider = t.account.provider;
     if (!connections.has(provider)) connections.set(provider, await getMarketingConnection(post.organizationId, post.companyId, SOCIAL_PROVIDER_KEYS[provider]));
     const conn = connections.get(provider) ?? null;
     if (t.account.archivedAt || !isUsable(conn)) {
-      await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { status: "FAILED", error: t.account.archivedAt ? "account_archived" : "not_connected", attempts: { increment: 1 } } });
+      await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { status: "FAILED", error: t.account.archivedAt ? "account_archived" : "not_connected", attempts: { increment: 1 }, nextAttemptAt: null } });
       continue;
     }
+    const text = withHashtags(t.text ?? post.text, post.hashtags);
+    const hash = contentHashOf(text, post.mediaAssetId ?? post.mediaUrl);
     try {
-      const r = await publishTo(provider, conn, { text: t.text ?? post.text, mediaUrl: post.mediaUrl, externalId: t.account.externalId });
-      await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { status: "PUBLISHED", providerPostId: r.providerPostId, providerUrl: r.url, error: null, publishedAt: new Date(), attempts: { increment: 1 } } });
+      let r: PublishResult | null;
+      if (t.providerPostId) {
+        // An asynchronous publish was accepted earlier: verify it.
+        r = await checkPending(provider, conn, t.providerPostId, t.account.externalId);
+        if (!r) {
+          await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { nextAttemptAt: new Date(Date.now() + 60_000), attempts: { increment: 1 } } });
+          if (t.attempts > 120) throw new ProviderError("provider_timeout", "The platform did not confirm the post");
+          continue;
+        }
+      } else {
+        const dup = await db().marketingSocialPostTarget.findFirst({ where: { accountId: t.accountId, contentHash: hash, status: "PUBLISHED", id: { not: t.id } }, select: { id: true } });
+        if (dup) throw new ProviderError("duplicate_content", "The same post was already published on this account");
+        if (provider === "YOUTUBE" && mediaBytes === undefined) mediaBytes = post.mediaAssetId ? await assetMedia(post.companyId, post.mediaAssetId) : null;
+        r = await publishTo(provider, conn, { text, mediaUrl, mediaType, media: provider === "YOUTUBE" ? (mediaBytes ?? null) : null, title: post.title, externalId: t.account.externalId });
+        if (r.pending) {
+          await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { providerPostId: r.providerPostId, contentHash: hash, error: null, nextAttemptAt: new Date(Date.now() + 30_000), attempts: { increment: 1 } } });
+          continue;
+        }
+      }
+      await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { status: "PUBLISHED", providerPostId: r.providerPostId, providerUrl: r.url, contentHash: hash, error: null, nextAttemptAt: null, publishedAt: new Date(), attempts: { increment: 1 } } });
       published++;
     } catch (err) {
       const reason = err instanceof ProviderError ? err.reason : "provider_error";
       const detail = err instanceof Error ? err.message.slice(0, 300) : "";
-      logger.warn({ postId, targetId: t.id, provider, reason }, "social publish failed");
-      await db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { status: "FAILED", error: detail && detail !== reason ? `${reason}: ${detail}` : reason, attempts: { increment: 1 } } });
+      const error = detail && detail !== reason ? `${reason}: ${detail}` : reason;
+      const attempts = t.attempts + 1;
+      const retry = isTransient(err) && attempts < MAX_PUBLISH_ATTEMPTS;
+      logger.warn({ postId, targetId: t.id, provider, reason, retry }, "social publish failed");
+      await db().marketingSocialPostTarget.update({
+        where: { id: t.id },
+        data: retry ? { error, attempts, nextAttemptAt: new Date(Date.now() + backoffMs(attempts, err instanceof ProviderError ? err.retryAfter : undefined)) } : { status: "FAILED", error, attempts, nextAttemptAt: null },
+      });
     }
   }
-  const targets = await db().marketingSocialPostTarget.findMany({ where: { postId }, select: { status: true } });
+  const targets = await db().marketingSocialPostTarget.findMany({ where: { postId }, select: { status: true, nextAttemptAt: true, error: true, providerUrl: true } });
+  const waiting = targets.filter((t) => t.status === "PENDING");
+  if (waiting.length) {
+    const next = waiting.reduce((m, t) => Math.min(m, t.nextAttemptAt?.getTime() ?? Date.now()), Infinity);
+    await db().marketingSocialPost.update({ where: { id: postId }, data: { status: "SCHEDULED", scheduledAt: new Date(Number.isFinite(next) ? next : Date.now() + 60_000), ...(published ? { publishedAt: post.publishedAt ?? new Date() } : {}) } });
+    return published;
+  }
   const ok = targets.filter((t) => t.status === "PUBLISHED").length;
   const status: MarketingSocialPostStatus = ok === targets.length ? "PUBLISHED" : ok > 0 ? "PARTIAL" : "FAILED";
+  const failures = [...new Set(targets.filter((t) => t.status === "FAILED").map((t) => t.error ?? "provider_error"))].join("; ").slice(0, 500);
   const ctx = systemContext();
+  const items = await db().marketingAutopilotItem.findMany({ where: { postId }, select: { id: true, autopilot: { select: { ownerId: true, createdById: true } } } });
   await transaction(async (tx) => {
     await tx.marketingSocialPost.update({ where: { id: postId }, data: { status, ...(ok ? { publishedAt: post.publishedAt ?? new Date() } : {}) } });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId: post.organizationId, action: "marketing.social_post.processed", resourceType: "marketing_social_post", resourceId: postId, newValue: { status, published: ok, total: targets.length } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId: post.organizationId, action: "marketing.social_post.processed", resourceType: "marketing_social_post", resourceId: postId, newValue: { status, published: ok, total: targets.length, failures: failures || undefined } });
+    if (ok) {
+      await emitDomainEvent(tx, ctx, "content.published", {
+        organizationId: post.organizationId,
+        companyId: post.companyId,
+        entityType: "marketing_social_post",
+        entityId: postId,
+        data: { title: post.title, channel: "social", publishedUrl: targets.find((t) => t.providerUrl)?.providerUrl ?? null, published: ok, total: targets.length },
+      });
+    }
     if (ok && post.contentId) {
       const content = await tx.marketingContent.findFirst({ where: { id: post.contentId, companyId: post.companyId } });
-      if (content && content.status !== "PUBLISHED") {
-        const url = (await tx.marketingSocialPostTarget.findFirst({ where: { postId, status: "PUBLISHED", providerUrl: { not: null } }, select: { providerUrl: true } }))?.providerUrl ?? null;
-        await markContentPublished(tx, ctx, content, url);
-      }
+      if (content && content.status !== "PUBLISHED") await markContentPublished(tx, ctx, content, targets.find((t) => t.providerUrl)?.providerUrl ?? null);
     }
-    await notifyUsers(tx, post.organizationId, [post.createdById], status === "PUBLISHED" ? "marketing.post_published" : "marketing.post_failed", { companyId: post.companyId, title: post.title, href: `/marketing/social/${postId}` });
+    if (items.length) {
+      await tx.marketingAutopilotItem.updateMany({ where: { postId }, data: ok ? { stage: "PUBLISHED", error: status === "PARTIAL" ? failures : null } : { stage: "FAILED", error: failures || "publish_failed" } });
+    }
+    const recipients = [post.createdById, ...items.flatMap((i) => [i.autopilot.ownerId, i.autopilot.createdById])];
+    const users = await tx.user.findMany({ where: { id: { in: recipients.filter((u): u is string => !!u) } }, select: { id: true } });
+    await notifyUsers(tx, post.organizationId, users.map((u) => u.id), status === "PUBLISHED" ? "marketing.post_published" : "marketing.post_failed", { companyId: post.companyId, title: failures && status !== "PUBLISHED" ? `${post.title} — ${failures.slice(0, 120)}` : post.title, href: `/marketing/social/${postId}` });
   });
   return published;
 }
@@ -368,7 +476,7 @@ export async function refreshPostMetrics(postId: string): Promise<number> {
     if (!isUsable(conn)) continue;
     try {
       const m = await fetchMetrics(t.account.provider, conn, t.providerPostId!);
-      const values = { impressions: m.impressions ?? null, likes: m.likes ?? null, comments: m.comments ?? null, shares: m.shares ?? null, clicks: m.clicks ?? null };
+      const values = { reach: m.reach ?? null, impressions: m.impressions ?? null, likes: m.likes ?? null, comments: m.comments ?? null, shares: m.shares ?? null, clicks: m.clicks ?? null };
       await db().$transaction([
         db().marketingSocialPostTarget.update({ where: { id: t.id }, data: { ...values, metricsAt: new Date() } }),
         db().marketingSocialMetricSnapshot.create({ data: { organizationId: t.organizationId, companyId: t.companyId, targetId: t.id, ...values } }),

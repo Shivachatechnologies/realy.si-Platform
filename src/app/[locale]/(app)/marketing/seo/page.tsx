@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InfoStrip } from "@/components/marketing/studio";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ProjectForm } from "@/components/marketing/seo-forms";
@@ -20,6 +21,7 @@ export default async function SeoPage() {
   const projects = await listProjects(viewer.ctx, org.id, company.id);
   return (
     <MarketingShell {...shell}>
+      <InfoStrip t={t} k="seo" />
       {canManage ? (
         <Card>
           <CardHeader title={t("marketing.seo.createProject")} />

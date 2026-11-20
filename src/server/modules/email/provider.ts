@@ -1,4 +1,7 @@
 import { env } from "@/server/core/env";
+import { providerFetch } from "@/server/modules/integrations/client";
+import { getConnection, type Connection } from "@/server/modules/integrations/connections";
+import { recordUsage } from "@/server/modules/integrations/usage";
 
 export interface OutboundEmail {
   to: string;
@@ -71,6 +74,60 @@ export function postmarkProvider(serverToken: string): EmailProvider {
       return { messageId: typeof r.MessageID === "string" ? r.MessageID : null };
     },
   };
+}
+
+/** SendGrid v3 Mail Send with a company's own connected API key (request log, rate limit, retries and health via providerFetch). */
+export function sendgridProvider(conn: Connection & { accessToken: string }): EmailProvider {
+  return {
+    id: "sendgrid",
+    async send(m) {
+      const custom = m.headers && Object.keys(m.headers).length ? { headers: m.headers } : {};
+      const res = await providerFetch(conn, "https://api.sendgrid.com/v3/mail/send", {
+        json: {
+          personalizations: [{ to: [{ email: m.to }] }],
+          from: parseFrom(m.from),
+          subject: m.subject,
+          content: [
+            { type: "text/plain", value: m.text },
+            { type: "text/html", value: m.html },
+          ],
+          ...custom,
+        },
+        retries: 2,
+        timeoutMs: TIMEOUT_MS,
+      });
+      const ok = res.status === 202 || res.ok;
+      if (conn.organizationId && conn.companyId) {
+        await recordUsage({ organizationId: conn.organizationId, companyId: conn.companyId, connectionId: conn.id, provider: "sendgrid", operation: "email.send", unit: "message", estimatedCostMicros: ok ? 1_000 : 0, status: ok ? "SUCCEEDED" : "FAILED", error: ok ? null : `SendGrid responded ${res.status}` });
+      }
+      if (!ok) throw new Error(`email provider responded ${res.status}`);
+      // SendGrid returns the message id in the X-Message-Id header, which providerFetch does not expose.
+      return { messageId: null };
+    },
+  };
+}
+
+/** "Name <email>" → { email, name } (SendGrid wants them separately). */
+function parseFrom(from: string): { email: string; name?: string } {
+  const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(from);
+  return m ? { email: m[2]!, ...(m[1] ? { name: m[1].replace(/^"|"$/g, "") } : {}) } : { email: from.trim() };
+}
+
+/**
+ * Email provider for a company's own sends (campaigns, invoices, notifications to its customers): the company's
+ * connected SendGrid account when present (from its configured sender), else the platform provider (Resend/Postmark
+ * from env), else null = NOT CONFIGURED.
+ */
+export async function companyEmailProvider(organizationId: string, companyId: string): Promise<{ provider: EmailProvider; from: string; scope: "company" | "platform" } | null> {
+  if (override !== undefined) return override ? { provider: override, from: "Realy <test@realy.si>", scope: "platform" } : null;
+  const conn = await getConnection(organizationId, companyId, "sendgrid");
+  const fromEmail = conn && typeof conn.config.fromEmail === "string" ? conn.config.fromEmail : null;
+  if (conn && conn.accessToken && conn.status !== "DISCONNECTED" && fromEmail) {
+    const name = typeof conn.config.fromName === "string" && conn.config.fromName ? conn.config.fromName.replace(/[<>"\r\n]/g, "") : null;
+    return { provider: sendgridProvider(conn as Connection & { accessToken: string }), from: name ? `${name} <${fromEmail}>` : fromEmail, scope: "company" };
+  }
+  const platform = emailProvider();
+  return platform ? { ...platform, scope: "platform" } : null;
 }
 
 let override: EmailProvider | null | undefined;

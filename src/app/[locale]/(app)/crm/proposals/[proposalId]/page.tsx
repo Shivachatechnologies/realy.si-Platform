@@ -56,7 +56,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ propo
     contactName: p.contact ? contactName(p.contact) : null,
   };
   return (
-    <CrmFrame active="proposals" title={`${p.number} · ${p.title}`} subtitle={`${p.deal.name} · ${t("crm.proposals.versionN", { version: p.version })}`}>
+    <CrmFrame active="proposals" intro={false} title={`${p.number} · ${p.title}`} subtitle={`${p.deal.name} · ${t("crm.proposals.versionN", { version: p.version })}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm/proposals`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.proposals.back")}

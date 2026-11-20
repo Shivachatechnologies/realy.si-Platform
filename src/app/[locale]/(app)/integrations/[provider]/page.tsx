@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ApiKeyForm, ConnectionActions, DocsLink, OAuthConnectButton } from "@/components/integrations/setup";
+import { AccountPicker, ApiKeyForm, ConnectionActions, ConnectionSettingsForm, DocsLink, OAuthConnectButton } from "@/components/integrations/setup";
+import { formatCostMicros } from "@/components/integrations/usage-format";
 import { CopyText, HookRowActions, NewHookForm } from "@/components/integrations/webhook-managers";
 import { SyncTable } from "@/components/integrations/sync-table";
-import { IntegrationsTabs } from "@/components/integrations/tabs";
+import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
 import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -12,8 +13,8 @@ import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
-import { providerInfo } from "@/server/modules/integrations/catalog";
-import { getIntegration } from "@/server/modules/integrations/service";
+import { providerInfo, type ConnectionAccount } from "@/server/modules/integrations/catalog";
+import { getIntegration, storedSecretNames, usageSummary } from "@/server/modules/integrations/service";
 import { listHooks } from "@/server/modules/integrations/webhooks";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
@@ -55,11 +56,20 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   const conn = data.connection;
   const oauthError = typeof sp.oauthError === "string" && OAUTH_ERRORS.includes(sp.oauthError) ? sp.oauthError : null;
   const hooks = info.key === "webhook" ? await listHooks(viewer.ctx, org.id, company.id) : [];
+  const [usage, secretNames] = await Promise.all([
+    info.key === "webhook" ? null : usageSummary(viewer.ctx, org.id, company.id, { provider }),
+    conn && info.configFields?.length && canManage ? storedSecretNames(org.id, company.id, provider) : Promise.resolve([] as string[]),
+  ]);
+  const cfg = (conn?.config && typeof conn.config === "object" && !Array.isArray(conn.config) ? conn.config : {}) as Record<string, unknown>;
+  const accounts = Array.isArray(cfg.accounts) ? (cfg.accounts as ConnectionAccount[]) : [];
+  const activeAccountId = typeof cfg.activeAccountId === "string" ? cfg.activeAccountId : (accounts[0]?.id ?? null);
+  const setupSteps = t(`integrations.providers.${info.key}.setup`).split("\n").filter(Boolean);
+  const usesOAuth = info.authType === "oauth2" || !!info.oauthAlternative;
   const tabs = (
     <IntegrationsTabs
       locale={locale}
       active="marketplace"
-      labels={{ marketplace: t("integrations.tabs.marketplace"), connected: t("integrations.tabs.connected"), webhooks: t("integrations.tabs.webhooks"), syncs: t("integrations.tabs.syncs") }}
+      labels={integrationTabLabels(t)}
     />
   );
 
@@ -135,6 +145,17 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                     <dt className="text-xs text-muted-foreground">{t("integrations.lastSync")}</dt>
                     <dd>{conn.lastSyncAt ? formatDateTime(conn.lastSyncAt, locale, tz) : "—"}</dd>
                   </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">{t("integrations.health.lastSuccess")}</dt>
+                    <dd>{conn.lastSuccessAt ? formatDateTime(conn.lastSuccessAt, locale, tz) : "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">{t("integrations.health.lastFailure")}</dt>
+                    <dd>
+                      {conn.lastFailureAt ? formatDateTime(conn.lastFailureAt, locale, tz) : "—"}
+                      {conn.errorStreak > 0 ? <span className="ms-2 text-xs text-danger">{t("integrations.health.streak", { count: conn.errorStreak })}</span> : null}
+                    </dd>
+                  </div>
                   {conn.tokenExpiresAt ? (
                     <div>
                       <dt className="text-xs text-muted-foreground">{t("integrations.tokenExpires")}</dt>
@@ -147,8 +168,8 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               )}
               {conn?.lastError ? <Notice tone="danger">{conn.lastError}</Notice> : null}
 
-              {info.authType === "oauth2" ? (
-                data.missingEnv.length ? (
+              {info.oauthAlternative && !data.oauthAvailable ? null : usesOAuth ? (
+                data.missingEnv.length && !data.oauthAvailable ? (
                   <Notice tone="warning">
                     <p className="font-medium">{t("integrations.notConfiguredTitle")}</p>
                     <p className="mt-1">{t("integrations.notConfiguredBody")}</p>
@@ -173,6 +194,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                 ) : null
               ) : null}
 
+              {info.oauthAlternative && data.oauthAvailable && canManage ? <p className="text-xs text-muted-foreground">{t("integrations.orApiKey")}</p> : null}
               {info.authType === "api_key" && canManage ? (
                 <div className="grid gap-2">
                   <h3 className="text-sm font-medium">{conn ? t("integrations.replaceCredentials") : t("integrations.enterCredentials")}</h3>
@@ -184,6 +206,66 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               {!canManage ? <p className="text-xs text-muted-foreground">{t("integrations.manageHint")}</p> : null}
             </CardBody>
           </Card>
+
+          {!conn ? (
+            <Card>
+              <CardHeader title={t("integrations.setup.title")} description={t("integrations.setup.help")} />
+              <ol className="grid list-decimal gap-2 p-4 ps-8 text-sm">
+                {setupSteps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+                {info.authType === "oauth2" ? (
+                  <>
+                    <li>{t("integrations.setup.oauthEnv", { vars: info.envVars.join(", ") })}</li>
+                    {data.redirectUri ? (
+                      <li>
+                        {t("integrations.setup.oauthRedirect")} <code className="break-all font-mono text-xs" dir="ltr">{data.redirectUri}</code>
+                      </li>
+                    ) : null}
+                    <li>{t("integrations.setup.oauthConnect", { name: info.name })}</li>
+                  </>
+                ) : info.authType === "api_key" ? (
+                  <li>{t("integrations.setup.apiKeyPaste", { fields: (info.fields ?? []).filter((f) => f.required).map((f) => t(`integrations.fields.${f.labelKey ?? f.key}`)).join(", ") })}</li>
+                ) : null}
+              </ol>
+            </Card>
+          ) : null}
+
+          {conn && info.multiAccount ? (
+            <Card>
+              <CardHeader title={t("integrations.accounts.title")} description={t("integrations.accounts.help")} />
+              <div className="p-4">{accounts.length ? <AccountPicker base={base} provider={info.key} accounts={accounts} activeId={activeAccountId} canManage={canManage} /> : <p className="text-sm text-muted-foreground">{t("integrations.accounts.empty")}</p>}</div>
+            </Card>
+          ) : null}
+
+          {conn && info.configFields?.length && canManage ? (
+            <Card>
+              <CardHeader title={t("integrations.settings.title")} description={t(`integrations.providers.${info.key}.settingsHelp`)} />
+              <div className="p-4">
+                <ConnectionSettingsForm
+                  base={base}
+                  provider={info.key}
+                  fields={info.configFields}
+                  values={Object.fromEntries(info.configFields.filter((f) => !f.secret && typeof cfg[f.key] === "string").map((f) => [f.key, cfg[f.key] as string]))}
+                  storedSecrets={secretNames}
+                />
+              </div>
+            </Card>
+          ) : null}
+
+          {usage && (conn || usage.totals.calls > 0) ? (
+            <Card>
+              <CardHeader
+                title={t("integrations.usage.title")}
+                description={t("integrations.usage.cardSummary", { calls: usage.totals.calls, failed: usage.totals.failed, cost: formatCostMicros(usage.totals.costMicros, locale) })}
+                actions={
+                  <Link href={`/${locale}/integrations/${info.key}/usage`} className="text-sm text-primary hover:underline">
+                    {t("integrations.usage.open")}
+                  </Link>
+                }
+              />
+            </Card>
+          ) : null}
 
           {conn || data.previous ? (
             <Card>

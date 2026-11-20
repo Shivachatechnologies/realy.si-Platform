@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export const MARKETING_TABS = ["overview", "campaigns", "content", "social", "seo", "email", "audience", "forms", "automation", "brand"] as const;
+export const MARKETING_TABS = ["overview", "start", "autopilot", "studio", "campaigns", "content", "social", "community", "seo", "blog", "email", "ads", "influencers", "analytics", "audience", "forms", "automation", "brand"] as const;
 export type MarketingTab = (typeof MARKETING_TABS)[number];
 
 /** Secondary navigation shared by all Marketing OS pages. */

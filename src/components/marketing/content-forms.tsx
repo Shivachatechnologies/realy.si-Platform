@@ -12,8 +12,8 @@ import { api } from "@/lib/api-client";
 import { localInputToIso, splitList } from "./format";
 import { useAction } from "./ui";
 
-export const CONTENT_TYPES = ["BLOG", "LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "AD", "LANDING_PAGE", "EMAIL"] as const;
-const LIMITS: Partial<Record<string, number>> = { X: 280, LINKEDIN: 3000, INSTAGRAM: 2200, FACEBOOK: 63206 };
+export const CONTENT_TYPES = ["BLOG", "SEO_ARTICLE", "LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "THREADS", "TIKTOK_SCRIPT", "YOUTUBE_SCRIPT", "VIDEO_SCRIPT", "CAROUSEL", "QUOTE", "GRAPHIC_BRIEF", "NEWSLETTER", "EMAIL", "AD", "LANDING_PAGE", "WEBSITE_COPY", "CASE_STUDY", "PRESS_RELEASE", "PRODUCT_ANNOUNCEMENT", "THOUGHT_LEADERSHIP", "INDUSTRY_REPORT"] as const;
+const LIMITS: Partial<Record<string, number>> = { X: 280, LINKEDIN: 3000, INSTAGRAM: 2200, FACEBOOK: 63206, THREADS: 500 };
 
 type Option = { id: string; name: string };
 

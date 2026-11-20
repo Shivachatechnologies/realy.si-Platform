@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HelpMeButton } from "@/components/guide-kit/help-me";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
+import { aiConfigured } from "@/server/modules/agents/runtime";
 import { notFound } from "next/navigation";
 import { Download, Lock, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +32,7 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/projects
   const t = await getT();
   const w = await workContext("projects", t("modules.projects.title"));
   if (w.gate) return w.gate;
-  const { locale, viewer, org, company, canManage, base, tz } = w;
+  const { locale, viewer, org, company, canManage, canRunAgents, base, tz } = w;
   const task = await getWorkTask(viewer.ctx, org.id, company.id, taskId).catch((err) => {
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
@@ -53,6 +57,7 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/projects
     discussionChannels(viewer.ctx, org.id, company.id).catch(() => []),
   ]);
   const commsBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
+  const helpTask = await latestSubjectTask(viewer.ctx, org.id, company.id, "work_task", task.id);
   const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
   const day = (d: Date | null) => (d ? formatDate(d, locale, "UTC") : "—");
   const hours = (m: number) => t("work.hoursValue", { hours: Math.round((m / 60) * 10) / 10 });
@@ -86,6 +91,24 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/projects
         </nav>
         {canManage ? <DeleteIconButton url={`${base}/tasks/${task.id}`} label={t("work.task.archive")} confirm={t("work.task.confirmArchive")} redirectTo={backHref} /> : null}
       </div>
+      <PageIntro
+        labels={introLabels(t)}
+        what={t("work.intro.task.what")}
+        why={t("work.intro.task.why")}
+        can={t("work.intro.task.can")}
+        accent="info"
+        extra={
+          <HelpMeButton
+            base={commsBase}
+            aiReady={aiConfigured() && canRunAgents}
+            profile="ai_project_manager"
+            subject={{ type: "work_task", id: task.id }}
+            title={`Help me do: ${task.title}`.slice(0, 200)}
+            instructions={`The person needs help doing this task: "${task.title}" (task id ${task.id}${task.project ? `, project "${task.project.name}", project id ${task.project.id}` : ""}).${task.description ? ` Description: ${task.description.slice(0, 2000)}` : ""} Read the project (read_project) for context. Explain in plain words how to get it done: a short step-by-step checklist, what to watch out for, who could help, and what "done" looks like. If it is too big, propose sub-tasks with create_work_task (applied only after approval).`}
+            initial={helpTask}
+          />
+        }
+      />
 
       <Card>
         <CardHeader

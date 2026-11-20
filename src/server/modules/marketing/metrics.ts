@@ -54,4 +54,29 @@ export const MARKETING_METRICS: MetricDefinition[] = [
     href: "/marketing/campaigns",
     compute: (s) => db().marketingCampaign.count({ where: { organizationId: s.organizationId, companyId: s.companyId, status: "ACTIVE", archivedAt: null } }),
   },
+  {
+    ...base,
+    key: "marketing.autopilot_published",
+    labelKey: "marketing.metrics.autopilotPublished",
+    unit: "count",
+    kind: "flow",
+    higherIsBetter: true,
+    href: "/marketing/autopilot",
+    compute: async (s, r) => {
+      const items = await db().marketingAutopilotItem.findMany({ where: { organizationId: s.organizationId, companyId: s.companyId, postId: { not: null }, stage: { in: ["PUBLISHED", "ANALYZED"] } }, select: { postId: true } });
+      if (!items.length) return 0;
+      return db().marketingSocialPostTarget.count({ where: { companyId: s.companyId, postId: { in: items.map((i) => i.postId!) }, status: "PUBLISHED", publishedAt: { gte: r.from, lt: r.to } } });
+    },
+  },
+  {
+    ...base,
+    key: "marketing.ad_spend",
+    labelKey: "marketing.metrics.adSpend",
+    unit: "money",
+    kind: "flow",
+    higherIsBetter: false,
+    href: "/marketing/ads",
+    // Provider-reported spend in the ads' own currencies (minor units); companies normally run ads in their base currency.
+    compute: async (s, r) => (await db().marketingAdMetric.aggregate({ where: { organizationId: s.organizationId, companyId: s.companyId, date: { gte: r.from, lt: r.to } }, _sum: { spendMinor: true } }))._sum.spendMinor ?? 0n,
+  },
 ];

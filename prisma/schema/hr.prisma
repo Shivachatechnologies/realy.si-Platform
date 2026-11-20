@@ -99,10 +99,11 @@ model HrJob {
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company       Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  department    Department?   @relation("HrJobDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
-  hiringManager Employee?     @relation("HrJobHiringManager", fields: [hiringManagerId, companyId], references: [id, companyId], onDelete: NoAction)
+  company       Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department    Department?      @relation("HrJobDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  hiringManager Employee?        @relation("HrJobHiringManager", fields: [hiringManagerId, companyId], references: [id, companyId], onDelete: NoAction)
   candidates    HrCandidate[]
+  journey       HrHiringJourney?
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -1019,4 +1020,28 @@ model HrPayslipLine {
 
   @@index([payslipId, position])
   @@map("hr_payslip_lines")
+}
+
+/// Guided hiring journey (/hr/hire): where a person is in "role → description → publish → candidates → interviews → hire".
+/// The job, candidates and interviews are the real records; this only remembers the step and the plain-language brief.
+model HrHiringJourney {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  jobId          String    @unique @map("job_id") @db.Uuid
+  /// role | describe | publish | candidates | interviews | hire | done
+  step           String    @default("describe")
+  /// What the person said the new hire will do (input for the AI job description).
+  brief          String    @default("")
+  createdById    String    @map("created_by_id") @db.Uuid
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  job     HrJob   @relation(fields: [jobId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([jobId, companyId])
+  @@index([organizationId, companyId, completedAt])
+  @@map("hr_hiring_journeys")
 }

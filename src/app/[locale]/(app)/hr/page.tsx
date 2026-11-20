@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Sparkles } from "lucide-react";
+import { HelpMeButton } from "@/components/guide-kit/help-me";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
+import { HiringFunnel, TeamHealthStrip } from "@/components/hr/people-visuals";
+import { aiConfigured } from "@/server/modules/agents/runtime";
+import { hiringPipeline, teamHealth } from "@/server/modules/hr/hiring";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { AiPanel } from "@/components/hr/ai-panel";
@@ -29,10 +37,54 @@ export default async function HrOverviewPage() {
     access!.manage ? upcomingInterviews(viewer.ctx, org.id, company.id) : Promise.resolve([]),
     access!.agentsRun || access!.manage ? listSubjectTasks(viewer.ctx, org.id, company.id, "hr_insights", company.id, 5).catch(() => []) : Promise.resolve([]),
   ]);
+  // An empty HR area starts with the guided hiring journey ("Do you need to hire someone?").
+  if (access!.manage && summary.headcount === 0 && summary.openPositions === 0 && summary.activeCandidates === 0) redirect(`/${locale}/hr/hire`);
+  const [health, pipeline, helpTask] = await Promise.all([
+    teamHealth(viewer.ctx, org.id, company.id),
+    access!.manage ? hiringPipeline(viewer.ctx, org.id, company.id) : Promise.resolve(null),
+    latestSubjectTask(viewer.ctx, org.id, company.id, "hr_overview", company.id),
+  ]);
   const maxDept = Math.max(1, ...summary.byDepartment.map((d) => d.count));
   const n = (v: number) => formatNumber(v, locale);
   return (
     <HrFrame {...frame}>
+      <PageIntro
+        labels={introLabels(t)}
+        what={t("hr.intro.overview.what")}
+        why={t("hr.intro.overview.why")}
+        can={t("hr.intro.overview.can")}
+        next={access!.manage ? { label: t("hr.intro.overview.next"), href: `/${locale}/hr/hire` } : { label: t("hr.intro.overview.nextSelf"), href: `/${locale}/hr/me` }}
+        accent="success"
+      />
+      <TeamHealthStrip
+        data={health}
+        labels={{ headcount: t("hr.hire.health.headcount"), onboarding: (n) => t("hr.hire.health.onboarding", { count: n }), onLeave: t("hr.hire.health.onLeave"), openRoles: t("hr.hire.health.openRoles"), applicants: t("hr.hire.health.applicants") }}
+        hrefs={{ people: `/${locale}/hr/employees`, leave: `/${locale}/hr/leave`, hiring: `/${locale}/hr/hire` }}
+      />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        {pipeline ? (
+          <Card>
+            <CardHeader title={t("hr.hire.pipeline.title")} description={t("hr.hire.pipeline.hintAll")} actions={<Link href={`/${locale}/hr/hire`} className="text-xs text-primary hover:underline">{t("hr.tabs.hire")}</Link>} />
+            <CardBody>
+              <HiringFunnel counts={pipeline} labels={{ APPLIED: t("hr.hire.stage.APPLIED"), SCREENING: t("hr.hire.stage.SCREENING"), INTERVIEW: t("hr.hire.stage.INTERVIEW"), OFFER: t("hr.hire.stage.OFFER"), HIRED: t("hr.hire.stage.HIRED") }} title={t("hr.hire.pipeline.title")} emptyText={t("hr.hire.pipeline.empty")} />
+            </CardBody>
+          </Card>
+        ) : null}
+        <Card>
+          <CardHeader title={t("hr.hire.help.title")} description={t("hr.intro.overview.helpHint")} icon={<Sparkles />} />
+          <CardBody>
+            <HelpMeButton
+              base={base}
+              aiReady={aiConfigured() && !!access!.agentsRun}
+              profile="people_analyst"
+              subject={{ type: "hr_overview", id: company.id }}
+              title="Help with my team"
+              instructions="The person is on the HR overview page and is not an HR expert. Call read_headcount_summary and read_open_jobs, then explain in plain words how the team is doing (headcount, who is out, open roles, attrition) and the 3 most useful things to do next, each with the page in Realy.si where they can do it (/hr/hire to hire, /hr/leave for time off, /hr/onboarding for new people, /hr/performance for reviews)."
+              initial={helpTask}
+            />
+          </CardBody>
+        </Card>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label={t("hr.metrics.headcount")} value={n(summary.headcount)} hint={t("hr.overview.onboardingCount", { count: summary.byStatus.ONBOARDING ?? 0 })} />
         <Stat label={t("hr.overview.newHires90")} value={n(summary.newHires90d)} />

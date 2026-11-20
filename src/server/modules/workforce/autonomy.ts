@@ -4,7 +4,7 @@ import { getTool } from "@/server/modules/tools/registry";
 export const AUTONOMY_LEVELS = ["READ_ONLY", "RECOMMEND", "PREPARE", "EXECUTE_WITH_APPROVAL", "AUTONOMOUS_LOW_RISK"] as const satisfies readonly AiAutonomyLevel[];
 
 /** Autonomous tools that still create work (internal writes); a read-only employee is not offered them. */
-const INTERNAL_WRITES = new Set(["delegate_to_ai_employee"]);
+const INTERNAL_WRITES = new Set(["delegate_to_ai_employee", "escalate_to_manager", "report_to_manager"]);
 
 /**
  * Which of an employee's tools are offered at an autonomy level. This only narrows the offer: every call still goes

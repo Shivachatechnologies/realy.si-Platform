@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { DeleteButton, EditObjectiveDialog, MilestoneToggle, NewKeyResultForm, NewMilestoneForm, NewObjectiveForm, ObjectiveStatusSelect } from "@/components/objectives/objective-forms";
 import { KeyResultList } from "@/components/objectives/key-result-list";
@@ -48,10 +49,7 @@ export default async function ObjectivesPage({ searchParams }: { searchParams: P
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{t("modules.objectives.title")}</h1>
-        <p className="text-muted-foreground">{t("objectives.subtitle")}</p>
-      </div>
+      <PageHeader variant="editorial" world="projects" eyebrow={t("dna.worlds.projects")} title={t("modules.objectives.title")} description={t("objectives.subtitle")} />
       <ObjectivesTabs locale={locale} active="objectives" />
     </div>
   );

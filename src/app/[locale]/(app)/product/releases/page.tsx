@@ -4,7 +4,8 @@ import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ActionButton } from "@/components/work/actions";
-import { ProductTabs } from "@/components/work/area-tabs";
+import { ProductAreaTabs } from "@/components/work/product-nav";
+import { HelpStrip } from "@/components/work/product-studio";
 import { workContext } from "@/components/work/context";
 import { ReleaseEditor, ReleaseForm } from "@/components/work/product-forms";
 import { DeleteIconButton } from "@/components/work/task-forms";
@@ -13,6 +14,7 @@ import { getT } from "@/i18n/server";
 import { formatDate } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { listReleases } from "@/server/modules/work/product";
+import { productOptions } from "@/server/modules/work/product-core";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("work.product.tabs.releases") };
@@ -25,16 +27,18 @@ export default async function ReleasesPage() {
   const w = await workContext("projects", t("work.product.title"), t("work.product.subtitle"));
   if (w.gate) return w.gate;
   const { locale, viewer, org, company, canManage, base } = w;
-  const [releases, features] = await Promise.all([
+  const [releases, features, products] = await Promise.all([
     listReleases(viewer.ctx, org.id, company.id),
     db().productFeature.findMany({ where: { organizationId: org.id, companyId: company.id, archivedAt: null, status: { not: "CANCELLED" } }, orderBy: { title: "asc" }, take: 500, select: { id: true, title: true } }),
+    productOptions(org.id, company.id),
   ]);
   const featureOpts = features.map((f) => ({ id: f.id, name: f.title }));
   const changelog = `/${locale}/changelog/${company.id}`;
   return (
     <div className="mx-auto grid max-w-[1100px] min-w-0 gap-4">
       {w.header}
-      <ProductTabs t={t} locale={locale} active="releases" />
+      <ProductAreaTabs t={t} locale={locale} active="releases" />
+      <HelpStrip t={t} area="releasesAll" />
       <Card>
         <CardHeader
           title={t("work.product.tabs.releases")}
@@ -49,7 +53,7 @@ export default async function ReleasesPage() {
         {canManage ? (
           <details className="border-b">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.product.addRelease")}</summary>
-            <ReleaseForm base={base} features={featureOpts} />
+            <ReleaseForm base={base} features={featureOpts} products={products} />
           </details>
         ) : null}
         {releases.length ? (
@@ -59,6 +63,11 @@ export default async function ReleasesPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono font-semibold">{r.version}</span>
                   {r.name ? <span className="font-medium">{r.name}</span> : null}
+                  {r.product ? (
+                    <Link href={`/${locale}/product/${r.product.id}/releases`}>
+                      <Badge tone="accent">{r.product.name}</Badge>
+                    </Link>
+                  ) : null}
                   <Badge tone={RELEASE_TONE[r.status]}>{t(`work.releaseStatus.${r.status}`)}</Badge>
                   {r.publishedAt ? <Badge tone="success">{t("work.product.published")}</Badge> : null}
                   <span className="text-xs text-muted-foreground">{r.releaseDate ? formatDate(r.releaseDate, locale, "UTC") : t("work.product.noDate")}</span>
@@ -74,7 +83,8 @@ export default async function ReleasesPage() {
                         releaseId={r.id}
                         features={[...featureOpts, ...r.features.filter((f) => !featureOpts.some((o) => o.id === f.id)).map((f) => ({ id: f.id, name: f.title }))]}
                         published={!!r.publishedAt}
-                        initial={{ version: r.version, name: r.name ?? "", releaseDate: r.releaseDate ? r.releaseDate.toISOString().slice(0, 10) : "", status: r.status, notes: r.notes ?? "", featureIds: r.features.map((f) => f.id) }}
+                        products={products}
+                        initial={{ version: r.version, name: r.name ?? "", releaseDate: r.releaseDate ? r.releaseDate.toISOString().slice(0, 10) : "", status: r.status, notes: r.notes ?? "", featureIds: r.features.map((f) => f.id), productId: r.productId ?? "" }}
                       />
                     ) : null}
                     {canManage && !r.publishedAt ? <DeleteIconButton url={`${base}/product/releases/${r.id}`} label={t("work.delete")} confirm={t("work.confirmDelete")} /> : null}

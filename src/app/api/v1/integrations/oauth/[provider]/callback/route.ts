@@ -26,11 +26,12 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/v1/integrati
   try {
     const state = readIntegrationState(req.cookies.get(INTEGRATION_OAUTH_COOKIE)?.value, provider, q.get("state"));
     locale = closestLocale(state.locale);
-    if (q.get("error") || !q.get("code")) return done(`oauthError=${q.get("error") === "access_denied" ? "access_denied" : "provider_error"}`);
+    const code = q.get("code") ?? q.get("auth_code");
+    if (q.get("error") || !code) return done(`oauthError=${q.get("error") === "access_denied" ? "access_denied" : "provider_error"}`);
     const session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
     if (!session || session.mfaPending || session.userId !== state.userId) return done("oauthError=state_mismatch");
     const requestCtx = userContext(session.userId, { ip: clientIp(req), userAgent: req.headers.get("user-agent"), sessionId: session.id, mfaVerifiedAt: session.mfaVerifiedAt });
-    await completeOAuthConnection(requestCtx, state, q.get("code")!, { realmId: q.get("realmId") });
+    await completeOAuthConnection(requestCtx, state, code, { realmId: q.get("realmId") });
     return done("connected=1");
   } catch (err) {
     if (err instanceof IntegrationOAuthError) return done(`oauthError=${err.code}`);

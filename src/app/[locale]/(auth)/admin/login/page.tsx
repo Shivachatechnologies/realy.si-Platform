@@ -25,7 +25,7 @@ export default async function AdminLoginPage() {
             <ShieldCheck className="size-3.5" aria-hidden />
             {t("admin.title")}
           </span>
-          <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("admin.signInTitle")}</h1>
+          <h1 className="font-display text-display-lg">{t("admin.signInTitle")}</h1>
           <p className="text-muted-foreground">{t("admin.signInSubtitle")}</p>
         </div>
         <SignInForm variant="admin" />

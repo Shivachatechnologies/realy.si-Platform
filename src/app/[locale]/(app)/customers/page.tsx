@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Network } from "lucide-react";
 import { AccountsList } from "@/components/crm/accounts-list";
 import { PageFrame, crmContext } from "@/components/crm/shell";
+import { PageIntro } from "@/components/crm/page-intro";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -42,7 +43,10 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
       ) : !c.canRead ? (
         <Notice tone="warning">{t("errors.forbidden")}</Notice>
       ) : (
-        <AccountsList path={`/${locale}/customers`} query={query} fixedType="CUSTOMER" />
+        <>
+          <PageIntro ns="crm.intro.customers" href={`/${locale}/sales/start`} />
+          <AccountsList path={`/${locale}/customers`} query={query} fixedType="CUSTOMER" />
+        </>
       )}
     </PageFrame>
   );

@@ -8,6 +8,14 @@ import { MetricTile } from "@/components/bi/metric-tile";
 import { ActionButton } from "@/components/workforce/action-button";
 import { AiAvatar } from "@/components/workforce/avatar";
 import { BriefingForm } from "@/components/workforce/briefing-form";
+import { AskCeoForm } from "@/components/workforce/ask-ceo-form";
+import { BriefingCard } from "@/components/workforce/briefing-card";
+import { CeoActions, type CeoActionsData } from "@/components/workforce/ceo-actions";
+import { IntelligenceTabs } from "@/components/workforce/intelligence-tabs";
+import { CompanyNetwork } from "@/components/workforce/company-network";
+import { HeaderStrip } from "@/components/workforce/header-strip";
+import { Aurora, LiveDot, SystemPulse, TypingText, AnimatedProgress } from "@/components/motion";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { PageHeader } from "@/components/workforce/page-header";
 import { PageState, Pager, qs } from "@/components/workforce/states";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +32,10 @@ import { metricContext, metricValues } from "@/server/modules/bi/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { BRIEFING_MODES, dailyBriefingSchedule, listBriefings } from "@/server/modules/workforce/briefings";
+import type { BriefingSections } from "@/server/modules/workforce/briefing-card";
+import { SUGGESTED_QUESTIONS, listConversations } from "@/server/modules/workforce/ceo-chat";
+import { listEmployees, listMembers } from "@/server/modules/workforce/service";
+import { companyNetwork } from "@/server/modules/workforce/network";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,14 +48,22 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
   const locale = await getLocale();
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
-  const header = <PageHeader title={t("intelligence.title")} subtitle={t("intelligence.subtitle")} />;
+  const header = (
+    <>
+      <PageHeader title={t("intelligence.title")} subtitle={t("intelligence.subtitle")} />
+      <IntelligenceTabs locale={locale} active="overview" labels={{ overview: t("intelligence.tabs.overview"), ceo: t("intelligence.tabs.ceo"), growth: t("intelligence.tabs.growth") }} />
+    </>
+  );
   if (!company) return <PageState header={header} kind="empty" message={t("company.empty")} />;
   const chain = await companyChain(db(), org.id, company.id);
-  const [canRead, canRun, canManage, canAnalytics] = await Promise.all([
+  const [canRead, canRun, canManage, canAnalytics, canProjects, canApprovalsRead, canDecide] = await Promise.all([
     can(viewer.ctx, "agents.read", chain),
     can(viewer.ctx, "agents.run", chain),
     can(viewer.ctx, "agents.manage", chain),
     can(viewer.ctx, "analytics.read", chain),
+    can(viewer.ctx, "projects.manage", chain),
+    can(viewer.ctx, "approvals.read", chain),
+    can(viewer.ctx, "approvals.decide", chain),
   ]);
   if (!canRead) return <PageState header={header} kind="forbidden" message={t("errors.forbidden")} />;
   const sp = Object.fromEntries(Object.entries(await searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])) as Record<string, string | undefined>;
@@ -66,6 +86,44 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
     const tiles = await metricValues(mc.metrics, mc.scope, resolveRange("7d"));
     live = { issues: await criticalIssues(viewer.ctx, mc.chain, mc.scope, mc.metrics, tiles), tiles, currency: mc.scope.currency };
   }
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const canObjectives = await can(viewer.ctx, "objectives.read", chain);
+  const [activity, objectives, recommendations, network] = await Promise.all([
+    db().agentTask.findMany({
+      where: { ...scope, status: { in: ["RUNNING", "QUEUED"] } },
+      orderBy: [{ status: "desc" }, { createdAt: "asc" }],
+      take: 8,
+      select: { id: true, title: true, status: true, startedAt: true, profile: true, aiEmployee: { select: { id: true, name: true, initials: true } } },
+    }),
+    canObjectives ? db().objective.findMany({ where: { ...scope, status: "ACTIVE" }, orderBy: { targetDate: "asc" }, take: 4, select: { id: true, title: true, milestones: { select: { completedAt: true } } } }) : Promise.resolve(null),
+    canAnalytics ? db().growthInsight.findMany({ where: { ...scope, status: "OPEN" }, orderBy: [{ severity: "desc" }, { createdAt: "desc" }], take: 4, select: { id: true, signal: true, severity: true, taskId: true } }) : Promise.resolve(null),
+    companyNetwork(viewer.ctx, chain, org.id, company.id),
+  ]);
+  const runningCount = activity.filter((a) => a.status === "RUNNING").length;
+  const [threads, team, members, workTasks, aiTasks, approvals] = await Promise.all([
+    listConversations(viewer.ctx, org.id, company.id, { limit: 5 }),
+    listEmployees(viewer.ctx, org.id, company.id),
+    listMembers(viewer.ctx, org.id, company.id),
+    canProjects
+      ? db().workTask.findMany({
+          where: { ...scope, archivedAt: null, status: { notIn: ["DONE", "CANCELLED"] } },
+          orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { priority: "desc" }],
+          take: 15,
+          select: { id: true, title: true, priority: true, assigneeId: true, dueDate: true },
+        })
+      : Promise.resolve([]),
+    db().agentTask.findMany({ where: { ...scope, status: { in: ["QUEUED", "FAILED"] } }, orderBy: { id: "desc" }, take: 10, select: { id: true, title: true, status: true, aiEmployeeId: true } }),
+    canApprovalsRead ? db().approval.findMany({ where: { ...scope, status: "PENDING", expiresAt: { gt: now } }, orderBy: { expiresAt: "asc" }, take: 10, select: { id: true, summary: true, risk: true } }) : Promise.resolve([]),
+  ]);
+  const actionsData: CeoActionsData = {
+    employees: team.map((e) => ({ id: e.id, name: e.name, status: e.status, autonomy: e.autonomy, monthlyTokenBudget: e.monthlyTokenBudget })),
+    members,
+    workTasks: workTasks.map((w) => ({ id: w.id, title: w.title, priority: w.priority, assigneeId: w.assigneeId, dueDate: w.dueDate ? w.dueDate.toISOString().slice(0, 10) : null, overdue: !!w.dueDate && w.dueDate < today })),
+    aiTasks,
+    approvals,
+    can: { run: canRun, manageAgents: canManage, projects: canProjects, decide: canDecide },
+  };
   const selected = (sp.briefing ? history.data.find((b) => b.id === sp.briefing) : null) ?? history.data[0] ?? null;
   const selectedTask = selected?.task ?? null;
   const active = history.data.some((b) => b.task && (b.task.status === "QUEUED" || b.task.status === "RUNNING")) || delegated.some((d) => d.status === "QUEUED" || d.status === "RUNNING");
@@ -79,6 +137,146 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
       {header}
       {!configured ? <Notice tone="warning">{t("agentTasks.notConfigured")}</Notice> : null}
       {!canAnalytics ? <Notice tone="warning">{t("intelligence.needsAnalytics")}</Notice> : null}
+      <HeaderStrip
+        t={t}
+        what={t("intelligence.strip.what")}
+        why={t("intelligence.strip.why")}
+        can={t("intelligence.strip.can")}
+        next={ceo ? t("intelligence.strip.nextAsk") : t("intelligence.strip.nextHire")}
+        action={
+          ceo ? (
+            <Button asChild size="sm">
+              <Link href={`/${locale}/intelligence/ceo`}>{t("intelligence.chat.title")}</Link>
+            </Button>
+          ) : canManage ? (
+            <Button asChild size="sm">
+              <Link href={`/${locale}/workforce/hire?profile=ai_ceo`}>{t("intelligence.hireCeo")}</Link>
+            </Button>
+          ) : null
+        }
+      />
+
+      <section className="relative isolate overflow-hidden rounded-xl border" aria-labelledby="command-center">
+        <Aurora className="absolute inset-0 -z-10" />
+        <div className="grid gap-4 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="command-center" className="text-base font-semibold tracking-tight">
+              {t("intelligence.center.title")}
+            </h2>
+            <SystemPulse active={runningCount > 0} label={t("intelligence.center.pulse", { count: runningCount })} detail={activity.length - runningCount ? t("workforce.live.queued", { count: activity.length - runningCount }) : undefined} />
+          </div>
+          {live ? (
+            <StatGrid>
+              {(["finance.revenue", "finance.cash_balance", "crm.open_pipeline", "crm.new_leads"] as const).map((k, i) => {
+                const m = live!.tiles.find((x) => x.key === k);
+                if (!m) return null;
+                return (
+                  <StatTile
+                    key={k}
+                    index={i}
+                    label={t(m.labelKey)}
+                    {...(m.unit === "money" ? { money: { amountMinor: Math.round(m.value ?? 0), currency: live!.currency } } : { value: m.value ?? undefined })}
+                    delta={m.changePct === null ? null : m.changePct / 100}
+                    deltaLabel={t("intelligence.center.vsPrev")}
+                    positive={m.higherIsBetter === false ? "down" : "up"}
+                    href={m.href ? `/${locale}${m.href}` : undefined}
+                  />
+                );
+              })}
+              <StatTile index={4} label={t("intelligence.center.aiWorking")} value={runningCount} live={runningCount > 0} href={`/${locale}/tasks?status=RUNNING`} highlight={runningCount > 0} />
+            </StatGrid>
+          ) : null}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+            <Card variant="glass">
+              <CardHeader title={t("intelligence.network.title")} description={t("intelligence.network.hint")} />
+              <CardBody className="grid place-items-center">
+                {network.departments.length ? <CompanyNetwork data={network} t={t} locale={locale} companyName={company.name} /> : <p className="text-sm text-muted-foreground">{t("intelligence.network.empty")}</p>}
+              </CardBody>
+            </Card>
+            <div className="grid content-start gap-4">
+              <Card variant="glass">
+                <CardHeader title={t("intelligence.center.activity")} description={t("intelligence.center.activityHint")} />
+                {activity.length === 0 ? (
+                  <CardBody className="text-sm text-muted-foreground">{t("intelligence.center.idle")}</CardBody>
+                ) : (
+                  <ul className="divide-y text-sm">
+                    {activity.map((a) => (
+                      <li key={a.id}>
+                        <Link href={`/${locale}/tasks/${a.id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-muted/40">
+                          {a.aiEmployee ? <AiAvatar id={a.aiEmployee.id} initials={a.aiEmployee.initials} size="sm" working={a.status === "RUNNING"} /> : <LiveDot tone="neutral" pulse={false} />}
+                          <span className="grid min-w-0 flex-1">
+                            <span className="truncate text-xs text-muted-foreground">{a.aiEmployee?.name ?? t(`profiles.${a.profile}.name`)}</span>
+                            {a.status === "RUNNING" ? <TypingText text={a.title} className="truncate" /> : <span className="truncate">{a.title}</span>}
+                          </span>
+                          <LiveDot tone={a.status === "RUNNING" ? "primary" : "warning"} pulse={a.status === "RUNNING"} label={t(`agentTasks.status.${a.status}`)} />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+              {recommendations ? (
+                <Card variant="glass">
+                  <CardHeader
+                    title={t("intelligence.center.recommendations")}
+                    actions={
+                      <Link className="text-xs text-primary hover:underline" href={`/${locale}/intelligence/growth`}>
+                        {t("intelligence.tabs.growth")}
+                      </Link>
+                    }
+                  />
+                  <CardBody className="text-sm">
+                    {recommendations.length === 0 ? (
+                      <p className="text-muted-foreground">{t("growth.open.empty")}</p>
+                    ) : (
+                      <ul className="grid gap-1.5">
+                        {recommendations.map((r) => (
+                          <li key={r.id} className="flex items-center gap-2">
+                            <LiveDot tone={r.severity === "CRITICAL" ? "danger" : r.severity === "WARNING" ? "warning" : "info"} pulse={r.severity === "CRITICAL"} />
+                            <Link className="min-w-0 flex-1 truncate hover:underline" href={r.taskId ? `/${locale}/tasks/${r.taskId}` : `/${locale}/intelligence/growth`}>
+                              {t(`growth.signals.${r.signal}.title`)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardBody>
+                </Card>
+              ) : null}
+              {objectives ? (
+                <Card variant="glass">
+                  <CardHeader
+                    title={t("intelligence.center.goals")}
+                    actions={
+                      <Link className="text-xs text-primary hover:underline" href={`/${locale}/objectives/goals`}>
+                        {t("analytics.ceo.openGoals")}
+                      </Link>
+                    }
+                  />
+                  <CardBody className="grid gap-2 text-sm">
+                    {objectives.length === 0 ? (
+                      <p className="text-muted-foreground">{t("analytics.ceo.noObjectives")}</p>
+                    ) : (
+                      objectives.map((o) => {
+                        const done = o.milestones.filter((m) => m.completedAt).length;
+                        return (
+                          <div key={o.id} className="grid gap-1">
+                            <span className="flex justify-between gap-2">
+                              <span className="truncate">{o.title}</span>
+                              <span className="text-xs text-muted-foreground">{t("analytics.ceo.milestones", { done, total: o.milestones.length })}</span>
+                            </span>
+                            <AnimatedProgress value={o.milestones.length ? (done / o.milestones.length) * 100 : 0} label={o.title} />
+                          </div>
+                        );
+                      })
+                    )}
+                  </CardBody>
+                </Card>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -141,6 +339,7 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
                     </span>
                   ) : null}
                 </div>
+                {selected.sections && (selected.sections as unknown as BriefingSections).generatedAt ? <BriefingCard s={selected.sections as unknown as BriefingSections} t={t} locale={locale} /> : null}
                 {selectedTask?.output ? (
                   <>
                     <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{selectedTask.output}</div>
@@ -169,6 +368,41 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
         <Card>
           <CardHeader title={t("intelligence.criticalIssues")} description={t("intelligence.criticalIssuesHint")} />
           <CardBody>{live ? <IssueList issues={live.issues} t={t} locale={locale} emptyLabel={t("intelligence.noIssues")} /> : <p className="text-sm text-muted-foreground">{t("intelligence.needsAnalytics")}</p>}</CardBody>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader
+            title={t("intelligence.chat.title")}
+            description={t("intelligence.chat.subtitle")}
+            actions={
+              <Link className="text-xs text-primary hover:underline" href={`/${locale}/intelligence/ceo`}>
+                {t("intelligence.chat.allThreads")}
+              </Link>
+            }
+          />
+          <CardBody className="grid gap-3">
+            {canRun && configured ? <AskCeoForm apiBase={apiBase} suggestions={SUGGESTED_QUESTIONS.map((k) => t(`intelligence.chat.suggestions.${k}`))} compact /> : <p className="text-sm text-muted-foreground">{configured ? t("errors.forbidden") : t("agentTasks.notConfigured")}</p>}
+            {threads.data.length ? (
+              <ul className="grid gap-1 text-sm">
+                {threads.data.map((c) => (
+                  <li key={c.id}>
+                    <Link className="hover:underline" href={`/${locale}/intelligence/ceo?c=${c.id}`}>
+                      {c.title}
+                    </Link>
+                    <span className="ms-2 text-xs text-muted-foreground">{formatDateTime(c.updatedAt, locale, tz)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </CardBody>
+        </Card>
+        <Card className="lg:col-span-2">
+          <CardHeader title={t("intelligence.actions.title")} description={t("intelligence.actions.hint")} />
+          <CardBody>
+            <CeoActions apiBase={apiBase} data={actionsData} />
+          </CardBody>
         </Card>
       </div>
 

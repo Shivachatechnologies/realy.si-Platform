@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { AbSettings, VariantForm } from "@/components/marketing/studio-forms";
+import { Notice } from "@/components/ui/notice";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -135,6 +137,37 @@ export default async function EmailCampaignPage({ params, searchParams }: PagePr
             </TBody>
           </Table>
         )}
+      </Card>
+      <Card>
+        <CardHeader title={t("marketing.studio.email.abTitle")} description={t("marketing.studio.email.abHint")} />
+        <div className="grid gap-4 p-4 lg:grid-cols-2">
+          <div className="grid content-start gap-3">
+            {!d.providerReady ? <Notice tone="warning">{t("marketing.studio.email.providerNotReady")}</Notice> : null}
+            {editable ? <AbSettings base={base} id={c.id} initial={{ provider: c.provider, abEnabled: c.abEnabled, abTestPercent: c.abTestPercent, abMetric: c.abMetric, abWaitHours: c.abWaitHours }} /> : <p className="text-sm">{t(`marketing.studio.email.providers.${c.provider}`)}{c.abEnabled ? ` · ${t("marketing.studio.email.abEnabled")}` : ""}</p>}
+            {c.abPhase ? <p className="text-xs text-muted-foreground">{t(`marketing.studio.email.phase.${c.abPhase}`)}</p> : null}
+          </div>
+          <div className="grid content-start gap-3">
+            <ul className="grid gap-2 text-sm">
+              {c.variants.map((v) => {
+                const r = d.variantStats[v.id];
+                return (
+                  <li key={v.id} className={`grid gap-1 rounded-md border p-2 ${c.abWinnerVariantId === v.id ? "border-success" : ""}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">
+                        {v.label}: {v.subject}
+                      </span>
+                      {c.abWinnerVariantId === v.id ? <span className="text-xs text-success">{t("marketing.studio.email.winner")}</span> : null}
+                    </div>
+                    {r ? <p className="text-xs text-muted-foreground">{t("marketing.studio.email.variantStats", { sent: r.sent, open: (r.openRate * 100).toFixed(1), click: (r.clickRate * 100).toFixed(1) })}</p> : null}
+                    {editable ? <ActionButton path={`${base}/email/campaigns/${c.id}/variants/${v.id}`} method="DELETE" variant="ghost" label={t("marketing.common.delete")} confirm={t("marketing.common.confirmDelete")} /> : null}
+                  </li>
+                );
+              })}
+            </ul>
+            {editable && c.variants.length < 4 ? <VariantForm base={base} emailCampaignId={c.id} /> : null}
+            <p className="text-[11px] text-muted-foreground">{t("marketing.studio.email.tokens")}</p>
+          </div>
+        </div>
       </Card>
     </MarketingShell>
   );

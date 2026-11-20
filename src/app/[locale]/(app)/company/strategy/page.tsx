@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { CheckCircle2, Circle, FolderKanban, Target } from "lucide-react";
 import { KrStatusBadge, ProgressBar } from "@/components/objectives/progress";
@@ -27,10 +28,7 @@ export default async function StrategyPage() {
   const { viewer, org, company } = await requireOrgContext(locale);
   const header = (
     <div className="grid gap-3">
-      <div className="grid gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">{t("strategy.title")}</h1>
-        <p className="text-muted-foreground">{t("strategy.subtitle")}</p>
-      </div>
+      <PageHeader variant="editorial" world="command" eyebrow={t("dna.worlds.command")} title={t("strategy.title")} description={t("strategy.subtitle")} />
       <CompanyTabs locale={locale} active="strategy" />
     </div>
   );

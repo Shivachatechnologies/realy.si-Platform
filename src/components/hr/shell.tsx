@@ -2,6 +2,7 @@ import "server-only";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
+import { PageIntro } from "@/components/guide-kit/page-intro";
 import type { AppLocale } from "@/i18n/config";
 import { getT } from "@/i18n/server";
 import type { Translate } from "@/i18n/translate";
@@ -22,7 +23,7 @@ export function visibleTabs(access: HrAccess | null): HrTab[] {
   if (!access) return [];
   return HR_TABS.filter((k) => {
     if (k === "payroll") return access.payrollRead;
-    if (["recruiting", "onboarding"].includes(k)) return access.manage;
+    if (["recruiting", "onboarding", "hire"].includes(k)) return access.manage;
     if (k === "me") return !!access.me;
     return access.read;
   });
@@ -30,6 +31,32 @@ export function visibleTabs(access: HrAccess | null): HrTab[] {
 
 export function hrTabLabels(t: Translate) {
   return Object.fromEntries(HR_TABS.map((k) => [k, t(`hr.tabs.${k}`)])) as Record<HrTab, string>;
+}
+
+/** "Next step" link of each tab's intro strip (null: the page itself is the next step). */
+const HR_NEXT: Partial<Record<HrTab, string>> = {
+  employees: "/hr/hire",
+  recruiting: "/hr/hire",
+  onboarding: "/hr/employees?status=ONBOARDING",
+  time: "/hr/leave",
+  leave: "/hr/me",
+  policies: "/hr/me",
+  requests: "/hr/me",
+  me: "/hr/leave",
+};
+const ORG_NEXT: Partial<Record<OrgTab, string>> = { structure: "/organization/chart", chart: "/hr/employees", roles: "/organization" };
+
+function TabIntro({ t, locale, prefix, next }: { t: Translate; locale: string; prefix: string; next?: string }) {
+  return (
+    <PageIntro
+      labels={{ what: t("guideKit.intro.what"), why: t("guideKit.intro.why"), can: t("guideKit.intro.can"), next: t("guideKit.intro.next") }}
+      what={t(`${prefix}.what`)}
+      why={t(`${prefix}.why`)}
+      can={t(`${prefix}.can`)}
+      next={next ? { label: t(`${prefix}.next`), href: `/${locale}${next}` } : undefined}
+      accent="success"
+    />
+  );
 }
 
 /** Page frame for /hr/*: title, tabs and the no-company / forbidden states. Returns null children when blocked. */
@@ -56,6 +83,7 @@ export function HrFrame({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const showIntro = hasCompany && allowed && tab !== "overview" && tab !== "hire";
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -66,6 +94,7 @@ export function HrFrame({
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
       {hasCompany && access?.read ? <HrTabs locale={locale} active={tab} labels={hrTabLabels(t)} visible={visibleTabs(access)} /> : null}
+      {showIntro ? <TabIntro t={t} locale={locale} prefix={`hr.intro.${tab}`} next={HR_NEXT[tab]} /> : null}
       {!hasCompany ? (
         <Card>
           <p className="p-4 text-muted-foreground">{t("company.empty")}</p>
@@ -90,6 +119,7 @@ export function OrgFrame({ t, locale, tab, hasCompany, allowed, children, action
         {actions}
       </div>
       {hasCompany && allowed ? <OrgTabs locale={locale} active={tab} labels={Object.fromEntries(ORG_TABS.map((k) => [k, t(`hr.org.tabs.${k}`)])) as Record<OrgTab, string>} /> : null}
+      {hasCompany && allowed ? <TabIntro t={t} locale={locale} prefix={`hr.intro.org_${tab}`} next={ORG_NEXT[tab]} /> : null}
       {!hasCompany ? (
         <Card>
           <p className="p-4 text-muted-foreground">{t("company.empty")}</p>

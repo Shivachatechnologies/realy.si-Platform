@@ -10,7 +10,16 @@ export interface ProviderConnection {
 }
 
 /** Integrations provider keys used by marketing. */
-export const SOCIAL_PROVIDER_KEYS = { LINKEDIN: "linkedin", X: "x", INSTAGRAM: "instagram", FACEBOOK: "facebook" } as const;
+export const SOCIAL_PROVIDER_KEYS = {
+  LINKEDIN: "linkedin",
+  X: "x",
+  INSTAGRAM: "instagram",
+  FACEBOOK: "facebook",
+  YOUTUBE: "youtube",
+  TIKTOK: "tiktok",
+  THREADS: "threads",
+  PINTEREST: "pinterest",
+} as const;
 
 /** The company's connection for a provider, from the Integrations module (fresh token, refreshed when near expiry). */
 export async function getMarketingConnection(organizationId: string, companyId: string, providerKey: string): Promise<ProviderConnection | null> {
@@ -18,3 +27,14 @@ export async function getMarketingConnection(organizationId: string, companyId: 
 }
 
 export const isUsable = (c: ProviderConnection | null): c is ProviderConnection & { accessToken: string } => !!c && c.status === "CONNECTED" && !!c.accessToken;
+
+/** Sub-accounts a connection exposes (pages, boards, channels, organizations): connection.config.accounts = [{ id, name }]. */
+export function connectionAccounts(c: ProviderConnection | null): { id: string; name: string }[] {
+  const raw = c?.config.accounts;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((a) => (a && typeof a === "object" ? (a as Record<string, unknown>) : {}))
+    .filter((a) => typeof a.id === "string" || typeof a.id === "number")
+    .map((a) => ({ id: String(a.id), name: typeof a.name === "string" && a.name ? a.name : String(a.id) }))
+    .slice(0, 200);
+}

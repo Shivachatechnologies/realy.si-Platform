@@ -1,3 +1,4 @@
+import { SmartEmpty } from "@/components/crm/page-intro";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { BulkTable, SaveSegment } from "@/components/crm/kit";
@@ -102,13 +103,13 @@ export async function AccountsList({ path, query, fixedType }: { path: string; q
           </div>
         </form>
         {c.canManage ? (
-          <details className="border-b">
+          <details id="new-item" className="border-b" open={list.rows.length === 0 && !filtered}>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("crm.accounts.add")}</summary>
             <AccountForm base={base} locale={locale} owners={owners} sources={sources} fields={fields} defaultType={fixedType ?? "PROSPECT"} viewerId={viewer.user.id} />
           </details>
         ) : null}
         {list.rows.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("crm.accounts.empty")}</p>
+          filtered ? <p className="p-4 text-muted-foreground">{t("common.noResults")}</p> : <SmartEmpty ns="crm.smartEmpty.accounts" primaryHref="#new-item" aiHref={`/${locale}/sales/start`} />
         ) : (
           <BulkTable
             url={`${base}/crm/accounts/bulk`}

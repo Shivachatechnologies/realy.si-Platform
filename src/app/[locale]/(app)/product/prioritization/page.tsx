@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { ProductTabs } from "@/components/work/area-tabs";
+import { ProductAreaTabs } from "@/components/work/product-nav";
+import { HelpStrip } from "@/components/work/product-studio";
 import { workContext } from "@/components/work/context";
 import { Empty } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
@@ -50,7 +51,8 @@ export default async function PrioritizationPage({ searchParams }: PageProps<"/[
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
       {w.header}
-      <ProductTabs t={t} locale={locale} active="prioritization" />
+      <ProductAreaTabs t={t} locale={locale} active="prioritization" />
+      <HelpStrip t={t} area="prioritization" />
       <Card>
         <CardHeader title={t("work.product.prioritization")} description={t("work.product.riceFormula")} />
         {unscored ? (

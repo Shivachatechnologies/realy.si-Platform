@@ -14,6 +14,7 @@ import { getT } from "@/i18n/server";
 import { formatDate, formatDateTime } from "@/i18n/format";
 import { AppError } from "@/server/core/errors";
 import { featurePickers, getFeature, quarterOptions } from "@/server/modules/work/product";
+import { productOptions } from "@/server/modules/work/product-core";
 import { listPeople } from "@/server/modules/work/shared";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,14 +31,14 @@ export default async function FeaturePage({ params }: PageProps<"/[locale]/produ
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
-  const [pickers, people] = await Promise.all([featurePickers(org.id, company.id), canManage ? listPeople(viewer.ctx, org.id, company.id) : []]);
+  const [pickers, people, products] = await Promise.all([featurePickers(org.id, company.id), canManage ? listPeople(viewer.ctx, org.id, company.id) : [], productOptions(org.id, company.id)]);
   if (f.release && !pickers.releases.some((r) => r.id === f.release!.id)) pickers.releases.push({ id: f.release.id, name: f.release.version });
   const n = (v: number | null) => (v == null ? "" : String(v));
   return (
     <div className="mx-auto grid max-w-[1100px] min-w-0 gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link href={`/${locale}/product/features`} className="text-sm text-muted-foreground hover:underline">
-          ← {t("work.product.tabs.features")}
+        <Link href={f.product ? `/${locale}/product/${f.product.id}/features` : `/${locale}/product/features`} className="text-sm text-muted-foreground hover:underline">
+          ← {f.product ? `${f.product.name} · ${t("work.product.tabs.features")}` : t("work.product.tabs.features")}
         </Link>
         {canManage ? (
           <ActionButton url={`${base}/product/features/${f.id}`} method="PATCH" body={{ archived: !f.archivedAt }} confirm={f.archivedAt ? undefined : t("work.confirmArchive")}>
@@ -59,8 +60,9 @@ export default async function FeaturePage({ params }: PageProps<"/[locale]/produ
         />
         <CardBody className="grid gap-4">
           <Facts
-            cols={4}
+            cols={5}
             items={[
+              [t("product.product"), f.product ? <Link key="pr" href={`/${locale}/product/${f.product.id}`} className="hover:underline">{f.product.name}</Link> : "—"],
               [t("work.product.initiative"), f.initiative?.title ?? "—"],
               [t("work.product.quarter"), f.quarter ?? t("work.product.unscheduled")],
               [t("work.product.release"), f.release ? `${f.release.version} · ${t(`work.releaseStatus.${f.release.status}`)}` : "—"],
@@ -74,12 +76,47 @@ export default async function FeaturePage({ params }: PageProps<"/[locale]/produ
               featureId={f.id}
               quarters={quarterOptions()}
               {...pickers}
-              initial={{ title: f.title, spec: f.spec ?? "", status: f.status, quarter: f.quarter ?? "", initiativeId: f.initiativeId ?? "", projectId: f.projectId ?? "", releaseId: f.releaseId ?? "", reach: n(f.reach), impact: n(f.impact), confidence: n(f.confidence), effort: n(f.effort) }}
+              products={products}
+              initial={{
+                title: f.title,
+                spec: f.spec ?? "",
+                status: f.status,
+                quarter: f.quarter ?? "",
+                initiativeId: f.initiativeId ?? "",
+                projectId: f.projectId ?? "",
+                releaseId: f.releaseId ?? "",
+                reach: n(f.reach),
+                impact: n(f.impact),
+                confidence: n(f.confidence),
+                effort: n(f.effort),
+                productId: f.productId ?? "",
+                requirements: f.requirements ?? "",
+                acceptanceCriteria: f.acceptanceCriteria ?? "",
+              }}
             />
-          ) : f.spec ? (
-            <div className="whitespace-pre-wrap text-sm">{f.spec}</div>
           ) : (
-            <p className="text-sm text-muted-foreground">{t("work.product.noSpec")}</p>
+            <div className="grid gap-3 text-sm">
+              {f.spec ? <div className="whitespace-pre-wrap">{f.spec}</div> : <p className="text-muted-foreground">{t("work.product.noSpec")}</p>}
+              {f.requirements ? (
+                <div>
+                  <h3 className="text-xs font-medium text-muted-foreground">{t("product.feature.requirements")}</h3>
+                  <div className="whitespace-pre-wrap">{f.requirements}</div>
+                </div>
+              ) : null}
+              {f.acceptanceCriteria ? (
+                <div>
+                  <h3 className="text-xs font-medium text-muted-foreground">{t("product.feature.acceptance")}</h3>
+                  <ul className="list-disc ps-5">
+                    {f.acceptanceCriteria
+                      .split("\n")
+                      .filter((l) => l.trim())
+                      .map((l, i) => (
+                        <li key={i}>{l.replace(/^[-*]\s*/, "")}</li>
+                      ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
           )}
         </CardBody>
       </Card>

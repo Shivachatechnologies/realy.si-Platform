@@ -58,36 +58,54 @@ export function Marketplace({ locale, items, initialView }: { locale: string; it
           <p className="p-4 text-muted-foreground">{view === "connected" && !q && !category ? t("integrations.noneConnected") : t("common.noResults")}</p>
         </Card>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {shown.map((i) => (
-            <li key={i.key}>
-              <Link href={`/${locale}/integrations/${i.key}`} className="block h-full rounded-lg border bg-surface p-4 transition-colors hover:bg-muted/50">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-sm font-semibold uppercase">
-                      {i.name.slice(0, 2)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{i.name}</p>
-                      <p className="text-xs text-muted-foreground">{t(`integrations.categories.${i.category}`)}</p>
-                    </div>
-                  </div>
-                  {i.status ? (
-                    <Badge tone={TONE[i.status]}>
-                      <StatusDot tone={TONE[i.status]} />
-                      {t(`integrations.status.${i.status}`)}
-                    </Badge>
-                  ) : i.authType === "oauth2" && !i.configured ? (
-                    <Badge>{t("integrations.needsSetup")}</Badge>
-                  ) : null}
-                </div>
-                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{t(`integrations.providers.${i.key}.description`)}</p>
-                {i.account ? <p className="mt-2 truncate text-xs text-muted-foreground">{i.account}</p> : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        PROVIDER_CATEGORIES.filter((c) => shown.some((i) => i.category === c)).map((c) => (
+          <section key={c} className="grid gap-2" aria-labelledby={`cat-${c}`}>
+            <h2 id={`cat-${c}`} className="text-sm font-semibold text-muted-foreground">
+              {t(`integrations.categories.${c}`)} <span className="font-normal">· {shown.filter((i) => i.category === c).length}</span>
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {shown
+                .filter((i) => i.category === c)
+                .map((i) => (
+                  <li key={i.key}>
+                    <ProviderCard locale={locale} item={i} />
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ))
       )}
     </div>
+  );
+}
+
+function ProviderCard({ locale, item: i }: { locale: string; item: MarketplaceItem }) {
+  const t = useT();
+  return (
+    <Link href={`/${locale}/integrations/${i.key}`} className="block h-full rounded-lg border bg-surface p-4 transition-colors hover:bg-muted/50">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-sm font-semibold uppercase">
+            {i.name.slice(0, 2)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium">{i.name}</p>
+            <p className="text-xs text-muted-foreground">{t(`integrations.authTypes.${i.authType}`)}</p>
+          </div>
+        </div>
+        {i.status ? (
+          <Badge tone={TONE[i.status]}>
+            <StatusDot tone={TONE[i.status]} />
+            {t(`integrations.status.${i.status}`)}
+          </Badge>
+        ) : i.authType === "oauth2" && !i.configured ? (
+          <Badge>{t("integrations.needsSetup")}</Badge>
+        ) : i.authType === "api_key" ? (
+          <Badge>{t("integrations.requiresCredentials")}</Badge>
+        ) : null}
+      </div>
+      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{t(`integrations.providers.${i.key}.description`)}</p>
+      {i.account ? <p className="mt-2 truncate text-xs text-muted-foreground">{i.account}</p> : null}
+    </Link>
   );
 }

@@ -2,6 +2,7 @@ import "server-only";
 import type { ReactNode } from "react";
 import { WorkflowsTabs, type WorkflowsTab } from "@/components/automation/tabs";
 import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
+import { PageIntro } from "@/components/guide-kit/page-intro";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
@@ -22,6 +23,15 @@ export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: st
           active={tab}
           pending={pending}
           labels={{ workflows: t("workflows.tabs.workflows"), runs: t("workflows.tabs.runs"), approvals: t("workflows.tabs.approvals"), templates: t("workflows.tabs.templates") }}
+        />
+      ) : null}
+      {withTabs && tab && tab !== "workflows" && company ? (
+        <PageIntro
+          labels={{ what: t("guideKit.intro.what"), why: t("guideKit.intro.why"), can: t("guideKit.intro.can"), next: t("guideKit.intro.next") }}
+          what={t(`workflows.intro.${tab}.what`)}
+          why={t(`workflows.intro.${tab}.why`)}
+          can={t(`workflows.intro.${tab}.can`)}
+          next={{ label: t("workflows.intro.list.next"), href: `/${locale}/workflows/new` }}
         />
       ) : null}
       {children}

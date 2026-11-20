@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Briefcase } from "lucide-react";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
@@ -88,7 +90,12 @@ export default async function RecruitingPage({ searchParams }: { searchParams: P
               </TBody>
             </Table>
           ) : (
-            <p className="p-4 text-sm text-muted-foreground">{t("hr.recruiting.noJobs")}</p>
+            <SmartEmpty
+              icon={<Briefcase />}
+              title={t("hr.empty.jobs.title")}
+              body={t("hr.empty.jobs.body")}
+              primary={<Link href={`/${locale}/hr/hire`} className={buttonVariants({ size: "sm" })}>{t("hr.intro.recruiting.next")}</Link>}
+            />
           )}
           <details className="border-t">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("hr.recruiting.addJob")}</summary>

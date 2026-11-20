@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type IntegrationsTab = "marketplace" | "connected" | "webhooks" | "syncs";
+export type IntegrationsTab = "marketplace" | "connected" | "usage" | "webhooks" | "syncs";
+
+/** Tab labels from a translator (server or client). */
+export const integrationTabLabels = (t: (key: string) => string): Record<IntegrationsTab, string> => ({
+  marketplace: t("integrations.tabs.marketplace"),
+  connected: t("integrations.tabs.connected"),
+  usage: t("integrations.tabs.usage"),
+  webhooks: t("integrations.tabs.webhooks"),
+  syncs: t("integrations.tabs.syncs"),
+});
 
 /** Secondary navigation of the Integrations area. */
 export function IntegrationsTabs({ locale, active, labels }: { locale: string; active: IntegrationsTab; labels: Record<IntegrationsTab, string> }) {
   const tabs: { key: IntegrationsTab; href: string }[] = [
     { key: "marketplace", href: `/${locale}/integrations` },
     { key: "connected", href: `/${locale}/integrations?view=connected` },
+    { key: "usage", href: `/${locale}/integrations/usage` },
     { key: "webhooks", href: `/${locale}/integrations/webhooks` },
     { key: "syncs", href: `/${locale}/integrations/syncs` },
   ];

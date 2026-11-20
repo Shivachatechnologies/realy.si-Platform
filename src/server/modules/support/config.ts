@@ -7,7 +7,14 @@ import { authorize, isUuid, PRIORITIES, supportAgents, uuid } from "./common";
 
 // ─── Settings ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export const settingsInput = z.object({ helpCenterEnabled: z.boolean().optional(), supportFormEnabled: z.boolean().optional(), aiTriageEnabled: z.boolean().optional() });
+export const settingsInput = z.object({
+  helpCenterEnabled: z.boolean().optional(),
+  supportFormEnabled: z.boolean().optional(),
+  aiTriageEnabled: z.boolean().optional(),
+  emailChannelEnabled: z.boolean().optional(),
+  supportEmail: z.string().trim().toLowerCase().email().max(254).nullable().optional().or(z.literal("").transform(() => null)),
+  setupStep: z.enum(["channels", "promises", "articles", "done"]).optional(),
+});
 
 export async function ensureSettings(client: Tx | Db, organizationId: string, companyId: string) {
   return client.supportSettings.upsert({ where: { companyId }, create: { companyId, organizationId }, update: {} });
@@ -23,7 +30,7 @@ export async function updateSettings(ctx: RequestContext, organizationId: string
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "support.manage", tx);
     await ensureSettings(tx, organizationId, companyId);
-    const s = await tx.supportSettings.update({ where: { companyId }, data: input });
+    const s = await tx.supportSettings.update({ where: { companyId }, data: { ...input, ...(input.setupStep === "done" ? { setupCompletedAt: new Date() } : {}) } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "support.settings.updated", resourceType: "support_settings", resourceId: companyId, newValue: input });
     return s;
   });

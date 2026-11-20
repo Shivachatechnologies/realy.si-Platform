@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Archive, ArchiveRestore } from "lucide-react";
+import { HelpMeButton } from "@/components/guide-kit/help-me";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
+import { DelayBadge, WorkloadHeatmap } from "@/components/work/insights";
+import { projectDelays, workloadHeatmap } from "@/server/modules/work/kickoff";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -48,7 +53,12 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
     db().workTimeEntry.findMany({ where: { projectId: p.id, companyId: company.id }, orderBy: { workDate: "desc" }, take: 20, include: { task: { select: { id: true, title: true } } } }),
     canSeeFinance ? financeProjectCosts(org.id, company.id, p.id).catch(() => null) : null,
   ]);
-  const names = await userNames(db(), timeEntries.map((e) => e.userId));
+  const [names, delays, heat, helpTask] = await Promise.all([
+    userNames(db(), timeEntries.map((e) => e.userId)),
+    projectDelays(viewer.ctx, org.id, company.id, [p.id]),
+    workloadHeatmap(viewer.ctx, org.id, company.id, { projectId: p.id }),
+    latestSubjectTask(viewer.ctx, org.id, company.id, "project_help", p.id),
+  ]);
   const currency = p.currency ?? company.baseCurrency;
   const money = (m: bigint | null) => (m == null ? "—" : formatMoney({ amountMinor: m, currency }, locale));
   const active = !p.archivedAt;
@@ -69,6 +79,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
           <h1 className="text-lg font-semibold tracking-tight">{p.name}</h1>
           <Badge tone={PROJECT_STATUS_TONE[p.status]}>{t(`work.projectStatus.${p.status}`)}</Badge>
           <Badge tone={HEALTH_TONE[p.health]}>{t(`work.health.${p.health}`)}</Badge>
+          <DelayBadge t={t} delay={delays.get(p.id)} />
           {p.suggestedHealth !== p.health ? (
             <span className="text-xs text-muted-foreground">{t("work.project.suggestedHealth", { health: t(`work.health.${p.suggestedHealth}`) })}</span>
           ) : null}
@@ -89,6 +100,25 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
       </div>
       {!active ? <p className="rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-sm">{t("work.project.archivedNotice")}</p> : null}
       <ProjectTabs t={t} locale={locale} projectId={p.id} active="overview" />
+      <PageIntro
+        labels={introLabels(t)}
+        what={t("work.intro.project.what")}
+        why={t("work.intro.project.why")}
+        can={t("work.intro.project.can")}
+        next={{ label: t("work.intro.project.next"), href: `/${locale}/projects/${p.id}/timeline` }}
+        accent="info"
+        extra={
+          <HelpMeButton
+            base={`/api/v1/organizations/${org.id}/companies/${company.id}`}
+            aiReady={aiConfigured() && canRunAgents}
+            profile="ai_project_manager"
+            subject={{ type: "project_help", id: p.id }}
+            title={`Help me with ${p.name}`.slice(0, 200)}
+            instructions={`The person is looking at the project "${p.name}" (project id ${p.id}) and is not a project-management expert. Read it with read_project and read_team_workload. Explain in plain words where the project stands, what is late or at risk and why, and the next 3 concrete things to do. You may propose missing tasks (create_work_task) or assignments (assign_task); they are applied only after the person approves.`}
+            initial={helpTask}
+          />
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-4">
         <StatCard label={t("work.project.progress")} value={`${p.stats.progress}%`} hint={t("work.project.progressOf", { done: p.stats.done, total: p.stats.total })} />
@@ -395,6 +425,10 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
           ) : null}
         </div>
       </div>
+      <Card>
+        <CardHeader title={t("work.heatmap.title")} description={t("work.heatmap.hintProject")} />
+        <WorkloadHeatmap t={t} locale={locale} data={heat} />
+      </Card>
     </div>
   );
 }
