@@ -7,7 +7,7 @@ import { notifyApprovers } from "@/server/modules/notifications/service";
 import { NEVER_FOR_AGENTS } from "@/server/modules/rbac/catalog";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { getTool, type ToolDefinition, type ToolExecutionContext, type ToolOutput } from "./registry";
+import { getTool, loadTools, type ToolDefinition, type ToolExecutionContext, type ToolOutput } from "./registry";
 
 /** Approval requests expire after 72 h (docs/agent-runtime.md). */
 export const APPROVAL_TTL_MS = 72 * 60 * 60_000;
@@ -57,6 +57,7 @@ export async function authorizeTool(tool: ToolDefinition, ctx: RequestContext, o
  * SUPERVISED / FOUNDER_ONLY tools only file an approval request and change nothing.
  */
 export async function requestTool(name: string, rawInput: unknown, run: ToolRun): Promise<ToolCallResult> {
+  await loadTools();
   const tool = getTool(name);
   if (!tool) throw new ToolDenied("unknown_tool", `Unknown tool ${name}`);
   if (!run.allowedTools.includes(name)) throw new ToolDenied("not_allowed", `Tool ${name} is not available to this role`);

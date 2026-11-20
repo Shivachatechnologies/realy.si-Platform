@@ -22,7 +22,7 @@ import { aiConfigured, type ToolCallRecord } from "@/server/modules/agents/runti
 import { listTasks } from "@/server/modules/agents/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { getTool } from "@/server/modules/tools/registry";
+import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { toolsForAutonomy } from "@/server/modules/workforce/autonomy";
 import { costMicros, microsToCents } from "@/server/modules/workforce/pricing";
 import { listSchedules } from "@/server/modules/workforce/schedules";
@@ -35,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EmployeePage({ params }: PageProps<"/[locale]/workforce/[employeeId]">) {
+  await loadTools();
   const { employeeId } = await params;
   const locale = await getLocale();
   const t = await getT(locale);

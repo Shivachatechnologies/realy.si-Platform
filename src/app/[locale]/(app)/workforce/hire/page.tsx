@@ -9,7 +9,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { getTool } from "@/server/modules/tools/registry";
+import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { listMembers, rolesByDepartment } from "@/server/modules/workforce/service";
 import { requireOrgContext } from "@/server/workspace";
 
@@ -18,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HirePage({ searchParams }: PageProps<"/[locale]/workforce/hire">) {
+  await loadTools();
   const locale = await getLocale();
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);

@@ -307,12 +307,20 @@ export const TOOLS: Record<string, ToolDefinition> = {
 };
 
 let all: Record<string, ToolDefinition> | null = null;
-/** Core tools plus every business module's tools (./modules.ts), resolved on first use to keep imports acyclic at load. */
-export function allTools(): Record<string, ToolDefinition> {
-  if (!all) {
-    all = { ...TOOLS };
-    for (const group of MODULE_TOOLS()) for (const [k, t] of Object.entries(group)) all[k] = t;
-  }
-  return all;
+let loading: Promise<Record<string, ToolDefinition>> | null = null;
+
+/** Load core + every business module's tools (./modules.ts). Call (await) before getTool in any request or job. */
+export function loadTools(): Promise<Record<string, ToolDefinition>> {
+  if (all) return Promise.resolve(all);
+  loading ??= MODULE_TOOLS().then((groups) => {
+    const map: Record<string, ToolDefinition> = { ...TOOLS };
+    for (const group of groups) for (const [k, t] of Object.entries(group)) map[k] = t;
+    all = map;
+    return map;
+  });
+  return loading;
 }
+
+/** Every loaded tool (core only until loadTools() has resolved). */
+export const allTools = (): Record<string, ToolDefinition> => all ?? TOOLS;
 export const getTool = (name: string): ToolDefinition | undefined => (Object.hasOwn(allTools(), name) ? allTools()[name] : undefined);

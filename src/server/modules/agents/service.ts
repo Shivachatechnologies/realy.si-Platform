@@ -10,7 +10,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { can, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { getTool } from "@/server/modules/tools/registry";
+import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { AUTONOMY_GUIDANCE, toolsForAutonomy } from "@/server/modules/workforce/autonomy";
 import { employeeMonthUsage } from "@/server/modules/workforce/usage";
 import { AGENT_TASK_STATUSES } from "./statuses";
@@ -326,6 +326,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
         throw new TaskError("employee_over_budget", `${employee.name} has used this month's token budget`);
       }
       const allowed = employee.allowedTools.length ? profile.tools.filter((t) => employee.allowedTools.includes(t)) : profile.tools;
+      await loadTools();
       tools = toolsForAutonomy(allowed, employee.autonomy);
       if (ctx !== requester) {
         // Never more than the requester could do: offer only tools whose permissions the requester also holds.

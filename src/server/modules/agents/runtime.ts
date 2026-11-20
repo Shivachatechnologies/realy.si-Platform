@@ -12,7 +12,7 @@ import { env } from "@/server/core/env";
 import type { RequestContext } from "@/server/core/context";
 import { isAppError } from "@/server/core/errors";
 import { requestTool, ToolDenied } from "@/server/modules/tools/gateway";
-import { getTool, type Citable } from "@/server/modules/tools/registry";
+import { getTool, loadTools, type Citable } from "@/server/modules/tools/registry";
 import type { AgentProfile } from "./profiles";
 
 /** A failure with a stable code and a message safe to show the user. `retryable` failures may be retried by the queue. */
@@ -139,6 +139,7 @@ export async function runTask(input: RunInput): Promise<RunResult> {
         .join("\n")
     : "";
   const system = `${SYSTEM_PROMPT}\n\n${companyFacts.join("\n")}\n\nYour role:\n${profile.instructions}${employeeSection}`;
+  await loadTools();
   const tools: BetaToolUnion[] = offered.flatMap((t) => {
     const def = getTool(t);
     return def ? [{ name: t, description: def.description, strict: true, input_schema: def.modelSchema as BetaTool["input_schema"] }] : [];
