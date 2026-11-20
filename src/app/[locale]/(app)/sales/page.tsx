@@ -12,6 +12,9 @@ import { listOwners } from "@/server/modules/crm/service";
 import { mySalesTasks } from "@/server/modules/crm/tasks";
 import { SalesTaskControls } from "@/components/crm/sales-task-forms";
 import { Badge } from "@/components/ui/badge";
+import { redirect } from "next/navigation";
+import { SalesOsOverview } from "@/components/crm/sales-os-overview";
+import { shouldStartJourney } from "@/server/modules/crm/guided";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.sales.title") };
@@ -23,6 +26,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const query = await searchParams;
   if (!c.company || !c.canRead) return <CrmFrame area="sales" active="overview">{null}</CrmFrame>;
   const { t, locale, org, company, viewer, base } = c;
+  // Empty companies start with the guided journey (until it's finished or dismissed).
+  if (c.canManage && (await shouldStartJourney(org.id, company.id))) redirect(`/${locale}/sales/start`);
+  const advancedOpen = ["from", "to", "owner", "pipeline"].some((k) => typeof query[k] === "string" && query[k]);
   const todayStart = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
   const range = parseSalesRange(query);
   const [summary, team, forecast, targets, owners, pipelines, myTasks] = await Promise.all([
@@ -42,6 +48,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const toIncl = isoDay(new Date(range.to.getTime() - 86_400_000))!;
   return (
     <CrmFrame area="sales" active="overview" subtitle={t("sales.subtitle")}>
+      <SalesOsOverview />
+      <details className="group rounded-lg border bg-surface" open={advancedOpen}>
+        <summary className="cursor-pointer px-4 py-3 text-sm font-medium">{t("sales.os.advanced")}</summary>
+        <div className="grid gap-4 border-t p-4">
       <RangeFilter action={`/${locale}/sales`} from={isoDay(range.from)!} to={toIncl} owner={range.owner} owners={owners} pipeline={range.pipelineId} pipelines={pipelines} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label={t("sales.kpi.wonRevenue")} value={money(summary.wonMinor)} hint={t("sales.kpi.wonDeals", { count: summary.wonCount })} />
@@ -224,6 +234,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           <p className="p-4 text-sm text-muted-foreground">{t("sales.myTasks.none")}</p>
         )}
       </Card>
+        </div>
+      </details>
     </CrmFrame>
   );
 }

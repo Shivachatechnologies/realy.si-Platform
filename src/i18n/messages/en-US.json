@@ -668,7 +668,11 @@
       "guide_unknown_step": "That step doesn't exist on this page anymore. Reload and try again.",
       "guide_step_not_automatable": "The AI can't do this step for you — follow the guide to do it yourself.",
       "guide_answer_missing": "Please answer every question first.",
-      "guide_answer_invalid": "Please choose one of the offered options."
+      "guide_answer_invalid": "Please choose one of the offered options.",
+      "crm_journey_no_lead": "Add or choose a customer first.",
+      "crm_journey_no_deal": "Create the deal first.",
+      "crm_lead_no_email": "This lead has no email address.",
+      "crm_lead_archived": "This lead is archived."
     }
   },
   "onboarding": {
@@ -3391,7 +3395,13 @@
       "intakeFollowUpDays": "Follow-up after (days)",
       "intakeFollowUpHint": "Schedules a follow-up for the assigned owner. Leave empty for none.",
       "taskDueDays": "Task due in (days)",
-      "createSalesTask": "Create a sales task for the owner"
+      "createSalesTask": "Create a sales task for the owner",
+      "icpTitle": "Ideal customer profile",
+      "icpHint": "Who you sell to, in plain words. AI uses it to find and research leads and write messages.",
+      "icpGuided": "Build it with AI",
+      "icpNone": "No ideal customer profile yet.",
+      "icpPlaceholder": "e.g. Small dental clinics in Germany with 2–10 staff that still book appointments by phone…",
+      "icpSaved": "Saved"
     },
     "sort": "Sort",
     "sortCreated": "Newest",
@@ -3555,6 +3565,130 @@
       "matching": "Matched on {addresses}",
       "noAddress": "No email address on record — only logged CRM emails are shown.",
       "hiddenSources": "Not shown (no access): {sources}."
+    },
+    "introLabels": {
+      "what": "What is this?",
+      "why": "Why it matters",
+      "can": "What you can do",
+      "aria": "About this page"
+    },
+    "guided": {
+      "aiWorking": "AI is working",
+      "openTask": "Open full result",
+      "aiFailed": "The AI task failed. Open it to see why, or try again.",
+      "aiWait": "Working on it — this usually takes under a minute. You can leave this page; progress is saved.",
+      "helpMe": "Help me do this",
+      "helpTitle": "Let AI help you here",
+      "helpHint": "An AI teammate looks at this page and your real data, explains what to do and suggests the next steps.",
+      "helpQuestion": "Anything specific? (optional)",
+      "helpStart": "Ask AI for help",
+      "helpNext": "Follow the numbered next steps above. Any change the AI proposes waits for your approval."
+    },
+    "intro": {
+      "leads": {
+        "what": "Leads are people or companies who might buy from you.",
+        "why": "Every sale starts as a lead — keeping them here means nobody is forgotten.",
+        "can": "Add leads, see who is hot, plan follow-ups and let AI research them.",
+        "next": "Start selling (guided)"
+      },
+      "contacts": {
+        "what": "Contacts are the people you talk to at your customers.",
+        "why": "Knowing who decides and who uses your product helps you win and keep deals.",
+        "can": "Add people, link them to companies and see every conversation.",
+        "next": "Go to companies"
+      },
+      "accounts": {
+        "what": "Accounts are the companies you sell to or work with.",
+        "why": "One place per company shows its people, deals and history.",
+        "can": "Add companies, merge duplicates and ask AI for an account analysis.",
+        "next": "Go to deals"
+      },
+      "deals": {
+        "what": "A deal is a sale you are working on, with a value and a stage.",
+        "why": "Deals tell you how much money is on the way and what needs attention.",
+        "can": "Create deals, move them through stages, mark them won or lost.",
+        "next": "See the pipeline board"
+      },
+      "pipeline": {
+        "what": "The pipeline shows all open deals as cards in their stage.",
+        "why": "You see at a glance where deals get stuck.",
+        "can": "Drag deals between stages and spot stale ones.",
+        "next": "See your sales overview"
+      },
+      "proposals": {
+        "what": "Proposals are written offers you send to a customer.",
+        "why": "A clear offer with prices is often what closes a deal.",
+        "can": "Create offers from deals, send them and track if they were viewed or accepted.",
+        "next": "Pick a deal to write an offer"
+      },
+      "calendar": {
+        "what": "The calendar shows follow-ups, meetings and expected closing dates.",
+        "why": "Showing up on time is half of selling.",
+        "can": "See what's due and reschedule.",
+        "next": "Open the pipeline"
+      },
+      "dashboard": {
+        "what": "Numbers about your leads: how many, where they are, who owns them.",
+        "why": "It shows if your sales engine is healthy.",
+        "can": "Check conversion between stages and overdue follow-ups.",
+        "next": "Open the Sales overview"
+      },
+      "import": {
+        "what": "Bring customers in from a spreadsheet, or take them out.",
+        "why": "Start with the data you already have instead of typing it again.",
+        "can": "Import CSV files and export your CRM.",
+        "next": "Back to leads"
+      },
+      "settings": {
+        "what": "How your sales process is set up: stages, sources, fields and rules.",
+        "why": "A process that fits how you sell keeps everyone on the same page.",
+        "can": "Edit stages, automate assignments and describe your ideal customer.",
+        "next": "Run the guided setup"
+      },
+      "customers": {
+        "what": "Customers are companies that already buy from you.",
+        "why": "Keeping customers happy is the cheapest way to grow.",
+        "can": "See every customer, their people, deals and history.",
+        "next": "Find new customers (guided)"
+      }
+    },
+    "smartEmpty": {
+      "leads": {
+        "title": "No leads yet",
+        "text": "A lead is anyone who might buy from you. Add the first one yourself — or let AI find people who match your ideal customer.",
+        "primary": "Add my first lead",
+        "ai": "Let AI find leads"
+      },
+      "deals": {
+        "title": "No deals yet",
+        "text": "A deal is a sale you are working on. Create one when a customer shows real interest — or let the guided journey create it for you.",
+        "primary": "Create my first deal",
+        "ai": "Let AI guide me"
+      },
+      "contacts": {
+        "title": "No contacts yet",
+        "text": "Contacts are the people at your customers. Add someone you talk to, or let AI help you find and research the right people.",
+        "primary": "Add my first contact",
+        "ai": "Let AI help"
+      },
+      "accounts": {
+        "title": "No companies yet",
+        "text": "Add the companies you sell to. AI can find companies that match your ideal customer.",
+        "primary": "Add my first company",
+        "ai": "Let AI find companies"
+      },
+      "proposals": {
+        "title": "No proposals yet",
+        "text": "Proposals are offers you send for a deal. Open a deal to create one — AI can write the first draft.",
+        "primary": "Pick a deal",
+        "ai": "Let AI guide me"
+      },
+      "sales": {
+        "title": "Your sales map is empty",
+        "text": "Once you add customers, you'll see your customer journey, pipeline and forecast here. The guided journey gets you there in a few minutes.",
+        "primary": "Start selling",
+        "ai": "Let AI do the research"
+      }
     }
   },
   "plans": {
@@ -7513,7 +7647,8 @@
       "targets": "Targets",
       "commissions": "Commissions",
       "reports": "Reports",
-      "team": "Team"
+      "team": "Team",
+      "start": "Start selling"
     },
     "subtitle": "Team performance, forecast and targets from your live CRM data.",
     "from": "From",
@@ -7666,6 +7801,233 @@
       "setTarget": "Set target",
       "noTarget": "no target",
       "empty": "Nobody has sales access in this company yet."
+    },
+    "intro": {
+      "overview": {
+        "what": "Your Sales OS: the customer journey, pipeline, forecast and what to do next.",
+        "why": "It shows where money comes from and where customers drop off.",
+        "can": "Follow the AI next actions, watch the funnel and drill into details.",
+        "next": "Start selling (guided)"
+      },
+      "start": {
+        "what": "A step-by-step guide from 'who is my customer?' to a tracked deal.",
+        "why": "You learn a proven sales process while doing real work.",
+        "can": "Answer simple questions; AI researches, recommends and writes for you.",
+        "next": "Follow the steps below"
+      },
+      "targets": {
+        "what": "Targets are the sales goals for each person per month or quarter.",
+        "why": "Clear goals keep the team focused.",
+        "can": "Set targets and see progress against them.",
+        "next": "See the team"
+      },
+      "commissions": {
+        "what": "Commissions are what salespeople earn from deals they win.",
+        "why": "Fair, visible commissions motivate the team.",
+        "can": "Review earned commissions and the rules behind them.",
+        "next": "Edit commission rules"
+      },
+      "reports": {
+        "what": "Reports break down deals, revenue and win rates.",
+        "why": "Data shows which sources, people and stages work best.",
+        "can": "Filter, compare and export sales numbers.",
+        "next": "Back to the overview"
+      },
+      "team": {
+        "what": "Your sales team: capacity, availability and performance.",
+        "why": "Balanced workloads mean faster replies to customers.",
+        "can": "Set limits and availability per person.",
+        "next": "Set targets"
+      }
+    },
+    "journey": {
+      "title": "Start selling",
+      "subtitle": "A guided path from your first customer to a tracked deal — with AI doing the heavy lifting.",
+      "toDashboard": "Go to the Sales overview",
+      "dismiss": "I'll explore on my own",
+      "restart": "Restart the guide",
+      "restartConfirm": "Start the guide again from the beginning? Records you created stay.",
+      "aiNotReady": "AI isn't available right now (not configured or no permission). You can still do every step yourself.",
+      "back": "Back",
+      "skip": "Skip for now",
+      "continue": "Continue",
+      "noPermission": "You need permission to manage sales to use the guide.",
+      "progress": "{done} of {total} steps done",
+      "completed": "Completed",
+      "stepsLabel": "Journey steps",
+      "stepOf": "Step {n} of {total}",
+      "steps": {
+        "sell": "How you sell",
+        "icp": "Your customer",
+        "lead": "First customer",
+        "research": "Research",
+        "next": "Next action",
+        "message": "Message",
+        "send": "Send",
+        "track": "Track the deal"
+      },
+      "q": {
+        "sell": "How do you usually sell your product?",
+        "icp": "Who is your potential customer?",
+        "lead": "Add a customer — yourself or with AI",
+        "research": "Let AI research this customer",
+        "next": "What should you do next?",
+        "message": "Write a personal message",
+        "send": "Send it — or plan a follow-up",
+        "track": "Let AI track the conversation and the deal"
+      },
+      "why": {
+        "sell": "We'll set up your sales stages (your pipeline) to match. You can change them later in settings.",
+        "icp": "Describe them in your own words. AI turns it into a clear ideal customer profile that guides everything else.",
+        "lead": "A lead is someone who might buy. Add one you know, or let AI suggest people — they're only added when you tick them.",
+        "research": "Good research means a better first message. AI summarizes who they are and why they'd care.",
+        "next": "AI recommends the single best next step, with a date. Reminders it proposes need your approval.",
+        "message": "AI writes a first draft that mentions real facts. Edit it until it sounds like you.",
+        "send": "We send it from your email provider and show exactly what happened — or you schedule a reminder instead.",
+        "track": "A deal records the opportunity and its stage, so AI can watch it and tell you what to do next."
+      },
+      "recommended": "Recommended",
+      "stagesPreview": "Your stages will be:",
+      "won": "Won",
+      "lost": "Lost",
+      "styles": {
+        "quick": {
+          "title": "Quick sales",
+          "description": "People buy after one or two conversations.",
+          "pipeline": "Quick sales",
+          "stage1": "Contacted",
+          "stage2": "Interested",
+          "stage3": "Ready to buy"
+        },
+        "meetings": {
+          "title": "Meetings & offers",
+          "description": "I meet customers, then send an offer.",
+          "pipeline": "Sales pipeline",
+          "stage1": "Contacted",
+          "stage2": "Meeting booked",
+          "stage3": "Offer sent",
+          "stage4": "Negotiating"
+        },
+        "long": {
+          "title": "Bigger deals",
+          "description": "Several people decide; it takes weeks or months.",
+          "pipeline": "B2B pipeline",
+          "stage1": "Qualified",
+          "stage2": "Needs understood",
+          "stage3": "Demo",
+          "stage4": "Proposal",
+          "stage5": "Negotiation"
+        }
+      },
+      "pipelineReady": "Your pipeline is set up.",
+      "setupPipeline": "Set up my pipeline",
+      "icpDescribe": "Describe your ideal customer",
+      "icpExample": "Example: “Cafés and small restaurants in my city that want more online orders.”",
+      "icpPlaceholder": "Who are they, what problem do they have, where are they?",
+      "icpAi": "Let AI build my customer profile",
+      "icpUseMine": "Use my words as they are",
+      "icpResult": "Your ideal customer profile",
+      "icpResultHint": "Edit anything that isn't right, then save.",
+      "icpSave": "Save profile",
+      "leadSelf": "Add a customer myself",
+      "leadSelfHint": "You already know someone who might buy.",
+      "leadAi": "Let AI find leads",
+      "leadAiHint": "AI suggests real matches for your ideal customer. Nothing is added until you tick it.",
+      "leadName": "Name",
+      "leadNameHint": "A person or a company.",
+      "leadEmailHint": "Needed to send them an email later.",
+      "leadCompany": "Company",
+      "leadValue": "Possible deal value",
+      "leadValueHint": "A rough guess is fine (e.g. 1500).",
+      "leadNotes": "Notes",
+      "leadAdd": "Add this customer",
+      "findWhere": "Anything to focus on?",
+      "findWhereHint": "Optional — e.g. a city, an industry or company size.",
+      "findStart": "Find leads with AI",
+      "tickLeads": "Tick the ones you want to add:",
+      "addTicked": "{count, plural, one {Add # lead} other {Add # leads}}",
+      "noCandidates": "AI didn't return suggestions in a usable form. Open the result to read them, or try again with more detail.",
+      "addedLeads": "{count, plural, one {# lead added.} other {# leads added.}}",
+      "skippedLeads": "Already in your CRM: {names}.",
+      "chooseLead": "Continue with",
+      "chooseLeadHint": "The customer the next steps are about.",
+      "choose": "Choose a customer…",
+      "addCustomerFirst": "Add a customer",
+      "needLead": "Add or choose a customer first.",
+      "workingOn": "Customer:",
+      "researchStart": "Research this customer",
+      "again": "Run again",
+      "nextStart": "Recommend my next step",
+      "nextHint": "Tip: the recommendation also appears on the customer's page.",
+      "tone": "Tone (optional)",
+      "toneHint": "e.g. friendly, short, formal",
+      "draftStart": "Write it with AI",
+      "subject": "Subject",
+      "body": "Message",
+      "bodyHint": "Plain text. Make it sound like you.",
+      "saveMessage": "Use this message",
+      "followUpDefault": "Follow up with this customer",
+      "sendTitle": "Send by email",
+      "sendTo": "To: {email}",
+      "addEmail": "Add an email",
+      "noEmail": "This customer has no email address yet.",
+      "sendNow": "Send now",
+      "sentOk": "Sent: “{subject}”. It's recorded on the customer's timeline.",
+      "connectEmail": "Set up email",
+      "sentNotConfigured": "Email sending isn't set up yet, so nothing was sent.",
+      "sentFailed": "The email provider rejected the message. Nothing was sent.",
+      "followTitle": "Or plan a follow-up",
+      "followHint": "Get a reminder to call or write later.",
+      "followDate": "When",
+      "followNote": "Reminder",
+      "followSave": "Schedule follow-up",
+      "followDone": "Follow-up planned for {date}.",
+      "dealAmount": "Deal value (optional)",
+      "dealAmountHint": "What you expect this customer to pay.",
+      "createDeal": "Create the deal",
+      "dealStages": "Deal stages",
+      "dealTracked": "This deal is now in your pipeline. Move it forward as the conversation progresses.",
+      "watchDeal": "Ask AI what to do next",
+      "allDone": "You've completed the guide. Your Sales OS is ready.",
+      "finish": "Finish and open my Sales OS"
+    },
+    "os": {
+      "convert": "{pct} move on",
+      "openPipeline": "Open the pipeline board →",
+      "scoreAria": "Lead score {score} of 100",
+      "lastTouch": "Last touch:",
+      "never": "never",
+      "nextAction": "Next:",
+      "noNext": "nothing planned",
+      "forecastWon": "Won",
+      "forecastWeighted": "Expected (weighted)",
+      "forecastBest": "Best case",
+      "stageLead": "Lead",
+      "eyebrow": "Sales OS",
+      "inJourney": "In the journey",
+      "inJourneyHint": "Active leads",
+      "won": "Won",
+      "wonHint": "{pct}% of leads",
+      "openValue": "Open pipeline",
+      "dueToday": "Follow-ups due",
+      "dueTodayHint": "Today or earlier",
+      "startSelling": "Start selling",
+      "journeyTitle": "Customer journey",
+      "journeyHint": "How leads move from first contact to won, with the share that moves on at each step.",
+      "funnelTitle": "Funnel",
+      "funnelHint": "Where customers drop off.",
+      "riverTitle": "Pipeline value river",
+      "riverHint": "Money in open deals at each stage of “{pipeline}”.",
+      "riverEmpty": "No stages yet.",
+      "forecastTitle": "Revenue forecast",
+      "forecastHint": "Won so far plus what open deals are likely to bring, by month.",
+      "leadsTitle": "Lead intelligence",
+      "leadsHint": "Your best leads: score, temperature, last touch and next action.",
+      "allLeads": "All leads",
+      "railTitle": "AI next actions",
+      "railHint": "Follow-ups that are due and the latest AI recommendations.",
+      "railEmpty": "Nothing due. Ask AI for help on any page, or run the guided journey.",
+      "advanced": "Advanced: detailed numbers, team and targets"
     }
   },
   "finance": {
@@ -7688,7 +8050,8 @@
       "bills": "Bills",
       "payables": "Payables",
       "approvals": "Approvals",
-      "claims": "Expense claims"
+      "claims": "Expense claims",
+      "start": "Start here"
     },
     "accounting": {
       "tabs": {
@@ -8496,6 +8859,340 @@
       "submit": "Ask",
       "asking": "Asking…",
       "thinking": "Working on the answer…"
+    },
+    "intro": {
+      "dashboard": {
+        "what": "Your financial command center: money in, money out, cash and health.",
+        "why": "Knowing your numbers keeps you out of surprises.",
+        "can": "Do common tasks in one click, read the health checks, ask the AI CFO.",
+        "next": "Start with a simple task"
+      },
+      "start": {
+        "what": "Simple, guided money tasks for people who aren't accountants.",
+        "why": "A few minutes a week keeps your books right.",
+        "can": "Add income or expenses, create invoices, track payments and bills.",
+        "next": "Pick a task below"
+      },
+      "transactions": {
+        "what": "Every payment in and out of your bank, cash and card accounts.",
+        "why": "This is the raw record your profit and cash come from.",
+        "can": "Add, import, categorize and attach receipts.",
+        "next": "Add an expense (guided)"
+      },
+      "accounts": {
+        "what": "Your bank, cash and card accounts.",
+        "why": "Balances tell you how much money you really have.",
+        "can": "Add accounts and see their balances.",
+        "next": "See transactions"
+      },
+      "invoices": {
+        "what": "Invoices are bills you send to customers so they pay you.",
+        "why": "No invoice, no money — they also show what you're owed.",
+        "can": "Create, send, remind and record payments.",
+        "next": "Create an invoice (guided)"
+      },
+      "estimates": {
+        "what": "Estimates (quotes) are prices you offer before the work.",
+        "why": "Agreeing on price first avoids disputes.",
+        "can": "Create quotes and turn accepted ones into invoices.",
+        "next": "Go to invoices"
+      },
+      "creditNotes": {
+        "what": "Credit notes reduce what a customer owes, e.g. for a refund.",
+        "why": "They keep invoices and balances correct.",
+        "can": "Issue credit notes and apply them to invoices.",
+        "next": "Go to invoices"
+      },
+      "receivables": {
+        "what": "Receivables are money customers owe you.",
+        "why": "Unpaid invoices are cash you've earned but don't have yet.",
+        "can": "See who owes what and how late, and send reminders.",
+        "next": "Record a payment (guided)"
+      },
+      "bills": {
+        "what": "Bills are invoices you receive from suppliers.",
+        "why": "Paying on time protects your reputation; not too early protects your cash.",
+        "can": "Record bills, get them approved and pay them.",
+        "next": "Add a bill (guided)"
+      },
+      "payables": {
+        "what": "Payables are money you owe to suppliers.",
+        "why": "They show what will leave your bank soon.",
+        "can": "See what's due and plan payments.",
+        "next": "See upcoming bills (guided)"
+      },
+      "approvals": {
+        "what": "Spending that needs someone's OK before it's paid.",
+        "why": "Approvals prevent mistakes and fraud.",
+        "can": "Approve or reject bills and claims.",
+        "next": "Go to bills"
+      },
+      "claims": {
+        "what": "Expense claims are costs employees paid themselves.",
+        "why": "Paying people back quickly keeps them happy.",
+        "can": "Submit and review claims.",
+        "next": "Go to approvals"
+      },
+      "recurring": {
+        "what": "Payments that repeat: rent, subscriptions, retainers.",
+        "why": "Automating them saves time and makes forecasts accurate.",
+        "can": "Set up repeating invoices and expenses.",
+        "next": "See cash flow"
+      },
+      "budgets": {
+        "what": "Budgets are spending limits per department.",
+        "why": "They stop costs from quietly growing.",
+        "can": "Set budgets and compare with actual spending.",
+        "next": "See reports"
+      },
+      "vendors": {
+        "what": "Vendors are the suppliers you buy from.",
+        "why": "Knowing where money goes helps you negotiate.",
+        "can": "See spend per vendor.",
+        "next": "Go to bills"
+      },
+      "cashflow": {
+        "what": "Cash flow is money moving in and out over time.",
+        "why": "A profitable business can still run out of cash.",
+        "can": "See the forecast and plan scenarios.",
+        "next": "Understand my profit"
+      },
+      "accounting": {
+        "what": "The full books: chart of accounts, journal, periods, tax.",
+        "why": "This is what your accountant needs.",
+        "can": "Review entries, close periods, reconcile.",
+        "next": "See reports"
+      },
+      "reports": {
+        "what": "Standard reports: profit & loss, balance sheet, cash flow.",
+        "why": "They answer 'are we making money?' and 'what do we own?'",
+        "can": "Pick a period, read and export reports.",
+        "next": "Understand my profit (guided)"
+      },
+      "settings": {
+        "what": "Invoice numbering, due days, taxes and categories.",
+        "why": "Correct settings make every document right.",
+        "can": "Change defaults for your company.",
+        "next": "Back to the guided tasks"
+      }
+    },
+    "os": {
+      "startTitle": "Finance — start here",
+      "homeTitle": "What do you want to do?",
+      "askTitle": "Ask the AI CFO",
+      "askHint": "Ask anything about your money in plain words — answers come from your real books.",
+      "advanced": "Advanced: all figures, forecasts and insights",
+      "emptyTitle": "Let's set up your money in two minutes",
+      "emptyText": "Add your first income or expense — we'll create your bank account on the way.",
+      "emptyCta": "Add my first income",
+      "doneBefore": "Done before",
+      "flows": {
+        "income": {
+          "title": "Add income",
+          "hint": "Money you received — a sale, a payment, a grant.",
+          "done": "Income saved.",
+          "q1": "How much did you receive, and when?",
+          "q2": "Where did it go, and what was it?",
+          "q3": "Check and save",
+          "what": "What was it for?",
+          "whatHint": "e.g. “Website project for Café Luna”"
+        },
+        "expense": {
+          "title": "Add expense",
+          "hint": "Money you spent — rent, software, travel.",
+          "done": "Expense saved.",
+          "q1": "How much did you spend, and when?",
+          "q2": "Which account paid, and what kind of cost was it?",
+          "q3": "Check and save",
+          "what": "What did you pay for?",
+          "whatHint": "e.g. “Office rent March”"
+        },
+        "invoice": {
+          "title": "Create invoice",
+          "hint": "Ask a customer to pay you.",
+          "done": "Invoice done.",
+          "q1": "Who are you billing?",
+          "q2": "What did you sell?",
+          "q3": "Check, create and send"
+        },
+        "payments": {
+          "title": "Track payments",
+          "hint": "Record money a customer paid on an invoice.",
+          "done": "Payment recorded.",
+          "q1": "Which invoice was paid?",
+          "q2": "How much arrived, and where?",
+          "q3": "Check and record"
+        },
+        "bills": {
+          "title": "See upcoming bills",
+          "hint": "What you must pay soon — and add a bill you received.",
+          "done": "Bill saved.",
+          "q1": "Bills coming up",
+          "q2": "Add a bill you received",
+          "q3": "Check and save"
+        },
+        "profit": {
+          "title": "Understand my profit",
+          "hint": "Are you making money? Explained simply.",
+          "done": "Done.",
+          "q1": "Your profit this month, explained",
+          "q2": "Ask the AI CFO why"
+        }
+      },
+      "back": "Back",
+      "close": "Close",
+      "continue": "Continue",
+      "stepOf": "Step {n} of {total}",
+      "noPermission": "You need permission to manage finance for this task.",
+      "profitNow": "Profit this month",
+      "owedToYou": "Customers owe you",
+      "billsDue": "Bills due in 30 days",
+      "profitSentence": "Your profit this month is now {amount} ({revenue} in, {expenses} out).",
+      "again": "Do another",
+      "amount": "Amount",
+      "amountHint": "In {currency}, e.g. 120.50",
+      "date": "Date",
+      "category": "Category",
+      "categoryHint": "We picked the one you use most.",
+      "noCategory": "No category",
+      "recommended": "recommended",
+      "terms": {
+        "category": "Category",
+        "categoryText": "a label for the kind of money (e.g. Sales, Rent). It decides where the amount shows up in your profit report.",
+        "profit": "Profit",
+        "profitText": "money in minus money out for a period. Positive means you earned more than you spent.",
+        "invoice": "Invoice",
+        "invoiceText": "a document asking a customer to pay a set amount by a due date.",
+        "receivable": "Receivable",
+        "receivableText": "money a customer owes you for an invoice you sent but that isn't paid yet.",
+        "payment": "Payment",
+        "paymentText": "money a customer actually paid. Recording it marks the invoice (partly) paid and adds the money to your bank account.",
+        "payable": "Payable",
+        "payableText": "money you owe a supplier for a bill you received.",
+        "cashflow": "Cash flow",
+        "cashflowText": "when money actually moves. You can be profitable on paper and still short of cash if customers pay late."
+      },
+      "account": "Account",
+      "save": "Save",
+      "customerExisting": "Customer",
+      "customerNewOption": "+ New customer",
+      "customerName": "Customer name",
+      "customerEmail": "Customer email",
+      "customerEmailHint": "To send the invoice by email.",
+      "item": "What you sold",
+      "itemHint": "e.g. “Logo design”",
+      "quantity": "Quantity",
+      "price": "Price each",
+      "dueIn": "Payment due in",
+      "dueInHint": "How long the customer has to pay.",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "customer": "Customer",
+      "total": "Total",
+      "beforeTax": "(before tax)",
+      "createInvoice": "Create invoice",
+      "due": "due {date}",
+      "overdue": "Overdue",
+      "noOpenInvoices": "No unpaid invoices — nobody owes you money right now.",
+      "amountReceived": "Amount received",
+      "amountReceivedHint": "Prefilled with what's still owed.",
+      "invoice": "Invoice",
+      "recordPayment": "Record payment",
+      "noUpcomingBills": "No bills due in the next 60 days.",
+      "addBill": "Add a bill",
+      "vendorExisting": "Supplier",
+      "vendorNewOption": "+ New supplier",
+      "vendorName": "Supplier name",
+      "vendorHint": "Who sent you the bill.",
+      "billNumber": "Bill number",
+      "billNumberHint": "The number printed on the bill.",
+      "dueDate": "Due date",
+      "vendor": "Supplier",
+      "billApprovalNote": "If your company requires approval for bills, it goes to an approver first.",
+      "saveBill": "Save bill",
+      "askWhy": "Ask the AI CFO",
+      "question": "Your question",
+      "defaultQuestion": "Why is my profit {amount} this month, and what can I do to improve it?",
+      "askCfo": "Ask the AI CFO",
+      "thisMonth": "This month so far",
+      "moneyIn": "Money in",
+      "moneyOut": "Money out",
+      "profit": "Profit",
+      "lossVerdict": "You spent more than you earned this month. Look at your biggest expenses and unpaid invoices.",
+      "zeroVerdict": "Nothing recorded yet this month. Add income and expenses to see your profit.",
+      "profitVerdict": "You earned more than you spent this month. Nice — keep an eye on cash too.",
+      "mainAccount": "Main bank account",
+      "accountHint": "Where the money went in or out.",
+      "noAccount": "You don't have a bank account in Realy.si yet. Create one (recommended) — it takes a second.",
+      "accountName": "Account name",
+      "createAccount": "Create account",
+      "emailSubject": "Invoice {number}",
+      "emailMessage": "Hello,\n\nplease find invoice {number} at the link below.\n\nThank you!",
+      "emailSent": "The invoice was emailed to the customer.",
+      "connectEmail": "Set up email",
+      "emailNotConfigured": "Email sending isn't set up, so nothing was sent. The invoice stays a draft.",
+      "emailFailed": "The email provider rejected the message. Nothing was sent.",
+      "markedSent": "Marked as sent — it now counts as money owed to you.",
+      "keptDraft": "Kept as a draft. Send it from the invoice page when ready.",
+      "openInvoice": "Open invoice",
+      "invoiceCreated": "Invoice {number} created as a draft.",
+      "sendHow": "How do you want to send it?",
+      "sendEmail": "Email it now",
+      "sendEmailHint": "We email a link to the customer.",
+      "sendMark": "I sent it myself",
+      "sendMarkHint": "Mark as sent (e.g. printed or via chat).",
+      "sendDraft": "Keep as draft",
+      "sendDraftHint": "Finish it later.",
+      "finishInvoice": "Finish",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "health": {
+        "runwayPositive": "Healthy: you're bringing in more cash than you spend.",
+        "runway": {
+          "success": "Healthy: {months} months of runway.",
+          "warning": "Watch out: {months} months of runway left.",
+          "danger": "Urgent: only {months} months of runway."
+        },
+        "runwayTitle": "Runway",
+        "burnTitle": "Monthly burn",
+        "burnNone": "You're not burning cash.",
+        "burnText": "Average cash you lose per month (last 3 months).",
+        "overdueTitle": "Overdue from customers",
+        "overdueNone": "No late customers.",
+        "overdueText": "Customers are late — send reminders.",
+        "payablesTitle": "Overdue to suppliers",
+        "payablesNone": "No late bills.",
+        "payablesText": "Some bills are past due — pay or agree new dates."
+      },
+      "charts": {
+        "pnl": "Money in vs. money out",
+        "pnlHint": "Revenue and expenses per month from your books; the dashed line is profit.",
+        "pnlEmpty": "No income or expenses yet in this period.",
+        "gauge": "Profit margin",
+        "gaugeLabel": "of revenue kept as profit",
+        "gaugeNone": "No revenue yet in this period.",
+        "gauge_success": "Healthy margin.",
+        "gauge_warning": "Thin margin — small changes matter.",
+        "gauge_danger": "Losing money in this period.",
+        "gauge_neutral": "",
+        "cash": "Cash flow",
+        "cashHint": "Money that actually arrived and left your accounts each month.",
+        "cashEmpty": "No bank movements yet in this period.",
+        "forecast": "Cash forecast",
+        "forecastHint": "Starting from {cash} today: the line assumes customers pay on time; the band shows the range if they don't.",
+        "forecastLine": "Expected cash",
+        "forecastBand": "If customers don't pay",
+        "forecastRisk": "If open invoices aren't paid, cash could go below zero — follow up on receivables."
+      },
+      "cashIn": "Cash in",
+      "cashOut": "Cash out",
+      "payLinkTitle": "Online payment link",
+      "payLinkHint": "Let the customer pay online by card or bank (Razorpay or Stripe).",
+      "payLinkReady": "Payment link via {provider} — it's included in invoice emails.",
+      "payLinkCreate": "Create payment link",
+      "payLinkRecreate": "Create a new link",
+      "payLinkConnect": "Connect Razorpay or Stripe",
+      "payLinkNotConnected": "No payment provider is connected. Connect Razorpay or Stripe to create payment links.",
+      "payLinkFailed": "The payment provider refused: {error}",
+      "payOnline": "Pay online"
     }
   },
   "hr": {

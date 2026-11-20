@@ -1,3 +1,4 @@
+import { SmartEmpty } from "@/components/crm/page-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NewProposalForm } from "@/components/crm/proposals";
@@ -128,7 +129,7 @@ export default async function ProposalsPage({ searchParams }: { searchParams: Pr
             </table>
           </div>
         ) : (
-          <p className="p-4 text-sm text-muted-foreground">{filtered ? t("crm.proposals.noMatch") : t("crm.proposals.empty")}</p>
+          filtered ? <p className="p-4 text-sm text-muted-foreground">{t("crm.proposals.noMatch")}</p> : <SmartEmpty ns="crm.smartEmpty.proposals" primaryHref={`/${locale}/crm/deals`} aiHref={`/${locale}/sales/start`} />
         )}
         <Pager path={`/${locale}/crm/proposals`} query={query} page={list.page} pageSize={list.pageSize} total={list.total} />
       </Card>

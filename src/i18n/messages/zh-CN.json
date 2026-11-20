@@ -668,7 +668,11 @@
       "guide_unknown_step": "此页面已没有这个步骤。请刷新后重试。",
       "guide_step_not_automatable": "AI 无法替你完成这一步——请按照向导自己完成。",
       "guide_answer_missing": "请先回答所有问题。",
-      "guide_answer_invalid": "请选择提供的选项之一。"
+      "guide_answer_invalid": "请选择提供的选项之一。",
+      "crm_journey_no_lead": "请先添加或选择一个客户。",
+      "crm_journey_no_deal": "请先创建交易。",
+      "crm_lead_no_email": "此线索没有邮箱地址。",
+      "crm_lead_archived": "此线索已归档。"
     }
   },
   "onboarding": {
@@ -3391,7 +3395,13 @@
       "intakeFollowUpDays": "跟进间隔（天）",
       "intakeFollowUpHint": "为分配的负责人安排跟进。留空则不安排。",
       "taskDueDays": "任务截止（天）",
-      "createSalesTask": "为负责人创建销售任务"
+      "createSalesTask": "为负责人创建销售任务",
+      "icpTitle": "理想客户画像",
+      "icpHint": "用简单的话描述您卖给谁。AI 用它来寻找、调研线索并撰写消息。",
+      "icpGuided": "用 AI 生成",
+      "icpNone": "尚无理想客户画像。",
+      "icpPlaceholder": "例如：德国 2–10 名员工、仍用电话预约的小型牙科诊所……",
+      "icpSaved": "已保存"
     },
     "sort": "排序",
     "sortCreated": "最新",
@@ -3555,6 +3565,130 @@
       "matching": "按 {addresses} 匹配",
       "noAddress": "未记录邮箱地址——仅显示已记录的 CRM 邮件。",
       "hiddenSources": "未显示（无权限）：{sources}。"
+    },
+    "introLabels": {
+      "what": "这是什么？",
+      "why": "为什么重要",
+      "can": "您可以做什么",
+      "aria": "关于本页"
+    },
+    "guided": {
+      "aiWorking": "AI 正在处理",
+      "openTask": "查看完整结果",
+      "aiFailed": "AI 任务失败。打开查看原因，或重试。",
+      "aiWait": "处理中——通常不到一分钟。您可以离开此页面，进度已保存。",
+      "helpMe": "帮我完成",
+      "helpTitle": "让 AI 在这里帮您",
+      "helpHint": "AI 同事会查看此页面和您的真实数据，解释该做什么并建议下一步。",
+      "helpQuestion": "有具体问题吗？（可选）",
+      "helpStart": "请 AI 帮忙",
+      "helpNext": "按照上面编号的下一步操作。AI 提出的任何更改都需要您批准。"
+    },
+    "intro": {
+      "leads": {
+        "what": "线索是可能向您购买的个人或公司。",
+        "why": "每笔销售都从线索开始——放在这里就不会遗漏任何人。",
+        "can": "添加线索、识别热门线索、安排跟进，并让 AI 调研。",
+        "next": "开始销售（引导）"
+      },
+      "contacts": {
+        "what": "联系人是您在客户处打交道的人。",
+        "why": "了解谁做决定、谁使用产品，有助于赢得并留住交易。",
+        "can": "添加联系人、关联公司并查看所有沟通。",
+        "next": "前往公司"
+      },
+      "accounts": {
+        "what": "客户公司是您销售或合作的公司。",
+        "why": "每家公司一个页面，显示人员、交易和历史。",
+        "can": "添加公司、合并重复项并请 AI 做客户分析。",
+        "next": "前往交易"
+      },
+      "deals": {
+        "what": "交易是您正在推进的一笔销售，有金额和阶段。",
+        "why": "交易告诉您有多少钱在路上、哪些需要关注。",
+        "can": "创建交易、推进阶段、标记赢单或输单。",
+        "next": "查看销售管道看板"
+      },
+      "pipeline": {
+        "what": "销售管道以卡片形式显示各阶段的所有未结交易。",
+        "why": "一眼看出交易卡在哪里。",
+        "can": "在阶段之间拖动交易并发现停滞的交易。",
+        "next": "查看销售概览"
+      },
+      "proposals": {
+        "what": "报价单是您发给客户的书面报价。",
+        "why": "清晰的价格报价往往能促成交易。",
+        "can": "从交易创建报价、发送并跟踪是否被查看或接受。",
+        "next": "选择一个交易来写报价"
+      },
+      "calendar": {
+        "what": "日历显示跟进、会议和预计成交日期。",
+        "why": "准时出现就是成功的一半。",
+        "can": "查看到期事项并重新安排。",
+        "next": "打开销售管道"
+      },
+      "dashboard": {
+        "what": "关于线索的数据：数量、所处阶段、负责人。",
+        "why": "它显示您的销售引擎是否健康。",
+        "can": "查看阶段间转化率和逾期跟进。",
+        "next": "打开销售概览"
+      },
+      "import": {
+        "what": "从表格导入客户，或导出数据。",
+        "why": "从已有数据开始，无需重新输入。",
+        "can": "导入 CSV 文件并导出 CRM。",
+        "next": "返回线索"
+      },
+      "settings": {
+        "what": "您的销售流程设置：阶段、来源、字段和规则。",
+        "why": "契合您销售方式的流程让大家步调一致。",
+        "can": "编辑阶段、自动分配并描述理想客户。",
+        "next": "运行引导设置"
+      },
+      "customers": {
+        "what": "客户是已经在向您购买的公司。",
+        "why": "让客户满意是成本最低的增长方式。",
+        "can": "查看每个客户及其人员、交易和历史。",
+        "next": "寻找新客户（引导）"
+      }
+    },
+    "smartEmpty": {
+      "leads": {
+        "title": "还没有线索",
+        "text": "线索是任何可能向您购买的人。自己添加第一个——或让 AI 寻找符合理想客户的人。",
+        "primary": "添加我的第一个线索",
+        "ai": "让 AI 寻找线索"
+      },
+      "deals": {
+        "title": "还没有交易",
+        "text": "交易是您正在推进的销售。客户表现出真正兴趣时创建一个——或让引导流程为您创建。",
+        "primary": "创建我的第一笔交易",
+        "ai": "让 AI 引导我"
+      },
+      "contacts": {
+        "title": "还没有联系人",
+        "text": "联系人是客户那边的人。添加一位您打交道的人，或让 AI 帮您找到并调研合适的人。",
+        "primary": "添加我的第一个联系人",
+        "ai": "让 AI 帮忙"
+      },
+      "accounts": {
+        "title": "还没有公司",
+        "text": "添加您销售的目标公司。AI 可以找到符合理想客户的公司。",
+        "primary": "添加我的第一家公司",
+        "ai": "让 AI 寻找公司"
+      },
+      "proposals": {
+        "title": "还没有报价单",
+        "text": "报价单是针对某笔交易的报价。打开一个交易来创建——AI 可以写初稿。",
+        "primary": "选择交易",
+        "ai": "让 AI 引导我"
+      },
+      "sales": {
+        "title": "您的销售地图是空的",
+        "text": "添加客户后，这里会显示客户旅程、销售管道和预测。引导流程几分钟就能带您到这里。",
+        "primary": "开始销售",
+        "ai": "让 AI 做调研"
+      }
     }
   },
   "plans": {
@@ -7513,7 +7647,8 @@
       "targets": "目标",
       "commissions": "佣金",
       "reports": "报表",
-      "team": "团队"
+      "team": "团队",
+      "start": "开始销售"
     },
     "subtitle": "基于实时 CRM 数据的团队业绩、预测和目标。",
     "from": "从",
@@ -7666,6 +7801,233 @@
       "setTarget": "设置目标",
       "noTarget": "无目标",
       "empty": "该公司尚无人拥有销售权限。"
+    },
+    "intro": {
+      "overview": {
+        "what": "您的销售系统：客户旅程、销售管道、预测和下一步行动。",
+        "why": "它显示钱从哪里来、客户在哪里流失。",
+        "can": "按照 AI 下一步建议行动、观察漏斗并深入细节。",
+        "next": "开始销售（引导）"
+      },
+      "start": {
+        "what": "从“谁是我的客户？”到被跟踪的交易的分步指南。",
+        "why": "在做实际工作的同时学会一套成熟的销售流程。",
+        "can": "回答简单问题；AI 帮您调研、建议和撰写。",
+        "next": "按照下面的步骤操作"
+      },
+      "targets": {
+        "what": "目标是每人每月或每季度的销售目标。",
+        "why": "清晰的目标让团队保持专注。",
+        "can": "设定目标并查看进度。",
+        "next": "查看团队"
+      },
+      "commissions": {
+        "what": "佣金是销售人员从赢单中获得的收入。",
+        "why": "公平透明的佣金能激励团队。",
+        "can": "查看已获得的佣金及其规则。",
+        "next": "编辑佣金规则"
+      },
+      "reports": {
+        "what": "报表细分交易、收入和赢单率。",
+        "why": "数据显示哪些来源、人员和阶段效果最好。",
+        "can": "筛选、比较和导出销售数据。",
+        "next": "返回概览"
+      },
+      "team": {
+        "what": "您的销售团队：容量、可用性和业绩。",
+        "why": "工作量均衡意味着更快回复客户。",
+        "can": "为每个人设定上限和可用性。",
+        "next": "设定目标"
+      }
+    },
+    "journey": {
+      "title": "开始销售",
+      "subtitle": "从第一个客户到被跟踪的交易的引导路径——繁重工作由 AI 完成。",
+      "toDashboard": "前往销售概览",
+      "dismiss": "我自己探索",
+      "restart": "重新开始引导",
+      "restartConfirm": "从头重新开始引导吗？已创建的记录会保留。",
+      "aiNotReady": "AI 当前不可用（未配置或无权限）。您仍可以自己完成每一步。",
+      "back": "返回",
+      "skip": "暂时跳过",
+      "continue": "继续",
+      "noPermission": "您需要销售管理权限才能使用引导。",
+      "progress": "已完成 {done}/{total} 步",
+      "completed": "已完成",
+      "stepsLabel": "旅程步骤",
+      "stepOf": "第 {n} 步，共 {total} 步",
+      "steps": {
+        "sell": "销售方式",
+        "icp": "您的客户",
+        "lead": "第一个客户",
+        "research": "调研",
+        "next": "下一步",
+        "message": "消息",
+        "send": "发送",
+        "track": "跟踪交易"
+      },
+      "q": {
+        "sell": "您通常如何销售产品？",
+        "icp": "谁是您的潜在客户？",
+        "lead": "添加一个客户——自己添加或借助 AI",
+        "research": "让 AI 调研这个客户",
+        "next": "接下来该做什么？",
+        "message": "写一条个性化消息",
+        "send": "发送——或安排跟进",
+        "track": "让 AI 跟踪对话和交易"
+      },
+      "why": {
+        "sell": "我们会据此设置销售阶段（销售管道）。之后可在设置中修改。",
+        "icp": "用您自己的话描述。AI 会将其转化为清晰的理想客户画像，指导后续一切。",
+        "lead": "线索是可能购买的人。添加您认识的人，或让 AI 推荐——只有您勾选的才会被添加。",
+        "research": "好的调研意味着更好的第一条消息。AI 会总结他们是谁以及为什么会感兴趣。",
+        "next": "AI 推荐最佳的下一步并给出日期。它提出的提醒需要您批准。",
+        "message": "AI 根据真实信息写初稿。修改到像您本人说话为止。",
+        "send": "我们通过您的邮件服务商发送，并如实显示结果——或者您改为安排提醒。",
+        "track": "交易记录商机及其阶段，让 AI 持续关注并告诉您下一步。"
+      },
+      "recommended": "推荐",
+      "stagesPreview": "您的阶段将是：",
+      "won": "赢单",
+      "lost": "输单",
+      "styles": {
+        "quick": {
+          "title": "快速销售",
+          "description": "客户在一两次沟通后就购买。",
+          "pipeline": "快速销售",
+          "stage1": "已联系",
+          "stage2": "有兴趣",
+          "stage3": "准备购买"
+        },
+        "meetings": {
+          "title": "会面与报价",
+          "description": "我先与客户会面，再发送报价。",
+          "pipeline": "销售管道",
+          "stage1": "已联系",
+          "stage2": "已约会面",
+          "stage3": "已发报价",
+          "stage4": "谈判中"
+        },
+        "long": {
+          "title": "大额交易",
+          "description": "多人参与决策，需要数周或数月。",
+          "pipeline": "B2B 管道",
+          "stage1": "已确认",
+          "stage2": "需求已明确",
+          "stage3": "演示",
+          "stage4": "方案",
+          "stage5": "谈判"
+        }
+      },
+      "pipelineReady": "您的销售管道已设置好。",
+      "setupPipeline": "设置我的销售管道",
+      "icpDescribe": "描述您的理想客户",
+      "icpExample": "例如：“我所在城市希望增加线上订单的咖啡馆和小餐馆。”",
+      "icpPlaceholder": "他们是谁、有什么问题、在哪里？",
+      "icpAi": "让 AI 生成客户画像",
+      "icpUseMine": "直接使用我的描述",
+      "icpResult": "您的理想客户画像",
+      "icpResultHint": "修改不准确的地方，然后保存。",
+      "icpSave": "保存画像",
+      "leadSelf": "自己添加客户",
+      "leadSelfHint": "您已经认识可能购买的人。",
+      "leadAi": "让 AI 寻找线索",
+      "leadAiHint": "AI 会推荐符合理想客户的真实对象。只有您勾选后才会添加。",
+      "leadName": "名称",
+      "leadNameHint": "个人或公司。",
+      "leadEmailHint": "之后发送邮件需要。",
+      "leadCompany": "公司",
+      "leadValue": "可能的交易金额",
+      "leadValueHint": "粗略估计即可（例如 1500）。",
+      "leadNotes": "备注",
+      "leadAdd": "添加此客户",
+      "findWhere": "有什么侧重点吗？",
+      "findWhereHint": "可选——例如城市、行业或公司规模。",
+      "findStart": "用 AI 寻找线索",
+      "tickLeads": "勾选您要添加的：",
+      "addTicked": "{count, plural, other {添加 # 个线索}}",
+      "noCandidates": "AI 未返回可用格式的建议。打开结果查看，或补充细节后重试。",
+      "addedLeads": "{count, plural, other {已添加 # 个线索。}}",
+      "skippedLeads": "已在 CRM 中：{names}。",
+      "chooseLead": "继续处理",
+      "chooseLeadHint": "后续步骤针对的客户。",
+      "choose": "选择客户……",
+      "addCustomerFirst": "添加客户",
+      "needLead": "请先添加或选择一个客户。",
+      "workingOn": "客户：",
+      "researchStart": "调研此客户",
+      "again": "再次运行",
+      "nextStart": "推荐我的下一步",
+      "nextHint": "提示：建议也会显示在客户页面上。",
+      "tone": "语气（可选）",
+      "toneHint": "例如：友好、简短、正式",
+      "draftStart": "用 AI 撰写",
+      "subject": "主题",
+      "body": "消息",
+      "bodyHint": "纯文本。让它听起来像您。",
+      "saveMessage": "使用此消息",
+      "followUpDefault": "跟进此客户",
+      "sendTitle": "通过邮件发送",
+      "sendTo": "收件人：{email}",
+      "addEmail": "添加邮箱",
+      "noEmail": "该客户还没有邮箱地址。",
+      "sendNow": "立即发送",
+      "sentOk": "已发送：“{subject}”。已记录在客户时间线上。",
+      "connectEmail": "设置邮件",
+      "sentNotConfigured": "尚未设置邮件发送，因此没有发送任何内容。",
+      "sentFailed": "邮件服务商拒绝了该消息。没有发送任何内容。",
+      "followTitle": "或安排跟进",
+      "followHint": "稍后提醒您致电或写信。",
+      "followDate": "时间",
+      "followNote": "提醒内容",
+      "followSave": "安排跟进",
+      "followDone": "已安排在 {date} 跟进。",
+      "dealAmount": "交易金额（可选）",
+      "dealAmountHint": "您预计此客户会支付的金额。",
+      "createDeal": "创建交易",
+      "dealStages": "交易阶段",
+      "dealTracked": "此交易已进入您的销售管道。随着沟通推进而推进它。",
+      "watchDeal": "询问 AI 下一步",
+      "allDone": "您已完成引导。您的销售系统已就绪。",
+      "finish": "完成并打开销售系统"
+    },
+    "os": {
+      "convert": "{pct} 进入下一步",
+      "openPipeline": "打开销售管道看板 →",
+      "scoreAria": "线索评分 {score}/100",
+      "lastTouch": "最近接触：",
+      "never": "从未",
+      "nextAction": "下一步：",
+      "noNext": "暂无计划",
+      "forecastWon": "已赢单",
+      "forecastWeighted": "预期（加权）",
+      "forecastBest": "最佳情况",
+      "stageLead": "线索",
+      "eyebrow": "销售系统",
+      "inJourney": "旅程中",
+      "inJourneyHint": "活跃线索",
+      "won": "赢单",
+      "wonHint": "占线索的 {pct}%",
+      "openValue": "未结管道金额",
+      "dueToday": "到期跟进",
+      "dueTodayHint": "今天或更早",
+      "startSelling": "开始销售",
+      "journeyTitle": "客户旅程",
+      "journeyHint": "线索如何从首次接触走到赢单，以及每一步继续推进的比例。",
+      "funnelTitle": "漏斗",
+      "funnelHint": "客户在哪里流失。",
+      "riverTitle": "管道价值河流",
+      "riverHint": "“{pipeline}”各阶段未结交易中的金额。",
+      "riverEmpty": "还没有阶段。",
+      "forecastTitle": "收入预测",
+      "forecastHint": "按月显示已赢单金额加上未结交易可能带来的收入。",
+      "leadsTitle": "线索洞察",
+      "leadsHint": "您最好的线索：评分、热度、最近接触和下一步。",
+      "allLeads": "全部线索",
+      "railTitle": "AI 下一步行动",
+      "railHint": "到期的跟进和最新的 AI 建议。",
+      "railEmpty": "没有到期事项。可在任何页面请 AI 帮忙，或运行引导流程。",
+      "advanced": "高级：详细数据、团队和目标"
     }
   },
   "finance": {
@@ -7688,7 +8050,8 @@
       "bills": "供应商账单",
       "payables": "应付账款",
       "approvals": "审批",
-      "claims": "费用报销"
+      "claims": "费用报销",
+      "start": "从这里开始"
     },
     "accounting": {
       "tabs": {
@@ -8496,6 +8859,340 @@
       "submit": "提问",
       "asking": "正在提问…",
       "thinking": "正在准备答案…"
+    },
+    "intro": {
+      "dashboard": {
+        "what": "您的财务指挥中心：收入、支出、现金和健康状况。",
+        "why": "了解自己的数字，就不会有意外。",
+        "can": "一键完成常见任务、查看健康检查、询问 AI 财务官。",
+        "next": "从一个简单任务开始"
+      },
+      "start": {
+        "what": "为非会计人员准备的简单引导式财务任务。",
+        "why": "每周几分钟就能保持账目正确。",
+        "can": "记录收入或支出、开发票、跟踪收款和账单。",
+        "next": "在下方选择一个任务"
+      },
+      "transactions": {
+        "what": "银行、现金和卡账户的每一笔收付款。",
+        "why": "这是利润和现金的原始记录。",
+        "can": "添加、导入、分类并附上收据。",
+        "next": "记录支出（引导）"
+      },
+      "accounts": {
+        "what": "您的银行、现金和卡账户。",
+        "why": "余额告诉您实际有多少钱。",
+        "can": "添加账户并查看余额。",
+        "next": "查看交易"
+      },
+      "invoices": {
+        "what": "发票是您发给客户、请他们付款的账单。",
+        "why": "没有发票就没有钱——它们也显示别人欠您多少。",
+        "can": "创建、发送、催款并记录收款。",
+        "next": "开具发票（引导）"
+      },
+      "estimates": {
+        "what": "估价单（报价）是在工作前提供的价格。",
+        "why": "先谈好价格可以避免纠纷。",
+        "can": "创建报价并将已接受的转为发票。",
+        "next": "前往发票"
+      },
+      "creditNotes": {
+        "what": "贷项通知单减少客户的欠款，例如退款时。",
+        "why": "它们让发票和余额保持正确。",
+        "can": "开具贷项通知单并应用到发票。",
+        "next": "前往发票"
+      },
+      "receivables": {
+        "what": "应收账款是客户欠您的钱。",
+        "why": "未付发票是您已赚到但尚未到手的现金。",
+        "can": "查看谁欠多少、逾期多久，并发送提醒。",
+        "next": "记录收款（引导）"
+      },
+      "bills": {
+        "what": "账单是供应商开给您的发票。",
+        "why": "按时付款保护信誉；不过早付款保护现金。",
+        "can": "记录账单、审批并付款。",
+        "next": "添加账单（引导）"
+      },
+      "payables": {
+        "what": "应付账款是您欠供应商的钱。",
+        "why": "它们显示即将从您账户流出的资金。",
+        "can": "查看到期款项并规划付款。",
+        "next": "查看即将到期的账单（引导）"
+      },
+      "approvals": {
+        "what": "付款前需要有人批准的支出。",
+        "why": "审批可防止错误和欺诈。",
+        "can": "批准或拒绝账单和报销。",
+        "next": "前往账单"
+      },
+      "claims": {
+        "what": "费用报销是员工自己垫付的费用。",
+        "why": "快速报销让大家满意。",
+        "can": "提交并审核报销。",
+        "next": "前往审批"
+      },
+      "recurring": {
+        "what": "重复发生的付款：房租、订阅、固定服务费。",
+        "why": "自动化节省时间并让预测更准确。",
+        "can": "设置定期发票和支出。",
+        "next": "查看现金流"
+      },
+      "budgets": {
+        "what": "预算是各部门的支出上限。",
+        "why": "它们防止成本悄悄增长。",
+        "can": "设定预算并与实际支出比较。",
+        "next": "查看报表"
+      },
+      "vendors": {
+        "what": "供应商是您采购的对象。",
+        "why": "了解钱花在哪里有助于谈判。",
+        "can": "查看各供应商的支出。",
+        "next": "前往账单"
+      },
+      "cashflow": {
+        "what": "现金流是随时间流入和流出的资金。",
+        "why": "盈利的企业也可能现金耗尽。",
+        "can": "查看预测并规划情景。",
+        "next": "了解我的利润"
+      },
+      "accounting": {
+        "what": "完整账簿：科目表、日记账、期间、税务。",
+        "why": "这是您的会计师需要的。",
+        "can": "审核分录、结账、对账。",
+        "next": "查看报表"
+      },
+      "reports": {
+        "what": "标准报表：利润表、资产负债表、现金流量表。",
+        "why": "它们回答“我们赚钱了吗？”和“我们拥有什么？”",
+        "can": "选择期间，阅读并导出报表。",
+        "next": "了解我的利润（引导）"
+      },
+      "settings": {
+        "what": "发票编号、付款期限、税率和类别。",
+        "why": "正确的设置让每份单据都准确。",
+        "can": "更改公司的默认设置。",
+        "next": "返回引导任务"
+      }
+    },
+    "os": {
+      "startTitle": "财务——从这里开始",
+      "homeTitle": "您想做什么？",
+      "askTitle": "询问 AI 财务官",
+      "askHint": "用简单的话询问任何关于钱的问题——答案来自您的真实账簿。",
+      "advanced": "高级：全部数据、预测和洞察",
+      "emptyTitle": "两分钟设置好您的财务",
+      "emptyText": "记录您的第一笔收入或支出——我们会顺便创建银行账户。",
+      "emptyCta": "记录我的第一笔收入",
+      "doneBefore": "已完成过",
+      "flows": {
+        "income": {
+          "title": "记录收入",
+          "hint": "您收到的钱——一笔销售、一笔付款、一笔补助。",
+          "done": "收入已保存。",
+          "q1": "收到了多少钱，什么时候？",
+          "q2": "钱进了哪里，是什么款项？",
+          "q3": "检查并保存",
+          "what": "这笔钱是什么？",
+          "whatHint": "例如“为 Luna 咖啡馆做的网站项目”"
+        },
+        "expense": {
+          "title": "记录支出",
+          "hint": "您花出去的钱——房租、软件、差旅。",
+          "done": "支出已保存。",
+          "q1": "花了多少钱，什么时候？",
+          "q2": "用哪个账户付的，属于哪类费用？",
+          "q3": "检查并保存",
+          "what": "您为什么付款？",
+          "whatHint": "例如“三月办公室租金”"
+        },
+        "invoice": {
+          "title": "开具发票",
+          "hint": "请客户付款给您。",
+          "done": "发票已完成。",
+          "q1": "向谁开票？",
+          "q2": "您卖了什么？",
+          "q3": "检查、创建并发送"
+        },
+        "payments": {
+          "title": "跟踪收款",
+          "hint": "记录客户为发票支付的款项。",
+          "done": "收款已记录。",
+          "q1": "哪张发票已付款？",
+          "q2": "到账多少，进了哪个账户？",
+          "q3": "检查并记录"
+        },
+        "bills": {
+          "title": "查看即将到期的账单",
+          "hint": "近期必须支付的款项——并添加收到的账单。",
+          "done": "账单已保存。",
+          "q1": "即将到期的账单",
+          "q2": "添加收到的账单",
+          "q3": "检查并保存"
+        },
+        "profit": {
+          "title": "了解我的利润",
+          "hint": "您在赚钱吗？简单解释。",
+          "done": "完成。",
+          "q1": "本月利润解读",
+          "q2": "问 AI 财务官原因"
+        }
+      },
+      "back": "返回",
+      "close": "关闭",
+      "continue": "继续",
+      "stepOf": "第 {n} 步，共 {total} 步",
+      "noPermission": "此任务需要财务管理权限。",
+      "profitNow": "本月利润",
+      "owedToYou": "客户欠您",
+      "billsDue": "30 天内到期账单",
+      "profitSentence": "您本月的利润现在是 {amount}（收入 {revenue}，支出 {expenses}）。",
+      "again": "再做一次",
+      "amount": "金额",
+      "amountHint": "以 {currency} 计，例如 120.50",
+      "date": "日期",
+      "category": "类别",
+      "categoryHint": "我们选择了您最常用的类别。",
+      "noCategory": "无类别",
+      "recommended": "推荐",
+      "terms": {
+        "category": "类别",
+        "categoryText": "表示款项类型的标签（如销售、房租），决定金额在利润报表中的位置。",
+        "profit": "利润",
+        "profitText": "一段时间内的收入减去支出。为正表示赚的比花的多。",
+        "invoice": "发票",
+        "invoiceText": "要求客户在到期日前支付一定金额的单据。",
+        "receivable": "应收账款",
+        "receivableText": "您已发出但客户尚未支付的发票金额。",
+        "payment": "收款",
+        "paymentText": "客户实际支付的钱。记录后发票会标记为（部分）已付，钱也会计入您的银行账户。",
+        "payable": "应付账款",
+        "payableText": "您因收到的账单而欠供应商的钱。",
+        "cashflow": "现金流",
+        "cashflowText": "钱实际流动的时间。如果客户付款晚，账面盈利也可能现金紧张。"
+      },
+      "account": "账户",
+      "save": "保存",
+      "customerExisting": "客户",
+      "customerNewOption": "+ 新客户",
+      "customerName": "客户名称",
+      "customerEmail": "客户邮箱",
+      "customerEmailHint": "用于通过邮件发送发票。",
+      "item": "您卖的东西",
+      "itemHint": "例如“标志设计”",
+      "quantity": "数量",
+      "price": "单价",
+      "dueIn": "付款期限",
+      "dueInHint": "客户有多长时间付款。",
+      "days": "{count, plural, other {# 天}}",
+      "customer": "客户",
+      "total": "合计",
+      "beforeTax": "（税前）",
+      "createInvoice": "创建发票",
+      "due": "{date} 到期",
+      "overdue": "已逾期",
+      "noOpenInvoices": "没有未付发票——目前没人欠您钱。",
+      "amountReceived": "收到金额",
+      "amountReceivedHint": "已预填仍欠的金额。",
+      "invoice": "发票",
+      "recordPayment": "记录收款",
+      "noUpcomingBills": "未来 60 天内没有到期账单。",
+      "addBill": "添加账单",
+      "vendorExisting": "供应商",
+      "vendorNewOption": "+ 新供应商",
+      "vendorName": "供应商名称",
+      "vendorHint": "谁给您寄的账单。",
+      "billNumber": "账单编号",
+      "billNumberHint": "账单上印的编号。",
+      "dueDate": "到期日",
+      "vendor": "供应商",
+      "billApprovalNote": "如果贵公司要求账单审批，它会先交给审批人。",
+      "saveBill": "保存账单",
+      "askWhy": "询问 AI 财务官",
+      "question": "您的问题",
+      "defaultQuestion": "为什么我本月的利润是 {amount}？我该如何改善？",
+      "askCfo": "询问 AI 财务官",
+      "thisMonth": "本月至今",
+      "moneyIn": "收入",
+      "moneyOut": "支出",
+      "profit": "利润",
+      "lossVerdict": "本月支出超过收入。看看最大的几笔支出和未付发票。",
+      "zeroVerdict": "本月尚无记录。记录收入和支出即可看到利润。",
+      "profitVerdict": "本月收入超过支出。很好——也要关注现金。",
+      "mainAccount": "主银行账户",
+      "accountHint": "钱进出的账户。",
+      "noAccount": "您在 Realy.si 中还没有银行账户。创建一个（推荐）——只需一秒。",
+      "accountName": "账户名称",
+      "createAccount": "创建账户",
+      "emailSubject": "发票 {number}",
+      "emailMessage": "您好，\n\n请通过以下链接查看发票 {number}。\n\n谢谢！",
+      "emailSent": "发票已通过邮件发送给客户。",
+      "connectEmail": "设置邮件",
+      "emailNotConfigured": "尚未设置邮件发送，因此没有发送任何内容。发票仍为草稿。",
+      "emailFailed": "邮件服务商拒绝了该消息。没有发送任何内容。",
+      "markedSent": "已标记为已发送——现在计入应收账款。",
+      "keptDraft": "已保留为草稿。准备好后可在发票页面发送。",
+      "openInvoice": "打开发票",
+      "invoiceCreated": "发票 {number} 已作为草稿创建。",
+      "sendHow": "您想如何发送？",
+      "sendEmail": "立即邮件发送",
+      "sendEmailHint": "我们会把链接发给客户。",
+      "sendMark": "我已自行发送",
+      "sendMarkHint": "标记为已发送（例如打印或通过聊天）。",
+      "sendDraft": "保留为草稿",
+      "sendDraftHint": "稍后完成。",
+      "finishInvoice": "完成",
+      "months": "{count, plural, other {# 个月}}",
+      "health": {
+        "runwayPositive": "健康：流入的现金多于支出。",
+        "runway": {
+          "success": "健康：可维持 {months} 个月。",
+          "warning": "注意：还可维持 {months} 个月。",
+          "danger": "紧急：仅可维持 {months} 个月。"
+        },
+        "runwayTitle": "现金跑道",
+        "burnTitle": "每月消耗",
+        "burnNone": "您没有在消耗现金。",
+        "burnText": "最近 3 个月平均每月净流出的现金。",
+        "overdueTitle": "客户逾期款",
+        "overdueNone": "没有逾期客户。",
+        "overdueText": "有客户逾期——请发送提醒。",
+        "payablesTitle": "逾期应付款",
+        "payablesNone": "没有逾期账单。",
+        "payablesText": "部分账单已逾期——请付款或商定新日期。"
+      },
+      "charts": {
+        "pnl": "收入与支出",
+        "pnlHint": "账簿中的每月收入和费用；虚线为利润。",
+        "pnlEmpty": "此期间尚无收入或支出。",
+        "gauge": "利润率",
+        "gaugeLabel": "收入中留作利润的比例",
+        "gaugeNone": "此期间尚无收入。",
+        "gauge_success": "利润率健康。",
+        "gauge_warning": "利润率偏低——小变化也很重要。",
+        "gauge_danger": "此期间处于亏损。",
+        "gauge_neutral": "",
+        "cash": "现金流",
+        "cashHint": "每月实际进出账户的资金。",
+        "cashEmpty": "此期间尚无银行流水。",
+        "forecast": "现金预测",
+        "forecastHint": "以今天的 {cash} 为起点：曲线假设客户按时付款；色带表示客户不付款时的范围。",
+        "forecastLine": "预期现金",
+        "forecastBand": "如果客户不付款",
+        "forecastRisk": "如果未付发票收不回来，现金可能降到零以下——请跟进应收账款。"
+      },
+      "cashIn": "现金流入",
+      "cashOut": "现金流出",
+      "payLinkTitle": "在线付款链接",
+      "payLinkHint": "让客户通过银行卡或银行在线付款（Razorpay 或 Stripe）。",
+      "payLinkReady": "通过 {provider} 生成的付款链接——已包含在发票邮件中。",
+      "payLinkCreate": "创建付款链接",
+      "payLinkRecreate": "创建新链接",
+      "payLinkConnect": "连接 Razorpay 或 Stripe",
+      "payLinkNotConnected": "未连接支付服务商。连接 Razorpay 或 Stripe 即可创建付款链接。",
+      "payLinkFailed": "支付服务商拒绝：{error}",
+      "payOnline": "在线付款"
     }
   },
   "hr": {

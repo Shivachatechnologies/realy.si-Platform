@@ -578,3 +578,26 @@ model CrmSalesRep {
   @@unique([companyId, ownerId])
   @@map("crm_sales_reps")
 }
+
+/// Saved progress of a guided "Start here" journey (Sales OS "Start selling", Finance OS beginner flows), one row per
+/// company and flow key, so a journey can be resumed by anyone on the team.
+model GuidedFlowProgress {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  /// e.g. "sales_start", "finance_income".
+  flow           String
+  step           Int       @default(0)
+  /// Answers and ids of records/AI tasks created along the way.
+  data           Json      @default("{}")
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  dismissedAt    DateTime? @map("dismissed_at") @db.Timestamptz(3)
+  updatedById    String?   @map("updated_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, flow])
+  @@map("guided_flow_progress")
+}

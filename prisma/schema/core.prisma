@@ -642,6 +642,7 @@ model Company {
   guideRequests                   GuideRequest[]
   commandSessions                 CommandSession[]
   commandMessages                 CommandMessage[]
+  guidedFlowProgresses            GuidedFlowProgress[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

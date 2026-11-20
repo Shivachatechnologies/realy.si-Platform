@@ -9,6 +9,32 @@ import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
 import { FinanceTabs, type FinanceTab } from "./finance-tabs";
+import { HelpMeButton } from "@/components/crm/guided-kit";
+import { PageIntro } from "@/components/crm/page-intro";
+import { aiConfigured } from "@/server/modules/agents/runtime";
+
+/** Where each finance page's "what to do next" button leads. */
+const INTRO_NEXT: Record<FinanceTab, string | undefined> = {
+  dashboard: "/start",
+  start: undefined,
+  transactions: "/start?flow=expense",
+  accounts: "/transactions",
+  invoices: "/start?flow=invoice",
+  estimates: "/invoices",
+  creditNotes: "/invoices",
+  receivables: "/start?flow=payments",
+  bills: "/start?flow=bills",
+  payables: "/start?flow=bills",
+  approvals: "/bills",
+  claims: "/approvals",
+  recurring: "/cashflow",
+  budgets: "/reports",
+  vendors: "/bills",
+  cashflow: "/start?flow=profit",
+  accounting: "/reports",
+  reports: "/start?flow=profit",
+  settings: "/start",
+};
 
 /**
  * Everything a finance page needs: translator, viewer, company, permissions and formatters. When there is no company or
@@ -52,7 +78,20 @@ export async function financePage(active: FinanceTab, title?: string) {
     money: (v: bigint | string, cur = currency) => formatMoney({ amountMinor: v, currency: cur }, locale),
     /** Dates stored as calendar days (@db.Date) are formatted in UTC so they never shift. */
     day: (d: Date) => formatDate(d, locale, "UTC"),
-    frame: (children: ReactNode) => frame(<>{tabs}{children}</>),
+    frame: (children: ReactNode) =>
+      frame(
+        <>
+          {tabs}
+          {title ? null : (
+            <PageIntro ns={`finance.intro.${active}`} tone="finance" href={INTRO_NEXT[active] !== undefined ? `/${locale}/finance${INTRO_NEXT[active]}` : undefined}>
+              {canRunAgents && aiConfigured() ? (
+                <HelpMeButton base={`/api/v1/organizations/${org.id}/companies/${company.id}`} url={`/api/v1/organizations/${org.id}/companies/${company.id}/finance/guided/help`} body={{ page: `finance.${active}` }} locale={locale} />
+              ) : null}
+            </PageIntro>
+          )}
+          {children}
+        </>,
+      ),
   } as const;
 }
 

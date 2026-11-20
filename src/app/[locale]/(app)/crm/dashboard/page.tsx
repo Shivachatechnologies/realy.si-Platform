@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CrmTabs } from "@/components/crm/crm-tabs";
+import { CrmIntro } from "@/components/crm/shell";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
@@ -61,6 +62,7 @@ export default async function CrmDashboardPage() {
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
       <CrmTabs locale={locale} active="dashboard" />
+      <CrmIntro area="crm" active="dashboard" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stat(t("crm.newLeads"), formatNumber(d.newLeads.last7, locale), t("crm.newLeadsHint", { count: d.newLeads.last30 }))}
         {stat(t("crm.pipelineValue"), money(d.pipeline.openValueMinor), t("crm.count", { count: d.pipeline.openCount }))}

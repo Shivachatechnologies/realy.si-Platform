@@ -668,7 +668,11 @@
       "guide_unknown_step": "Diesen Schritt gibt es auf dieser Seite nicht mehr. Lade neu und versuche es erneut.",
       "guide_step_not_automatable": "Diesen Schritt kann die KI nicht für dich erledigen – folge dem Guide und erledige ihn selbst.",
       "guide_answer_missing": "Bitte beantworte zuerst alle Fragen.",
-      "guide_answer_invalid": "Bitte wähle eine der angebotenen Optionen."
+      "guide_answer_invalid": "Bitte wähle eine der angebotenen Optionen.",
+      "crm_journey_no_lead": "Fügen Sie zuerst einen Kunden hinzu oder wählen Sie einen aus.",
+      "crm_journey_no_deal": "Legen Sie zuerst den Deal an.",
+      "crm_lead_no_email": "Dieser Lead hat keine E-Mail-Adresse.",
+      "crm_lead_archived": "Dieser Lead ist archiviert."
     }
   },
   "onboarding": {
@@ -3391,7 +3395,13 @@
       "intakeFollowUpDays": "Follow-up nach (Tagen)",
       "intakeFollowUpHint": "Plant ein Follow-up für den zugewiesenen Verantwortlichen. Leer lassen für keins.",
       "taskDueDays": "Aufgabe fällig in (Tagen)",
-      "createSalesTask": "Vertriebsaufgabe für den Verantwortlichen erstellen"
+      "createSalesTask": "Vertriebsaufgabe für den Verantwortlichen erstellen",
+      "icpTitle": "Idealkundenprofil",
+      "icpHint": "An wen Sie verkaufen, in einfachen Worten. Die KI nutzt es, um Leads zu finden, zu recherchieren und Nachrichten zu schreiben.",
+      "icpGuided": "Mit KI erstellen",
+      "icpNone": "Noch kein Idealkundenprofil.",
+      "icpPlaceholder": "z. B. Kleine Zahnarztpraxen in Deutschland mit 2–10 Mitarbeitenden, die Termine noch telefonisch vergeben …",
+      "icpSaved": "Gespeichert"
     },
     "sort": "Sortieren",
     "sortCreated": "Neueste",
@@ -3555,6 +3565,130 @@
       "matching": "Zugeordnet über {addresses}",
       "noAddress": "Keine E-Mail-Adresse hinterlegt — nur protokollierte CRM-E-Mails werden angezeigt.",
       "hiddenSources": "Nicht angezeigt (kein Zugriff): {sources}."
+    },
+    "introLabels": {
+      "what": "Was ist das?",
+      "why": "Warum es wichtig ist",
+      "can": "Was Sie hier tun können",
+      "aria": "Über diese Seite"
+    },
+    "guided": {
+      "aiWorking": "KI arbeitet",
+      "openTask": "Vollständiges Ergebnis öffnen",
+      "aiFailed": "Die KI-Aufgabe ist fehlgeschlagen. Öffnen Sie sie, um den Grund zu sehen, oder versuchen Sie es erneut.",
+      "aiWait": "Wird bearbeitet – das dauert meist unter einer Minute. Sie können die Seite verlassen; der Fortschritt bleibt gespeichert.",
+      "helpMe": "Hilf mir dabei",
+      "helpTitle": "Lassen Sie sich hier von der KI helfen",
+      "helpHint": "Ein KI-Teammitglied sieht sich diese Seite und Ihre echten Daten an, erklärt, was zu tun ist, und schlägt die nächsten Schritte vor.",
+      "helpQuestion": "Etwas Bestimmtes? (optional)",
+      "helpStart": "KI um Hilfe bitten",
+      "helpNext": "Folgen Sie den nummerierten nächsten Schritten oben. Jede von der KI vorgeschlagene Änderung wartet auf Ihre Freigabe."
+    },
+    "intro": {
+      "leads": {
+        "what": "Leads sind Personen oder Firmen, die bei Ihnen kaufen könnten.",
+        "why": "Jeder Verkauf beginnt als Lead – hier geht niemand verloren.",
+        "can": "Leads anlegen, heiße Leads erkennen, Nachfassen planen und von der KI recherchieren lassen.",
+        "next": "Verkaufen starten (geführt)"
+      },
+      "contacts": {
+        "what": "Kontakte sind die Menschen, mit denen Sie bei Ihren Kunden sprechen.",
+        "why": "Wer entscheidet und wer nutzt Ihr Produkt? Das hilft, Deals zu gewinnen und zu halten.",
+        "can": "Personen anlegen, Firmen zuordnen und jedes Gespräch sehen.",
+        "next": "Zu den Firmen"
+      },
+      "accounts": {
+        "what": "Accounts sind die Firmen, an die Sie verkaufen oder mit denen Sie arbeiten.",
+        "why": "Ein Ort pro Firma zeigt Personen, Deals und Verlauf.",
+        "can": "Firmen anlegen, Dubletten zusammenführen und eine KI-Analyse anfordern.",
+        "next": "Zu den Deals"
+      },
+      "deals": {
+        "what": "Ein Deal ist ein Verkauf, an dem Sie arbeiten – mit Wert und Phase.",
+        "why": "Deals zeigen, wie viel Geld unterwegs ist und was Aufmerksamkeit braucht.",
+        "can": "Deals anlegen, durch Phasen bewegen, als gewonnen oder verloren markieren.",
+        "next": "Pipeline-Board ansehen"
+      },
+      "pipeline": {
+        "what": "Die Pipeline zeigt alle offenen Deals als Karten in ihrer Phase.",
+        "why": "Sie sehen sofort, wo Deals hängen bleiben.",
+        "can": "Deals zwischen Phasen ziehen und veraltete erkennen.",
+        "next": "Verkaufsübersicht ansehen"
+      },
+      "proposals": {
+        "what": "Angebote sind schriftliche Offerten an einen Kunden.",
+        "why": "Ein klares Angebot mit Preisen schließt oft den Deal ab.",
+        "can": "Angebote aus Deals erstellen, senden und verfolgen, ob sie gesehen oder angenommen wurden.",
+        "next": "Deal für ein Angebot wählen"
+      },
+      "calendar": {
+        "what": "Der Kalender zeigt Nachfassaktionen, Termine und erwartete Abschlussdaten.",
+        "why": "Pünktlich sein ist der halbe Verkauf.",
+        "can": "Fälliges sehen und neu planen.",
+        "next": "Pipeline öffnen"
+      },
+      "dashboard": {
+        "what": "Zahlen zu Ihren Leads: wie viele, wo sie stehen, wem sie gehören.",
+        "why": "Es zeigt, ob Ihr Vertrieb gesund ist.",
+        "can": "Konversion zwischen Phasen und überfällige Nachfassaktionen prüfen.",
+        "next": "Verkaufsübersicht öffnen"
+      },
+      "import": {
+        "what": "Kunden aus einer Tabelle übernehmen oder exportieren.",
+        "why": "Starten Sie mit den Daten, die Sie schon haben, statt sie neu einzutippen.",
+        "can": "CSV-Dateien importieren und Ihr CRM exportieren.",
+        "next": "Zurück zu den Leads"
+      },
+      "settings": {
+        "what": "So ist Ihr Verkaufsprozess eingerichtet: Phasen, Quellen, Felder und Regeln.",
+        "why": "Ein Prozess, der zu Ihrem Verkauf passt, bringt alle auf denselben Stand.",
+        "can": "Phasen bearbeiten, Zuweisungen automatisieren und Ihren Idealkunden beschreiben.",
+        "next": "Geführte Einrichtung starten"
+      },
+      "customers": {
+        "what": "Kunden sind Firmen, die bereits bei Ihnen kaufen.",
+        "why": "Zufriedene Kunden sind der günstigste Weg zu wachsen.",
+        "can": "Jeden Kunden mit Personen, Deals und Verlauf sehen.",
+        "next": "Neue Kunden finden (geführt)"
+      }
+    },
+    "smartEmpty": {
+      "leads": {
+        "title": "Noch keine Leads",
+        "text": "Ein Lead ist jeder, der bei Ihnen kaufen könnte. Legen Sie den ersten selbst an – oder lassen Sie die KI passende Personen zu Ihrem Idealkunden finden.",
+        "primary": "Meinen ersten Lead anlegen",
+        "ai": "KI Leads finden lassen"
+      },
+      "deals": {
+        "title": "Noch keine Deals",
+        "text": "Ein Deal ist ein Verkauf, an dem Sie arbeiten. Legen Sie einen an, wenn ein Kunde echtes Interesse zeigt – oder lassen Sie ihn von der geführten Reise erstellen.",
+        "primary": "Meinen ersten Deal anlegen",
+        "ai": "Von der KI führen lassen"
+      },
+      "contacts": {
+        "title": "Noch keine Kontakte",
+        "text": "Kontakte sind die Menschen bei Ihren Kunden. Legen Sie jemanden an, mit dem Sie sprechen, oder lassen Sie die KI die richtigen Personen finden.",
+        "primary": "Meinen ersten Kontakt anlegen",
+        "ai": "KI helfen lassen"
+      },
+      "accounts": {
+        "title": "Noch keine Firmen",
+        "text": "Legen Sie die Firmen an, an die Sie verkaufen. Die KI kann Firmen finden, die zu Ihrem Idealkunden passen.",
+        "primary": "Meine erste Firma anlegen",
+        "ai": "KI Firmen finden lassen"
+      },
+      "proposals": {
+        "title": "Noch keine Angebote",
+        "text": "Angebote sind Offerten zu einem Deal. Öffnen Sie einen Deal, um eines zu erstellen – die KI schreibt den ersten Entwurf.",
+        "primary": "Deal auswählen",
+        "ai": "Von der KI führen lassen"
+      },
+      "sales": {
+        "title": "Ihre Verkaufskarte ist leer",
+        "text": "Sobald Sie Kunden anlegen, sehen Sie hier Kundenreise, Pipeline und Prognose. Die geführte Reise bringt Sie in wenigen Minuten dorthin.",
+        "primary": "Verkaufen starten",
+        "ai": "KI recherchieren lassen"
+      }
     }
   },
   "plans": {
@@ -7513,7 +7647,8 @@
       "targets": "Ziele",
       "commissions": "Provisionen",
       "reports": "Berichte",
-      "team": "Team"
+      "team": "Team",
+      "start": "Verkaufen starten"
     },
     "subtitle": "Teamleistung, Prognose und Ziele aus Ihren aktuellen CRM-Daten.",
     "from": "Von",
@@ -7666,6 +7801,233 @@
       "setTarget": "Ziel festlegen",
       "noTarget": "kein Ziel",
       "empty": "In diesem Unternehmen hat noch niemand Vertriebszugriff."
+    },
+    "intro": {
+      "overview": {
+        "what": "Ihr Sales OS: Kundenreise, Pipeline, Prognose und was als Nächstes zu tun ist.",
+        "why": "Es zeigt, woher das Geld kommt und wo Kunden abspringen.",
+        "can": "KI-Empfehlungen folgen, den Trichter beobachten und Details öffnen.",
+        "next": "Verkaufen starten (geführt)"
+      },
+      "start": {
+        "what": "Eine Schritt-für-Schritt-Anleitung von „Wer ist mein Kunde?“ bis zum verfolgten Deal.",
+        "why": "Sie lernen einen bewährten Verkaufsprozess bei echter Arbeit.",
+        "can": "Einfache Fragen beantworten; die KI recherchiert, empfiehlt und schreibt für Sie.",
+        "next": "Folgen Sie den Schritten unten"
+      },
+      "targets": {
+        "what": "Ziele sind die Verkaufsvorgaben pro Person und Monat oder Quartal.",
+        "why": "Klare Ziele halten das Team fokussiert.",
+        "can": "Ziele setzen und den Fortschritt sehen.",
+        "next": "Team ansehen"
+      },
+      "commissions": {
+        "what": "Provisionen sind, was Verkäufer an gewonnenen Deals verdienen.",
+        "why": "Faire, sichtbare Provisionen motivieren das Team.",
+        "can": "Verdiente Provisionen und die Regeln dahinter prüfen.",
+        "next": "Provisionsregeln bearbeiten"
+      },
+      "reports": {
+        "what": "Berichte schlüsseln Deals, Umsatz und Abschlussquoten auf.",
+        "why": "Daten zeigen, welche Quellen, Personen und Phasen am besten funktionieren.",
+        "can": "Verkaufszahlen filtern, vergleichen und exportieren.",
+        "next": "Zurück zur Übersicht"
+      },
+      "team": {
+        "what": "Ihr Vertriebsteam: Kapazität, Verfügbarkeit und Leistung.",
+        "why": "Ausgewogene Auslastung heißt schnellere Antworten an Kunden.",
+        "can": "Limits und Verfügbarkeit pro Person festlegen.",
+        "next": "Ziele setzen"
+      }
+    },
+    "journey": {
+      "title": "Verkaufen starten",
+      "subtitle": "Ein geführter Weg vom ersten Kunden bis zum verfolgten Deal – die KI erledigt die schwere Arbeit.",
+      "toDashboard": "Zur Verkaufsübersicht",
+      "dismiss": "Ich schaue mich selbst um",
+      "restart": "Anleitung neu starten",
+      "restartConfirm": "Die Anleitung von vorne beginnen? Angelegte Datensätze bleiben erhalten.",
+      "aiNotReady": "KI ist gerade nicht verfügbar (nicht eingerichtet oder keine Berechtigung). Sie können jeden Schritt trotzdem selbst erledigen.",
+      "back": "Zurück",
+      "skip": "Vorerst überspringen",
+      "continue": "Weiter",
+      "noPermission": "Sie brauchen die Berechtigung „Vertrieb verwalten“, um die Anleitung zu nutzen.",
+      "progress": "{done} von {total} Schritten erledigt",
+      "completed": "Abgeschlossen",
+      "stepsLabel": "Schritte der Reise",
+      "stepOf": "Schritt {n} von {total}",
+      "steps": {
+        "sell": "Wie Sie verkaufen",
+        "icp": "Ihr Kunde",
+        "lead": "Erster Kunde",
+        "research": "Recherche",
+        "next": "Nächster Schritt",
+        "message": "Nachricht",
+        "send": "Senden",
+        "track": "Deal verfolgen"
+      },
+      "q": {
+        "sell": "Wie verkaufen Sie Ihr Produkt normalerweise?",
+        "icp": "Wer ist Ihr potenzieller Kunde?",
+        "lead": "Einen Kunden hinzufügen – selbst oder mit KI",
+        "research": "Lassen Sie die KI diesen Kunden recherchieren",
+        "next": "Was sollten Sie als Nächstes tun?",
+        "message": "Eine persönliche Nachricht schreiben",
+        "send": "Senden – oder ein Nachfassen planen",
+        "track": "Lassen Sie die KI Gespräch und Deal verfolgen"
+      },
+      "why": {
+        "sell": "Wir richten Ihre Verkaufsphasen (Ihre Pipeline) passend ein. Sie können sie später in den Einstellungen ändern.",
+        "icp": "Beschreiben Sie sie mit eigenen Worten. Die KI macht daraus ein klares Idealkundenprofil, das alles Weitere leitet.",
+        "lead": "Ein Lead ist jemand, der kaufen könnte. Fügen Sie jemanden hinzu, den Sie kennen, oder lassen Sie die KI Vorschläge machen – hinzugefügt wird nur, was Sie anhaken.",
+        "research": "Gute Recherche bedeutet eine bessere erste Nachricht. Die KI fasst zusammen, wer sie sind und warum es sie interessiert.",
+        "next": "Die KI empfiehlt den besten nächsten Schritt mit Datum. Vorgeschlagene Erinnerungen brauchen Ihre Freigabe.",
+        "message": "Die KI schreibt einen ersten Entwurf mit echten Fakten. Bearbeiten Sie ihn, bis er nach Ihnen klingt.",
+        "send": "Wir senden über Ihren E-Mail-Anbieter und zeigen genau, was passiert ist – oder Sie planen stattdessen eine Erinnerung.",
+        "track": "Ein Deal erfasst die Chance und ihre Phase, damit die KI ihn beobachten und Ihnen den nächsten Schritt sagen kann."
+      },
+      "recommended": "Empfohlen",
+      "stagesPreview": "Ihre Phasen werden sein:",
+      "won": "Gewonnen",
+      "lost": "Verloren",
+      "styles": {
+        "quick": {
+          "title": "Schnelle Verkäufe",
+          "description": "Kunden kaufen nach ein, zwei Gesprächen.",
+          "pipeline": "Schnelle Verkäufe",
+          "stage1": "Kontaktiert",
+          "stage2": "Interessiert",
+          "stage3": "Kaufbereit"
+        },
+        "meetings": {
+          "title": "Termine & Angebote",
+          "description": "Ich treffe Kunden und sende dann ein Angebot.",
+          "pipeline": "Vertriebspipeline",
+          "stage1": "Kontaktiert",
+          "stage2": "Termin vereinbart",
+          "stage3": "Angebot gesendet",
+          "stage4": "Verhandlung"
+        },
+        "long": {
+          "title": "Größere Deals",
+          "description": "Mehrere Personen entscheiden; es dauert Wochen oder Monate.",
+          "pipeline": "B2B-Pipeline",
+          "stage1": "Qualifiziert",
+          "stage2": "Bedarf verstanden",
+          "stage3": "Demo",
+          "stage4": "Angebot",
+          "stage5": "Verhandlung"
+        }
+      },
+      "pipelineReady": "Ihre Pipeline ist eingerichtet.",
+      "setupPipeline": "Meine Pipeline einrichten",
+      "icpDescribe": "Beschreiben Sie Ihren Idealkunden",
+      "icpExample": "Beispiel: „Cafés und kleine Restaurants in meiner Stadt, die mehr Online-Bestellungen wollen.“",
+      "icpPlaceholder": "Wer sind sie, welches Problem haben sie, wo sind sie?",
+      "icpAi": "KI mein Kundenprofil erstellen lassen",
+      "icpUseMine": "Meine Worte so übernehmen",
+      "icpResult": "Ihr Idealkundenprofil",
+      "icpResultHint": "Korrigieren Sie, was nicht stimmt, und speichern Sie.",
+      "icpSave": "Profil speichern",
+      "leadSelf": "Selbst einen Kunden hinzufügen",
+      "leadSelfHint": "Sie kennen schon jemanden, der kaufen könnte.",
+      "leadAi": "KI Leads finden lassen",
+      "leadAiHint": "Die KI schlägt echte Treffer für Ihren Idealkunden vor. Hinzugefügt wird nur, was Sie anhaken.",
+      "leadName": "Name",
+      "leadNameHint": "Eine Person oder eine Firma.",
+      "leadEmailHint": "Nötig, um später eine E-Mail zu senden.",
+      "leadCompany": "Firma",
+      "leadValue": "Möglicher Auftragswert",
+      "leadValueHint": "Eine grobe Schätzung reicht (z. B. 1500).",
+      "leadNotes": "Notizen",
+      "leadAdd": "Diesen Kunden hinzufügen",
+      "findWhere": "Worauf soll sich die Suche konzentrieren?",
+      "findWhereHint": "Optional – z. B. eine Stadt, eine Branche oder Firmengröße.",
+      "findStart": "Leads mit KI finden",
+      "tickLeads": "Haken Sie an, wen Sie hinzufügen möchten:",
+      "addTicked": "{count, plural, one {# Lead hinzufügen} other {# Leads hinzufügen}}",
+      "noCandidates": "Die KI hat keine verwertbaren Vorschläge geliefert. Öffnen Sie das Ergebnis oder versuchen Sie es mit mehr Details erneut.",
+      "addedLeads": "{count, plural, one {# Lead hinzugefügt.} other {# Leads hinzugefügt.}}",
+      "skippedLeads": "Bereits im CRM: {names}.",
+      "chooseLead": "Weiter mit",
+      "chooseLeadHint": "Um diesen Kunden geht es in den nächsten Schritten.",
+      "choose": "Kunden auswählen …",
+      "addCustomerFirst": "Kunden hinzufügen",
+      "needLead": "Fügen Sie zuerst einen Kunden hinzu oder wählen Sie einen aus.",
+      "workingOn": "Kunde:",
+      "researchStart": "Diesen Kunden recherchieren",
+      "again": "Erneut ausführen",
+      "nextStart": "Nächsten Schritt empfehlen",
+      "nextHint": "Tipp: Die Empfehlung erscheint auch auf der Seite des Kunden.",
+      "tone": "Tonfall (optional)",
+      "toneHint": "z. B. freundlich, kurz, förmlich",
+      "draftStart": "Mit KI schreiben",
+      "subject": "Betreff",
+      "body": "Nachricht",
+      "bodyHint": "Reiner Text. Lassen Sie es nach Ihnen klingen.",
+      "saveMessage": "Diese Nachricht verwenden",
+      "followUpDefault": "Bei diesem Kunden nachfassen",
+      "sendTitle": "Per E-Mail senden",
+      "sendTo": "An: {email}",
+      "addEmail": "E-Mail hinzufügen",
+      "noEmail": "Dieser Kunde hat noch keine E-Mail-Adresse.",
+      "sendNow": "Jetzt senden",
+      "sentOk": "Gesendet: „{subject}“. Es ist im Verlauf des Kunden vermerkt.",
+      "connectEmail": "E-Mail einrichten",
+      "sentNotConfigured": "Der E-Mail-Versand ist noch nicht eingerichtet, daher wurde nichts gesendet.",
+      "sentFailed": "Der E-Mail-Anbieter hat die Nachricht abgelehnt. Es wurde nichts gesendet.",
+      "followTitle": "Oder ein Nachfassen planen",
+      "followHint": "Erinnerung, später anzurufen oder zu schreiben.",
+      "followDate": "Wann",
+      "followNote": "Erinnerung",
+      "followSave": "Nachfassen planen",
+      "followDone": "Nachfassen für {date} geplant.",
+      "dealAmount": "Auftragswert (optional)",
+      "dealAmountHint": "Was dieser Kunde voraussichtlich zahlt.",
+      "createDeal": "Deal anlegen",
+      "dealStages": "Deal-Phasen",
+      "dealTracked": "Dieser Deal ist jetzt in Ihrer Pipeline. Bewegen Sie ihn weiter, wenn das Gespräch vorankommt.",
+      "watchDeal": "KI nach dem nächsten Schritt fragen",
+      "allDone": "Sie haben die Anleitung abgeschlossen. Ihr Sales OS ist bereit.",
+      "finish": "Abschließen und Sales OS öffnen"
+    },
+    "os": {
+      "convert": "{pct} gehen weiter",
+      "openPipeline": "Pipeline-Board öffnen →",
+      "scoreAria": "Lead-Score {score} von 100",
+      "lastTouch": "Letzter Kontakt:",
+      "never": "nie",
+      "nextAction": "Als Nächstes:",
+      "noNext": "nichts geplant",
+      "forecastWon": "Gewonnen",
+      "forecastWeighted": "Erwartet (gewichtet)",
+      "forecastBest": "Bester Fall",
+      "stageLead": "Lead",
+      "eyebrow": "Sales OS",
+      "inJourney": "In der Reise",
+      "inJourneyHint": "Aktive Leads",
+      "won": "Gewonnen",
+      "wonHint": "{pct} % der Leads",
+      "openValue": "Offene Pipeline",
+      "dueToday": "Fällige Nachfassaktionen",
+      "dueTodayHint": "Heute oder früher",
+      "startSelling": "Verkaufen starten",
+      "journeyTitle": "Kundenreise",
+      "journeyHint": "Wie Leads vom ersten Kontakt bis zum Abschluss kommen – mit dem Anteil, der jeweils weitergeht.",
+      "funnelTitle": "Trichter",
+      "funnelHint": "Wo Kunden abspringen.",
+      "riverTitle": "Pipeline-Wertstrom",
+      "riverHint": "Geld in offenen Deals je Phase von „{pipeline}“.",
+      "riverEmpty": "Noch keine Phasen.",
+      "forecastTitle": "Umsatzprognose",
+      "forecastHint": "Bereits gewonnen plus was offene Deals voraussichtlich bringen, pro Monat.",
+      "leadsTitle": "Lead-Intelligenz",
+      "leadsHint": "Ihre besten Leads: Score, Temperatur, letzter Kontakt und nächster Schritt.",
+      "allLeads": "Alle Leads",
+      "railTitle": "KI-Empfehlungen",
+      "railHint": "Fällige Nachfassaktionen und die neuesten KI-Empfehlungen.",
+      "railEmpty": "Nichts fällig. Bitten Sie die KI auf jeder Seite um Hilfe oder starten Sie die geführte Reise.",
+      "advanced": "Erweitert: detaillierte Zahlen, Team und Ziele"
     }
   },
   "finance": {
@@ -7688,7 +8050,8 @@
       "bills": "Eingangsrechnungen",
       "payables": "Verbindlichkeiten",
       "approvals": "Freigaben",
-      "claims": "Spesenabrechnungen"
+      "claims": "Spesenabrechnungen",
+      "start": "Hier starten"
     },
     "accounting": {
       "tabs": {
@@ -8496,6 +8859,340 @@
       "submit": "Fragen",
       "asking": "Wird gefragt…",
       "thinking": "Die Antwort wird erarbeitet…"
+    },
+    "intro": {
+      "dashboard": {
+        "what": "Ihre Finanzzentrale: Einnahmen, Ausgaben, Liquidität und Gesundheit.",
+        "why": "Wer seine Zahlen kennt, erlebt keine Überraschungen.",
+        "can": "Häufige Aufgaben mit einem Klick, Gesundheitschecks lesen, den KI-CFO fragen.",
+        "next": "Mit einer einfachen Aufgabe beginnen"
+      },
+      "start": {
+        "what": "Einfache, geführte Geldaufgaben für alle, die keine Buchhalter sind.",
+        "why": "Ein paar Minuten pro Woche halten Ihre Bücher in Ordnung.",
+        "can": "Einnahmen oder Ausgaben erfassen, Rechnungen erstellen, Zahlungen und Rechnungen im Blick behalten.",
+        "next": "Wählen Sie unten eine Aufgabe"
+      },
+      "transactions": {
+        "what": "Jede Zahlung auf und von Ihren Bank-, Bar- und Kartenkonten.",
+        "why": "Daraus entstehen Ihr Gewinn und Ihre Liquidität.",
+        "can": "Erfassen, importieren, kategorisieren und Belege anhängen.",
+        "next": "Ausgabe erfassen (geführt)"
+      },
+      "accounts": {
+        "what": "Ihre Bank-, Bar- und Kartenkonten.",
+        "why": "Kontostände zeigen, wie viel Geld Sie wirklich haben.",
+        "can": "Konten anlegen und Salden sehen.",
+        "next": "Buchungen ansehen"
+      },
+      "invoices": {
+        "what": "Rechnungen sind Forderungen an Kunden, damit sie Sie bezahlen.",
+        "why": "Keine Rechnung, kein Geld – und sie zeigen, was Ihnen zusteht.",
+        "can": "Erstellen, senden, mahnen und Zahlungen erfassen.",
+        "next": "Rechnung erstellen (geführt)"
+      },
+      "estimates": {
+        "what": "Kostenvoranschläge sind Preise, die Sie vor der Arbeit anbieten.",
+        "why": "Erst den Preis klären vermeidet Streit.",
+        "can": "Angebote erstellen und angenommene in Rechnungen umwandeln.",
+        "next": "Zu den Rechnungen"
+      },
+      "creditNotes": {
+        "what": "Gutschriften verringern, was ein Kunde schuldet, z. B. bei einer Erstattung.",
+        "why": "Sie halten Rechnungen und Salden korrekt.",
+        "can": "Gutschriften ausstellen und auf Rechnungen anwenden.",
+        "next": "Zu den Rechnungen"
+      },
+      "receivables": {
+        "what": "Forderungen sind Geld, das Kunden Ihnen schulden.",
+        "why": "Offene Rechnungen sind verdientes Geld, das Sie noch nicht haben.",
+        "can": "Sehen, wer was wie spät schuldet, und Erinnerungen senden.",
+        "next": "Zahlung erfassen (geführt)"
+      },
+      "bills": {
+        "what": "Eingangsrechnungen sind Rechnungen Ihrer Lieferanten.",
+        "why": "Pünktlich zahlen schützt Ihren Ruf; nicht zu früh schützt Ihre Liquidität.",
+        "can": "Rechnungen erfassen, freigeben lassen und bezahlen.",
+        "next": "Rechnung erfassen (geführt)"
+      },
+      "payables": {
+        "what": "Verbindlichkeiten sind Geld, das Sie Lieferanten schulden.",
+        "why": "Sie zeigen, was bald Ihr Konto verlässt.",
+        "can": "Fälliges sehen und Zahlungen planen.",
+        "next": "Anstehende Rechnungen (geführt)"
+      },
+      "approvals": {
+        "what": "Ausgaben, die vor der Zahlung jemand freigeben muss.",
+        "why": "Freigaben verhindern Fehler und Betrug.",
+        "can": "Rechnungen und Spesen freigeben oder ablehnen.",
+        "next": "Zu den Eingangsrechnungen"
+      },
+      "claims": {
+        "what": "Spesenabrechnungen sind Kosten, die Mitarbeitende selbst bezahlt haben.",
+        "why": "Schnelle Erstattung hält alle zufrieden.",
+        "can": "Abrechnungen einreichen und prüfen.",
+        "next": "Zu den Freigaben"
+      },
+      "recurring": {
+        "what": "Wiederkehrende Zahlungen: Miete, Abos, Pauschalen.",
+        "why": "Automatisierung spart Zeit und macht Prognosen genau.",
+        "can": "Wiederkehrende Rechnungen und Ausgaben einrichten.",
+        "next": "Liquidität ansehen"
+      },
+      "budgets": {
+        "what": "Budgets sind Ausgabengrenzen pro Abteilung.",
+        "why": "Sie verhindern, dass Kosten heimlich wachsen.",
+        "can": "Budgets setzen und mit tatsächlichen Ausgaben vergleichen.",
+        "next": "Berichte ansehen"
+      },
+      "vendors": {
+        "what": "Lieferanten sind die Firmen, bei denen Sie einkaufen.",
+        "why": "Wer weiß, wohin das Geld geht, verhandelt besser.",
+        "can": "Ausgaben je Lieferant sehen.",
+        "next": "Zu den Eingangsrechnungen"
+      },
+      "cashflow": {
+        "what": "Cashflow ist Geld, das über die Zeit herein- und hinausfließt.",
+        "why": "Auch ein profitables Unternehmen kann zahlungsunfähig werden.",
+        "can": "Prognose sehen und Szenarien planen.",
+        "next": "Meinen Gewinn verstehen"
+      },
+      "accounting": {
+        "what": "Die vollständige Buchhaltung: Kontenplan, Journal, Perioden, Steuern.",
+        "why": "Das braucht Ihre Steuerberatung.",
+        "can": "Buchungen prüfen, Perioden abschließen, abstimmen.",
+        "next": "Berichte ansehen"
+      },
+      "reports": {
+        "what": "Standardberichte: GuV, Bilanz, Kapitalflussrechnung.",
+        "why": "Sie beantworten „Verdienen wir Geld?“ und „Was besitzen wir?“",
+        "can": "Zeitraum wählen, Berichte lesen und exportieren.",
+        "next": "Meinen Gewinn verstehen (geführt)"
+      },
+      "settings": {
+        "what": "Rechnungsnummern, Zahlungsziele, Steuern und Kategorien.",
+        "why": "Richtige Einstellungen machen jedes Dokument korrekt.",
+        "can": "Standardwerte für Ihr Unternehmen ändern.",
+        "next": "Zurück zu den geführten Aufgaben"
+      }
+    },
+    "os": {
+      "startTitle": "Finanzen – hier starten",
+      "homeTitle": "Was möchten Sie tun?",
+      "askTitle": "Den KI-CFO fragen",
+      "askHint": "Fragen Sie alles über Ihr Geld in einfachen Worten – die Antworten kommen aus Ihren echten Büchern.",
+      "advanced": "Erweitert: alle Kennzahlen, Prognosen und Einblicke",
+      "emptyTitle": "Richten wir Ihre Finanzen in zwei Minuten ein",
+      "emptyText": "Erfassen Sie Ihre erste Einnahme oder Ausgabe – Ihr Bankkonto legen wir dabei an.",
+      "emptyCta": "Meine erste Einnahme erfassen",
+      "doneBefore": "Bereits erledigt",
+      "flows": {
+        "income": {
+          "title": "Einnahme erfassen",
+          "hint": "Geld, das Sie erhalten haben – ein Verkauf, eine Zahlung, ein Zuschuss.",
+          "done": "Einnahme gespeichert.",
+          "q1": "Wie viel haben Sie erhalten, und wann?",
+          "q2": "Wohin ging das Geld, und wofür war es?",
+          "q3": "Prüfen und speichern",
+          "what": "Wofür war es?",
+          "whatHint": "z. B. „Website-Projekt für Café Luna“"
+        },
+        "expense": {
+          "title": "Ausgabe erfassen",
+          "hint": "Geld, das Sie ausgegeben haben – Miete, Software, Reisen.",
+          "done": "Ausgabe gespeichert.",
+          "q1": "Wie viel haben Sie ausgegeben, und wann?",
+          "q2": "Von welchem Konto, und welche Art Kosten war es?",
+          "q3": "Prüfen und speichern",
+          "what": "Wofür haben Sie bezahlt?",
+          "whatHint": "z. B. „Büromiete März“"
+        },
+        "invoice": {
+          "title": "Rechnung erstellen",
+          "hint": "Einen Kunden um Zahlung bitten.",
+          "done": "Rechnung erledigt.",
+          "q1": "Wem stellen Sie eine Rechnung?",
+          "q2": "Was haben Sie verkauft?",
+          "q3": "Prüfen, erstellen und senden"
+        },
+        "payments": {
+          "title": "Zahlungen erfassen",
+          "hint": "Geld erfassen, das ein Kunde auf eine Rechnung gezahlt hat.",
+          "done": "Zahlung erfasst.",
+          "q1": "Welche Rechnung wurde bezahlt?",
+          "q2": "Wie viel kam an, und wo?",
+          "q3": "Prüfen und erfassen"
+        },
+        "bills": {
+          "title": "Anstehende Rechnungen",
+          "hint": "Was Sie bald zahlen müssen – und eine erhaltene Rechnung erfassen.",
+          "done": "Rechnung gespeichert.",
+          "q1": "Anstehende Rechnungen",
+          "q2": "Eine erhaltene Rechnung erfassen",
+          "q3": "Prüfen und speichern"
+        },
+        "profit": {
+          "title": "Meinen Gewinn verstehen",
+          "hint": "Verdienen Sie Geld? Einfach erklärt.",
+          "done": "Fertig.",
+          "q1": "Ihr Gewinn in diesem Monat, erklärt",
+          "q2": "Den KI-CFO nach dem Grund fragen"
+        }
+      },
+      "back": "Zurück",
+      "close": "Schließen",
+      "continue": "Weiter",
+      "stepOf": "Schritt {n} von {total}",
+      "noPermission": "Für diese Aufgabe brauchen Sie die Berechtigung „Finanzen verwalten“.",
+      "profitNow": "Gewinn diesen Monat",
+      "owedToYou": "Kunden schulden Ihnen",
+      "billsDue": "Fällig in 30 Tagen",
+      "profitSentence": "Ihr Gewinn in diesem Monat beträgt jetzt {amount} ({revenue} Einnahmen, {expenses} Ausgaben).",
+      "again": "Noch eine",
+      "amount": "Betrag",
+      "amountHint": "In {currency}, z. B. 120.50",
+      "date": "Datum",
+      "category": "Kategorie",
+      "categoryHint": "Wir haben die am häufigsten genutzte gewählt.",
+      "noCategory": "Keine Kategorie",
+      "recommended": "empfohlen",
+      "terms": {
+        "category": "Kategorie",
+        "categoryText": "eine Bezeichnung für die Art des Geldes (z. B. Umsatz, Miete). Sie bestimmt, wo der Betrag in Ihrer Gewinnrechnung erscheint.",
+        "profit": "Gewinn",
+        "profitText": "Einnahmen minus Ausgaben in einem Zeitraum. Positiv heißt: Sie haben mehr verdient als ausgegeben.",
+        "invoice": "Rechnung",
+        "invoiceText": "ein Dokument, das einen Kunden auffordert, einen Betrag bis zu einem Fälligkeitsdatum zu zahlen.",
+        "receivable": "Forderung",
+        "receivableText": "Geld, das ein Kunde Ihnen für eine gesendete, aber noch nicht bezahlte Rechnung schuldet.",
+        "payment": "Zahlung",
+        "paymentText": "Geld, das ein Kunde tatsächlich gezahlt hat. Das Erfassen markiert die Rechnung als (teilweise) bezahlt und bucht das Geld auf Ihr Konto.",
+        "payable": "Verbindlichkeit",
+        "payableText": "Geld, das Sie einem Lieferanten für eine erhaltene Rechnung schulden.",
+        "cashflow": "Cashflow",
+        "cashflowText": "wann Geld tatsächlich fließt. Sie können auf dem Papier Gewinn machen und trotzdem knapp bei Kasse sein, wenn Kunden spät zahlen."
+      },
+      "account": "Konto",
+      "save": "Speichern",
+      "customerExisting": "Kunde",
+      "customerNewOption": "+ Neuer Kunde",
+      "customerName": "Name des Kunden",
+      "customerEmail": "E-Mail des Kunden",
+      "customerEmailHint": "Um die Rechnung per E-Mail zu senden.",
+      "item": "Was Sie verkauft haben",
+      "itemHint": "z. B. „Logo-Design“",
+      "quantity": "Menge",
+      "price": "Einzelpreis",
+      "dueIn": "Zahlbar innerhalb von",
+      "dueInHint": "Wie lange der Kunde Zeit zum Zahlen hat.",
+      "days": "{count, plural, one {# Tag} other {# Tagen}}",
+      "customer": "Kunde",
+      "total": "Summe",
+      "beforeTax": "(vor Steuern)",
+      "createInvoice": "Rechnung erstellen",
+      "due": "fällig {date}",
+      "overdue": "Überfällig",
+      "noOpenInvoices": "Keine offenen Rechnungen – niemand schuldet Ihnen gerade Geld.",
+      "amountReceived": "Erhaltener Betrag",
+      "amountReceivedHint": "Vorausgefüllt mit dem offenen Betrag.",
+      "invoice": "Rechnung",
+      "recordPayment": "Zahlung erfassen",
+      "noUpcomingBills": "Keine Rechnungen in den nächsten 60 Tagen fällig.",
+      "addBill": "Rechnung erfassen",
+      "vendorExisting": "Lieferant",
+      "vendorNewOption": "+ Neuer Lieferant",
+      "vendorName": "Name des Lieferanten",
+      "vendorHint": "Wer Ihnen die Rechnung geschickt hat.",
+      "billNumber": "Rechnungsnummer",
+      "billNumberHint": "Die Nummer auf der Rechnung.",
+      "dueDate": "Fälligkeitsdatum",
+      "vendor": "Lieferant",
+      "billApprovalNote": "Wenn Ihr Unternehmen Freigaben für Rechnungen verlangt, geht sie zuerst an eine freigebende Person.",
+      "saveBill": "Rechnung speichern",
+      "askWhy": "Den KI-CFO fragen",
+      "question": "Ihre Frage",
+      "defaultQuestion": "Warum liegt mein Gewinn diesen Monat bei {amount}, und wie kann ich ihn verbessern?",
+      "askCfo": "Den KI-CFO fragen",
+      "thisMonth": "Dieser Monat bisher",
+      "moneyIn": "Einnahmen",
+      "moneyOut": "Ausgaben",
+      "profit": "Gewinn",
+      "lossVerdict": "Sie haben diesen Monat mehr ausgegeben als eingenommen. Prüfen Sie Ihre größten Ausgaben und offenen Rechnungen.",
+      "zeroVerdict": "Diesen Monat ist noch nichts erfasst. Erfassen Sie Einnahmen und Ausgaben, um Ihren Gewinn zu sehen.",
+      "profitVerdict": "Sie haben diesen Monat mehr eingenommen als ausgegeben. Gut – behalten Sie auch die Liquidität im Blick.",
+      "mainAccount": "Hauptbankkonto",
+      "accountHint": "Wo das Geld ein- oder ausging.",
+      "noAccount": "Sie haben noch kein Bankkonto in Realy.si. Legen Sie eines an (empfohlen) – das dauert eine Sekunde.",
+      "accountName": "Kontoname",
+      "createAccount": "Konto anlegen",
+      "emailSubject": "Rechnung {number}",
+      "emailMessage": "Hallo,\n\nanbei Rechnung {number} unter dem folgenden Link.\n\nVielen Dank!",
+      "emailSent": "Die Rechnung wurde dem Kunden per E-Mail gesendet.",
+      "connectEmail": "E-Mail einrichten",
+      "emailNotConfigured": "Der E-Mail-Versand ist nicht eingerichtet, daher wurde nichts gesendet. Die Rechnung bleibt ein Entwurf.",
+      "emailFailed": "Der E-Mail-Anbieter hat die Nachricht abgelehnt. Es wurde nichts gesendet.",
+      "markedSent": "Als gesendet markiert – sie zählt jetzt als Forderung.",
+      "keptDraft": "Als Entwurf behalten. Senden Sie sie von der Rechnungsseite, wenn Sie bereit sind.",
+      "openInvoice": "Rechnung öffnen",
+      "invoiceCreated": "Rechnung {number} als Entwurf erstellt.",
+      "sendHow": "Wie möchten Sie sie senden?",
+      "sendEmail": "Jetzt per E-Mail senden",
+      "sendEmailHint": "Wir senden dem Kunden einen Link.",
+      "sendMark": "Ich habe sie selbst gesendet",
+      "sendMarkHint": "Als gesendet markieren (z. B. gedruckt oder per Chat).",
+      "sendDraft": "Als Entwurf behalten",
+      "sendDraftHint": "Später fertigstellen.",
+      "finishInvoice": "Fertig",
+      "months": "{count, plural, one {# Monat} other {# Monate}}",
+      "health": {
+        "runwayPositive": "Gesund: Es kommt mehr Geld herein, als Sie ausgeben.",
+        "runway": {
+          "success": "Gesund: {months} Monate Reichweite.",
+          "warning": "Achtung: noch {months} Monate Reichweite.",
+          "danger": "Dringend: nur {months} Monate Reichweite."
+        },
+        "runwayTitle": "Reichweite",
+        "burnTitle": "Monatlicher Geldverbrauch",
+        "burnNone": "Sie verbrauchen kein Geld.",
+        "burnText": "Durchschnittlicher monatlicher Liquiditätsverlust (letzte 3 Monate).",
+        "overdueTitle": "Überfällig von Kunden",
+        "overdueNone": "Keine säumigen Kunden.",
+        "overdueText": "Kunden sind im Verzug – senden Sie Erinnerungen.",
+        "payablesTitle": "Überfällig an Lieferanten",
+        "payablesNone": "Keine überfälligen Rechnungen.",
+        "payablesText": "Einige Rechnungen sind überfällig – zahlen oder neue Termine vereinbaren."
+      },
+      "charts": {
+        "pnl": "Einnahmen vs. Ausgaben",
+        "pnlHint": "Umsatz und Aufwand pro Monat aus Ihren Büchern; die gestrichelte Linie ist der Gewinn.",
+        "pnlEmpty": "In diesem Zeitraum noch keine Einnahmen oder Ausgaben.",
+        "gauge": "Gewinnmarge",
+        "gaugeLabel": "des Umsatzes bleibt als Gewinn",
+        "gaugeNone": "In diesem Zeitraum noch kein Umsatz.",
+        "gauge_success": "Gesunde Marge.",
+        "gauge_warning": "Knappe Marge – kleine Änderungen zählen.",
+        "gauge_danger": "In diesem Zeitraum wird Geld verloren.",
+        "gauge_neutral": "",
+        "cash": "Cashflow",
+        "cashHint": "Geld, das jeden Monat tatsächlich auf Ihren Konten ein- und ausging.",
+        "cashEmpty": "In diesem Zeitraum noch keine Kontobewegungen.",
+        "forecast": "Liquiditätsprognose",
+        "forecastHint": "Ausgehend von heute {cash}: Die Linie geht von pünktlich zahlenden Kunden aus; das Band zeigt die Spanne, wenn sie nicht zahlen.",
+        "forecastLine": "Erwartete Liquidität",
+        "forecastBand": "Wenn Kunden nicht zahlen",
+        "forecastRisk": "Werden offene Rechnungen nicht bezahlt, könnte die Liquidität unter null fallen – fassen Sie bei Forderungen nach."
+      },
+      "cashIn": "Geldeingang",
+      "cashOut": "Geldausgang",
+      "payLinkTitle": "Online-Zahlungslink",
+      "payLinkHint": "Lassen Sie den Kunden online per Karte oder Bank zahlen (Razorpay oder Stripe).",
+      "payLinkReady": "Zahlungslink über {provider} – er ist in Rechnungs-E-Mails enthalten.",
+      "payLinkCreate": "Zahlungslink erstellen",
+      "payLinkRecreate": "Neuen Link erstellen",
+      "payLinkConnect": "Razorpay oder Stripe verbinden",
+      "payLinkNotConnected": "Kein Zahlungsanbieter verbunden. Verbinden Sie Razorpay oder Stripe, um Zahlungslinks zu erstellen.",
+      "payLinkFailed": "Der Zahlungsanbieter hat abgelehnt: {error}",
+      "payOnline": "Online bezahlen"
     }
   },
   "hr": {

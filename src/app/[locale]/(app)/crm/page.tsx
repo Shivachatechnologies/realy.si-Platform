@@ -1,7 +1,9 @@
+import { SmartEmpty } from "@/components/crm/page-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CompleteFollowUpButton, NewLeadForm } from "@/components/crm/lead-forms";
 import { CrmTabs } from "@/components/crm/crm-tabs";
+import { CrmIntro } from "@/components/crm/shell";
 import { LeadTable, type LeadRow } from "@/components/crm/lead-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -114,6 +116,7 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
         </div>
       </div>
       <CrmTabs locale={locale} active="leads" />
+      <CrmIntro area="crm" active="leads" />
       {segments.length ? (
         <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label={t("crm.segments.title")}>
           <span className="text-xs text-muted-foreground">{t("crm.segments.title")}:</span>
@@ -225,13 +228,13 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
           </div>
         </form>
         {canManage ? (
-          <details className="border-b">
+          <details id="new-item" className="border-b" open={leads.length === 0 && !filtered}>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("crm.addLead")}</summary>
             <NewLeadForm base={base} locale={locale} owners={owners} viewerId={viewer.user.id} sources={sources} fields={fields} />
           </details>
         ) : null}
         {leads.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("crm.empty")}</p>
+          filtered ? <p className="p-4 text-muted-foreground">{t("common.noResults")}</p> : <SmartEmpty ns="crm.smartEmpty.leads" primaryHref="#new-item" aiHref={`/${locale}/sales/start`} />
         ) : (
           <LeadTable base={base} locale={locale} rows={rows} owners={owners} canManage={canManage} />
         )}

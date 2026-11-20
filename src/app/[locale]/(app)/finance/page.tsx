@@ -9,6 +9,8 @@ import { InsightsButton } from "@/components/finance/insights-button";
 import { financePage } from "@/components/finance/page-context";
 import { BarChart, Empty, Kpi, RangeForm, rangePresets, StatusBadge, TASK_TONE } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
+import { CalendarClock, FilePlus2, HandCoins, PiggyBank, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { FinanceCommandCenter, type CommandData } from "@/components/finance/finance-os";
 import { formatDateTime } from "@/i18n/format";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { detectExpenseAnomalies, financeDashboard } from "@/server/modules/finance/analytics";
@@ -25,7 +27,8 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
   const p = await financePage("dashboard");
   if (p.blocked) return p.blocked;
   const { t, locale, viewer, org, company, money, base } = p;
-  const range = parseRange(await searchParams);
+  const sp = await searchParams;
+  const range = parseRange(sp);
   const [d, anomalies, accounts, tasks, questions, pendingApprovals] = await Promise.all([
     financeDashboard(viewer.ctx, org.id, company.id, range),
     detectExpenseAnomalies(viewer.ctx, org.id, company.id),
@@ -37,8 +40,79 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
   const answering = questions.some((q) => q.status === "QUEUED" || q.status === "RUNNING");
   const monthLabel = (k: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${k}-01T00:00:00Z`));
 
+  const advancedOpen = typeof sp.from === "string" || typeof sp.to === "string";
+  const command: CommandData = {
+    currency: p.currency,
+    monthly: d.monthly.map((m) => ({ month: m.month, revenue: m.revenue.toString(), expenses: m.expenses.toString(), profit: m.profit.toString() })),
+    cash: d.cashSeries.map((m) => ({ month: m.month, inflow: m.inflow.toString(), outflow: m.outflow.toString(), net: m.net.toString() })),
+    forecast: d.forecast.months.map((m) => ({ month: m.month, balance: m.balance.toString(), receivables: m.receivables.toString() })),
+    startingCash: d.forecast.startingCash.toString(),
+    margin: d.margin,
+    runwayMonths: d.runwayMonths,
+    netBurn: d.burn.netBurn.toString(),
+    overdue: d.overdue.toString(),
+    receivables: d.receivables.toString(),
+    payablesOverdue: d.payablesOverdue.toString(),
+    payables: d.payables.toString(),
+  };
+  const actions = [
+    ["income", TrendingUp],
+    ["expense", TrendingDown],
+    ["invoice", FilePlus2],
+    ["payments", HandCoins],
+    ["bills", CalendarClock],
+    ["profit", PiggyBank],
+  ] as const;
+
   return p.frame(
     <>
+      {!accounts.length ? (
+        <Notice tone="info" title={t("finance.os.emptyTitle")} action={<Link href={`/${locale}/finance/start?flow=income`} className="text-xs font-medium underline">{t("finance.os.emptyCta")}</Link>}>
+          {t("finance.os.emptyText")}
+        </Notice>
+      ) : null}
+      <section aria-label={t("finance.os.homeTitle")} className="grid gap-2">
+        <h2 className="text-sm font-semibold">{t("finance.os.homeTitle")}</h2>
+        <div className="stagger grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          {actions.map(([key, Icon]) => (
+            <Link key={key} href={`/${locale}/finance/start?flow=${key}`} className="reveal hover-lift grid gap-1 rounded-lg border bg-surface p-3 shadow-elev-1">
+              <span className="grid size-8 place-items-center rounded-md bg-success/10 text-success">
+                <Icon aria-hidden className="size-4" />
+              </span>
+              <span className="text-sm font-semibold">{t(`finance.os.flows.${key}.title`)}</span>
+              <span className="line-clamp-2 text-xs text-muted-foreground">{t(`finance.os.flows.${key}.hint`)}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+        <Card variant="highlight">
+        <CardHeader icon={<Sparkles />} title={t("finance.os.askTitle")} description={t("finance.os.askHint")} />
+        <CardBody className="grid gap-3">
+          <AutoRefresh active={answering} intervalMs={4000} />
+          {!aiConfigured() ? <Notice tone="warning">{t("agentTasks.notConfigured")}</Notice> : p.canRunAgents ? <AskCfoForm base={base} /> : <Notice>{t("finance.dashboard.insightsNoPermission")}</Notice>}
+          {questions.length ? (
+            <ul className="grid divide-y rounded-md border">
+              {questions.map((task) => (
+                <li key={task.id} className="grid gap-1 p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge tone={TASK_TONE[task.status]}>{t(`agentTasks.status.${task.status}`)}</StatusBadge>
+                    <Link href={`/${locale}/tasks/${task.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                      {task.title.replace(/^AI CFO: /, "")}
+                    </Link>
+                    <span className="text-xs text-muted-foreground">{formatDateTime(task.createdAt, locale, p.tz)}</span>
+                  </div>
+                  {task.output ? <p className="whitespace-pre-line text-muted-foreground">{task.output}</p> : task.status === "QUEUED" || task.status === "RUNNING" ? <p className="text-xs text-muted-foreground">{t("finance.ask.thinking")}</p> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </CardBody>
+      </Card>
+
+      <FinanceCommandCenter data={command} locale={locale} />
+      <details className="rounded-lg border bg-surface" open={advancedOpen}>
+        <summary className="cursor-pointer px-4 py-3 text-sm font-medium">{t("finance.os.advanced")}</summary>
+        <div className="grid gap-4 border-t p-4">
       <RangeForm
         action={`/${locale}/finance`}
         from={range.fromStr}
@@ -128,29 +202,6 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title={t("finance.ask.title")} description={t("finance.ask.hint")} />
-          <CardBody className="grid gap-3">
-            <AutoRefresh active={answering} intervalMs={4000} />
-            {!aiConfigured() ? <Notice tone="warning">{t("agentTasks.notConfigured")}</Notice> : p.canRunAgents ? <AskCfoForm base={base} /> : <Notice>{t("finance.dashboard.insightsNoPermission")}</Notice>}
-            {questions.length ? (
-              <ul className="grid divide-y rounded-md border">
-                {questions.map((task) => (
-                  <li key={task.id} className="grid gap-1 p-3 text-sm">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge tone={TASK_TONE[task.status]}>{t(`agentTasks.status.${task.status}`)}</StatusBadge>
-                      <Link href={`/${locale}/tasks/${task.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
-                        {task.title.replace(/^AI CFO: /, "")}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">{formatDateTime(task.createdAt, locale, p.tz)}</span>
-                    </div>
-                    {task.output ? <p className="whitespace-pre-line text-muted-foreground">{task.output}</p> : task.status === "QUEUED" || task.status === "RUNNING" ? <p className="text-xs text-muted-foreground">{t("finance.ask.thinking")}</p> : null}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </CardBody>
-        </Card>
-        <Card>
           <CardHeader title={t("finance.payables.upcomingTitle")} description={t("finance.dashboard.upcomingPayablesHint")} actions={<Link href={`/${locale}/finance/payables`} className="text-xs hover:underline">{t("finance.tabs.payables")}</Link>} />
           {d.upcomingPayables.length ? (
             <ul className="grid divide-y text-sm">
@@ -216,6 +267,8 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
           )}
         </Card>
       </div>
+        </div>
+      </details>
     </>,
   );
 }

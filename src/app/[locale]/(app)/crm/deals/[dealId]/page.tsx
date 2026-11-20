@@ -1,3 +1,5 @@
+import { aiConfigured } from "@/server/modules/agents/runtime";
+import { HelpMeButton } from "@/components/crm/guided-kit";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -45,7 +47,7 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
   const custom = (d.customFields ?? {}) as Record<string, string | number | null>;
   const daysInStage = d.daysInStage;
   return (
-    <CrmFrame active="deals" title={d.name} subtitle={[d.account?.name, `${d.pipeline.name} · ${d.stage.name}`].filter(Boolean).join(" · ")}>
+    <CrmFrame active="deals" intro={false} actions={c.canRunAgents && aiConfigured() ? <HelpMeButton base={base} url={`${base}/crm/help`} body={{ kind: "deal", id: d.id, page: "crm.deal" }} locale={locale} /> : undefined} title={d.name} subtitle={[d.account?.name, `${d.pipeline.name} · ${d.stage.name}`].filter(Boolean).join(" · ")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm/pipeline?pipeline=${d.pipelineId}`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.deals.backToPipeline")}

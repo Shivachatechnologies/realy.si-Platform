@@ -18,6 +18,9 @@ import * as EC from "./expense-claims";
 import * as PC from "./project-costs";
 import { attachmentResponse } from "./doc-attachments";
 import { parseRange } from "./common";
+import * as G from "./guided";
+import { createInvoicePaymentLink } from "./payment-links";
+import { notFound } from "@/server/core/errors";
 
 /**
  * Finance REST API: /api/v1/organizations/:orgId/companies/:companyId/finance/<path>. Each entry is wrapped with route()
@@ -132,6 +135,7 @@ add("POST", "invoices/:id/mark-sent", async ({ ctx, o, c, p }) => B.markInvoiceS
 add("POST", "invoices/:id/send", async ({ req, ctx, o, c, p }) => B.emailInvoice(ctx, o, c, p.id!, "INVOICE", await input(req, B.sendInput)));
 add("POST", "invoices/:id/remind", async ({ req, ctx, o, c, p }) => B.emailInvoice(ctx, o, c, p.id!, "REMINDER", await input(req, B.sendInput)));
 add("POST", "invoices/:id/void", async ({ ctx, o, c, p }) => B.voidInvoice(ctx, o, c, p.id!));
+add("POST", "invoices/:id/payment-link", async ({ ctx, o, c, p }) => createInvoicePaymentLink(ctx, o, c, p.id!));
 add("POST", "invoices/:id/payments", async ({ req, ctx, o, c, p }) => B.recordPayment(ctx, o, c, p.id!, await input(req, B.paymentInput)));
 add("DELETE", "payments/:id", async ({ ctx, o, c, p }) => B.deletePayment(ctx, o, c, p.id!));
 add("GET", "estimates", async ({ ctx, o, c, q }) => B.listEstimates(ctx, o, c, { q: q.q, page: Math.max(1, Number(q.page) || 1) }));
@@ -209,6 +213,13 @@ add("PATCH", "scenarios/:id", async ({ req, ctx, o, c, p }) => A.updateScenario(
 add("DELETE", "scenarios/:id", async ({ ctx, o, c, p }) => A.deleteScenario(ctx, o, c, p.id!));
 add("GET", "reports/:report", async ({ ctx, o, c, p, q }) => csv(await A.reportCsv(ctx, o, c, A.parseReport(p.report), parseRange(q)), `${A.parseReport(p.report)}.csv`));
 add("POST", "insights", async ({ req, ctx, o, c }) => requestCfoInsights(ctx, o, c, await input(req, insightsInput)));
+// Finance OS beginner flows.
+const flowOf = (v: string | undefined) => G.parseFlow(v) ?? (() => { throw notFound("Flow"); })();
+add("POST", "guided/help", async ({ req, ctx, o, c }) => G.financeHelp(ctx, o, c, await input(req, G.financeHelpInput)));
+add("GET", "guided/summary", async ({ ctx, o, c }) => G.financeSnapshot(ctx, o, c));
+add("GET", "guided/options", async ({ ctx, o, c }) => G.guidedOptions(ctx, o, c));
+add("GET", "guided/progress/:flow", async ({ ctx, o, c, p }) => G.getFlowProgress(ctx, o, c, flowOf(p.flow)));
+add("PUT", "guided/progress/:flow", async ({ req, ctx, o, c, p }) => G.saveFlowProgress(ctx, o, c, flowOf(p.flow), await input(req, G.flowProgressInput)));
 add("POST", "ask", async ({ req, ctx, o, c }) => askCfo(ctx, o, c, await input(req, askInput)));
 
 function match(method: string, path: string[]) {

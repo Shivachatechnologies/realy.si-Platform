@@ -12,6 +12,8 @@ import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
 import { CrmTabs, SalesTabs, type CrmTab, type SalesTab } from "./crm-tabs";
+import { HelpMeButton } from "./guided-kit";
+import { PageIntro } from "./page-intro";
 
 /** Server helpers shared by the CRM & Sales pages: context + permission gate, page frame, pager, AI task list. */
 
@@ -60,7 +62,40 @@ export function PageFrame({ title, subtitle, actions, tabs, children, wide = tru
 }
 
 /** Frame for CRM pages: handles "no company" and "forbidden"; renders children only when allowed. */
-export async function CrmFrame({ active, title, subtitle, actions, children, area = "crm" }: { active: CrmTab | SalesTab; title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode; area?: "crm" | "sales" }) {
+/** Where the "what to do next" button of each page's intro strip leads. */
+const INTRO_NEXT: Record<string, string | undefined> = {
+  "crm.leads": "/sales/start",
+  "crm.contacts": "/crm/accounts",
+  "crm.accounts": "/crm/deals",
+  "crm.deals": "/crm/pipeline",
+  "crm.pipeline": "/sales",
+  "crm.proposals": "/crm/deals",
+  "crm.calendar": "/crm/pipeline",
+  "crm.dashboard": "/sales",
+  "crm.import": "/crm",
+  "crm.settings": "/sales/start",
+  "sales.overview": "/sales/start",
+  "sales.start": undefined,
+  "sales.targets": "/sales/team",
+  "sales.commissions": "/crm/settings",
+  "sales.reports": "/sales",
+  "sales.team": "/sales/targets",
+};
+
+/** Plain-language intro strip of a CRM/Sales page with "Help me do this" (AI task about the page). */
+export async function CrmIntro({ area, active }: { area: "crm" | "sales"; active: string }) {
+  const c = await crmContext();
+  if (!c.company) return null;
+  const key = `${area}.${active}`;
+  const next = INTRO_NEXT[key];
+  return (
+    <PageIntro ns={`${area}.intro.${active}`} href={next ? `/${c.locale}${next}` : undefined}>
+      {c.canRunAgents && aiConfigured() ? <HelpMeButton base={c.base} url={`${c.base}/crm/help`} body={{ kind: "page", page: key }} locale={c.locale} /> : null}
+    </PageIntro>
+  );
+}
+
+export async function CrmFrame({ active, title, subtitle, actions, children, area = "crm", intro = true }: { active: CrmTab | SalesTab; title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode; area?: "crm" | "sales"; intro?: boolean }) {
   const c = await crmContext();
   const t = c.t;
   const tabs = area === "crm" ? <CrmTabs locale={c.locale} active={active as CrmTab} /> : <SalesTabs locale={c.locale} active={active as SalesTab} />;
@@ -83,6 +118,7 @@ export async function CrmFrame({ active, title, subtitle, actions, children, are
   }
   return (
     <PageFrame title={heading} subtitle={subtitle} actions={actions} tabs={tabs}>
+      {intro ? <CrmIntro area={area} active={active} /> : null}
       {children}
     </PageFrame>
   );
