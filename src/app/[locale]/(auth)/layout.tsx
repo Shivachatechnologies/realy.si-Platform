@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CircleCheck, Lock, ShieldCheck } from "lucide-react";
-import { BrandMark, ControlMark } from "@/components/brand";
+import { BrandMark, BrandName, ControlMark } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Aurora } from "@/components/motion/aurora";
 import { AiCoreStage } from "@/components/graphics/ai-core-stage";
@@ -36,7 +36,7 @@ export default async function AuthLayout({ children }: LayoutProps<"/[locale]">)
         <div className="auth-variant-user">
           <Link href={`/${locale}`} className="relative flex w-fit items-center gap-2.5 text-[17px] font-semibold tracking-[-0.02em]">
             <BrandMark className="size-7" />
-            {t("common.appName")}
+            <BrandName className="text-[19px]" />
           </Link>
           <div className="relative grid max-w-md gap-8">
             <div className="grid gap-5">
@@ -94,7 +94,7 @@ export default async function AuthLayout({ children }: LayoutProps<"/[locale]">)
             <span className="auth-variant-user">
               <Link href={`/${locale}`} className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
                 <BrandMark />
-                <span>{t("common.appName")}</span>
+                <BrandName />
               </Link>
             </span>
             <span className="auth-variant-admin">

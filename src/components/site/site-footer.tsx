@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandMark } from "@/components/brand";
+import { BrandMark, BrandName } from "@/components/brand";
 import { getT } from "@/i18n/server";
 import { SITE_DEPARTMENTS } from "@/server/modules/site/content";
 
@@ -22,7 +22,7 @@ export async function SiteFooter({ locale }: { locale: string }) {
         <div className="grid content-start gap-4">
           <Link href={`/${locale}`} className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
             <BrandMark className="size-7" />
-            <span className="text-[17px]">{t("common.appName")}</span>
+            <BrandName className="text-[19px]" />
           </Link>
           <p className="max-w-xs font-display text-[1.6rem] leading-[1.1] text-balance">{t("site.footer.tagline")}</p>
           <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">{t("site.footer.statement")}</p>

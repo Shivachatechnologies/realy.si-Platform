@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertOctagon, ShieldCheck } from "lucide-react";
-import { BrandMark } from "@/components/brand";
+import { BrandMark, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignOutButton } from "@/components/shell/switchers";
 import { Notice } from "@/components/ui/notice";
@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/[locale]/a
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md sm:px-6">
         <Link href={`/${locale}/admin`} className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
           <BrandMark />
-          <span className="hidden md:inline">{t("common.appName")}</span>
+          <BrandName className="hidden md:inline" />
           <span className="hidden items-center gap-1 rounded-full border border-primary/30 bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-foreground min-[480px]:inline-flex">
             <ShieldCheck className="size-3.5" aria-hidden />
             {t("admin.title")}

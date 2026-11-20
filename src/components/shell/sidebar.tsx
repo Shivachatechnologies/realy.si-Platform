@@ -6,7 +6,7 @@ import { createContext, Suspense, useContext, useLayoutEffect, useRef, type Reac
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { BrandMark } from "@/components/brand";
+import { BrandMark, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 
@@ -143,7 +143,7 @@ export function Sidebar({
             title={collapsed ? t("common.appName") : undefined}
           >
             <BrandMark className="size-6" />
-            <span className={cn("truncate text-[15px]", collapsed && "sr-only")}>{t("common.appName")}</span>
+            <BrandName className={cn("truncate text-[16px]", collapsed && "sr-only")} />
           </Link>
           {onToggleCollapsed && !collapsed ? (
             <button

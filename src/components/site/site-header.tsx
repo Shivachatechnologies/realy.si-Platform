@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
-import { BrandMark } from "@/components/brand";
+import { BrandMark, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
         <Link href={`/${locale}`} className="flex min-h-11 items-center gap-2 font-semibold tracking-[-0.02em]" onClick={() => setOpen(false)}>
           <BrandMark className="size-7" />
-          <span className="text-[17px]">{t("common.appName")}</span>
+          <BrandName className="text-[19px]" />
         </Link>
         <nav aria-label={t("site.nav.label")} className="ms-6 hidden items-center gap-1 lg:flex">
           {LINKS.map((l) => (
