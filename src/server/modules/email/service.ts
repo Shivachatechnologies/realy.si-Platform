@@ -4,7 +4,7 @@ import { logger } from "@/server/core/logger";
 import { captureException } from "@/server/core/telemetry";
 import { closestLocale } from "@/i18n/config";
 import { createTranslator, type Messages } from "@/i18n/translate";
-import { emailProvider } from "./provider";
+import { companyEmailProvider, emailProvider } from "./provider";
 import enUS from "@/i18n/messages/en-US.json";
 import hiIN from "@/i18n/messages/hi-IN.json";
 import arAE from "@/i18n/messages/ar-AE.json";
@@ -110,15 +110,22 @@ export async function sendPlainEmail(args: {
   organizationId: string;
   userId?: string | null;
   locale?: string;
+  /** Send as this company: its connected SendGrid account when present, else the platform provider. */
+  companyId?: string;
+  /** With companyId: only the company's own provider (no platform fallback); otherwise NOT_CONFIGURED. */
+  companyOnly?: boolean;
+  /** Provider metadata echoed in delivery webhooks (SendGrid custom_args). */
+  customArgs?: Record<string, string>;
 }): Promise<SendResult> {
-  const configured = emailProvider();
+  const company = args.companyId ? await companyEmailProvider(args.organizationId, args.companyId) : null;
+  const configured = args.companyId ? (args.companyOnly && company?.scope !== "company" ? null : company) : emailProvider();
   let status: EmailStatus = "NOT_CONFIGURED";
   let messageId: string | null = null;
   let error: string | null = null;
   if (configured) {
     try {
       const html = args.html ?? textToHtml(args.text);
-      const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html, headers: args.headers });
+      const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html, headers: args.headers, customArgs: args.customArgs });
       status = "SENT";
       messageId = r.messageId;
     } catch (err) {

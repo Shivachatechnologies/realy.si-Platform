@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { emailDeliveryReady } from "@/server/modules/marketing/email";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -11,7 +12,6 @@ import { ActionButton } from "@/components/marketing/ui";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { AppError } from "@/server/core/errors";
-import { emailConfigured } from "@/server/modules/email/service";
 import { listForms } from "@/server/modules/marketing/forms";
 import { listSegments } from "@/server/modules/marketing/segments";
 import { ENROLLMENT_STATUSES, getSequence } from "@/server/modules/marketing/sequences";
@@ -65,7 +65,7 @@ export default async function SequencePage({ params, searchParams }: PageProps<"
         ) : null
       }
     >
-      {!emailConfigured() ? <Notice tone="warning">{t("marketing.automation.emailNotConfigured")}</Notice> : null}
+      {!(await emailDeliveryReady(org.id, company.id)) ? <Notice tone="warning">{t("marketing.automation.emailNotConfigured")}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-4">
         {ENROLLMENT_STATUSES.map((k) => (
           <Kpi key={k} label={t(`marketing.automation.enrollmentStatus.${k}`)} value={d.counts[k] ?? 0} />

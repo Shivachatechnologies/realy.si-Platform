@@ -23,6 +23,8 @@ export interface GenerateImageInput {
 export interface GeneratedImages {
   images: StoredObject[];
   model: string;
+  /** Estimated cost of this call in micro-USD (same value as its usage record); null when the price is unknown. */
+  estimatedCostMicros: number | null;
 }
 
 const ASPECT: Record<ImageSize, string> = { "1024x1024": "1:1", "1536x1024": "3:2", "1024x1536": "2:3" };
@@ -99,8 +101,9 @@ export async function generateImage(organizationId: string, companyId: string, i
         images.push(stored.data);
       }
       const unit = FLAT_COST_MICROS[`${conn.provider}.image`] ?? null;
-      await recordUsage({ organizationId, companyId, connectionId: conn.id, provider: conn.provider, operation: "images.generate", units: images.length, unit: "image", estimatedCostMicros: unit === null ? null : unit * images.length, status: "SUCCEEDED", meta: { model, size } });
-      return { images, model };
+      const estimatedCostMicros = unit === null ? null : unit * images.length;
+      await recordUsage({ organizationId, companyId, connectionId: conn.id, provider: conn.provider, operation: "images.generate", units: images.length, unit: "image", estimatedCostMicros, status: "SUCCEEDED", meta: { model, size } });
+      return { images, model, estimatedCostMicros };
     } catch (err) {
       await recordUsage({ organizationId, companyId, connectionId: conn.id, provider: conn.provider, operation: "images.generate", units: 0, unit: "image", estimatedCostMicros: 0, status: "FAILED", error: errorText(err), meta: { model, size } });
       throw err;

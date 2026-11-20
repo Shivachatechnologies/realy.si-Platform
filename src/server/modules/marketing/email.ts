@@ -5,7 +5,8 @@ import { db, transaction } from "@/server/core/db";
 import { systemContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
-import { emailConfigured, sendPlainEmail } from "@/server/modules/email/service";
+import { companyEmailProvider } from "@/server/modules/email/provider";
+import { sendPlainEmail } from "@/server/modules/email/service";
 import { notifyUsers } from "@/server/modules/notifications/service";
 import { actorId, authorize, enumParam, instant, isUuid, PAGE_SIZE, pageParam, param, renderMergeTags, requireOwned, toInstant, uuid } from "./common";
 import { segmentRecipients } from "./segments";
@@ -170,9 +171,14 @@ export async function variantResults(emailCampaignId: string, companyId: string)
   })) as Record<string, { sent: number; opened: number; clicked: number; openRate: number; clickRate: number }>;
 }
 
+/** Whether marketing email can be delivered for the company (default path, or a campaign's chosen provider). */
+export const emailDeliveryReady = (organizationId: string, companyId: string, provider = "platform") => providerReady(organizationId, companyId, provider);
+
+/** Whether the campaign's delivery path can send: Mailchimp connection, the company's SendGrid sender, or any company/platform provider. */
 async function providerReady(organizationId: string, companyId: string, provider: string) {
-  if (provider === "sendgrid" || provider === "mailchimp") return isUsable(await getMarketingConnection(organizationId, companyId, provider));
-  return emailConfigured();
+  if (provider === "mailchimp") return isUsable(await getMarketingConnection(organizationId, companyId, provider));
+  const p = await companyEmailProvider(organizationId, companyId);
+  return provider === "sendgrid" ? p?.scope === "company" : p !== null;
 }
 
 async function editableCampaign(tx: Prisma.TransactionClient, organizationId: string, companyId: string, id: string) {
@@ -272,8 +278,8 @@ function requireReady(c: { subject: string; body: string; segmentId: string | nu
   if (!c.segmentId) throw invalid("Choose an audience segment", { reason: "marketing_email_no_segment" });
 }
 
-function requireEmailProvider() {
-  if (!emailConfigured()) throw new AppError("not_configured", "Email provider not configured", { reason: "marketing_email_not_configured" });
+async function requireEmailProvider(organizationId: string, companyId: string) {
+  if (!(await companyEmailProvider(organizationId, companyId))) throw new AppError("not_configured", "Email provider not configured", { reason: "marketing_email_not_configured" });
 }
 
 export async function emailCampaignAction(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof emailActionInput>) {
@@ -321,7 +327,7 @@ export async function emailCampaignAction(ctx: RequestContext, organizationId: s
 /** Send the rendered email to the acting user only (not logged as a campaign send). */
 async function sendTest(ctx: RequestContext, organizationId: string, companyId: string, id: string) {
   await authorize(ctx, organizationId, companyId, "marketing.manage");
-  requireEmailProvider();
+  await requireEmailProvider(organizationId, companyId);
   const c = await db().marketingEmailCampaign.findFirst({ where: { id, organizationId, companyId }, include: { company: { select: { name: true } } } });
   if (!c) throw notFound("Email campaign");
   if (!c.subject.trim() || !c.body.trim()) throw invalid("Subject and body are required", { reason: "marketing_email_incomplete" });
@@ -332,7 +338,7 @@ async function sendTest(ctx: RequestContext, organizationId: string, companyId: 
   const locale = user.locale ?? "en-US";
   // Same HTML layout as real sends, without tracking pixel / click redirects / unsubscribe token.
   const html = renderMarketingHtml({ body, sendId: null, locale, footer: c.company.name, unsubLabel: "", unsubscribeLink: "#", brand: await loadBrandKit(db(), companyId) });
-  const r = await sendPlainEmail({ to: user.email, subject: `[TEST] ${renderMergeTags(c.subject, vars)}`, text: body, html, template: "marketing_test", organizationId, userId: ctx.actor.id, locale });
+  const r = await sendPlainEmail({ to: user.email, subject: `[TEST] ${renderMergeTags(c.subject, vars)}`, text: body, html, template: "marketing_test", organizationId, companyId, userId: ctx.actor.id, locale });
   return { status: r.status };
 }
 

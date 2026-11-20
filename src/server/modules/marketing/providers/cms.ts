@@ -1,6 +1,9 @@
-// Uses integrations services when available — thin CMS adapters (WordPress REST, Webflow CMS v2, Shopify Admin) until the lead consolidates.
+// CMS adapters (WordPress REST, Webflow CMS v2, Shopify Admin) and Google Search Console. Every request goes through the
+// Integrations provider client (call → providerFetch) with the Integrations auth scheme of the connection's provider
+// (WordPress application password, Shopify access token, Bearer).
+import { SHOPIFY_API_VERSION, shopifyHost } from "@/server/modules/integrations/providers";
 import type { ProviderConnection } from "../connections-bridge";
-import { bearer, call, cfg, num, ProviderError, str } from "./http";
+import { call, cfg, num, ProviderError, str } from "./http";
 
 export const CMS_PROVIDERS = ["wordpress", "webflow", "shopify"] as const;
 export type CmsProvider = (typeof CMS_PROVIDERS)[number];
@@ -34,21 +37,20 @@ const httpsBase = (v: string | null, what: string) => {
 
 // ── WordPress (REST API, application password) ──
 
-function wpAuth(c: Conn) {
-  const user = cfg(c, "username", "user");
-  if (!user) throw new ProviderError("account_not_configured", "WordPress username missing");
-  return `Basic ${Buffer.from(`${user}:${c.accessToken}`).toString("base64")}`;
+/** WordPress auth (Basic with the application password) is added by the Integrations client from config.username. */
+function wpCheck(c: Conn) {
+  if (!cfg(c, "username")) throw new ProviderError("account_not_configured", "WordPress username missing");
 }
 
-async function wpTermIds(base: string, auth: string, taxonomy: "categories" | "tags", names: string[]): Promise<number[]> {
+async function wpTermIds(c: Conn, base: string, taxonomy: "categories" | "tags", names: string[]): Promise<number[]> {
   const ids: number[] = [];
   for (const name of names.slice(0, 10)) {
-    const found = await call(`${base}/wp-json/wp/v2/${taxonomy}?${new URLSearchParams({ search: name, per_page: "20" })}`, { headers: { authorization: auth } });
+    const found = await call(c, `${base}/wp-json/wp/v2/${taxonomy}?${new URLSearchParams({ search: name, per_page: "20" })}`, {});
     const items = (found.json.items as { id: number; name: string }[] | undefined) ?? [];
     const match = items.find((t) => t.name.toLowerCase() === name.toLowerCase());
     if (match) ids.push(match.id);
     else {
-      const created = await call(`${base}/wp-json/wp/v2/${taxonomy}`, { method: "POST", headers: { authorization: auth, "content-type": "application/json" }, body: JSON.stringify({ name }) });
+      const created = await call(c, `${base}/wp-json/wp/v2/${taxonomy}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
       const id = num(created.json.id);
       if (id) ids.push(id);
     }
@@ -58,20 +60,20 @@ async function wpTermIds(base: string, auth: string, taxonomy: "categories" | "t
 
 async function wordpress(c: Conn, a: CmsArticle): Promise<CmsResult> {
   const base = httpsBase(cfg(c, "siteUrl", "url"), "WordPress site URL");
-  const auth = wpAuth(c);
+  wpCheck(c);
   let featured: number | null = null;
   if (a.featuredImage) {
-    const media = await call(
+    const media = await call(c, 
       `${base}/wp-json/wp/v2/media`,
-      { method: "POST", headers: { authorization: auth, "content-type": a.featuredImage.mimeType, "content-disposition": `attachment; filename="${a.featuredImage.filename.replace(/[^\w.-]/g, "_")}"` }, body: new Uint8Array(a.featuredImage.bytes) },
+      { method: "POST", headers: { "content-type": a.featuredImage.mimeType, "content-disposition": `attachment; filename="${a.featuredImage.filename.replace(/[^\w.-]/g, "_")}"` }, body: new Uint8Array(a.featuredImage.bytes) },
       60_000,
     );
     featured = num(media.json.id);
   }
   const scheduled = !!a.publishAt && a.publishAt.getTime() > Date.now() + 60_000;
-  const post = await call(`${base}/wp-json/wp/v2/posts`, {
+  const post = await call(c, `${base}/wp-json/wp/v2/posts`, {
     method: "POST",
-    headers: { authorization: auth, "content-type": "application/json" },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify({
       title: a.title,
       content: a.html,
@@ -80,8 +82,8 @@ async function wordpress(c: Conn, a: CmsArticle): Promise<CmsResult> {
       status: scheduled ? "future" : "publish",
       ...(scheduled ? { date_gmt: a.publishAt!.toISOString().slice(0, 19) } : {}),
       ...(featured ? { featured_media: featured } : {}),
-      categories: await wpTermIds(base, auth, "categories", a.categories),
-      tags: await wpTermIds(base, auth, "tags", a.tags),
+      categories: await wpTermIds(c, base, "categories", a.categories),
+      tags: await wpTermIds(c, base, "tags", a.tags),
     }),
   });
   const id = num(post.json.id);
@@ -96,9 +98,9 @@ async function webflow(c: Conn, a: CmsArticle): Promise<CmsResult> {
   if (!collectionId) throw new ProviderError("account_not_configured", "Webflow collection id missing");
   const f = (k: string, d: string) => cfg(c, `${k}Field`) ?? d;
   const slug = (a.slug || a.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")).slice(0, 100);
-  const res = await call(`https://api.webflow.com/v2/collections/${encodeURIComponent(collectionId)}/items/live`, {
+  const res = await call(c, `https://api.webflow.com/v2/collections/${encodeURIComponent(collectionId)}/items/live`, {
     method: "POST",
-    headers: bearer(c.accessToken, { "content-type": "application/json", accept: "application/json" }),
+    headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({
       isArchived: false,
       isDraft: false,
@@ -121,14 +123,14 @@ async function webflow(c: Conn, a: CmsArticle): Promise<CmsResult> {
 // ── Shopify (Admin REST blog articles) ──
 
 async function shopify(c: Conn, a: CmsArticle): Promise<CmsResult> {
-  const shop = cfg(c, "shopDomain", "shop");
+  const shop = shopifyHost(c.config);
   const blogId = cfg(c, "blogId");
-  if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/i.test(shop)) throw new ProviderError("account_not_configured", "Shopify shop domain missing");
+  if (!shop) throw new ProviderError("account_not_configured", "Shopify shop domain missing");
   if (!blogId || !/^\d+$/.test(blogId)) throw new ProviderError("account_not_configured", "Shopify blog id missing");
-  const base = `https://${shop}/admin/api/2024-10`;
-  const headers = { "x-shopify-access-token": c.accessToken, "content-type": "application/json" };
+  const base = `https://${shop}/admin/api/${SHOPIFY_API_VERSION}`;
+  const headers = { "content-type": "application/json" };
   const scheduled = !!a.publishAt && a.publishAt.getTime() > Date.now() + 60_000;
-  const res = await call(`${base}/blogs/${blogId}/articles.json`, {
+  const res = await call(c, `${base}/blogs/${blogId}/articles.json`, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -153,7 +155,7 @@ async function shopify(c: Conn, a: CmsArticle): Promise<CmsResult> {
   if (!article.id) throw new ProviderError("provider_no_id");
   let url: string | null = null;
   try {
-    const blog = await call(`${base}/blogs/${blogId}.json`, { headers });
+    const blog = await call(c, `${base}/blogs/${blogId}.json`, { headers });
     const handle = str((blog.json.blog as { handle?: string } | undefined)?.handle);
     const domain = cfg(c, "publicDomain") ?? shop;
     if (handle && article.handle) url = `https://${domain}/blogs/${handle}/${article.handle}`;
@@ -195,9 +197,10 @@ export interface SearchRow {
 export async function searchConsoleQuery(c: Conn, siteUrl: string, startDate: string, endDate: string): Promise<SearchRow[]> {
   const out: SearchRow[] = [];
   for (let startRow = 0; startRow < 25_000; startRow += 5000) {
-    const res = await call(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
+    const res = await call(c, `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
       method: "POST",
-      headers: bearer(c.accessToken, { "content-type": "application/json" }),
+      headers: { "content-type": "application/json" },
+      retries: 2,
       body: JSON.stringify({ startDate, endDate, dimensions: ["date", "page", "query"], rowLimit: 5000, startRow }),
     });
     const rows = (res.json.rows as { keys: string[]; clicks: number; impressions: number; ctr: number; position: number }[] | undefined) ?? [];

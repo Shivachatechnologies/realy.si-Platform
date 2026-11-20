@@ -1,7 +1,10 @@
-// Uses integrations services when available — thin adapters for SendGrid (v3 mail/send) and Mailchimp Transactional.
+// Marketing email delivery helpers. SendGrid sends go through the core email module (companyEmailProvider →
+// sendgridProvider over the Integrations client); Mailchimp Transactional (Mandrill) sends go through the Integrations
+// provider client here. Delivery webhooks are verified and parsed below.
 import { createHmac, createPublicKey, verify } from "node:crypto";
 import type { ProviderConnection } from "../connections-bridge";
-import { bearer, call, cfg, ProviderError, str } from "./http";
+import { recordUsage } from "@/server/modules/integrations/usage";
+import { call, cfg, ProviderError, str } from "./http";
 
 export const EMAIL_PROVIDERS = ["platform", "sendgrid", "mailchimp"] as const;
 export type EmailProviderChoice = (typeof EMAIL_PROVIDERS)[number];
@@ -18,36 +21,25 @@ export interface OutgoingEmail {
   fromName: string;
 }
 
-/** Sends one email; returns the provider message id. Throws ProviderError when the provider did not accept it. */
-export async function sendViaProvider(provider: "sendgrid" | "mailchimp", c: Conn, m: OutgoingEmail): Promise<string> {
+/** Sends one email through Mailchimp Transactional; returns the provider message id. Throws ProviderError when it was not accepted. */
+export async function sendViaMailchimp(c: Conn, m: OutgoingEmail): Promise<string> {
   const fromEmail = cfg(c, "fromEmail", "from");
   if (!fromEmail) throw new ProviderError("account_not_configured", "Sender address (fromEmail) missing");
   const fromName = cfg(c, "fromName") ?? m.fromName;
-  if (provider === "sendgrid") {
-    const res = await call("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: bearer(c.accessToken, { "content-type": "application/json" }),
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: m.to }], custom_args: { sendId: m.sendId } }],
-        from: { email: fromEmail, name: fromName },
-        subject: m.subject,
-        content: [
-          { type: "text/plain", value: m.text },
-          { type: "text/html", value: m.html },
-        ],
-        headers: m.headers,
-      }),
-    });
-    return res.headers.get("x-message-id") ?? m.sendId;
-  }
-  const res = await call("https://mandrillapp.com/api/1.0/messages/send", {
+  // Mandrill authenticates with the key in the body.
+  const res = await call(c, "https://mandrillapp.com/api/1.0/messages/send", {
     method: "POST",
     headers: { "content-type": "application/json" },
+    noAuth: true,
     body: JSON.stringify({ key: c.accessToken, message: { subject: m.subject, text: m.text, html: m.html, from_email: fromEmail, from_name: fromName, to: [{ email: m.to, type: "to" }], headers: m.headers, metadata: { sendId: m.sendId } } }),
   });
   const first = (res.json.items as { _id?: string; status?: string; reject_reason?: string }[] | undefined)?.[0];
-  if (!first?._id || first.status === "rejected" || first.status === "invalid") throw new ProviderError("provider_rejected", first?.reject_reason ?? first?.status ?? "rejected");
-  return first._id;
+  const accepted = !!first?._id && first.status !== "rejected" && first.status !== "invalid";
+  if (c.organizationId && c.companyId) {
+    await recordUsage({ organizationId: c.organizationId, companyId: c.companyId, connectionId: c.id, provider: "mailchimp", operation: "email.send", unit: "message", estimatedCostMicros: null, status: accepted ? "SUCCEEDED" : "FAILED", error: accepted ? null : (first?.reject_reason ?? first?.status ?? "rejected") });
+  }
+  if (!accepted) throw new ProviderError("provider_rejected", first?.reject_reason ?? first?.status ?? "rejected");
+  return first!._id!;
 }
 
 export interface DeliveryEvent {

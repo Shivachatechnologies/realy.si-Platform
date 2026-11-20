@@ -8,9 +8,10 @@ import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { hmacSha256, safeEqual } from "@/server/core/crypto";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
+import { getSignedUrl, newObjectKey, putObject } from "@/server/modules/integrations/services/storage";
 import { actorId, authorize, enumParam, isUuid, PAGE_SIZE, pageParam, param, requireOwned, uuid } from "./common";
 import { loadBrandKit } from "./brand";
-import { generateImage, imageConnection, pollVideoJob, startVideoJob, videoConnection } from "./providers/generation";
+import { generateImage, IMAGE_PROVIDERS, imageConnection, pollVideoJob, startVideoJob, VIDEO_PROVIDERS, videoConnection } from "./providers/generation";
 import { download, ProviderError } from "./providers/http";
 
 export const ASSET_KINDS = ["IMAGE", "VIDEO", "LOGO", "DOCUMENT"] as const;
@@ -85,7 +86,7 @@ export const generateInput = z.object({
   variations: z.number().int().min(1).max(4).default(1),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
   overlay: overlay.optional(),
-  provider: z.enum(["openai", "stability"]).optional(),
+  provider: z.enum(IMAGE_PROVIDERS).optional(),
   /** Regenerate / vary an existing asset (keeps the link). */
   parentId: uuid.optional(),
   useBrand: z.boolean().default(true),
@@ -96,7 +97,7 @@ export const videoInput = z.object({
   vertical: z.boolean().default(true),
   seconds: z.number().int().min(4).max(10).optional(),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
-  provider: z.enum(["runway", "replicate"]).optional(),
+  provider: z.enum(VIDEO_PROVIDERS).optional(),
 });
 
 // ── Signed public URLs (platforms fetch media from these) ──
@@ -106,15 +107,48 @@ const assetSig = (id: string) => hmacSha256(assetKey(), id).toString("base64url"
 export const verifyAssetSig = (id: string, sig: string | null) => isUuid(id) && !!sig && safeEqual(sig, assetSig(id));
 const ext = (mime: string | null) => (mime?.includes("png") ? "png" : mime?.includes("jpeg") || mime?.includes("jpg") ? "jpg" : mime?.includes("webp") ? "webp" : mime?.includes("mp4") ? "mp4" : mime?.includes("quicktime") ? "mov" : "bin");
 
-/** Public URL of an asset: signed Realy URL for stored bytes, else its external URL. */
-export function assetPublicUrl(a: { id: string; url: string | null; mimeType: string | null; sizeBytes: number | null; hasData?: boolean }): string | null {
-  if (a.hasData || a.sizeBytes) return `${env().APP_URL.replace(/\/$/, "")}/api/public/marketing/assets/${a.id}/file.${ext(a.mimeType)}?sig=${assetSig(a.id)}`;
+/** Public URL of an asset: stable signed Realy URL for stored files (row bytes or storage), else its external URL. */
+export function assetPublicUrl(a: { id: string; url: string | null; mimeType: string | null; sizeBytes: number | null; hasData?: boolean; storageRef?: string | null }): string | null {
+  if (a.hasData || a.sizeBytes || a.storageRef) return `${env().APP_URL.replace(/\/$/, "")}/api/public/marketing/assets/${a.id}/file.${ext(a.mimeType)}?sig=${assetSig(a.id)}`;
   return a.url;
 }
 
-export async function publicAssetFile(id: string) {
-  const a = await db().marketingAsset.findFirst({ where: { id, archivedAt: null, status: "READY" }, select: { data: true, mimeType: true } });
-  return a?.data ? { bytes: Buffer.from(a.data), mimeType: a.mimeType ?? "application/octet-stream" } : null;
+// ── Storage (Integrations storage service: company S3 bucket or the bounded database fallback) ──
+
+const CONTENT_TYPE_RE = /^[a-z]+\/[a-z0-9.+-]{1,100}$/i;
+
+/**
+ * Store asset bytes through the Integrations storage service. Returns the storage reference, or null when storage
+ * refused the object (e.g. over the database fallback limit without a bucket) — the caller then keeps the bytes on the
+ * asset row as before, so nothing is lost.
+ */
+async function storeAssetBytes(organizationId: string, companyId: string, bytes: Buffer, mimeType: string | null): Promise<string | null> {
+  const contentType = mimeType && CONTENT_TYPE_RE.test(mimeType) ? mimeType.toLowerCase() : "application/octet-stream";
+  const r = await putObject(organizationId, companyId, { key: newObjectKey("marketing-assets", ext(contentType)), body: new Uint8Array(bytes), contentType });
+  if (r.ok) return r.data.ref;
+  logger.warn({ companyId, code: r.code }, "marketing asset storage failed; keeping bytes on the asset");
+  return null;
+}
+
+/** Short-lived signed URL of a storage-backed asset (previews, provider fetches), or null. */
+export async function assetSignedUrl(a: { organizationId: string; companyId: string; storageRef: string | null }, expiresSeconds = 3600): Promise<string | null> {
+  if (!a.storageRef) return null;
+  const r = await getSignedUrl(a.organizationId, a.companyId, a.storageRef, expiresSeconds);
+  return r.ok ? r.data.url : null;
+}
+
+/**
+ * File behind the stable signed public URL (social platforms and CMSs fetch media from it, so it serves the bytes itself
+ * on the app's own domain): row bytes for older assets, else the object fetched through a fresh signed storage URL.
+ */
+export async function publicAssetFile(id: string): Promise<{ bytes: Buffer; mimeType: string } | null> {
+  const a = await db().marketingAsset.findFirst({ where: { id, archivedAt: null, status: "READY" }, select: { organizationId: true, companyId: true, data: true, mimeType: true, storageRef: true } });
+  if (!a) return null;
+  const mimeType = a.mimeType ?? "application/octet-stream";
+  if (a.data) return { bytes: Buffer.from(a.data), mimeType };
+  const url = await assetSignedUrl(a, 600);
+  const d = url ? await download(url, MAX_VIDEO_BYTES).catch(() => null) : null;
+  return d ? { bytes: d.bytes, mimeType } : null;
 }
 
 /** Media bytes for uploads that need the file itself (YouTube, CMS featured images). */
@@ -123,6 +157,12 @@ export async function assetMedia(companyId: string, id: string): Promise<{ bytes
   if (!a) return null;
   const url = assetPublicUrl({ ...a, hasData: !!a.data });
   if (a.data) return { bytes: Buffer.from(a.data), mimeType: a.mimeType ?? "application/octet-stream", filename: `${a.name}.${ext(a.mimeType)}`, url };
+  if (a.storageRef) {
+    const signed = await assetSignedUrl(a);
+    if (!signed) return null;
+    const d = await download(signed, MAX_VIDEO_BYTES);
+    return { bytes: d.bytes, mimeType: a.mimeType ?? d.mimeType, filename: `${a.name}.${ext(a.mimeType ?? d.mimeType)}`, url };
+  }
   if (a.url) {
     const d = await download(a.url, MAX_VIDEO_BYTES);
     return { ...d, filename: `${a.name}.${ext(d.mimeType)}`, url: a.url };
@@ -148,6 +188,9 @@ const listSelect = {
   campaignId: true,
   parentId: true,
   error: true,
+  storageRef: true,
+  organizationId: true,
+  companyId: true,
   createdAt: true,
 } satisfies Prisma.MarketingAssetSelect;
 
@@ -172,7 +215,9 @@ export async function listAssets(ctx: RequestContext, organizationId: string, co
     db().marketingAsset.count({ where }),
     db().marketingAsset.findMany({ where, orderBy: { createdAt: "desc" }, skip: (f.page - 1) * PAGE_SIZE, take: PAGE_SIZE, select: listSelect }),
   ]);
-  return { total, pageSize: PAGE_SIZE, data: rows.map((a) => ({ ...a, publicUrl: assetPublicUrl(a) })) };
+  // Previews use a short-lived signed storage URL directly; publicUrl stays the stable signed Realy URL (shareable, downloadable).
+  const data = await Promise.all(rows.map(async (a) => ({ ...a, publicUrl: assetPublicUrl(a), previewUrl: (await assetSignedUrl(a)) ?? assetPublicUrl(a) })));
+  return { total, pageSize: PAGE_SIZE, data };
 }
 
 export async function assetOptions(ctx: RequestContext, organizationId: string, companyId: string, kinds: MarketingAssetKind[] = ["IMAGE", "VIDEO", "LOGO"]) {
@@ -204,6 +249,8 @@ export async function uploadAsset(ctx: RequestContext, organizationId: string, c
       throw invalid("The file could not be downloaded", { reason: err instanceof ProviderError && err.reason === "media_too_large" ? "marketing_asset_too_large" : "marketing_asset_download_failed" });
     }
   }
+  await authorize(ctx, organizationId, companyId, "marketing.manage");
+  const storageRef = bytes ? await storeAssetBytes(organizationId, companyId, bytes, mimeType) : null;
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const a = await tx.marketingAsset.create({
@@ -213,7 +260,8 @@ export async function uploadAsset(ctx: RequestContext, organizationId: string, c
         kind: input.kind,
         name: input.name,
         mimeType,
-        data: bytes ? new Uint8Array(bytes) : null,
+        storageRef,
+        data: bytes && !storageRef ? new Uint8Array(bytes) : null,
         sizeBytes: bytes?.length ?? null,
         url: bytes ? null : (input.url ?? null),
         tags: input.tags ?? [],
@@ -269,8 +317,8 @@ export async function creativePrompt(companyId: string, prompt: string, ov?: z.i
 }
 
 /**
- * Generate creatives with the company's image provider (openai / stability). Only images the provider returned are
- * stored. Without a connected provider this fails with `marketing_image_not_connected`.
+ * Generate creatives through the Integrations image service (OpenAI → Stability → Replicate; the preferred provider
+ * first). Only images a provider returned are stored (through the storage service). Without a connected provider this fails with `marketing_image_not_connected`.
  */
 export async function generateCreative(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof generateInput>) {
   const input = generateInput.parse(raw);
@@ -298,8 +346,8 @@ export async function generateCreative(ctx: RequestContext, organizationId: stri
           kind: "IMAGE",
           name: `${input.prompt.slice(0, 60)}${input.variations > 1 ? ` #${i + 1}` : ""}`,
           mimeType: img.mimeType,
-          data: new Uint8Array(img.bytes),
-          sizeBytes: img.bytes.length,
+          storageRef: img.stored.ref,
+          sizeBytes: img.sizeBytes,
           width: size.width,
           height: size.height,
           preset: input.preset,
@@ -325,7 +373,7 @@ export async function generateCreative(ctx: RequestContext, organizationId: stri
   return { created: created.map((c) => c.id), errors, provider: conn.provider };
 }
 
-/** Start a video generation job (runway / replicate); the asset stays PROCESSING until the worker confirms the output. */
+/** Start a video generation job (Integrations video service: Runway → Replicate); the asset stays PROCESSING until the worker confirms the output. */
 export async function startVideo(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof videoInput>) {
   const input = videoInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "marketing.manage");
@@ -335,7 +383,7 @@ export async function startVideo(ctx: RequestContext, organizationId: string, co
   if (input.imageAssetId) {
     const img = await db().marketingAsset.findFirst({ where: { id: input.imageAssetId, organizationId, companyId, kind: { in: ["IMAGE", "LOGO"] }, status: "READY" } });
     if (!img) throw notFound("Asset");
-    imageUrl = assetPublicUrl({ ...img, hasData: !!img.data });
+    imageUrl = (await assetSignedUrl(img)) ?? assetPublicUrl({ ...img, hasData: !!img.data });
   }
   const prompt = await creativePrompt(companyId, input.prompt);
   let job;
@@ -368,7 +416,7 @@ export async function startVideo(ctx: RequestContext, organizationId: string, co
   });
 }
 
-/** Worker: poll PROCESSING video jobs; store the output (≤ 50 MB as bytes, else its URL) only when the provider succeeded. */
+/** Worker: poll PROCESSING video jobs; store the output (≤ 50 MB through storage, else its URL) only when the provider succeeded. */
 export async function processVideoJobs(): Promise<number> {
   const jobs = await db().marketingAsset.findMany({ where: { status: "PROCESSING", providerJobId: { not: null } }, orderBy: { createdAt: "asc" }, take: 10 });
   let done = 0;
@@ -383,16 +431,21 @@ export async function processVideoJobs(): Promise<number> {
         await db().marketingAsset.update({ where: { id: j.id }, data: { status: "FAILED", error: s.error.slice(0, 500) } });
         continue;
       }
+      // Keep the output: through the storage service, else (over the storage limit) on the row, else its provider URL.
       let data: Uint8Array<ArrayBuffer> | null = null;
+      let storageRef: string | null = null;
+      let size: number | null = null;
       let mimeType = "video/mp4";
       try {
         const d = await download(s.url, MAX_VIDEO_BYTES);
-        data = new Uint8Array(d.bytes);
         mimeType = d.mimeType.startsWith("video/") ? d.mimeType : mimeType;
+        size = d.bytes.length;
+        storageRef = await storeAssetBytes(j.organizationId, j.companyId, d.bytes, mimeType);
+        if (!storageRef) data = new Uint8Array(d.bytes);
       } catch {
         data = null;
       }
-      await db().marketingAsset.update({ where: { id: j.id }, data: { status: "READY", data, sizeBytes: data?.length ?? null, mimeType, url: data ? null : s.url, error: null } });
+      await db().marketingAsset.update({ where: { id: j.id }, data: { status: "READY", data, storageRef, sizeBytes: size, mimeType, url: size ? null : s.url, error: null } });
       done++;
     } catch (err) {
       logger.warn({ assetId: j.id, reason: err instanceof ProviderError ? err.reason : "error" }, "video job poll failed");

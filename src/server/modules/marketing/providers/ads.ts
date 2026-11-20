@@ -1,7 +1,10 @@
-// Uses integrations services when available — thin Paid Ads adapters (Meta Marketing API, Google Ads REST, LinkedIn
-// Marketing API, TikTok Business API). Writes are only called from the SUPERVISED HIGH tools after a cap check.
+// Paid Ads adapters (Meta Marketing API, Google Ads REST, LinkedIn Marketing API, TikTok Business API). Every request
+// goes through the Integrations provider client (call → providerFetch: request log, rate limit, retries, health) with the
+// Integrations auth scheme of each provider. Writes are only called from the SUPERVISED HIGH tools after a cap check.
+import { env } from "@/server/core/env";
+import { googleAdsDeveloperToken, oauthClient } from "@/server/modules/integrations/providers";
 import type { ProviderConnection } from "../connections-bridge";
-import { bearer, call, cfg, num, ProviderError, str } from "./http";
+import { call, cfg, num, ProviderError, str } from "./http";
 
 export const AD_PROVIDERS = ["meta_ads", "google_ads", "linkedin_ads", "tiktok_ads"] as const;
 export type AdProvider = (typeof AD_PROVIDERS)[number];
@@ -37,8 +40,8 @@ export interface CampaignDraft {
 }
 
 const minor = (major: unknown) => BigInt(Math.round((num(major) ?? 0) * 100));
-const META = "https://graph.facebook.com/v19.0";
-const GADS = "https://googleads.googleapis.com/v17";
+const META = "https://graph.facebook.com/v21.0";
+const gadsBase = () => `https://googleads.googleapis.com/${env().GOOGLE_ADS_API_VERSION}`;
 const TT = "https://business-api.tiktok.com/open_api/v1.3";
 const LIA = "https://api.linkedin.com/rest";
 
@@ -49,11 +52,11 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 const actId = (id: string) => (id.startsWith("act_") ? id : `act_${id}`);
 
 async function metaAccounts(c: Conn): Promise<RemoteAdAccount[]> {
-  const res = await call(`${META}/me/adaccounts?${new URLSearchParams({ fields: "id,name,currency", limit: "100", access_token: c.accessToken })}`);
+  const res = await call(c, `${META}/me/adaccounts?${new URLSearchParams({ fields: "id,name,currency", limit: "100" })}`);
   return ((res.json.data as Record<string, unknown>[] | undefined) ?? []).map((a) => ({ externalId: String(a.id), name: String(a.name ?? a.id), currency: String(a.currency ?? "USD") }));
 }
 async function metaCampaigns(c: Conn, account: string): Promise<RemoteCampaign[]> {
-  const res = await call(`${META}/${actId(account)}/campaigns?${new URLSearchParams({ fields: "id,name,status,objective,daily_budget", limit: "200", access_token: c.accessToken })}`);
+  const res = await call(c, `${META}/${actId(account)}/campaigns?${new URLSearchParams({ fields: "id,name,status,objective,daily_budget", limit: "200" })}`);
   return ((res.json.data as Record<string, unknown>[] | undefined) ?? []).map((x) => ({
     externalId: String(x.id),
     name: String(x.name ?? ""),
@@ -69,9 +72,8 @@ async function metaInsights(c: Conn, account: string, since: Date): Promise<Remo
     time_increment: "1",
     time_range: JSON.stringify({ since: day(since), until: day(new Date()) }),
     limit: "500",
-    access_token: c.accessToken,
   });
-  const res = await call(`${META}/${actId(account)}/insights?${q}`);
+  const res = await call(c, `${META}/${actId(account)}/insights?${q}`);
   return ((res.json.data as Record<string, unknown>[] | undefined) ?? []).map((r) => {
     const actions = (r.actions as { action_type: string; value: string }[] | undefined) ?? [];
     const values = (r.action_values as { action_type: string; value: string }[] | undefined) ?? [];
@@ -83,19 +85,18 @@ async function metaInsights(c: Conn, account: string, since: Date): Promise<Remo
 
 // ── Google Ads ──
 
+/** Auth, developer-token and login-customer-id headers come from the Integrations google_ads auth scheme. */
 function gadsHeaders(c: Conn) {
-  const dev = cfg(c, "developerToken");
-  if (!dev) throw new ProviderError("account_not_configured", "Google Ads developer token missing");
-  const login = cfg(c, "loginCustomerId");
-  return bearer(c.accessToken, { "developer-token": dev, "content-type": "application/json", ...(login ? { "login-customer-id": login.replace(/-/g, "") } : {}) });
+  if (!googleAdsDeveloperToken(c.config)) throw new ProviderError("account_not_configured", "Google Ads developer token missing");
+  return { "content-type": "application/json" };
 }
 const cid = (id: string) => id.replace(/-/g, "");
 async function gadsSearch(c: Conn, customer: string, query: string) {
-  const res = await call(`${GADS}/customers/${cid(customer)}/googleAds:search`, { method: "POST", headers: gadsHeaders(c), body: JSON.stringify({ query }) });
+  const res = await call(c, `${gadsBase()}/customers/${cid(customer)}/googleAds:search`, { method: "POST", headers: gadsHeaders(c), body: JSON.stringify({ query }) });
   return (res.json.results as Record<string, Record<string, unknown>>[] | undefined) ?? [];
 }
 async function gadsAccounts(c: Conn): Promise<RemoteAdAccount[]> {
-  const res = await call(`${GADS}/customers:listAccessibleCustomers`, { headers: gadsHeaders(c) });
+  const res = await call(c, `${gadsBase()}/customers:listAccessibleCustomers`, { headers: gadsHeaders(c) });
   const names = (res.json.resourceNames as string[] | undefined) ?? [];
   const out: RemoteAdAccount[] = [];
   for (const rn of names.slice(0, 20)) {
@@ -139,13 +140,14 @@ async function gadsInsights(c: Conn, customer: string, since: Date): Promise<Rem
 
 // ── LinkedIn Ads ──
 
-const liHeaders = (c: Conn) => bearer(c.accessToken, { "linkedin-version": cfg(c, "apiVersion") ?? "202405", "x-restli-protocol-version": "2.0.0", "content-type": "application/json" });
+/** Auth, linkedin-version and Rest.li protocol headers come from the Integrations linkedin_ads auth scheme. */
+const liHeaders = (): Record<string, string> => ({ "content-type": "application/json" });
 async function liAccounts(c: Conn): Promise<RemoteAdAccount[]> {
-  const res = await call(`${LIA}/adAccounts?q=search&search=(status:(values:List(ACTIVE)))`, { headers: liHeaders(c) });
+  const res = await call(c, `${LIA}/adAccounts?q=search&search=(status:(values:List(ACTIVE)))`, { headers: liHeaders() });
   return ((res.json.elements as Record<string, unknown>[] | undefined) ?? []).map((a) => ({ externalId: String(a.id), name: String(a.name ?? a.id), currency: String(a.currency ?? "USD") }));
 }
 async function liCampaigns(c: Conn, account: string): Promise<RemoteCampaign[]> {
-  const res = await call(`${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns?q=search`, { headers: liHeaders(c) });
+  const res = await call(c, `${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns?q=search`, { headers: liHeaders() });
   return ((res.json.elements as Record<string, unknown>[] | undefined) ?? []).map((x) => ({
     externalId: String(x.id),
     name: String(x.name ?? ""),
@@ -158,7 +160,7 @@ async function liInsights(c: Conn, account: string, since: Date): Promise<Remote
   const now = new Date();
   const dr = `(start:(year:${since.getUTCFullYear()},month:${since.getUTCMonth() + 1},day:${since.getUTCDate()}),end:(year:${now.getUTCFullYear()},month:${now.getUTCMonth() + 1},day:${now.getUTCDate()}))`;
   const url = `${LIA}/adAnalytics?q=analytics&pivot=CAMPAIGN&timeGranularity=DAILY&dateRange=${dr}&accounts=List(${encodeURIComponent(`urn:li:sponsoredAccount:${account}`)})&fields=pivotValues,dateRange,costInLocalCurrency,impressions,clicks,externalWebsiteConversions,conversionValueInLocalCurrency`;
-  const res = await call(url, { headers: liHeaders(c) });
+  const res = await call(c, url, { headers: liHeaders() });
   return ((res.json.elements as Record<string, unknown>[] | undefined) ?? []).map((e) => {
     const start = ((e.dateRange as { start?: { year: number; month: number; day: number } } | undefined)?.start ?? { year: 1970, month: 1, day: 1 }) as { year: number; month: number; day: number };
     const urn = ((e.pivotValues as string[] | undefined) ?? [""])[0]!;
@@ -176,20 +178,22 @@ async function liInsights(c: Conn, account: string, since: Date): Promise<Remote
 
 // ── TikTok Ads ──
 
-const ttHeaders = (c: Conn) => ({ "access-token": c.accessToken, "content-type": "application/json" });
+/** The access-token header comes from the Integrations tiktok_ads auth scheme. */
+const ttHeaders = () => ({ "content-type": "application/json" });
 function ttData(json: Record<string, unknown>) {
   if (num(json.code) !== 0) throw new ProviderError("provider_rejected", String(json.message ?? "TikTok error").slice(0, 200));
   return (json.data ?? {}) as Record<string, unknown>;
 }
 async function ttAccounts(c: Conn): Promise<RemoteAdAccount[]> {
-  const appId = cfg(c, "appId");
-  const secret = cfg(c, "appSecret");
+  const app = oauthClient("tiktok_ads");
+  const appId = cfg(c, "appId") ?? app?.clientId ?? null;
+  const secret = cfg(c, "appSecret") ?? app?.clientSecret ?? null;
   if (!appId || !secret) throw new ProviderError("account_not_configured", "TikTok app id/secret missing");
-  const res = await call(`${TT}/oauth2/advertiser/get/?${new URLSearchParams({ app_id: appId, secret })}`, { headers: ttHeaders(c) });
+  const res = await call(c, `${TT}/oauth2/advertiser/get/?${new URLSearchParams({ app_id: appId, secret })}`, { headers: ttHeaders() });
   return ((ttData(res.json).list as Record<string, unknown>[] | undefined) ?? []).map((a) => ({ externalId: String(a.advertiser_id), name: String(a.advertiser_name ?? a.advertiser_id), currency: "USD" }));
 }
 async function ttCampaigns(c: Conn, advertiser: string): Promise<RemoteCampaign[]> {
-  const res = await call(`${TT}/campaign/get/?${new URLSearchParams({ advertiser_id: advertiser, page_size: "200" })}`, { headers: ttHeaders(c) });
+  const res = await call(c, `${TT}/campaign/get/?${new URLSearchParams({ advertiser_id: advertiser, page_size: "200" })}`, { headers: ttHeaders() });
   return ((ttData(res.json).list as Record<string, unknown>[] | undefined) ?? []).map((x) => ({
     externalId: String(x.campaign_id),
     name: String(x.campaign_name ?? ""),
@@ -209,7 +213,7 @@ async function ttInsights(c: Conn, advertiser: string, since: Date): Promise<Rem
     end_date: day(new Date()),
     page_size: "1000",
   });
-  const res = await call(`${TT}/report/integrated/get/?${q}`, { headers: ttHeaders(c) });
+  const res = await call(c, `${TT}/report/integrated/get/?${q}`, { headers: ttHeaders() });
   return ((ttData(res.json).list as { dimensions: Record<string, string>; metrics: Record<string, string> }[] | undefined) ?? []).map((r) => ({
     campaignExternalId: r.dimensions.campaign_id!,
     date: r.dimensions.stat_time_day!.slice(0, 10),
@@ -247,24 +251,24 @@ export async function fetchDailyMetrics(provider: AdProvider, c: Conn, account: 
 /** Creates the campaign PAUSED at the provider; returns its provider id. */
 export async function createRemoteCampaign(provider: AdProvider, c: Conn, account: string, d: CampaignDraft): Promise<string> {
   if (provider === "meta_ads") {
-    const res = await call(`${META}/${actId(account)}/campaigns`, {
+    const res = await call(c, `${META}/${actId(account)}/campaigns`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ name: d.name, objective: d.objective || "OUTCOME_TRAFFIC", status: "PAUSED", special_ad_categories: "[]", daily_budget: d.dailyBudgetMinor.toString(), access_token: c.accessToken }),
+      body: new URLSearchParams({ name: d.name, objective: d.objective || "OUTCOME_TRAFFIC", status: "PAUSED", special_ad_categories: "[]", daily_budget: d.dailyBudgetMinor.toString() }),
     });
     const id = str(res.json.id);
     if (!id) throw new ProviderError("provider_no_id");
     return id;
   }
   if (provider === "google_ads") {
-    const budget = await call(`${GADS}/customers/${cid(account)}/campaignBudgets:mutate`, {
+    const budget = await call(c, `${gadsBase()}/customers/${cid(account)}/campaignBudgets:mutate`, {
       method: "POST",
       headers: gadsHeaders(c),
       body: JSON.stringify({ operations: [{ create: { name: `${d.name} budget ${Date.now()}`, amountMicros: (d.dailyBudgetMinor * 10_000n).toString(), deliveryMethod: "STANDARD" } }] }),
     });
     const budgetName = str((budget.json.results as { resourceName?: string }[] | undefined)?.[0]?.resourceName);
     if (!budgetName) throw new ProviderError("provider_no_id");
-    const res = await call(`${GADS}/customers/${cid(account)}/campaigns:mutate`, {
+    const res = await call(c, `${gadsBase()}/customers/${cid(account)}/campaigns:mutate`, {
       method: "POST",
       headers: gadsHeaders(c),
       body: JSON.stringify({ operations: [{ create: { name: d.name, status: "PAUSED", advertisingChannelType: d.objective || "SEARCH", campaignBudget: budgetName, manualCpc: {}, networkSettings: { targetGoogleSearch: true, targetSearchNetwork: true } } }] }),
@@ -276,9 +280,9 @@ export async function createRemoteCampaign(provider: AdProvider, c: Conn, accoun
   if (provider === "linkedin_ads") {
     const group = cfg(c, "campaignGroupId");
     if (!group) throw new ProviderError("account_not_configured", "LinkedIn campaign group id missing");
-    const res = await call(`${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns`, {
+    const res = await call(c, `${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns`, {
       method: "POST",
-      headers: liHeaders(c),
+      headers: liHeaders(),
       body: JSON.stringify({
         account: `urn:li:sponsoredAccount:${account}`,
         campaignGroup: `urn:li:sponsoredCampaignGroup:${group}`,
@@ -298,9 +302,9 @@ export async function createRemoteCampaign(provider: AdProvider, c: Conn, accoun
     if (!id) throw new ProviderError("provider_no_id");
     return id;
   }
-  const res = await call(`${TT}/campaign/create/`, {
+  const res = await call(c, `${TT}/campaign/create/`, {
     method: "POST",
-    headers: ttHeaders(c),
+    headers: ttHeaders(),
     body: JSON.stringify({ advertiser_id: account, campaign_name: d.name, objective_type: d.objective || "TRAFFIC", budget_mode: "BUDGET_MODE_DAY", budget: Number(d.dailyBudgetMinor) / 100, operation_status: "DISABLE" }),
   });
   const id = str(String((ttData(res.json) as { campaign_id?: string | number }).campaign_id ?? ""));
@@ -310,14 +314,14 @@ export async function createRemoteCampaign(provider: AdProvider, c: Conn, accoun
 
 export async function updateRemoteBudget(provider: AdProvider, c: Conn, account: string, campaignExternalId: string, dailyBudgetMinor: bigint, currency: string): Promise<void> {
   if (provider === "meta_ads") {
-    await call(`${META}/${encodeURIComponent(campaignExternalId)}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ daily_budget: dailyBudgetMinor.toString(), access_token: c.accessToken }) });
+    await call(c, `${META}/${encodeURIComponent(campaignExternalId)}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ daily_budget: dailyBudgetMinor.toString() }) });
     return;
   }
   if (provider === "google_ads") {
     const rows = await gadsSearch(c, account, `SELECT campaign.campaign_budget FROM campaign WHERE campaign.id = ${Number(campaignExternalId)}`);
     const budget = str(rows[0]?.campaign?.campaignBudget);
     if (!budget) throw new ProviderError("provider_rejected", "Campaign budget not found");
-    await call(`${GADS}/customers/${cid(account)}/campaignBudgets:mutate`, {
+    await call(c, `${gadsBase()}/customers/${cid(account)}/campaignBudgets:mutate`, {
       method: "POST",
       headers: gadsHeaders(c),
       body: JSON.stringify({ operations: [{ update: { resourceName: budget, amountMicros: (dailyBudgetMinor * 10_000n).toString() }, updateMask: "amount_micros" }] }),
@@ -325,24 +329,24 @@ export async function updateRemoteBudget(provider: AdProvider, c: Conn, account:
     return;
   }
   if (provider === "linkedin_ads") {
-    await call(`${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns/${encodeURIComponent(campaignExternalId)}`, {
+    await call(c, `${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns/${encodeURIComponent(campaignExternalId)}`, {
       method: "POST",
-      headers: { ...liHeaders(c), "x-restli-method": "PARTIAL_UPDATE" },
+      headers: { ...liHeaders(), "x-restli-method": "PARTIAL_UPDATE" },
       body: JSON.stringify({ patch: { $set: { dailyBudget: { amount: (Number(dailyBudgetMinor) / 100).toFixed(2), currencyCode: currency } } } }),
     });
     return;
   }
-  const res = await call(`${TT}/campaign/update/`, { method: "POST", headers: ttHeaders(c), body: JSON.stringify({ advertiser_id: account, campaign_id: campaignExternalId, budget: Number(dailyBudgetMinor) / 100 }) });
+  const res = await call(c, `${TT}/campaign/update/`, { method: "POST", headers: ttHeaders(), body: JSON.stringify({ advertiser_id: account, campaign_id: campaignExternalId, budget: Number(dailyBudgetMinor) / 100 }) });
   ttData(res.json);
 }
 
 export async function setRemoteStatus(provider: AdProvider, c: Conn, account: string, campaignExternalId: string, active: boolean): Promise<void> {
   if (provider === "meta_ads") {
-    await call(`${META}/${encodeURIComponent(campaignExternalId)}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ status: active ? "ACTIVE" : "PAUSED", access_token: c.accessToken }) });
+    await call(c, `${META}/${encodeURIComponent(campaignExternalId)}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ status: active ? "ACTIVE" : "PAUSED" }) });
     return;
   }
   if (provider === "google_ads") {
-    await call(`${GADS}/customers/${cid(account)}/campaigns:mutate`, {
+    await call(c, `${gadsBase()}/customers/${cid(account)}/campaigns:mutate`, {
       method: "POST",
       headers: gadsHeaders(c),
       body: JSON.stringify({ operations: [{ update: { resourceName: `customers/${cid(account)}/campaigns/${campaignExternalId}`, status: active ? "ENABLED" : "PAUSED" }, updateMask: "status" }] }),
@@ -350,13 +354,13 @@ export async function setRemoteStatus(provider: AdProvider, c: Conn, account: st
     return;
   }
   if (provider === "linkedin_ads") {
-    await call(`${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns/${encodeURIComponent(campaignExternalId)}`, {
+    await call(c, `${LIA}/adAccounts/${encodeURIComponent(account)}/adCampaigns/${encodeURIComponent(campaignExternalId)}`, {
       method: "POST",
-      headers: { ...liHeaders(c), "x-restli-method": "PARTIAL_UPDATE" },
+      headers: { ...liHeaders(), "x-restli-method": "PARTIAL_UPDATE" },
       body: JSON.stringify({ patch: { $set: { status: active ? "ACTIVE" : "PAUSED" } } }),
     });
     return;
   }
-  const res = await call(`${TT}/campaign/status/update/`, { method: "POST", headers: ttHeaders(c), body: JSON.stringify({ advertiser_id: account, campaign_ids: [campaignExternalId], operation_status: active ? "ENABLE" : "DISABLE" }) });
+  const res = await call(c, `${TT}/campaign/status/update/`, { method: "POST", headers: ttHeaders(), body: JSON.stringify({ advertiser_id: account, campaign_ids: [campaignExternalId], operation_status: active ? "ENABLE" : "DISABLE" }) });
   ttData(res.json);
 }

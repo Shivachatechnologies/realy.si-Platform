@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { emailDeliveryReady } from "@/server/modules/marketing/email";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -6,7 +7,6 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SequenceForm } from "@/components/marketing/sequence-forms";
 import { MarketingShell, StatusBadge, loadMarketing } from "@/components/marketing/shell";
 import { getT } from "@/i18n/server";
-import { emailConfigured } from "@/server/modules/email/service";
 import { listForms } from "@/server/modules/marketing/forms";
 import { listSequences } from "@/server/modules/marketing/sequences";
 
@@ -23,7 +23,7 @@ export default async function AutomationPage() {
   const [sequences, forms] = await Promise.all([listSequences(viewer.ctx, org.id, company.id), listForms(viewer.ctx, org.id, company.id)]);
   return (
     <MarketingShell {...shell}>
-      {!emailConfigured() ? <Notice tone="warning">{t("marketing.automation.emailNotConfigured")}</Notice> : null}
+      {!(await emailDeliveryReady(org.id, company.id)) ? <Notice tone="warning">{t("marketing.automation.emailNotConfigured")}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
           <p className="text-sm font-medium">{t("marketing.automation.nurtureTitle")}</p>

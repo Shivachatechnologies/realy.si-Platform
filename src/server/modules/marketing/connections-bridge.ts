@@ -1,13 +1,7 @@
-import { getConnection } from "@/server/modules/integrations/connections";
+import { activeAccount, getConnection, type Connection } from "@/server/modules/integrations/connections";
 
-/** Shape of an Integrations connection (contract of src/server/modules/integrations/connections.ts → getConnection). */
-export interface ProviderConnection {
-  id: string;
-  provider: string;
-  accessToken: string | null;
-  config: Record<string, unknown>;
-  status: "CONNECTED" | "ERROR" | "DISCONNECTED";
-}
+/** An Integrations connection (src/server/modules/integrations/connections.ts → getConnection). */
+export type ProviderConnection = Connection;
 
 /** Integrations provider keys used by marketing. */
 export const SOCIAL_PROVIDER_KEYS = {
@@ -27,6 +21,21 @@ export async function getMarketingConnection(organizationId: string, companyId: 
 }
 
 export const isUsable = (c: ProviderConnection | null): c is ProviderConnection & { accessToken: string } => !!c && c.status === "CONNECTED" && !!c.accessToken;
+
+/**
+ * Sub-account id to act on: the record's own external id when set, else the connection's selected sub-account
+ * (Integrations activeAccount: page, channel, ad account, board, site), else the given config keys.
+ */
+export function accountIdFor(c: ProviderConnection, explicit: string | null | undefined, ...configKeys: string[]): string | null {
+  if (explicit) return explicit;
+  const active = activeAccount(c);
+  if (active?.id) return active.id;
+  for (const k of configKeys) {
+    const v = c.config[k];
+    if (typeof v === "string" && v) return v;
+  }
+  return null;
+}
 
 /** Sub-accounts a connection exposes (pages, boards, channels, organizations): connection.config.accounts = [{ id, name }]. */
 export function connectionAccounts(c: ProviderConnection | null): { id: string; name: string }[] {

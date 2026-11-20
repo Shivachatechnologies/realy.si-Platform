@@ -12,9 +12,8 @@ import { ActionButton } from "@/components/marketing/ui";
 import { getT } from "@/i18n/server";
 import { formatDateTime, formatNumber } from "@/i18n/format";
 import { AppError } from "@/server/core/errors";
-import { emailConfigured } from "@/server/modules/email/service";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
-import { getEmailCampaign } from "@/server/modules/marketing/email";
+import { getEmailCampaign, emailDeliveryReady } from "@/server/modules/marketing/email";
 import { listSegments } from "@/server/modules/marketing/segments";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -76,7 +75,7 @@ export default async function EmailCampaignPage({ params, searchParams }: PagePr
       {canManage ? (
         <Card>
           <CardHeader title={t("marketing.email.sending")} description={c.segment ? t("marketing.email.toSegment", { name: c.segment.name }) : t("marketing.email.noSegment")} />
-          <EmailActions base={base} id={c.id} status={c.status} audience={d.audience} emailReady={emailConfigured()} />
+          <EmailActions base={base} id={c.id} status={c.status} audience={d.audience} emailReady={(await emailDeliveryReady(org.id, company.id, d.campaign.provider))} />
         </Card>
       ) : null}
       {editable ? (
