@@ -25,7 +25,14 @@ async function authorize(ctx: RequestContext, organizationId: string, companyId:
   await requirePermission(ctx, permission, await companyChain(tx ?? db(), organizationId, companyId), tx);
 }
 
-export const createRunInput = z.object({ mode: z.enum(RUN_MODES).default("NEW_IDEA"), brief: briefSchema });
+export const createRunInput = z.object({
+  mode: z.enum(RUN_MODES).default("NEW_IDEA"),
+  brief: briefSchema,
+  /** The 6-stage onboarding journey's step list (research → blueprint → workforce → post-launch). */
+  journey: z.boolean().default(false),
+  /** Keep the run as a draft (documents are uploaded first, then it is started). */
+  hold: z.boolean().default(false),
+});
 
 function checkBrief(mode: RunMode, brief: z.output<typeof briefSchema>) {
   if (mode === "NEW_IDEA" && brief.idea.length < 10) throw invalid("Describe the business idea in a sentence or two", { reason: "builder_idea_required", issues: [{ path: "brief.idea", message: "Describe the idea" }] });
@@ -46,7 +53,7 @@ export async function createRun(ctx: RequestContext, organizationId: string, com
     await authorize(ctx, organizationId, companyId, "companies.manage", tx);
     const active = await tx.builderRun.findFirst({ where: { organizationId, companyId, status: { in: [...ACTIVE] } }, select: { id: true } });
     if (active) throw conflict("This company already has a builder run in progress", { reason: "builder_run_active", runId: active.id });
-    const starts = input.mode === "NEW_IDEA";
+    const starts = !input.hold && (input.journey || input.mode === "NEW_IDEA");
     const r = await tx.builderRun.create({
       data: {
         organizationId,
@@ -56,11 +63,12 @@ export async function createRun(ctx: RequestContext, organizationId: string, com
         brief: input.brief as Prisma.InputJsonValue,
         websiteUrl: input.brief.websiteUrl ?? null,
         startedAt: starts ? new Date() : null,
+        journey: input.journey,
         createdById: ctx.actor.id ?? organizationId,
       },
     });
-    await tx.builderStep.createMany({ data: initialSteps(input.mode).map((s) => ({ ...s, organizationId, companyId, runId: r.id })) });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "builder.run.created", resourceType: "builder_run", resourceId: r.id, newValue: { companyId, mode: r.mode } });
+    await tx.builderStep.createMany({ data: initialSteps(input.mode, input.journey).map((s) => ({ ...s, organizationId, companyId, runId: r.id })) });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "builder.run.created", resourceType: "builder_run", resourceId: r.id, newValue: { companyId, mode: r.mode, journey: r.journey } });
     return r;
   });
   if (run.status === "RUNNING") await advanceRun(run.id, { inline: true });
@@ -159,6 +167,9 @@ export async function decide(ctx: RequestContext, organizationId: string, compan
   const exclude = new Set(input.exclude);
   let result: Prisma.InputJsonValue = {};
 
+  if (input.action === "approve" && (decision.kind === "BLUEPRINT" || decision.kind === "WORKFORCE")) {
+    throw conflict("Review and approve this in the onboarding journey editor", { reason: "builder_use_journey_editor" });
+  }
   if (input.action === "revise") {
     if (!input.feedback) throw invalid("Tell the AI what to change", { reason: "builder_feedback_required", issues: [{ path: "feedback", message: "Required" }] });
   } else if (decision.kind === "NAME") {
@@ -275,6 +286,8 @@ export const onboardInput = z.object({
   mode: z.enum(RUN_MODES),
   brief: briefSchema,
   company: createCompanyInput.omit({ name: true }).extend({ name: z.string().trim().max(120).optional() }),
+  journey: z.boolean().default(false),
+  hold: z.boolean().default(false),
 });
 
 /** A unique working name when the founder has not chosen one (the builder's name decision renames it). */
@@ -300,6 +313,11 @@ export async function onboardBusiness(ctx: RequestContext, organizationId: strin
     targetMarketCodes: input.company.targetMarketCodes?.length ? input.company.targetMarketCodes : input.brief.targetMarketCodes,
   });
   const brief = { ...input.brief, name: input.company.name || input.brief.name };
-  const run = await createRun(ctx, organizationId, company.id, { mode: input.mode, brief });
+  const run = await createRun(ctx, organizationId, company.id, { mode: input.mode, brief, journey: input.journey, hold: input.hold });
+  // The journey resumes at Intelligence from now on (server-side, so a reload or another device lands there).
+  if (input.journey && ctx.actor.type === "USER" && ctx.actor.id) {
+    const data = { runId: run.id, journeyStage: "intelligence" };
+    await db().builderOnboarding.upsert({ where: { userId: ctx.actor.id }, create: { userId: ctx.actor.id, ...data }, update: data });
+  }
   return { companyId: company.id, runId: run.id, status: run.status };
 }

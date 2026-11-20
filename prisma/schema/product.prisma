@@ -207,6 +207,12 @@ enum ProductDocKind {
   DESIGN_BRIEF
   QA_PLAN
   RELEASE_PLAN
+  /// Stage deliverables added for the full studio lifecycle.
+  IDEA_BRIEF
+  VALIDATION_REPORT
+  LAUNCH_BRIEF
+  FEEDBACK_SYNTHESIS
+  IMPROVEMENT_PLAN
 }
 
 enum ProductDocStatus {

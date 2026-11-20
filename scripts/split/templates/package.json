@@ -1,0 +1,38 @@
+{
+  "name": "realy-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Realy monorepo: apps/user (app.realy.si), apps/admin (admin.realy.si), shared packages/*. See docs/architecture/apps.md.",
+  "scripts": {
+    "dev:user": "pnpm --filter @realy/user dev",
+    "dev:admin": "pnpm --filter @realy/admin dev",
+    "build:user": "pnpm --filter @realy/user build",
+    "build:admin": "pnpm --filter @realy/admin build",
+    "start:user": "pnpm --filter @realy/user start",
+    "start:admin": "pnpm --filter @realy/admin start",
+    "worker": "pnpm --filter @realy/backend worker",
+    "typecheck": "pnpm typecheck:user && pnpm typecheck:admin",
+    "typecheck:user": "pnpm --filter @realy/user typecheck",
+    "typecheck:admin": "pnpm --filter @realy/admin typecheck",
+    "typecheck:tooling": "pnpm --filter @realy/user exec next typegen && tsc --noEmit -p tsconfig.json",
+    "check:boundaries": "node scripts/split/check-boundaries.mjs",
+    "i18n:sync": "node scripts/i18n-sync.mjs",
+    "i18n:check": "node scripts/i18n-sync.mjs --check",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:generate": "pnpm --filter @realy/database generate",
+    "db:migrate": "pnpm --filter @realy/database migrate",
+    "db:migrate:dev": "pnpm --filter @realy/database migrate:dev",
+    "db:seed": "pnpm --filter @realy/database seed",
+    "realy:grant-role": "tsx scripts/grant-role.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "$root",
+    "eslint": "$root",
+    "eslint-config-next": "$root",
+    "tsx": "$root",
+    "typescript": "$root",
+    "vitest": "$root"
+  }
+}

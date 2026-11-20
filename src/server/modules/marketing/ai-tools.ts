@@ -14,6 +14,8 @@ import { listLearnings } from "./learning";
 import { adPerformanceText, changeAdBudget, changeAdStatus, createAdCampaignDraft, launchAdCampaign } from "./ads";
 import { generateCreative, PRESET_KEYS } from "./assets";
 import { sendOutreach, sendReply } from "./community";
+import { createResearchReport, listResearchReports, parseFindings, parseSources, RESEARCH_KINDS } from "./research-reports";
+import { listPlans, planChannels, planObjectives } from "./plans";
 
 const money = (m: bigint | null, currency: string) => (m == null ? "n/a" : `${(Number(m) / 100).toFixed(2)} ${currency}`);
 const pct = (v: number | null) => (v == null ? "n/a" : `${v.toFixed(1)}%`);
@@ -571,6 +573,87 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
     async execute({ influencerId }, { ctx, organizationId, companyId }) {
       await sendOutreach(ctx, organizationId, companyId, influencerId);
       return { content: "Outreach email sent.", records: [`marketing_influencer:${influencerId}`] };
+    },
+  }),
+
+  read_market_research: def({
+    name: "read_market_research",
+    version: 1,
+    description: "Returns the company's saved marketing research reports (market, competitor, audience, trends, keywords, brand): status, summary, key insights, opportunities and source URLs. Optional kind filter. Use before planning or writing to ground claims in real research.",
+    input: z.object({ kind: z.enum(RESEARCH_KINDS).optional() }).strict(),
+    modelSchema: { type: "object", properties: { kind: { type: "string", enum: [...RESEARCH_KINDS] } }, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read marketing research reports",
+    async execute(input, { ctx, organizationId, companyId }) {
+      const { data } = await listResearchReports(ctx, organizationId, companyId, { kind: input.kind, page: 1 });
+      if (!data.length) return { content: "No research reports yet.", count: 0 };
+      const full = await db().marketingResearchReport.findMany({ where: { id: { in: data.slice(0, 8).map((r) => r.id) }, companyId }, select: { id: true, sources: true } });
+      const sources = new Map(full.map((r) => [r.id, parseSources(r.sources)]));
+      const lines = data.slice(0, 8).map((r) => {
+        const f = parseFindings(r.findings);
+        const src = (sources.get(r.id) ?? []).slice(0, 6).map((s, i) => `[${i + 1}] ${s.url}`).join(" ");
+        return [`- ${r.id} ${r.kind} "${r.title}" [${r.status}] ${r.createdAt.toISOString().slice(0, 10)}`, r.summary ? `  Summary: ${r.summary.slice(0, 600)}` : null, ...(f?.insights ?? []).slice(0, 5).map((i) => `  • ${i.title}: ${i.detail.slice(0, 200)}`), src ? `  Sources: ${src}` : null].filter(Boolean).join("\n");
+      });
+      return { content: lines.join("\n"), count: data.length, records: data.map((r) => `marketing_research_report:${r.id}`) };
+    },
+  }),
+
+  read_marketing_plans: def({
+    name: "read_marketing_plans",
+    version: 1,
+    description: "Returns the company's marketing plans: status, period, positioning, objectives (metric and target), channels with funnel role, budget split and cadence.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read marketing plans",
+    async execute(_input, { ctx, organizationId, companyId }) {
+      const plans = await listPlans(ctx, organizationId, companyId);
+      if (!plans.length) return { content: "No marketing plans yet.", count: 0 };
+      const lines = plans.slice(0, 10).map((p) =>
+        [
+          `- ${p.id} "${p.name}" [${p.status}] ${p.periodStart.toISOString().slice(0, 10)} → ${p.periodEnd.toISOString().slice(0, 10)}, budget ${money(p.budgetMinor, p.currency)}`,
+          p.positioning ? `  Positioning: ${p.positioning.slice(0, 400)}` : null,
+          ...planObjectives(p.objectives).map((o) => `  Objective: ${o.metric} ≥ ${o.target}${o.label ? ` (${o.label})` : ""}`),
+          ...planChannels(p.channels).map((c) => `  Channel: ${c.channel} [${c.role}] ${money(BigInt(c.budgetMinor), p.currency)}${c.cadence ? `, ${c.cadence}` : ""}`),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+      return { content: lines.join("\n"), count: plans.length, records: plans.map((p) => `marketing_plan:${p.id}`) };
+    },
+  }),
+
+  start_market_research: def({
+    name: "start_market_research",
+    version: 1,
+    description: "Propose running a new research report (MARKET, COMPETITOR, AUDIENCE, TRENDS, KEYWORDS or BRAND) through the company's connected research provider. Needs approval (it calls a paid external provider). The report is saved with its sources; findings are synthesized afterwards.",
+    input: z.object({ kind: z.enum(RESEARCH_KINDS), subject: z.string().trim().min(2).max(200), region: z.string().trim().max(80).optional(), competitors: z.array(z.string().trim().min(1).max(120)).max(8).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { kind: { type: "string", enum: [...RESEARCH_KINDS] }, subject: { type: "string" }, region: { type: "string" }, competitors: { type: "array", items: { type: "string" } } },
+      required: ["kind", "subject"],
+      additionalProperties: false,
+    },
+    permissions: ["marketing.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 90_000,
+    summarize: ({ kind, subject }) => `Run ${kind.toLowerCase()} research: ${subject}`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const r = await createResearchReport(ctx, organizationId, companyId, { kind: input.kind, subject: input.subject, region: input.region ?? "", competitors: input.competitors ?? [] });
+      const what =
+        r.status === "CREDENTIAL_REQUIRED"
+          ? "No research provider is connected (Tavily, Exa or SerpApi) — nothing was researched. Ask the person to connect one under Integrations."
+          : r.status === "FAILED"
+            ? `Research failed: ${r.error ?? "unknown error"}.`
+            : `Research report saved with ${parseSources(r.sources).length} sources (status ${r.status}).`;
+      return { content: what, records: [`marketing_research_report:${r.id}`] };
     },
   }),
 };

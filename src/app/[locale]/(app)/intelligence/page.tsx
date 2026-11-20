@@ -27,6 +27,9 @@ import { formatDate, formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { criticalIssues, type Issue } from "@/server/modules/bi/issues";
+import { businessHealth } from "@/server/modules/bi/health";
+import { DoThisButton } from "@/components/bi/do-this-button";
+import { insightCommand, insightText } from "@/components/bi/insight-text";
 import { resolveRange } from "@/server/modules/bi/range";
 import { metricContext, metricValues } from "@/server/modules/bi/service";
 import { can } from "@/server/modules/rbac/service";
@@ -130,6 +133,8 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
   const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const tz = viewer.user.timezone;
   const configured = aiConfigured();
+  const health = canAnalytics ? await businessHealth(viewer.ctx, org.id, company.id).catch(() => null) : null;
+  const topInsight = health?.insights[0] ?? null;
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
@@ -155,6 +160,25 @@ export default async function IntelligencePage({ searchParams }: PageProps<"/[lo
           ) : null
         }
       />
+
+      {health ? (
+        <section className="grid gap-4 rounded-2xl border bg-surface/70 p-4 backdrop-blur sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center" aria-labelledby="intel-health">
+          <Link href={`/${locale}/analytics/health`} className="flex items-end gap-3">
+            <span className={`numeral font-display text-5xl leading-none ${health.score === null ? "text-muted-foreground" : health.score >= 65 ? "text-success" : health.score >= 45 ? "text-warning" : "text-danger"}`}>{health.score ?? "—"}</span>
+            <span className="pb-1 text-xs text-muted-foreground">{t("analytics.health.outOf")}</span>
+          </Link>
+          <div className="grid gap-1">
+            <h2 id="intel-health" className="text-sm font-semibold">
+              {t("command.ops.healthTitle")} · {t(`analytics.health.verdict.${health.score === null ? "unknown" : health.score >= 65 ? "strong" : health.score >= 45 ? "steady" : "weak"}`)}
+            </h2>
+            <p className="text-sm text-muted-foreground">{topInsight ? insightText(t, topInsight) : t("analytics.health.noInsights")}</p>
+            <Link href={`/${locale}/analytics/health`} className="text-xs text-primary hover:underline">
+              {t("command.ops.openHealth")}
+            </Link>
+          </div>
+          {topInsight ? <DoThisButton base={apiBase} command={insightCommand(t, topInsight)} disabledReason={!configured ? t("guide.ai.notConfigured") : !canRun ? t("guide.ai.forbidden") : null} /> : null}
+        </section>
+      ) : null}
 
       <section className="relative isolate overflow-hidden rounded-xl border" aria-labelledby="command-center">
         <Aurora className="absolute inset-0 -z-10" />

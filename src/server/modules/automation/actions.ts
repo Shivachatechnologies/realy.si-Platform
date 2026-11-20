@@ -626,6 +626,8 @@ export async function executeAction(action: Action, env: ActionEnv, scope: EvalS
     }
     case "decompose_goal":
       return decomposeGoal(env, action);
+    case "ai_decision":
+      return startAiTask(env, { profile: action.profile, title: `Decision: ${action.question}`.slice(0, 200), instructions: decisionInstructions(action) }, true);
     case "notify":
       return done(await notify(env, action));
     case "request_approval":
@@ -650,4 +652,26 @@ export async function executeAction(action: Action, env: ActionEnv, scope: EvalS
 }
 
 /** Kinds whose step can wait for an AI task (the engine polls the task). */
-export const AI_TASK_KINDS: readonly string[] = ["assign_ai_employee", "generate_ai_content", "ai_employee_task", "decompose_goal"];
+export const AI_TASK_KINDS: readonly string[] = ["assign_ai_employee", "generate_ai_content", "ai_employee_task", "decompose_goal", "ai_decision"];
+
+function decisionInstructions(a: Extract<Action, { kind: "ai_decision" }>): string {
+  return [
+    `A workflow needs a decision: ${a.question}`,
+    a.context?.trim() ? `Context from the workflow:\n${a.context.trim()}` : "",
+    "Read the related records and company knowledge with your tools before deciding. Do not change any data.",
+    `Choose exactly one of these options: ${a.options.map((o) => `"${o}"`).join(", ")}.`,
+    'Answer with the line "DECISION: <option>" (the option text exactly as written), then the line "REASON: <one or two sentences>".',
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** The option an AI decision task chose ("DECISION: x" line, exact option match ignoring case), or null. */
+export function parseDecision(output: string, options: readonly string[]): { choice: string; reason: string } | null {
+  const line = /DECISION:\s*\**\s*"?([^"\n*]+?)"?\s*\**\s*$/im.exec(output)?.[1]?.trim().toLowerCase();
+  if (!line) return null;
+  const choice = options.find((o) => o.trim().toLowerCase() === line);
+  if (!choice) return null;
+  const reason = /REASON:\s*(.+)$/im.exec(output)?.[1]?.trim().slice(0, 1000) ?? "";
+  return { choice, reason };
+}

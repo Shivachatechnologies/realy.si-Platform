@@ -57,6 +57,11 @@ export default async function ProductFeedbackPage({ params, searchParams }: Page
                 <li key={x.id} className="grid gap-1 px-4 py-3 text-sm">
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <Badge>{x.source}</Badge>
+                    {x.supportTicketId && fb.support ? (
+                      <Link href={`/${locale}/support/tickets/${x.supportTicketId}`} className="text-primary hover:underline">
+                        {t("productStudio.feedback.fromTicket")}
+                      </Link>
+                    ) : null}
                     {canEdit ? (
                       <InlineSelect
                         url={`${base}/product/feedback/${x.id}`}

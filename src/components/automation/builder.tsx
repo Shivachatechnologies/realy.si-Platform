@@ -76,6 +76,7 @@ const DEFAULT_ACTIONS: Record<ActionKind, Action> = {
   notify: { kind: "notify", recipients: "owner", userIds: [], title: "" },
   request_approval: { kind: "request_approval", title: "", approverMode: "users", approverIds: [], escalateToIds: [] },
   generate_ai_content: { kind: "generate_ai_content", profile: "marketing_strategist", title: "", instructions: "", wait: true },
+  ai_decision: { kind: "ai_decision", profile: "operations_assistant", question: "", context: "", options: ["Yes", "No"] },
   send_email: { kind: "send_email", to: "{{event.data.email}}", subject: "", body: "" },
   send_slack: { kind: "send_slack", channel: "general", text: "", ifNotConnected: "fail" },
   send_teams: { kind: "send_teams", teamId: "", channelId: "", text: "", ifNotConnected: "fail" },
@@ -636,6 +637,34 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
           <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.decomposeHint")}</p>
           {text("guidance", { multiline: true })}
           {toggle("wait")}
+        </>
+      );
+      break;
+    case "ai_decision":
+      body = (
+        <>
+          <Field label={L("profile")} htmlFor={id("profile")}>
+            <Select id={id("profile")} value={action.profile} onChange={(e) => onChange({ ...action, profile: e.target.value })}>
+              {opts.profiles.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {text("question", { required: true, placeholder: t("workflows.builder.decisionQuestionPlaceholder") })}
+          {text("context", { multiline: true, placeholder: "{{event.data.name}} — {{event.data.notes}}" })}
+          <Field label={L("options")} htmlFor={id("options")} hint={t("workflows.builder.decisionOptionsHint")} className="sm:col-span-2">
+            <Input
+              id={id("options")}
+              defaultValue={action.options.join(", ")}
+              onBlur={(e) => {
+                const options = [...new Set(e.target.value.split(",").map((x) => x.trim()).filter(Boolean))].slice(0, 8);
+                onChange({ ...action, options: options.length >= 2 ? options : action.options });
+              }}
+            />
+          </Field>
+          <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.decisionHint")}</p>
         </>
       );
       break;

@@ -10,6 +10,7 @@ import { sendPlainEmail } from "@/server/modules/email/service";
 import { createTask } from "@/server/modules/agents/service";
 import { can } from "@/server/modules/rbac/service";
 import { actorId, authorize, isUuid, uuid } from "./common";
+import { contextText, customerContext } from "./customer-context";
 import { activeConnection, getConnection } from "./connections-bridge";
 import { gmailFetchRecent, gmailSend, outlookFetchRecent, outlookSend, ProviderError, type FetchedEmail } from "./providers";
 
@@ -391,10 +392,18 @@ export async function emailAi(ctx: RequestContext, organizationId: string, compa
   const input = emailAiInput.parse(raw);
   const t = await getThread(ctx, organizationId, companyId, threadId);
   const spec = AI[input.mode];
+  // Ground drafts in the relationship: CRM contact/account, deals and open tickets the requester may see.
+  const crm = input.mode === "draft" ? contextText(await customerContext(ctx, organizationId, companyId, t.contactId, { excludeThreadId: t.id })) : "";
   return createTask(ctx, organizationId, companyId, {
     profile: "chief_of_staff",
     title: `${spec.title}: ${t.subject}`.slice(0, 200),
-    instructions: [spec.instructions(t.id), input.guidance ? `Additional direction from the requester: ${input.guidance}` : null].filter(Boolean).join("\n\n"),
+    instructions: [
+      spec.instructions(t.id),
+      crm ? `Customer context from the CRM and support desk (use only where relevant; search the company brain for policies or product facts you need):\n${crm}` : null,
+      input.guidance ? `Additional direction from the requester: ${input.guidance}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
     subject: { type: "email_thread", id: t.id },
   });
 }

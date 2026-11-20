@@ -10,6 +10,8 @@ import { createCounterparty } from "./setup";
 import { createBill, payablesAging, upcomingPayables } from "./payables";
 import { departmentBudgets, parseBudgetWindow } from "./budgets";
 import { budgetVsActual } from "./transactions";
+import { financeAlertCenter } from "./alerts";
+import { moneyFlow } from "./money-flow";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const money = (v: bigint, currency: string) => `${fromMinor(v, currency)} ${currency}`;
@@ -423,6 +425,54 @@ export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
       return {
         content: `Draft bill ${bill.number} from ${input.vendorName} created: total ${money(bill.totalMinor, bill.currency)}, due ${dayString(bill.dueDate)}. It is a draft: it must be submitted for approval before it is posted or paid.${missing.length ? ` Not found (left empty): ${[...new Set(missing)].join(", ")}.` : ""}`,
         records: [`finance_bill:${bill.id}`],
+      };
+    },
+  }),
+
+  read_financial_alerts: def({
+    name: "read_financial_alerts",
+    version: 1,
+    description: "Everything that needs attention now: cash runway (months) and its level, the first forecast month with negative cash, overdue customer invoices and vendor bills (with days late), and budgets at 80% or more.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read financial alerts",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const c = (await companyInfo(db(), organizationId, companyId)).baseCurrency;
+      const a = await financeAlertCenter(ctx, organizationId, companyId);
+      const content = [
+        `Cash ${money(a.runway.cash, c)}, net burn ${money(a.runway.netBurn, c)}/month, runway ${a.runway.months === null ? "not burning cash" : `${a.runway.months} months`}${a.runway.level ? ` (${a.runway.level})` : ""}.`,
+        a.negative ? `Forecast: cash drops to ${money(a.negative.balance, c)} in ${a.negative.month} (projection, not fact).` : "Forecast: cash stays positive for the next 6 months.",
+        `Overdue invoices: ${a.invoices.length} totalling ${money(a.invoicesTotal, c)}${a.invoices.length ? "\n" + a.invoices.slice(0, 15).map((i) => `- ${i.number} ${i.account.name}: ${money(i.balanceMinor, i.currency)}, ${i.daysLate} days late`).join("\n") : ""}`,
+        `Overdue vendor bills: ${a.bills.length} totalling ${money(a.billsTotal, c)}${a.bills.length ? "\n" + a.bills.slice(0, 15).map((b) => `- ${b.vendor.name} ${b.number}: ${money(b.balanceMinor, b.currency)}, ${b.daysLate} days late`).join("\n") : ""}`,
+        `Budgets at 80%+: ${a.overBudget.length ? a.overBudget.map((b) => `${b.name} ${b.usedPct}%`).join(", ") : "none"}`,
+      ].join("\n");
+      return { content, count: a.count };
+    },
+  }),
+
+  read_money_flow: def({
+    name: "read_money_flow",
+    version: 1,
+    description: "Where money came from and went in a period (income and expense ledger accounts, largest first, with profit or loss) — the data behind the money-flow diagram.",
+    input: z.object({ from: date.optional(), to: date.optional() }).strict(),
+    modelSchema: { type: "object", properties: { from: { type: "string", description: "YYYY-MM-DD (default: 12 months ago)" }, to: { type: "string", description: "YYYY-MM-DD exclusive (default: today)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read the money flow",
+    async execute({ from, to }, { ctx, organizationId, companyId }) {
+      const c = (await companyInfo(db(), organizationId, companyId)).baseCurrency;
+      const end = to ? toDay(to) : addDays(todayUtc(), 1);
+      const start = from ? toDay(from) : addMonths(monthStart(todayUtc()), -11);
+      const f = await moneyFlow(ctx, organizationId, companyId, { from: start, to: end });
+      const line = (n: { label: string | null; key: string; amountMinor: bigint }) => `- ${n.label ?? n.key}: ${money(n.amountMinor, c)}`;
+      return {
+        content: `Period ${dayString(start)} to ${dayString(end)}. Income ${money(f.totalIncome, c)}, expenses ${money(f.totalExpense, c)}, net ${money(f.net, c)}.\nMoney in:\n${f.sources.map(line).join("\n") || "- none"}\nMoney out:\n${f.uses.map(line).join("\n") || "- none"}`,
       };
     },
   }),

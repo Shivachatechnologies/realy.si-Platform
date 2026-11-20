@@ -12,7 +12,7 @@ export function CommandEntry({ locale }: { locale: string }) {
   const [q, setQ] = useState("");
   function submit(e: FormEvent) {
     e.preventDefault();
-    router.push(`/${locale}/command${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`);
+    router.push(`/${locale}/command${q.trim() ? `?q=${encodeURIComponent(q.trim())}&run=1` : ""}`);
   }
   return (
     <form onSubmit={submit} role="search" aria-label={t("dna.command.entryLabel")} className="group flex items-center gap-3 rounded-2xl border bg-surface/80 px-4 py-3 shadow-float backdrop-blur transition-shadow focus-within:border-ring focus-within:shadow-glow">

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type AnalyticsTab = "overview" | "ceo" | "departments" | "dashboards" | "reports" | "ai";
+export type AnalyticsTab = "overview" | "health" | "ceo" | "departments" | "dashboards" | "reports" | "ai";
 
 /** Secondary navigation of the Analytics area. */
 export function AnalyticsTabs({ locale, active, labels }: { locale: string; active: AnalyticsTab; labels: Record<AnalyticsTab, string> }) {
   const tabs: { key: AnalyticsTab; href: string }[] = [
     { key: "overview", href: `/${locale}/analytics` },
+    { key: "health", href: `/${locale}/analytics/health` },
     { key: "ceo", href: `/${locale}/analytics/ceo` },
     { key: "departments", href: `/${locale}/analytics/departments/sales` },
     { key: "dashboards", href: `/${locale}/analytics/dashboards` },

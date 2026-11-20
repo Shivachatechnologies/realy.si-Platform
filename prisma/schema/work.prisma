@@ -406,20 +406,22 @@ model ProductIdeaVote {
 
 /// Customer feedback, optionally tied to a CRM account/contact and to the feature it supports.
 model ProductFeedback {
-  id             String                    @id @default(uuid(7)) @db.Uuid
-  organizationId String                    @map("organization_id") @db.Uuid
-  companyId      String                    @map("company_id") @db.Uuid
-  productId      String?                   @map("product_id") @db.Uuid
-  sentiment      ProductFeedbackSentiment?
+  id              String                    @id @default(uuid(7)) @db.Uuid
+  organizationId  String                    @map("organization_id") @db.Uuid
+  companyId       String                    @map("company_id") @db.Uuid
+  productId       String?                   @map("product_id") @db.Uuid
+  sentiment       ProductFeedbackSentiment?
   /// e.g. "email", "call", "support", "survey", "sales".
-  source         String
-  body           String
-  accountId      String?                   @map("account_id") @db.Uuid
-  contactId      String?                   @map("contact_id") @db.Uuid
-  featureId      String?                   @map("feature_id") @db.Uuid
-  archivedAt     DateTime?                 @map("archived_at") @db.Timestamptz(3)
-  createdById    String                    @map("created_by_id") @db.Uuid
-  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  source          String
+  body            String
+  accountId       String?                   @map("account_id") @db.Uuid
+  contactId       String?                   @map("contact_id") @db.Uuid
+  featureId       String?                   @map("feature_id") @db.Uuid
+  /// Support ticket the feedback was taken from (support → product loop; plain id, validated on write).
+  supportTicketId String?                   @map("support_ticket_id") @db.Uuid
+  archivedAt      DateTime?                 @map("archived_at") @db.Timestamptz(3)
+  createdById     String                    @map("created_by_id") @db.Uuid
+  createdAt       DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   product Product?        @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
@@ -428,6 +430,7 @@ model ProductFeedback {
   @@index([companyId, createdAt])
   @@index([featureId])
   @@index([productId, createdAt])
+  @@index([supportTicketId])
   @@map("product_feedback")
 }
 
@@ -659,4 +662,45 @@ model WorkProjectKickoff {
   @@unique([id, companyId])
   @@index([organizationId, companyId, createdById])
   @@map("work_project_kickoffs")
+}
+
+enum WorkDeliverableStatus {
+  PLANNED
+  IN_PROGRESS
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+/// A tangible output a project promises (document, release, asset …): owner, due date, optional milestone, link to the
+/// result, and an acceptance step by a project manager.
+model WorkProjectDeliverable {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  projectId      String                @map("project_id") @db.Uuid
+  /// Project milestone the deliverable belongs to (plain id, validated on write; cleared when the milestone is deleted).
+  milestoneId    String?               @map("milestone_id") @db.Uuid
+  title          String
+  description    String?
+  status         WorkDeliverableStatus @default(PLANNED)
+  ownerId        String?               @map("owner_id") @db.Uuid
+  dueDate        DateTime?             @map("due_date") @db.Date
+  /// Where the result lives (document, file, release, design) — https only.
+  url            String?
+  /// Reviewer's note on acceptance or rejection.
+  reviewNote     String?               @map("review_note")
+  reviewedById   String?               @map("reviewed_by_id") @db.Uuid
+  reviewedAt     DateTime?             @map("reviewed_at") @db.Timestamptz(3)
+  createdById    String                @map("created_by_id") @db.Uuid
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([projectId, dueDate])
+  @@index([companyId, ownerId])
+  @@map("work_project_deliverables")
 }

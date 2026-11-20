@@ -2,12 +2,14 @@ import type { ModuleJobs } from "@/server/core/module-jobs";
 import { db, transaction } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
 import { syncChecklistStatus } from "./onboarding";
+import { syncFilledPlans } from "./planning";
 
 /**
  * Background work of the hr module, run by the worker (src/worker/index.ts via src/worker/modules.ts).
  * - task.completed: when a WorkTask created for an onboarding/offboarding step is completed in the Work module, the step
  *   is checked and the checklist completes once every step is done.
  * - hr.checklist-sync (hourly): the same reconciliation for tasks completed without an event (idempotent).
+ * - hr.headcount-filled (hourly): workforce-plan roles whose job hired all openings become FILLED.
  */
 
 async function syncByTask(companyId: string, workTaskId: string) {
@@ -31,6 +33,7 @@ export const HR_JOBS: ModuleJobs = {
         return open.length;
       },
     },
+    { name: "hr.headcount-filled", everyMs: 60 * 60_000, run: () => syncFilledPlans() },
   ],
   onEvent: [
     {

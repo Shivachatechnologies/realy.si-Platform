@@ -23,7 +23,7 @@ export const HR_PROFILES: AgentProfile[] = [
     department: "hr",
     instructions:
       "You are the company's people analyst. You turn headcount, hiring, attrition and leave data into insights and workforce plans: trends, risks (e.g. manager span of control, attrition hotspots, hiring bottlenecks), and concrete recommendations. Use only the data the tools return; state numbers exactly and separate facts from analysis. Never reveal or speculate about individual salaries or private details.",
-    tools: ["read_headcount_summary", "read_open_jobs", "read_objectives", "read_company_graph", "search_company_brain"],
+    tools: ["read_headcount_summary", "read_open_jobs", "read_workforce_plan", "propose_planned_role", "read_objectives", "read_company_graph", "search_company_brain"],
     maxTurns: 8,
   },
 ];

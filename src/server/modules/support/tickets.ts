@@ -5,7 +5,7 @@ import { db, transaction, type Db, type Tx } from "@/server/core/db";
 import { systemContext, type RequestContext } from "@/server/core/context";
 import { randomToken } from "@/server/core/crypto";
 import { env } from "@/server/core/env";
-import { AppError, invalid, notFound } from "@/server/core/errors";
+import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
@@ -67,6 +67,7 @@ export const messageInput = z.object({
   status: z.enum(STATUSES).optional(),
 });
 export const publicReplyInput = z.object({ body: z.string().trim().min(1).max(10_000) });
+export const publicRatingInput = z.object({ score: z.number().int().min(1).max(5), comment: z.string().trim().max(2000).optional() });
 export const attachmentInput = z.object({
   fileName: z.string().trim().min(1).max(200),
   contentType: z.string().trim().max(120).regex(/^[\w.+-]+\/[\w.+-]+$/).default("application/octet-stream"),
@@ -345,6 +346,9 @@ export async function createPublicTicket(companyId: string, raw: z.input<typeof 
     template: "support.ticket_received",
     organizationId: company.organizationId,
     locale,
+    // Customer communication goes only through the company's connected email provider (Integrations).
+    companyId: company.id,
+    companyOnly: true,
   });
   await db().supportMessage.create({
     data: { companyId: company.id, ticketId: ticket.id, kind: "PUBLIC_REPLY", authorType: "SYSTEM", body: "Ticket received confirmation", emailStatus: r.status },
@@ -499,6 +503,8 @@ export async function addMessage(ctx: RequestContext, organizationId: string, co
     organizationId,
     userId: ctx.actor.id,
     locale,
+    companyId,
+    companyOnly: true,
   });
   await db().supportMessage.update({ where: { id: message.id }, data: { emailStatus: r.status } });
   return { message: { ...message, emailStatus: r.status }, emailStatus: r.status };
@@ -608,6 +614,7 @@ export async function getPublicTicket(token: string) {
     companyName: t.company.name,
     timeZone: t.company.timezone,
     requesterName: t.requester ? contactName(t.requester) : null,
+    csat: t.csatRatedAt ? { score: t.csatScore, comment: t.csatComment, ratedAt: t.csatRatedAt } : null,
     messages: messages.map((m) => ({ id: m.id, body: m.body, createdAt: m.createdAt, fromCustomer: m.authorType === "CUSTOMER", authorName: m.authorType === "CUSTOMER" ? null : (names.get(m.authorUserId ?? "")?.split(" ")[0] ?? null) })),
   };
 }
@@ -631,6 +638,34 @@ export async function addPublicReply(token: string, raw: z.input<typeof publicRe
     const recipients = t.assigneeId ? [t.assigneeId] : await usersWithPermission(tx, t.organizationId, t.companyId, "support.manage");
     await notifyUsers(tx, t.organizationId, recipients, "support.customer_reply", { companyId: t.companyId, title, href: ticketHref(t.id) });
     return { id: m.id };
+  });
+}
+
+/**
+ * Customer satisfaction (CSAT) by token, once the ticket is solved or closed. One rating per ticket (it can be changed
+ * for 7 days). A low score (1–2) tells the assignee — or support managers — so someone follows up.
+ */
+export async function ratePublicTicket(token: string, raw: z.input<typeof publicRatingInput>) {
+  const input = publicRatingInput.parse(raw);
+  const t = await ticketByToken(token);
+  if (t.status !== "SOLVED" && t.status !== "CLOSED") throw new AppError("not_available", "You can rate the ticket once it is solved", { reason: "support_csat_not_solved" });
+  if (t.csatRatedAt && Date.now() - t.csatRatedAt.getTime() > 7 * 86_400_000) throw conflict("This ticket was already rated", { reason: "support_csat_locked" });
+  const ctx = systemContext();
+  return transaction(async (tx) => {
+    const now = new Date();
+    await tx.supportTicket.update({ where: { id: t.id }, data: { csatScore: input.score, csatComment: input.comment || null, csatRatedAt: now } });
+    await emitDomainEvent(tx, ctx, "ticket.updated", {
+      organizationId: t.organizationId,
+      companyId: t.companyId,
+      entityType: "ticket",
+      entityId: t.id,
+      data: { number: t.number, status: t.status, csatScore: input.score, changed: "csatScore" },
+    });
+    if (input.score <= 2) {
+      const recipients = t.assigneeId ? [t.assigneeId] : await usersWithPermission(tx, t.organizationId, t.companyId, "support.manage");
+      await notifyUsers(tx, t.organizationId, recipients, "support.csat_low", { companyId: t.companyId, title: `#${t.number} ${t.subject}`.slice(0, 120), href: ticketHref(t.id) });
+    }
+    return { score: input.score, ratedAt: now };
   });
 }
 

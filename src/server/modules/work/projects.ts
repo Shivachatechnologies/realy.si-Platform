@@ -459,6 +459,7 @@ export async function deleteProjectMilestone(ctx: RequestContext, organizationId
     const m = await milestoneOf(tx, organizationId, companyId, milestoneId);
     await authorizeProject(ctx, organizationId, companyId, m.projectId, "projects.manage", tx);
     await tx.workTask.updateMany({ where: { milestoneId, companyId }, data: { milestoneId: null } });
+    await tx.workProjectDeliverable.updateMany({ where: { milestoneId, companyId }, data: { milestoneId: null } });
     await tx.projectMilestone.delete({ where: { id: milestoneId } });
     await audit(tx, ctx, organizationId, "project_milestone.deleted", "project_milestone", milestoneId, undefined, { title: m.title });
     return { ok: true };

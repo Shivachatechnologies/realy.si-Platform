@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Marketplace, type MarketplaceItem } from "@/components/integrations/marketplace";
+import Link from "next/link";
+import { Bot, Compass, KeyRound, ShieldCheck } from "lucide-react";
+import { Marketplace, type MarketplaceItem, type MarketplaceState } from "@/components/integrations/marketplace";
 import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
+import { WorkerStatusNotice } from "@/components/integrations/worker-status";
 import { Forbidden, NoCompany, Stat } from "@/components/automation/page-frame";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
+import { workerHealth } from "@/server/core/job-admin";
 import { integrationsHealth, listIntegrations, usageSummary } from "@/server/modules/integrations/service";
 import { formatCostMicros } from "@/components/integrations/usage-format";
-import { formatNumber } from "@/i18n/format";
+import { formatNumber, formatRelativeTime } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
+import { requestTime } from "@/server/session";
 import { Section } from "@/components/ui/scene";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProviderConstellation } from "@/components/graphics/provider-constellation";
@@ -17,6 +22,23 @@ import { ProviderConstellation } from "@/components/graphics/provider-constellat
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.integrations.title") };
 }
+
+type Listed = Awaited<ReturnType<typeof listIntegrations>>[number];
+
+/** Connected only when the provider accepted the credentials (test, health check or a successful call) with no error pending. */
+function stateOf(i: Listed): MarketplaceState {
+  if (i.status === "ERROR") return "failing";
+  if (i.status === "CONNECTED") {
+    if (i.info.key === "webhook") return "verified";
+    const c = i.connection;
+    return c && !c.lastError && (c.lastTestedAt || c.lastSuccessAt) ? "verified" : "unverified";
+  }
+  if (i.info.authType === "oauth2") return i.oauthAvailable ? "ready" : "platform_setup";
+  if (i.info.authType === "api_key") return "credentials_required";
+  return "ready";
+}
+
+const latest = (a: Date | null | undefined, b: Date | null | undefined) => (a && b ? (a > b ? a : b) : (a ?? b ?? null));
 
 export default async function IntegrationsPage({ searchParams }: PageProps<"/[locale]/integrations">) {
   const locale = await getLocale();
@@ -33,38 +55,80 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
   if (!(await can(viewer.ctx, "integrations.read", chain))) return frame(<Forbidden message={t("errors.forbidden")} />);
   const view = (await searchParams).view === "connected" ? "connected" : "all";
   const list = await listIntegrations(viewer.ctx, org.id, company.id);
-  const [{ syncErrors, failedDeliveries }, usage] = await Promise.all([integrationsHealth(viewer.ctx, org.id, company.id), usageSummary(viewer.ctx, org.id, company.id, { days: 30 })]);
-  const items: MarketplaceItem[] = list.map((i) => ({
-    key: i.info.key,
-    name: i.info.name,
-    category: i.info.category,
-    authType: i.info.authType,
-    status: i.status === "CONNECTED" || i.status === "ERROR" ? i.status : null,
-    account: i.connection?.status !== "DISCONNECTED" ? (i.connection?.externalAccount ?? null) : null,
-    configured: i.configured || i.oauthAvailable,
-  }));
-  const connected = items.filter((i) => i.status).length;
-  const failing = items.filter((i) => i.status === "ERROR").length;
+  const [{ syncErrors, failedDeliveries }, usage, worker] = await Promise.all([integrationsHealth(viewer.ctx, org.id, company.id), usageSummary(viewer.ctx, org.id, company.id, { days: 30 }), workerHealth()]);
+  const now = requestTime();
+  const items: MarketplaceItem[] = list.map((i) => {
+    const state = stateOf(i);
+    const verifiedAt = latest(i.connection?.lastTestedAt, i.connection?.lastSuccessAt);
+    return {
+      key: i.info.key,
+      name: i.info.name,
+      category: i.info.category,
+      authType: i.info.authType,
+      status: i.status === "CONNECTED" || i.status === "ERROR" ? i.status : null,
+      account: i.connection?.status !== "DISCONNECTED" ? (i.connection?.externalAccount ?? null) : null,
+      configured: i.configured || i.oauthAvailable,
+      state,
+      capabilities: i.info.capabilities,
+      verifiedLabel: state === "verified" && verifiedAt ? t("integrations.marketplace.verifiedAgo", { time: formatRelativeTime(verifiedAt, locale, now) }) : null,
+    };
+  });
+  const verified = items.filter((i) => i.state === "verified").length;
+  const attention = items.filter((i) => i.state === "failing" || i.state === "unverified").length;
+  const guide = [
+    { icon: Compass, title: t("integrations.guide.whatTitle"), body: t("integrations.guide.what") },
+    { icon: ShieldCheck, title: t("integrations.guide.whyTitle"), body: t("integrations.guide.why") },
+    { icon: Bot, title: t("integrations.guide.aiTitle"), body: t("integrations.guide.ai") },
+    { icon: KeyRound, title: t("integrations.guide.nextTitle"), body: attention ? t("integrations.guide.nextFix", { count: attention }) : verified ? t("integrations.guide.nextMore") : t("integrations.guide.nextFirst") },
+  ];
   return frame(
     <>
-      <IntegrationsTabs
-        locale={locale}
-        active={view === "connected" ? "connected" : "marketplace"}
-        labels={integrationTabLabels(t)}
-      />
+      <IntegrationsTabs locale={locale} active={view === "connected" ? "connected" : "marketplace"} labels={integrationTabLabels(t)} />
+      <WorkerStatusNotice state={worker.state} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <Stat label={t("integrations.metrics.connected")} value={connected} hint={t("integrations.ofAvailable", { count: items.length })} />
-        <Stat label={t("integrations.failing")} value={failing} />
+        <Stat label={t("integrations.marketplace.verifiedStat")} value={verified} hint={t("integrations.ofAvailable", { count: items.length })} />
+        <Stat label={t("integrations.failing")} value={attention} hint={attention ? t("integrations.marketplace.attentionHint") : undefined} />
         <Stat label={t("integrations.metrics.syncErrors")} value={syncErrors} hint={t("integrations.last30Days")} />
         <Stat label={t("integrations.metrics.webhookFailures")} value={failedDeliveries} hint={t("integrations.last30Days")} />
         <Stat label={t("integrations.usage.calls")} value={formatNumber(usage.totals.calls, locale)} hint={t("integrations.usage.failedHint", { count: usage.totals.failed })} />
         <Stat label={t("integrations.usage.estimatedCost")} value={formatCostMicros(usage.totals.costMicros, locale)} hint={t("integrations.last30Days")} />
       </div>
-      <Section eyebrow={t("dna.integrations.eyebrow")} title={t("dna.integrations.title")} description={t("dna.integrations.description", { connected, total: items.length })}>
+      <ol className="grid gap-px overflow-hidden rounded-3xl border bg-border sm:grid-cols-2 lg:grid-cols-4">
+        {guide.map((g, idx) => (
+          <li key={g.title} className="grid content-start gap-2 bg-surface p-4">
+            <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <span aria-hidden className="font-mono tabular-nums">
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <g.icon aria-hidden className="size-3.5 text-primary" />
+              {g.title}
+            </span>
+            <p className="text-sm">{g.body}</p>
+          </li>
+        ))}
+      </ol>
+      <Section
+        eyebrow={t("dna.integrations.eyebrow")}
+        title={t("dna.integrations.title")}
+        description={t("dna.integrations.description", { connected: verified, total: items.length })}
+        action={
+          <Link href={`/${locale}/integrations/usage`} className="inline-flex min-h-11 items-center text-sm text-primary hover:underline sm:min-h-0">
+            {t("integrations.marketplace.usageLink")}
+          </Link>
+        }
+      >
         <div className="overflow-hidden rounded-3xl border bg-[radial-gradient(ellipse_at_center,var(--world-soft),var(--surface)_75%)] p-3">
           <ProviderConstellation
             companyName={company.name}
-            providers={items.map((i) => ({ key: i.key, name: i.name, category: i.category, categoryLabel: t(`integrations.categories.${i.category}`), status: i.status, href: `/${locale}/integrations/${i.key}` }))}
+            providers={items.map((i) => ({
+              key: i.key,
+              name: i.name,
+              category: i.category,
+              categoryLabel: t(`integrations.categories.${i.category}`),
+              // Only verified connections light up as connected; failing and unverified ones show as needing attention.
+              status: i.state === "verified" ? "CONNECTED" : i.state === "failing" || i.state === "unverified" ? "ERROR" : null,
+              href: `/${locale}/integrations/${i.key}`,
+            }))}
           />
         </div>
       </Section>

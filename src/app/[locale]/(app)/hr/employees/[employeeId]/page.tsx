@@ -645,13 +645,23 @@ export default async function EmployeePage({ params, searchParams }: { params: P
   } else if (tab === "documents") {
     body = (
       <Card>
-        <CardHeader title={t("hr.docs.title")} description={t("hr.docs.hint", { types: ACCEPTED_DOCUMENT_EXTENSIONS.join(", ") })} />
+        <CardHeader
+          title={t("hr.docs.title")}
+          description={t("hr.docs.hint", { types: ACCEPTED_DOCUMENT_EXTENSIONS.join(", ") })}
+          actions={
+            manage ? (
+              <Link href={`/${locale}/hr/documents?employee=${e.id}`} className="text-xs font-medium text-primary hover:underline">
+                {t("hr.docgen.generateFor")}
+              </Link>
+            ) : null
+          }
+        />
         <CardBody className="grid gap-3">
           {e.documents.length ? (
             <ul className="grid divide-y rounded-md border">
               {e.documents.map((d) => (
                 <li key={d.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
-                  <a href={`${base}/hr/documents/${d.id}`} className="font-medium hover:underline">
+                  <a href={`${base}/hr/documents/${d.id}${d.category === "letter" && d.mimeType === "text/html" ? "?view=1" : ""}`} target={d.category === "letter" ? "_blank" : undefined} rel="noreferrer" className="font-medium hover:underline">
                     {d.name}
                   </a>
                   <Badge>{t(`hr.docCategory.${d.category}`)}</Badge>

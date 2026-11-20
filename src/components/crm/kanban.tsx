@@ -51,12 +51,12 @@ export function PipelineBoard({ base, locale, columns, canManage }: { base: stri
   return (
     <div className="grid gap-2">
       <FormError error={error} />
-      <div className="flex gap-3 overflow-x-auto pb-2" aria-busy={busy}>
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:snap-none sm:px-0" aria-busy={busy}>
         {columns.map((col, ci) => (
           <section
             key={col.id}
             aria-label={col.name}
-            className={cn("flex w-72 shrink-0 flex-col rounded-lg border bg-surface-2", over === col.id && dragging ? "ring-2 ring-primary" : "")}
+            className={cn("flex w-[85vw] max-w-80 shrink-0 snap-start flex-col rounded-lg border bg-surface-2 sm:w-72", over === col.id && dragging ? "ring-2 ring-primary" : "")}
             onDragOver={(e) => {
               if (!canManage || !dragging) return;
               e.preventDefault();
@@ -81,6 +81,11 @@ export function PipelineBoard({ base, locale, columns, canManage }: { base: stri
                 {col.total}
                 {col.type === "OPEN" ? ` · ${t("crm.weighted")} ${col.weighted} · ${col.probability}%` : ""}
               </p>
+              {col.type === "OPEN" ? (
+                <span aria-hidden className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
+                  <span className="block h-full rounded-full bg-[linear-gradient(90deg,var(--primary),var(--primary-2))]" style={{ width: `${col.probability}%` }} />
+                </span>
+              ) : null}
             </header>
             <ul className="grid min-h-24 content-start gap-2 p-2">
               {col.deals.map((d) => (
@@ -110,14 +115,14 @@ export function PipelineBoard({ base, locale, columns, canManage }: { base: stri
                   </span>
                   {canManage ? (
                     <span className="flex justify-between">
-                      <Button type="button" size="icon" variant="ghost" className="size-7" disabled={busy || ci === 0} aria-label={t("crm.pipeline.moveBack")} title={columns[ci - 1]?.name} onClick={() => move(d.id, columns[ci - 1]!)}>
+                      <Button type="button" size="icon" variant="ghost" className="size-9 sm:size-7" disabled={busy || ci === 0} aria-label={t("crm.pipeline.moveBack")} title={columns[ci - 1]?.name} onClick={() => move(d.id, columns[ci - 1]!)}>
                         <ChevronLeft aria-hidden className="rtl:rotate-180" />
                       </Button>
                       <Button
                         type="button"
                         size="icon"
                         variant="ghost"
-                        className="size-7"
+                        className="size-9 sm:size-7"
                         disabled={busy || ci === columns.length - 1}
                         aria-label={t("crm.pipeline.moveForward")}
                         title={columns[ci + 1]?.name}

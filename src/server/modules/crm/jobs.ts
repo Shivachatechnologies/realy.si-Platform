@@ -6,6 +6,7 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { runLeadIntake } from "./automation";
 import { expireProposals } from "./proposals";
+import { runCadences } from "./cadences";
 
 /**
  * Background work of the crm module, run by the worker (src/worker/index.ts via src/worker/modules.ts).
@@ -14,6 +15,7 @@ import { expireProposals } from "./proposals";
  * - Stale deals: open deals that sat in their stage longer than the pipeline's staleDays are flagged (staleSince) and
  *   their owner is notified once.
  * - Proposals past their valid-until date are marked EXPIRED.
+ * - Cadences (sequences): due steps run every 15 minutes; enrollments stop when the person replies (cadences.ts).
  * - lead.created: leads created outside createLead (e.g. marketing forms) without an owner go through the same intake
  *   workflow (assignment rule → follow-up → notify owner). Idempotent: only unowned leads are touched.
  */
@@ -105,6 +107,7 @@ export const CRM_JOBS: ModuleJobs = {
     { name: "crm.follow_up_reminders", everyMs: HOUR, run: () => remindFollowUps() },
     { name: "crm.stale_deals", everyMs: 6 * HOUR, run: () => markStaleDeals() },
     { name: "crm.expire_proposals", everyMs: 6 * HOUR, run: () => expireProposals() },
+    { name: "crm.cadences", everyMs: HOUR / 4, run: () => runCadences() },
   ],
   onEvent: [{ name: "crm.lead_intake", types: ["lead.created"], handle: (event) => leadIntakeOnCreated(event) }],
 };

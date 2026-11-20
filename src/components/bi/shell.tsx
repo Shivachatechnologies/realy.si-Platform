@@ -10,7 +10,7 @@ export function AnalyticsHeader({ t, locale, active, title, subtitle, actions }:
       <AnalyticsTabs
         locale={locale}
         active={active}
-        labels={{ overview: t("analytics.tabs.overview"), ceo: t("analytics.tabs.ceo"), departments: t("analytics.tabs.departments"), dashboards: t("analytics.tabs.dashboards"), reports: t("analytics.tabs.reports"), ai: t("analytics.tabs.ai") }}
+        labels={{ overview: t("analytics.tabs.overview"), health: t("analytics.tabs.health"), ceo: t("analytics.tabs.ceo"), departments: t("analytics.tabs.departments"), dashboards: t("analytics.tabs.dashboards"), reports: t("analytics.tabs.reports"), ai: t("analytics.tabs.ai") }}
       />
     </>
   );

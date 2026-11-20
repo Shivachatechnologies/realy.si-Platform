@@ -726,7 +726,17 @@
       "workforce_delegation_decided": "此委派已经处理过了。",
       "workforce_delegation_limit": "此任务的委派子任务已达上限。",
       "workforce_delegation_parent_missing": "此委派所属的任务已不存在。",
-      "workforce_escalation_resolved": "此升级问题已解决。"
+      "workforce_escalation_resolved": "此升级问题已解决。",
+      "work_product_gate_deliverables": "批准关卡前，请先保存本阶段的交付物。",
+      "support_csat_not_solved": "工单解决后才可以评分。",
+      "support_csat_locked": "此评分已无法修改。",
+      "support_feedback_exists": "此工单已作为该产品的反馈。",
+      "work_deliverable_needs_link": "提交前请添加成果链接。",
+      "work_deliverable_not_submitted": "只有已提交的交付成果才能审核。",
+      "work_deliverables_full": "一个项目最多可有 300 项交付成果。",
+      "hr_plan_state": "该计划岗位无法变更为此状态。",
+      "hr_plan_has_job": "该岗位已有职位，请取消而不是删除。",
+      "hr_doc_field": "请填写此信函所需的信息。"
     }
   },
   "onboarding": {
@@ -751,6 +761,324 @@
       "ME_CENTRAL": "中东 (me-central)",
       "AP_SOUTH": "印度 (ap-south)",
       "AP_SOUTHEAST": "亚太 (ap-southeast)"
+    },
+    "journey": {
+      "title": "打造你的公司",
+      "progress": "旅程进度",
+      "stageOf": "第 {n} / {total} 阶段 · {name}",
+      "guide": {
+        "what": "这里会发生什么",
+        "ai": "AI 做什么",
+        "next": "下一步"
+      },
+      "saving": "正在保存…",
+      "saved": "已保存 — 可以稍后继续",
+      "saveFailed": "暂时无法保存 — 你的回答仍保留在此页面",
+      "noAccess": "你无权访问此旅程所属的公司。请向其所有者申请访问权限。",
+      "noRun": "还没有正在构建的公司。请从你的愿景开始。",
+      "toIntelligence": "前往研究",
+      "stages": {
+        "welcome": {
+          "short": "欢迎",
+          "title": "欢迎来到你的 AI 公司",
+          "what": "设置你的姓名、语言和工作区。",
+          "ai": "暂时没有 — AI 正在等待你的愿景。",
+          "next": "描述你想打造的事业。"
+        },
+        "vision": {
+          "short": "愿景",
+          "title": "你想打造什么？",
+          "what": "用自己的话描述你的想法或现有业务，如有细节和文档也可添加。",
+          "ai": "阅读你的回答和文档（保存在公司大脑中）来规划研究。",
+          "next": "AI 研究你的市场、竞争对手和客户。"
+        },
+        "intelligence": {
+          "short": "情报",
+          "title": "AI 正在研究你的业务",
+          "what": "AI 研究任务分析想法、市场、竞争对手、客户、商业模式、机会和风险。",
+          "ai": "运行真实的研究任务（连接研究服务后可进行实时网络搜索），并将每份成果保存到公司大脑。",
+          "next": "研究结论将成为你的公司蓝图。"
+        },
+        "blueprint": {
+          "short": "蓝图",
+          "title": "你的公司蓝图",
+          "what": "部门、产品、目标、关键成果、项目和工作流 — 由研究提出，由你编辑。",
+          "ai": "起草蓝图；在你批准之前不会创建任何内容。",
+          "next": "批准后的公司将获得它的 AI 团队。"
+        },
+        "workforce": {
+          "short": "AI 团队",
+          "title": "聘用你的 AI 团队",
+          "what": "以组织架构图呈现的 AI 团队：CEO、经理和专员，各有职责和目标。",
+          "ai": "为你的蓝图推荐团队；由你决定聘用谁。",
+          "next": "进入指挥中心。"
+        },
+        "launch": {
+          "short": "启动",
+          "title": "你的公司已就绪",
+          "what": "现在已存在的一切，以及启动后 AI 将继续构建的内容。",
+          "ai": "在后台持续工作：定位、市场进入、启动计划和财务计划。",
+          "next": "在指挥中心经营你的公司。"
+        }
+      },
+      "welcome": {
+        "eyebrow": "Realy.si · AI 企业操作系统",
+        "title": "一位创始人，一整家公司。",
+        "lead": "只需几个引导步骤，AI 就会研究你的业务、与你一起设计公司，并聘用运营它的 AI 团队。每一步都由你批准。",
+        "promise": {
+          "one": "用你自己的话告诉 AI 你的愿景。",
+          "two": "观看真实研究并批准你的蓝图。",
+          "three": "聘用 AI 团队并启动。"
+        },
+        "name": "你的姓名",
+        "country": "居住国家/地区",
+        "workspace": "工作区",
+        "workspacePlaceholder": "例如：我的创业项目",
+        "begin": "开始旅程",
+        "resume": "从上次离开的地方继续",
+        "time": "每一步都会保存你的进度。",
+        "coreLabel": "你公司的 AI 核心"
+      },
+      "vision": {
+        "ask": {
+          "mode": "欢迎来到 {workspace}。我们一起打造什么？",
+          "modeLabel": "我们要打造什么？",
+          "idea": {
+            "NEW_IDEA": "跟我说说你的想法 — 解决什么问题、面向谁、你会提供什么。",
+            "EXISTING": "跟我说说你的业务 — 卖什么、卖给谁、想改进什么。提供网站能让我学得更快。",
+            "IMPORT": "在下方添加你的文档，并用一句话告诉我这项业务是做什么的。"
+          },
+          "details": "一些细节有助于研究（全部可选 — 我会标注所有假设）。",
+          "docs": "有需要我先读的文档吗？商业计划、路演材料或笔记都会进入你的公司大脑。"
+        },
+        "ideaLabel": "你的描述",
+        "placeholder": {
+          "NEW_IDEA": "例如：为独立瑜伽老师打造的预约应用，处理付款和提醒…",
+          "EXISTING": "例如：我们经营两家面包店并向咖啡馆批发；希望实现在线订购并提高利润…",
+          "IMPORT": "例如：一家物流咨询公司 — 附件中的计划介绍了我们的服务…"
+        },
+        "websiteHint": "可选。最多读取 10 个公开页面到公司大脑。",
+        "websiteInvalid": "请输入以 https:// 开头的完整地址",
+        "name": "公司名称",
+        "nameHint": "留空则使用临时名称。",
+        "country": "国家/地区",
+        "letAiChoose": "让 AI 建议",
+        "budget": "启动预算（{currency}）",
+        "docs": {
+          "drop": "将文件拖到此处或选择文件",
+          "types": "{types} · PDF 最大 {pdf} MB，文本最大 {text} MB",
+          "refused": "未添加（类型不支持或文件过大）：{files}",
+          "remove": "移除 {name}",
+          "status": {
+            "ready": "就绪",
+            "uploading": "正在上传…",
+            "done": "已存入公司大脑",
+            "failed": "失败"
+          },
+          "upload": "添加到公司大脑",
+          "title": "{count, plural, =0 {文档和页面} other {# 个文档和页面}}"
+        },
+        "phase": {
+          "creating": "正在创建你的公司…",
+          "uploading": "正在将文档添加到公司大脑…",
+          "starting": "正在启动研究…"
+        },
+        "readyHint": "描述你想打造的事业即可开始研究。",
+        "start": "开始研究",
+        "fromSources": "根据你分享的文档和页面描述。"
+      },
+      "intelligence": {
+        "aiOff": {
+          "title": "AI 研究不可用",
+          "notConfigured": "此平台未配置 AI 服务，因此无法运行研究。你可以继续并自行构建蓝图。",
+          "refused": "此工作区的 AI 目前已关闭或预算已用完，因此无法运行研究。你可以继续并自行构建蓝图。"
+        },
+        "manual": "不使用 AI 继续",
+        "noResearch": {
+          "title": "没有实时网络研究",
+          "body": "未连接研究服务（Tavily、Exa 或 SerpApi），因此 AI 基于通用知识和你的文档工作，并将数据标注为估算。",
+          "connect": "连接服务"
+        },
+        "draft": "文档到位后研究即开始。",
+        "radar": "研究进度：已完成 {done} / {total} 个步骤",
+        "progress": "研究进度",
+        "now": "{who} 正在处理 {step}",
+        "system": "构建器",
+        "allDone": "全部研究已完成",
+        "failed": "{count, plural, other {# 个步骤需要处理}}",
+        "queued": "正在等待下一个 AI 任务开始…",
+        "web": {
+          "done": "{count, plural, =0 {实时网络搜索未找到结果} other {已将 # 条实时网络结果保存到公司大脑}}（{provider}）",
+          "notConnected": "已跳过实时网络搜索：未连接研究服务。",
+          "noTopic": "已跳过实时网络搜索：暂时没有可搜索的内容。",
+          "failed": "实时网络搜索失败；AI 已在没有它的情况下继续。"
+        },
+        "task": {
+          "status": "任务",
+          "started": "开始于",
+          "queued": "排队于",
+          "finished": "完成于",
+          "lookupsLabel": "查询",
+          "lookups": "{count, plural, =0 {尚无查询} other {# 次查询}}",
+          "citations": "{count, plural, other {引用了 # 个来源}}"
+        },
+        "waiting": "正在等待前面的步骤。",
+        "result": "AI 的发现",
+        "readFull": "在公司大脑中阅读完整成果",
+        "sources": "{count, plural, other {# 个来源}}",
+        "toBlueprint": "构建蓝图",
+        "continueWhileWorking": "在 AI 工作时继续",
+        "continueHint": "研究会继续进行；蓝图准备好后会显示。"
+      },
+      "blueprint": {
+        "waiting": {
+          "title": "AI 正在设计你的公司",
+          "running": "AI CEO 正在把研究转化为蓝图。此页面会自动更新。",
+          "queued": "研究完成后将开始制作蓝图。此页面会自动更新。",
+          "failed": "AI 未能完成蓝图：{error}"
+        },
+        "buildMyself": "我自己来构建",
+        "manualNotice": "你正在自行构建蓝图。添加公司当前需要的内容 — 之后都可以修改。",
+        "manualNoAi": "AI 不可用，请自行构建蓝图。添加公司当前需要的内容 — 之后都可以修改。",
+        "proposalNotice": "这是 AI 根据研究提出的方案。可任意编辑、删除或添加，然后批准。",
+        "draftNotice": "已恢复你保存的编辑。",
+        "forbidden": "你可以查看蓝图，但只有管理此公司的人员才能修改或批准。",
+        "mapLabel": "{count, plural, =0 {空蓝图} other {包含 # 项的蓝图}}",
+        "sections": {
+          "departments": "部门与团队",
+          "products": "产品与服务",
+          "goals": "公司目标",
+          "objectives": "关键成果",
+          "projects": "项目",
+          "workflows": "工作流"
+        },
+        "hints": {
+          "departments": "只保留未来 12 个月需要的。团队隶属于部门。",
+          "products": "启动时销售的内容，如已知可附上定价。",
+          "goals": "本季度或本年度最多 5 个大目标。",
+          "objectives": "带有目标期限和里程碑的可衡量成果。",
+          "projects": "首批项目及其起步任务。",
+          "workflows": "需要自动化的重复工作。模板可直接使用。"
+        },
+        "add": {
+          "departments": "添加部门",
+          "products": "添加产品",
+          "goals": "添加目标",
+          "objectives": "添加关键成果",
+          "projects": "添加项目",
+          "workflows": "添加工作流"
+        },
+        "remove": "移除",
+        "empty": "这里还没有内容。",
+        "fields": {
+          "name": "名称",
+          "description": "描述",
+          "departmentName": "部门名称",
+          "teams": "团队",
+          "addTeam": "输入团队后按回车",
+          "productName": "产品或服务",
+          "pricing": "定价",
+          "title": "标题",
+          "goalTitle": "目标",
+          "horizon": "周期",
+          "quarter": "本季度",
+          "year": "本年度",
+          "objectiveTitle": "关键成果",
+          "targetInDays": "目标天数",
+          "days": "天",
+          "milestones": "里程碑",
+          "addMilestone": "输入里程碑后按回车",
+          "projectName": "项目名称",
+          "tasks": "起步任务",
+          "addTask": "输入任务后按回车",
+          "workflowName": "工作流名称",
+          "template": "模板",
+          "custom": "自定义工作流",
+          "trigger": "触发条件：{trigger}"
+        },
+        "approved": "你的公司已建成",
+        "approvedHint": "记录已按你的权限创建。你无权管理的部分已被跳过。",
+        "result": {
+          "departments": "部门",
+          "teams": "团队",
+          "products": "产品",
+          "goals": "目标",
+          "objectives": "关键成果",
+          "milestones": "里程碑",
+          "projects": "项目",
+          "tasks": "任务",
+          "workflows": "工作流",
+          "counts": "新建 {created} · 已存在 {skipped}",
+          "forbidden": "需要权限"
+        },
+        "reviseTitle": "请 AI 重新调整蓝图",
+        "revisePlaceholder": "例如：减少部门、增加批发产品、聚焦德国市场…",
+        "revise": "发送给 AI",
+        "approveHint": "{count, plural, =0 {请至少添加一项，然后批准。} other {批准后将创建 # 项。}}",
+        "approve": "批准并构建",
+        "toWorkforce": "聘用 AI 团队"
+      },
+      "workforce": {
+        "waiting": {
+          "title": "AI 正在组建你的团队",
+          "running": "AI CEO 正在为你的蓝图推荐 AI 团队。此页面会自动更新。",
+          "queued": "团队推荐将在蓝图完成后开始。此页面会自动更新。",
+          "failed": "AI 未能推荐团队：{error}"
+        },
+        "useStarter": "使用标准入门团队",
+        "starterNotice": "这是标准入门团队（并非为你的业务生成）。请按需调整。",
+        "starterNoAi": "AI 不可用，以下是标准入门团队（并非为你的业务生成）。请按需调整。",
+        "proposalNotice": "这是 AI 为你的蓝图提出的方案。聘用前可修改姓名、角色、汇报关系和目标。",
+        "draftNotice": "已恢复你保存的编辑。",
+        "forbidden": "只有管理此公司及其 AI 团队的人员才能聘用团队。",
+        "chart": "{count, plural, =0 {空组织架构图} other {包含 # 名 AI 员工的组织架构图}}",
+        "empty": "还没有 AI 员工 — 请在下方添加角色。",
+        "editing": "正在编辑 {name}",
+        "remove": "移除",
+        "fields": {
+          "name": "姓名",
+          "title": "职位名称",
+          "role": "角色",
+          "level": "层级",
+          "reportsTo": "汇报对象",
+          "reportsToYou": "你（创始人）",
+          "responsibilities": "职责",
+          "onePerLine": "每行一项。",
+          "goals": "该 AI 员工负责的目标",
+          "noGoals": "已批准蓝图中的目标会显示在这里。"
+        },
+        "levels": {
+          "EXECUTIVE": "高管",
+          "MANAGER": "经理",
+          "SPECIALIST": "专员"
+        },
+        "addRole": "添加角色",
+        "add": "添加",
+        "hired": "{created, plural, other {已聘用 # 名 AI 员工}}{skipped, plural, =0 {} other { · # 名已在团队中}}",
+        "hiredHint": "你的 AI 团队已上岗，并按图示汇报。可随时在 AI 员工中管理。",
+        "hireHint": "{count, plural, =0 {未选择 AI 员工。} other {将聘用 # 名 AI 员工。}}",
+        "hire": "{count, plural, other {聘用 # 名 AI 员工}}",
+        "skip": "不组建 AI 团队继续",
+        "toLaunch": "前往启动"
+      },
+      "launch": {
+        "eyebrow": "启动",
+        "title": "{name} 已就绪",
+        "lead": "以下所有内容现已存在于你的公司中 — 由你批准的蓝图和团队创建。进入后 AI 仍会继续工作。",
+        "records": {
+          "departments": "部门",
+          "products": "产品",
+          "goals": "目标",
+          "objectives": "关键成果",
+          "projects": "项目",
+          "workflows": "工作流",
+          "aiEmployees": "AI 员工"
+        },
+        "enter": "进入指挥中心",
+        "sceneLabel": "你的公司、AI 团队以及进行中的工作",
+        "keepsWorking": "启动后 AI 会继续构建",
+        "keepsWorkingHint": "这些步骤在后台运行；结果会出现在公司大脑和各个模块中。"
+      }
     }
   },
   "command": {
@@ -836,6 +1164,109 @@
       "followUps": "到期的跟进",
       "noFollowUps": "没有到期的跟进。",
       "overdue": "已逾期"
+    },
+    "ai": {
+      "stagesLabel": "指令阶段",
+      "stages": {
+        "understanding": "理解",
+        "planning": "规划",
+        "delegation": "分派",
+        "execution": "执行",
+        "review": "审核",
+        "completion": "完成"
+      },
+      "stageState": {
+        "done": "已完成",
+        "active": "进行中",
+        "pending": "未开始",
+        "failed": "失败",
+        "skipped": "已跳过"
+      },
+      "stepTitle": {
+        "research": "调研事实 — {role}",
+        "department": "{part} — {role}",
+        "review": "审核并建议 — {role}"
+      },
+      "detail": {
+        "understanding": "{count, plural, other {# 个领域}}",
+        "planning": "{count, plural, other {# 个步骤}}",
+        "delegation": "已分派 {done}/{total}",
+        "execution": "已完成 {done}/{total}",
+        "approvals": "{count, plural, other {# 项审批待处理}}"
+      },
+      "runStatus": {
+        "PLANNED": "已规划",
+        "RUNNING": "进行中",
+        "REVIEWING": "审核中",
+        "COMPLETED": "已完成",
+        "FAILED": "未能完成",
+        "CANCELLED": "已取消"
+      },
+      "live": "实时 — 随 AI 团队的工作更新",
+      "cancel": "停止",
+      "result": "结果",
+      "nextAction": "建议的下一步",
+      "runNext": "接着做这个",
+      "failed": "没有任何步骤完成。打开上面的步骤查看原因，修复后（例如连接 AI 服务或工具）再次运行指令。",
+      "understood": "AI 的理解",
+      "researchFirst": "先调研",
+      "factsUsed": "{count, plural, other {使用了公司的 # 个真实数据}}",
+      "noFacts": "您的角色无法查看公司数据。",
+      "knowledgeUsed": "{count, plural, other {公司知识中有 # 个匹配来源}}",
+      "noKnowledge": "没有匹配的文档或记录 — 向公司大脑添加文档，让 AI 了解更多。",
+      "plan": "计划",
+      "planAria": "指令计划：{summary}",
+      "stepState": {
+        "WAITING": "等待中",
+        "DELEGATED": "已分派",
+        "BLOCKED": "无法开始",
+        "SKIPPED": "已跳过",
+        "QUEUED": "排队中",
+        "RUNNING": "进行中",
+        "COMPLETED": "已完成",
+        "FAILED": "失败",
+        "CANCELLED": "已取消"
+      },
+      "kind": {
+        "RESEARCH": "调研",
+        "DEPARTMENT": "部门工作",
+        "REVIEW": "审核"
+      },
+      "waitingFor": "步骤 {steps} 完成后开始。",
+      "skipped": "已不再需要。",
+      "showResult": "显示此步骤的结果",
+      "hideResult": "隐藏结果",
+      "howTitle": "AI 指令如何运作",
+      "how": {
+        "understanding": "读取您的指令、数据和知识",
+        "planning": "保存分步计划",
+        "delegation": "把每一步交给一名 AI 员工",
+        "execution": "基于您的真实数据工作",
+        "review": "核查结果；变更由您审批",
+        "completion": "给出答案和最佳下一步"
+      }
+    },
+    "ops": {
+      "runsTitle": "AI 工作中",
+      "openCommand": "打开 AI 指令",
+      "runsForbidden": "您的角色无法查看本公司的 AI 工作。",
+      "runsEmpty": "还没有指令。告诉公司要做什么 — AI 团队会制定计划并开始工作。",
+      "teammateRun": "同事的指令",
+      "approvalsTitle": "等待您处理",
+      "allApprovals": "全部审批",
+      "approvalsForbidden": "您的角色无法查看审批请求。",
+      "approvalsEmpty": "没有待您决定的事项。会更改数据或联系他人的 AI 提议会首先出现在这里。",
+      "risk": {
+        "LOW": "低风险",
+        "MEDIUM": "中风险",
+        "HIGH": "高风险",
+        "CRITICAL": "严重"
+      },
+      "expires": "{when}到期",
+      "healthTitle": "业务健康度",
+      "openHealth": "详情",
+      "healthNotEnough": "数据不足，暂无评分",
+      "healthOutOf": "满分 100 · 基于 {metrics} 个真实 KPI"
     }
   },
   "company": {
@@ -1150,7 +1581,61 @@
       "why": "当出现缓慢或故障时，从这里开始：实时检查、作业队列、后台进程和最新错误。",
       "queuesHint": "每个后台队列中等待、运行和失败的作业。",
       "noHeartbeatHint": "启动后台进程（pnpm worker）。它每分钟会在这里上报一次。",
-      "noErrorsHint": "过去 7 天没有失败的作业、AI 任务、同步、工作流或 Webhook。"
+      "noErrorsHint": "过去 7 天没有失败的作业、AI 任务、同步、工作流或 Webhook。",
+      "jobs": {
+        "title": "后台任务",
+        "subtitle": "Worker 服务、队列、任务历史和死信队列。",
+        "why": "所有 AI 任务、定时任务、事件处理器和 Webhook 投递都在这里运行。失败的任务会按退避策略重试；最后一次尝试失败后，它们会留在死信队列中，直到您重新入队或丢弃。",
+        "worker": {
+          "not_configured": {
+            "title": "Worker 未配置",
+            "body": "未设置 REDIS_URL，因此不会运行任何后台任务：AI 任务无法入队，定时任务、同步和 Webhook 投递均处于空闲。Web 应用仍可正常使用。"
+          },
+          "stale": {
+            "title": "Worker 心跳已过期",
+            "body": "最近 3 分钟内没有 Worker 上报。请检查 Worker 服务日志并重启。"
+          },
+          "missing": {
+            "title": "从未启动过 Worker",
+            "body": "请使用与 Web 应用相同的镜像和环境部署 Worker 服务（docs/deployment.md）。"
+          }
+        },
+        "aliveCount": "{count, plural, =0 {没有在线 Worker} other {# 个在线 Worker}}",
+        "queues": "队列",
+        "queuesHint": "每个队列的等待 · 运行中 · 延迟 · 失败任务数（实时来自 Redis）。",
+        "queueLegend": "条形显示等待 + 运行中 + 延迟的任务。",
+        "noQueues": "没有队列。",
+        "unavailable": "不可用",
+        "last24h": "最近 24 小时",
+        "deadTotal": "{count, plural, =0 {死信队列为空。} other {# 个任务在死信队列中等待。}}",
+        "status": {
+          "ACTIVE": "运行中",
+          "RETRYING": "重试中",
+          "SUCCEEDED": "成功",
+          "FAILED": "失败",
+          "DEAD": "已进入死信队列",
+          "REQUEUED": "已重新入队"
+        },
+        "detailHint": "第 {attempts} 次尝试，共 {max} 次",
+        "noLogs": "没有日志记录。",
+        "runs": "任务运行记录",
+        "runsHint": "最新的在前。任务载荷从不存储或显示——仅包括名称、尝试次数、耗时和错误。",
+        "filterStatus": "按状态筛选",
+        "filterQueue": "按队列筛选",
+        "all": "全部",
+        "allQueues": "全部队列",
+        "empty": "没有任务运行记录",
+        "emptyHint": "Worker 开始处理任务后，运行记录会显示在这里。",
+        "attempts": "尝试 {attempts}/{max}",
+        "duration": "{ms} 毫秒",
+        "next": "更早的记录",
+        "requeue": "重新入队",
+        "requeueTitle": "重新将此任务入队？",
+        "requeueBody": "该任务将作为新任务回到原队列，并拥有完整的重试次数。请先修复失败原因。",
+        "discard": "丢弃",
+        "discardTitle": "丢弃此任务？",
+        "discardBody": "死信副本将被删除，任务不会再次运行。其历史记录会保留以供审计。"
+      }
     },
     "users": {
       "count": "{count, plural, other {# 个用户}}（最新优先，最多 100 个）",
@@ -2053,7 +2538,8 @@
       "search": "搜索",
       "documents": "文档",
       "memory": "公司记忆",
-      "ask": "询问大脑"
+      "ask": "询问大脑",
+      "knowledge": "知识搜索"
     },
     "sources": {
       "upload": "已上传",
@@ -2151,6 +2637,40 @@
       "notConfigured": "此平台未配置 AI，因此暂时无法回答问题。",
       "noPermission": "您需要运行 AI 任务的权限才能询问大脑。",
       "tryAsking": "没有匹配的段落——改为询问大脑"
+    },
+    "knowledge": {
+      "title": "知识搜索",
+      "subtitle": "一次搜索公司知道的一切 — 文档、公司记忆、人员与关系、客户、交易和项目 — 然后向大脑索取有出处的答案。",
+      "searchLabel": "搜索公司知识",
+      "placeholder": "例如：Acme 续约、退款政策、谁负责移动应用",
+      "intro": {
+        "whatTitle": "这是什么？",
+        "what": "一次搜索覆盖您的文档、公司记忆、公司图谱和核心记录。",
+        "whyTitle": "为什么重要",
+        "why": "答案的质量取决于来源：每条结果都链接到其来源记录。",
+        "aiTitle": "AI 做什么",
+        "ai": "“询问大脑”基于同样的来源作答，并逐一引用，如 [S1] 或 [K2]。它从不猜测。"
+      },
+      "none": "公司知识中没有与“{q}”匹配的内容。",
+      "addDocs": "添加文档",
+      "found": "{count, plural, other {“{q}”共 # 条结果}}",
+      "passages": "文档段落",
+      "memories": "公司记忆",
+      "pinned": "已置顶",
+      "source": "来源：{source}",
+      "records": "记录",
+      "recordType": {
+        "account": "客户",
+        "deal": "交易",
+        "lead": "线索",
+        "project": "项目"
+      },
+      "relationships": "关系",
+      "relationshipsHint": "匹配的人员、团队、产品和合作伙伴之间如何关联。",
+      "orbitAria": "{name} 及 {count, plural, other {# 个关系}}",
+      "askTitle": "询问大脑",
+      "askHint": "从这些来源获得带引用的直接答案。",
+      "contextLead": "与搜索“{q}”匹配的知识："
     }
   },
   "agentTasks": {
@@ -2217,7 +2737,76 @@
     "firstPage": "第一页",
     "delegatedBy": "由“{title}”委派",
     "delegated": "委派的任务",
-    "estimatedCost": "约 {cost}"
+    "estimatedCost": "约 {cost}",
+    "subjects": {
+      "account": "客户账户",
+      "activity_digest": "活动摘要",
+      "ai_employee_report": "AI 员工报告",
+      "ai_plans": "AI 计划",
+      "ai_tasks": "AI 任务",
+      "announcement": "公告",
+      "approvals": "审批",
+      "brain_question": "知识库提问",
+      "builder_step": "构建器步骤",
+      "ceo_conversation": "与 AI CEO 的对话",
+      "command_session": "指令会话",
+      "company_goal": "公司目标",
+      "contact": "联系人",
+      "crm_account": "CRM 客户账户",
+      "crm_deal": "交易",
+      "crm_lead": "CRM 线索",
+      "crm_page": "CRM 页面",
+      "crm_pipeline": "销售管道",
+      "crm_proposal": "提案",
+      "deal": "交易",
+      "email_thread": "邮件会话",
+      "finance_insights": "财务洞察",
+      "finance_question": "财务问题",
+      "graph_entity": "公司图谱条目",
+      "growth_insight": "增长洞察",
+      "guide_request": "引导式帮助请求",
+      "hr_candidate": "候选人",
+      "hr_hiring": "招聘",
+      "hr_insights": "人员洞察",
+      "hr_job": "职位空缺",
+      "hr_overview": "人力资源概览",
+      "hr_policy_qa": "人事政策问题",
+      "lead": "线索",
+      "marketing_ad_campaign": "广告活动",
+      "marketing_autopilot_item": "自动驾驶事项",
+      "marketing_campaign": "营销活动",
+      "marketing_content": "内容",
+      "marketing_engagement": "互动",
+      "marketing_influencer": "网红合作",
+      "marketing_journey": "营销旅程",
+      "meeting": "会议",
+      "ops_overview": "运营概览",
+      "post": "帖子",
+      "product": "产品",
+      "product_doc_architecture": "架构文档",
+      "product_doc_brd": "业务需求文档",
+      "product_doc_design_brief": "设计简报",
+      "product_doc_prd": "产品需求文档",
+      "product_doc_qa_plan": "测试计划",
+      "product_doc_release_plan": "发布计划",
+      "product_doc_research": "产品调研",
+      "product_doc_tech_requirements": "技术需求",
+      "product_doc_ux_spec": "用户体验规范",
+      "product_plan": "产品计划",
+      "project": "项目",
+      "project_help": "项目协助",
+      "projects_overview": "项目概览",
+      "sales_journey": "销售旅程",
+      "seo_project": "SEO 项目",
+      "sprint": "冲刺",
+      "support_inbox": "支持收件箱",
+      "support_kb_draft": "知识库草稿",
+      "ticket": "工单",
+      "work_kickoff": "项目启动",
+      "work_task": "任务",
+      "workflow": "工作流",
+      "workflow_run": "工作流运行"
+    }
   },
   "workforce": {
     "subtitle": "共享同一任务运行时的 AI 员工角色。每个角色只能使用所列工具，并以分配任务者的权限工作。",
@@ -2329,7 +2918,11 @@
       "set_ad_budget": "调整广告预算",
       "set_ad_campaign_status": "启用或暂停广告活动",
       "reply_to_comment": "回复评论",
-      "send_influencer_outreach": "发送达人邀约"
+      "send_influencer_outreach": "发送达人邀约",
+      "read_workforce_plan": "读取人力规划",
+      "propose_planned_role": "提议计划岗位",
+      "read_financial_alerts": "读取财务警报",
+      "read_money_flow": "读取资金流"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -3281,7 +3874,11 @@
         "productOwner": "您现在是 {title} 的负责人",
         "productStage": "产品已进入新阶段：{title}",
         "productPlan": "AI 产品团队已停止：{title}",
-        "productPlanDone": "AI 产品团队已完成 {title} 的规划"
+        "productPlanDone": "AI 产品团队已完成 {title} 的规划",
+        "deliverableAssigned": "分配给您的交付成果：{title}",
+        "deliverableSubmitted": "交付成果已提交审核：{title}",
+        "deliverableAccepted": "交付成果已验收：{title}",
+        "deliverableRejected": "交付成果需要修改：{title}"
       },
       "marketing": {
         "campaign_launched": "活动已启动：{title}",
@@ -3294,7 +3891,12 @@
         "content_comment": "{title} 有新评论",
         "post_published": "社交帖子已发布：{title}",
         "post_failed": "社交帖子未完全发布：{title}",
-        "autopilot_failed": "自动驾驶需要关注：{title}"
+        "autopilot_failed": "自动驾驶需要关注：{title}",
+        "research_ready": "调研已就绪：{title}",
+        "plan_review": "营销计划等待批准：{title}",
+        "plan_changes": "计划需要修改：{title}",
+        "plan_approved": "营销计划已批准：{title}",
+        "optimizations_proposed": "有新的营销优化待审核：{title}"
       },
       "crm": {
         "lead_assigned": "分配给您的线索：{title}",
@@ -3311,7 +3913,10 @@
         "proposal_accepted": "方案已被接受：{title}",
         "proposal_declined": "方案已被拒绝：{title}",
         "proposal_expired": "方案已过期：{title}",
-        "sales_task_assigned": "分配给您的销售任务：{title}"
+        "sales_task_assigned": "分配给您的销售任务：{title}",
+        "outreach_pending": "有邮件待批准：{title}",
+        "sequence_replied": "已回复——序列已停止：{title}",
+        "sequence_failed": "序列邮件无法发送：{title}"
       },
       "finance": {
         "invoice_paid": "发票已付款：{title}",
@@ -3322,7 +3927,10 @@
         "approval_rejected": "已驳回：{title}",
         "bill_overdue": "账单逾期：{title}",
         "budget_warning": "预算已使用 80%：{title}",
-        "budget_exceeded": "预算超支：{title}"
+        "budget_exceeded": "预算超支：{title}",
+        "runway_low": "现金跑道正在变短：{title}",
+        "runway_critical": "现金跑道严重不足：{title}",
+        "cash_negative_forecast": "预测显示现金将耗尽：{title}"
       },
       "hr": {
         "candidate_applied": "新申请：{title}",
@@ -3335,7 +3943,8 @@
         "policy_published": "待确认制度：{title}",
         "request_created": "新的人事申请：{title}",
         "request_updated": "您的人事申请已回复：{title}",
-        "payslip_available": "您的工资单已可查看：{title}"
+        "payslip_available": "您的工资单已可查看：{title}",
+        "headcount_approved": "计划岗位已批准：{title}"
       },
       "comms": {
         "announcement": "新公告：{title}",
@@ -3351,7 +3960,9 @@
         "task_discussion": "任务讨论已开始：{title}",
         "meeting_accepted": "已接受：{title}",
         "meeting_tentative": "待定：{title}",
-        "meeting_declined": "已拒绝：{title}"
+        "meeting_declined": "已拒绝：{title}",
+        "reminder": "提醒：{title}",
+        "meeting_reminder": "10 分钟后开始：{title}"
       },
       "support": {
         "assigned": "分配给你的工单：{title}",
@@ -3359,7 +3970,8 @@
         "customer_reply": "客户已回复：{title}",
         "follow_up": "你的跟进任务：{title}",
         "sla_breached": "SLA 已违约：{title}",
-        "escalated": "工单已升级：{title}"
+        "escalated": "工单已升级：{title}",
+        "csat_low": "客户低分评价：{title}"
       },
       "integrations": {
         "connection_failing": "集成反复失败：{title}"
@@ -3519,7 +4131,12 @@
       "dashboard": "仪表板",
       "import": "导入与导出",
       "settings": "设置",
-      "proposals": "报价方案"
+      "proposals": "报价方案",
+      "today": "今日",
+      "discover": "寻找线索",
+      "outreach": "外联",
+      "sequences": "跟进序列",
+      "meetings": "会议"
     },
     "accountTypes": {
       "PROSPECT": "潜在客户",
@@ -4116,6 +4733,36 @@
         "why": "让客户满意是成本最低的增长方式。",
         "can": "查看每个客户及其人员、交易和历史。",
         "next": "寻找新客户（引导）"
+      },
+      "today": {
+        "what": "你的销售待办清单：每个未结线索和商机的最佳下一步。",
+        "why": "销售靠在对的时机跟进——这份清单确保不会遗漏。",
+        "can": "一键完成每一步。邮件只会生成草稿，发送前由你批准。",
+        "next": "查看待批准的邮件"
+      },
+      "discover": {
+        "what": "描述你的目标客户，我们在网上搜索匹配的企业。",
+        "why": "新客户始于一份合适的联系人名单。",
+        "can": "查看带来源的真实搜索结果，把合适的转为线索。",
+        "next": "前往你的线索"
+      },
+      "outreach": {
+        "what": "发给线索和客户的个性化邮件——由你撰写或由 AI 起草。",
+        "why": "简短、个性化的邮件是开启对话最快的方式。",
+        "can": "起草、编辑、批准并通过你自己已连接的邮箱发送。未经批准不会发送任何内容。",
+        "next": "设置自动跟进"
+      },
+      "sequences": {
+        "what": "跟进序列是一组按计划发送的跟进邮件和提醒。",
+        "why": "大多数商机需要多次跟进；序列替你记住。",
+        "can": "写一次步骤，添加联系人，对方一回复就自动停止。",
+        "next": "查看待批准的邮件"
+      },
+      "meetings": {
+        "what": "你与线索、联系人或商机预约的所有销售会议。",
+        "why": "会议是推动商机的关键——提前准备并记录约定事项。",
+        "can": "下载日历文件，带备注完成会议或取消会议。",
+        "next": "返回今日行动"
       }
     },
     "smartEmpty": {
@@ -4155,6 +4802,453 @@
         "primary": "开始销售",
         "ai": "让 AI 做调研"
       }
+    },
+    "rev": {
+      "connect": "前往集成页面连接",
+      "working": "处理中…",
+      "save": "保存",
+      "cancel": "取消",
+      "edit": "编辑",
+      "readOnly": "你可以查看，但只有负责销售的人员可以在此修改。",
+      "channels": {
+        "mailbox_gmail": "你的 Gmail",
+        "mailbox_outlook": "你的 Outlook 邮箱",
+        "sendgrid": "SendGrid",
+        "google_calendar": "Google 日历",
+        "outlook_calendar": "Outlook 日历"
+      },
+      "engine": {
+        "title": "你的销售引擎",
+        "research": "网络调研",
+        "ai": "AI 撰写与评分",
+        "email": "发送邮件",
+        "calendar": "日历邀请",
+        "on": "已开启 · {detail}",
+        "off": {
+          "research": "未连接——连接 Tavily、Exa 或 SerpApi 以寻找和调研线索。",
+          "ai": "未连接——连接 OpenAI 或 Gemini，让 AI 起草邮件并为线索评分。",
+          "email": "未连接——连接 Gmail、Outlook 或 SendGrid 以发送邮件。",
+          "calendar": "未连接——会议会被保存，并改为提供日历文件。"
+        }
+      },
+      "today": {
+        "eyebrow": "收入引擎",
+        "title": "今日",
+        "subtitle": "每个未结线索和商机的最佳下一步，最紧急的排在前面。",
+        "forecast": "加权预测",
+        "forecastHint": "每个未结商机 × 其赢单概率 · {deals, plural, other {# 个商机}}共 {open}",
+        "approvals": "待批准",
+        "approvalsHint": "等你检查并发送的邮件",
+        "meetings": "本周会议",
+        "meetingsHint": "未来 7 天与客户预约的会议",
+        "followUps": "到期跟进",
+        "followUpsHint": "明天前到期 · {enrolled} 人在序列中",
+        "otherCurrency": "{count, plural, other {# 个其他币种的商机}}未计入预测。",
+        "listTitle": "下一步做什么",
+        "listHint": "基于你的真实记录：负责人、邮件、跟进、回复、会议和报价。",
+        "everyone": "所有人",
+        "mine": "我的",
+        "filter": "显示",
+        "filters": {
+          "all": "全部",
+          "lead": "线索",
+          "deal": "商机"
+        },
+        "types": {
+          "lead": "线索",
+          "deal": "商机"
+        },
+        "focus": "今日重点",
+        "upcoming": "即将到来",
+        "allClear": "目前这里没有待办。",
+        "emptyTitle": "全部完成",
+        "emptyText": "目前没有需要处理的未结线索或商机。添加新线索，让销售持续推进。",
+        "emptyDiscover": "寻找新线索",
+        "emptyAdd": "添加线索"
+      },
+      "nba": {
+        "title": "最佳下一步",
+        "description": "什么最能推动进展，以及原因。",
+        "none": "没有紧急事项——这条记录状态良好。",
+        "open": "打开",
+        "doIt": "执行",
+        "draftIt": "用 AI 起草",
+        "draftNote": "已保存为草稿等待你批准——尚未发送。",
+        "writeYourself": "撰写邮件",
+        "reviewDraft": "查看草稿",
+        "more": "{count, plural, other {另有 # 条建议}}",
+        "priority": {
+          "1": "今天",
+          "2": "尽快",
+          "3": "有空时"
+        },
+        "done": {
+          "assigned": "现在由你负责。",
+          "enriched": "调研已保存。",
+          "qualified": "AI 评估已保存。",
+          "follow_up": "已设置 2 天后的提醒。",
+          "drafted": "草稿已保存待批准。"
+        },
+        "kinds": {
+          "assign_me": {
+            "title": "认领负责",
+            "why": "目前没有负责人，所以没人会跟进。"
+          },
+          "add_email": {
+            "title": "补充邮箱或电话",
+            "why": "你还无法联系到此人。调研没有找到联系方式。"
+          },
+          "enrich": {
+            "title": "调研这家公司",
+            "why": "还没有联系方式——网络调研也许能找到他们是谁以及如何联系。"
+          },
+          "first_email": {
+            "title": "发送第一封邮件",
+            "why": "你有对方的邮箱但尚未联系。一封简短的个人邮件就能开启对话。"
+          },
+          "overdue_follow_up": {
+            "title": "逾期跟进：{note}",
+            "why": "你答应过跟进，日期已过。"
+          },
+          "approve_email": {
+            "title": "批准待发邮件",
+            "why": "这条记录有一封邮件已准备好，等待你确认。"
+          },
+          "qualify": {
+            "title": "判断线索是否合适",
+            "why": "你们已经沟通过，但还没决定是否值得跟进。AI 可根据已知信息评估匹配度。"
+          },
+          "follow_up_email": {
+            "title": "跟进——已沉寂 {days} 天",
+            "why": "一周或更久没有联系。简短跟进能让对方记得你。"
+          },
+          "convert": {
+            "title": "将线索转为商机",
+            "why": "线索已合格。转化会创建联系人、公司和商机，方便跟踪销售。"
+          },
+          "plan_follow_up": {
+            "title": "规划下一步",
+            "why": "没有安排跟进。设置提醒，避免冷场。"
+          },
+          "reengage": {
+            "title": "重新开启对话",
+            "why": "已经沉寂很久（{days} 天）。轻松的问候可能让它重新活跃。"
+          },
+          "set_close_date": {
+            "title": "设置预计成交日期",
+            "why": "没有日期，这个商机无法按月计入预测。"
+          },
+          "close_date_passed": {
+            "title": "成交日期已过",
+            "why": "更新日期，或将商机标记为赢单或输单，让预测保持真实。"
+          },
+          "book_meeting": {
+            "title": "预约会议",
+            "why": "没有安排会议。通话通常是推进商机最快的方式。"
+          },
+          "prepare_meeting": {
+            "title": "准备：{title}",
+            "why": "这场会议在 2 天内。回顾历史和目标。"
+          },
+          "create_proposal": {
+            "title": "发送报价",
+            "why": "这个商机赢单可能性已足够，是时候提交书面报价了。"
+          },
+          "proposal_follow_up": {
+            "title": "跟进你的报价",
+            "why": "报价已发送超过 3 天，尚无决定。"
+          }
+        }
+      },
+      "score": {
+        "title": "为什么是这个分数",
+        "description": "线索评分是简单信号的累加，没有隐藏公式。",
+        "note": "热 ≥ 70 · 温 ≥ 45 · 更低：培育（保持联系）。",
+        "base": "起始分",
+        "workEmail": "工作邮箱",
+        "personalEmail": "个人邮箱（工作邮箱得分更高）",
+        "noEmail": "尚无邮箱",
+        "phone": "电话号码",
+        "company": "已知公司名称",
+        "value": "已填写预估价值",
+        "notesLong": "详细备注",
+        "notesSome": "部分备注",
+        "notesShort": "简短备注",
+        "noNotes": "尚无备注",
+        "stage": "管道中的进展",
+        "lostCap": "已输线索最高 30 分",
+        "cap": "最高 100 分"
+      },
+      "intel": {
+        "enrichTitle": "公司调研",
+        "enrichDescription": "在网上找到的事实，每条都附来源。",
+        "enrichEmpty": "尚无调研。点击调研在网上查找这家公司。",
+        "researchMissing": "网络调研未连接，暂时无法查找。",
+        "enrich": "调研",
+        "enrichAgain": "重新调研",
+        "qualTitle": "AI 匹配度评估",
+        "qualDescription": "AI 评估这个线索成为客户的可能性并说明原因。",
+        "qualEmpty": "尚未评估。AI 只使用这条记录及其调研中的信息。",
+        "aiMissing": "未连接 AI 写作服务，AI 暂时无法为该线索评分。",
+        "qualify": "评估匹配度",
+        "qualifyAgain": "重新评估",
+        "apply": "采用这些答案",
+        "ask": "向线索提问",
+        "noFacts": "AI 在来源中没有找到明确事实——请阅读下方来源。",
+        "sourcesOnly": "连接 AI 写作服务，把这些来源整理成简短事实。",
+        "sources": "{count, plural, other {# 个来源}}",
+        "source": "来源",
+        "by": "来自 {provider} · {date}",
+        "verdicts": {
+          "qualified": "非常匹配",
+          "nurture": "暂不——保持联系",
+          "disqualify": "不匹配",
+          "need_info": "需要更多信息"
+        }
+      },
+      "discover": {
+        "eyebrow": "线索发现",
+        "title": "寻找新线索",
+        "subtitle": "告诉我们你的理想客户是谁。我们在网上搜索并展示真实企业——由你决定联系谁。",
+        "audience": "你卖给谁？",
+        "audienceHint": "尽量具体：企业类型、规模或需求。",
+        "audiencePlaceholder": "例如：提供餐饮外包的独立烘焙店",
+        "location": "在哪里？（可选）",
+        "locationPlaceholder": "例如：上海",
+        "extra": "还有其他要求？（可选）",
+        "extraPlaceholder": "例如：最近开业",
+        "search": "网络搜索",
+        "searching": "搜索中…",
+        "honest": "只显示调研服务返回的真实结果，绝不编造。",
+        "noProvider": "要搜索线索，请连接调研服务（Tavily、Exa 或 SerpApi）。",
+        "results": "{count, plural, =0 {没有结果} other {# 条结果}}",
+        "resultsMeta": "“{query}” · {provider} · {date} · {fresh} 条未处理",
+        "noResults": "搜索没有返回结果。试试换一种方式描述你的客户。",
+        "next": "下一步：打开新线索，点击“调研”了解更多，或点击“用 AI 起草”撰写第一封邮件。",
+        "added": "已添加",
+        "dismissed": "已忽略",
+        "known": "这家公司可能已经是你的线索",
+        "openLead": "打开线索",
+        "addAsLead": "添加为线索",
+        "dismiss": "不合适",
+        "create": "创建线索",
+        "emailIfKnown": "邮箱（仅在已知时填写）",
+        "history": "以往搜索",
+        "historyEmpty": "你的搜索会显示在这里。",
+        "historyMeta": "{results} 条结果 · 已添加 {added} · {date}"
+      },
+      "outreach": {
+        "eyebrow": "个性化外联",
+        "title": "外联",
+        "subtitle": "撰写或用 AI 起草个性化邮件，检查后通过你已连接的邮箱发送。",
+        "queue": "邮件",
+        "compose": "新邮件",
+        "to": "收件人",
+        "noRecipients": "还没有带邮箱的线索或联系人",
+        "groups": {
+          "lead": "线索",
+          "contact": "联系人"
+        },
+        "aiTitle": "让 AI 写草稿",
+        "goal": "邮件的目的？",
+        "goals": {
+          "first_touch": "初次问候",
+          "follow_up": "跟进",
+          "book_meeting": "约会议",
+          "proposal_follow_up": "跟进报价",
+          "re_engage": "重启沉寂的对话",
+          "thank_you": "会后致谢"
+        },
+        "tone": "语气",
+        "tones": {
+          "friendly": "友好",
+          "formal": "正式",
+          "short": "非常简短"
+        },
+        "guidance": "需要 AI 提到什么吗？（可选）",
+        "guidancePlaceholder": "例如：提到我们的春季优惠",
+        "draftWithAi": "用 AI 起草",
+        "drafting": "撰写中…",
+        "aiNote": "AI 只使用记录中的信息。发送前由你检查。",
+        "aiMissing": "连接 OpenAI 或 Gemini 后 AI 才能起草邮件。你仍可自己撰写。",
+        "writeYourself": "自己撰写",
+        "subject": "主题",
+        "body": "正文",
+        "saveDraft": "保存草稿",
+        "saveForApproval": "保存并申请批准",
+        "savedNote": "已保存。可在下方或外联页面找到——在有人批准前不会发送。",
+        "recordTitle": "邮件",
+        "recordDescription": "此人的草稿、待批准和已发送邮件。",
+        "needEmail": "请先为这条记录添加邮箱地址。",
+        "noChannel": "未连接邮箱账号，邮件只能起草不能发送。请连接 Gmail、Outlook 或 SendGrid。",
+        "status": {
+          "DRAFT": "草稿",
+          "PENDING_APPROVAL": "待批准",
+          "SENT": "已发送",
+          "FAILED": "未发送",
+          "CANCELLED": "已丢弃"
+        },
+        "empty": {
+          "DRAFT": "没有草稿。",
+          "PENDING_APPROVAL": "没有待批准的邮件。",
+          "SENT": "还没有发送邮件。",
+          "FAILED": "没有发送失败的邮件。",
+          "CANCELLED": "没有丢弃的邮件。"
+        },
+        "aiDrafted": "AI 草稿",
+        "fromSequence": "{name} · 第 {step} 步",
+        "sentVia": "通过{channel}发送",
+        "approveSend": "批准并发送",
+        "confirmSend": "现在将这封邮件原样发送给 {email}？",
+        "askApproval": "申请批准",
+        "discard": "丢弃",
+        "skipStep": "跳过此步",
+        "kpi": {
+          "pending": "待批准",
+          "pendingHint": "优先检查并发送这些",
+          "sent": "已发送（30 天）",
+          "sentHint": "发给 {people, plural, other {# 人}}",
+          "replies": "回复（30 天）",
+          "repliesHint": "在已连接的收件箱中看到",
+          "rate": "回复率",
+          "rateHint": "回复人数 ÷ 发信人数"
+        }
+      },
+      "seq": {
+        "eyebrow": "自动跟进",
+        "title": "跟进序列",
+        "subtitle": "按计划运行的跟进，对方一回复就停止。",
+        "yours": "你的序列",
+        "empty": "还没有序列。从旁边的示例开始——修改文字即可。",
+        "new": "新建序列",
+        "newHint": "我们填好了一个简单的 4 步示例。把文字改成你的风格。",
+        "name": "名称",
+        "namePlaceholder": "例如：新线索跟进",
+        "description": "简短描述（可选）",
+        "stopOnReply": "对方回复时停止（需要连接 Gmail 或 Outlook 收件箱才能看到回复）",
+        "mergeHint": "可使用 '{{firstName}}'、'{{name}}'、'{{company}}' 和 '{{sender}}' 个性化——会为每个人自动填入。",
+        "kind": "步骤",
+        "kinds": {
+          "EMAIL": "邮件",
+          "TASK": "给你的提醒"
+        },
+        "wait": "等待（天）",
+        "waitDays": "等待 {count, plural, other {# 天}}",
+        "dayN": "第 {day} 天",
+        "up": "上移",
+        "down": "下移",
+        "remove": "删除步骤",
+        "taskNote": "你需要做什么？",
+        "addStep": "添加步骤",
+        "create": "创建序列",
+        "status": {
+          "DRAFT": "未开始",
+          "ACTIVE": "运行中",
+          "PAUSED": "已暂停",
+          "ARCHIVED": "已归档"
+        },
+        "autoBadge": "自动发送",
+        "reviewBadge": "每封邮件由你批准",
+        "stepsCount": "{count, plural, other {# 个步骤}}",
+        "listMeta": "{active} 进行中 · {replied} 已回复 · {completed} 已完成",
+        "back": "全部序列",
+        "stopsOnReply": "回复即停止",
+        "notRunning": "此序列未运行。启动前不会给任何人发邮件。",
+        "replyNeedsMailbox": "要在回复时停止，我们需要能看到回复：请在集成中连接 Gmail 或 Outlook 收件箱。",
+        "steps": "步骤",
+        "run": "启动或停止",
+        "autoSend": "自动发送邮件",
+        "autoSendHint": "开启此项并启动，即表示你批准这些文字——之后每封邮件将按计划发送，不再询问。保持关闭则逐封批准。",
+        "autoSendNoChannel": "请先连接邮箱账号。在此之前，每封邮件都会等待你批准。",
+        "confirmAuto": "将使用这些文字自动发送邮件。现在启动？",
+        "activate": "启动序列",
+        "pause": "暂停",
+        "archive": "归档",
+        "confirmArchive": "归档此序列？其中所有人都会停止，待发邮件将被丢弃。",
+        "addPeople": "添加联系人",
+        "searchPeople": "搜索线索和联系人",
+        "noPeople": "没有匹配且带邮箱的联系人。",
+        "enroll": "添加 {count, plural, =0 {联系人} other {# 人}}",
+        "enrolled": "已添加 {enrolled} 人。跳过 {skipped} 人（已在序列中或没有邮箱）。",
+        "people": "此序列中有 {count, plural, other {# 人}}",
+        "nobody": "还没有人。请在上方添加。",
+        "progress": "第 {done} / {total} 步",
+        "nextAt": "下次 {date}",
+        "waitingApproval": "等待批准",
+        "enrollStatus": {
+          "ACTIVE": "进行中",
+          "PAUSED": "已暂停",
+          "COMPLETED": "已完成",
+          "REPLIED": "已回复",
+          "STOPPED": "已停止",
+          "FAILED": "发送失败"
+        },
+        "stop": "移除",
+        "recordTitle": "跟进序列",
+        "recordDescription": "此人所在的自动跟进。",
+        "noneActive": "还没有运行中的序列。",
+        "pick": "序列",
+        "start": "开始",
+        "enrolledOne": "已加入序列。",
+        "alreadyIn": "已在此序列中（或没有邮箱）。",
+        "manage": "管理序列",
+        "starter": {
+          "s1": "'{{firstName}}'，想请教一个问题",
+          "b1": "'{{firstName}}' 您好：\n\n我了解到 '{{company}}'，想亲自和您联系。我们帮助像您这样的企业节省那些占用客户时间的工作。\n\n下周简短通个电话方便吗？\n\n祝好，\n'{{sender}}'",
+          "s2": "跟进一下",
+          "b2": "'{{firstName}}' 您好：\n\n把我之前的邮件提到您收件箱顶部。如果更方便，我也可以发一份简短介绍代替通话。\n\n'{{sender}}'",
+          "t3": "给 '{{firstName}}' 打电话或在 LinkedIn 上联系",
+          "s4": "需要我先结束这个话题吗？",
+          "b4": "'{{firstName}}' 您好：\n\n一直没有收到回复，我先暂停跟进。如果时机有变，直接回复这封邮件即可。\n\n祝一切顺利，\n'{{sender}}'"
+        }
+      },
+      "meet": {
+        "eyebrow": "客户会议",
+        "pageTitle": "会议",
+        "subtitle": "与线索、联系人或商机预约的所有会议。新会议请在对方页面预约。",
+        "recordTitle": "会议",
+        "recordDescription": "预约通话或拜访并保存备注。",
+        "defaultTitle": "与{name}的会议",
+        "bookNew": "预约会议",
+        "title": "标题",
+        "when": "时间",
+        "duration": "时长",
+        "minutes": "{count} 分钟",
+        "location": "地点",
+        "locationPlaceholder": "视频链接、电话或地址",
+        "agenda": "议程（可选）",
+        "willAdd": "将添加到{calendar}，并把客户设为嘉宾。",
+        "noCalendar": "未连接日历：会议会被保存，你可以下载日历文件自行发送。不会自动邀请任何人。",
+        "book": "预约会议",
+        "result": {
+          "added": "已预约并添加到你的日历。",
+          "not_connected": "已预约。未连接日历——下载日历文件即可分享。",
+          "failed": "已预约，但你的日历拒绝了它。请在会议中重试。",
+          "skipped": "已预约。"
+        },
+        "status": {
+          "SCHEDULED": "已计划",
+          "COMPLETED": "已完成",
+          "CANCELLED": "已取消"
+        },
+        "onCalendar": "已在你的日历中",
+        "onCalendarGuest": "已在你的日历中 · 嘉宾：{email}",
+        "notOnCalendar": "未添加到日历——没有自动邀请任何人",
+        "calendarFailed": "你的日历拒绝了这场会议",
+        "ics": "日历文件",
+        "done": "标记完成",
+        "cancel": "取消会议",
+        "confirmCancel": "取消这场会议？（不会自动通知客户。）",
+        "retry": "添加到日历",
+        "notes": "会议备注",
+        "notesPlaceholder": "约定了什么？下一步是什么？",
+        "saveDone": "保存为已完成",
+        "none": "没有已计划的会议。",
+        "upcoming": "即将到来（{count}）",
+        "emptyUpcoming": "没有已计划的会议。打开线索、联系人或商机，点击“预约会议”。",
+        "past": "更早"
+      },
+      "customersEyebrow": "客户关系"
     }
   },
   "plans": {
@@ -4435,7 +5529,8 @@
       "dashboards": "仪表板",
       "reports": "报表",
       "ai": "AI 洞察",
-      "ceo": "CEO 仪表板"
+      "ceo": "CEO 仪表板",
+      "health": "业务健康度"
     },
     "range": {
       "label": "期间",
@@ -4583,6 +5678,66 @@
         "why": "一眼就能看出资金、销售、交付和团队是否健康。",
         "can": "更改时间段，打开任意数字查看详情，并与上一期比较。",
         "next": "对任何异常之处询问 AI CEO。"
+      }
+    },
+    "health": {
+      "title": "业务健康度",
+      "subtitle": "全公司一个可解释的分数、各部门表现、数据走向以及应对措施。",
+      "dialAria": "业务健康度 {score} 分（满分 100）",
+      "outOf": "满分 100",
+      "eyebrow": "近 30 天对比之前 30 天",
+      "verdict": {
+        "strong": "公司状况良好",
+        "steady": "总体平稳，有需关注之处",
+        "weak": "公司需要关注",
+        "unknown": "数据不足，暂无评分"
+      },
+      "notEnough": "评分至少需要 {min} 个可与上一周期比较的 KPI。添加销售、发票或项目后，评分会自动出现。",
+      "explain": "基于 {metrics} 个真实 KPI：各部门平均 {base} 分；{issues, plural, =0 {没有未解决问题拉低分数} other {# 个未解决问题使分数降低 {penalty}}}。",
+      "howTitle": "评分如何计算",
+      "how1": "您可查看的每个 KPI 都与前 30 天比较。持平为 50；变好则更高，变差则更低（考虑方向：逾期任务越少越好）。",
+      "how2": "部门分数为其 KPI 的平均值；公司分数中财务和销售的权重更高。",
+      "how3": "未解决问题（下滑、逾期工作、即将到期的审批、失败的 AI 工作）会降低分数：严重扣 6 分，警告扣 2 分。",
+      "how4": "不涉及 AI — 相同数据总是得到相同分数。",
+      "last30": "近 30 天",
+      "departmentsTitle": "部门表现",
+      "deptNoScore": "暂无可比较的 KPI",
+      "deptNote": "{improving} 项改善 · {declining} 项下滑 · 共 {total} 个 KPI",
+      "insightsEyebrow": "来自您的数据",
+      "insightsTitle": "需要关注的事项",
+      "insightsHint": "“去处理”会把问题交给 AI 指令：它会规划工作、分派给 AI 员工，并在更改任何内容前征求同意。",
+      "noInsights": "目前未发现问题。",
+      "severity": {
+        "critical": "严重",
+        "warning": "关注",
+        "info": "提示"
+      },
+      "openEvidence": "查看数据",
+      "forecastEyebrow": "预测 — 并非承诺",
+      "forecastTitle": "数据走向",
+      "forecastHint": "穿过最近 12 周的直线趋势，向后延伸 4 周。虚线部分为预测。",
+      "noForecast": "预测至少需要营收等流量类 KPI 的 6 周历史数据。",
+      "fit": "趋势拟合 r² = {r2}",
+      "forecastAria": "{metric}：最近 12 周及 4 周预测",
+      "actual": "实际",
+      "projected": "预测",
+      "lowFit": "历史数据不规律，此预测不可靠。",
+      "projectionNote": "未来 {weeks} 周相对最近 {weeks} 周的预测变化。",
+      "doThis": "去处理",
+      "insight": {
+        "forecast_decline": "预计未来 4 周 {metric} 将变化 {change}%",
+        "department_weak": "{department} 得分 {score}/100 — 大部分 KPI 变差"
+      },
+      "do": {
+        "metric_drop": "本周 {metric} 为什么变化了 {change}%？我们应该怎么做？",
+        "metric_attention": "{metric} 为 {value}。找出原因并提出解决办法。",
+        "overdue_work_tasks": "我们有 {count} 项逾期工作任务。重新规划并建议新的日期和负责人。",
+        "overdue_follow_ups": "我们有 {count} 个逾期的 CRM 跟进。起草跟进内容并排出优先级。",
+        "approvals_expiring": "汇总 24 小时内到期的 {count} 个审批请求，并为每个给出决定建议。",
+        "ai_tasks_failed": "最近有 {count} 个 AI 任务失败。找出原因并提出解决办法。",
+        "ai_employee_over_budget": "{name} 已用完本月 AI 预算。建议如何重新分配工作。",
+        "forecast_decline": "预计未来 4 周 {metric} 将变化 {change}%。解释原因并提出扭转趋势的计划。",
+        "department_weak": "{department} 表现不佳（得分 {score}）。诊断原因并提出改进计划。"
       }
     }
   },
@@ -5090,7 +6245,15 @@
       "attempts": "尝试次数",
       "response": "响应",
       "nextAttempt": "下次尝试 {date}",
-      "redeliver": "重新投递"
+      "redeliver": "重新投递",
+      "verificationSTRIPE": "Stripe 签名（Stripe-Signature）",
+      "verificationGITHUB": "GitHub 签名（X-Hub-Signature-256）",
+      "verificationSHOPIFY": "Shopify 签名（X-Shopify-Hmac-Sha256）",
+      "verificationSLACK": "Slack 签名（X-Slack-Signature）",
+      "signingSecret": "服务商签名密钥",
+      "signingSecretHint": "从服务商的 Webhook 设置中复制。请求将通过 {header} 请求头用它验证；密钥加密存储，不会再次显示。",
+      "presetSaved": "端点已创建。请将其 URL 粘贴到服务商的 Webhook 设置中——使用您的密钥签名的请求会被接受，其余请求将被拒绝并记录。",
+      "presetHelp": "请将此 URL 粘贴到服务商的 Webhook 设置中。每个请求都必须在 {header} 请求头中携带有效的{provider}；未签名、被篡改或重放的请求将被拒绝并记录在下方。"
     },
     "calendarOk": "日历访问正常：{count, plural, other {# 个日历}}（主日历：{primary}）",
     "calendarFailed": "日历检查失败：{error}",
@@ -5195,6 +6358,80 @@
         "payments_link": "支付链接",
         "email_send": "邮件"
       }
+    },
+    "marketplace": {
+      "filters": {
+        "all": "全部",
+        "connected": "已连接并验证",
+        "attention": "需要处理",
+        "available": "可用"
+      },
+      "searchPlaceholder": "按名称、用途或可解锁的功能搜索…",
+      "showAll": "显示全部集成",
+      "categoryCount": "{count, plural, other {# 个集成}}",
+      "states": {
+        "verified": "已验证",
+        "unverified": "尚未验证",
+        "failing": "故障",
+        "ready": "可立即连接",
+        "credentials_required": "需要凭据",
+        "platform_setup": "需管理员配置"
+      },
+      "unlocks": "可解锁",
+      "powering": "正在驱动",
+      "hints": {
+        "ready": "一键连接——在服务商处授权",
+        "credentials_required": "使用您自己的 API 密钥",
+        "platform_setup": "平台管理员需先添加 OAuth 应用"
+      },
+      "cta": {
+        "verified": "管理",
+        "unverified": "立即测试",
+        "failing": "修复连接",
+        "ready": "连接",
+        "credentials_required": "添加凭据",
+        "platform_setup": "查看要求"
+      },
+      "verifiedAgo": "{time}已验证",
+      "verifiedStat": "已连接并验证",
+      "attentionHint": "故障或从未验证",
+      "usageLink": "用量与费用 →",
+      "unverifiedNotice": "这些凭据尚未经服务商验证。请运行“测试连接”——在此之前，此集成不会显示为已连接。",
+      "rateLimit": "速率限制",
+      "rateLimitValue": "此连接每 {window} 最多 {limit} 次调用；Realy 会等待并重试，而不会触及服务商的限制。",
+      "windows": {
+        "sec1": "秒",
+        "sec10": "10 秒",
+        "min1": "分钟",
+        "min15": "15 分钟",
+        "hour1": "小时"
+      }
+    },
+    "guide": {
+      "whatTitle": "这是什么",
+      "what": "贵公司与外部工具的连接——AI、邮件、支付、CRM、广告等——每个连接都有独立的加密凭据。",
+      "whyTitle": "为什么重要",
+      "why": "每个连接都经服务商验证并每日进行健康检查，功能绝不会在无法发送、同步或收费时假装成功。",
+      "aiTitle": "AI 做什么",
+      "ai": "AI 员工只能通过已批准的操作使用已连接的工具；任何对外操作都需您批准，每次调用都会连同费用记录在案。",
+      "nextTitle": "下一步",
+      "nextFix": "{count, plural, other {# 个集成}}需要处理——打开以测试或重新连接。",
+      "nextMore": "连接团队每天使用的下一个工具——下方可查看每个工具能解锁什么。",
+      "nextFirst": "从您最常用的工具开始：连接后，Realy 会立即验证凭据。"
+    },
+    "worker": {
+      "not_configured": {
+        "title": "后台 Worker 未配置",
+        "body": "定时同步、Webhook 重试和每日连接健康检查在 Worker 服务上运行，需要 Redis（REDIS_URL）。本页的手动操作仍可使用。"
+      },
+      "stale": {
+        "title": "后台 Worker 无响应",
+        "body": "Worker 已停止发送心跳。定时同步、Webhook 投递和健康检查将暂停，直到它恢复运行。"
+      },
+      "missing": {
+        "title": "后台 Worker 尚未启动",
+        "body": "尚未记录到任何 Worker 心跳。请启动 Worker 服务（见 docs/deployment.md）以运行同步、Webhook 投递和健康检查。"
+      }
     }
   },
   "workflows": {
@@ -5203,7 +6440,8 @@
       "workflows": "工作流",
       "runs": "运行记录",
       "approvals": "审批",
-      "templates": "模板"
+      "templates": "模板",
+      "monitor": "监控"
     },
     "metrics": {
       "activeWorkflows": "启用中的工作流",
@@ -5343,6 +6581,10 @@
       "deal_approval_gate": {
         "name": "大额交易 → 审批关卡",
         "description": "超过 50,000 的交易需在 48 小时内获得销售经理审批，之后才通知负责人继续。"
+      },
+      "lead_research_score": {
+        "name": "调研、评分并分配新潜在客户",
+        "description": "AI 调研每个新潜在客户并评为热、温或冷，CRM 规则分配负责人，热门潜在客户会立即通知其负责人。"
       }
     },
     "runs": {
@@ -5506,7 +6748,8 @@
         "create_meeting": "安排会议",
         "ai_employee_task": "交给 AI 员工的任务",
         "decompose_goal": "用 AI 分解目标",
-        "send_teams": "发布到 Microsoft Teams"
+        "send_teams": "发布到 Microsoft Teams",
+        "ai_decision": "让 AI 决定"
       },
       "match": "匹配",
       "matchAll": "全部条件",
@@ -5670,7 +6913,10 @@
         "escalateToIds": "升级给",
         "ifNotConnected": "提供方未连接时跳过此步骤（而不是失败）",
         "teamId": "团队 ID",
-        "channelId": "频道 ID"
+        "channelId": "频道 ID",
+        "question": "向 AI 提问",
+        "context": "背景（AI 应查看的内容）",
+        "options": "选项"
       },
       "actionGroups": {
         "crm": "销售与 CRM",
@@ -5726,7 +6972,10 @@
         "escalate": "升级一次，然后拒绝"
       },
       "noTimeout": "无期限等待",
-      "teamsHint": "在 Teams 中通过“获取频道链接”找到团队和频道 ID。使用 Microsoft 365 连接。"
+      "teamsHint": "在 Teams 中通过“获取频道链接”找到团队和频道 ID。使用 Microsoft 365 连接。",
+      "decisionQuestionPlaceholder": "例如：这个潜在客户有多大希望？",
+      "decisionOptionsHint": "两到八个简短选项，用逗号分隔，例如：热、温、冷。",
+      "decisionHint": "AI 员工阅读背景并恰好选择一个选项。自动化会等待答案；后续步骤可在条件或如果/否则中检查所选项。如果 AI 无法选出列出的选项，此步骤会失败，而不会猜测。"
     },
     "events": {
       "lead_created": "新线索",
@@ -5804,6 +7053,11 @@
         "what": "一个自动化：由什么触发、执行哪些步骤。",
         "why": "这里的更改会影响 Realy.si 的自动操作。",
         "can": "编辑步骤、发布新版本、测试，或开启和关闭。"
+      },
+      "monitor": {
+        "what": "每个自动化的健康状况：运行次数、失败内容以及等待人工处理的事项。",
+        "why": "在客户或团队发现之前，及时发现出错的自动化。",
+        "can": "查看失败和警报，重试失败的运行，找出需要关注的自动化。"
       }
     },
     "map": {
@@ -6030,6 +7284,124 @@
         "projectName": "新项目",
         "name": "我的自动化"
       }
+    },
+    "flow": {
+      "aria": "自动化流程",
+      "when": "当发生以下情况",
+      "done": "完成",
+      "everyMinutes": "每 {minutes} 分钟",
+      "daily": "每天 {time}",
+      "weekly": "每{day} {time}",
+      "dueIn": "{days, plural, =0 {今天到期} other {# 天后到期}}",
+      "onlyIf": "仅在以下情况继续",
+      "and": "且",
+      "or": "或",
+      "ifThen": "如果",
+      "yes": "是",
+      "otherwise": "否则",
+      "nothing": "不执行任何操作",
+      "wait": "等待 {amount} {unit}",
+      "remember": "记住“{name}”",
+      "badgeAi": "AI",
+      "badgeApproval": "审批",
+      "badgeExternal": "发送到公司外部"
+    },
+    "compose": {
+      "title": "告诉 Realy.si 要自动化什么",
+      "hint": "像告诉同事一样写下来。保存前你会先看到自动化的流程图。",
+      "label": "描述自动化",
+      "placeholder": "有新潜在客户时，调研他们、给他们打分、分配负责人并通知我",
+      "tryOne": "试试：",
+      "exampleLabels": {
+        "lead": "新潜在客户",
+        "deal": "赢单",
+        "ticket": "紧急工单",
+        "invoice": "逾期发票",
+        "weekly": "周一总结"
+      },
+      "examples": {
+        "lead": "When a new lead comes in, research them, score them, assign them and send me a notification",
+        "deal": "When a deal is won, create a project, schedule a kickoff meeting and notify the team",
+        "ticket": "When a new support ticket arrives, decide how urgent it is, assign it and notify the owner",
+        "invoice": "When an invoice is overdue, create a follow-up task due in 2 days and notify me",
+        "weekly": "Every Monday at 9:00, summarize last week's sales and notify me"
+      },
+      "build": "生成自动化",
+      "building": "正在生成…",
+      "safeNote": "尚未运行任何内容——请先检查。",
+      "sourceAi": "由 AI 设计",
+      "sourceRules": "由规则解析器生成",
+      "aiStatus": {
+        "used": "你已连接的 AI 服务商根据你的描述设计了此自动化，并通过了所有检查。",
+        "not_connected": "未连接 AI 文本服务商，因此由内置的规则解析器生成。它只能理解常见（英文）表达——在集成中连接 OpenAI 或 Gemini 以获得完整理解。",
+        "paused": "此平台的 AI 目前已暂停，因此由内置的规则解析器生成。",
+        "invalid_design": "AI 的设计未通过校验，因此改由规则解析器生成。",
+        "error": "AI 服务商没有响应，因此改由规则解析器生成。"
+      },
+      "flowTitle": "将会发生什么",
+      "nothingUnderstood": "无法转换为任何步骤。请说明触发条件（“有新潜在客户时……”）以及应执行的操作。",
+      "understood": "你的描述是如何被理解的",
+      "theTrigger": "触发条件",
+      "unmatchedTitle": "未转换为步骤",
+      "unmatchedHint": "保存后在编辑器中添加，或改写后重新生成。",
+      "issuesTitle": "此设计尚无效",
+      "reviewHint": "保存后会创建草稿。在下一页你可以调整任何步骤、运行测试、发布并启用。",
+      "saveDraft": "保存为草稿",
+      "startOver": "重新开始",
+      "afterSave": "标记为 AI 或审批的步骤会等待 AI 员工或人员处理；任何发送到公司外部的内容都会先征求同意。",
+      "architectTitle": "询问自动化架构师",
+      "architectHint": "适用于更大的自动化：AI 员工会阅读你现有的工作流和集成，并在后台撰写草稿。"
+    },
+    "monitor": {
+      "lastDays": "最近 {days} 天",
+      "headlineHealthy": "你的自动化运行顺畅。",
+      "headlineDegraded": "{count, plural, other {# 个自动化偶尔失败。}}",
+      "headlineFailing": "{count, plural, other {# 个自动化需要你关注。}}",
+      "headlineHint": "根据真实运行统计（不含测试）。每次打开此页面时更新。",
+      "stats": {
+        "runs": "运行次数",
+        "successRate": "成功率",
+        "failed": "失败",
+        "waitingApproval": "等待审批"
+      },
+      "chartTitle": "每日运行",
+      "chartHint": "每天成功、失败和仍在进行的运行。",
+      "truncated": "非常繁忙的时期——仅统计最近 10,000 次运行。",
+      "chartAria": "每日自动化运行",
+      "day": "日期",
+      "succeeded": "成功",
+      "failed": "失败",
+      "open": "运行中或等待中",
+      "alertsTitle": "需要关注",
+      "alertsHint": "失败的运行、等待超过两天的审批以及疑似卡住的运行。",
+      "noAlerts": "目前没有需要你关注的事项。",
+      "approvalWaiting": "自 {since} 起等待决定",
+      "stuck": "运行时间异常长（自 {since}）",
+      "healthTitle": "各自动化健康状况",
+      "healthHint": "最差的排在前面。圆点为最近十次运行，从旧到新。",
+      "health": {
+        "healthy": "健康",
+        "degraded": "偶有失败",
+        "failing": "失败中",
+        "idle": "尚无运行"
+      },
+      "lastFailure": "上次失败 {when}",
+      "lastRun": "上次运行 {when}",
+      "noRuns": "此期间未运行",
+      "recentAria": "最近的运行",
+      "avgTime": "平均用时",
+      "emptyTitle": "暂无可监控的内容",
+      "emptyBody": "自动化启用并运行后，其健康状况、失败和警报会显示在这里。"
+    },
+    "gallery": {
+      "categories": "模板类别",
+      "all": "全部",
+      "steps": "{count, plural, other {# 个步骤}}",
+      "preview": "查看流程"
+    },
+    "flowCard": {
+      "title": "运作方式（通俗说明）",
+      "hint": "以流程形式展示当前草稿。在构建器中编辑；确认无误后发布并启用。"
     }
   },
   "marketplace": {
@@ -7770,7 +9142,11 @@
       "blog": "博客",
       "ads": "广告",
       "influencers": "达人",
-      "analytics": "分析"
+      "analytics": "分析",
+      "intelligence": "市场洞察",
+      "strategy": "策略",
+      "calendar": "日历",
+      "optimize": "优化"
     },
     "common": {
       "allStatuses": "全部状态",
@@ -8652,6 +10028,26 @@
           "what": "活动把内容、邮件、广告和预算围绕一个目标组织起来。",
           "why": "看清哪项投入带来了线索和收入。",
           "do": "创建活动、记录支出并跟踪结果。"
+        },
+        "intelligence": {
+          "what": "关于市场、竞争对手、受众、趋势、关键词和品牌的调研。",
+          "why": "好的营销始于事实，而不是猜测。",
+          "do": "运行一份调研报告；AI 会把真实的网络来源变成可执行的结论。"
+        },
+        "strategy": {
+          "what": "你的营销计划：定位、目标、渠道和预算。",
+          "why": "清晰的计划让每篇帖子、每封邮件和每个广告朝同一方向发力。",
+          "do": "创建计划，让 AI 根据你的调研起草，然后提交审批。"
+        },
+        "calendar": {
+          "what": "所有已排期的内容、帖子、自动驾驶时段和邮件集中在一个日历里。",
+          "why": "一眼看出空档和冲突，保持稳定节奏。",
+          "do": "把条目拖到另一天即可改期，或选中它设置精确时间。"
+        },
+        "optimize": {
+          "what": "根据你的真实结果计算出的具体改进。",
+          "why": "小而可衡量的改变会累积成更好的结果。",
+          "do": "查看每条建议及其数据；批准后立即生效。"
         }
       },
       "help": {
@@ -9321,6 +10717,397 @@
           "hashtag": "话题标签"
         }
       }
+    },
+    "lifecycle": {
+      "eyebrow": "自主营销部门",
+      "title": "从调研到结果，一个闭环",
+      "subtitle": "下面每个阶段统计的都是公司里的真实工作。点击阶段即可处理；圆点表示有事项在等你。",
+      "nextGap": "从这里开始：{stage}",
+      "needsYou": "需要你处理",
+      "stages": {
+        "research": {
+          "name": "调研",
+          "value": "份报告已就绪",
+          "pending": "{count} 个进行中",
+          "attention": "{count} 个受阻",
+          "empty": "运行第一份调研报告"
+        },
+        "strategy": {
+          "name": "策略",
+          "value": "个生效计划",
+          "pending": "{count} 个审核中",
+          "attention": "{count} 个待批准",
+          "empty": "创建营销计划"
+        },
+        "content": {
+          "name": "内容",
+          "value": "篇草稿",
+          "pending": "{count} 篇审核中",
+          "attention": "{count} 篇待审核",
+          "empty": "起草第一篇内容"
+        },
+        "graphics": {
+          "name": "图像",
+          "value": "个视觉素材（30 天）",
+          "pending": "{count} 个生成中",
+          "attention": "{count} 个失败",
+          "empty": "创建视觉素材"
+        },
+        "campaign": {
+          "name": "活动",
+          "value": "个进行中的活动",
+          "pending": "{count} 个已计划",
+          "attention": "{count} 个需处理",
+          "empty": "启动一个活动"
+        },
+        "schedule": {
+          "name": "排期",
+          "value": "项已排期（14 天）",
+          "pending": "{count} 项待定",
+          "attention": "{count} 项需处理",
+          "empty": "尚无排期"
+        },
+        "publish": {
+          "name": "发布",
+          "value": "次已发布（30 天）",
+          "pending": "{count} 个发布中",
+          "attention": "{count} 个失败",
+          "empty": "连接账号并发布"
+        },
+        "monitor": {
+          "name": "监测",
+          "value": "篇已统计（7 天）",
+          "pending": "{count} 条新评论",
+          "attention": "{count} 条待回复",
+          "empty": "发布后会显示指标"
+        },
+        "analyze": {
+          "name": "分析",
+          "value": "条经验",
+          "pending": "{count} 条待定",
+          "attention": "{count} 条需处理",
+          "empty": "经验需要已发布的帖子"
+        },
+        "optimize": {
+          "name": "优化",
+          "value": "项已应用（30 天）",
+          "pending": "{count} 条建议",
+          "attention": "{count} 条待审核",
+          "empty": "尚无建议"
+        }
+      }
+    },
+    "intelligence": {
+      "title": "营销洞察",
+      "subtitle": "市场、竞争对手、受众、趋势、关键词和品牌调研——来自真实网络来源，保存为报告。",
+      "credentialRequired": "未连接调研服务（Tavily、Exa 或 SerpApi）。调研需要其中之一——没有它就不会编造任何内容。",
+      "aiNotConfigured": "AI 未配置，因此报告只保留来源，没有 AI 摘要。",
+      "readOnly": "你可以阅读调研报告。如需运行新调研，请联系拥有营销管理权限的人。",
+      "atlas": "调研库",
+      "atlasHint": "已保存 {count} 份报告。选择类型进行筛选。",
+      "reports": "全部报告",
+      "reportsHint": "最新的在前。打开报告查看结论、来源和下一步。",
+      "emptyTitle": "尚无调研",
+      "emptyBody": "在上方选择你想了解的内容。调研服务查找来源，AI 分析师只总结来源中写明的内容。",
+      "insightCount": "{count} 条洞察",
+      "kind": {
+        "MARKET": "市场",
+        "COMPETITOR": "竞争对手",
+        "AUDIENCE": "受众",
+        "TRENDS": "热门话题",
+        "KEYWORDS": "关键词",
+        "BRAND": "品牌"
+      },
+      "kindHint": {
+        "MARKET": "规模、增长、买家和价格",
+        "COMPETITOR": "定位、价格、优势",
+        "AUDIENCE": "需求、痛点和他们在哪里搜索",
+        "TRENDS": "人们现在在谈论什么",
+        "KEYWORDS": "人们在搜索什么",
+        "BRAND": "外界如何评价你"
+      },
+      "subjectLabel": {
+        "MARKET": "市场或行业",
+        "COMPETITOR": "你的品类或主要竞争对手",
+        "AUDIENCE": "你的客户是谁",
+        "TRENDS": "话题或行业",
+        "KEYWORDS": "种子关键词或产品",
+        "BRAND": "品牌名称"
+      },
+      "subjectPlaceholder": {
+        "MARKET": "例如：面向代理机构的项目管理软件",
+        "COMPETITOR": "例如：面向小企业的 CRM",
+        "AUDIENCE": "例如：独立执业的理疗师",
+        "TRENDS": "例如：可持续包装",
+        "KEYWORDS": "例如：发票软件",
+        "BRAND": "例如：Acme"
+      },
+      "launcher": {
+        "title": "新建调研",
+        "subtitle": "查询发送到 {provider}；来源会被保存，然后 AI 分析师撰写引用这些来源的结论。",
+        "subtitleNoProvider": "请先连接调研服务——否则报告会被保存为“需要凭据”，不会进行任何调研。",
+        "what": "你想了解什么？",
+        "region": "地区",
+        "competitors": "竞争对手",
+        "notes": "有什么特别要求？",
+        "optional": "可选",
+        "run": "运行调研",
+        "running": "调研中…",
+        "howConnected": "最多需要一分钟，会消耗调研服务的额度。",
+        "howNotConnected": "未连接调研服务——报告会显示缺少什么。"
+      },
+      "status": {
+        "RESEARCHING": "调研中",
+        "SYNTHESIZING": "AI 撰写中",
+        "READY": "已就绪",
+        "SOURCES_ONLY": "仅来源",
+        "CREDENTIAL_REQUIRED": "需要凭据",
+        "FAILED": "失败"
+      },
+      "statusHint": {
+        "RESEARCHING": "正在通过你的调研服务搜索网络。",
+        "SYNTHESIZING": "来源已保存，AI 分析师正在整理结论。",
+        "READY": "结论基于编号的来源。",
+        "SOURCES_ONLY": "来源已保存，但未生成 AI 摘要。",
+        "CREDENTIAL_REQUIRED": "连接调研服务后重新运行。",
+        "FAILED": "调研服务返回了错误。"
+      },
+      "detail": {
+        "title": "调研报告",
+        "subtitle": "{kind} · {date} · 来自 {provider}",
+        "rerun": "重新运行",
+        "usePlan": "用于计划",
+        "failed": "调研失败：{error}",
+        "unstructured": "AI 以自由文本作答，因此其回答显示为摘要。",
+        "stepSearch": "正在搜索 {count} 个查询",
+        "stepSources": "正在保存 {count} 个来源",
+        "stepSynthesize": "根据来源撰写结论",
+        "summary": "摘要",
+        "insights": "关键洞察",
+        "trends": "热门话题",
+        "competitors": "竞争对手",
+        "personas": "受众画像",
+        "persona": {
+          "goals": "目标",
+          "pains": "痛点",
+          "channels": "所在渠道",
+          "objections": "顾虑"
+        },
+        "keywords": "关键词",
+        "keywordsHint": "不会编造搜索量——排名追踪有真实数据后才会显示。",
+        "intent": {
+          "informational": "信息型",
+          "navigational": "导航型",
+          "commercial": "商业型",
+          "transactional": "交易型"
+        },
+        "mentions": "品牌提及",
+        "sentiment": {
+          "positive": "正面",
+          "neutral": "中性",
+          "negative": "负面"
+        },
+        "opportunities": "机会",
+        "risks": "风险",
+        "pricing": "价格",
+        "strengths": "优势",
+        "weaknesses": "劣势",
+        "sources": "来源（{count}）",
+        "sourcesHint": "与调研服务返回的完全一致。",
+        "noSources": "未收集到来源。",
+        "queries": "搜索查询",
+        "aiWork": "此报告的 AI 工作",
+        "toContent": "创建草稿",
+        "contentType": "内容类型",
+        "toSeo": "添加到 SEO 项目",
+        "seoProject": "SEO 项目",
+        "keywordsAdded": "已添加关键词",
+        "noSeoProject": "创建 SEO 项目以追踪这些关键词。"
+      }
+    },
+    "strategy": {
+      "title": "营销策略",
+      "subtitle": "包含定位、可衡量目标、渠道组合和预算的计划——经批准后才驱动工作。",
+      "detailTitle": "营销计划",
+      "timeline": "计划时间线",
+      "timelineHint": "每个条形代表一个计划的周期，点击即可打开。",
+      "today": "今天",
+      "emptyTitle": "尚无计划",
+      "emptyBody": "在下方创建你的第一个计划。AI 可以根据你的调研和结果起草。",
+      "noLive": "没有生效的计划",
+      "noLiveHint": "批准一个计划后，这里会显示其预算分配。",
+      "objectiveCount": "{count} 个目标",
+      "plans": "计划",
+      "noChannels": "尚无渠道",
+      "newPlan": "新建计划",
+      "newPlanHint": "填写名称、周期和预算。创建后可以让 AI 起草其余部分。",
+      "readOnly": "你可以查看计划。创建和批准需要营销管理权限。",
+      "allocation": "已分配 {allocated} / {total}",
+      "allocatedShort": "已分配",
+      "totalBudget": "总预算",
+      "budgetSplit": "预算分配",
+      "approvedAt": "于 {date} 批准",
+      "openCampaign": "打开活动",
+      "changesRequested": "已要求修改：{note}",
+      "goalsHint": "根据你的真实数据作为营销目标追踪。",
+      "noObjectives": "没有目标。",
+      "noResearch": "未关联调研。前往添加：",
+      "status": {
+        "DRAFT": "草稿",
+        "IN_REVIEW": "审核中",
+        "APPROVED": "已批准",
+        "ACTIVE": "生效中",
+        "ARCHIVED": "已归档"
+      },
+      "statusHint": {
+        "DRAFT": "可自由编辑，然后提交审批。",
+        "IN_REVIEW": "等待批准。批准后目标会变成被追踪的指标。",
+        "APPROVED": "已批准。可据此创建活动或标记为生效。",
+        "ACTIVE": "生效中——目标会自动追踪进度。",
+        "ARCHIVED": "已归档。"
+      },
+      "role": {
+        "awareness": "认知",
+        "consideration": "考虑",
+        "conversion": "转化",
+        "retention": "留存"
+      },
+      "form": {
+        "name": "计划名称",
+        "start": "开始",
+        "end": "结束",
+        "budget": "总预算（{currency}）",
+        "budgetHint": "整个周期的预算。",
+        "positioning": "定位",
+        "positioningHint": "面向谁、做什么、为什么选你。",
+        "audience": "受众",
+        "audienceHint": "你想触达谁。",
+        "messaging": "核心信息",
+        "messagingHint": "每行一条。",
+        "objectives": "目标",
+        "objectiveLabel": "说明（可选）",
+        "addObjective": "添加目标",
+        "channels": "渠道与预算",
+        "allocated": "已分配 {allocated} / {total}",
+        "overBudget": "超出总预算",
+        "role": "漏斗角色",
+        "channelBudget": "预算",
+        "cadence": "节奏（例如每周 3 篇）",
+        "rationale": "为什么选这个渠道？",
+        "addChannel": "添加渠道",
+        "research": "基于调研",
+        "save": "保存计划",
+        "create": "创建计划",
+        "saved": "已保存"
+      },
+      "actions": {
+        "submit": "提交审批",
+        "approve": "批准",
+        "requestChanges": "要求修改",
+        "changesPlaceholder": "需要修改什么？",
+        "sendBack": "退回",
+        "createCampaign": "创建活动",
+        "activate": "标记为生效"
+      },
+      "ai": {
+        "title": "AI 策略师",
+        "hint": "AI 首席营销官会根据你的调研、结果和经验起草定位、目标和渠道组合。这只是建议：在你应用之前不会有任何改变。",
+        "draft": "用 AI 起草",
+        "note": "给 AI 的方向（可选）",
+        "noPermission": "运行 AI 需要执行 AI 任务的权限。",
+        "failed": "无法使用 AI 草稿（{error}），请重试。",
+        "proposal": "AI 建议",
+        "assumptions": "{count} 条假设",
+        "apply": "使用此草稿",
+        "applyConfirm": "用 AI 草稿替换计划的定位、目标和渠道吗？"
+      }
+    },
+    "calendar": {
+      "title": "营销日历",
+      "subtitle": "内容、社交帖子、自动驾驶时段和邮件在同一时间线上——拖动即可改期。",
+      "today": "今天",
+      "view": "视图",
+      "views": {
+        "month": "月",
+        "week": "周"
+      },
+      "timezone": "时区",
+      "companyTz": "公司 · {tz}",
+      "localTz": "我的 · {tz}",
+      "filter": "显示",
+      "kinds": {
+        "content": "内容",
+        "post": "社交帖子",
+        "autopilot": "自动驾驶时段",
+        "email": "邮件"
+      },
+      "dragHint": "拖到另一天即可改期——当天的时间保持不变。",
+      "more": "还有 {count} 项",
+      "empty": "此期间没有排期。",
+      "date": "日期",
+      "time": "时间（{tz}）",
+      "move": "移动",
+      "open": "打开",
+      "close": "关闭",
+      "newPost": "新建帖子",
+      "newContent": "新建内容",
+      "rescheduled": "已改期",
+      "lock": {
+        "published": "已发布或已发送——无法移动。",
+        "provider": "已在服务方排期——请在那里修改。",
+        "running": "正在处理中。",
+        "status": "当前状态不允许移动。"
+      }
+    },
+    "optimize": {
+      "title": "优化",
+      "subtitle": "根据你的真实表现计算出的改进。未经你批准不会做任何改变。",
+      "checkNow": "立即检查",
+      "aiReview": "询问 AI 分析师",
+      "stats": {
+        "proposed": "等你处理",
+        "applied": "已应用",
+        "failed": "应用失败",
+        "learnings": "经验"
+      },
+      "proposals": "建议",
+      "proposalsHint": "每条建议都会展示背后的数据。批准后立即应用，并记录真实结果。",
+      "status": {
+        "PROPOSED": "已提议",
+        "APPLIED": "已应用",
+        "REJECTED": "已拒绝",
+        "FAILED": "失败",
+        "EXPIRED": "已过期"
+      },
+      "kind": {
+        "retry_failed_post": "重试失败的帖子",
+        "pause_ad": "暂停广告活动",
+        "ad_budget": "调整广告预算",
+        "autopilot_windows": "发布时间",
+        "shift_cadence": "调整节奏"
+      },
+      "source": {
+        "rules": "来自你的数据",
+        "ai": "AI 分析师"
+      },
+      "emptyTitle": "当前没有建议",
+      "emptyOther": "这里没有内容",
+      "emptyBody": "当数据显示出明确的改进空间时就会出现建议——失败的帖子、浪费的广告支出、更好的发布时间。点击“立即检查”或询问 AI 分析师。",
+      "approve": "批准并应用",
+      "retryApply": "重试",
+      "applying": "应用中…",
+      "confirmApply": "现在应用此更改吗？",
+      "reject": "拒绝",
+      "rejectReason": "原因（可选）",
+      "failedWith": "无法应用：{error}",
+      "rejectedWith": "已拒绝：{note}",
+      "appliedAt": "于 {date} 应用",
+      "learnings": "数据怎么说",
+      "learningsHint": "来自过去 28 天你发布的帖子。",
+      "noLearnings": "已发布帖子有了指标后会显示经验。",
+      "recommendations": "未处理的建议",
+      "open": "打开",
+      "aiReviews": "AI 审查"
     }
   },
   "sales": {
@@ -9733,7 +11520,9 @@
       "payables": "应付账款",
       "approvals": "审批",
       "claims": "费用报销",
-      "start": "从这里开始"
+      "start": "从这里开始",
+      "alerts": "警报",
+      "learn": "术语学习"
     },
     "accounting": {
       "tabs": {
@@ -10354,7 +12143,9 @@
       "byVendor": "按供应商",
       "byCostCenter": "按成本中心",
       "noVendor": "无供应商",
-      "noCostCenter": "无成本中心"
+      "noCostCenter": "无成本中心",
+      "learnHint": "第一次看这些报表？",
+      "learnLink": "了解每一行的含义"
     },
     "settings": {
       "documents": "单据与付款期限",
@@ -10656,6 +12447,18 @@
         "why": "正确的设置让每份单据都准确。",
         "can": "更改公司的默认设置。",
         "next": "返回引导任务"
+      },
+      "alerts": {
+        "what": "现在需要你关注的资金警告。",
+        "why": "逾期付款、跑道缩短或预算超支，越早处理越容易。",
+        "can": "查看每条警报及其重要性，并直接跳到解决办法。",
+        "next": "规划我的现金"
+      },
+      "learn": {
+        "what": "Realy 中用到的每个财务术语，用通俗的话解释。",
+        "why": "管理公司的钱，不需要成为会计。",
+        "can": "搜索一个词，阅读生活化的例子，并打开它所在的页面。",
+        "next": "开始引导任务"
       }
     },
     "os": {
@@ -10875,6 +12678,246 @@
       "payLinkNotConnected": "未连接支付服务商。连接 Razorpay 或 Stripe 即可创建付款链接。",
       "payLinkFailed": "支付服务商拒绝：{error}",
       "payOnline": "在线付款"
+    },
+    "flow": {
+      "title": "钱从哪里来、到哪里去",
+      "hint": "所选期间内，一侧是收入来源，另一侧是成本。带子越宽，金额越大。",
+      "whatIsThis": "这是什么？",
+      "aria": "资金流：收入 {income}，支出 {expenses}",
+      "center": "你的公司",
+      "kept": "留存利润 {amount}",
+      "lost": "支出比收入多 {amount}",
+      "empty": "此期间尚无收入或费用记录。记录一笔销售或费用后，图示就会出现在这里。",
+      "moneyIn": "资金流入",
+      "moneyOut": "资金流出",
+      "income": "收入",
+      "expense": "费用",
+      "profit": "留存利润",
+      "loss": "由储蓄弥补",
+      "other_income": "其他收入",
+      "other_expense": "其他成本"
+    },
+    "alerts": {
+      "runwayTitle": "现金跑道",
+      "runwayHint": "如果一切不变，你的钱能撑多久。",
+      "runwayLabel": "剩余现金月数",
+      "noBurn": "现金流为正",
+      "zones": {
+        "critical": "少于 3 个月",
+        "warning": "3–6 个月",
+        "healthy": "6 个月以上"
+      },
+      "runwayExplain": "跑道 = 银行现金 ÷ 最近 3 个完整月的平均月烧钱额。",
+      "historyTitle": "已发送的警报",
+      "historyHint": "系统发给财务人员的通知。",
+      "historyEmpty": "尚未发送任何现金警报。",
+      "kinds": {
+        "runway_low": "现金跑道正在变短",
+        "runway_critical": "现金跑道严重不足",
+        "cash_negative_forecast": "预测显示现金将耗尽"
+      },
+      "activeTitle": "需要关注",
+      "count": "{count, plural, =0 {无需处理} other {# 条警报}}",
+      "allClearTitle": "一切正常",
+      "allClearText": "没有逾期发票或账单，没有预算超支，跑道健康。一有变化我们会立即通知你。",
+      "planCash": "规划我的现金",
+      "runwayBody": "按目前速度，你的现金（{cash}）大约能撑 {months} 个月，因为你每月的支出比收入多 {burn}。",
+      "runwayTodo": "催收未付发票、推迟非必要支出，或在现金流预测中规划新的收入。",
+      "seeForecast": "查看预测",
+      "negativeBody": "如果未结发票、账单和经常性项目按预期到来，你的银行余额将在 {month} 降至 {amount}。",
+      "projectedLabel": "基于未结发票、账单、经常性项目和近 3 个月趋势的推算——并非事实。",
+      "overdueInvoices": "{count, plural, other {# 张客户发票已逾期}}（{amount}）",
+      "chase": "催收款项",
+      "daysLate": "{count, plural, other {逾期 # 天}}",
+      "overdueBills": "{count, plural, other {# 张供应商账单已逾期}}（{amount}）",
+      "payBills": "支付账单",
+      "budgetOver": "预算已超支：{name}",
+      "budgetNear": "预算即将用完：{name}",
+      "reviewBudget": "查看预算",
+      "budgetBody": "已花费 {actual}，预算 {budget}（{pct}%）。",
+      "howSent": "财务人员每月最多收到一次跑道和预测警报，每张逾期发票或账单一次，以及每个预算达到 80% 和 100% 时各一次。"
+    },
+    "glossary": {
+      "search": "搜索术语…",
+      "groupsLabel": "主题",
+      "tip": "提示：财务中的每个报表和图表在用到这些术语时都会链接到这里。",
+      "noMatch": "没有符合搜索的术语。",
+      "example": "例子",
+      "seeIt": "在你的公司中查看",
+      "groups": {
+        "moneyIn": "流入的钱",
+        "moneyOut": "流出的钱",
+        "bigPicture": "全局概览",
+        "planning": "提前规划",
+        "bookkeeping": "记账"
+      },
+      "terms": {
+        "revenue": {
+          "term": "收入",
+          "short": "在扣除任何成本之前，销售产品或服务赚到的全部钱。",
+          "example": "你以每个 1,000 的价格卖出 10 个网站：收入为 10,000。"
+        },
+        "invoice": {
+          "term": "发票",
+          "short": "发给客户、要求为已交付的内容付款的单据。",
+          "example": "项目完成后你开出一张 2,500 的发票，30 天内到期。"
+        },
+        "receivable": {
+          "term": "应收账款",
+          "short": "客户因尚未支付的发票而欠你的钱。",
+          "example": "三张各 1,000 的未付发票意味着 3,000 应收账款。"
+        },
+        "estimate": {
+          "term": "报价单",
+          "short": "开工前发出的价格方案；客户接受后转为发票。",
+          "example": "你为新标志报价 4,000；客户接受后转成发票。"
+        },
+        "creditNote": {
+          "term": "贷项通知单",
+          "short": "减少客户欠款的单据，例如退款或出错之后。",
+          "example": "你开票 1,200 但同意优惠 200：一张 200 的贷项通知单即可更正。"
+        },
+        "paymentLink": {
+          "term": "付款链接",
+          "short": "客户可以用银行卡在线支付发票的网页链接。",
+          "example": "你在发票邮件中加入付款链接，客户两次点击即可付款。"
+        },
+        "mrr": {
+          "term": "MRR（月度经常性收入）",
+          "short": "每月可依赖的订阅或固定服务费收入。",
+          "example": "20 位客户每月各付 50，MRR 为 1,000。"
+        },
+        "arr": {
+          "term": "ARR（年度经常性收入）",
+          "short": "一整年的经常性收入：MRR × 12。",
+          "example": "MRR 为 1,000 即 ARR 为 12,000。"
+        },
+        "expense": {
+          "term": "费用",
+          "short": "经营业务所花的钱：房租、软件、工资、差旅。",
+          "example": "每月 30 的软件订阅就是一项费用。"
+        },
+        "bill": {
+          "term": "供应商账单",
+          "short": "供应商开给你、需要你支付的发票。",
+          "example": "会计师发来一张 400 的账单，15 日到期。"
+        },
+        "payable": {
+          "term": "应付账款",
+          "short": "你因尚未支付的账单而欠供应商的钱。",
+          "example": "两张分别为 400 和 600 的未付账单意味着 1,000 应付账款。"
+        },
+        "overdue": {
+          "term": "逾期",
+          "short": "已过到期日但尚未付清的发票或账单。",
+          "example": "3 月 1 日到期、3 月 10 日仍未付的发票已逾期 9 天。"
+        },
+        "costCenter": {
+          "term": "成本中心",
+          "short": "你单独追踪支出的公司部分（通常是部门）。",
+          "example": "市场部是一个成本中心：所有广告和代理费用都记到它名下。"
+        },
+        "projectCost": {
+          "term": "项目成本",
+          "short": "在一个项目上的全部花费，与它带来的收入相比较。",
+          "example": "一个客户项目收入 10,000、成本 6,500，盈利 3,500。"
+        },
+        "profit": {
+          "term": "利润",
+          "short": "收入减去所有费用后剩下的部分。负利润即亏损。",
+          "example": "收入 10,000 减费用 7,000 = 利润 3,000。"
+        },
+        "margin": {
+          "term": "利润率",
+          "short": "利润占收入的百分比：每赚一份钱你能留下多少。",
+          "example": "收入 10,000、利润 3,000，利润率 30%。"
+        },
+        "pnl": {
+          "term": "利润表（损益表）",
+          "short": "列出一段时间的收入和费用并显示是否盈利的报表。",
+          "example": "你的 3 月利润表显示收入 12,000、费用 9,000、利润 3,000。"
+        },
+        "balanceSheet": {
+          "term": "资产负债表",
+          "short": "某一天的快照：公司拥有什么（资产）、欠什么（负债）以及所有者的份额（权益）。",
+          "example": "12 月 31 日你有现金 20,000、欠款 5,000，权益为 15,000。"
+        },
+        "asset": {
+          "term": "资产",
+          "short": "公司拥有的有价值的东西：现金、别人欠你的钱、设备。",
+          "example": "你的银行余额和买的笔记本电脑都是资产。"
+        },
+        "liability": {
+          "term": "负债",
+          "short": "公司欠下的东西：未付账单、贷款、应缴税款。",
+          "example": "一笔 10,000 的银行贷款是负债。"
+        },
+        "equity": {
+          "term": "所有者权益",
+          "short": "所有者在公司中的份额：资产减负债。",
+          "example": "资产 30,000 减负债 12,000，权益为 18,000。"
+        },
+        "cashFlow": {
+          "term": "现金流",
+          "short": "一段时间内实际流入和流出银行账户的钱。",
+          "example": "5 月流入 8,000、流出 9,500：现金流为 −1,500。"
+        },
+        "cashBalance": {
+          "term": "现金余额",
+          "short": "你此刻在银行和现金账户中有多少钱。",
+          "example": "两个账户分别有 4,000 和 6,000，现金余额为 10,000。"
+        },
+        "burnRate": {
+          "term": "烧钱速度",
+          "short": "平均每月流出比流入多出的现金。",
+          "example": "每月流出 12,000、流入 8,000，烧钱速度为 4,000。"
+        },
+        "runway": {
+          "term": "现金跑道",
+          "short": "按当前烧钱速度，你的现金还能撑几个月。",
+          "example": "银行有 40,000、每月烧 4,000，跑道为 10 个月。"
+        },
+        "budget": {
+          "term": "预算",
+          "short": "为某类别或部门在一段时间内设定的支出上限。",
+          "example": "你允许市场部每月花 2,000。"
+        },
+        "variance": {
+          "term": "差异",
+          "short": "计划（预算）与实际发生之间的差额。",
+          "example": "预算 2,000，实际 2,300：超支 300。"
+        },
+        "forecast": {
+          "term": "预测",
+          "short": "根据未结发票、账单、经常性项目和近期趋势估算的未来资金。是推算，不是事实。",
+          "example": "下月到期的未结发票预计带来 6,000 流入。"
+        },
+        "ledger": {
+          "term": "总账",
+          "short": "按科目归类的每一笔资金变动的完整清单。报表由它生成。",
+          "example": "“软件”科目列出今年的每笔软件支出。"
+        },
+        "journalEntry": {
+          "term": "会计分录",
+          "short": "一笔记录下来的资金变动，借贷两边始终相等。",
+          "example": "支付房租：房租费用增加 1,000，银行减少 1,000。"
+        },
+        "reconciliation": {
+          "term": "对账",
+          "short": "逐行核对账簿与真实银行对账单是否一致。",
+          "example": "银行显示 5,240，账簿也是 5,240：账户已对平。"
+        },
+        "tax": {
+          "term": "税（增值税 / GST / 销售税）",
+          "short": "加在价格上、向客户收取并上缴政府的税。",
+          "example": "一笔 100 的销售含 13% 增值税：客户付 113，你需缴 13。"
+        },
+        "accrual": {
+          "term": "权责发生制",
+          "short": "在收入或成本发生时记账，而不是在现金流动时。",
+          "example": "3 月完成的工作计入 3 月收入，即使客户 4 月才付款。"
+        }
+      }
     }
   },
   "hr": {
@@ -10948,7 +12991,9 @@
       "requests": "申请",
       "payroll": "薪资",
       "me": "我的人事",
-      "hire": "招聘人员"
+      "hire": "招聘人员",
+      "planning": "人力规划",
+      "documents": "文档"
     },
     "ai": {
       "analystAnswers": "人才分析师的回答",
@@ -11793,7 +13838,8 @@
       "tax": "税务",
       "certificate": "证书",
       "review": "考评",
-      "other": "其他"
+      "other": "其他",
+      "letter": "信函"
     },
     "hire": {
       "title": "招聘人员",
@@ -12133,6 +14179,18 @@
       "chart": {
         "emptyTitle": "架构图上还没有人",
         "addPeople": "添加人员"
+      },
+      "planning": {
+        "what": "你计划增加哪些岗位、何时增加以及成本多少。",
+        "why": "招聘是最大的开支——提前规划能避免现金和工作量上的意外。",
+        "can": "列出未来岗位、审批、查看每季度成本，并一键开始招聘。",
+        "next": "立即招人"
+      },
+      "documents": {
+        "what": "员工的信函和文件，集中在一处。",
+        "why": "员工经常需要正式信函，而你需要整洁的档案。",
+        "can": "根据你的数据生成信函，打开、下载或删除任何文档。",
+        "next": "打开团队名单"
       }
     },
     "empty": {
@@ -12144,6 +14202,181 @@
       "jobs": {
         "title": "没有空缺职位",
         "body": "告诉我们您需要什么样的帮手，AI 会为您撰写招聘启事。"
+      }
+    },
+    "calendar": {
+      "synced": "已在 {provider}",
+      "failed": "日历同步失败",
+      "manual": "未加入日历",
+      "downloadIcs": "添加到日历（.ics）",
+      "sendNow": "发送到日历",
+      "willSync": "面试将添加到 {provider}，并邀请候选人和面试官。",
+      "notConnected": "未连接日历：面试保存在这里，你可以用 .ics 文件将其加入任何日历。",
+      "connect": "连接 Google 或 Microsoft",
+      "providers": {
+        "google_calendar": "Google 日历",
+        "outlook_calendar": "Outlook"
+      }
+    },
+    "planning": {
+      "title": "人力规划",
+      "subtitle": "决定需要谁、什么时候需要、要花多少钱。",
+      "guide": {
+        "title": "三步规划你的团队",
+        "intro": "人力规划就是写下未来几个月需要的岗位，让招聘、资金和工作量相匹配。无需任何人事经验。",
+        "steps": {
+          "list": {
+            "title": "写下岗位",
+            "text": "每个岗位：做什么、几个人、哪个季度、大致年成本。"
+          },
+          "approve": {
+            "title": "批准负担得起的岗位",
+            "text": "把每月成本与现金跑道对照后再批准。"
+          },
+          "hire": {
+            "title": "开始招聘",
+            "text": "一键打开职位和引导式招聘流程。"
+          }
+        }
+      },
+      "stats": {
+        "today": "当前团队",
+        "planned": "计划招聘",
+        "plannedHint": "已批准 {approved} · 招聘中 {hiring}",
+        "annualCost": "计划年成本",
+        "monthlyCost": "新增月成本",
+        "monthlyHint": "这些招聘会给每月烧钱增加多少"
+      },
+      "trajectory": "团队规模变化",
+      "trajectoryHint": "当前人数加上每季度的计划招聘。",
+      "today": "今天",
+      "noQuarters": "添加一个计划岗位，看看团队如何增长。",
+      "byDepartment": "按部门",
+      "byDepartmentHint": "当前人数与计划新增。",
+      "editDepartments": "编辑部门",
+      "current": "当前",
+      "plannedLegend": "计划",
+      "noPeople": "还没有员工或计划岗位。",
+      "roles": "计划岗位",
+      "rolesHint": "按应开始的季度分组。",
+      "status": {
+        "PLANNED": "已计划",
+        "APPROVED": "已批准",
+        "HIRING": "招聘中",
+        "FILLED": "已到岗",
+        "CANCELLED": "已取消"
+      },
+      "priority": {
+        "LOW": "低",
+        "MEDIUM": "中",
+        "HIGH": "高",
+        "CRITICAL": "紧急"
+      },
+      "perYear": "每人每年 {amount}",
+      "hiredOf": "已招 {hired}/{total}",
+      "openHiring": "打开招聘流程",
+      "approve": "批准",
+      "startHiring": "开始招聘",
+      "starting": "正在打开…",
+      "cancel": "取消",
+      "confirmCancel": "取消这个计划岗位？",
+      "empty": "还没有计划岗位。在下方添加第一个。",
+      "add": "添加计划岗位",
+      "addSubmit": "加入计划",
+      "fields": {
+        "title": "岗位",
+        "titlePlaceholder": "例如：客户支持专员",
+        "headcount": "人数",
+        "targetStart": "大约开始时间",
+        "targetStartHint": "保存为该季度的第一天。",
+        "priority": "优先级",
+        "annualCost": "每人年成本（{currency}）",
+        "annualCostHint": "工资再加约 20–30% 的税费和福利。大概的数字即可。",
+        "reason": "为什么需要这个岗位？",
+        "reasonPlaceholder": "例如：支持工单翻倍，回复需要 2 天。"
+      },
+      "ai": {
+        "title": "帮我规划",
+        "hint": "AI 人才分析师会审阅你的团队、在招职位和本计划，并建议下一步招谁。",
+        "guidance": "有什么需要它知道的吗？（可选）",
+        "placeholder": "例如：我们计划明年春天进入德国市场。",
+        "run": "审阅我的计划",
+        "results": "计划审阅",
+        "resultsHint": "来自 AI 人才分析师的建议——由你决定添加什么。"
+      }
+    },
+    "documents": {
+      "title": "人事文档",
+      "subtitle": "生成正式信函，并把每位员工的文件集中存放。",
+      "generateTitle": "生成信函",
+      "generateHint": "选择员工和信函类型，我们会根据其档案自动填写。",
+      "honest": "信函根据 Realy 中的数据生成，并保存在员工文档中。不会自动发送——分享前请审阅、打印并签字。",
+      "libraryTitle": "全部文档",
+      "libraryHint": "已为员工保存 {count, plural, other {# 份文档}}。",
+      "all": "全部",
+      "searchPlaceholder": "按文档或人员搜索",
+      "noMatch": "没有匹配的文档。",
+      "empty": "还没有文档。生成一封信函，或在员工档案中上传文件。"
+    },
+    "docgen": {
+      "noTitle": "团队成员",
+      "noDepartment": "公司",
+      "noManager": "你的经理",
+      "signoff": "此致",
+      "footer": "由 Realy 于 {date} 生成。签字后有效。",
+      "noPeople": "请先添加团队成员——信函会根据其档案填写。",
+      "who": "信函给谁？",
+      "pickPerson": "选择人员",
+      "which": "哪种信函？",
+      "newTitle": "新职位名称",
+      "lastDay": "最后工作日",
+      "lastDayHint": "留空则使用今天。",
+      "language": "信函语言",
+      "details": "补充内容（可选）",
+      "detailsHint": "作为最后一段添加。",
+      "warningDetails": "发生了什么、需要改变什么",
+      "warningHint": "陈述事实：日期、期望、发生的情况、需要在何时前改变什么。",
+      "created": "已生成“{name}”并保存到其文档中。",
+      "open": "打开以打印",
+      "generating": "生成中…",
+      "generate": "生成信函",
+      "generateFor": "生成信函",
+      "tpl": {
+        "employment_verification": {
+          "name": "在职证明",
+          "when": "用于银行、房东或签证：证明此人在本公司工作。",
+          "subject": "在职证明",
+          "recipient": "致相关人士：",
+          "body": "兹证明 {name} 受雇于 {company}，在 {department} 担任 {title}。\n\n{name} 自 {startDate} 起以{employmentType}形式在本公司工作，目前在职。\n\n如需更多信息，请与我们联系。"
+        },
+        "experience": {
+          "name": "工作经历证明",
+          "when": "员工离职时：证明其岗位和任职时间。",
+          "subject": "工作经历证明",
+          "recipient": "致相关人士：",
+          "body": "兹证明 {name} 于 {startDate} 至 {endDate} 期间在 {company} 的 {department} 担任 {title}。\n\n任职期间，{name} 尽职尽责地完成了各项工作。感谢其贡献，并祝其前程似锦。"
+        },
+        "welcome": {
+          "name": "欢迎信",
+          "when": "入职前：欢迎新员工并说明入职安排。",
+          "subject": "欢迎加入 {company}",
+          "recipient": "亲爱的 {name}：",
+          "body": "我们非常高兴欢迎你以 {title} 的身份加入 {company} 的 {department}。\n\n你的入职日期是 {startDate}。{manager} 将担任你的经理，并在最初几周帮助你尽快适应。\n\n入职前如有任何问题，请直接回复我们。期待与你共事。"
+        },
+        "role_change": {
+          "name": "岗位变更确认函",
+          "when": "晋升或调岗：确认新职位和生效日期。",
+          "subject": "新岗位确认",
+          "recipient": "亲爱的 {name}：",
+          "body": "我们很高兴确认，自 {effectiveDate} 起，你在 {company} 的岗位由 {title} 调整为 {newTitle}。\n\n感谢你迄今为止的付出。除非另有书面约定，你的其他雇佣条款保持不变。"
+        },
+        "warning": {
+          "name": "书面警告",
+          "when": "关于行为或绩效的正式书面警告。",
+          "subject": "书面警告",
+          "recipient": "{name}：",
+          "body": "本函是针对你在 {company} 担任 {title} 期间的行为或工作表现发出的正式书面警告。\n\n具体情况如下所述。我们期望你有明显改进，并愿意为此提供支持。如情况没有改善，公司可能采取进一步措施。\n\n你可以书面回复本函，你的回复将与本文件一并存档。"
+        }
       }
     }
   },
@@ -12496,6 +14729,49 @@
         "description": "起草回复或总结会话。草稿绝不会自动发送。",
         "draft": "起草回复",
         "summarize": "总结会话"
+      },
+      "quickDraft": {
+        "guidance": "回复要表达什么？（可选）",
+        "tone": "语气",
+        "tones": {
+          "friendly": "友好",
+          "formal": "正式",
+          "short": "简短"
+        },
+        "write": "用 AI 撰写",
+        "writing": "正在撰写…",
+        "replaceConfirm": "要用 AI 草稿替换你已写的内容吗？",
+        "hint": "AI 会阅读此对话以及 CRM 和客服台对该客户的了解，然后起草回复供你编辑。在你点击发送之前不会发送任何内容。",
+        "done": "草稿由 {model} 撰写。发送前请阅读并编辑。",
+        "usedContext": "已使用：{items}。",
+        "context": {
+          "contact": "联系人",
+          "account": "公司",
+          "deals": "商机",
+          "tickets": "未关闭工单"
+        },
+        "notConnected": "未连接 AI 文本服务商（OpenAI 或 Gemini），因此未生成草稿。你仍可在侧边栏询问幕僚长。",
+        "paused": "此平台的 AI 目前已暂停——未生成草稿。",
+        "failed": "AI 服务商失败：{error}"
+      },
+      "customer": {
+        "title": "客户",
+        "hint": "来自你的 CRM 和客服台。",
+        "dealStatus": {
+          "WON": "已赢单",
+          "LOST": "已输单"
+        }
+      },
+      "unified": {
+        "description": "已连接邮箱的邮件和团队消息，集中在一处。",
+        "views": "收件箱视图",
+        "all": "全部",
+        "email": "邮件",
+        "team": "团队消息",
+        "teamEmpty": "还没有团队对话。在消息或频道中开始一个。",
+        "customer": "客户",
+        "direct": "私信",
+        "channel": "频道"
       }
     },
     "providers": {
@@ -12605,6 +14881,21 @@
         "announcement": "在公告中",
         "meeting": "在会议中"
       }
+    },
+    "reminders": {
+      "title": "提醒",
+      "hint": "为自己设置提醒。会议提醒会在每次会议开始前 10 分钟自动送达。",
+      "what": "提醒我……",
+      "placeholder": "就提案给 Ana 打电话",
+      "when": "时间",
+      "presets": {
+        "in1h": "1 小时后",
+        "tomorrow9": "明天 9:00"
+      },
+      "add": "添加提醒",
+      "remove": "删除提醒",
+      "empty": "没有即将到来的提醒。",
+      "delivered": "今天已送达"
     }
   },
   "support": {
@@ -12614,7 +14905,8 @@
       "customers": "客户",
       "knowledge": "知识库",
       "dashboard": "仪表盘",
-      "settings": "设置"
+      "settings": "设置",
+      "setup": "设置"
     },
     "views": {
       "label": "视图",
@@ -12756,7 +15048,9 @@
         "NO_EMAIL": "回复已保存并显示在工单页面（无邮箱地址）。",
         "QUEUED": "回复已保存；邮件仍在发送中。",
         "NOTE": "备注已添加。"
-      }
+      },
+      "emailNotConnected": "此公司尚未连接电子邮件服务商，回复只会显示在客户的工单页面上——不会发送邮件。",
+      "connectEmail": "在集成中连接邮件"
     },
     "sla": {
       "title": "SLA",
@@ -13152,6 +15446,67 @@
     "emptyKb": {
       "title": "还没有帮助文章",
       "ai": "用 AI 起草文章"
+    },
+    "productLoop": {
+      "title": "产品反馈",
+      "hint": "将该客户反馈的内容分享给产品团队——它会进入反馈综合分析和改进计划。",
+      "none": "尚未分享给产品团队。",
+      "noProducts": "还没有产品——请先在产品工作室中创建一个以分享反馈。",
+      "share": "分享给产品团队",
+      "product": "产品",
+      "feature": "功能（可选）",
+      "noFeature": "无特定功能",
+      "sentiment": "情绪",
+      "sentimentAuto": "来自工单分类",
+      "sentiments": {
+        "POSITIVE": "正面",
+        "NEUTRAL": "中性",
+        "NEGATIVE": "负面"
+      },
+      "summary": "产品团队应该了解什么？",
+      "summaryHint": "留空则使用工单的主题和描述。",
+      "submit": "分享反馈",
+      "cancel": "取消"
+    },
+    "csat": {
+      "title": "我们的服务如何？",
+      "hint": "您的评分能帮助团队改进。7 天内可以修改。",
+      "question": "您对获得的帮助满意吗？",
+      "scoreLabel": "5 星中的 {score} 星",
+      "labels": {
+        "1": "非常不满意",
+        "2": "不满意",
+        "3": "一般",
+        "4": "满意",
+        "5": "非常满意"
+      },
+      "comment": "评论",
+      "commentPlaceholder": "有什么可以做得更好的吗？（可选）",
+      "submit": "提交评分",
+      "update": "更新评分",
+      "thanks": "谢谢——您的评分已保存。",
+      "agentTitle": "客户评分"
+    },
+    "analytics": {
+      "volumeTitle": "工单量——最近 {count} 天",
+      "volumeHint": "每天新建与已解决的工单数。虚线低于面积时，积压在增加。",
+      "volumeLabel": "{days} 天内新建 {opened} 个工单，解决 {solved} 个",
+      "noVolume": "此期间没有工单。",
+      "opened": "新建",
+      "solved": "已解决",
+      "firstResponseMedian": "首次响应（中位数）",
+      "firstResponseP90": "首次响应（90% 在此之内）",
+      "slaFirstResponse": "首次响应 SLA 达成率",
+      "slaResolution": "解决 SLA 达成率",
+      "csatTitle": "客户满意度",
+      "csatHint": "客户在工单解决后于工单页面给出的评分。CSAT 为 4 星和 5 星所占比例。",
+      "csatLabel": "基于 {ratings} 条评分的 CSAT 为 {score}%",
+      "csatMeta": "{ratings} 条评分 · 平均 {average} · {rate}% 的已解决工单有评分",
+      "noRatings": "暂无评分。工单解决后，客户可以在工单页面上评分。",
+      "speedTitle": "按优先级的处理速度",
+      "speedHint": "此期间首次响应和解决所需小时数的中位数。",
+      "medianFirstResponse": "首次响应",
+      "medianResolution": "解决"
     }
   },
   "strategy": {
@@ -13229,7 +15584,18 @@
     "aiWorking": "{count, plural, other {# 个 AI 任务运行中}}",
     "aiQueued": "{count, plural, other {# 个排队中}}",
     "aiIdle": "AI 空闲",
-    "controlName": "Realy Control"
+    "controlName": "Realy Control",
+    "tabs": {
+      "command": "指挥",
+      "approvals": "审批",
+      "tasks": "任务",
+      "workforce": "团队",
+      "more": "更多"
+    },
+    "mobileNavigation": "主要板块",
+    "askAi": "问 AI",
+    "askAiTitle": "指挥你的公司",
+    "askAiHint": "描述你的需求——AI 团队会制定计划，并在做出任何更改前征求你的同意。"
   },
   "authHero": {
     "eyebrow": "面向企业的 AI 操作系统",
@@ -13336,7 +15702,10 @@
       "positioning_review": "定位评估",
       "opportunities_weaknesses": "机会与弱点",
       "goals": "目标与 KPI",
-      "recommended_configuration": "推荐配置"
+      "recommended_configuration": "推荐配置",
+      "web_research": "实时网络研究",
+      "company_blueprint": "公司蓝图",
+      "workforce_plan": "AI 团队计划"
     },
     "sections": {
       "departments": "部门与团队",
@@ -13371,6 +15740,16 @@
           "title": "审阅推荐配置",
           "description": "取消勾选不需要的内容，然后启用。所有内容都会在您的公司中创建，并且可以继续编辑。",
           "approve": "启用配置"
+        },
+        "BLUEPRINT": {
+          "title": "批准你的公司蓝图",
+          "description": "在入门旅程中审阅并编辑推荐的部门、产品、目标、项目和工作流。",
+          "approve": "打开蓝图"
+        },
+        "WORKFORCE": {
+          "title": "聘用你的 AI 团队",
+          "description": "在入门旅程中审阅推荐的 AI 团队及其汇报关系。",
+          "approve": "打开 AI 团队"
         }
       },
       "customName": "或输入您自己的名称",
@@ -14253,7 +16632,12 @@
       "UX_SPEC": "UX 规格",
       "DESIGN_BRIEF": "设计简报",
       "QA_PLAN": "QA 与测试计划",
-      "RELEASE_PLAN": "发布与上市计划"
+      "RELEASE_PLAN": "发布与上市计划",
+      "IDEA_BRIEF": "创意简报",
+      "VALIDATION_REPORT": "验证报告",
+      "LAUNCH_BRIEF": "发布简报",
+      "FEEDBACK_SYNTHESIS": "反馈综合分析",
+      "IMPROVEMENT_PLAN": "改进计划"
     },
     "docHints": {
       "RESEARCH": "市场、竞争对手、客户需求和证据。",
@@ -14264,7 +16648,12 @@
       "UX_SPEC": "用户旅程、流程和无障碍。",
       "DESIGN_BRIEF": "视觉方向、页面、组件和状态。",
       "QA_PLAN": "发布前如何测试产品。",
-      "RELEASE_PLAN": "上线、沟通、支持准备和上市。"
+      "RELEASE_PLAN": "上线、沟通、支持准备和上市。",
+      "IDEA_BRIEF": "问题、谁遇到它、拟议的解决方案以及风险最高的假设。",
+      "VALIDATION_REPORT": "测试了什么、证据，以及继续 / 转向 / 停止的建议。",
+      "LAUNCH_BRIEF": "受众、定位、渠道和时间安排——将成为营销活动简报。",
+      "FEEDBACK_SYNTHESIS": "来自已记录反馈（包括支持工单）的主题、情绪和引述。",
+      "IMPROVEMENT_PLAN": "基于反馈和分析的优先改进项，以及需要关注的 KPI。"
     },
     "docStatus": {
       "DRAFT": "草稿",
@@ -16439,6 +18828,685 @@
     "empty": {
       "title": "全部处理完毕",
       "body": "当有事需要你 — 审批、分配给你的任务、逾期发票 — 都会显示在这里。"
+    }
+  },
+  "productStudio": {
+    "deliverables": {
+      "title": "阶段交付物",
+      "hint": "每个阶段都会产出已保存的成果——共 {total} 项交付物，已有 {saved} 项。AI 产品团队起草，您审阅并保存。",
+      "mapLabel": "交付物地图：已保存 {saved}/{total}",
+      "currentTitle": "当前：{stage} 阶段的交付物",
+      "gateRule": "当下方每项交付物都有已保存版本后，即可批准阶段关卡。",
+      "states": {
+        "missing": "未开始",
+        "drafting": "AI 起草中",
+        "draft": "已保存草稿",
+        "in_review": "审阅中",
+        "approved": "已批准"
+      },
+      "version": "版本 {version} · {date}",
+      "reviewDraft": "AI 草稿已就绪——去审阅",
+      "draftAi": "用 AI 起草",
+      "redraft": "新的 AI 草稿",
+      "backlog": "开发待办列表",
+      "backlogCount": "已完成 {done}/{total} 项任务",
+      "sprints": "{count, plural, =0 {尚未规划冲刺} other {项目中有 # 个冲刺}}",
+      "noProject": "关联或创建开发项目以建立待办列表。",
+      "openSprints": "打开冲刺",
+      "none": "此阶段没有文档类交付物。"
+    },
+    "feedback": {
+      "fromTicket": "打开支持工单"
+    }
+  },
+  "projectsGantt": {
+    "title": "甘特时间线",
+    "hint": "色条为有日期的任务；箭头为依赖关系（完成 → 开始）。高亮的链路是关键路径——其中任何延误都会推迟结束日期。红色箭头表示某任务计划在其所依赖的工作结束前开始。",
+    "label": "包含 {count} 个任务的甘特图",
+    "today": "今天",
+    "summary": {
+      "tasks": "{count, plural, other {# 个任务}}",
+      "dependencies": "{count, plural, other {# 个依赖}}",
+      "critical": "关键路径：{count} 个任务 · {days} 天",
+      "conflicts": "{count, plural, other {# 个日期冲突}}",
+      "late": "{count, plural, other {# 个任务逾期}}"
+    },
+    "legend": {
+      "critical": "关键路径",
+      "conflict": "日期冲突"
+    }
+  },
+  "projectsDeliverables": {
+    "heading": "交付成果",
+    "hint": "此项目承诺交付的成果——已验收 {accepted}/{total}。负责人提交成果链接，项目经理进行验收。",
+    "empty": "暂无交付成果。请添加此项目必须交付的文档、版本或素材。",
+    "status": {
+      "PLANNED": "已计划",
+      "IN_PROGRESS": "进行中",
+      "SUBMITTED": "已提交",
+      "ACCEPTED": "已验收",
+      "REJECTED": "需要修改"
+    },
+    "noOwner": "无负责人",
+    "due": "截止 {date}",
+    "openResult": "打开成果",
+    "start": "开始",
+    "submit": "提交",
+    "link": "成果链接（https）",
+    "accept": "验收",
+    "reject": "要求修改",
+    "rejectNote": "需要修改什么？",
+    "title": "交付成果",
+    "owner": "负责人",
+    "milestone": "里程碑",
+    "noMilestone": "无里程碑",
+    "add": "添加交付成果"
+  },
+  "site": {
+    "nav": {
+      "label": "网站",
+      "platform": "平台",
+      "workforce": "AI 员工团队",
+      "pricing": "价格",
+      "docs": "文档",
+      "blog": "日志",
+      "help": "帮助中心",
+      "signIn": "登录",
+      "start": "免费开始",
+      "openApp": "打开 Realy",
+      "waitlist": "加入候补名单",
+      "openMenu": "打开菜单",
+      "closeMenu": "关闭菜单"
+    },
+    "footer": {
+      "tagline": "一位创始人。一个平台。一整家公司。",
+      "statement": "Realy 是 AI 企业操作系统：你的部门、你的数据和一支 AI 员工团队汇聚一处——每一个会改变事物的 AI 操作，都要等待人来批准。",
+      "platform": "平台",
+      "departments": "部门",
+      "more": "更多部门",
+      "resources": "资源",
+      "copyright": "© {year} Realy",
+      "languages": "支持 English、Deutsch、العربية、हिन्दी 和中文"
+    },
+    "home": {
+      "metaTitle": "Realy——一位创始人。一个平台。一整家公司。",
+      "metaDescription": "AI 企业操作系统：销售、营销、财务、人事、产品和支持汇聚一处，由一支先请示、后行动的 AI 员工团队来运转。",
+      "eyebrow": "AI 企业操作系统",
+      "titleA": "一位创始人。",
+      "titleB": "一个平台。",
+      "titleC": "一整家公司。",
+      "lede": "Realy 把公司的每个部门整合进一个系统，并为它配备一支 AI 员工团队。你来定方向；AI 员工负责规划、起草和准备工作——任何会改变业务的事，都不会在未经你批准的情况下发生。",
+      "ctaPrimary": "创建你的公司",
+      "ctaSecondary": "了解工作方式",
+      "heroNote": "AI 员工只能通过经过权限校验的工具行事。读取是自动的；每一次更改都等你决定。",
+      "story": {
+        "eyebrow": "工作方式",
+        "title": "从一个想法到一家运转的公司，一次批准接着一次。",
+        "lede": "Realy 不是外挂在工具上的聊天机器人，而是公司工作真正发生的地方——因此 AI 能看到全局，你也能看到 AI 做的每一件事。",
+        "s1": {
+          "title": "告诉它你要去哪里",
+          "body": "在指挥中心用简单的话描述一个目标。Realy 会把它变成目标、里程碑和一份可编辑的计划。"
+        },
+        "s2": {
+          "title": "AI 团队规划工作",
+          "body": "角色清晰的 AI 员工——从 AI CEO 到 SDR——把计划拆成任务，并按你的组织架构相互委派。"
+        },
+        "s3": {
+          "title": "他们通过工具完成工作",
+          "body": "每个角色只能使用分配给它的工具。他们读取你的记录和文档，起草邮件、提案和计划，并提出更改建议。"
+        },
+        "s4": {
+          "title": "你来批准——公司在学习",
+          "body": "更改和任何对外操作都会先进入审批。每个决定都会被审计，你保存在公司记忆中的事实会影响之后的每一个任务。"
+        }
+      },
+      "departments": {
+        "eyebrow": "每个部门",
+        "title": "整家公司，在一个互联的系统里。",
+        "lede": "每个部门都有自己的工作区和 AI 角色，并共享同一个公司图谱——客户、产品、人员和文档。",
+        "all": "探索平台"
+      },
+      "workforce": {
+        "eyebrow": "AI 员工团队",
+        "title": "雇用有真实岗位的 AI 员工，而不是一个通用助手。",
+        "lede": "Realy 内置 {count} 个 AI 角色，覆盖管理层、销售、营销、财务、人事、产品、工程、支持和运营。每个角色都有自己的指令、工具和限制，并向上级汇报——最终向你汇报。",
+        "cta": "认识全部 {count} 个角色"
+      },
+      "ladder": {
+        "title": "AI 可以自主做多少",
+        "read": {
+          "title": "读取：自动",
+          "body": "搜索文档、读取记录和分析数据会自动进行，且仅限于你的公司内部。"
+        },
+        "change": {
+          "title": "更改数据：需要批准",
+          "body": "创建线索、项目、发票或其他任何内容都会作为提案提交。在有人批准之前，什么都不会改变。"
+        },
+        "external": {
+          "title": "对外操作：需批准且属高风险",
+          "body": "发送邮件、发布内容或付款会被标记为高风险，并且始终等待人的明确决定。"
+        }
+      },
+      "trust": {
+        "eyebrow": "控制与信任",
+        "title": "让你把工作交给 AI，而不失去掌控。",
+        "lede": "这些保障是平台的一部分，而不是需要你记得打开的设置。",
+        "t1": {
+          "title": "角色与权限",
+          "body": "每个人和每个 AI 工具都要通过细粒度权限校验，范围可以是整个组织或单个公司。"
+        },
+        "t2": {
+          "title": "完整的审计记录",
+          "body": "谁在何时、为何改了什么——包括每个 AI 提案和每次批准——都记录在审计日志中。"
+        },
+        "t3": {
+          "title": "双因素登录与 SSO",
+          "body": "用双因素认证和团队单点登录保护账户。"
+        },
+        "t4": {
+          "title": "随时暂停任何 AI 员工",
+          "body": "随时暂停某个角色、取消任务或拒绝提案。用量上限让 AI 支出可预期。"
+        },
+        "t5": {
+          "title": "多家公司，一个账户",
+          "body": "在一个组织内运营多家公司，每家都有自己的数据、团队和 AI 员工。"
+        },
+        "t6": {
+          "title": "五种语言，支持从右到左",
+          "body": "整个产品支持英语、德语、阿拉伯语、印地语和中文，并为阿拉伯语提供正确的从右到左布局。"
+        }
+      },
+      "pricing": {
+        "title": "简单的套餐，按你的市场定价。",
+        "lede": "价格按国家设定，并以当地货币显示。选择账单国家，即可准确看到你需要支付的金额。",
+        "cta": "查看价格"
+      },
+      "final": {
+        "title": "打造你心中的公司——和一支永不休息的团队一起。",
+        "lede": "加入候补名单，Realy 在你的市场开放时我们会第一时间通知你；如果你所在地区已开放注册，今天就可以创建公司。",
+        "orStart": "已经准备好了？"
+      }
+    },
+    "showcase": {
+      "eyebrow": "产品导览",
+      "title": "看看工作在哪里发生。",
+      "lede": "快速浏览你每天都会用到的界面。这些是真实界面的示意图——在产品中，它们会填满你自己公司的数据。",
+      "tabs": {
+        "command": {
+          "label": "指挥中心",
+          "body": "公司一览：目标、AI 正在做什么、什么在等你，以及一个指挥一切的输入框。"
+        },
+        "approvals": {
+          "label": "审批",
+          "body": "AI 员工提出的每一项更改都会先到这里，附上提出者、理由和风险等级。"
+        },
+        "workforce": {
+          "label": "AI 员工团队",
+          "body": "像真实团队一样组织的 AI 员工：管理者向下属委派，并把阻碍向上升级。"
+        },
+        "brain": {
+          "label": "公司知识库",
+          "body": "就你自己的文档提问，获得附带来源的答案。"
+        },
+        "pipeline": {
+          "label": "销售管道",
+          "body": "线索和交易在你设定的阶段中推进，销售团队同时起草简报、跟进和提案。"
+        }
+      },
+      "preview": {
+        "note": "示意图——不展示任何真实或示例客户数据。",
+        "greeting": "早上好。",
+        "commandPrompt": "准备下周的销售计划",
+        "cmd1": "下周销售计划",
+        "cmd2": "未结交易的跟进草稿",
+        "cmd3": "每周财务摘要",
+        "statusWaiting": "等你处理",
+        "statusRunning": "进行中",
+        "statusDone": "待审阅",
+        "ap1": "向一条线索发送跟进邮件",
+        "ap2": "创建一张发票草稿",
+        "proposedBy": "由 {name} 提出",
+        "riskHigh": "高风险",
+        "riskMedium": "更改数据",
+        "approve": "批准",
+        "reject": "拒绝",
+        "reportsToYou": "向你汇报",
+        "delegation": "管理者向下属委派工作，并上报自己解决不了的问题。",
+        "brainQ": "我们年度套餐的退款政策是什么？",
+        "brainA": "答案来自你自己的文档，每个说法都有出处——如果你的文档没有涵盖这个问题，也会明确说明。",
+        "source1": "你的政策文档",
+        "source2": "你的服务条款",
+        "stages": {
+          "lead": "线索",
+          "qualified": "已认定",
+          "proposal": "提案",
+          "won": "已赢单"
+        },
+        "aiDraft": "AI 草稿已就绪"
+      }
+    },
+    "platform": {
+      "metaTitle": "平台",
+      "eyebrow": "平台",
+      "title": "一套操作系统，运转整家公司。",
+      "lede": "一个共享核心——指挥中心、审批、公司知识库、公司图谱、工作流和集成——其上是每个部门的工作区。",
+      "core": {
+        "eyebrow": "核心",
+        "title": "所有部门共享的部分。",
+        "lede": "因为一切都建立在同一个核心上，销售部门的 AI 员工可以利用财务掌握的信息，而你能在一个地方看到全部。",
+        "command": {
+          "title": "指挥中心",
+          "body": "目标、进度、实时 AI 活动和待你处理的事项。输入一个请求，合适的 AI 角色就会接手。"
+        },
+        "approvals": {
+          "title": "审批",
+          "body": "一个收件箱汇集来自人和 AI 的每一项提案，附带风险等级、理由和完整历史。"
+        },
+        "brain": {
+          "title": "公司知识库",
+          "body": "文档只需上传一次。每个 AI 员工都能搜索，答案附带来源。"
+        },
+        "graph": {
+          "title": "公司图谱",
+          "body": "客户、合作伙伴、产品、团队和人员彼此关联——每个任务都从这里获取上下文。"
+        },
+        "workflows": {
+          "title": "工作流",
+          "body": "用步骤、等待、审批和 AI 任务自动化重复流程，并查看每一次运行。"
+        },
+        "integrations": {
+          "title": "集成",
+          "body": "连接支付、邮件、存储等服务商。凭据加密保存，未连接时不会发送任何内容。"
+        }
+      },
+      "departmentsTitle": "每个部门都有自己的工作区。",
+      "explore": "探索"
+    },
+    "departments": {
+      "metaTitle": "Realy 上的{name}",
+      "eyebrow": "部门",
+      "readDocs": "阅读文档",
+      "whatYouGet": "你可以在这里运转什么",
+      "aiTitle": "你的 AI 团队做什么",
+      "approvalTitle": "始终等你决定的事",
+      "approvalNote": "每项提案都会显示提出者、理由以及它将改变什么。你可以批准、修改或拒绝——决定会被记录下来。",
+      "next": "下一个部门",
+      "sales": {
+        "name": "销售",
+        "tagline": "在你睡觉时也持续推进的销售管道。",
+        "intro": "CRM、销售管道、提案和销售目标集中在一个工作区，AI 销售团队负责研究客户并准备好每一个下一步。",
+        "f1": "线索、联系人和客户账户及其完整历史",
+        "f2": "自定义阶段的交易管道和销售日历",
+        "f3": "提案、目标、佣金和销售报表",
+        "f4": "导入现有联系人并跟踪跟进事项",
+        "ai": "AI SDR、客户经理和销售经理研究线索、撰写客户简报、准备跟进，并根据你的产品和历史起草提案。",
+        "approval": "发给线索的每封邮件、CRM 中的每条新记录，在你批准前都只是提案。不会自动以你的名义发送任何内容。"
+      },
+      "marketing": {
+        "name": "营销",
+        "tagline": "从定位到发布——笔始终握在你手中。",
+        "intro": "营销活动、内容、SEO、邮件、社交、表单和广告汇聚一处，由 AI CMO 带领的 AI 营销团队负责。",
+        "f1": "营销活动、内容日历和品牌素材库",
+        "f2": "SEO 项目、邮件受众和获客表单",
+        "f3": "社交、社区、网红合作和广告工作区",
+        "f4": "营销分析和一个由你审核的自动驾驶队列",
+        "ai": "AI CMO、内容写手、SEO 专家和活动策划依据你自己的文档起草定位、活动计划、文章和帖子。",
+        "approval": "发布、发送和花费都要等你批准。AI 不会在草稿中编造客户、成果或数据。"
+      },
+      "finance": {
+        "name": "财务",
+        "tagline": "始终最新的账目，以及能讲清楚它们的 CFO。",
+        "intro": "发票、账单、报价、会计、预算和现金流，由 AI CFO 和记账员让你随时掌握情况。",
+        "f1": "发票、报价单、贷项通知单和定期账单",
+        "f2": "账单、供应商、应付、应收和报销",
+        "f3": "日记账、会计期间、对账和税务",
+        "f4": "预算、现金流和财务报表",
+        "ai": "AI CFO 解释你的数字有哪些变化并回答财务问题；AI 记账员根据你的记录准备分录和草稿。",
+        "approval": "每笔分录、每张发票或与付款相关的更改都会先作为提案。资金只会通过已连接的服务商、并且只在批准后流动。"
+      },
+      "people": {
+        "name": "人事",
+        "tagline": "用心招聘、入职和支持你的团队。",
+        "intro": "员工、招聘、入职、休假、工时、薪资和绩效，并为招聘人员和人事问题提供 AI 帮助。",
+        "f1": "员工目录、文档和自助服务",
+        "f2": "职位空缺、候选人、面试和录用",
+        "f3": "入职清单、休假、工时和申请",
+        "f4": "薪资组成、绩效和人事制度",
+        "ai": "AI 招聘官汇总候选人信息，人事制度助手依据你自己的制度回答问题，人员分析师揭示趋势。",
+        "approval": "关于人的决定由人来做。AI 建议会清楚标注，任何员工记录的更改都需要批准。"
+      },
+      "projects": {
+        "name": "项目",
+        "tagline": "让计划变成进展。",
+        "intro": "项目、任务、里程碑和模板与你的目标相连，由 AI 项目经理推动事情向前。",
+        "f1": "带任务、负责人和里程碑的项目",
+        "f2": "跨项目的我的任务和可复用的项目模板",
+        "f3": "与工作关联的目标和里程碑",
+        "f4": "状态摘要和交付风险",
+        "ai": "AI 项目经理起草计划和清单，交付分析师标出风险和缺失的负责人，状态报告自动生成。",
+        "approval": "AI 提出的新项目和里程碑只有在你批准后才会创建。"
+      },
+      "product": {
+        "name": "产品",
+        "tagline": "清楚下一步该做什么，以及为什么。",
+        "intro": "路线图、想法、反馈、优先级和发布，由 AI 产品角色为你撰写文档。",
+        "f1": "路线图、功能看板和发布规划",
+        "f2": "想法和客户反馈集中一处",
+        "f3": "按你的目标为功能排定优先级",
+        "f4": "从调研到发布计划的产品文档",
+        "ai": "AI 产品经理撰写 PRD 和规格说明，产品研究员和 UX 设计师准备调研和简报，发布经理规划发布。",
+        "approval": "AI 提出的新产品、里程碑和路线图更改都要等你批准。"
+      },
+      "support": {
+        "name": "支持",
+        "tagline": "每位客户都有回应，每条回应都经审阅。",
+        "intro": "支持收件箱、客户和知识库，由 AI 客服起草回复和文章。",
+        "f1": "带工单和优先级的共享支持收件箱",
+        "f2": "包含完整历史的客户视图",
+        "f3": "面向团队和客户的知识库",
+        "f4": "支持看板和渠道设置",
+        "ai": "AI 客服根据你的知识库起草回复；支持主管发现反复出现的问题并起草新的知识库文章。",
+        "approval": "给客户的回复和新的公开文章在有人批准前都只是草稿。"
+      },
+      "operations": {
+        "name": "运营",
+        "tagline": "让一切正常运转的流程。",
+        "intro": "流程、清单、供应商、资产和事件——以及把重复部分自动化的工作流。",
+        "f1": "成文的流程和周期性清单",
+        "f2": "供应商、公司资产和事件跟踪",
+        "f3": "包含步骤、等待、审批和 AI 任务的工作流",
+        "f4": "带同步历史和 Webhook 的集成",
+        "ai": "自动化架构师设计工作流，集成工程师帮助连接你的工具，行政助理让组织井井有条。",
+        "approval": "新的工作流和集成更改都会先作为提案，工作流步骤也可以要求批准后才继续。"
+      },
+      "knowledge": {
+        "name": "知识",
+        "tagline": "公司知道的一切，随问随答。",
+        "intro": "公司知识库保存你的文档和记忆；公司图谱把客户、产品、团队和人员连接起来。",
+        "f1": "文档只需上传一次，所有角色都能搜索",
+        "f2": "提出问题，获得附带来源的答案",
+        "f3": "公司记忆：每个 AI 任务都会参考的事实",
+        "f4": "由客户、合作伙伴、产品和团队构成的公司图谱",
+        "ai": "知识库答复员依据你的文档作答并附上引用，知识管理员保持信息有序，研究分析师撰写简报。",
+        "approval": "当你的文档无法回答某个问题时，AI 会直说而不是猜测。向公司图谱添加内容需要批准。"
+      }
+    },
+    "workforce": {
+      "metaTitle": "AI 员工团队",
+      "eyebrow": "AI 员工团队",
+      "title": "一整支 AI 员工团队，每位都有岗位说明。",
+      "lede": "{count} 个角色，直接读取自产品本身。每个角色都有自己的指令、固定的工具和限制——读取之外的一切都要等人来决定。",
+      "rosterEyebrow": "名册",
+      "rosterTitle": "今天就能雇用的每一个角色。",
+      "rosterLede": "按部门分组。数字表示该角色有多少工具可以自主运行，又有多少始终需要批准。",
+      "general": "通用",
+      "autoTools": "自主运行",
+      "approvalTools": "需要批准",
+      "externalTools": "高风险",
+      "ctaTitle": "从小团队开始，随着信任增长再扩大。",
+      "ctaLede": "雇用你需要的角色，给他们目标，在工作完成时逐一批准。"
+    },
+    "pricing": {
+      "title": "随公司一起成长的套餐。",
+      "lede": "价格按市场设定，并以账单国家的货币显示。可选择按月或按年付费。",
+      "interval": "计费周期",
+      "noPlans": "目前没有可公开的套餐。加入候补名单，我们会与你联系。",
+      "faqTitle": "关于价格的问题",
+      "faq": {
+        "q1": {
+          "q": "为什么价格取决于我所在的国家？",
+          "a": "套餐按市场定价，以适应当地购买力和货币。此处选择的国家仅用于显示；你的账单国家会在结账时确认。"
+        },
+        "q2": {
+          "q": "价格含税吗？",
+          "a": "税费在结账时根据你的账单国家计算，并在付款前显示。"
+        },
+        "q3": {
+          "q": "有免费试用吗？",
+          "a": "如果套餐包含试用，试用天数会显示在你所在国家的套餐上。"
+        },
+        "q4": {
+          "q": "如果某个套餐在我的国家不可用怎么办？",
+          "a": "部分套餐尚未在所有市场提供。加入候补名单并告诉我们你在哪里——开放时我们会通知你。"
+        }
+      }
+    },
+    "blog": {
+      "eyebrow": "日志",
+      "title": "关于用 AI 打造公司的笔记。",
+      "lede": "Realy 为什么这样设计——由打造它的团队撰写。",
+      "minutes": "{count, plural, other {阅读约 # 分钟}}",
+      "read": "阅读全文",
+      "more": "更多日志",
+      "posts": {
+        "approvals": {
+          "title": "为什么 Realy 中每个 AI 操作都要等你批准",
+          "excerpt": "自主权需要赢得。我们这样设计 Realy：AI 可以完成几乎所有工作，却不做任何决定。",
+          "intro": "失去对 AI 系统信任最快的方式，就是让它做出你意料之外的事。所以我们从另一端出发：如果 AI 能准备好一切，却不能自行改变任何东西，会怎样？",
+          "h1": "读取是自由的，更改是提案",
+          "p1": "AI 员工能使用的每个工具都有标签。只读工具——搜索文档、查看销售管道、汇总数字——会自动运行。会更改数据的工具则在审批中创建一份提案，用一句话说明将会发生什么。",
+          "h2": "对外操作始终是高风险",
+          "p2": "发送邮件、发布帖子或转移资金都会离开你的公司。这些工具被标记为高风险，除非服务商真正接受，AI 员工绝不能报告已完成。",
+          "h3": "每个决定都有迹可循",
+          "p3": "每个决定都会被审计并附在对应任务上，你随时能看到提出了什么、谁做的决定以及原因。你保存在公司记忆中的事实会进入之后的每个任务——团队会越来越有用，却从不背着你行事。"
+        },
+        "graph": {
+          "title": "用一个公司图谱取代十二个工具",
+          "excerpt": "AI 的能力取决于它能看到的上下文。所以 Realy 把整家公司放在一个互联的模型中。",
+          "intro": "大多数公司依赖十几个互不相通的工具。CRM 里的交易不知道会计里的发票，也不知道支持里的工单。人来弥合这些缺口——AI 做不到。",
+          "h1": "从一开始就全部相连",
+          "p1": "在 Realy 中，客户、产品、团队、人员和文档都在同一个公司图谱里。销售、财务、支持和产品读写的是同一批记录。",
+          "h2": "上下文让 AI 有用",
+          "p2": "当 AI 客户经理准备提案时，它能看到客户的历史、你销售的产品以及描述这些产品的文档——无需任何人在系统之间复制数据。",
+          "h3": "需要时再集成",
+          "p3": "你仍然可以连接你依赖的服务商。凭据加密保存；当服务商未连接时，Realy 会明确说明，而不是假装已经发送。"
+        },
+        "languages": {
+          "title": "从第一天起就为五种语言打造",
+          "excerpt": "伟大的公司诞生于世界各地。Realy 支持英语、德语、阿拉伯语、印地语和中文——包括从右到左。",
+          "intro": "翻译通常是软件后来才加上的。我们很早就决定 Realy 要从核心上支持多语言，因为我们服务的创始人并非都用英语工作。",
+          "h1": "不只是翻译字符串",
+          "p1": "日期、数字和货币遵循各地习惯。复数和语法都得到正确处理，每句话读起来都自然。",
+          "h2": "从右到左，认真对待",
+          "p2": "在阿拉伯语中，整个界面都会镜像：导航、带方向含义的图标以及布局。我们全程使用逻辑间距，不留事后补丁的痕迹。",
+          "h3": "按你的市场定价",
+          "p3": "套餐按国家定价并以当地货币显示，因此价格页面反映的就是你实际所在的市场。"
+        }
+      }
+    },
+    "docs": {
+      "eyebrow": "文档",
+      "title": "在 Realy 上运营公司的指南。",
+      "lede": "简短实用的指南——从创建公司，到设定 AI 员工可以自主做多少。",
+      "allGuides": "全部指南",
+      "next": "下一篇",
+      "helpTitle": "没找到需要的内容？",
+      "helpBody": "在帮助中心搜索快速解答。",
+      "categories": {
+        "start": "入门",
+        "ai": "AI 员工团队",
+        "data": "你的数据",
+        "trust": "安全与地区"
+      },
+      "articles": {
+        "createCompany": {
+          "title": "创建你的公司",
+          "summary": "注册、设置组织和第一家公司，然后进入指挥中心。",
+          "s1h": "注册",
+          "s1p": "用邮箱创建账户并选择你的国家。通过我们发送的邮件验证邮箱地址。在已配置的情况下，你也可以通过外部服务商登录。",
+          "s2h": "设置组织和公司",
+          "s2p": "一个组织可以包含一家或多家公司。入门引导会带你为公司命名并描述业务，这为 AI 团队提供最初的上下文。",
+          "s3h": "从指挥中心开始",
+          "s3p": "指挥中心显示你的目标、AI 正在做什么以及待你处理的事项。在指令框中描述一个目标，即可获得第一份计划。"
+        },
+        "inviteTeam": {
+          "title": "邀请你的团队",
+          "summary": "将成员加入组织并分配合适的角色。",
+          "s1h": "发送邀请",
+          "s1p": "在组织设置中通过邮箱邀请成员。他们会收到加入链接，邀请如未使用将会过期。",
+          "s2h": "选择角色",
+          "s2p": "角色是权限的组合。可以为整个组织或单个公司授予角色，让每个人只能查看和更改其应有的内容。",
+          "s3h": "与 AI 协作",
+          "s3p": "拥有相应权限的成员可以给 AI 员工分配任务并批准提案。每个操作都会记录在审计日志中。"
+        },
+        "aiEmployees": {
+          "title": "AI 员工",
+          "summary": "什么是 AI 员工、如何雇用他们以及如何追踪他们的工作。",
+          "s1h": "角色、工具和限制",
+          "s1p": "AI 员工是一个角色——例如 AI CFO 或 SDR——拥有自己的指令、固定的工具清单以及单个任务内可做多少的限制。它无法使用清单之外的工具。",
+          "s2h": "雇用与组织",
+          "s2p": "在 AI 员工团队中雇用角色，并将其放入你的组织架构。管理者可以向下属委派，任何人都可以把阻碍上报给上级。",
+          "s3h": "任务、用量和成本",
+          "s3p": "每项 AI 工作都是一个可以打开查看的任务：指令、来源、工具调用和结果。用量按天统计，限额让支出可预期。"
+        },
+        "approvals": {
+          "title": "审批与自主程度",
+          "summary": "Realy 如何决定 AI 可以自主做什么、什么需要人来决定。",
+          "s1h": "三个级别",
+          "s1p": "只读工具自动运行。更改数据的工具受监督：它们创建审批请求而不是直接执行。在公司之外起作用的工具——发送、发布、付款——受监督并标记为高风险。",
+          "s2h": "审阅提案",
+          "s2p": "每个审批都会显示提出者、一句话的影响摘要和详细信息。批准即执行，或者附上理由拒绝。",
+          "s3h": "绝不虚报",
+          "s3p": "除非工具确实成功，AI 员工绝不会说某件事已发送或已完成。如果服务商未连接，任务中会写明。"
+        },
+        "brain": {
+          "title": "公司知识库",
+          "summary": "把文档交给 AI 团队，获得附带来源的答案。",
+          "s1h": "添加文档",
+          "s1p": "将文档上传到公司知识库。文档经过处理后，每个 AI 角色都可以搜索，且始终仅限你自己的公司。",
+          "s2h": "带来源提问",
+          "s2p": "在知识库中提问，得到的答案会引用所使用的段落。当你的文档无法覆盖问题时，答案会明确说明。",
+          "s3h": "记忆与公司图谱",
+          "s3p": "公司记忆保存持久的事实——决策、惯例、数字——每个 AI 任务都会参考。AI 员工还会保留以往任务中的简短笔记。公司图谱把客户、产品、团队和人员连接起来，提供上下文。"
+        },
+        "integrations": {
+          "title": "集成",
+          "summary": "连接公司已经在用的服务商。",
+          "s1h": "连接服务商",
+          "s1p": "打开集成并连接服务商。凭据加密存储，仅用于你的公司。",
+          "s2h": "同步与 Webhook",
+          "s2p": "查看每次同步的结果和历史，并管理传入的 Webhook 及其验证方式和投递日志。",
+          "s3h": "未连接时",
+          "s3p": "需要服务商的功能会提示尚未连接，并附上设置链接。没有可用连接时，不会记录任何内容为已发送。"
+        },
+        "security": {
+          "title": "角色与安全",
+          "summary": "权限、双因素登录、单点登录和审计日志。",
+          "s1h": "处处有权限",
+          "s1p": "每个请求——无论来自人还是 AI 工具——都要按组织或公司范围的权限校验。一个组织的数据绝不会被另一个组织看到。",
+          "s2h": "登录保护",
+          "s2p": "为你的账户开启双因素认证，并在组织已配置的情况下使用单点登录。",
+          "s3h": "审计日志",
+          "s3p": "更改、审批和敏感操作会与更改本身一起写入审计日志，记录始终完整。"
+        },
+        "languages": {
+          "title": "语言与地区",
+          "summary": "以五种语言使用 Realy，并查看你所在市场的价格。",
+          "s1h": "选择语言",
+          "s1p": "Realy 支持英语、德语、阿拉伯语、印地语和中文。可随时在语言菜单中切换；你的选择会保存在个人资料中。",
+          "s2h": "从右到左",
+          "s2p": "在阿拉伯语中，整个界面会切换为从右到左布局，包括导航和带方向的图标。",
+          "s3h": "格式与货币",
+          "s3p": "日期、数字和金额遵循你的语言习惯。套餐按国家定价，并以该国货币显示。"
+        }
+      }
+    },
+    "help": {
+      "eyebrow": "帮助中心",
+      "title": "需要什么帮助？",
+      "lede": "关于 Realy、AI 员工团队和你的账户的快速解答。",
+      "search": "搜索答案",
+      "results": "{count, plural, =0 {未找到答案} other {# 条答案}}",
+      "noResults": "没有与搜索匹配的答案。试试其他关键词，或浏览文档。",
+      "readGuide": "阅读《{title}》",
+      "paths": {
+        "docs": {
+          "title": "浏览文档",
+          "body": "设置和运营公司的分步指南。"
+        },
+        "inApp": {
+          "title": "应用内帮助",
+          "body": "已登录？每个页面都会说明用途，“帮我完成”会一步步引导你。"
+        },
+        "contact": {
+          "title": "联系我们",
+          "body": "通过候补名单表单留言，团队会回复你。"
+        }
+      },
+      "faq": {
+        "whatIs": {
+          "q": "Realy 是什么？",
+          "a": "Realy 是 AI 企业操作系统。它把销售、营销、财务、人事、项目、产品、支持和运营等部门整合到一个平台上，并配备一支在你批准下工作的 AI 员工团队。"
+        },
+        "aiActs": {
+          "q": "AI 会不经询问就更改内容吗？",
+          "a": "不会。AI 员工可以自主读取，但对数据的每一次更改都会作为审批请求提交；发送邮件等任何对外操作都会被标记为高风险并等待人来决定。"
+        },
+        "aiCost": {
+          "q": "AI 用量如何限制？",
+          "a": "每个任务都会记录用量。每日上限和单任务上限让支出可预期，你也可以随时暂停任何 AI 员工。"
+        },
+        "data": {
+          "q": "谁能看到我公司的数据？",
+          "a": "只有你组织内拥有相应权限的人员和 AI 角色。每个请求都要经过权限校验，数据绝不会在组织之间流动。"
+        },
+        "connect": {
+          "q": "可以连接我已经在用的工具吗？",
+          "a": "可以。在集成中连接服务商，凭据会加密保存。服务商未连接时，Realy 会告诉你，而不是假装事情已经发生。"
+        },
+        "team": {
+          "q": "可以邀请我的团队吗？",
+          "a": "可以。通过邮箱邀请成员，并为整个组织或单个公司分配角色。"
+        },
+        "security": {
+          "q": "Realy 支持双因素登录吗？",
+          "a": "支持。你可以用双因素认证保护账户，组织也可以使用单点登录。"
+        },
+        "languages": {
+          "q": "支持哪些语言？",
+          "a": "英语、德语、阿拉伯语（从右到左）、印地语和中文——覆盖整个产品。"
+        },
+        "pricing": {
+          "q": "Realy 多少钱？",
+          "a": "套餐按国家定价，在价格页以当地货币显示，税费在结账时计算。"
+        },
+        "waitlist": {
+          "q": "为什么要候补名单？",
+          "a": "Realy 正在逐个市场开放。如果你所在地区尚未开放注册，请加入候补名单，开放后我们会第一时间通知你。"
+        }
+      }
+    },
+    "waitlist": {
+      "pageEyebrow": "抢先体验",
+      "pageTitle": "加入候补名单。",
+      "pageLede": "Realy 正在逐个市场开放。留下邮箱，你可以开始使用时我们会通知你。",
+      "why1": "第一时间知道 Realy 何时在你的市场开放。",
+      "why2": "告诉我们你最希望 AI 先帮哪些部门——这会影响我们的开发方向。",
+      "why3": "轮到你时只发一封邮件。除非你订阅，否则不发简报。",
+      "alreadyOpen": "你所在地区可能已经开放注册。",
+      "email": "工作邮箱",
+      "emailPlaceholder": "you@company.com",
+      "name": "你的姓名",
+      "company": "公司",
+      "role": "你的职位",
+      "rolePlaceholder": "创始人、CEO……",
+      "teamSize": "团队规模",
+      "choose": "请选择…",
+      "teamSizes": {
+        "solo": "只有我",
+        "2-10": "2–10 人",
+        "11-50": "11–50 人",
+        "51-200": "51–200 人",
+        "200+": "200 人以上"
+      },
+      "interests": "你最希望 AI 先在哪里帮忙？",
+      "note": "还有其他想说的吗？",
+      "noteHint": "选填——你希望 Realy 为你做什么？",
+      "consent": "我同意 Realy 通过邮件就使用资格联系我。我可以随时要求移除。",
+      "submit": "加入候补名单",
+      "successTitle": "你已在名单上。",
+      "successBody": "谢谢。Realy 为你准备就绪时，我们会发邮件通知你。",
+      "privacy": "我们只会用你的信息就使用资格联系你，并了解需求。"
     }
   }
 }

@@ -21,6 +21,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   return (
     <PageFrame
       title={t("modules.customers.title")}
+      eyebrow={t("crm.rev.customersEyebrow")}
       subtitle={t("crm.customers.subtitle")}
       actions={
         <>

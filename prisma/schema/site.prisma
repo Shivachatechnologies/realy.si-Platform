@@ -1,0 +1,34 @@
+// Public website (marketing site): platform-level, not tenant data. Waitlist sign-ups from the public site.
+
+enum SiteWaitlistStatus {
+  WAITING
+  INVITED
+  JOINED
+  REMOVED
+}
+
+/// One person on the platform waitlist. Email is stored lower-cased and unique: re-submitting updates the entry
+/// instead of creating a duplicate. No IP address is stored (rate limiting happens in Redis).
+model SiteWaitlistEntry {
+  id        String             @id @default(uuid(7)) @db.Uuid
+  email     String             @unique
+  name      String?
+  company   String?
+  /// Self-described role, e.g. "Founder".
+  role      String?
+  /// Team size bucket chosen on the form ("solo", "2-10", "11-50", "51-200", "200+").
+  teamSize  String?            @map("team_size")
+  /// Departments the person wants AI help with first (site department keys).
+  interests String[]           @default([])
+  note      String?
+  locale    String             @default("en-US")
+  /// Where the sign-up came from (page path or campaign tag), for attribution only.
+  source    String?
+  status    SiteWaitlistStatus @default(WAITING)
+  consentAt DateTime           @map("consent_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@map("site_waitlist_entries")
+}

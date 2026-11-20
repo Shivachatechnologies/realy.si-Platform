@@ -1,3 +1,4 @@
+import { isProviderPreset, PRESET_HEADERS } from "@/server/modules/integrations/webhook-signatures";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,8 +25,11 @@ export default async function HookPage({ params }: PageProps<"/[locale]/integrat
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
+  const preset = isProviderPreset(hook.verification);
   const curl =
-    hook.verification === "TOKEN"
+    preset
+      ? null
+      : hook.verification === "TOKEN"
       ? `curl -X POST '${hook.url}' -H 'content-type: application/json' -H 'x-realy-token: <secret>' -d '{"name":"Ada","email":"ada@example.com"}'`
       : `body='{"name":"Ada"}'; sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac '<secret>' | cut -d' ' -f2)\ncurl -X POST '${hook.url}' -H 'content-type: application/json' -H "${hook.signatureHeader}: sha256=$sig" -d "$body"`;
   return p.render(
@@ -37,10 +41,14 @@ export default async function HookPage({ params }: PageProps<"/[locale]/integrat
         <CardHeader title={hook.name} description={t(`integrations.webhooks.verification${hook.verification}`)} actions={<Badge tone={hook.active ? "success" : "neutral"}>{hook.active ? t("common.enabled") : t("common.disabled")}</Badge>} />
         <CardBody className="grid gap-3">
           <CopyText value={hook.url} label={t("integrations.webhooks.copy")} />
-          <div>
-            <p className="mb-1 text-xs text-muted-foreground">{t("integrations.webhooks.example")}</p>
-            <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 font-mono text-xs">{curl}</pre>
-          </div>
+          {curl ? (
+            <div>
+              <p className="mb-1 text-xs text-muted-foreground">{t("integrations.webhooks.example")}</p>
+              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 font-mono text-xs">{curl}</pre>
+            </div>
+          ) : (
+            <p className="rounded-md bg-muted p-3 text-sm">{t("integrations.webhooks.presetHelp", { provider: t(`integrations.webhooks.verification${hook.verification}`), header: PRESET_HEADERS[hook.verification as keyof typeof PRESET_HEADERS] })}</p>
+          )}
           <p className="text-xs text-muted-foreground">{t("integrations.webhooks.workflowHint")}</p>
           {canManage ? <HookRowActions base={base} hookId={hook.id} active={hook.active} /> : null}
         </CardBody>

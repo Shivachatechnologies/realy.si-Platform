@@ -2,7 +2,7 @@ import { z } from "zod";
 import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { createTask } from "@/server/modules/agents/service";
-import { emailConfigured } from "@/server/modules/email/service";
+import { companyEmailProvider } from "@/server/modules/email/provider";
 import { authorize } from "./common";
 import { ensureSettings, listSlaPolicies, saveSlaPolicy } from "./config";
 
@@ -27,14 +27,16 @@ export const PROMISE_POLICY_NAME = "Our response promise";
 /** Where the setup stands, from the real configuration. */
 export async function setupState(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  const [settings, policies, articles, published, tickets] = await Promise.all([
+  const [settings, policies, articles, published, tickets, email] = await Promise.all([
     ensureSettings(db(), organizationId, companyId),
     listSlaPolicies(ctx, organizationId, companyId),
     db().supportKbArticle.count({ where: { organizationId, companyId } }),
     db().supportKbArticle.count({ where: { organizationId, companyId, status: "PUBLISHED" } }),
     db().supportTicket.count({ where: { organizationId, companyId } }),
+    companyEmailProvider(organizationId, companyId).catch(() => null),
   ]);
-  return { settings, policy: policies.find((p) => p.isDefault) ?? policies[0] ?? null, articles, published, tickets, emailReady: emailConfigured() };
+  // Customer email goes only through the company's own connected provider (see tickets.ts companyOnly).
+  return { settings, policy: policies.find((p) => p.isDefault) ?? policies[0] ?? null, articles, published, tickets, emailReady: email?.scope === "company" };
 }
 
 /** Turn plain-language promises into an SLA policy: urgent issues get a quarter of the time, high half, low double. */

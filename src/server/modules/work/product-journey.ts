@@ -3,6 +3,7 @@ import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { can } from "@/server/modules/rbac/service";
 import { productOf, stageIndex } from "./product-core";
+import { PRODUCT_STAGES, STAGE_DELIVERABLES } from "./product-constants";
 import { docSubject } from "./product-docs";
 import { authorize } from "./shared";
 
@@ -195,5 +196,54 @@ export async function productVisuals(ctx: RequestContext, organizationId: string
     weeks,
     hasProject: !!p.developmentProjectId,
     releases: releases.map((r) => ({ id: r.id, version: r.version, step: r.publishedAt ? 3 : r.status === "RELEASED" ? 2 : r.status === "IN_PROGRESS" ? 1 : 0 })),
+  };
+}
+
+// ─── Stage deliverables (full studio lifecycle) ───
+
+export type DeliverableState = "missing" | "drafting" | "draft" | "in_review" | "approved";
+
+/**
+ * The deliverable each lifecycle stage produces, with its real state: saved document version and status, the latest AI
+ * task drafting it, and for Development the backlog in the linked project. Drives the deliverables map and gate checks.
+ */
+export async function stageDeliverables(ctx: RequestContext, organizationId: string, companyId: string, productId: string) {
+  const chain = await authorize(ctx, organizationId, companyId, "projects.read");
+  const p = await productOf(db(), organizationId, companyId, productId);
+  const canAgents = await can(ctx, "agents.read", chain);
+  const [docs, tasks, backlog, backlogDone, sprints] = await Promise.all([
+    db().productDoc.findMany({ where: { productId, companyId }, select: { kind: true, status: true, currentVersion: true, updatedAt: true } }),
+    canAgents
+      ? db().agentTask.findMany({
+          where: { organizationId, companyId, subjectId: productId, subjectType: { startsWith: "product_doc_" } },
+          orderBy: { createdAt: "desc" },
+          take: 60,
+          select: { id: true, status: true, subjectType: true, createdAt: true },
+        })
+      : [],
+    p.developmentProjectId ? db().workTask.count({ where: { companyId, projectId: p.developmentProjectId, archivedAt: null } }) : 0,
+    p.developmentProjectId ? db().workTask.count({ where: { companyId, projectId: p.developmentProjectId, archivedAt: null, status: "DONE" } }) : 0,
+    p.developmentProjectId ? db().sprint.count({ where: { companyId, projectId: p.developmentProjectId } }) : 0,
+  ]);
+  const current = stageIndex(p.stage);
+  const stages = PRODUCT_STAGES.map((stage, i) => {
+    const items = STAGE_DELIVERABLES[stage].map((kind) => {
+      const d = docs.find((x) => x.kind === kind);
+      const task = tasks.find((x) => x.subjectType === docSubject(kind)) ?? null;
+      const running = !!task && (task.status === "QUEUED" || task.status === "RUNNING");
+      const state: DeliverableState = d ? (d.status === "APPROVED" ? "approved" : d.status === "IN_REVIEW" ? "in_review" : "draft") : running ? "drafting" : "missing";
+      return { kind, state, version: d?.currentVersion ?? null, updatedAt: d?.updatedAt ?? null, task: task ? { id: task.id, status: task.status } : null };
+    });
+    const saved = items.filter((x) => x.state !== "missing" && x.state !== "drafting").length + (stage === "DEVELOPMENT" && backlog > 0 ? 1 : 0);
+    const total = items.length + (stage === "DEVELOPMENT" ? 1 : 0);
+    return { stage, position: i < current ? "past" : i === current ? "current" : "future", items, saved, total };
+  });
+  return {
+    productId: p.id,
+    stage: p.stage,
+    stages,
+    backlog: { projectId: p.developmentProjectId, tasks: backlog, done: backlogDone, sprints },
+    saved: stages.reduce((s, x) => s + x.saved, 0),
+    total: stages.reduce((s, x) => s + x.total, 0),
   };
 }

@@ -3,7 +3,10 @@ import { PageIntro } from "@/components/guide-kit/page-intro";
 import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bot, Download, Paperclip } from "lucide-react";
+import { Bot, Download, Paperclip, Star } from "lucide-react";
+import { ShareWithProduct } from "@/components/support/loop-forms";
+import { ticketProductLinks } from "@/server/modules/support/product-loop";
+import { companyEmailProvider } from "@/server/modules/email/provider";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -40,12 +43,15 @@ export default async function TicketPage({ params, searchParams }: PageProps<"/[
     if (isAppError(err) && err.code === "not_found") notFound();
     throw err;
   });
-  const [agents, categories, teams, tasks] = await Promise.all([
+  const [agents, categories, teams, tasks, productLinks, emailProvider] = await Promise.all([
     listAgents(viewer.ctx, org.id, company.id),
     listCategories(viewer.ctx, org.id, company.id),
     db().team.findMany({ where: { organizationId: org.id, companyId: company.id, archivedAt: null }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     perms.runAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "ticket", tk.id) : Promise.resolve([]),
+    ticketProductLinks(viewer.ctx, org.id, company.id, tk.id),
+    perms.manage ? companyEmailProvider(org.id, company.id).catch(() => null) : Promise.resolve(null),
   ]);
+  const emailConnected = emailProvider?.scope === "company";
   const draftId = typeof sp.draft === "string" ? sp.draft : null;
   const draft = draftId ? tk.messages.find((m) => m.id === draftId && m.isDraft) : null;
   const cls = (tk.classification ?? {}) as { sentiment?: string; matched?: string[]; priority?: string };
@@ -133,6 +139,14 @@ export default async function TicketPage({ params, searchParams }: PageProps<"/[
           {perms.manage ? (
             <CardBody id="reply" className="border-t">
               {tk.status === "CLOSED" ? <Notice className="mb-2">{t("support.reply.closedNotice")}</Notice> : null}
+              {!emailConnected ? (
+                <Notice tone="warning" className="mb-2">
+                  {t("support.reply.emailNotConnected")}{" "}
+                  <Link href={`/${locale}/integrations`} className="underline">
+                    {t("support.reply.connectEmail")}
+                  </Link>
+                </Notice>
+              ) : null}
               <ReplyBox key={draft?.id ?? "reply"} base={base} ticketId={tk.id} status={tk.status} hasEmail={!!tk.requester?.email} prefill={draft ? { id: draft.id, body: draft.body } : null} />
             </CardBody>
           ) : null}
@@ -217,6 +231,45 @@ export default async function TicketPage({ params, searchParams }: PageProps<"/[
             </dl>
           </CardBody>
         </Card>
+        {tk.csatRatedAt ? (
+          <Card>
+            <CardHeader title={t("support.csat.agentTitle")} description={formatDateTime(tk.csatRatedAt, locale, tz)} />
+            <CardBody className="grid gap-2 text-sm">
+              <p className="flex items-center gap-0.5" aria-label={t("support.csat.scoreLabel", { score: tk.csatScore ?? 0 })}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star key={n} className={cn("size-4", n <= (tk.csatScore ?? 0) ? "fill-warning text-warning" : "text-muted-foreground")} aria-hidden />
+                ))}
+              </p>
+              {tk.csatComment ? <p className="text-muted-foreground">“{tk.csatComment}”</p> : null}
+            </CardBody>
+          </Card>
+        ) : null}
+        {productLinks.canRead ? (
+          <Card>
+            <CardHeader title={t("support.productLoop.title")} description={t("support.productLoop.hint")} />
+            <CardBody className="grid gap-3">
+              {productLinks.feedback.length ? (
+                <ul className="grid gap-1.5 text-sm">
+                  {productLinks.feedback.map((f) => (
+                    <li key={f.id} className="flex flex-wrap items-center gap-2">
+                      {f.product ? (
+                        <Link href={`/${locale}/product/${f.product.id}/feedback`} className="font-medium hover:underline">
+                          {f.product.name}
+                        </Link>
+                      ) : null}
+                      {f.feature ? <Badge>{f.feature.title}</Badge> : null}
+                      {f.sentiment ? <Badge tone={f.sentiment === "NEGATIVE" ? "danger" : f.sentiment === "POSITIVE" ? "success" : "neutral"}>{t(`support.productLoop.sentiments.${f.sentiment}`)}</Badge> : null}
+                      <span className="text-xs text-muted-foreground">{formatDate(f.createdAt, locale, tz)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t("support.productLoop.none")}</p>
+              )}
+              {productLinks.canManage ? <ShareWithProduct base={base} ticketId={tk.id} products={productLinks.products} features={productLinks.features} /> : null}
+            </CardBody>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader title={t("support.classification.title")} description={t("support.classification.description")} />
           <CardBody className="grid gap-1 text-sm">

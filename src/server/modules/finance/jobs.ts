@@ -3,6 +3,7 @@ import { markOverdueInvoices, runDueRecurringInvoices } from "./billing";
 import { runDueRecurringExpenses } from "./transactions";
 import { notifyOverdueBills } from "./payables";
 import { runBudgetAlerts } from "./budgets";
+import { runCashAlerts } from "./alerts";
 
 const HOUR = 60 * 60_000;
 
@@ -14,6 +15,7 @@ export const FINANCE_JOBS: ModuleJobs = {
     { name: "finance.overdue_invoices", everyMs: HOUR, run: () => markOverdueInvoices() },
     { name: "finance.overdue_bills", everyMs: HOUR, run: () => notifyOverdueBills() },
     { name: "finance.budget_alerts", everyMs: HOUR, run: () => runBudgetAlerts() },
+    { name: "finance.cash_alerts", everyMs: 6 * HOUR, run: () => runCashAlerts() },
   ],
   onEvent: [],
 };

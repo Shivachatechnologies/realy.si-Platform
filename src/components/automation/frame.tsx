@@ -1,7 +1,8 @@
 import "server-only";
 import type { ReactNode } from "react";
 import { WorkflowsTabs, type WorkflowsTab } from "@/components/automation/tabs";
-import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
+import { Forbidden, NoCompany } from "@/components/automation/page-frame";
+import { PageHeader } from "@/components/ui/page-header";
 import { PageIntro } from "@/components/guide-kit/page-intro";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
@@ -16,13 +17,21 @@ export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: st
   const { viewer, org, company } = await requireOrgContext(locale);
   const pending = company ? await db().workflowApprovalRequest.count({ where: { organizationId: org.id, companyId: company.id, status: "PENDING" } }).catch(() => 0) : 0;
   const wrap = (children: ReactNode, withTabs = true, actions?: ReactNode) => (
-    <PageFrame title={opts.title ?? t("modules.workflows.title")} subtitle={opts.subtitle ?? (opts.title ? undefined : t("workflows.subtitle"))} actions={actions ?? opts.actions}>
+    <div className="mx-auto grid max-w-[1400px] gap-5">
+      <PageHeader
+        variant="editorial"
+        world="automation"
+        eyebrow={t("dna.worlds.automation")}
+        title={opts.title ?? t("modules.workflows.title")}
+        description={opts.subtitle ?? (opts.title ? undefined : t("workflows.subtitle"))}
+        actions={actions ?? opts.actions}
+      />
       {withTabs && tab ? (
         <WorkflowsTabs
           locale={locale}
           active={tab}
           pending={pending}
-          labels={{ workflows: t("workflows.tabs.workflows"), runs: t("workflows.tabs.runs"), approvals: t("workflows.tabs.approvals"), templates: t("workflows.tabs.templates") }}
+          labels={{ workflows: t("workflows.tabs.workflows"), monitor: t("workflows.tabs.monitor"), runs: t("workflows.tabs.runs"), approvals: t("workflows.tabs.approvals"), templates: t("workflows.tabs.templates") }}
         />
       ) : null}
       {withTabs && tab && tab !== "workflows" && company ? (
@@ -35,7 +44,7 @@ export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: st
         />
       ) : null}
       {children}
-    </PageFrame>
+    </div>
   );
   if (!company) return { page: wrap(<NoCompany message={t("company.empty")} />, false) } as const;
   const chain = await companyChain(db(), org.id, company.id);

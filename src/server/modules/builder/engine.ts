@@ -31,6 +31,7 @@ import {
   type StepDef,
 } from "./steps";
 import { importWebsite, WebsiteError } from "./website";
+import { runWebResearch } from "./research";
 
 /**
  * Advances builder runs one step at a time: starts the next step's AI task when the previous one is done, converts a
@@ -82,14 +83,17 @@ async function keyFacts(run: RunRow): Promise<string> {
     if (Array.isArray(d.products)) facts.push(`Products: ${(d.products as { name: string }[]).map((p) => p.name).join(", ")}`);
     if (typeof d.mission === "string") facts.push(`Mission: ${d.mission.slice(0, 300)}`);
     if (Array.isArray(d.departments)) facts.push(`Departments: ${(d.departments as { name: string }[]).map((p) => p.name).join(", ")}`);
+    if (Array.isArray(d.goals)) facts.push(`Company goals: ${(d.goals as { title: string }[]).map((g) => g.title).join("; ")}`);
+    if (Array.isArray(d.objectives)) facts.push(`Objectives: ${(d.objectives as { title: string }[]).map((g) => g.title).join("; ")}`);
+    if (Array.isArray(d.team)) facts.push(`AI team: ${(d.team as { name: string; profile: string }[]).map((m) => `${m.name} (${m.profile})`).join(", ")}`);
   }
-  return facts.join("\n").slice(0, 1500);
+  return facts.join("\n").slice(0, 2500);
 }
 
 function allowedValues(def: StepDef): string {
   const out: string[] = [];
-  if (def.key === "ai_employees" || def.effect === "configuration") out.push(`Valid "profile" keys: ${PROFILE_KEYS.join(", ")}.`);
-  if (def.key === "operational_workflows" || def.effect === "configuration") {
+  if (def.key === "ai_employees" || def.effect === "configuration" || def.effect === "workforce") out.push(`Valid "profile" keys: ${PROFILE_KEYS.join(", ")}.`);
+  if (def.key === "operational_workflows" || def.effect === "configuration" || def.effect === "blueprint") {
     out.push(`Workflow "key": prefer a ready-made template (${WORKFLOW_TEMPLATES.map((t) => t.key).join(", ")}); "trigger" must be one of: ${TRIGGER_EVENTS.join(", ")}.`);
   }
   return out.join("\n");
@@ -148,6 +152,21 @@ async function startAiStep(run: RunRow, step: StepRow, def: StepDef, index: numb
 async function runSystemStep(run: RunRow, step: StepRow) {
   const { count } = await db().builderStep.updateMany({ where: { id: step.id, status: "PENDING" }, data: { status: "APPLYING", attempts: { increment: 1 }, startedAt: new Date() } });
   if (!count) return false;
+  if (step.key === "web_research") {
+    try {
+      const r = await runWebResearch(founderCtx(run), run);
+      // A missing provider or a provider error never blocks the journey: the AI steps continue without live sources
+      // and the Intelligence stage says so (the outcome is kept on the step).
+      await db().builderStep.update({
+        where: { id: step.id },
+        data: { status: r.status === "done" ? "COMPLETED" : "SKIPPED", completedAt: new Date(), result: r as unknown as Prisma.InputJsonValue, brainDocumentId: r.status === "done" ? r.documentId : null },
+      });
+    } catch (err) {
+      logger.warn({ runId: run.id, err: errorText(err) }, "builder web research failed");
+      await db().builderStep.update({ where: { id: step.id }, data: { status: "SKIPPED", completedAt: new Date(), result: { status: "failed", reason: errorReason(err), message: errorText(err) } } });
+    }
+    return true;
+  }
   if (step.key === "website_ingest") {
     if (!run.websiteUrl) {
       await db().builderStep.update({ where: { id: step.id }, data: { status: "SKIPPED", completedAt: new Date() } });
@@ -217,7 +236,9 @@ export async function installPart(run: { id: string; organizationId: string; com
   return r.summary;
 }
 
-async function openDecision(run: RunRow, step: StepRow, kind: "NAME" | "STRUCTURE" | "CONFIGURATION", options: unknown) {
+export type DecisionKind = "NAME" | "STRUCTURE" | "CONFIGURATION" | "BLUEPRINT" | "WORKFORCE";
+
+async function openDecision(run: RunRow, step: StepRow, kind: DecisionKind, options: unknown) {
   await transaction(async (tx) => {
     const open = await tx.builderDecision.findFirst({ where: { runId: run.id, stepId: step.id, status: "OPEN" }, select: { id: true } });
     if (!open) {
@@ -225,7 +246,8 @@ async function openDecision(run: RunRow, step: StepRow, kind: "NAME" | "STRUCTUR
     }
     await tx.builderStep.update({ where: { id: step.id }, data: { status: "WAITING_INPUT" } });
     const { count } = await tx.builderRun.updateMany({ where: { id: run.id, status: "RUNNING" }, data: { status: "WAITING_INPUT" } });
-    if (count) await notifyUsers(tx, run.organizationId, [run.createdById], "builder.input_needed", { companyId: run.companyId, title: run.company.name, href: `/builder/${run.id}#decisions` });
+    const href = kind === "BLUEPRINT" ? "/onboarding?stage=blueprint" : kind === "WORKFORCE" ? "/onboarding?stage=workforce" : `/builder/${run.id}#decisions`;
+    if (count) await notifyUsers(tx, run.organizationId, [run.createdById], "builder.input_needed", { companyId: run.companyId, title: run.company.name, href });
   });
 }
 
@@ -285,6 +307,14 @@ async function applyEffect(run: RunRow, step: StepRow, def: StepDef, data: unkno
     }
     case "configuration": {
       await openDecision(run, step, "CONFIGURATION", data);
+      return { status: "waiting" };
+    }
+    case "blueprint": {
+      await openDecision(run, step, "BLUEPRINT", data);
+      return { status: "waiting" };
+    }
+    case "workforce": {
+      await openDecision(run, step, "WORKFORCE", data);
       return { status: "waiting" };
     }
     case "install": {
@@ -370,14 +400,15 @@ export async function advanceRun(runId: string, opts: { inline?: boolean } = {})
       return transitions + 1;
     }
     const step = steps[index]!;
-    const def = stepDef(mode, step.key);
+    const def = stepDef(mode, step.key, run.journey);
     if (!def) {
       await failStep(run, step, "builder_unknown_step", `Unknown step ${step.key}`);
       return transitions + 1;
     }
     if (step.status === "PENDING") {
       if (def.kind === "system") {
-        if (opts.inline) return transitions;
+        // Quick system steps (web research: a few metered searches) may run inline; website imports wait for the worker.
+        if (opts.inline && step.key !== "web_research") return transitions;
         if (!(await runSystemStep(run, step))) return transitions + 1;
         transitions++;
         continue;
@@ -426,7 +457,7 @@ export async function advanceActiveRuns(): Promise<number> {
 }
 
 /** Steps of a new run, in order. */
-export function initialSteps(mode: RunMode) {
-  return stepsFor(mode).map((s, i) => ({ key: s.key, position: i, profile: s.profile ?? null }));
+export function initialSteps(mode: RunMode, journey = false) {
+  return stepsFor(mode, journey).map((s, i) => ({ key: s.key, position: i, profile: s.profile ?? null }));
 }
 

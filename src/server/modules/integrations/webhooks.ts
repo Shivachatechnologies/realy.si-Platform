@@ -4,7 +4,7 @@ import { isIP } from "node:net";
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { systemContext, type RequestContext } from "@/server/core/context";
-import { decryptSecret, encryptSecret, hmacSha256, randomToken, safeEqual } from "@/server/core/crypto";
+import { decryptSecret, encryptSecret, hmacSha256, randomToken } from "@/server/core/crypto";
 import { env } from "@/server/core/env";
 import { conflict, invalid, notFound } from "@/server/core/errors";
 import { toJson } from "@/server/core/json";
@@ -15,6 +15,8 @@ import { DOMAIN_EVENTS } from "@/server/modules/events/catalog";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { writeAudit } from "@/server/modules/audit/service";
 import { authorizeIntegrations } from "./service";
+import { dispatchJob, WEBHOOKS_QUEUE } from "@/server/core/jobs";
+import { HOOK_VERIFICATIONS, isProviderPreset, verifyHookSignature } from "./webhook-signatures";
 
 const uuid = z.string().uuid();
 const isUuid = (v: string) => uuid.safeParse(v).success;
@@ -24,17 +26,20 @@ const isUuid = (v: string) => uuid.safeParse(v).success;
 const hookPurpose = (hookId: string) => `integrations.hook:${hookId}`;
 const subPurpose = (id: string) => `integrations.webhook:${id}`;
 
-export const hookInput = z.object({
+const hookFields = z.object({
   name: z.string().trim().min(1).max(120),
-  verification: z.enum(["TOKEN", "HMAC_SHA256"]).default("TOKEN"),
+  verification: z.enum(HOOK_VERIFICATIONS).default("TOKEN"),
   signatureHeader: z
     .string()
     .trim()
     .toLowerCase()
     .regex(/^[a-z0-9-]{1,64}$/)
     .default("x-realy-signature"),
+  /** Provider presets (STRIPE, GITHUB, SHOPIFY, SLACK): the signing secret the provider issued. Stored encrypted, never returned. */
+  signingSecret: z.string().trim().min(8).max(500).optional(),
 });
-export const hookUpdateInput = hookInput.partial().extend({ active: z.boolean().optional() });
+export const hookInput = hookFields.refine((v) => !isProviderPreset(v.verification) || !!v.signingSecret, { message: "Enter the signing secret the provider shows for this webhook", path: ["signingSecret"] });
+export const hookUpdateInput = hookFields.partial().extend({ active: z.boolean().optional() });
 
 export const hookUrl = (hookId: string) => `${env().APP_URL}/api/v1/hooks/${hookId}`;
 
@@ -49,7 +54,9 @@ export async function listHooks(ctx: RequestContext, organizationId: string, com
 /** Create an incoming webhook; the secret is returned once and stored encrypted. */
 export async function createHook(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof hookInput>) {
   const input = hookInput.parse(raw);
-  const secret = randomToken(32);
+  // Provider presets verify with the provider's signing secret; Realy's own modes get a random secret shown once.
+  const preset = isProviderPreset(input.verification);
+  const secret = preset ? input.signingSecret! : randomToken(32);
   return transaction(async (tx) => {
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
     const created = await tx.integrationHook.create({
@@ -58,7 +65,7 @@ export async function createHook(ctx: RequestContext, organizationId: string, co
     });
     const hook = await tx.integrationHook.update({ where: { id: created.id }, data: { secretEnc: encryptSecret(secret, hookPurpose(created.id)) }, select: hookSelect });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "integration.hook_created", resourceType: "integration_hook", resourceId: hook.id, newValue: { name: hook.name, verification: hook.verification } });
-    return { hook: { ...hook, url: hookUrl(hook.id) }, secret };
+    return { hook: { ...hook, url: hookUrl(hook.id) }, secret: preset ? null : secret };
   });
 }
 
@@ -74,8 +81,15 @@ export async function updateHook(ctx: RequestContext, organizationId: string, co
   return transaction(async (tx) => {
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
     const before = await findHook(organizationId, companyId, hookId);
-    const hook = await tx.integrationHook.update({ where: { id: hookId }, data: input, select: hookSelect });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "integration.hook_updated", resourceType: "integration_hook", resourceId: hookId, oldValue: before, newValue: input });
+    const { signingSecret, ...fields } = input;
+    const verification = fields.verification ?? before.verification;
+    if (isProviderPreset(verification) && verification !== before.verification && !signingSecret) throw invalid("Enter the signing secret the provider shows for this webhook", { reason: "signing_secret_required" });
+    const hook = await tx.integrationHook.update({
+      where: { id: hookId },
+      data: { ...fields, ...(signingSecret && isProviderPreset(verification) ? { secretEnc: encryptSecret(signingSecret, hookPurpose(hookId)) } : {}) },
+      select: hookSelect,
+    });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "integration.hook_updated", resourceType: "integration_hook", resourceId: hookId, oldValue: before, newValue: { ...fields, ...(signingSecret ? { signingSecret: "updated" } : {}) } });
     return hook;
   });
 }
@@ -84,7 +98,9 @@ export async function rotateHookSecret(ctx: RequestContext, organizationId: stri
   const secret = randomToken(32);
   return transaction(async (tx) => {
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
-    await findHook(organizationId, companyId, hookId);
+    const hook = await findHook(organizationId, companyId, hookId);
+    // The provider owns a preset's secret: rotate it there, then save the new one with updateHook.
+    if (isProviderPreset(hook.verification)) throw invalid("Rotate the signing secret at the provider, then save the new secret here", { reason: "provider_managed_secret" });
     await tx.integrationHook.update({ where: { id: hookId }, data: { secretEnc: encryptSecret(secret, hookPurpose(hookId)) } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "integration.hook_secret_rotated", resourceType: "integration_hook", resourceId: hookId });
     return { secret };
@@ -144,18 +160,10 @@ export async function receiveHook(hookId: string, raw: string, headers: Headers,
   if (Buffer.byteLength(raw) > MAX_HOOK_BODY) return { status: 413, body: { error: "payload_too_large" } };
 
   const secret = decryptSecret(hook.secretEnc, hookPurpose(hook.id));
-  let verified = false;
-  if (hook.verification === "TOKEN") {
-    const bearer = headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-    const token = headers.get("x-realy-token") ?? bearer ?? query.get("token");
-    verified = !!token && safeEqual(token, secret);
-  } else {
-    const sig = (headers.get(hook.signatureHeader) ?? "").trim().replace(/^sha256=/i, "").toLowerCase();
-    verified = !!sig && safeEqual(sig, hmacSha256(secret, raw).toString("hex"));
-  }
+  const check = verifyHookSignature({ verification: hook.verification, secret, raw, headers, query, signatureHeader: hook.signatureHeader });
   const contentType = headers.get("content-type")?.slice(0, 100) ?? null;
-  if (!verified) {
-    await db().integrationHookDelivery.create({ data: { organizationId: hook.organizationId, companyId: hook.companyId, hookId: hook.id, status: "REJECTED", contentType, error: "signature or token verification failed", ip } });
+  if (!check.ok) {
+    await db().integrationHookDelivery.create({ data: { organizationId: hook.organizationId, companyId: hook.companyId, hookId: hook.id, status: "REJECTED", contentType, error: check.reason.slice(0, 200), ip } });
     return { status: 401, body: { error: "unauthenticated" } };
   }
   let parsed: unknown = null;
@@ -395,14 +403,24 @@ export async function fanOutEvent(event: OutboxEvent) {
     data: subs.map((s) => ({ organizationId: event.organizationId!, companyId: event.companyId!, subscriptionId: s.id, eventId: event.id, eventType: event.type, payload: toJson(payload), nextAttemptAt: new Date() })),
     skipDuplicates: true,
   });
-  const created = await db().integrationWebhookDelivery.findMany({ where: { eventId: event.id, status: "PENDING", attempts: 0, subscriptionId: { in: subs.map((s) => s.id) } }, select: { id: true } });
-  for (const c of created) await attemptDelivery(c.id);
+  const created = await db().integrationWebhookDelivery.findMany({ where: { eventId: event.id, status: "PENDING", attempts: 0, subscriptionId: { in: subs.map((s) => s.id) } }, select: { id: true, attempts: true } });
+  for (const c of created) await sendDelivery(c, event.organizationId);
   return created.length;
+}
+
+/**
+ * Send a delivery on the worker's webhooks queue (parallel, isolated from the event handlers) or, without the worker
+ * queues, inline. The job id carries the attempt number, so a delivery is queued once per attempt; the attempt claim in
+ * attemptDelivery keeps concurrent sends impossible either way.
+ */
+async function sendDelivery(d: { id: string; attempts: number }, organizationId: string | null) {
+  const queued = await dispatchJob(WEBHOOKS_QUEUE, "integrations.webhook_delivery", { deliveryId: d.id }, { jobId: `whd_${d.id}_${d.attempts}`, organizationId });
+  if (!queued) await attemptDelivery(d.id);
 }
 
 /** Periodic job: retry deliveries whose backoff has elapsed. */
 export async function retryDueDeliveries(limit = 50): Promise<number> {
-  const due = await db().integrationWebhookDelivery.findMany({ where: { status: "PENDING", nextAttemptAt: { lte: new Date() } }, orderBy: { nextAttemptAt: "asc" }, take: limit, select: { id: true } });
-  for (const d of due) await attemptDelivery(d.id);
+  const due = await db().integrationWebhookDelivery.findMany({ where: { status: "PENDING", nextAttemptAt: { lte: new Date() } }, orderBy: { nextAttemptAt: "asc" }, take: limit, select: { id: true, attempts: true, organizationId: true } });
+  for (const d of due) await sendDelivery(d, d.organizationId);
   return due.length;
 }

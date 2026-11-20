@@ -44,10 +44,11 @@ export function CommandPalette({ showAdmin }: { showAdmin: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex h-8 w-full max-w-72 items-center gap-2 rounded-md border bg-surface/70 px-2.5 text-xs text-muted-foreground shadow-elev-1 transition-[background-color,border-color,box-shadow] hover:border-border-strong hover:bg-surface hover:text-foreground"
+        aria-label={t("common.searchPlaceholder")}
+        className="group flex h-8 w-8 shrink-0 items-center justify-center gap-2 rounded-md border bg-surface/70 text-xs pointer-coarse:size-10 sm:w-full sm:max-w-72 sm:justify-start sm:px-2.5 sm:pointer-coarse:w-full text-muted-foreground shadow-elev-1 transition-[background-color,border-color,box-shadow] hover:border-border-strong hover:bg-surface hover:text-foreground"
       >
         <Search className="size-3.5" aria-hidden />
-        <span className="truncate">{t("common.searchPlaceholder")}</span>
+        <span className="hidden truncate sm:inline">{t("common.searchPlaceholder")}</span>
         <kbd className="ms-auto hidden rounded border bg-muted px-1.5 py-px font-mono text-[10px] whitespace-nowrap shadow-[inset_0_-1px_0_var(--border)] sm:inline" dir="ltr">{shortcut}</kbd>
       </button>
       <D.Root open={open} onOpenChange={setOpen}>
@@ -70,7 +71,7 @@ export function CommandPalette({ showAdmin }: { showAdmin: boolean }) {
                         key={item.href}
                         value={`${t(item.label)} ${item.href}`}
                         onSelect={() => go(item.href)}
-                        className="group/item flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+                        className="group/item flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 pointer-coarse:min-h-11 text-sm text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                       >
                         <item.icon className="size-4 text-muted-foreground group-data-[selected=true]/item:text-primary rtl:-scale-x-100" aria-hidden />
                         {t(item.label)}

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Send } from "lucide-react";
+import { Plus, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
 import { FormError } from "@/components/form-error";
-import { useT } from "@/i18n/client";
+import { useI18n, useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { ActionButton, useAction } from "./client";
 
@@ -144,7 +144,76 @@ export function ComposeForm({ base, locale, mailboxes, templates }: { base: stri
   );
 }
 
-export function ReplyForm({ base, threadId, templates, viaLabel }: { base: string; threadId: string; templates: TemplateLite[]; viaLabel: string }) {
+type QuickDraft = { status: "ok"; body: string; model: string; usedContext: string[] } | { status: "not_connected" } | { status: "paused" } | { status: "failed"; error: string };
+
+/** "Write with AI": an instant reply draft grounded in the thread + CRM/support context, put in the box for editing. */
+function AiDraftHelper({ base, threadId, onDraft, hasText }: { base: string; threadId: string; onDraft: (body: string) => void; hasText: boolean }) {
+  const { t, locale } = useI18n();
+  const [guidance, setGuidance] = useState("");
+  const [tone, setTone] = useState<"friendly" | "formal" | "short">("friendly");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<QuickDraft | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  return (
+    <div className="grid gap-2 rounded-lg border border-primary/25 bg-primary/5 p-3">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
+        <Input value={guidance} maxLength={1000} onChange={(e) => setGuidance(e.target.value)} placeholder={t("communication.inbox.quickDraft.guidance")} aria-label={t("communication.inbox.quickDraft.guidance")} />
+        <Select value={tone} onChange={(e) => setTone(e.target.value as typeof tone)} aria-label={t("communication.inbox.quickDraft.tone")}>
+          {(["friendly", "formal", "short"] as const).map((k) => (
+            <option key={k} value={k}>
+              {t(`communication.inbox.quickDraft.tones.${k}`)}
+            </option>
+          ))}
+        </Select>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          aria-busy={busy}
+          onClick={async () => {
+            if (hasText && !window.confirm(t("communication.inbox.quickDraft.replaceConfirm"))) return;
+            setBusy(true);
+            setError(null);
+            try {
+              const r = await api<QuickDraft>(`${base}/comms/email/threads/${threadId}/quick-draft`, { body: { guidance: guidance || undefined, tone } });
+              setResult(r);
+              if (r.status === "ok") onDraft(r.body);
+            } catch (e) {
+              setError(e);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <Sparkles aria-hidden /> {busy ? t("communication.inbox.quickDraft.writing") : t("communication.inbox.quickDraft.write")}
+        </Button>
+      </div>
+      <FormError error={error} />
+      {result?.status === "ok" ? (
+        <p className="text-xs text-muted-foreground">
+          {t("communication.inbox.quickDraft.done", { model: result.model })}
+          {result.usedContext.length ? ` ${t("communication.inbox.quickDraft.usedContext", { items: result.usedContext.map((k) => t(`communication.inbox.quickDraft.context.${k}`)).join(", ") })}` : ""}
+        </p>
+      ) : result?.status === "not_connected" ? (
+        <Notice tone="warning">
+          {t("communication.inbox.quickDraft.notConnected")}{" "}
+          <a href={`/${locale}/integrations`} className="font-medium underline">
+            {t("communication.connectIntegrations")}
+          </a>
+        </Notice>
+      ) : result?.status === "paused" ? (
+        <Notice tone="warning">{t("communication.inbox.quickDraft.paused")}</Notice>
+      ) : result?.status === "failed" ? (
+        <Notice tone="danger">{t("communication.inbox.quickDraft.failed", { error: result.error })}</Notice>
+      ) : (
+        <p className="text-xs text-muted-foreground">{t("communication.inbox.quickDraft.hint")}</p>
+      )}
+    </div>
+  );
+}
+
+export function ReplyForm({ base, threadId, templates, viaLabel, aiDraft = false }: { base: string; threadId: string; templates: TemplateLite[]; viaLabel: string; aiDraft?: boolean }) {
   const t = useT();
   const [body, setBody] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -181,6 +250,7 @@ export function ReplyForm({ base, threadId, templates, viaLabel }: { base: strin
           ))}
         </Select>
       ) : null}
+      {aiDraft ? <AiDraftHelper base={base} threadId={threadId} hasText={body.trim().length > 0} onDraft={setBody} /> : null}
       <Textarea rows={6} maxLength={50000} value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("communication.inbox.replyPlaceholder")} aria-label={t("communication.inbox.reply")} />
       <FormError error={error} />
       <SendStatus status={status} />

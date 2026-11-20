@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Markdownish } from "@/components/comms/markdownish";
 import { PublicReplyForm } from "@/components/support/public";
+import { CsatForm } from "@/components/support/loop-forms";
 import { PublicShell } from "@/components/support/public-shell";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
@@ -46,6 +47,14 @@ export default async function PublicTicketPage({ params }: PageProps<"/[locale]/
           </li>
         ))}
       </ul>
+      {tk.status === "SOLVED" || tk.status === "CLOSED" ? (
+        <Card>
+          <CardHeader title={t("support.csat.title")} description={t("support.csat.hint")} />
+          <CardBody>
+            <CsatForm token={token} initial={tk.csat ? { score: tk.csat.score, comment: tk.csat.comment } : null} />
+          </CardBody>
+        </Card>
+      ) : null}
       {tk.status === "CLOSED" ? (
         <Notice>{t("support.public.closed")}</Notice>
       ) : (

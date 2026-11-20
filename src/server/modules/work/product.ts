@@ -448,9 +448,10 @@ export async function listFeedback(ctx: RequestContext, organizationId: string, 
   };
 }
 
-export async function createFeedback(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof feedbackInput>) {
+/** Record customer feedback. `opts.supportTicketId` (server-side only, already validated by the caller) links a support ticket. */
+export async function createFeedback(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof feedbackInput>, opts: { supportTicketId?: string; tx?: Tx } = {}) {
   const input = feedbackInput.parse(raw);
-  return transaction(async (tx) => {
+  const run = async (tx: Tx) => {
     await authorize(ctx, organizationId, companyId, "projects.manage", tx);
     const accountId = blank(input.accountId) ?? null;
     const contactId = blank(input.contactId) ?? null;
@@ -464,10 +465,12 @@ export async function createFeedback(ctx: RequestContext, organizationId: string
       if (accountId && c.accountId && c.accountId !== accountId) throw invalid("The contact belongs to another account", { reason: "work_contact_account" });
     }
     if (featureId && !(await tx.productFeature.findFirst({ where: { id: featureId, organizationId, companyId }, select: { id: true } }))) throw notFound("Feature");
-    const f = await tx.productFeedback.create({ data: { organizationId, companyId, productId, sentiment: blank(input.sentiment) ?? null, source: input.source, body: input.body, accountId, contactId, featureId, createdById: actorId(ctx, organizationId) } });
-    await audit(tx, ctx, organizationId, "product_feedback.created", "product_feedback", f.id, { source: f.source, featureId });
+    const supportTicketId = opts.supportTicketId ?? null;
+    const f = await tx.productFeedback.create({ data: { organizationId, companyId, productId, sentiment: blank(input.sentiment) ?? null, source: input.source, body: input.body, accountId, contactId, featureId, supportTicketId, createdById: actorId(ctx, organizationId) } });
+    await audit(tx, ctx, organizationId, "product_feedback.created", "product_feedback", f.id, { source: f.source, featureId, supportTicketId });
     return f;
-  });
+  };
+  return opts.tx ? run(opts.tx) : transaction(run);
 }
 
 export async function updateFeedback(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof updateFeedbackInput>) {

@@ -14,6 +14,7 @@ import { isAppError } from "@/server/core/errors";
 import { listSubjectTasks } from "@/server/modules/agents/service";
 import { EMPLOYMENT_TYPES, employeeOptions } from "@/server/modules/hr/employees";
 import { listDepartments, listTeams } from "@/server/modules/hr/org";
+import { interviewCalendarStatus } from "@/server/modules/hr/interview-calendar";
 import { getCandidate, INTERVIEW_TYPES, MAX_RESUME_BYTES, RECOMMENDATIONS, SCORECARD_CRITERIA } from "@/server/modules/hr/recruiting";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,11 +35,12 @@ export default async function CandidatePage({ params }: { params: Promise<{ cand
     if (isAppError(err) && err.code === "not_found") notFound();
     throw err;
   });
-  const [people, departments, teams, tasks] = await Promise.all([
+  const [people, departments, teams, tasks, calendar] = await Promise.all([
     employeeOptions(viewer.ctx, org.id, company.id),
     listDepartments(viewer.ctx, org.id, company.id),
     listTeams(viewer.ctx, org.id, company.id),
     access!.agentsRun ? listSubjectTasks(viewer.ctx, org.id, company.id, "hr_candidate", c.id).catch(() => []) : Promise.resolve([]),
+    interviewCalendarStatus(viewer.ctx, org.id, company.id),
   ]);
   const open = c.stage !== "HIRED" && c.stage !== "REJECTED" && !c.archivedAt;
   const cBase = `${base}/hr/candidates/${c.id}`;
@@ -149,6 +151,21 @@ export default async function CandidatePage({ params }: { params: Promise<{ cand
                       <p className="text-xs text-muted-foreground">{[i.interviewerIds.map((id) => c.interviewerNames.get(id)).filter(Boolean).join(", "), i.location].filter(Boolean).join(" · ")}</p>
                       {i.notes ? <p className="text-xs">{i.notes}</p> : null}
                       {i.status === "SCHEDULED" ? (
+                        <p className="flex flex-wrap items-center gap-2 text-xs">
+                          {i.calendarEventId && i.calendarProvider ? (
+                            <Badge tone="success">{t("hr.calendar.synced", { provider: t(`hr.calendar.providers.${i.calendarProvider}`) })}</Badge>
+                          ) : i.calendarError ? (
+                            <Badge tone="danger" title={i.calendarError}>{t("hr.calendar.failed")}</Badge>
+                          ) : (
+                            <Badge tone="neutral">{t("hr.calendar.manual")}</Badge>
+                          )}
+                          <a href={`${base}/hr/interviews/${i.id}/ics`} className="font-medium text-primary hover:underline">
+                            {t("hr.calendar.downloadIcs")}
+                          </a>
+                          {calendar.provider && !i.calendarEventId ? <ActionButton endpoint={`${base}/hr/interviews/${i.id}/calendar`} label={t("hr.calendar.sendNow")} variant="ghost" /> : null}
+                        </p>
+                      ) : null}
+                      {i.status === "SCHEDULED" ? (
                         <div className="flex flex-wrap gap-2">
                           <ActionButton endpoint={`${base}/hr/interviews/${i.id}`} method="PATCH" body={{ status: "COMPLETED" }} label={t("hr.recruiting.markCompleted")} />
                           <ActionButton endpoint={`${base}/hr/interviews/${i.id}`} method="PATCH" body={{ status: "CANCELLED" }} label={t("hr.recruiting.cancelInterview")} variant="ghost" />
@@ -163,6 +180,18 @@ export default async function CandidatePage({ params }: { params: Promise<{ cand
               {open ? (
                 <details className="rounded-md border p-3">
                   <summary className="cursor-pointer text-sm font-medium">{t("hr.recruiting.scheduleInterview")}</summary>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {calendar.provider ? (
+                      t("hr.calendar.willSync", { provider: t(`hr.calendar.providers.${calendar.provider}`) })
+                    ) : (
+                      <>
+                        {t("hr.calendar.notConnected")}{" "}
+                        <Link href={`/${locale}/integrations`} className="font-medium text-primary hover:underline">
+                          {t("hr.calendar.connect")}
+                        </Link>
+                      </>
+                    )}
+                  </p>
                   <HrForm
                     className="mt-3"
                     endpoint={`${cBase}/interviews`}

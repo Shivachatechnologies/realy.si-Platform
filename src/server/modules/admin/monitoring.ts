@@ -2,7 +2,7 @@ import { Queue } from "bullmq";
 import { Redis } from "ioredis";
 import { db } from "@/server/core/db";
 import { env } from "@/server/core/env";
-import { AGENT_TASK_QUEUE, AUTH_EMAIL_QUEUE, queuePrefix } from "@/server/core/jobs";
+import { WORKER_QUEUES, prefixFor } from "@/server/core/jobs";
 import { redis } from "@/server/core/rate-limit";
 import type { RequestContext } from "@/server/core/context";
 import { emailConfigured } from "@/server/modules/email/service";
@@ -44,12 +44,9 @@ let queues: { name: string; queue: Queue }[] | null = null;
 function adminQueues() {
   if (!queues) {
     const connection = () => new Redis(env().REDIS_URL, { maxRetriesPerRequest: 1, enableOfflineQueue: false, commandTimeout: 1500, lazyConnect: false });
-    queues = [
-      { name: AGENT_TASK_QUEUE, queue: new Queue(AGENT_TASK_QUEUE, { connection: connection(), prefix: queuePrefix() }) },
-      { name: AUTH_EMAIL_QUEUE, queue: new Queue(AUTH_EMAIL_QUEUE, { connection: connection(), prefix: queuePrefix() }) },
-      // The worker's domain-event queue uses BullMQ's default prefix.
-      { name: "events", queue: new Queue("events", { connection: connection() }) },
-    ];
+    // One shared connection is fine for Queue (non-blocking) clients.
+    const conn = connection();
+    queues = WORKER_QUEUES.map(({ name }) => ({ name, queue: new Queue(name, { connection: conn, prefix: prefixFor(name) }) }));
     for (const q of queues) q.queue.on("error", () => undefined);
   }
   return queues;

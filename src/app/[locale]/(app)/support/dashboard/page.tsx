@@ -11,6 +11,8 @@ import { formatNumber } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { OPEN_STATUSES, userNames } from "@/server/modules/support/common";
 import { SUPPORT_METRICS } from "@/server/modules/support/metrics";
+import { supportAnalytics } from "@/server/modules/support/analytics";
+import { CsatPanel, SpeedByPriority, VolumeChart } from "@/components/support/analytics-charts";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +24,7 @@ const DAY = 86_400_000;
 export default async function SupportDashboardPage({ searchParams }: PageProps<"/[locale]/support/dashboard">) {
   const p = await areaPage("support", "dashboard");
   if (p.gate) return p.gate;
-  const { locale, t, org, company, wrap } = p;
+  const { locale, t, viewer, org, company, wrap } = p;
   const sp = await searchParams;
   const days = [7, 30, 90].includes(Number(sp.days)) ? Number(sp.days) : 30;
   const to = new Date();
@@ -39,6 +41,9 @@ export default async function SupportDashboardPage({ searchParams }: PageProps<"
     db().supportCategory.findMany({ where: { companyId: company.id }, select: { id: true, name: true } }),
   ]);
   const names = await userNames(db(), byAssignee.map((a) => a.assigneeId));
+  const analytics = await supportAnalytics(viewer.ctx, org.id, company.id, days);
+  const pctOrDash = (v: number | null) => (v == null ? "—" : `${formatNumber(v, locale, { maximumFractionDigits: 1 })}%`);
+  const hoursOrDash = (v: number | null) => (v == null ? "—" : t("support.dashboard.hours", { value: formatNumber(v, locale, { maximumFractionDigits: 1 }) }));
   const catName = new Map(categories.map((c) => [c.id, c.name]));
   const fmt = (unit: string, v: number) => (unit === "percent" ? `${formatNumber(v, locale, { maximumFractionDigits: 1 })}%` : unit === "hours" ? t("support.dashboard.hours", { value: formatNumber(v, locale, { maximumFractionDigits: 1 }) }) : formatNumber(v, locale));
   const bar = (rows: { label: React.ReactNode; count: number; key: string }[]) => {
@@ -80,6 +85,28 @@ export default async function SupportDashboardPage({ searchParams }: PageProps<"
             </div>
           );
         })}
+      </div>
+      <Card variant="elevated">
+        <CardHeader title={t("support.analytics.volumeTitle", { count: days })} description={t("support.analytics.volumeHint")} />
+        <div className="p-4 pt-0">
+          <VolumeChart t={t} locale={locale} data={analytics} />
+        </div>
+      </Card>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label={t("support.analytics.firstResponseMedian")} value={hoursOrDash(analytics.firstResponse.median)} />
+        <Stat label={t("support.analytics.firstResponseP90")} value={hoursOrDash(analytics.firstResponse.p90)} />
+        <Stat label={t("support.analytics.slaFirstResponse")} value={pctOrDash(analytics.sla.firstResponse)} />
+        <Stat label={t("support.analytics.slaResolution")} value={pctOrDash(analytics.sla.resolution)} />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader title={t("support.analytics.csatTitle")} description={t("support.analytics.csatHint")} />
+          <CsatPanel t={t} locale={locale} csat={analytics.csat} />
+        </Card>
+        <Card>
+          <CardHeader title={t("support.analytics.speedTitle")} description={t("support.analytics.speedHint")} />
+          <SpeedByPriority t={t} locale={locale} rows={analytics.byPriority} />
+        </Card>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

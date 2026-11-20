@@ -1,0 +1,12 @@
+{
+  "name": "@realy/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server core, domain modules and the background worker (src/server, src/worker). Imported by both apps as source.",
+  "scripts": {
+    "worker": "DOTENV_CONFIG_PATH=../../.env tsx src/worker/index.ts"
+  },
+  "devDependencies": {
+    "tsx": "$root"
+  }
+}

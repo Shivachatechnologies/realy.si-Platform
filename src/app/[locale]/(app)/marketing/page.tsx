@@ -13,6 +13,8 @@ import { StudioCommand } from "@/components/marketing/studio-command";
 import { JourneyWizard } from "@/components/marketing/journey-wizard";
 import { journeyProps } from "@/components/marketing/journey-data";
 import { db } from "@/server/core/db";
+import { departmentLifecycle } from "@/server/modules/marketing/lifecycle";
+import { LifecycleLoop } from "@/components/marketing/lifecycle-loop";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.marketing.title") };
@@ -37,7 +39,7 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
     }
   }
   const range = parseRange(sp);
-  const cc = await commandCenter(viewer.ctx, org.id, company.id, range);
+  const [cc, lifecycle] = await Promise.all([commandCenter(viewer.ctx, org.id, company.id, range), departmentLifecycle(viewer.ctx, org.id, company.id)]);
   const cur = company.baseCurrency;
   const money = (v: bigint | null) => (v == null ? "—" : formatMoney({ amountMinor: v, currency: cur }, locale));
   const pct = (v: number | null) => (v == null ? "—" : `${formatNumber(Math.round(v * 10) / 10, locale)}%`);
@@ -48,6 +50,7 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
 
   return (
     <MarketingShell {...shell}>
+      <LifecycleLoop stages={lifecycle} t={t} locale={locale} />
       <StudioCommand m={m} />
       <Card>
         <form className="flex flex-wrap items-end gap-2 p-3" action={`/${locale}/marketing`}>
@@ -141,7 +144,7 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
             </ul>
           </Card>
           <Card>
-            <CardHeader title={t("marketing.commandCenter.upcoming")} actions={<Link href={`/${locale}/marketing/content/calendar`} className="text-xs hover:underline">{t("marketing.content.calendar")}</Link>} />
+            <CardHeader title={t("marketing.commandCenter.upcoming")} actions={<Link href={`/${locale}/marketing/calendar`} className="text-xs hover:underline">{t("marketing.content.calendar")}</Link>} />
             {cc.upcoming.length === 0 ? (
               <p className="p-4 text-xs text-muted-foreground">{t("marketing.commandCenter.noUpcoming")}</p>
             ) : (

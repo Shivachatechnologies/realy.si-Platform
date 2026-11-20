@@ -1,0 +1,53 @@
+// ───────────────────────────── Background execution (src/worker, src/server/core/jobs.ts) ─────────────────────────────
+// Persisted status and execution log of BullMQ jobs run by the worker service, including dead-lettered jobs that a
+// platform administrator can requeue. Never stores job payloads (they may hold personal data) or secrets.
+
+enum WorkerJobStatus {
+  ACTIVE
+  RETRYING
+  SUCCEEDED
+  /// Final attempt failed and the job could not be moved to the dead-letter queue.
+  FAILED
+  /// Final attempt failed; a copy waits in the dead-letter queue for an administrator.
+  DEAD
+  /// An administrator sent the dead-lettered job back to its queue.
+  REQUEUED
+}
+
+/// One BullMQ job (per queue and job id) as seen by the worker: attempts, outcome and a short execution log.
+model WorkerJobRun {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  /// BullMQ queue name, e.g. "agent-tasks", "module-jobs", "schedules", "webhooks".
+  queue          String
+  /// Job name, e.g. "integrations.sync", "handler.automation.engine", "run".
+  jobName        String          @map("job_name")
+  /// BullMQ job id (unique per queue).
+  jobId          String          @map("job_id")
+  /// Tenant when the job belongs to one (never required: platform jobs have none).
+  organizationId String?         @map("organization_id") @db.Uuid
+  status         WorkerJobStatus @default(ACTIVE)
+  attempts       Int             @default(0)
+  maxAttempts    Int             @default(1) @map("max_attempts")
+  lastError      String?         @map("last_error")
+  /// [{ at, level, message }] — at most 40 entries, secret-free messages only.
+  logs           Json            @default("[]")
+  /// Number of items the job reported (periodic jobs return how much work they did).
+  result         Int?
+  startedAt      DateTime?       @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime?       @map("finished_at") @db.Timestamptz(3)
+  durationMs     Int?            @map("duration_ms")
+  /// Worker process that ran the last attempt ("<hostname>:<pid>").
+  workerId       String?         @map("worker_id")
+  deadLetteredAt DateTime?       @map("dead_lettered_at") @db.Timestamptz(3)
+  requeuedAt     DateTime?       @map("requeued_at") @db.Timestamptz(3)
+  requeuedById   String?         @map("requeued_by_id") @db.Uuid
+  requeueCount   Int             @default(0) @map("requeue_count")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([queue, jobId])
+  @@index([status, updatedAt(sort: Desc)])
+  @@index([queue, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("worker_job_runs")
+}

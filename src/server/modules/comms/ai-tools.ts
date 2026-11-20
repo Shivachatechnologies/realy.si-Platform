@@ -3,6 +3,7 @@ import { AppError } from "@/server/core/errors";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { listAnnouncements } from "./announcements";
 import { plainMentions } from "./common";
+import { contextText, customerContext } from "./customer-context";
 import { getThread, replyToThread } from "./email";
 import { createActionItems, getMeeting } from "./meetings";
 
@@ -139,6 +140,33 @@ export const COMMS_TOOLS: Record<string, ToolDefinition> = {
       const r = await replyToThread(ctx, organizationId, companyId, threadId, { body }, { providerOnly: true });
       if (r.status !== "SENT") throw new AppError("not_available", "The email provider rejected the reply; nothing was sent.");
       return { content: "The reply was sent through the connected mailbox.", records: [`email_thread:${threadId}`] };
+    },
+  }),
+
+  read_customer_context: def({
+    name: "read_customer_context",
+    version: 1,
+    description:
+      "Read the customer behind an email thread or CRM contact: contact, company, deals (stage, amount) and open support tickets, plus their other email threads. Sections the requester can't access are left out. Use before drafting customer replies.",
+    input: z.object({ threadId: z.string().uuid().optional(), contactId: z.string().uuid().optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { threadId: { type: "string", description: "Email thread id" }, contactId: { type: "string", description: "CRM contact id (when there is no thread)" } },
+      required: [],
+      additionalProperties: false,
+    },
+    permissions: ["communication.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: ({ threadId, contactId }) => (threadId ? `Read the customer behind thread ${threadId}` : `Read customer context for contact ${contactId ?? "?"}`),
+    async execute({ threadId, contactId }, { ctx, organizationId, companyId }) {
+      const contact = threadId ? (await getThread(ctx, organizationId, companyId, threadId)).contactId : (contactId ?? null);
+      if (!contact) return { content: "This conversation is not linked to a CRM contact." };
+      const c = await customerContext(ctx, organizationId, companyId, contact, { excludeThreadId: threadId });
+      const text = contextText(c);
+      const others = c.threads.map((x) => `- ${x.subject} (${iso(x.lastMessageAt)})`).join("\n");
+      return { content: [text || "No CRM details found.", others ? `Other email threads:\n${others}` : ""].filter(Boolean).join("\n\n"), records: [`contact:${contact}`] };
     },
   }),
 };

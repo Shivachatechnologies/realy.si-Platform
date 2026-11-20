@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Gauge as GaugeIcon, HeartPulse, ListX, Server, ServerCog } from "lucide-react";
@@ -48,7 +49,14 @@ export default async function SystemStatusPage() {
         title={t("admin.nav.system")}
         description={t("admin.system.subtitle")}
         why={t("admin.system.why")}
-        actions={<AutoRefresh loadedAt={now} timeZone={tz} label={t("admin.live.on")} pausedLabel={t("admin.live.paused")} pauseLabel={t("admin.live.pause")} resumeLabel={t("admin.live.resume")} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href={`/${locale}/admin/system/jobs`} className="text-sm font-semibold text-primary hover:underline">
+              {t("admin.system.jobs.title")}
+            </Link>
+            <AutoRefresh loadedAt={now} timeZone={tz} label={t("admin.live.on")} pausedLabel={t("admin.live.paused")} pauseLabel={t("admin.live.pause")} resumeLabel={t("admin.live.resume")} />
+          </div>
+        }
       />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <section aria-labelledby="sys-health" className="control-room relative overflow-hidden rounded-xl border bg-background p-5 shadow-elev-3">

@@ -1045,3 +1045,24 @@ model FinanceBudgetAlert {
   @@unique([budgetId, threshold, periodKey])
   @@map("finance_budget_alerts")
 }
+
+/// Financial alerts sent by the worker (low cash runway, overdue summaries...): one row per company, kind and period, so
+/// each alert is sent once and the alert center can show the history.
+model FinanceAlertLog {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  /// "runway_low" | "runway_critical" | "overdue_digest" | "cash_negative_forecast"
+  kind           String
+  /// Dedupe key (e.g. YYYY-MM for monthly alerts).
+  periodKey      String   @map("period_key")
+  /// Figures at send time (minor units as strings, months as numbers).
+  data           Json     @default("{}")
+  sentAt         DateTime @default(now()) @map("sent_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, kind, periodKey])
+  @@index([organizationId, companyId, sentAt])
+  @@map("finance_alert_logs")
+}

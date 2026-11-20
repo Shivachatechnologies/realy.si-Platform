@@ -18,6 +18,7 @@ import { AttachmentList } from "@/components/crm/activity-cards";
 import { EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
 import { ConvertLeadForm, LeadDetailsForm, QualificationForm } from "@/components/crm/lead-extras";
 import { CrmTabs } from "@/components/crm/crm-tabs";
+import { RevenueWorkspace } from "@/components/crm/revenue/panels";
 import { TagList } from "@/components/crm/shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -97,7 +98,7 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
   const majorUnits = (m: bigint | null) => (m == null ? "" : `${m / 100n}${m % 100n ? `.${(m % 100n).toString().padStart(2, "0")}` : ""}`);
 
   return (
-    <div className="mx-auto grid max-w-[1000px] gap-4">
+    <div className="mx-auto grid max-w-[1200px] gap-4">
       <CrmTabs locale={locale} active="leads" />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm`} className="text-sm text-muted-foreground hover:underline">
@@ -188,6 +189,16 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
         </CardBody>
       </Card>
 
+      {active ? (
+        <RevenueWorkspace
+          kind="lead"
+          id={lead.id}
+          name={lead.name}
+          hasEmail={!!lead.email}
+          score={{ email: lead.email, phone: lead.phone, account: lead.account, notes: lead.notes, valueMinor: lead.valueMinor, stage: lead.stage }}
+        />
+      ) : null}
+
       <Card>
         <CardHeader title={t("crm.bant.title")} description={t("crm.bant.description")} />
         <CardBody>
@@ -207,7 +218,7 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
       </Card>
 
       {canManage && active && !lead.convertedAt ? (
-        <Card>
+        <Card id="convert" className="scroll-mt-24">
           <CardHeader title={t("crm.convert.title")} description={t("crm.convert.description")} />
           <CardBody>
             <ConvertLeadForm

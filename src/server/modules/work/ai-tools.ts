@@ -42,7 +42,7 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
   read_project: def({
     name: "read_project",
     version: 1,
-    description: "Reads one project: details, budget, members, milestones, risks, the active sprint and open tasks (up to 150) with assignees, dates and dependencies.",
+    description: "Reads one project: details, budget, members, milestones, deliverables, risks, the active sprint and open tasks (up to 150) with assignees, dates and dependencies.",
     input: z.object({ projectId: uuid }).strict(),
     modelSchema: { type: "object", properties: { projectId: { type: "string", description: "Project id" } }, required: ["projectId"], additionalProperties: false },
     permissions: ["projects.read"],
@@ -52,7 +52,7 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
     summarize: () => "Read a project",
     async execute({ projectId }, { ctx, organizationId, companyId }) {
       const p = await getWorkProject(ctx, organizationId, companyId, projectId);
-      const [tasks, deps, agile] = await Promise.all([
+      const [tasks, deps, agile, deliverables] = await Promise.all([
         db().workTask.findMany({
           where: { projectId, companyId, archivedAt: null, status: { notIn: ["DONE", "CANCELLED"] } },
           orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }],
@@ -61,6 +61,7 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
         }),
         db().workTaskDependency.findMany({ where: { companyId, task: { projectId } }, select: { taskId: true, dependsOnId: true }, take: 500 }),
         projectAgile(ctx, organizationId, companyId, projectId),
+        db().workProjectDeliverable.findMany({ where: { projectId, companyId }, orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }], take: 100, select: { title: true, status: true, dueDate: true, ownerId: true } }),
       ]);
       const active = agile.sprints.find((s) => s.status === "ACTIVE");
       const money = (m: bigint | null) => (m == null ? "—" : `${(Number(m) / 100).toFixed(2)} ${p.currency ?? ""}`);
@@ -72,6 +73,7 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
         `Budget: ${money(p.budget.budgetMinor)}; spent ${money(p.budget.spentMinor)} (time ${money(p.budget.timeCostMinor)}, expenses ${money(p.budget.expenseMinor)}); ${Math.round(p.budget.minutes / 60)} h logged`,
         `Members: ${p.members.map((m) => `${m.user.name} (${m.userId}${m.role ? `, ${m.role}` : ""})`).join("; ") || "none"}`,
         `Milestones:\n${p.projectMilestones.map((m) => `- ${m.title} due ${day(m.dueDate)} ${m.completedAt ? "[done]" : `[${m.tasksDone}/${m.tasksTotal} tasks]`}`).join("\n") || "(none)"}`,
+        `Deliverables:\n${deliverables.map((d) => `- [${d.status}] ${d.title} due ${day(d.dueDate)}${d.ownerId ? ` owner ${d.ownerId}` : " (no owner)"}`).join("\n") || "(none)"}`,
         `Risks:\n${p.risks.map((r) => `- [${r.status}] ${r.title} P${r.probability}×I${r.impact}=${r.exposure}${r.mitigation ? `; mitigation: ${r.mitigation}` : ""}${r.ownerName ? `; owner ${r.ownerName}` : ""}`).join("\n") || "(none)"}`,
         active ? `Active sprint ${active.id} "${active.name}" ${day(active.startDate)}–${day(active.endDate)}: ${active.donePoints}/${active.points} pts${active.goal ? `; goal: ${active.goal}` : ""}` : "No active sprint.",
         agile.avgVelocity != null ? `Average velocity: ${agile.avgVelocity} pts/sprint` : null,

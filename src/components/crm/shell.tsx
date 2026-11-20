@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
+import { PageHeader } from "@/components/ui/page-header";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
@@ -45,7 +46,16 @@ export const crmContext = cache(async () => {
   } as const;
 });
 
-export function PageFrame({ title, subtitle, actions, tabs, children, wide = true }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; tabs?: ReactNode; children: ReactNode; wide?: boolean }) {
+export function PageFrame({ title, subtitle, actions, tabs, children, wide = true, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; tabs?: ReactNode; children: ReactNode; wide?: boolean; eyebrow?: ReactNode }) {
+  if (eyebrow) {
+    return (
+      <div className={`mx-auto grid ${wide ? "max-w-[1400px]" : "max-w-[1100px]"} gap-4`}>
+        <PageHeader variant="editorial" world="sales" eyebrow={eyebrow} title={title} description={subtitle} actions={actions} />
+        {tabs}
+        {children}
+      </div>
+    );
+  }
   return (
     <div className={`mx-auto grid ${wide ? "max-w-[1400px]" : "max-w-[1100px]"} gap-4`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -65,6 +75,11 @@ export function PageFrame({ title, subtitle, actions, tabs, children, wide = tru
 /** Where the "what to do next" button of each page's intro strip leads. */
 const INTRO_NEXT: Record<string, string | undefined> = {
   "crm.leads": "/sales/start",
+  "crm.today": "/crm/outreach",
+  "crm.discover": "/crm",
+  "crm.outreach": "/crm/sequences",
+  "crm.sequences": "/crm/outreach",
+  "crm.meetings": "/crm/today",
   "crm.contacts": "/crm/accounts",
   "crm.accounts": "/crm/deals",
   "crm.deals": "/crm/pipeline",
@@ -95,7 +110,7 @@ export async function CrmIntro({ area, active }: { area: "crm" | "sales"; active
   );
 }
 
-export async function CrmFrame({ active, title, subtitle, actions, children, area = "crm", intro = true }: { active: CrmTab | SalesTab; title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode; area?: "crm" | "sales"; intro?: boolean }) {
+export async function CrmFrame({ active, title, subtitle, actions, children, area = "crm", intro = true, eyebrow }: { active: CrmTab | SalesTab; title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode; area?: "crm" | "sales"; intro?: boolean; eyebrow?: string }) {
   const c = await crmContext();
   const t = c.t;
   const tabs = area === "crm" ? <CrmTabs locale={c.locale} active={active as CrmTab} /> : <SalesTabs locale={c.locale} active={active as SalesTab} />;
@@ -117,7 +132,7 @@ export async function CrmFrame({ active, title, subtitle, actions, children, are
     );
   }
   return (
-    <PageFrame title={heading} subtitle={subtitle} actions={actions} tabs={tabs}>
+    <PageFrame title={heading} subtitle={subtitle} actions={actions} tabs={tabs} eyebrow={eyebrow}>
       {intro ? <CrmIntro area={area} active={active} /> : null}
       {children}
     </PageFrame>

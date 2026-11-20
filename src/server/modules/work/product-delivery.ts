@@ -249,9 +249,12 @@ export async function createLaunchCampaign(ctx: RequestContext, organizationId: 
     throw conflict("The launch campaign exists", { reason: "work_product_campaign_exists" });
   }
   const release = await db().productRelease.findFirst({ where: { productId, companyId }, orderBy: { releaseDate: { sort: "desc", nulls: "last" } }, select: { version: true, releaseDate: true } });
+  // The saved Launch brief (stage deliverable) becomes the campaign brief, so Marketing starts from the product team's work.
+  const brief = await db().productDoc.findUnique({ where: { productId_kind: { productId, kind: "LAUNCH_BRIEF" } }, include: { versions: { orderBy: { version: "desc" }, take: 1 } } });
+  const briefText = brief?.companyId === companyId ? brief.versions[0]?.content : undefined;
   const c = await createCampaign(ctx, organizationId, companyId, {
     name: `${p.name} launch`.slice(0, 200),
-    description: [p.description, p.targetUsers ? `Target users: ${p.targetUsers}` : null, release ? `Release ${release.version}` : null].filter(Boolean).join("\n\n").slice(0, 5000) || undefined,
+    description: [briefText ? `Launch brief (product v${brief!.currentVersion}):\n${briefText}` : p.description, p.targetUsers ? `Target users: ${p.targetUsers}` : null, release ? `Release ${release.version}` : null].filter(Boolean).join("\n\n").slice(0, 5000) || undefined,
     objective: `Launch ${p.name}`.slice(0, 500),
     startDate: release?.releaseDate ? release.releaseDate.toISOString().slice(0, 10) : undefined,
   });

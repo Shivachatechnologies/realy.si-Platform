@@ -4,11 +4,13 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { ActionButton } from "@/components/comms/client";
 import { EventChip, NewEventButton } from "@/components/comms/calendar";
 import { hrefWith } from "@/components/comms/bits";
+import { RemindersPanel } from "@/components/comms/reminders";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
 import { formatDate, formatDateTime, formatMoney } from "@/i18n/format";
 import { CALENDAR_LAYERS, calendarRange, type CalendarLayer } from "@/server/modules/comms/calendar";
 import { connectionStatuses } from "@/server/modules/comms/connections-bridge";
+import { listMyReminders } from "@/server/modules/comms/reminders";
 import { zonedParts, zonedTime } from "@/server/modules/comms/time";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +46,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
   const from = zonedTime(tz, ...(cells[0]!.key.split("-").map(Number) as [number, number, number]), 0, 0);
   const lastParts = cells[cells.length - 1]!.key.split("-").map(Number) as [number, number, number];
   const to = new Date(zonedTime(tz, ...lastParts, 0, 0).getTime() + DAY);
-  const [data, conns] = await Promise.all([calendarRange(viewer.ctx, org.id, company.id, from, to, { mine, layers }), connectionStatuses(org.id, company.id)]);
+  const [data, conns, reminders] = await Promise.all([calendarRange(viewer.ctx, org.id, company.id, from, to, { mine, layers }), connectionStatuses(org.id, company.id), listMyReminders(viewer.ctx, org.id, company.id)]);
   type Item = { kind: "meeting" | "event" | "leave" | "holiday" | "crm"; start: Date; node: React.ReactNode };
   const byDay = new Map<string, Item[]>();
   /** Date-only rows (@db.Date, UTC midnight): place by their calendar date, not by time zone. */
@@ -159,6 +161,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
   const calendarConnected = conns.google_calendar === "CONNECTED" || conns.outlook_calendar === "CONNECTED";
 
   return wrap(
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
     <Card>
       <CardHeader
         title={title}
@@ -236,6 +239,13 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
         ))}
         {!hidden.has("leave") ? <span className="text-muted-foreground">· {t(data.layers.leaveScope === "all" ? "communication.calendar.leaveAll" : "communication.calendar.leaveOwn")}</span> : null}
       </div>
-    </Card>,
+    </Card>
+    <div className="grid content-start gap-4">
+      <RemindersPanel
+        base={base}
+        reminders={reminders.map((r) => ({ id: r.id, kind: r.kind, title: r.title, remindAt: r.remindAt.toISOString(), when: formatDateTime(r.remindAt, locale, tz), href: r.href, sent: Boolean(r.sentAt) }))}
+      />
+    </div>
+    </div>,
   );
 }

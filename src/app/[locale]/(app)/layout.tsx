@@ -52,7 +52,7 @@ async function Topbar() {
       ? await aiActivity(viewer.ctx, org.id, company.id).catch(() => null)
       : null;
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
+    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
       {org ? (
         <ContextSwitcher
           orgs={orgs}
@@ -61,7 +61,7 @@ async function Topbar() {
           companyId={company?.id ?? null}
         />
       ) : null}
-      <div className="ms-auto flex min-w-0 items-center justify-end gap-2">
+      <div className="ms-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
         {activity ? (
           <div className="hidden xl:block">
             <AiActivityIndicator

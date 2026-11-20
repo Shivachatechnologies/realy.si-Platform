@@ -1,10 +1,13 @@
 import { z } from "zod";
-import { AppError } from "@/server/core/errors";
+import { AppError, notFound } from "@/server/core/errors";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { contactName } from "./common";
 import { listCategories } from "./config";
 import { searchArticles } from "./kb";
 import { addMessage, getTicket, listTickets, parseTicketFilters, storeDraftReply, VIEWS } from "./tickets";
+import { supportAnalytics } from "./analytics";
+import { ticketToProductFeedback } from "./product-loop";
+import { db } from "@/server/core/db";
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 16).replace("T", " ") + " UTC" : "—");
 
@@ -122,6 +125,62 @@ export const SUPPORT_TOOLS: Record<string, ToolDefinition> = {
       if (r.emailStatus === "SENT") return { content: "The reply was posted on the ticket and emailed to the requester.", records: [`ticket:${ticketId}`] };
       if (r.emailStatus === "NO_EMAIL") return { content: "The reply was posted on the customer's ticket page; the requester has no email address, so no email was sent.", records: [`ticket:${ticketId}`] };
       throw new AppError(r.emailStatus === "NOT_CONFIGURED" ? "not_configured" : "not_available", `The reply was posted on the ticket page, but the email was not delivered (${r.emailStatus}).`);
+    },
+  }),
+
+  read_support_analytics: def({
+    name: "read_support_analytics",
+    version: 1,
+    description: "Support analytics for the last 7–90 days from real tickets: tickets opened vs solved, median and 90th-percentile first response and resolution hours (also by priority), SLA attainment and customer satisfaction (CSAT = share of 4–5 star ratings, with rating count). Null means no data.",
+    input: z.object({ days: z.number().int().min(7).max(90).default(30) }).strict(),
+    modelSchema: { type: "object", properties: { days: { type: "integer", minimum: 7, maximum: 90, description: "Period length in days (default 30)" } }, additionalProperties: false },
+    permissions: ["support.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ days }) => `Read support analytics (${days} days)`,
+    async execute({ days }, { ctx, organizationId, companyId }) {
+      const a = await supportAnalytics(ctx, organizationId, companyId, days);
+      const h = (v: number | null) => (v == null ? "no data" : `${v} h`);
+      const lines = [
+        `Period: last ${days} days. Opened ${a.totals.opened}, solved ${a.totals.solved}.`,
+        `First response: median ${h(a.firstResponse.median)}, p90 ${h(a.firstResponse.p90)} (${a.firstResponse.count} tickets).`,
+        `Resolution: median ${h(a.resolution.median)}, p90 ${h(a.resolution.p90)} (${a.resolution.count} tickets).`,
+        `SLA met: first response ${a.sla.firstResponse ?? "no data"}%, resolution ${a.sla.resolution ?? "no data"}%.`,
+        a.csat.ratings ? `CSAT ${a.csat.score}% from ${a.csat.ratings} ratings (average ${a.csat.average}/5; ${a.csat.responseRate}% of solved tickets rated).` : "CSAT: no ratings in the period.",
+        `By priority (median first response / resolution): ${a.byPriority.map((p) => `${p.priority} ${h(p.firstResponse)} / ${h(p.resolution)}`).join("; ")}.`,
+      ];
+      return { content: lines.join("\n") };
+    },
+  }),
+
+  share_ticket_with_product: def({
+    name: "share_ticket_with_product",
+    version: 1,
+    description: "Propose recording a support ticket as product feedback for one product (by id or exact name), so the product team's feedback synthesis sees it. Use for feature requests, recurring bugs and usability problems. A person approves it first.",
+    input: z.object({ ticketId: z.string().uuid(), product: z.string().trim().min(1).max(200), summary: z.string().trim().min(1).max(5000), sentiment: z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE"]).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "string" },
+        product: { type: "string", description: "Product id or exact product name" },
+        summary: { type: "string", description: "What the product team should learn from this ticket, in one or two short paragraphs" },
+        sentiment: { type: "string", enum: ["POSITIVE", "NEUTRAL", "NEGATIVE"] },
+      },
+      required: ["ticketId", "product", "summary"],
+      additionalProperties: false,
+    },
+    permissions: ["support.read", "projects.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ product, summary }) => `Share with product "${product}": "${summary.slice(0, 120)}"`,
+    async execute({ ticketId, product, summary, sentiment }, { ctx, organizationId, companyId }) {
+      const isId = z.string().uuid().safeParse(product).success;
+      const p = await db().product.findFirst({ where: { organizationId, companyId, archivedAt: null, ...(isId ? { id: product } : { name: { equals: product, mode: "insensitive" } }) }, select: { id: true, name: true } });
+      if (!p) throw notFound("Product");
+      const f = await ticketToProductFeedback(ctx, organizationId, companyId, ticketId, { productId: p.id, summary, sentiment });
+      return { content: `Recorded the ticket as feedback for "${p.name}".`, records: [`ticket:${ticketId}`, `product_feedback:${f.id}`] };
     },
   }),
 };

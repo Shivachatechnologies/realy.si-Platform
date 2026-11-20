@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type WorkflowsTab = "workflows" | "runs" | "approvals" | "templates";
+export type WorkflowsTab = "workflows" | "monitor" | "runs" | "approvals" | "templates";
 
 /** Secondary navigation of the Workflows area. */
 export function WorkflowsTabs({ locale, active, labels, pending }: { locale: string; active: WorkflowsTab; labels: Record<WorkflowsTab, string>; pending?: number }) {
   const tabs: { key: WorkflowsTab; href: string }[] = [
     { key: "workflows", href: `/${locale}/workflows` },
+    { key: "monitor", href: `/${locale}/workflows/monitor` },
     { key: "runs", href: `/${locale}/workflows/runs` },
     { key: "approvals", href: `/${locale}/workflows/approvals` },
     { key: "templates", href: `/${locale}/workflows/templates` },

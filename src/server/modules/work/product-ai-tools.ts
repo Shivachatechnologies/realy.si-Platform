@@ -55,7 +55,7 @@ export const PRODUCT_TOOLS: Record<string, ToolDefinition> = {
     name: "read_product_docs",
     version: 1,
     description: "Reads the current versions of a product's documents (research, BRD, PRD, technical requirements, architecture, UX spec, design brief, QA plan, release plan). Optionally only some kinds.",
-    input: z.object({ productId: uuid, kinds: z.array(z.enum(DOC_KINDS)).max(9).optional() }).strict(),
+    input: z.object({ productId: uuid, kinds: z.array(z.enum(DOC_KINDS)).max(DOC_KINDS.length).optional() }).strict(),
     modelSchema: { type: "object", properties: { ...productIdSchema, kinds: { type: "array", items: { type: "string", enum: [...DOC_KINDS] } } }, required: ["productId"], additionalProperties: false },
     permissions: ["projects.read"],
     risk: "LOW",

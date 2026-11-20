@@ -7,16 +7,17 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 
 /** Collapsed (icon-only) rail state, provided by the frame. */
-const SidebarState = createContext<{ collapsed: boolean }>({ collapsed: false });
+const SidebarState = createContext<{ collapsed: boolean; touch: boolean }>({ collapsed: false, touch: false });
 export const useSidebarCollapsed = () => useContext(SidebarState).collapsed;
 
 /** Link with active state. `pathname` null = unknown (static shell), rendered without highlighting. */
 function NavLinkBase({ item, onNavigate, pathname }: { item: NavItem; onNavigate?: () => void; pathname: string | null }) {
   const { t, locale } = useI18n();
-  const collapsed = useSidebarCollapsed();
+  const { collapsed, touch } = useContext(SidebarState);
   const href = `/${locale}${item.href}`;
   const active = pathname !== null && (item.href === "" ? pathname === `/${locale}` : pathname === href || pathname.startsWith(`${href}/`));
   const Icon = item.icon;
@@ -31,6 +32,7 @@ function NavLinkBase({ item, onNavigate, pathname }: { item: NavItem; onNavigate
         "group/nav relative z-[1] flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted/70 hover:text-foreground",
         active && "font-medium text-foreground hover:bg-transparent",
         collapsed && "justify-center px-0",
+        touch && "h-11 gap-3 px-3 text-sm",
       )}
     >
       <Icon
@@ -117,6 +119,7 @@ export function Sidebar({
   onNavigate,
   collapsed = false,
   onToggleCollapsed,
+  touch = false,
 }: {
   adminSlot?: ReactNode;
   onNavigate?: () => void;
@@ -124,11 +127,13 @@ export function Sidebar({
   collapsed?: boolean;
   /** Renders the collapse toggle when given. */
   onToggleCollapsed?: () => void;
+  /** Touch layout (mobile drawer): 44px rows. */
+  touch?: boolean;
 }) {
   const { t, locale } = useI18n();
   const list = useRef<HTMLDivElement>(null);
   return (
-    <SidebarState.Provider value={{ collapsed }}>
+    <SidebarState.Provider value={{ collapsed, touch }}>
       <nav aria-label={t("nav.commandCenter")} className="flex h-full flex-col">
         <div className={cn("flex h-14 shrink-0 items-center gap-2 px-3", collapsed && "justify-center px-2")}>
           <Link
@@ -174,6 +179,11 @@ export function Sidebar({
             {adminSlot ? <div className="grid gap-0.5 border-t pt-3 empty:hidden">{adminSlot}</div> : null}
           </div>
         </div>
+        {touch ? (
+          <div className="flex min-h-14 shrink-0 items-center border-t px-4">
+            <LanguageSwitcher signedIn className="min-h-11 text-sm [&_select]:min-h-11 [&_select]:text-sm" />
+          </div>
+        ) : null}
         {onToggleCollapsed && collapsed ? (
           <div className="flex shrink-0 justify-center border-t p-2">
             <button

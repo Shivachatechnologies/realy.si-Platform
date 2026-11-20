@@ -27,6 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
+  // Edge-to-edge on notched phones: the shell pads itself with env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafafb" },
     { media: "(prefers-color-scheme: dark)", color: "#16171c" },

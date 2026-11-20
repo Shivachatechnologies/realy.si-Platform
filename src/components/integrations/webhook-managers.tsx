@@ -55,40 +55,60 @@ export function CopyText({ value, label }: { value: string; label: string }) {
   );
 }
 
+const VERIFICATIONS = ["TOKEN", "HMAC_SHA256", "STRIPE", "GITHUB", "SHOPIFY", "SLACK"] as const;
+type Verification = (typeof VERIFICATIONS)[number];
+const PRESET_HEADERS: Partial<Record<Verification, string>> = { STRIPE: "Stripe-Signature", GITHUB: "X-Hub-Signature-256", SHOPIFY: "X-Shopify-Hmac-Sha256", SLACK: "X-Slack-Signature" };
+const isPreset = (v: Verification) => v in PRESET_HEADERS;
+
 export function NewHookForm({ base }: { base: string }) {
   const t = useT();
   const [name, setName] = useState("");
-  const [verification, setVerification] = useState<"TOKEN" | "HMAC_SHA256">("TOKEN");
+  const [verification, setVerification] = useState<Verification>("TOKEN");
   const [signatureHeader, setSignatureHeader] = useState("x-realy-signature");
+  const [signingSecret, setSigningSecret] = useState("");
   const [secret, setSecret] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const { busy, error, run } = useAction();
+  const preset = isPreset(verification);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void run(
-      () => api<{ secret: string }>(`${base}/integration-hooks`, { body: { name, verification, signatureHeader } }),
+      () => api<{ secret: string | null }>(`${base}/integration-hooks`, { body: { name, verification, signatureHeader, ...(preset ? { signingSecret } : {}) } }),
       (r) => {
         setSecret(r.secret);
+        setSaved(!r.secret);
         setName("");
+        setSigningSecret("");
       },
     );
   };
   return (
     <div className="grid gap-3 p-3">
       {secret ? <SecretReveal secret={secret} onDone={() => setSecret(null)} /> : null}
-      <form onSubmit={submit} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_12rem_auto] sm:items-end">
+      {saved ? <Notice tone="success">{t("integrations.webhooks.presetSaved")}</Notice> : null}
+      <form onSubmit={submit} className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] lg:items-end">
         <Field label={t("integrations.webhooks.name")} htmlFor="hook-name">
           <Input id="hook-name" value={name} required maxLength={120} placeholder={t("integrations.webhooks.namePlaceholder")} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field label={t("integrations.webhooks.verification")} htmlFor="hook-verification">
-          <Select id="hook-verification" value={verification} onChange={(e) => setVerification(e.target.value as "TOKEN" | "HMAC_SHA256")}>
-            <option value="TOKEN">{t("integrations.webhooks.verificationTOKEN")}</option>
-            <option value="HMAC_SHA256">{t("integrations.webhooks.verificationHMAC_SHA256")}</option>
+          <Select id="hook-verification" value={verification} onChange={(e) => setVerification(e.target.value as Verification)}>
+            {VERIFICATIONS.map((v) => (
+              <option key={v} value={v}>
+                {t(`integrations.webhooks.verification${v}`)}
+              </option>
+            ))}
           </Select>
         </Field>
-        <Field label={t("integrations.webhooks.signatureHeader")} htmlFor="hook-header">
-          <Input id="hook-header" value={signatureHeader} disabled={verification !== "HMAC_SHA256"} maxLength={64} pattern="[A-Za-z0-9-]{1,64}" onChange={(e) => setSignatureHeader(e.target.value)} />
-        </Field>
-        <Button type="submit" disabled={busy || !name.trim()}>
+        {preset ? (
+          <Field label={t("integrations.webhooks.signingSecret")} htmlFor="hook-signing-secret" hint={t("integrations.webhooks.signingSecretHint", { header: PRESET_HEADERS[verification] ?? "" })}>
+            <Input id="hook-signing-secret" type="password" autoComplete="off" value={signingSecret} required minLength={8} maxLength={500} onChange={(e) => setSigningSecret(e.target.value)} />
+          </Field>
+        ) : (
+          <Field label={t("integrations.webhooks.signatureHeader")} htmlFor="hook-header">
+            <Input id="hook-header" value={signatureHeader} disabled={verification !== "HMAC_SHA256"} maxLength={64} pattern="[A-Za-z0-9-]{1,64}" onChange={(e) => setSignatureHeader(e.target.value)} />
+          </Field>
+        )}
+        <Button type="submit" disabled={busy || !name.trim() || (preset && signingSecret.trim().length < 8)} className="min-h-11 sm:min-h-9">
           <Plus aria-hidden />
           {t("integrations.webhooks.createHook")}
         </Button>

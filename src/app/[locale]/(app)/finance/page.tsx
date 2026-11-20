@@ -6,6 +6,7 @@ import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { AutoRefresh } from "@/components/agents/auto-refresh";
 import { AskCfoForm } from "@/components/finance/approval-forms";
 import { InsightsButton } from "@/components/finance/insights-button";
+import { MoneyFlowCard } from "@/components/finance/money-flow-card";
 import { financePage } from "@/components/finance/page-context";
 import { BarChart, Empty, Kpi, RangeForm, rangePresets, StatusBadge, TASK_TONE } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
@@ -14,6 +15,7 @@ import { FinanceCommandCenter, type CommandData } from "@/components/finance/fin
 import { formatDateTime } from "@/i18n/format";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { detectExpenseAnomalies, financeDashboard } from "@/server/modules/finance/analytics";
+import { financeAlertCenter } from "@/server/modules/finance/alerts";
 import { parseRange } from "@/server/modules/finance/common";
 import { listInsightTasks, listQuestionTasks } from "@/server/modules/finance/insights";
 import { pendingApprovalCount } from "@/server/modules/finance/approvals";
@@ -29,13 +31,14 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
   const { t, locale, viewer, org, company, money, base } = p;
   const sp = await searchParams;
   const range = parseRange(sp);
-  const [d, anomalies, accounts, tasks, questions, pendingApprovals] = await Promise.all([
+  const [d, anomalies, accounts, tasks, questions, pendingApprovals, alerts] = await Promise.all([
     financeDashboard(viewer.ctx, org.id, company.id, range),
     detectExpenseAnomalies(viewer.ctx, org.id, company.id),
     listFinanceAccounts(viewer.ctx, org.id, company.id),
     p.canRunAgents ? listInsightTasks(viewer.ctx, org.id, company.id).catch(() => []) : Promise.resolve([]),
     p.canRunAgents ? listQuestionTasks(viewer.ctx, org.id, company.id).catch(() => []) : Promise.resolve([]),
     pendingApprovalCount(viewer.ctx, org.id, company.id),
+    financeAlertCenter(viewer.ctx, org.id, company.id),
   ]);
   const answering = questions.some((q) => q.status === "QUEUED" || q.status === "RUNNING");
   const monthLabel = (k: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${k}-01T00:00:00Z`));
@@ -66,6 +69,27 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
 
   return p.frame(
     <>
+      {alerts.count ? (
+        <Notice
+          tone={alerts.runway.level === "critical" || alerts.negative ? "danger" : "warning"}
+          title={t("finance.alerts.activeTitle")}
+          action={
+            <Link href={`/${locale}/finance/alerts`} className="text-xs font-medium underline">
+              {t("finance.alerts.count", { count: alerts.count })}
+            </Link>
+          }
+        >
+          {[
+            alerts.runway.level ? t(`finance.alerts.kinds.${alerts.runway.level === "critical" ? "runway_critical" : "runway_low"}`) : null,
+            alerts.negative ? t("finance.alerts.kinds.cash_negative_forecast") : null,
+            alerts.invoices.length ? t("finance.alerts.overdueInvoices", { count: alerts.invoices.length, amount: money(alerts.invoicesTotal) }) : null,
+            alerts.bills.length ? t("finance.alerts.overdueBills", { count: alerts.bills.length, amount: money(alerts.billsTotal) }) : null,
+            alerts.overBudget.length ? alerts.overBudget.map((b) => t(b.usedPct >= 100 ? "finance.alerts.budgetOver" : "finance.alerts.budgetNear", { name: b.name })).join(" · ") : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </Notice>
+      ) : null}
       {!accounts.length ? (
         <Notice tone="info" title={t("finance.os.emptyTitle")} action={<Link href={`/${locale}/finance/start?flow=income`} className="text-xs font-medium underline">{t("finance.os.emptyCta")}</Link>}>
           {t("finance.os.emptyText")}
@@ -110,6 +134,7 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
       </Card>
 
       <FinanceCommandCenter data={command} locale={locale} />
+      <MoneyFlowCard ctx={viewer.ctx} organizationId={org.id} companyId={company.id} range={range} t={t} locale={locale} money={money} qs={`from=${range.fromStr}&to=${range.toStr}`} />
       <details className="rounded-lg border bg-surface" open={advancedOpen}>
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium">{t("finance.os.advanced")}</summary>
         <div className="grid gap-4 border-t p-4">

@@ -8,7 +8,7 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { definitionSchema, evaluateAll, render, type Definition, type EvalScope, type Schedule, type Step } from "./definition";
-import { AI_TASK_KINDS, errorMessage, executeAction, isPermanent, renderAction, type ActionEnv } from "./actions";
+import { AI_TASK_KINDS, errorMessage, executeAction, isPermanent, parseDecision, renderAction, type ActionEnv } from "./actions";
 
 /**
  * Workflow engine.
@@ -353,7 +353,19 @@ async function resumeWaiting(s: WalkState, step: Step, stepType: string, output:
     if (!task) return { kind: "fail", error: `Step ${step.id}: AI task not found` };
     if (task.status === "QUEUED" || task.status === "RUNNING") return { kind: "wait", waitingFor: "agent_task", until: new Date(Date.now() + AGENT_POLL_MS) };
     if (task.status === "COMPLETED") {
-      const out = { id: output.id, status: task.status, output: (task.output ?? "").slice(0, 20_000) };
+      const text = (task.output ?? "").slice(0, 20_000);
+      if (step.action.kind === "ai_decision") {
+        const d = parseDecision(text, step.action.options);
+        if (!d) {
+          await saveStep(s, step, { status: "FAILED", output: { id: output.id, output: text }, error: "The AI did not pick one of the listed choices", finished: true });
+          return { kind: "fail", error: `Step ${step.id}: the AI did not pick one of the listed choices` };
+        }
+        const out = { id: output.id, status: task.status, output: text, choice: d.choice, reason: d.reason };
+        await saveStep(s, step, { status: "SUCCEEDED", output: out, finished: true });
+        s.scope.steps[step.id] = out;
+        return null;
+      }
+      const out = { id: output.id, status: task.status, output: text };
       await saveStep(s, step, { status: "SUCCEEDED", output: out, finished: true });
       s.scope.steps[step.id] = out;
       return null;

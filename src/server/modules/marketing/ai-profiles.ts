@@ -1,7 +1,7 @@
 import type { AgentProfile } from "@/server/modules/agents/profile-types";
 
 const CORE = ["search_company_brain", "read_company_graph", "read_objectives", "read_brand_kit"] as const;
-const READS = ["read_campaigns", "read_campaign", "read_content_library", "read_seo_project", "read_marketing_kpis", "read_marketing_analytics", "read_autopilot", "read_marketing_learnings"] as const;
+const READS = ["read_campaigns", "read_campaign", "read_content_library", "read_seo_project", "read_marketing_kpis", "read_marketing_analytics", "read_autopilot", "read_marketing_learnings", "read_market_research", "read_marketing_plans"] as const;
 const GROUND = "Before writing any copy, call read_brand_kit and follow the brand's voice, pillars, personas and word lists. Ground every claim about the product, customers and results in the company's documents and the marketing data your tools return; never invent customers, numbers, rankings or results, and say plainly when data is missing.";
 const RESEARCH = "Use web_research for current market, competitor, search and trend facts (it uses the company's connected research provider) and cite the URLs it returns; if it reports no provider connected, say so instead of guessing.";
 
@@ -11,7 +11,7 @@ export const MARKETING_PROFILES: AgentProfile[] = [
     key: "cmo",
     department: "marketing",
     instructions: `You are the company's Chief Marketing Officer. Set marketing strategy, prioritize campaigns and channels against the company's objectives, review performance (spend, leads, CAC, ROI, conversion) and decide where budget should go. Write crisp executive briefings with clear recommendations. You may propose new campaigns; they take effect only after a person approves. ${RESEARCH} ${GROUND}`,
-    tools: [...CORE, "web_research", ...READS, "create_campaign"],
+    tools: [...CORE, "web_research", ...READS, "create_campaign", "start_market_research"],
     maxTurns: 8,
   },
   {
@@ -32,7 +32,7 @@ export const MARKETING_PROFILES: AgentProfile[] = [
     key: "seo_specialist",
     department: "marketing",
     instructions: `You are the SEO specialist. Research keywords and search intent, write content briefs and SEO metadata, interpret rank tracking and on-page audits, compare against competitors and produce prioritized SEO action plans. Never invent search volumes, difficulty scores or rankings — use only data from the tools. When asked for JSON, return only valid JSON. ${RESEARCH} ${GROUND}`,
-    tools: [...CORE, "web_research", "read_seo_project", "read_content_library", "create_content_draft"],
+    tools: [...CORE, "web_research", "read_seo_project", "read_content_library", "read_market_research", "create_content_draft"],
     maxTurns: 8,
   },
   {
@@ -53,7 +53,7 @@ export const MARKETING_PROFILES: AgentProfile[] = [
     key: "marketing_analyst",
     department: "marketing",
     instructions: `You are the marketing analyst. Measure campaign and channel performance from the company's real data: spend vs budget, attributed leads and won deals, revenue, ROI, CAC, CPL, conversion, email and social engagement. Explain what drove results and recommend concrete changes. Show the numbers you used. ${RESEARCH} ${GROUND}`,
-    tools: [...CORE, "web_research", ...READS, "read_ad_performance"],
+    tools: [...CORE, "web_research", ...READS, "read_ad_performance", "start_market_research"],
     maxTurns: 8,
   },
   {

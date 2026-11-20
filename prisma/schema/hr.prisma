@@ -99,11 +99,12 @@ model HrJob {
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company       Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  department    Department?      @relation("HrJobDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
-  hiringManager Employee?        @relation("HrJobHiringManager", fields: [hiringManagerId, companyId], references: [id, companyId], onDelete: NoAction)
-  candidates    HrCandidate[]
-  journey       HrHiringJourney?
+  company        Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department     Department?       @relation("HrJobDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  hiringManager  Employee?         @relation("HrJobHiringManager", fields: [hiringManagerId, companyId], references: [id, companyId], onDelete: NoAction)
+  candidates     HrCandidate[]
+  journey        HrHiringJourney?
+  headcountPlans HrHeadcountPlan[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -198,21 +199,27 @@ enum HrInterviewStatus {
 }
 
 model HrInterview {
-  id             String            @id @default(uuid(7)) @db.Uuid
-  organizationId String            @map("organization_id") @db.Uuid
-  companyId      String            @map("company_id") @db.Uuid
-  candidateId    String            @map("candidate_id") @db.Uuid
-  type           HrInterviewType   @default(VIDEO)
-  status         HrInterviewStatus @default(SCHEDULED)
-  scheduledAt    DateTime          @map("scheduled_at") @db.Timestamptz(3)
-  durationMin    Int               @default(45) @map("duration_min")
-  location       String?
+  id               String            @id @default(uuid(7)) @db.Uuid
+  organizationId   String            @map("organization_id") @db.Uuid
+  companyId        String            @map("company_id") @db.Uuid
+  candidateId      String            @map("candidate_id") @db.Uuid
+  type             HrInterviewType   @default(VIDEO)
+  status           HrInterviewStatus @default(SCHEDULED)
+  scheduledAt      DateTime          @map("scheduled_at") @db.Timestamptz(3)
+  durationMin      Int               @default(45) @map("duration_min")
+  location         String?
   /// Employee ids of the interviewers (validated against the company).
-  interviewerIds String[]          @default([]) @map("interviewer_ids") @db.Uuid
-  notes          String?
-  createdById    String            @map("created_by_id") @db.Uuid
-  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  interviewerIds   String[]          @default([]) @map("interviewer_ids") @db.Uuid
+  notes            String?
+  /// Calendar the interview was pushed to ("google_calendar" | "outlook_calendar"); null = not synced (manual).
+  calendarProvider String?           @map("calendar_provider")
+  calendarEventId  String?           @map("calendar_event_id")
+  calendarSyncedAt DateTime?         @map("calendar_synced_at") @db.Timestamptz(3)
+  /// Last provider error when the push failed (shown to HR; nothing is claimed as synced).
+  calendarError    String?           @map("calendar_error")
+  createdById      String            @map("created_by_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company    Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   candidate  HrCandidate   @relation(fields: [candidateId, companyId], references: [id, companyId], onDelete: Cascade)
@@ -1044,4 +1051,53 @@ model HrHiringJourney {
   @@unique([jobId, companyId])
   @@index([organizationId, companyId, completedAt])
   @@map("hr_hiring_journeys")
+}
+
+// ─── Workforce planning ─────────────────────────────────────────────────────────────────────────────────────────────
+
+enum HrHeadcountPlanStatus {
+  PLANNED
+  APPROVED
+  HIRING
+  FILLED
+  CANCELLED
+}
+
+enum HrHeadcountPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+/// A planned role (headcount) for a future quarter: what the company intends to hire, why and at what cost.
+model HrHeadcountPlan {
+  id              String                @id @default(uuid(7)) @db.Uuid
+  organizationId  String                @map("organization_id") @db.Uuid
+  companyId       String                @map("company_id") @db.Uuid
+  title           String
+  /// Department id (validated against the company; kept as a plain id so departments stay owned by Organization).
+  departmentId    String?               @map("department_id") @db.Uuid
+  employmentType  EmploymentType        @default(FULL_TIME) @map("employment_type")
+  headcount       Int                   @default(1)
+  /// First day of the quarter the role should start in.
+  targetStart     DateTime              @map("target_start") @db.Date
+  /// Planned yearly cost per person (salary + overhead), minor units of `currency`.
+  annualCostMinor BigInt                @default(0) @map("annual_cost_minor")
+  currency        String                @db.Char(3)
+  priority        HrHeadcountPriority   @default(MEDIUM)
+  status          HrHeadcountPlanStatus @default(PLANNED)
+  reason          String?
+  jobId           String?               @map("job_id") @db.Uuid
+  createdById     String                @map("created_by_id") @db.Uuid
+  approvedById    String?               @map("approved_by_id") @db.Uuid
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  job     HrJob?  @relation(fields: [jobId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, targetStart])
+  @@map("hr_headcount_plans")
 }

@@ -10,7 +10,8 @@ import { productWorkspace } from "@/components/work/product-ui";
 import { HelpStrip, JourneyMap, LifecycleRail, ReadinessGauge } from "@/components/work/product-studio";
 import { AnimatedProgress } from "@/components/motion/animated-progress";
 import { aiConfigured } from "@/server/modules/agents/runtime";
-import { launchReadiness, productJourney, productVisuals } from "@/server/modules/work/product-journey";
+import { launchReadiness, productJourney, productVisuals, stageDeliverables } from "@/server/modules/work/product-journey";
+import { DeliverablesMap } from "@/components/product-studio/deliverables-map";
 import { ProductGraph, ProgressionFunnel } from "@/components/work/product-visuals";
 import { Facts, StatCard } from "@/components/work/ui";
 import { formatDate, formatDateTime } from "@/i18n/format";
@@ -32,7 +33,7 @@ export default async function ProductOverviewPage({ params }: PageProps<"/[local
   if (w.gate) return w.gate;
   const { t, locale, viewer, org, company, base, tz, canEdit, canManage } = w;
   const chain = await companyChain(db(), org.id, company.id);
-  const [visuals, journey, readiness, p, links, pickers, people, canHire] = await Promise.all([
+  const [visuals, journey, readiness, p, links, pickers, people, canHire, deliverables] = await Promise.all([
     productVisuals(viewer.ctx, org.id, company.id, productId),
     productJourney(viewer.ctx, org.id, company.id, productId),
     launchReadiness(viewer.ctx, org.id, company.id, productId),
@@ -41,6 +42,7 @@ export default async function ProductOverviewPage({ params }: PageProps<"/[local
     canManage ? productFormPickers(org.id, company.id) : { entities: [], projects: [] },
     canManage ? listPeople(viewer.ctx, org.id, company.id) : [],
     can(viewer.ctx, "agents.manage", chain),
+    stageDeliverables(viewer.ctx, org.id, company.id, productId),
   ]);
   const ws = `/${locale}/product/${p.id}`;
   const i = stageIndex(p.stage);
@@ -74,6 +76,12 @@ export default async function ProductOverviewPage({ params }: PageProps<"/[local
         <AnimatedProgress value={journey.overall} label={t("product.journey.overall", { percent: journey.overall })} active={journey.plan?.status === "RUNNING"} />
       </Card>
       <JourneyMap t={t} locale={locale} base={base} productId={p.id} journey={journey} canEdit={canEdit} canAi={w.canRunAgents && aiConfigured()} />
+      <Card variant="elevated">
+        <CardHeader title={t("productStudio.deliverables.title")} description={t("productStudio.deliverables.hint", { saved: deliverables.saved, total: deliverables.total })} />
+        <CardBody>
+          <DeliverablesMap t={t} locale={locale} tz={tz} base={base} ws={ws} data={deliverables} canEdit={canEdit} canAi={w.canRunAgents && aiConfigured()} />
+        </CardBody>
+      </Card>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader

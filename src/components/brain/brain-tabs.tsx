@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
-/** Secondary navigation of Company Brain (/brain, /documents, /brain/memory, /brain/ask). */
+/** Secondary navigation of Company Brain (/brain, /brain/knowledge, /documents, /brain/memory, /brain/ask). */
 const TABS = [
   { key: "search", path: "/brain" },
+  { key: "knowledge", path: "/brain/knowledge" },
   { key: "documents", path: "/documents" },
   { key: "memory", path: "/brain/memory" },
   { key: "ask", path: "/brain/ask" },

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 export const FINANCE_TABS = [
   ["dashboard", ""],
   ["start", "/start"],
+  ["alerts", "/alerts"],
   ["transactions", "/transactions"],
   ["accounts", "/accounts"],
   ["invoices", "/invoices"],
@@ -20,6 +21,7 @@ export const FINANCE_TABS = [
   ["cashflow", "/cashflow"],
   ["accounting", "/accounting"],
   ["reports", "/reports"],
+  ["learn", "/learn"],
   ["settings", "/settings"],
 ] as const;
 export type FinanceTab = (typeof FINANCE_TABS)[number][0];
