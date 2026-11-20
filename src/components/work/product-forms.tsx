@@ -15,6 +15,7 @@ import { useAction } from "./actions";
 const ITEM_STATUSES = ["PROPOSED", "PLANNED", "IN_PROGRESS", "SHIPPED", "CANCELLED"] as const;
 const RELEASE_STATUSES = ["PLANNED", "IN_PROGRESS", "RELEASED"] as const;
 const IMPACTS = ["0.25", "0.5", "1", "2", "3"] as const;
+const SENTIMENTS = ["POSITIVE", "NEUTRAL", "NEGATIVE"] as const;
 
 interface Opt {
   id: string;
@@ -35,9 +36,27 @@ function QuarterSelect({ id, value, onChange, quarters }: { id: string; value: s
   );
 }
 
-export function InitiativeForm({ base, quarters }: { base: string; quarters: string[] }) {
+/** Product picker (hidden when the form is inside a product workspace). */
+function ProductPick({ id, value, onChange, products }: { id: string; value: string; onChange: (v: string) => void; products?: Opt[] }) {
   const t = useT();
-  const empty = { title: "", description: "", quarter: quarters[0] ?? "", status: "PLANNED" };
+  if (!products) return null;
+  return (
+    <Field label={t("product.product")} htmlFor={id}>
+      <Select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">{t("work.none")}</option>
+        {products.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  );
+}
+
+export function InitiativeForm({ base, quarters, productId, products }: { base: string; quarters: string[]; productId?: string; products?: Opt[] }) {
+  const t = useT();
+  const empty = { title: "", description: "", quarter: quarters[0] ?? "", status: "PLANNED", productId: productId ?? "" };
   const [f, setF] = useState(empty);
   const { busy, error, run } = useAction();
   return (
@@ -67,9 +86,10 @@ export function InitiativeForm({ base, quarters }: { base: string; quarters: str
         <Plus aria-hidden />
         {t("work.product.addInitiative")}
       </Button>
-      <Field label={t("work.product.description")} htmlFor="in-desc" className="sm:col-span-4">
+      <Field label={t("work.product.description")} htmlFor="in-desc" className={products ? "sm:col-span-3" : "sm:col-span-4"}>
         <Input id="in-desc" value={f.description} maxLength={5000} onChange={(e) => setF((p) => ({ ...p, description: e.target.value }))} />
       </Field>
+      <ProductPick id="in-product" value={f.productId} products={products} onChange={(v) => setF((p) => ({ ...p, productId: v }))} />
       <div className="sm:col-span-4">
         <FormError error={error} />
       </div>
@@ -89,6 +109,9 @@ export interface FeatureValues {
   impact: string;
   confidence: string;
   effort: string;
+  productId?: string;
+  requirements?: string;
+  acceptanceCriteria?: string;
 }
 
 const featurePayload = (f: FeatureValues) => ({
@@ -114,6 +137,8 @@ export function FeatureForm({
   initiatives,
   projects,
   releases,
+  products,
+  productId,
 }: {
   base: string;
   locale: string;
@@ -123,11 +148,14 @@ export function FeatureForm({
   initiatives: Opt[];
   projects: Opt[];
   releases: Opt[];
+  /** Product picker options; omit inside a product workspace (then `productId` is fixed). */
+  products?: Opt[];
+  productId?: string;
 }) {
   const t = useT();
   const router = useRouter();
-  const empty: FeatureValues = { title: "", spec: "", status: "PROPOSED", quarter: "", initiativeId: "", projectId: "", releaseId: "", reach: "", impact: "", confidence: "", effort: "" };
-  const [f, setF] = useState<FeatureValues>(initial ?? empty);
+  const empty: FeatureValues = { title: "", spec: "", status: "PROPOSED", quarter: "", initiativeId: "", projectId: "", releaseId: "", reach: "", impact: "", confidence: "", effort: "", productId: productId ?? "", requirements: "", acceptanceCriteria: "" };
+  const [f, setF] = useState<FeatureValues>(initial ? { ...empty, ...initial } : empty);
   const [saved, setSaved] = useState(false);
   const { busy, error, run } = useAction();
   const set = (k: keyof FeatureValues) => (e: { target: { value: string } }) => (setSaved(false), setF((p) => ({ ...p, [k]: e.target.value })));
@@ -173,7 +201,7 @@ export function FeatureForm({
       {opt("ft-init", t("work.product.initiative"), "initiativeId", initiatives)}
       {opt("ft-project", t("work.task.project"), "projectId", projects)}
       {opt("ft-release", t("work.product.release"), "releaseId", releases)}
-      <div />
+      {products ? opt("ft-product", t("product.product"), "productId", products) : <div />}
       <fieldset className="grid gap-2 rounded-md border p-3 sm:col-span-4 sm:grid-cols-5 sm:items-end">
         <legend className="px-1 text-xs font-medium text-muted-foreground">{t("work.product.rice")}</legend>
         <Field label={t("work.product.reach")} htmlFor="ft-reach" hint={t("work.product.reachHint")}>
@@ -203,6 +231,12 @@ export function FeatureForm({
       <Field label={t("work.product.spec")} htmlFor="ft-spec" className="sm:col-span-4" hint={t("work.product.specHint")}>
         <Textarea id="ft-spec" rows={featureId ? 10 : 4} value={f.spec} maxLength={50000} onChange={set("spec")} />
       </Field>
+      <Field label={t("product.feature.requirements")} htmlFor="ft-req" className="sm:col-span-2" hint={t("product.feature.requirementsHint")}>
+        <Textarea id="ft-req" rows={featureId ? 8 : 3} value={f.requirements ?? ""} maxLength={50000} onChange={set("requirements")} />
+      </Field>
+      <Field label={t("product.feature.acceptance")} htmlFor="ft-ac" className="sm:col-span-2" hint={t("product.feature.acceptanceHint")}>
+        <Textarea id="ft-ac" rows={featureId ? 8 : 3} value={f.acceptanceCriteria ?? ""} maxLength={20000} onChange={set("acceptanceCriteria")} />
+      </Field>
       <div className="flex items-center gap-2 sm:col-span-4">
         <Button type="submit" variant={featureId ? "secondary" : "default"} disabled={busy || !f.title.trim()}>
           {featureId ? (
@@ -223,16 +257,17 @@ export function FeatureForm({
   );
 }
 
-export function IdeaForm({ base }: { base: string }) {
+export function IdeaForm({ base, productId, products }: { base: string; productId?: string; products?: Opt[] }) {
   const t = useT();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [product, setProduct] = useState(productId ?? "");
   const { busy, error, run } = useAction();
   return (
     <form
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
-        void run(() => api(`${base}/product/ideas`, { body: { title, description } }), () => (setTitle(""), setDescription("")));
+        void run(() => api(`${base}/product/ideas`, { body: { title, description, productId: product } }), () => (setTitle(""), setDescription("")));
       }}
       className="grid gap-2 p-3"
     >
@@ -242,6 +277,7 @@ export function IdeaForm({ base }: { base: string }) {
       <Field label={t("work.product.description")} htmlFor="id-desc">
         <Textarea id="id-desc" rows={2} value={description} maxLength={5000} onChange={(e) => setDescription(e.target.value)} />
       </Field>
+      <ProductPick id="id-product" value={product} products={products} onChange={setProduct} />
       <div>
         <Button type="submit" disabled={busy || !title.trim()}>
           <Plus aria-hidden />
@@ -274,9 +310,25 @@ export function VoteButton({ base, ideaId, voted, count }: { base: string; ideaI
   );
 }
 
-export function FeedbackForm({ base, accounts, contacts, features, sources }: { base: string; accounts: Opt[]; contacts: (Opt & { accountId: string | null })[]; features: Opt[]; sources: string[] }) {
+export function FeedbackForm({
+  base,
+  accounts,
+  contacts,
+  features,
+  sources,
+  productId,
+  products,
+}: {
+  base: string;
+  accounts: Opt[];
+  contacts: (Opt & { accountId: string | null })[];
+  features: Opt[];
+  sources: string[];
+  productId?: string;
+  products?: Opt[];
+}) {
   const t = useT();
-  const empty = { source: "email", body: "", accountId: "", contactId: "", featureId: "" };
+  const empty = { source: "email", body: "", accountId: "", contactId: "", featureId: "", productId: productId ?? "", sentiment: "" };
   const [f, setF] = useState(empty);
   const { busy, error, run } = useAction();
   const set = (k: keyof typeof empty) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value, ...(k === "accountId" ? { contactId: "" } : {}) }));
@@ -328,6 +380,17 @@ export function FeedbackForm({ base, accounts, contacts, features, sources }: { 
           ))}
         </Select>
       </Field>
+      <Field label={t("product.feedback.sentiment")} htmlFor="fb-sentiment">
+        <Select id="fb-sentiment" value={f.sentiment} onChange={set("sentiment")}>
+          <option value="">{t("product.feedback.unrated")}</option>
+          {SENTIMENTS.map((s) => (
+            <option key={s} value={s}>
+              {t(`product.sentiment.${s}`)}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <ProductPick id="fb-product" value={f.productId} products={products} onChange={(v) => setF((p) => ({ ...p, productId: v }))} />
       <Field label={t("work.product.feedbackBody")} htmlFor="fb-body" className="sm:col-span-4">
         <Textarea id="fb-body" rows={3} value={f.body} maxLength={10000} required onChange={set("body")} />
       </Field>
@@ -351,12 +414,31 @@ export interface ReleaseValues {
   status: string;
   notes: string;
   featureIds: string[];
+  productId?: string;
 }
 
-export function ReleaseForm({ base, releaseId, initial, features, published, onDone }: { base: string; releaseId?: string; initial?: ReleaseValues; features: Opt[]; published?: boolean; onDone?: () => void }) {
+export function ReleaseForm({
+  base,
+  releaseId,
+  initial,
+  features,
+  published,
+  onDone,
+  productId,
+  products,
+}: {
+  base: string;
+  releaseId?: string;
+  initial?: ReleaseValues;
+  features: Opt[];
+  published?: boolean;
+  onDone?: () => void;
+  productId?: string;
+  products?: Opt[];
+}) {
   const t = useT();
-  const empty: ReleaseValues = { version: "", name: "", releaseDate: "", status: "PLANNED", notes: "", featureIds: [] };
-  const [f, setF] = useState<ReleaseValues>(initial ?? empty);
+  const empty: ReleaseValues = { version: "", name: "", releaseDate: "", status: "PLANNED", notes: "", featureIds: [], productId: productId ?? "" };
+  const [f, setF] = useState<ReleaseValues>(initial ? { ...empty, ...initial } : empty);
   const { busy, error, run } = useAction();
   const set = (k: keyof Omit<ReleaseValues, "featureIds">) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
   const id = releaseId ?? "new";
@@ -386,7 +468,8 @@ export function ReleaseForm({ base, releaseId, initial, features, published, onD
           ))}
         </Select>
       </Field>
-      <Field label={t("work.product.includedFeatures")} htmlFor={`rl-f-${id}`} hint={t("work.project.membersHint")} className="sm:col-span-4">
+      {products ? <ProductPick id={`rl-p-${id}`} value={f.productId ?? ""} products={products} onChange={(v) => setF((p) => ({ ...p, productId: v }))} /> : null}
+      <Field label={t("work.product.includedFeatures")} htmlFor={`rl-f-${id}`} hint={t("work.project.membersHint")} className={products ? "sm:col-span-3" : "sm:col-span-4"}>
         <select
           id={`rl-f-${id}`}
           multiple
@@ -421,10 +504,10 @@ export function ReleaseForm({ base, releaseId, initial, features, published, onD
   );
 }
 
-export function ReleaseEditor({ base, releaseId, initial, features, published }: { base: string; releaseId: string; initial: ReleaseValues; features: Opt[]; published: boolean }) {
+export function ReleaseEditor({ base, releaseId, initial, features, published, products }: { base: string; releaseId: string; initial: ReleaseValues; features: Opt[]; published: boolean; products?: Opt[] }) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  if (open) return <div className="rounded-md border"><ReleaseForm base={base} releaseId={releaseId} initial={initial} features={features} published={published} onDone={() => setOpen(false)} /></div>;
+  if (open) return <div className="rounded-md border"><ReleaseForm base={base} releaseId={releaseId} initial={initial} features={features} published={published} products={products} onDone={() => setOpen(false)} /></div>;
   return (
     <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>
       {t("work.edit")}

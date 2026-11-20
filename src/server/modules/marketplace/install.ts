@@ -668,3 +668,60 @@ export async function installationFor(ctx: RequestContext, organizationId: strin
     where: { companyId_listingKey: { companyId, listingKey } },
   });
 }
+
+/**
+ * Install a manifest generated at runtime (AI Company Builder) the same way listings install: one installation per
+ * source (`listingKey`, e.g. "builder/<runId>") that every apply adds to; applying is idempotent (existing names are
+ * skipped). Runs inside the caller's permissions; areas they may not manage are skipped and reported.
+ */
+export async function installGeneratedManifest(
+  ctx: RequestContext,
+  organizationId: string,
+  companyId: string,
+  input: { listingKey: string; name: string; version?: string; manifest: Manifest; config?: InstallConfig },
+) {
+  const version = input.version ?? "1.0.0";
+  const config = installConfigSchema.parse(input.config ?? {});
+  return transaction(
+    async (tx) => {
+      const chain = await authorize(ctx, organizationId, companyId, "marketplace.install", tx);
+      const existing = await tx.marketplaceInstallation.findUnique({ where: { companyId_listingKey: { companyId, listingKey: input.listingKey } } });
+      const installation =
+        existing ??
+        (await tx.marketplaceInstallation.create({
+          data: {
+            organizationId,
+            companyId,
+            listingKey: input.listingKey,
+            listingType: "COMPANY_TEMPLATE",
+            listingName: input.name,
+            version,
+            config: config as Prisma.InputJsonValue,
+            status: "ACTIVE",
+            installedById: ctx.actor.id ?? organizationId,
+          },
+        }));
+      const summary = await applyManifest({ tx, ctx, organizationId, companyId, chain, installationId: installation.id, version, manifest: input.manifest, config });
+      const previous = (existing?.summary ?? {}) as unknown as Record<string, SectionResult>;
+      const merged: InstallSummary = { ...previous };
+      for (const [k, v] of Object.entries(summary)) {
+        const p = previous[k];
+        merged[k] = p ? { ...v, created: p.created + v.created, skipped: v.skipped } : v;
+      }
+      await tx.marketplaceInstallation.update({
+        where: { id: installation.id },
+        data: { summary: merged as unknown as Prisma.InputJsonValue, status: "ACTIVE", uninstalledAt: null },
+      });
+      await writeAudit(tx, ctx, {
+        category: "TENANT",
+        organizationId,
+        action: "marketplace.generated_installed",
+        resourceType: "marketplace_installation",
+        resourceId: installation.id,
+        newValue: { listingKey: input.listingKey, summary },
+      });
+      return { installationId: installation.id, summary };
+    },
+    { timeout: 60_000 },
+  );
+}

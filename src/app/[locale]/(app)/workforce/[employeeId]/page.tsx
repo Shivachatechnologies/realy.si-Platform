@@ -9,12 +9,16 @@ import { AssignTaskForm } from "@/components/workforce/assign-task-form";
 import { AiAvatar } from "@/components/workforce/avatar";
 import { EditEmployeeDialog } from "@/components/workforce/hire-dialog";
 import { MemoryForm } from "@/components/workforce/memory-form";
+import { ProfileDialog } from "@/components/workforce/profile-dialog";
+import { Sparkline } from "@/components/bi/charts";
+import { SystemPulse } from "@/components/motion";
+import { formatMetric } from "@/components/bi/format";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { getLocale, getT } from "@/i18n/server";
-import { formatDateTime, formatMoney, formatNumber, formatRelativeTime } from "@/i18n/format";
+import { formatDate, formatDateTime, formatMoney, formatNumber, formatRelativeTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { isAppError } from "@/server/core/errors";
 import { profileByKey } from "@/server/modules/agents/profiles";
@@ -26,7 +30,10 @@ import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { toolsForAutonomy } from "@/server/modules/workforce/autonomy";
 import { costMicros, microsToCents } from "@/server/modules/workforce/pricing";
 import { listSchedules } from "@/server/modules/workforce/schedules";
-import { employeeStats, getEmployee, listMembers, listMemories } from "@/server/modules/workforce/service";
+import { directReports, employeeStats, getEmployee, kpisOf, listMembers, listMemories, listReports, performanceHistory, setupSteps } from "@/server/modules/workforce/service";
+import { profileOptions, profileValues } from "@/server/modules/workforce/profile-options";
+import { resolveRange } from "@/server/modules/bi/range";
+import { metricValues, pickMetrics, visibleMetrics } from "@/server/modules/bi/service";
 import { employeeMonthUsage } from "@/server/modules/workforce/usage";
 import { requireOrgContext } from "@/server/workspace";
 
@@ -46,7 +53,7 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
     throw err;
   });
   const chain = await companyChain(db(), org.id, company.id);
-  const [canManage, canRun] = await Promise.all([can(viewer.ctx, "agents.manage", chain), can(viewer.ctx, "agents.run", chain)]);
+  const [canManage, canRun, canAnalytics] = await Promise.all([can(viewer.ctx, "agents.manage", chain), can(viewer.ctx, "agents.run", chain), can(viewer.ctx, "analytics.read", chain)]);
   const [stats, usage, queued, running, done, memories, schedules, members] = await Promise.all([
     employeeStats(org.id, company.id, [e.id]).then((m) => m.get(e.id)!),
     employeeMonthUsage(org.id, company.id, e),
@@ -57,12 +64,35 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
     listSchedules(viewer.ctx, org.id, company.id, { aiEmployeeId: e.id }),
     canManage ? listMembers(viewer.ctx, org.id, company.id) : Promise.resolve([]),
   ]);
+  const kpis = kpisOf(e.kpis);
+  const [history, reports, reportsTo, profileOpts, managerUser, kpiValues] = await Promise.all([
+    performanceHistory(org.id, company.id, e.id, 12),
+    directReports(org.id, company.id, e.id),
+    listReports(viewer.ctx, org.id, company.id, { authorId: e.id, managerId: e.id, take: 30 }),
+    canManage ? profileOptions(viewer.ctx, org.id, company.id, e, t) : Promise.resolve(null),
+    !e.managerEmployeeId && e.managerUserId ? db().user.findUnique({ where: { id: e.managerUserId }, select: { name: true } }) : Promise.resolve(null),
+    canAnalytics && kpis.length
+      ? visibleMetrics(viewer.ctx, chain).then(async (all) => {
+          const c = await db().company.findUnique({ where: { id: company.id }, select: { baseCurrency: true } });
+          const scope = { organizationId: org.id, companyId: company.id, currency: c?.baseCurrency ?? "USD" };
+          return { currency: scope.currency, values: await metricValues(pickMetrics(all, kpis.map((k) => k.key)), scope, resolveRange("30d")) };
+        })
+      : Promise.resolve(null),
+  ]);
+  const steps = setupSteps(e);
+  const received = reportsTo.filter((r) => r.manager?.id === e.id);
+  const written = reportsTo.filter((r) => r.aiEmployee.id === e.id);
   const logs = await db().agentTask.findMany({
     where: { organizationId: org.id, companyId: company.id, aiEmployeeId: e.id, status: { in: ["COMPLETED", "FAILED"] } },
     orderBy: { id: "desc" },
     take: 15,
     select: { id: true, title: true, status: true, toolCalls: true, model: true, inputTokens: true, outputTokens: true, startedAt: true, completedAt: true, errorCode: true },
   });
+  // Skills in use: tool calls across the recent finished tasks (real usage, not configuration).
+  const toolUsage = new Map<string, number>();
+  for (const l of logs) for (const c of (l.toolCalls as unknown as ToolCallRecord[]) ?? []) toolUsage.set(c.tool, (toolUsage.get(c.tool) ?? 0) + 1);
+  const usageRows = [...toolUsage.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const usageMax = Math.max(1, ...usageRows.map((r) => r[1]));
   const profile = profileByKey(e.profileKey);
   const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const tz = viewer.user.timezone;
@@ -91,19 +121,33 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <AiAvatar id={e.id} initials={e.initials} paused={e.status === "PAUSED"} size="lg" />
+          <AiAvatar id={e.id} initials={e.initials} paused={e.status === "PAUSED"} working={running.data.length > 0} size="lg" />
           <div className="grid min-w-0 gap-0.5">
             <h1 className="flex flex-wrap items-center gap-2 text-lg font-semibold tracking-tight">
               {e.name}
               <Badge tone={e.status === "ACTIVE" ? "success" : "neutral"}>{t(`workforce.status.${e.status}`)}</Badge>
+              {running.data.length ? <SystemPulse active label={t("workforce.live.workingNow")} /> : null}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {t(`profiles.${e.profileKey}.name`)} · {t(`workforce.departments.${e.department}`)}
+              {e.jobTitle ? `${e.jobTitle} · ` : ""}
+              {t(`profiles.${e.profileKey}.name`)} · {t(`workforce.departments.${e.department}`)} · {t(`workforce.levels.${e.level}.name`)}
+            </p>
+            <p className="text-xs italic text-muted-foreground">{t(`workforce.personality.${e.department}`)}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("workforce.profile.reportsTo")}:{" "}
+              {e.manager ? (
+                <Link className="text-primary hover:underline" href={`/${locale}/workforce/${e.manager.id}`}>
+                  {e.manager.name}
+                </Link>
+              ) : (
+                (managerUser?.name ?? t("workforce.org.founder"))
+              )}
             </p>
           </div>
         </div>
         {canManage ? (
           <div className="flex flex-wrap items-start gap-2">
+            {profileOpts ? <ProfileDialog apiBase={apiBase} employeeId={e.id} initial={profileValues(e)} options={profileOpts} /> : null}
             <EditEmployeeDialog
               apiBase={apiBase}
               profileKey={e.profileKey}
@@ -124,6 +168,21 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
         ) : null}
       </div>
 
+      {!e.setupCompletedAt ? (
+        <Notice
+          tone="info"
+          title={t("workforce.setup.pendingTitle")}
+          action={
+            canManage ? (
+              <Link className="text-sm text-primary hover:underline" href={`/${locale}/workforce/${e.id}/setup`}>
+                {t("workforce.setup.continue")}
+              </Link>
+            ) : null
+          }
+        >
+          {t("workforce.setup.pending", { done: steps.filter((s) => s.done).length, total: steps.length })}
+        </Notice>
+      ) : null}
       {e.status === "PAUSED" ? <Notice tone="warning">{t("workforce.employee.pausedNotice")}</Notice> : null}
       {usage.exhausted ? <Notice tone="warning">{t("workforce.employee.overBudgetNotice")}</Notice> : null}
 
@@ -193,6 +252,175 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
           </CardBody>
         </Card>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader title={t("workforce.profile.title")} />
+          <CardBody className="grid gap-3 text-sm">
+            {e.jobDescription ? <p className="whitespace-pre-wrap break-words">{e.jobDescription}</p> : <p className="text-muted-foreground">{t("workforce.profile.noDescription")}</p>}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid content-start gap-1">
+                <h3 className="text-xs font-medium text-muted-foreground">{t("workforce.profile.responsibilities")}</h3>
+                {e.responsibilities.length ? (
+                  <ul className="list-disc ps-5">
+                    {e.responsibilities.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">—</p>
+                )}
+              </div>
+              <div className="grid content-start gap-1">
+                <h3 className="text-xs font-medium text-muted-foreground">{t("workforce.profile.goals")}</h3>
+                {e.goals.length ? (
+                  <ul className="list-disc ps-5">
+                    {e.goals.map((g, i) => (
+                      <li key={i}>{g}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">—</p>
+                )}
+              </div>
+            </div>
+            <div className="grid gap-1">
+              <h3 className="text-xs font-medium text-muted-foreground">{t("workforce.profile.kpis")}</h3>
+              {kpis.length === 0 ? (
+                <p className="text-muted-foreground">{t("workforce.profile.noKpis")}</p>
+              ) : (
+                <ul className="grid gap-1">
+                  {kpis.map((k) => {
+                    const v = kpiValues?.values.find((x) => x.key === k.key);
+                    const ok = v && v.value !== null ? (v.higherIsBetter === false ? v.value <= k.target : v.value >= k.target) : null;
+                    return (
+                      <li key={k.key} className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-2 py-1">
+                        <span>{v ? t(v.labelKey) : k.key}</span>
+                        <span className="flex items-center gap-2 tabular text-xs">
+                          {v ? formatMetric(v.value, v.unit, locale, kpiValues!.currency) : "—"} / {v ? formatMetric(k.target, v.unit, locale, kpiValues!.currency) : formatNumber(k.target, locale)}
+                          {ok === null ? null : <Badge tone={ok ? "success" : "warning"}>{ok ? t("workforce.profile.onTrack") : t("workforce.profile.offTrack")}</Badge>}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {kpis.length && !kpiValues ? <p className="text-xs text-muted-foreground">{t("intelligence.needsAnalytics")}</p> : null}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("workforce.profile.model")}: {e.model ?? t("workforce.profile.platformDefault")}
+            </p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader
+            title={t("workforce.profile.directReports")}
+            actions={
+              <Link className="text-xs text-primary hover:underline" href={`/${locale}/workforce/org`}>
+                {t("workforce.org.open")}
+              </Link>
+            }
+          />
+          {reports.length === 0 ? (
+            <CardBody className="text-sm text-muted-foreground">{t("workforce.profile.noReports")}</CardBody>
+          ) : (
+            <ul className="divide-y text-sm">
+              {reports.map((r) => (
+                <li key={r.id} className="flex items-center gap-2 px-4 py-2">
+                  <AiAvatar id={r.id} initials={r.initials} size="sm" paused={r.status === "PAUSED"} />
+                  <Link className="min-w-0 flex-1 truncate hover:underline" href={`/${locale}/workforce/${r.id}`}>
+                    {r.name}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">{r.jobTitle ?? t(`profiles.${r.profileKey}.name`)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader title={t("workforce.history.title")} description={t("workforce.history.hint")} actions={<Sparkline values={history.map((w) => w.completed)} />} />
+        <Table>
+          <THead>
+            <Tr>
+              <Th>{t("workforce.history.week")}</Th>
+              <Th>{t("workforce.stats.completed")}</Th>
+              <Th>{t("workforce.stats.failed")}</Th>
+              <Th>{t("workforce.history.approvalRate")}</Th>
+              <Th>{t("workforce.logs.cost")}</Th>
+            </Tr>
+          </THead>
+          <TBody>
+            {[...history].reverse().map((w) => (
+              <Tr key={w.week}>
+                <Td className="whitespace-nowrap">{formatDate(new Date(`${w.week}T00:00:00Z`), locale, "UTC")}</Td>
+                <Td className="tabular">{formatNumber(w.completed, locale)}</Td>
+                <Td className="tabular">{formatNumber(w.failed, locale)}</Td>
+                <Td className="tabular">{w.approvalRate === null ? "—" : formatNumber(w.approvalRate, locale, { style: "percent" })}</Td>
+                <Td className="tabular">{usd(w.costMicros)}</Td>
+              </Tr>
+            ))}
+          </TBody>
+        </Table>
+      </Card>
+
+      <Card id="reports">
+        <CardHeader title={t("workforce.reports.title")} description={t("workforce.reports.hint")} />
+        {received.length + written.length === 0 ? (
+          <CardBody className="text-sm text-muted-foreground">{t("workforce.reports.empty")}</CardBody>
+        ) : (
+          <ul className="divide-y text-sm">
+            {[...received, ...written.filter((w) => !received.some((r) => r.id === w.id))]
+              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+              .map((r) => (
+                <li key={r.id} className="grid gap-1 px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone={r.kind === "ESCALATION" ? "warning" : "info"}>{t(`workforce.reports.kinds.${r.kind}`)}</Badge>
+                    <span className="font-medium">{r.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {r.aiEmployee.id === e.id ? t("workforce.reports.to", { name: r.manager?.name ?? t("workforce.org.founder") }) : t("workforce.reports.from", { name: r.aiEmployee.name })} · {formatRelativeTime(r.createdAt, locale)}
+                    </span>
+                  </div>
+                  <p className="line-clamp-4 whitespace-pre-wrap break-words text-muted-foreground">{r.body}</p>
+                  <span className="flex flex-wrap gap-3 text-xs">
+                    {r.taskId ? (
+                      <Link className="text-primary hover:underline" href={`/${locale}/tasks/${r.taskId}`}>
+                        {t("workforce.reports.sourceTask")}
+                      </Link>
+                    ) : null}
+                    {r.escalationTaskId ? (
+                      <Link className="text-primary hover:underline" href={`/${locale}/tasks/${r.escalationTaskId}`}>
+                        {t("workforce.reports.escalationTask")}
+                      </Link>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card>
+        <CardHeader title={t("workforce.skillsUsage.title")} description={t("workforce.skillsUsage.hint")} />
+        <CardBody>
+          {usageRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("workforce.skillsUsage.empty")}</p>
+          ) : (
+            <ul className="grid gap-1.5 text-sm" aria-label={t("workforce.skillsUsage.title")}>
+              {usageRows.map(([tool, n]) => (
+                <li key={tool} className="grid grid-cols-[10rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+                  <span className="truncate text-xs text-muted-foreground">{toolLabel(tool)}</span>
+                  <span className="h-2 overflow-hidden rounded-full bg-muted">
+                    <span className="block h-full rounded-full bg-primary" style={{ width: `${(n / usageMax) * 100}%` }} />
+                  </span>
+                  <span className="tabular text-end text-xs">{formatNumber(n, locale)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader title={t("workforce.tools")} description={t("workforce.employee.toolsHint")} />

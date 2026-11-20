@@ -1,4 +1,5 @@
 import type { ModuleJobs } from "@/server/core/module-jobs";
+import { BUILDER_JOBS } from "@/server/modules/builder/jobs";
 import { BRAIN_JOBS } from "@/server/modules/brain/jobs";
 import { MARKETING_JOBS } from "@/server/modules/marketing/jobs";
 import { FINANCE_JOBS } from "@/server/modules/finance/jobs";
@@ -15,4 +16,4 @@ import { ENTERPRISE_JOBS } from "@/server/modules/enterprise/jobs";
 import { CRM_JOBS } from "@/server/modules/crm/jobs";
 
 /** Background work contributed by business modules. */
-export const MODULE_JOBS: ModuleJobs[] = [BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS];
+export const MODULE_JOBS: ModuleJobs[] = [BUILDER_JOBS, BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS];

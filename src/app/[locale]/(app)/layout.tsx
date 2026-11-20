@@ -11,6 +11,7 @@ import { getWorkspaceContext, requireViewer } from "@/server/session";
 import { listCompanies } from "@/server/modules/companies/service";
 import { platformGrants } from "@/server/workspace";
 import { BrandingStyle } from "@/components/enterprise/branding-style";
+import { GuideMount } from "@/components/guide/guide-mount";
 import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { can } from "@/server/modules/rbac/service";
@@ -124,7 +125,9 @@ export default function AppLayout({ children }: LayoutProps<"/[locale]">) {
           </Suspense>
         }
       >
-        <Suspense fallback={<PageFallback />}>{children}</Suspense>
+        <Suspense fallback={<PageFallback />}>
+          <GuideMount>{children}</GuideMount>
+        </Suspense>
       </AppFrame>
     </>
   );

@@ -31,7 +31,7 @@ export default async function UsagePage({ searchParams }: PageProps<"/[locale]/w
   const header = (
     <>
       <PageHeader title={t("workforce.usage.title")} subtitle={t("workforce.usage.subtitle")} />
-      <WorkforceTabs locale={locale} active="usage" labels={{ employees: t("workforce.tabs.employees"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
+      <WorkforceTabs locale={locale} active="usage" labels={{ employees: t("workforce.tabs.employees"), org: t("workforce.tabs.org"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
     </>
   );
   if (!company) return <PageState header={header} kind="empty" message={t("company.empty")} />;

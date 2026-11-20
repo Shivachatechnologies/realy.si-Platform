@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { HireDialog } from "@/components/workforce/hire-dialog";
+import { JobPicker } from "@/components/workforce/job-picker";
+import { profileByKey } from "@/server/modules/agents/profiles";
 import { PageHeader } from "@/components/workforce/page-header";
 import { PageState } from "@/components/workforce/states";
 import { WorkforceTabs } from "@/components/workforce/workforce-tabs";
@@ -25,7 +27,7 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
   const header = (
     <>
       <PageHeader title={t("workforce.hire.title")} subtitle={t("workforce.hire.subtitle")} />
-      <WorkforceTabs locale={locale} active="hire" labels={{ employees: t("workforce.tabs.employees"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
+      <WorkforceTabs locale={locale} active="hire" labels={{ employees: t("workforce.tabs.employees"), org: t("workforce.tabs.org"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
     </>
   );
   if (!company) return <PageState header={header} kind="empty" message={t("company.empty")} />;
@@ -35,6 +37,9 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
   const { profile: preselect } = await searchParams;
   const members = canManage ? await listMembers(viewer.ctx, org.id, company.id) : [];
   const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
+  const staffed = new Set((await db().aiEmployee.findMany({ where: { organizationId: org.id, companyId: company.id, archivedAt: null }, select: { profileKey: true } })).map((e) => e.profileKey));
+  const hasCeo = staffed.has("ai_ceo");
+  const jobs = JOBS.filter((j) => profileByKey(j.profileKey)).map((j) => ({ job: j.job, profileKey: j.profileKey, name: t(`profiles.${j.profileKey}.name`), staffed: staffed.has(j.profileKey), recommended: j.profileKey === "ai_ceo" ? !hasCeo : hasCeo && j.recommended }));
   const toolLabel = (name: string) => {
     const label = t(`workforce.toolNames.${name}`);
     return label === `workforce.toolNames.${name}` ? name.replace(/_/g, " ") : label;
@@ -44,6 +49,17 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
       {!canManage ? <p className="text-sm text-muted-foreground">{t("workforce.hire.needsManage")}</p> : null}
+      {canManage ? (
+        <Card variant="highlight">
+          <CardHeader title={t("workforce.jobs.question")} description={t("workforce.jobs.hint")} />
+          <CardBody>
+            <JobPicker apiBase={apiBase} jobs={jobs} />
+          </CardBody>
+        </Card>
+      ) : null}
+      <details className="grid gap-4">
+        <summary className="cursor-pointer text-sm font-medium text-muted-foreground">{t("workforce.jobs.advanced")}</summary>
+        <div className="mt-3 grid gap-4">
       {rolesByDepartment().map(({ department, profiles }) => (
         <section key={department} className="grid gap-2" aria-labelledby={`hire-${department}`}>
           <h2 id={`hire-${department}`} className="text-sm font-semibold text-muted-foreground">
@@ -82,6 +98,20 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
           </div>
         </section>
       ))}
+        </div>
+      </details>
     </div>
   );
 }
+
+/** Plain-language jobs → the role that does them. */
+const JOBS: { job: string; profileKey: string; recommended?: boolean }[] = [
+  { job: "runCompany", profileKey: "ai_ceo" },
+  { job: "findCustomers", profileKey: "sales_manager", recommended: true },
+  { job: "marketing", profileKey: "cmo", recommended: true },
+  { job: "money", profileKey: "ai_cfo" },
+  { job: "answerCustomers", profileKey: "support_agent" },
+  { job: "projects", profileKey: "ai_project_manager" },
+  { job: "people", profileKey: "people_analyst" },
+  { job: "research", profileKey: "research_analyst" },
+];

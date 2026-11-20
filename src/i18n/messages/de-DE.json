@@ -606,7 +606,69 @@
       "sole_owner": "Dieser Benutzer ist einziger Inhaber einer Organisation mit weiteren Mitgliedern. Zuerst die Inhaberschaft übertragen.",
       "last_super_admin": "Die Plattform muss mindestens einen Super-Admin behalten.",
       "platform_lockdown_active": "Beenden Sie zuerst die Notfall-Sperre.",
-      "platform_lockdown_inactive": "Es ist keine Notfall-Sperre aktiv."
+      "platform_lockdown_inactive": "Es ist keine Notfall-Sperre aktiv.",
+      "builder_idea_required": "Beschreiben Sie die Geschäftsidee in ein, zwei Sätzen.",
+      "builder_run_active": "Für dieses Unternehmen läuft bereits ein Aufbau.",
+      "builder_not_draft": "Nur ein noch nicht gestarteter Lauf kann gestartet werden.",
+      "builder_not_active": "Dieser Aufbau-Lauf ist nicht mehr aktiv.",
+      "builder_step_not_failed": "Nur ein fehlgeschlagener Schritt kann wiederholt werden.",
+      "builder_feedback_required": "Sagen Sie der KI, was sich ändern soll.",
+      "builder_name_required": "Wählen oder geben Sie einen Namen ein.",
+      "builder_name_taken": "Ein anderes Unternehmen dieser Organisation verwendet diesen Namen bereits.",
+      "builder_decided": "Diese Entscheidung wurde bereits getroffen.",
+      "builder_no_json": "Die Antwort der KI enthielt den erforderlichen JSON-Block nicht.",
+      "builder_invalid_json": "Der JSON-Block der KI konnte nicht gelesen werden.",
+      "builder_invalid_output": "Die strukturierte Ausgabe der KI hat die Prüfung nicht bestanden.",
+      "builder_no_output": "Die KI-Aufgabe endete ohne Ergebnis.",
+      "builder_task_missing": "Die KI-Aufgabe dieses Schritts existiert nicht mehr.",
+      "builder_task_cancelled": "Die KI-Aufgabe dieses Schritts wurde abgebrochen.",
+      "builder_task_failed": "Die KI-Aufgabe dieses Schritts ist fehlgeschlagen.",
+      "builder_unknown_step": "Dieser Schritt wird nicht mehr unterstützt.",
+      "builder_website_invalid_url": "Die Website-Adresse ist ungültig.",
+      "builder_website_unsupported_protocol": "Nur http- und https-Websites können importiert werden.",
+      "builder_website_blocked_port": "Websites auf nicht standardmäßigen Ports können nicht importiert werden.",
+      "builder_website_blocked_host": "Diese Adresse verweist auf ein privates oder gesperrtes Netzwerk.",
+      "builder_website_dns_failed": "Die Domain der Website wurde nicht gefunden.",
+      "builder_website_timeout": "Die Website hat zu lange nicht geantwortet.",
+      "builder_website_fetch_failed": "Die Website war nicht erreichbar.",
+      "builder_website_not_html": "Die Adresse ist keine Webseite.",
+      "builder_website_too_large": "Die Webseite ist zu groß für den Import.",
+      "builder_website_too_many_redirects": "Die Website leitet zu oft weiter.",
+      "workforce_employee_model_not_allowed": "Dieses Modell ist auf der Plattform nicht zugelassen.",
+      "workforce_manager_cycle": "Diese Berichtslinie würde zum selben KI-Mitarbeiter zurückführen.",
+      "workforce_manager_invalid": "Der Vorgesetzte muss ein KI-Mitarbeiter dieses Unternehmens sein.",
+      "workforce_escalation_limit": "Diese Aufgabe wurde bereits mehrfach eskaliert.",
+      "workforce_task_not_reassignable": "Nur wartende, fehlgeschlagene oder abgebrochene Aufgaben können neu zugewiesen werden.",
+      "workforce_task_same_employee": "Die Aufgabe ist diesem KI-Mitarbeiter bereits zugewiesen.",
+      "growth_insight_status_unchanged": "Das Insight hat diesen Status bereits.",
+      "growth_insight_not_open": "Nur offene Insights können bearbeitet werden.",
+      "growth_insight_already_assigned": "Diesem Insight ist bereits KI-Arbeit zugewiesen.",
+      "growth_no_ai_employee": "Kein aktiver KI-Mitarbeiter kann dieses Insight übernehmen. Stellen Sie zuerst einen für die Rolle ein.",
+      "growth_assign_failed": "Diesem Insight konnte keine KI-Arbeit zugewiesen werden.",
+      "work_product_archived": "Das Produkt ist archiviert.",
+      "work_product_campaign_exists": "Die Launch-Kampagne existiert bereits.",
+      "work_product_doc_unchanged": "Seit der letzten Version hat sich nichts geändert.",
+      "work_product_draft_mismatch": "Diese KI-Aufgabe ist kein Entwurf dieses Dokuments.",
+      "work_product_draft_not_ready": "Die KI-Aufgabe ist noch nicht fertig.",
+      "work_product_exists": "Ein Produkt mit diesem Namen existiert bereits.",
+      "work_product_gate_builtin": "Vordefinierte Checklistenpunkte können nicht entfernt werden.",
+      "work_product_gate_full": "Ein Gate hat höchstens 30 Punkte.",
+      "work_product_gate_incomplete": "Erledigen Sie vor der Freigabe alle Checklistenpunkte.",
+      "work_product_gate_not_approved": "Der Product Owner muss zuerst das aktuelle Phasen-Gate freigeben.",
+      "work_product_gate_owner_only": "Nur der Product Owner kann Phasen-Gates freigeben.",
+      "work_product_has_project": "Das Produkt hat bereits ein Entwicklungsprojekt.",
+      "work_product_last_stage": "Das Produkt ist bereits in seiner letzten Phase.",
+      "work_product_no_prd": "Schreiben oder erstellen Sie zuerst das PRD.",
+      "work_product_no_project": "Verknüpfen oder erstellen Sie zuerst das Entwicklungsprojekt des Produkts.",
+      "work_product_plan_not_failed": "Nur ein fehlgeschlagener Plan kann wiederholt werden.",
+      "work_product_plan_not_running": "Der Plan läuft nicht.",
+      "work_product_plan_running": "Das KI-Produktteam plant dieses Produkt bereits.",
+      "work_product_same_stage": "Das Produkt ist bereits in dieser Phase.",
+      "work_product_stage_skip": "Phasen werden einzeln nacheinander durchlaufen.",
+      "guide_unknown_step": "Diesen Schritt gibt es auf dieser Seite nicht mehr. Lade neu und versuche es erneut.",
+      "guide_step_not_automatable": "Diesen Schritt kann die KI nicht für dich erledigen – folge dem Guide und erledige ihn selbst.",
+      "guide_answer_missing": "Bitte beantworte zuerst alle Fragen.",
+      "guide_answer_invalid": "Bitte wähle eine der angebotenen Optionen."
     }
   },
   "onboarding": {
@@ -1946,7 +2008,17 @@
       "create_bill_draft": "Entwurf einer Eingangsrechnung erstellen",
       "read_proposals": "Angebote lesen",
       "create_proposal_draft": "Angebotsentwurf erstellen",
-      "web_research": "Webrecherche"
+      "web_research": "Webrecherche",
+      "report_to_manager": "An Vorgesetzten berichten",
+      "escalate_to_manager": "An Vorgesetzten eskalieren",
+      "read_growth_insights": "Wachstums-Insights lesen",
+      "read_product": "Produkt lesen",
+      "read_product_docs": "Produktdokumente lesen",
+      "read_backlog": "Produkt-Backlog lesen",
+      "create_product_doc_draft": "Produktdokument entwerfen",
+      "create_feature": "Feature anlegen",
+      "create_backlog_tasks": "Backlog-Aufgaben anlegen",
+      "advance_product_stage": "Produktphase weiterschalten"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -1954,7 +2026,8 @@
       "hire": "Einstellen",
       "usage": "Nutzung & Kosten",
       "plans": "Zeitpläne",
-      "tasks": "KI-Aufgaben"
+      "tasks": "KI-Aufgaben",
+      "org": "Organigramm"
     },
     "filters": {
       "search": "Suche",
@@ -2125,6 +2198,193 @@
     "starterTeam": {
       "action": "KI-Kernteam einstellen",
       "confirm": "Das KI-Kernteam einstellen (CEO, Vertrieb, Marketing, Finanzen, HR, Projekte, Support, Research)? Bereits besetzte Rollen werden übersprungen."
+    },
+    "levels": {
+      "EXECUTIVE": {
+        "name": "Führungskraft",
+        "hint": "Kann an jeden KI-Mitarbeiter delegieren."
+      },
+      "MANAGER": {
+        "name": "Manager",
+        "hint": "Delegiert an die KI-Mitarbeiter, die ihm berichten."
+      },
+      "SPECIALIST": {
+        "name": "Spezialist",
+        "hint": "Delegiert nur an eigene Berichtende, falls vorhanden."
+      }
+    },
+    "profile": {
+      "title": "Profil",
+      "edit": "Profil bearbeiten",
+      "jobTitle": "Stellenbezeichnung",
+      "jobDescription": "Stellenbeschreibung",
+      "responsibilities": "Verantwortlichkeiten",
+      "goals": "Ziele",
+      "kpis": "KPIs",
+      "kpisHint": "Unternehmenskennzahlen, an denen dieser KI-Mitarbeiter gemessen wird, mit einem Zielwert für die letzten 30 Tage.",
+      "kpiMetric": "Kennzahl",
+      "kpiTarget": "Zielwert",
+      "addKpi": "KPI hinzufügen",
+      "removeKpi": "KPI entfernen",
+      "model": "Modell",
+      "modelHint": "Nur auf der Plattform zugelassene Modelle werden angezeigt.",
+      "modelDefault": "Plattform-Standard ({model})",
+      "platformDefault": "Plattform-Standard",
+      "manager": "Berichtet an",
+      "managerHint": "Eine Person (der Gründer) oder ein anderer KI-Mitarbeiter.",
+      "noManager": "Niemand",
+      "people": "Personen",
+      "aiEmployees": "KI-Mitarbeiter",
+      "level": "Ebene",
+      "onePerLine": "Ein Eintrag pro Zeile.",
+      "saved": "Gespeichert.",
+      "reportsTo": "Berichtet an",
+      "noDescription": "Noch keine Stellenbeschreibung.",
+      "noKpis": "Keine KPIs festgelegt.",
+      "onTrack": "Im Plan",
+      "offTrack": "Nicht im Plan",
+      "directReports": "Direkt Berichtende",
+      "noReports": "Diesem KI-Mitarbeiter berichtet niemand."
+    },
+    "org": {
+      "title": "Organigramm",
+      "subtitle": "Ihre KI-Belegschaft vom Gründer abwärts: Führungskräfte, Abteilungsleiter und Spezialisten.",
+      "founder": "Gründer",
+      "founderRole": "Gründer · Spitze des Organigramms",
+      "open": "Organigramm",
+      "hint": "Wer wem berichtet, ändern Sie im Profil des jeweiligen KI-Mitarbeiters. Manager delegieren an ihre Berichtenden; Eskalationen laufen dieses Organigramm hinauf."
+    },
+    "history": {
+      "title": "Leistungsverlauf",
+      "hint": "Pro Woche: erledigte und fehlgeschlagene Aufgaben, Genehmigungsquote vorgeschlagener Aktionen und geschätzte Kosten.",
+      "week": "Woche ab",
+      "approvalRate": "Genehmigungsquote"
+    },
+    "reports": {
+      "title": "Berichte & Eskalationen",
+      "hint": "Statusberichte und Eskalationen dieses KI-Mitarbeiters oder seiner Berichtenden.",
+      "empty": "Noch keine Berichte oder Eskalationen.",
+      "kinds": {
+        "STATUS": "Statusbericht",
+        "ESCALATION": "Eskalation"
+      },
+      "to": "an {name}",
+      "from": "von {name}",
+      "sourceTask": "Ausgangsaufgabe",
+      "escalationTask": "Aufgabe für den Vorgesetzten"
+    },
+    "setup": {
+      "title": "KI-Mitarbeiter einrichten",
+      "heading": "{name} einrichten",
+      "back": "Zurück zu {name}",
+      "steps": {
+        "create": "Anlegen",
+        "configure": "Konfigurieren",
+        "role": "Rolle zuweisen",
+        "goals": "Ziele",
+        "permissions": "Berechtigungen",
+        "activate": "Aktivieren"
+      },
+      "hints": {
+        "configure": "Stellenbezeichnung, Beschreibung, Anweisungen, Fähigkeiten und das verwendete Modell.",
+        "role": "An wen er berichtet, seine Ebene im Organigramm und seine Verantwortlichkeiten.",
+        "goals": "Was er erreichen soll und die KPIs, an denen er gemessen wird.",
+        "permissions": "Autonomie, mit wessen Berechtigungen er handelt, Monatsbudget und Werkzeuge.",
+        "activate": "Prüfen und aktivieren. Nach der Aktivierung übernimmt er Aufgaben."
+      },
+      "next": "Nächster Schritt",
+      "activate": "Aktivieren",
+      "optional": "nicht festgelegt (optional)",
+      "active": "{name} ist aktiv.",
+      "open": "Profil öffnen",
+      "pendingTitle": "Einrichtung nicht abgeschlossen",
+      "pending": "{done} von {total} Einrichtungsschritten erledigt. Schließen Sie die Einrichtung ab, um diesen KI-Mitarbeiter zu aktivieren.",
+      "continue": "Einrichtung fortsetzen"
+    },
+    "emptyExplain": "KI-Mitarbeiter sind digitale Teammitglieder, die für Sie recherchieren, entwerfen und Arbeit vorbereiten. Stellen Sie einen für eine Aufgabe ein oder lassen Sie die KI vorschlagen, wen Sie zuerst einstellen.",
+    "help": {
+      "action": "Hilf mir dabei",
+      "starting": "Wird gestartet…",
+      "firstHiresTitle": "Meine ersten KI-Einstellungen empfehlen"
+    },
+    "strip": {
+      "what": "Was ist das?",
+      "why": "Warum es wichtig ist",
+      "can": "Was Sie hier tun können",
+      "next": "Was als Nächstes",
+      "whatText": "Ihr KI-Team: digitale Mitarbeiter, die jeweils eine Aufgabe übernehmen, etwa Vertrieb oder Finanzen.",
+      "whyText": "Sie erledigen die Vorarbeit rund um die Uhr; jede vorgeschlagene Änderung wartet auf Ihre Genehmigung.",
+      "canText": "Einstellen, jedem Ziele und einen Vorgesetzten geben, Aufgaben zuweisen und live sehen, woran sie arbeiten.",
+      "nextHire": "Stellen Sie Ihren ersten KI-Mitarbeiter ein.",
+      "nextAssign": "Geben Sie einem KI-Mitarbeiter eine Aufgabe."
+    },
+    "live": {
+      "working": "{count, plural, =0 {Gerade arbeitet niemand} one {# KI-Mitarbeiter arbeitet} other {# KI-Mitarbeiter arbeiten}}",
+      "queued": "{count, plural, one {# wartend} other {# wartend}}",
+      "workingNow": "Arbeitet gerade",
+      "hasQueue": "Hat Arbeit in der Warteschlange",
+      "available": "Verfügbar",
+      "workingOn": "Arbeitet an",
+      "next": "Als Nächstes",
+      "weekly": "Erledigt pro Woche"
+    },
+    "personality": {
+      "executive": "Hat das ganze Spielfeld im Blick und fragt: Was zählt heute am meisten?",
+      "sales": "Hartnäckig und freundlich – lässt keinen Lead kalt werden.",
+      "marketing": "Neugieriger Geschichtenerzähler, der testet, misst und wiederholt, was funktioniert.",
+      "finance": "Ruhig mit Zahlen; erkennt ein Liquiditätsproblem, bevor es entsteht.",
+      "hr": "Kümmert sich um Menschen, Richtlinien und faire Abläufe.",
+      "engineering": "Methodischer Entwickler, der große Arbeit in kleine Schritte zerlegt.",
+      "product": "Denkt vom Problem des Kunden zur richtigen Funktion.",
+      "support": "Geduldiger Zuhörer, der Probleme löst und daraus lernt.",
+      "operations": "Hält Pläne, Verantwortliche und Termine in Ordnung.",
+      "research": "Gräbt in Quellen und trennt Fakten von Meinungen."
+    },
+    "jobs": {
+      "question": "Welche Aufgabe soll Ihr KI-Mitarbeiter übernehmen?",
+      "hint": "Wählen Sie eine Aufgabe in einfachen Worten – Realy wählt die passende Rolle. In den nächsten Schritten können Sie alles anpassen.",
+      "hire": "Für diese Aufgabe einstellen",
+      "after": "Danach geben Sie ihm eine Rolle, Ziele und Berechtigungen und aktivieren ihn.",
+      "recommended": "Empfohlen",
+      "staffed": "Bereits in Ihrem Team",
+      "advanced": "Erweitert: alle Rollen durchsuchen",
+      "runCompany": {
+        "title": "Das Unternehmen mit mir führen",
+        "example": "Tägliche Briefings, Prioritäten und Entscheidungen – wie ein Mitgründer."
+      },
+      "findCustomers": {
+        "title": "Kunden finden und nachfassen",
+        "example": "z. B. Leads qualifizieren, Deals nachfassen, Angebote vorbereiten."
+      },
+      "marketing": {
+        "title": "Bekannt werden",
+        "example": "z. B. Kampagnen planen, Beiträge und E-Mails schreiben, Ergebnisse verfolgen."
+      },
+      "money": {
+        "title": "Die Finanzen im Blick behalten",
+        "example": "z. B. Cashflow, Rechnungen, Budgets und Reichweite."
+      },
+      "answerCustomers": {
+        "title": "Kunden antworten",
+        "example": "z. B. Tickets sortieren, Antworten entwerfen, wiederkehrende Probleme erkennen."
+      },
+      "projects": {
+        "title": "Projekte auf Kurs halten",
+        "example": "z. B. Pläne, Termine, Blocker und Statusupdates."
+      },
+      "people": {
+        "title": "Sich um das Team kümmern",
+        "example": "z. B. Einstellungen, Urlaub, Richtlinien und Teamgesundheit."
+      },
+      "research": {
+        "title": "Märkte und Wettbewerber recherchieren",
+        "example": "z. B. Marktgröße, Wettbewerberprofile, Kundeneinblicke."
+      }
+    },
+    "skillsUsage": {
+      "title": "Genutzte Fähigkeiten",
+      "hint": "Wie oft jedes Werkzeug in den letzten abgeschlossenen Aufgaben genutzt wurde.",
+      "empty": "Noch keine Werkzeugnutzung – sie erscheint nach den ersten abgeschlossenen Aufgaben."
     }
   },
   "profiles": {
@@ -2255,6 +2515,46 @@
     "knowledge_manager": {
       "name": "Wissensmanager",
       "summary": "Hält das Company Brain nützlich: Zusammenfassungen, Lücken und Fakten für das Unternehmensgedächtnis."
+    },
+    "product_researcher": {
+      "name": "Produkt-Researcher",
+      "summary": "Markt-, Wettbewerbs- und Kundenrecherche mit Belegen."
+    },
+    "business_analyst": {
+      "name": "Business-Analyst",
+      "summary": "Geschäftsanforderungen, Features und Backlog aus der Recherche."
+    },
+    "ux_designer": {
+      "name": "UX-Designer",
+      "summary": "User Journeys, Abläufe und Anforderungen an Barrierefreiheit."
+    },
+    "ui_designer": {
+      "name": "UI-Designer",
+      "summary": "Design-Briefings: visuelle Richtung, Screens und Komponenten."
+    },
+    "software_architect": {
+      "name": "Software-Architekt",
+      "summary": "Systemarchitektur und technische Anforderungen."
+    },
+    "frontend_developer": {
+      "name": "Frontend-Entwickler",
+      "summary": "Frontend-Aufgaben, Schätzungen und Umsetzungsnotizen."
+    },
+    "backend_developer": {
+      "name": "Backend-Entwickler",
+      "summary": "Backend-Aufgaben: Daten, APIs, Jobs und Integrationen."
+    },
+    "ai_engineer": {
+      "name": "KI-Ingenieur",
+      "summary": "KI-Funktionen: Modelle, Evaluierung, Schutzmechanismen und Kosten."
+    },
+    "qa_agent": {
+      "name": "QS-Ingenieur",
+      "summary": "Testpläne und QS-Aufgaben aus Akzeptanzkriterien."
+    },
+    "release_manager": {
+      "name": "Release-Manager",
+      "summary": "Release- und Launch-Pläne, Bereitschaft und Änderungsprotokoll."
     }
   },
   "projects": {
@@ -2508,7 +2808,11 @@
         "ideaStatus": "Ihre Idee wurde aktualisiert: {title}",
         "checklistDue": "Checkliste fällig: {title}",
         "assetAssigned": "Ihnen zugewiesenes Asset: {title}",
-        "incident": "Vorfall: {title}"
+        "incident": "Vorfall: {title}",
+        "productOwner": "Sie sind jetzt verantwortlich für {title}",
+        "productStage": "Produkt in neue Phase verschoben: {title}",
+        "productPlan": "Das KI-Produktteam wurde gestoppt: {title}",
+        "productPlanDone": "Das KI-Produktteam hat die Planung von {title} abgeschlossen"
       },
       "marketing": {
         "campaign_launched": "Kampagne gestartet: {title}",
@@ -2589,6 +2893,18 @@
       },
       "integrations": {
         "connection_failing": "Integration schlägt wiederholt fehl: {title}"
+      },
+      "builder": {
+        "input_needed": "Der KI-Unternehmensaufbau braucht Ihre Entscheidung: {title}",
+        "completed": "Der KI-Unternehmensaufbau ist abgeschlossen: {title}",
+        "step_failed": "Ein Aufbau-Schritt ist fehlgeschlagen: {title}"
+      },
+      "workforce": {
+        "statusReport": "Statusbericht: {title}",
+        "escalation": "Eskalation: {title}"
+      },
+      "growth": {
+        "insight": "Kritisches Wachstumssignal: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -3364,6 +3680,151 @@
       "approvals_expiring": "{count, plural, one {# Freigabeanfrage läuft in 24 Stunden ab} other {# Freigabeanfragen laufen in 24 Stunden ab}}",
       "ai_tasks_failed": "{count, plural, one {# KI-Aufgabe ist in den letzten 24 Stunden fehlgeschlagen} other {# KI-Aufgaben sind in den letzten 24 Stunden fehlgeschlagen}}",
       "ai_employee_over_budget": "{name} hat das Token-Budget dieses Monats aufgebraucht"
+    },
+    "tabs": {
+      "overview": "Übersicht",
+      "ceo": "Den CEO fragen",
+      "growth": "Wachstumsmotor"
+    },
+    "chat": {
+      "title": "Den CEO fragen",
+      "subtitle": "Fragen Sie Ihren KI-CEO alles über das Geschäft; die Antworten stammen aus den Daten Ihres Unternehmens.",
+      "placeholder": "Stellen Sie eine Frage, z. B. Wie lief der Vertrieb diesen Monat?",
+      "followUp": "Folgefrage stellen…",
+      "ask": "Fragen",
+      "asking": "Wird gefragt…",
+      "shortcut": "Strg/⌘ + Enter zum Senden",
+      "suggested": "Vorgeschlagene Fragen",
+      "threads": "Unterhaltungen",
+      "new": "Neue Frage",
+      "newHint": "Wählen Sie einen Vorschlag oder stellen Sie Ihre eigene Frage.",
+      "search": "Unterhaltungen durchsuchen",
+      "noThreads": "Noch keine Unterhaltungen.",
+      "messages": "{count, plural, one {# Nachricht} other {# Nachrichten}}",
+      "thinking": "Der KI-CEO prüft das. Diese Seite aktualisiert sich automatisch.",
+      "sources": "Wie die Antwort entstand",
+      "rename": "Umbenennen",
+      "archive": "Archivieren",
+      "confirmArchive": "Diese Unterhaltung archivieren?",
+      "notFound": "Diese Unterhaltung existiert nicht oder wurde archiviert.",
+      "allThreads": "Alle Unterhaltungen",
+      "suggestions": {
+        "performance": "Wie läuft das Geschäft diese Woche?",
+        "revenue": "Warum hat sich der Umsatz gegenüber dem Vormonat verändert?",
+        "deals": "Auf welche Deals sollten wir uns diesen Monat konzentrieren?",
+        "leads": "Wo verlieren wir Leads im Funnel?",
+        "decisions": "Welche Entscheidungen warten auf mich?",
+        "projects": "Welche Projekte drohen sich zu verspäten?",
+        "cash": "Wie lange reicht unser Geld und was beeinflusst das?",
+        "marketing": "Welche Marketingkampagnen funktionieren am besten?",
+        "customers": "Worüber beschweren sich Kunden?",
+        "today": "Was sollte ich heute priorisieren?"
+      }
+    },
+    "actions": {
+      "title": "CEO-Aktionen",
+      "hint": "Direkt handeln: Arbeit zuweisen, neu priorisieren, Genehmigungen entscheiden und das KI-Team steuern.",
+      "tabs": {
+        "assign": "Arbeit zuweisen",
+        "priorities": "Prioritäten",
+        "approvals": "Genehmigungen",
+        "team": "KI-Team"
+      },
+      "assignTo": "Zuweisen an",
+      "toAi": "KI-Mitarbeiter",
+      "toPerson": "Person",
+      "aiEmployee": "KI-Mitarbeiter",
+      "person": "Person",
+      "unassigned": "Nicht zugewiesen",
+      "description": "Beschreibung",
+      "dueDate": "Fälligkeitsdatum",
+      "priority": "Priorität",
+      "assign": "Zuweisen",
+      "setGoal": "Ziel festlegen",
+      "workTasks": "Offene Arbeitsaufgaben",
+      "noWorkTasks": "Keine offenen Arbeitsaufgaben.",
+      "overdue": "Überfällig",
+      "aiTasks": "Wartende oder fehlgeschlagene KI-Aufgaben",
+      "noAiTasks": "Keine wartenden oder fehlgeschlagenen KI-Aufgaben.",
+      "reassign": "Neu zuweisen",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "allApprovals": "Alle Genehmigungen",
+      "activate": "Aktivieren",
+      "priorities": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "URGENT": "Dringend"
+      }
+    },
+    "card": {
+      "priorities": "Prioritäten für heute",
+      "noPriorities": "Heute nichts Dringendes.",
+      "decisions": "Anstehende Entscheidungen",
+      "noDecisions": "Keine Entscheidungen offen.",
+      "moreApprovals": "{count, plural, one {# weitere Genehmigung} other {# weitere Genehmigungen}}",
+      "performance": "Geschäftsentwicklung",
+      "updates": "Umsatz, Vertrieb & Marketing",
+      "update": {
+        "revenue": "Umsatz",
+        "sales": "Vertrieb",
+        "marketing": "Marketing"
+      },
+      "aiWork": "KI-Arbeit (24 h)",
+      "aiWorkCounts": "{completed} erledigt · {inProgress} in Arbeit · {failed} fehlgeschlagen",
+      "events": "Wichtige Ereignisse (24 h)",
+      "noEvents": "Keine Ereignisse in den letzten 24 Stunden.",
+      "risks": "Risiken",
+      "blockers": "Blocker",
+      "blocker": {
+        "overdueTasks": "Überfällige Aufgaben",
+        "overdueMilestones": "Überfällige Meilensteine",
+        "failedRuns": "Fehlgeschlagene KI-Läufe (24 h)",
+        "slaBreaches": "SLA-Verletzungen (24 h)"
+      },
+      "noData": "Keine Daten.",
+      "noAccess": "Sie haben keinen Zugriff auf diese Informationen.",
+      "prio": {
+        "decide_approvals": "{count, plural, one {# offene Genehmigung entscheiden} other {# offene Genehmigungen entscheiden}}",
+        "critical_issue": "Lösen: {issue}",
+        "growth_insight": "Wachstumssignal: {signal}",
+        "due_today": "{count, plural, one {# Aufgabe ist heute fällig} other {# Aufgaben sind heute fällig}}",
+        "overdue_tasks": "{count, plural, one {# überfällige Aufgabe abarbeiten} other {# überfällige Aufgaben abarbeiten}}",
+        "failed_ai": "{count, plural, one {# fehlgeschlagene KI-Aufgabe prüfen} other {# fehlgeschlagene KI-Aufgaben prüfen}}"
+      }
+    },
+    "strip": {
+      "what": "Die Kommandozentrale Ihres Unternehmens: Zahlen, KI-Arbeit, Ziele und Wachstumssignale an einem Ort.",
+      "why": "Sehen Sie, was sich geändert hat und was Sie braucht, ohne jedes Modul zu öffnen.",
+      "can": "Briefing lesen, den KI-CEO fragen, Entscheidungen treffen und das KI-Team steuern.",
+      "nextAsk": "Stellen Sie dem KI-CEO eine Frage.",
+      "nextHire": "Stellen Sie einen KI-CEO ein, um Briefings und Antworten zu erhalten."
+    },
+    "center": {
+      "title": "Kommandozentrale",
+      "pulse": "{count, plural, =0 {KI-Team im Leerlauf} one {# KI-Aufgabe läuft} other {# KI-Aufgaben laufen}}",
+      "vsPrev": "ggü. vorherigen 7 Tagen",
+      "aiWorking": "Laufende KI-Aufgaben",
+      "activity": "Live-KI-Aktivität",
+      "activityHint": "Echte laufende oder wartende Aufgaben.",
+      "idle": "Gerade läuft keine KI-Arbeit.",
+      "recommendations": "Strategische Empfehlungen",
+      "goals": "Ziele"
+    },
+    "network": {
+      "title": "Unternehmensnetzwerk",
+      "hint": "Abteilungen, ihre KI-Mitarbeiter und die wichtigsten Datensätze, an denen sie arbeiten. Gestrichelte Linien zeigen, wer wen führt.",
+      "aria": "Unternehmensnetzwerk aus Abteilungen, KI-Mitarbeitern und wichtigen Datensätzen",
+      "empty": "Stellen Sie KI-Mitarbeiter ein, um Ihr Unternehmensnetzwerk zu sehen.",
+      "records": {
+        "customers": "Kunden",
+        "deals": "Offene Deals",
+        "leads": "Offene Leads",
+        "projects": "Projekte",
+        "tickets": "Offene Tickets",
+        "invoices": "Offene Rechnungen"
+      }
     }
   },
   "analytics": {
@@ -3373,7 +3834,8 @@
       "departments": "Abteilungen",
       "dashboards": "Dashboards",
       "reports": "Berichte",
-      "ai": "KI-Einblicke"
+      "ai": "KI-Einblicke",
+      "ceo": "CEO-Dashboard"
     },
     "range": {
       "label": "Zeitraum",
@@ -3486,6 +3948,42 @@
       "generateHint": "Läuft als KI-Aufgabe; Zahlen stammen aus Ihren Kennzahlen und werden nie erfunden.",
       "latest": "Neueste Analyse",
       "empty": "Noch keine Analysen."
+    },
+    "ceo": {
+      "title": "CEO-Dashboard",
+      "subtitle": "Das ganze Unternehmen auf einer Seite: Finanzen, Vertrieb, Marketing, Umsetzung, Team, KI-Belegschaft, Ziele, Risiken und Entscheidungen.",
+      "sections": {
+        "revenue": "Umsatz",
+        "expenses": "Ausgaben",
+        "cashFlow": "Cashflow",
+        "sales": "Vertrieb",
+        "leads": "Leads",
+        "marketing": "Marketing",
+        "projects": "Projekte",
+        "team": "Team",
+        "ai": "KI-Belegschaft",
+        "goals": "Ziele"
+      },
+      "goals": "Ziele & KPIs",
+      "goalsHint": "Aktive Ziele und die KPI-Zielwerte Ihrer KI-Mitarbeiter.",
+      "openGoals": "Ziele",
+      "milestones": "{done}/{total} Meilensteine",
+      "noObjectives": "Keine aktiven Ziele.",
+      "kpiTargets": "KPI-Ziele der KI-Mitarbeiter",
+      "noKpiTargets": "Für KI-Mitarbeiter sind keine KPI-Ziele festgelegt.",
+      "approvals": "Genehmigungen",
+      "pending": "{count, plural, one {# offen} other {# offen}}",
+      "risks": "Risiken",
+      "opportunities": "Chancen",
+      "opportunitiesHint": "Kennzahlen, die sich um mindestens 20 % in die richtige Richtung bewegt haben, und starke Wachstumssignale.",
+      "noOpportunities": "In diesem Zeitraum wurden keine Chancen erkannt.",
+      "insight": "Wachstumssignal",
+      "strip": {
+        "what": "Jede wichtige Zahl des Unternehmens auf einer Seite.",
+        "why": "Ein Blick zeigt, ob Finanzen, Vertrieb, Umsetzung und Team gesund sind.",
+        "can": "Zeitraum ändern, jede Zahl im Detail öffnen und mit dem Vorzeitraum vergleichen.",
+        "next": "Fragen Sie den KI-CEO zu allem, was auffällig wirkt."
+      }
     }
   },
   "activity": {
@@ -9844,5 +10342,2149 @@
     "adminValue2": "Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "adminValue3": "Administrative Änderungen erfordern eine aktuelle Zwei-Faktor-Bestätigung.",
     "secureConnection": "Sichere Sitzung"
+  },
+  "builder": {
+    "title": "KI-Unternehmensaufbau",
+    "subtitle": "Machen Sie aus einer Idee oder einem bestehenden Geschäft ein funktionierendes Unternehmen: Recherche, Strategie, Struktur, KI-Mitarbeitende, Projekte und Pläne – Schritt für Schritt von der KI erstellt und von Ihnen freigegeben.",
+    "startFor": "Für {name} starten",
+    "addBusiness": "Weiteres Unternehmen hinzufügen",
+    "open": "Öffnen",
+    "card": {
+      "title": "Aufbau-Läufe",
+      "description": "{count, plural, one {# Lauf} other {# Läufe}} in Ihren Unternehmen"
+    },
+    "activeNotice": {
+      "DRAFT": "Für {name} wartet ein Aufbau-Lauf auf seine Quellen, bevor die Analyse beginnt.",
+      "RUNNING": "Die KI baut {name} gerade auf.",
+      "WAITING_INPUT": "Der Aufbau von {name} wartet auf Ihre Entscheidung.",
+      "FAILED": "Ein Schritt beim Aufbau von {name} ist fehlgeschlagen und kann wiederholt werden."
+    },
+    "tabs": {
+      "runs": "Läufe",
+      "new": "Neues Unternehmen",
+      "existing": "Bestehendes Unternehmen",
+      "import": "Unternehmen importieren",
+      "another": "Weiteres Unternehmen"
+    },
+    "list": {
+      "search": "Nach Unternehmen suchen",
+      "sort": "Sortieren",
+      "sorts": {
+        "newest": "Neueste zuerst",
+        "oldest": "Älteste zuerst",
+        "company": "Unternehmensname"
+      },
+      "apply": "Anwenden",
+      "mode": "Art",
+      "progress": "Fortschritt",
+      "started": "Gestartet",
+      "steps": "{done} von {total} Schritten",
+      "decisions": "{count, plural, one {# Entscheidung} other {# Entscheidungen}}",
+      "empty": "Noch keine Aufbau-Läufe. Starten Sie einen für eine neue Idee oder ein bestehendes Geschäft."
+    },
+    "modes": {
+      "NEW_IDEA": "Neues Unternehmen aus einer Idee",
+      "EXISTING": "Bestehendes Unternehmen",
+      "IMPORT": "Importiertes Unternehmen"
+    },
+    "runStatus": {
+      "DRAFT": "In Vorbereitung",
+      "RUNNING": "Im Aufbau",
+      "WAITING_INPUT": "Ihre Eingabe nötig",
+      "FAILED": "Schritt fehlgeschlagen",
+      "COMPLETED": "Abgeschlossen",
+      "CANCELLED": "Abgebrochen"
+    },
+    "stepStatus": {
+      "PENDING": "Ausstehend",
+      "RUNNING": "KI arbeitet",
+      "APPLYING": "Wird angewendet",
+      "WAITING_INPUT": "Wartet auf Sie",
+      "COMPLETED": "Erledigt",
+      "FAILED": "Fehlgeschlagen",
+      "SKIPPED": "Übersprungen",
+      "CANCELLED": "Abgebrochen"
+    },
+    "sourceStatus": {
+      "INGESTED": "Im Brain",
+      "FAILED": "Nicht importiert"
+    },
+    "steps": {
+      "idea_analysis": "Ideenanalyse",
+      "market_research": "Marktforschung",
+      "competitors": "Wettbewerbsanalyse",
+      "demand": "Nachfrageanalyse",
+      "customers_personas": "Kunden & Personas",
+      "opportunities_risks": "Chancen & Risiken",
+      "positioning": "Positionierung, Mission & Werte",
+      "business_model": "Geschäftsmodell, Preise & Erlöse",
+      "business_plan": "Businessplan",
+      "brand": "Markenstrategie & Namensideen",
+      "product_roadmap": "Produkt-Roadmap",
+      "objectives_kpis": "Ziele, Vorhaben & KPIs",
+      "org_structure": "Organisationsstruktur",
+      "ai_employees": "KI-Mitarbeitende",
+      "projects_tasks": "Projekte, Meilensteine & Aufgaben",
+      "go_to_market": "Marketing, Vertrieb & Markteinführung",
+      "operational_workflows": "Betriebliche Workflows",
+      "launch_plan": "Launch-Plan",
+      "financial_plan": "Erster Finanzplan",
+      "website_ingest": "Website-Import",
+      "business_analysis": "Geschäftsanalyse",
+      "market_competitors": "Markt & Wettbewerb",
+      "positioning_review": "Positionierungs-Review",
+      "opportunities_weaknesses": "Chancen & Schwächen",
+      "goals": "Ziele & KPIs",
+      "recommended_configuration": "Empfohlene Konfiguration"
+    },
+    "sections": {
+      "departments": "Abteilungen & Teams",
+      "aiEmployees": "KI-Mitarbeitende",
+      "projects": "Projekte",
+      "workflows": "Workflows",
+      "pipelines": "Vertriebspipelines"
+    },
+    "entities": {
+      "department": "Abteilungen",
+      "team": "Teams",
+      "role": "Rollen",
+      "project": "Projekte",
+      "work_task": "Aufgaben",
+      "objective": "Ziele",
+      "milestone": "Meilensteine"
+    },
+    "decisions": {
+      "awaiting": "Wartet auf Ihre Entscheidung",
+      "kinds": {
+        "NAME": {
+          "title": "Unternehmensnamen wählen",
+          "description": "Wählen Sie eine Namensidee der KI oder geben Sie einen eigenen Namen ein. Das Unternehmen wird überall umbenannt.",
+          "approve": "Diesen Namen verwenden"
+        },
+        "STRUCTURE": {
+          "title": "Organisationsstruktur freigeben",
+          "description": "Entfernen Sie den Haken bei allem, was Sie nicht möchten. Freigegebene Abteilungen und Teams werden in Ihrem Unternehmen angelegt.",
+          "approve": "Struktur anlegen"
+        },
+        "CONFIGURATION": {
+          "title": "Empfohlene Konfiguration prüfen",
+          "description": "Entfernen Sie den Haken bei allem, was Sie nicht möchten, und aktivieren Sie den Rest. Alles wird in Ihrem Unternehmen angelegt und bleibt bearbeitbar.",
+          "approve": "Konfiguration aktivieren"
+        }
+      },
+      "customName": "Oder eigenen Namen eingeben",
+      "currentName": "Aktueller Arbeitsname: {name}",
+      "teams": "Teams: {list}",
+      "tasks": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "revise": "Änderungen anfordern",
+      "sendRevision": "An die KI senden",
+      "feedback": "Was soll sich ändern?",
+      "feedbackPlaceholder": "Beschreiben Sie, was die KI ändern soll …"
+    },
+    "brief": {
+      "idea": "Was möchten Sie aufbauen?",
+      "ideaHint": "Ein, zwei Sätze genügen: was Sie verkaufen möchten, an wen und warum.",
+      "describe": "Was macht Ihr Unternehmen heute?",
+      "describeHint": "Was es verkauft, an wen und wie es heute arbeitet. Optional, wenn Website und Dokumente das zeigen.",
+      "website": "Website",
+      "websiteHint": "Die Startseite und bis zu 10 von ihr verlinkte Seiten werden ins Company Brain übernommen.",
+      "name": "Haben Sie schon einen Namen?",
+      "nameHint": "Optional – leer lassen, dann schlägt die KI Namen zur Auswahl vor.",
+      "industry": "In welcher Branche ist es tätig?",
+      "country": "Wo sitzt das Unternehmen?",
+      "businessModel": "Wie verkaufen Sie Ihr Produkt normalerweise?",
+      "letAiChoose": "Die KI wählen lassen",
+      "targetMarket": "Wer sind Ihre Kunden, und wo sind sie?",
+      "targetMarketHint": "An wen und wo Sie verkaufen. Länder unten hinzufügen.",
+      "addMarket": "Land hinzufügen …",
+      "removeMarket": "{name} entfernen",
+      "offering": "Was werden Sie verkaufen?",
+      "budget": "Wie viel können Sie zum Start investieren?",
+      "budgetHint": "Wird für Finanzplan und Budgets verwendet.",
+      "goals": "Wie sähe Erfolg in einem Jahr aus?",
+      "goalsHint": "Z. B. erste zahlende Kunden in 3 Monaten, 10.000 € Monatsumsatz in einem Jahr.",
+      "preferences": "Sollten wir etwas darüber wissen, wie Sie gern arbeiten?",
+      "preferencesHint": "Verfügbare Zeit, Risikobereitschaft, remote oder lokal, was Sie vermeiden möchten.",
+      "aiFill": "Den Rest von der KI ausfüllen lassen",
+      "aiFillHint": "Die KI wählt für alles Offene sinnvolle Antworten und kennzeichnet sie als Annahmen.",
+      "advanced": "Weitere Angaben (optional)"
+    },
+    "models": {
+      "b2b": "B2B",
+      "b2c": "B2C",
+      "b2b2c": "B2B2C",
+      "marketplace": "Marktplatz",
+      "subscription": "Abonnement",
+      "ecommerce": "E-Commerce",
+      "services": "Dienstleistungen",
+      "agency": "Agentur",
+      "other": "Sonstiges"
+    },
+    "industries": {
+      "software": "Software",
+      "ecommerce": "E-Commerce",
+      "consulting": "Beratung",
+      "health": "Gesundheit",
+      "education": "Bildung",
+      "finance": "Finanzen",
+      "food": "Lebensmittel & Getränke",
+      "travel": "Reisen",
+      "media": "Medien",
+      "manufacturing": "Fertigung",
+      "realEstate": "Immobilien",
+      "logistics": "Logistik"
+    },
+    "new": {
+      "title": "Aufbau starten",
+      "titles": {
+        "NEW_IDEA": "Neues Unternehmen aufbauen",
+        "EXISTING": "Bestehendes Unternehmen einrichten",
+        "IMPORT": "Bestehendes Unternehmen importieren"
+      },
+      "descriptions": {
+        "NEW_IDEA": "Beantworten Sie ein paar Fragen; die KI recherchiert, plant und richtet das Unternehmen Schritt für Schritt ein.",
+        "EXISTING": "Website und Dokumente kommen ins Company Brain; die KI analysiert das Geschäft und empfiehlt eine Konfiguration.",
+        "IMPORT": "Importieren Sie Kunden, Kontakte und Mitarbeitende aus CSV-Dateien, fügen Sie Dokumente hinzu und lassen Sie die KI das Geschäft analysieren."
+      },
+      "questions": "Über {name}",
+      "submit": "Aufbau starten",
+      "submitExisting": "Weiter"
+    },
+    "setup": {
+      "title": "Fügen Sie hinzu, woraus die KI lernen soll",
+      "description": "Alles, was Sie hinzufügen, landet in den eigenen Daten des Unternehmens. Starten Sie die Analyse, wenn Sie bereit sind.",
+      "website": "Die Website {url} wird beim Start der Analyse importiert.",
+      "noWebsite": "Keine Website angegeben – die Analyse nutzt Ihre Dokumente und Importe.",
+      "brainCount": "{count, plural, =0 {Noch keine Dokumente im Company Brain.} one {# Dokument im Company Brain.} other {# Dokumente im Company Brain.}}",
+      "documents": "Dokumente hochladen (PDF, Text, Markdown)",
+      "crm": "Kunden, Kontakte und Deals importieren (CSV)",
+      "employees": "Mitarbeitende importieren (CSV)",
+      "products": "Produkte übernimmt die Analyse aus Website und Dokumenten; Sie können sie auch von Hand anlegen.",
+      "productsLink": "Produkte öffnen"
+    },
+    "run": {
+      "title": "Aufbau-Arbeitsbereich",
+      "progress": "Fortschritt",
+      "current": "Jetzt:",
+      "openTask": "KI-Aufgabe öffnen",
+      "start": "Analyse starten",
+      "cancel": "Lauf abbrechen",
+      "confirmCancel": "Diesen Aufbau-Lauf abbrechen? Bereits angelegte Datensätze bleiben in Ihrem Unternehmen.",
+      "retry": "Schritt wiederholen",
+      "addFeedback": "Anweisungen hinzufügen",
+      "completed": "Der Aufbau ist abgeschlossen. Alles Angelegte liegt in Ihrem Unternehmen und lässt sich in jedem Modul bearbeiten.",
+      "failed": "Schritt fehlgeschlagen",
+      "otherCompany": "Dieser Lauf gehört zu {name}. Wechseln Sie zu diesem Unternehmen, um in seinen Modulen zu arbeiten.",
+      "steps": "Schritte",
+      "stepsDescription": "Jeder Schritt ist eine echte KI-Aufgabe; das Ergebnis wird im Company Brain gespeichert.",
+      "attempts": "{count, plural, one {# Versuch} other {# Versuche}}",
+      "document": "Dokument",
+      "task": "KI-Aufgabe · {status}",
+      "documents": "Erstellte Dokumente",
+      "noDocuments": "Noch keine Dokumente.",
+      "structure": "Unternehmensstruktur",
+      "noStructure": "Noch keine Abteilungen.",
+      "products": "Produkte",
+      "noProducts": "Noch keine Produkte.",
+      "aiEmployees": "KI-Mitarbeitende",
+      "noAiEmployees": "Noch keine KI-Mitarbeitenden.",
+      "projects": "Projekte & Aufgaben",
+      "noProjects": "Noch keine Projekte.",
+      "objectives": "Ziele",
+      "noObjectives": "Noch keine Ziele.",
+      "installed": "Vom Aufbau angelegt – {list}",
+      "sources": "Importierte Quellen",
+      "view": "Ansehen"
+    },
+    "onboarding": {
+      "title": "Willkommen bei Realy",
+      "subtitle": "Ein paar Schritte, dann beginnt die KI mit Ihnen, Ihr Unternehmen aufzubauen.",
+      "progress": "Onboarding-Schritte",
+      "steps": {
+        "profile": "Profil",
+        "workspace": "Arbeitsbereich",
+        "plan": "Tarif",
+        "business": "Unternehmen",
+        "questions": "Fragen"
+      },
+      "chooseFirst": "Wählen Sie zuerst, welches Unternehmen eingerichtet werden soll.",
+      "profile": {
+        "title": "Ihr Profil & Ihre Einstellungen",
+        "description": "Wie Realy Sie anspricht und Datum, Uhrzeit und Texte anzeigt.",
+        "name": "Ihr Name",
+        "timezone": "Ihre Zeitzone",
+        "country": "Land, in dem Sie leben"
+      },
+      "workspace": {
+        "title": "Ihr Arbeitsbereich",
+        "existing": "Sie arbeiten in {name}.",
+        "create": "Arbeitsbereich anlegen"
+      },
+      "plan": {
+        "title": "Ihr Tarif",
+        "description": "Tarife und Preise für Ihr Abrechnungsland. Sie können den Tarif jederzeit in den Abrechnungseinstellungen ändern.",
+        "current": "Aktueller Tarif: {plan}",
+        "none": "Noch kein Abonnement. Sie können jederzeit in den Abrechnungseinstellungen einen Tarif wählen.",
+        "trialEnds": "Testphase endet am {date}",
+        "renews": "verlängert sich am {date}",
+        "yours": "Ihr Tarif",
+        "unavailable": "In Ihrem Abrechnungsland nicht verfügbar",
+        "trialDays": "{count, plural, one {# Tag kostenlos testen} other {# Tage kostenlos testen}}",
+        "noPlans": "Es sind noch keine Tarife veröffentlicht.",
+        "billing": "Abrechnungseinstellungen",
+        "interval": {
+          "MONTH": "Monat",
+          "YEAR": "Jahr"
+        }
+      },
+      "business": {
+        "title": "Welches Unternehmen bauen wir auf?",
+        "description": "Wählen Sie, wie Sie starten möchten.",
+        "descriptionMore": "Fügen Sie diesem Konto ein weiteres Unternehmen hinzu oder machen Sie mit einem bestehenden weiter.",
+        "new": {
+          "title": "Neues Unternehmen aus einer Idee",
+          "description": "Die KI recherchiert den Markt und baut das Unternehmen von Grund auf."
+        },
+        "existing": {
+          "title": "Bestehendes Unternehmen einrichten",
+          "description": "Start mit Ihrer Website und Ihren Dokumenten; die KI analysiert und konfiguriert."
+        },
+        "import": {
+          "title": "Bestehendes Unternehmen importieren",
+          "description": "Übernehmen Sie Kunden, Kontakte und Mitarbeitende aus CSV-Dateien."
+        },
+        "another": {
+          "title": "Weiteres Unternehmen in diesem Konto",
+          "description": "Legen Sie ein neues Unternehmen neben Ihren bestehenden an."
+        },
+        "current": {
+          "title": "Mit {name} weitermachen",
+          "description": "Den KI-Unternehmensaufbau für dieses Unternehmen starten.",
+          "hasRun": "Seine Aufbau-Läufe ansehen."
+        }
+      },
+      "questions": {
+        "NEW_IDEA": "Erzählen Sie uns von der Idee",
+        "EXISTING": "Erzählen Sie uns vom Unternehmen",
+        "IMPORT": "Erzählen Sie uns vom Unternehmen",
+        "description": "Nur das Wesentliche – die KI fragt unterwegs nach Entscheidungen.",
+        "submit": "Unternehmen anlegen & Aufbau starten"
+      }
+    },
+    "journey": {
+      "stageOf": "Etappe {n} von {total}",
+      "why": "Warum das wichtig ist:",
+      "working": "{who} arbeitet an: {step}",
+      "stageDone": "Diese Etappe ist fertig",
+      "queued": "Wartet, bis die vorherigen Etappen fertig sind …",
+      "draft": "Fügen Sie Website, Dokumente oder Importe hinzu und starten Sie dann die Analyse im Aufbau-Arbeitsbereich.",
+      "inThisStage": "Was die KI in dieser Etappe tut",
+      "read": "Lesen",
+      "yourAnswers": "Was Sie uns erzählt haben",
+      "fromSources": "Wir lernen aus Ihrer Website und Ihren Dokumenten.",
+      "pagesRead": "{count, plural, one {# Seite ins Company Brain übernommen} other {# Seiten ins Company Brain übernommen}}",
+      "blueprintHint": "Die Identität Ihres Unternehmens in einfachen Worten.",
+      "mission": "Mission:",
+      "vision": "Vision:",
+      "notYet": "Noch nicht fertig – das füllt sich, sobald die KI fertig ist.",
+      "workforceHint": "KI-Mitarbeitende arbeiten rund um die Uhr für Sie; Wichtiges geben Sie frei.",
+      "finance": "Finanzplan",
+      "cashItems": "Geplante Ein- und Ausgaben",
+      "budgets": "Budgets",
+      "summary": "Alles, was Ihr Unternehmen jetzt hat",
+      "stillWorking": "Die KI erledigt noch einige Arbeiten – Sie können im Command Center weitermachen.",
+      "enter": "Ins Command Center",
+      "continueWhileWorking": "Weiter – die KI arbeitet weiter",
+      "fullWorkspace": "Alle Details im Aufbau-Arbeitsbereich ansehen",
+      "stages": {
+        "welcome": {
+          "title": "Bauen wir Ihr Unternehmen gemeinsam auf",
+          "short": "Willkommen",
+          "what": "Ein paar kurze Fragen, dann beginnt die KI mit Ihnen zu arbeiten.",
+          "why": "Sie behalten die Kontrolle: Die KI schlägt vor, Sie entscheiden."
+        },
+        "tell": {
+          "title": "Erzählen Sie von Ihrer Idee oder Ihrem Unternehmen",
+          "short": "Ihre Idee",
+          "what": "Antworten Sie in eigenen Worten – Beispiele genügen, nichts muss perfekt sein.",
+          "why": "Je mehr die KI weiß, desto besser passen ihre Pläne zu Ihnen."
+        },
+        "vision": {
+          "title": "Die KI versteht Ihre Vision",
+          "short": "Vision",
+          "what": "Die KI liest Ihre Antworten (und Ihre Website) und hält fest, worum es in Ihrem Geschäft geht.",
+          "why": "Alles Weitere baut auf diesem Verständnis auf."
+        },
+        "market": {
+          "title": "Marktwissen",
+          "short": "Markt",
+          "what": "Die KI betrachtet Ihren Markt, Wettbewerber, Nachfrage und ideale Kunden.",
+          "why": "Wer weiß, wer kauft und wer konkurriert, muss nicht raten."
+        },
+        "blueprint": {
+          "title": "Ihr Unternehmensbauplan",
+          "short": "Bauplan",
+          "what": "Mission, Positionierung, Businessplan und Marke – inklusive Namensideen zur Auswahl.",
+          "why": "Eine klare Identität erleichtert jede Entscheidung und Botschaft."
+        },
+        "products": {
+          "title": "Produkte & Dienstleistungen",
+          "short": "Produkte",
+          "what": "Was Sie verkaufen, wie es bepreist ist und wie es sich entwickelt.",
+          "why": "Ihre Produkte werden angelegt, damit alle Teams mit derselben Liste arbeiten."
+        },
+        "workforce": {
+          "title": "KI-Team aktivieren",
+          "short": "KI-Team",
+          "what": "Die KI wählt die KI-Mitarbeitenden, die Ihnen die meiste Arbeit abnehmen.",
+          "why": "Sie erledigen Recherche, Marketing, Vertrieb und Verwaltung, während Sie entscheiden."
+        },
+        "structure": {
+          "title": "Abteilungen & Abläufe",
+          "short": "Struktur",
+          "what": "Abteilungen, Teams, erste Projekte mit Aufgaben und automatische Workflows.",
+          "why": "Alle – Menschen und KI – wissen, wer was macht."
+        },
+        "goals": {
+          "title": "Ziele & Launch-Plan",
+          "short": "Ziele",
+          "what": "Ziele mit Meilensteinen, Markteinführung und Launch-Plan sowie ein erster Finanzplan.",
+          "why": "Klare Ziele zeigen, ob das Geschäft auf Kurs ist."
+        },
+        "command": {
+          "title": "Ihr lebendiges Command Center",
+          "short": "Command Center",
+          "what": "Ihr Unternehmen ist eingerichtet. Das Command Center zeigt, was passiert und was Sie braucht.",
+          "why": "Von hier aus führen Sie das Unternehmen im Alltag."
+        }
+      }
+    }
+  },
+  "growth": {
+    "title": "Wachstumsmotor",
+    "subtitle": "Signale aus Ihren eigenen Daten erzeugen Arbeit für den richtigen KI-Mitarbeiter – von der Recherche bis zur Optimierung, jede Stunde.",
+    "needsCeo": "Der Wachstumsmotor läuft für Unternehmen mit einem aktiven KI-CEO.",
+    "loop": {
+      "title": "Wachstumskreislauf",
+      "hint": "Jede Phase mit ihren echten Zahlen; Phasen mit offenen Signalen sind hervorgehoben.",
+      "noData": "Für diese Phase gibt es noch keine Daten.",
+      "period": "Letzte 30 Tage im Vergleich zu den 30 Tagen davor."
+    },
+    "stages": {
+      "research": "Recherche",
+      "strategy": "Strategie",
+      "product": "Produkt",
+      "marketing": "Marketing",
+      "leads": "Leads",
+      "sales": "Vertrieb",
+      "customers": "Kunden",
+      "revenue": "Umsatz",
+      "analytics": "Analyse",
+      "optimization": "Optimierung"
+    },
+    "stageMetrics": {
+      "brainDocuments": "Dokumente im Company Brain",
+      "researchTasks": "Rechercheaufgaben (30 Tage)",
+      "customers": "Kunden",
+      "kpisTracked": "Verfolgte KPIs",
+      "insightsOpen": "Offene Insights",
+      "insightsActed": "Umgesetzte Insights (30 Tage)",
+      "growthTasks": "Erledigte Wachstumsaufgaben (30 Tage)"
+    },
+    "openCount": "{count, plural, one {# offen} other {# offen}}",
+    "open": {
+      "title": "Offene Insights",
+      "hint": "Diese Woche ausgelöste Signale mit Belegen und der zugewiesenen KI-Arbeit.",
+      "empty": "Keine offenen Insights. Der Motor prüft Ihre Daten stündlich."
+    },
+    "signals": {
+      "NO_CUSTOMERS": {
+        "title": "Noch keine Kunden",
+        "description": "Im CRM gibt es keine Kundenkonten. Die Kundengewinnung übernimmt der Marketingleiter."
+      },
+      "LOW_CONVERSION": {
+        "title": "Niedrige Lead-zu-Deal-Konversion",
+        "description": "Die Konversion ist gegenüber den vorherigen 30 Tagen gesunken (oder bleibt bei vielen Leads sehr niedrig)."
+      },
+      "REVENUE_DECLINE": {
+        "title": "Umsatzrückgang",
+        "description": "Der Umsatz ist gegenüber den vorherigen 30 Tagen um mindestens 10 % gefallen."
+      },
+      "PROJECTS_DELAYED": {
+        "title": "Projekte verzögert",
+        "description": "Arbeitsaufgaben oder Meilensteine sind überfällig."
+      },
+      "COMPLAINTS_UP": {
+        "title": "Mehr Beschwerden",
+        "description": "Es wurden mehr Support-Tickets eröffnet als in der Vorwoche."
+      },
+      "STRONG_CAMPAIGN": {
+        "title": "Starke Kampagnenleistung",
+        "description": "Marketing-ROI oder Konversion sind gegenüber der Vorwoche um mindestens 20 % gestiegen."
+      },
+      "DECISION_OVERLOAD": {
+        "title": "Entscheidungsstau beim Gründer",
+        "description": "Es warten mehr Genehmigungen als Ihr Schwellenwert."
+      }
+    },
+    "severity": {
+      "INFO": "Info",
+      "WARNING": "Warnung",
+      "CRITICAL": "Kritisch"
+    },
+    "status": {
+      "OPEN": "Offen",
+      "ACTED": "Umgesetzt",
+      "DISMISSED": "Verworfen"
+    },
+    "evidence": {
+      "customers": "Kunden",
+      "newLeads30d": "Neue Leads (30 Tage)",
+      "conversionRate": "Konversionsrate",
+      "previousConversionRate": "Vorherige Konversionsrate",
+      "changePct": "Veränderung",
+      "threshold": "Schwellenwert",
+      "revenueMinor": "Umsatz (30 Tage)",
+      "previousRevenueMinor": "Vorherige 30 Tage",
+      "overdueTasks": "Überfällige Aufgaben",
+      "overdueMilestones": "Überfällige Meilensteine",
+      "ticketsOpened7d": "Eröffnete Tickets (7 Tage)",
+      "previous7d": "Vorherige 7 Tage",
+      "campaignRoi": "Kampagnen-ROI",
+      "previousCampaignRoi": "Vorheriger Kampagnen-ROI",
+      "marketingConversionRate": "Marketing-Konversion",
+      "previousMarketingConversionRate": "Vorherige Marketing-Konversion",
+      "pendingApprovals": "Offene Genehmigungen"
+    },
+    "responsible": "Verantwortlich: {roles}",
+    "viewWork": "KI-Arbeit ansehen",
+    "notes": {
+      "observe": "Beobachtungsmodus: keine KI-Arbeit zugewiesen.",
+      "no_ai_employee": "Kein aktiver KI-Mitarbeiter für diese Rolle – stellen Sie einen ein, um zu handeln.",
+      "ai_not_configured": "KI ist nicht konfiguriert, daher wurde keine Arbeit zugewiesen.",
+      "ai_budget_exhausted": "Das heutige KI-Kontingent ist aufgebraucht.",
+      "workforce_employee_paused": "Der verantwortliche KI-Mitarbeiter ist pausiert.",
+      "workforce_employee_over_budget": "Der verantwortliche KI-Mitarbeiter hat sein Monatsbudget überschritten.",
+      "other": "Keine KI-Arbeit zugewiesen ({reason})."
+    },
+    "act": "KI-Arbeit zuweisen",
+    "markActed": "Als umgesetzt markieren",
+    "dismiss": "Verwerfen",
+    "reopen": "Wieder öffnen",
+    "runNow": "Jetzt prüfen",
+    "autonomy": {
+      "OBSERVE": {
+        "name": "Beobachten",
+        "hint": "Nur Insights erfassen; es wird keine KI-Arbeit zugewiesen."
+      },
+      "RECOMMEND": {
+        "name": "Empfehlen",
+        "hint": "Der verantwortliche KI-Mitarbeiter analysiert und empfiehlt; er schlägt keine Änderungen vor."
+      },
+      "PREPARE": {
+        "name": "Vorbereiten",
+        "hint": "Er bereitet Pläne und Entwürfe vor und darf interne Änderungen vorschlagen, jeweils zur Genehmigung."
+      },
+      "EXECUTE_WITH_APPROVAL": {
+        "name": "Mit Genehmigung ausführen",
+        "hint": "Er handelt mit seinen Werkzeugen; jede Änderung oder externe Aktion wartet auf Ihre Genehmigung."
+      }
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "enabled": "Wachstumsmotor an",
+      "autonomy": "Wachstums-Autonomie",
+      "threshold": "Schwellenwert für Entscheidungsstau",
+      "thresholdHint": "Mehr offene Genehmigungen als diese Zahl lösen ein Signal aus.",
+      "lastRun": "Zuletzt geprüft {time}",
+      "neverRun": "Noch nicht geprüft",
+      "schedule": "Stündliche Prüfung. Jedes Signal wird höchstens einmal pro Woche ausgelöst."
+    },
+    "history": {
+      "title": "Verlauf",
+      "acted": "{count, plural, one {# auf dieser Seite umgesetzt} other {# auf dieser Seite umgesetzt}}",
+      "empty": "Noch keine Insights.",
+      "status": "Status",
+      "signal": "Signal"
+    },
+    "strip": {
+      "what": "Ein Motor, der Ihre Zahlen stündlich auf Wachstumssignale prüft.",
+      "why": "Probleme und Chancen werden früh erkannt und an den richtigen KI-Mitarbeiter übergeben.",
+      "can": "Jede Phase Ihres Wachstumskreislaufs sehen, auf Signale reagieren und festlegen, wie viel die KI tun darf.",
+      "nextRun": "Prüfen Sie Ihre Daten jetzt.",
+      "nextAct": "Reagieren Sie auf die offenen Signale unten."
+    },
+    "help": "KI soll mein Wachstum prüfen",
+    "helpTitle": "Wachstumsprüfung: schwächste Phase und nächste Schritte"
+  },
+  "product": {
+    "studio": "Produktstudio",
+    "studioTitle": "Aus Ideen werden Produkte, die Menschen lieben",
+    "studioSubtitle": "Ein geführter Weg von der Idee bis zum Launch. Ihr KI-Produktteam recherchiert, plant, gestaltet und bereitet den Launch vor – Sie entscheiden.",
+    "startHere": "Hier starten",
+    "subtitle": "Alle Produkte, die Sie entwickeln – von der ersten Idee bis zum Launch und darüber hinaus.",
+    "product": "Produkt",
+    "allProducts": "Alle Produkte",
+    "allStages": "Alle Phasen",
+    "stage": "Phase",
+    "count": "{count, plural, one {# Produkt} other {# Produkte}}",
+    "search": "Produkte suchen…",
+    "sortUpdated": "Zuletzt aktualisiert",
+    "sortStage": "Phase",
+    "showArchived": "Archiviert",
+    "create": "Neues Produkt",
+    "linked": "Verknüpft",
+    "linkedCounts": "{features} Features · {docs} Dokumente · {releases} Releases · {feedback} Feedback",
+    "inStageSince": "In Phase seit",
+    "emptyTitle": "Noch keine Produkte",
+    "emptyHint": "Erzählen Sie mir Ihre Idee und ich richte alles ein: einen Produkteintrag, einen Arbeitsbereich und – wenn Sie möchten – Ihr KI-Produktteam für Recherche und Planung.",
+    "emptyAction": "Idee erzählen",
+    "boardHint": "{count, plural, one {# aktives Produkt} other {# aktive Produkte}} nach Lebenszyklusphase.",
+    "noOwner": "Kein Verantwortlicher",
+    "sinceDate": "Seit {date}",
+    "lifecycle": "Lebenszyklus",
+    "stageSince": "{stage} seit {date}",
+    "history": "Phasenverlauf",
+    "noHistory": "Noch keine Phasenwechsel.",
+    "now": "jetzt",
+    "createProject": "Entwicklungsprojekt anlegen",
+    "launchCampaign": "Launch-Kampagne",
+    "createCampaign": "Launch-Kampagne entwerfen",
+    "aiTasks": "KI-Aufgaben",
+    "railLabel": "Lebenszyklus: Phase {n} von {total}, {stage}",
+    "stats": {
+      "products": "Produkte",
+      "discovery": "In Erkundung",
+      "discoveryHint": "Idee bis Anforderungen",
+      "building": "In Entwicklung",
+      "buildingHint": "Architektur bis Release",
+      "launched": "Gelauncht",
+      "launchedHint": "Launch und danach"
+    },
+    "tabs": {
+      "products": "Produkte",
+      "board": "Phasen-Board"
+    },
+    "workspace": {
+      "nav": "Produkt-Arbeitsbereich",
+      "tabs": {
+        "overview": "Übersicht",
+        "research": "Recherche",
+        "documents": "Dokumente",
+        "features": "Features",
+        "roadmap": "Roadmap",
+        "backlog": "Backlog",
+        "releases": "Releases",
+        "feedback": "Feedback",
+        "analytics": "Analysen",
+        "plan": "KI-Team"
+      }
+    },
+    "stages": {
+      "IDEA": "Idee",
+      "RESEARCH": "Recherche",
+      "VALIDATION": "Validierung",
+      "BUSINESS_REQUIREMENTS": "Geschäftsanforderungen",
+      "PRODUCT_REQUIREMENTS": "Produktanforderungen",
+      "ARCHITECTURE": "Architektur",
+      "DESIGN": "Design",
+      "DEVELOPMENT": "Entwicklung",
+      "QA": "Qualitätssicherung",
+      "RELEASE": "Release",
+      "LAUNCH": "Launch",
+      "FEEDBACK": "Feedback",
+      "OPTIMIZATION": "Optimierung"
+    },
+    "status": {
+      "ACTIVE": "Aktiv",
+      "ON_HOLD": "Pausiert",
+      "SUNSET": "Auslaufend"
+    },
+    "fields": {
+      "name": "Name",
+      "owner": "Product Owner",
+      "ownerHint": "Gibt jedes Phasen-Gate frei.",
+      "ownerMe": "Ich",
+      "targetUsers": "Zielgruppe",
+      "targetUsersHint": "Für wen ist es? z. B. kleine Bäckereien mit Online-Bestellungen.",
+      "graphEntity": "Produkt im Unternehmensgraphen",
+      "project": "Entwicklungsprojekt",
+      "createGraphEntity": "Zum Unternehmensgraphen hinzufügen",
+      "createProject": "Entwicklungsprojekt anlegen"
+    },
+    "gate": {
+      "title": "Abschluss-Checkliste: {stage}",
+      "addItem": "Checklistenpunkt hinzufügen",
+      "approve": "Gate freigeben",
+      "reopen": "Gate wieder öffnen",
+      "approved": "Gate freigegeben",
+      "approvedBy": "Freigegeben von {name} am {date}",
+      "ownerApproves": "{name} gibt dieses Gate frei, sobald alle Punkte erledigt sind.",
+      "managerApproves": "Noch kein Verantwortlicher: Ein Produktmanager gibt dieses Gate frei.",
+      "approveFirst": "Zuerst das aktuelle Gate freigeben",
+      "advance": "Weiter zu {stage}",
+      "moveBack": "Zurück zu…",
+      "moveBackButton": "Zurücksetzen",
+      "note": "Notiz (optional)",
+      "progress": "{done}/{total} erledigt",
+      "items": {
+        "problem_defined": "Das Problem ist beschrieben",
+        "target_users": "Die Zielgruppe ist benannt",
+        "initial_value": "Der Nutzen ist klar",
+        "competitors_reviewed": "Wettbewerber geprüft",
+        "personas_defined": "Personas definiert",
+        "research_doc": "Recherchedokument verfasst",
+        "hypotheses_tested": "Wichtige Annahmen getestet",
+        "evidence_recorded": "Belege erfasst",
+        "go_decision": "Go/No-Go entschieden",
+        "brd_written": "Geschäftsanforderungen verfasst",
+        "business_case": "Business Case vereinbart",
+        "stakeholders_aligned": "Stakeholder abgestimmt",
+        "prd_written": "Produktanforderungen verfasst",
+        "features_prioritized": "Features priorisiert",
+        "acceptance_defined": "Akzeptanzkriterien definiert",
+        "architecture_doc": "Architektur dokumentiert",
+        "tech_requirements": "Technische Anforderungen verfasst",
+        "risks_reviewed": "Technische Risiken geprüft",
+        "ux_spec": "Nutzererlebnis spezifiziert",
+        "design_brief": "Design-Briefing verfasst",
+        "design_review": "Entwürfe geprüft",
+        "backlog_ready": "Backlog bereit",
+        "dev_project_linked": "Entwicklungsprojekt verknüpft",
+        "features_built": "Features umgesetzt",
+        "qa_plan": "Testplan verfasst",
+        "tests_passed": "Tests bestanden",
+        "bugs_triaged": "Fehler priorisiert",
+        "release_planned": "Release geplant",
+        "release_notes": "Release Notes verfasst",
+        "release_shipped": "Release ausgeliefert",
+        "launch_campaign": "Launch-Kampagne bereit",
+        "support_ready": "Support-Team bereit",
+        "launch_announced": "Launch angekündigt",
+        "feedback_collected": "Feedback gesammelt",
+        "feedback_analyzed": "Feedback ausgewertet",
+        "improvements_planned": "Verbesserungen geplant",
+        "kpis_reviewed": "KPIs geprüft"
+      }
+    },
+    "help": {
+      "whatLabel": "Was ist das",
+      "whyLabel": "Warum es wichtig ist",
+      "nextLabel": "Nächster Schritt",
+      "portfolio": {
+        "what": "Alle Produkte Ihres Unternehmens, jedes mit eigenem Arbeitsbereich.",
+        "why": "Ein Ort, an dem Sie sehen, wo jedes Produkt steht und was es braucht.",
+        "next": "Beginnen Sie mit Ihrer Idee – das dauert zwei Minuten."
+      },
+      "overview": {
+        "what": "Der Weg Ihres Produkts von der Idee bis zum Launch, mit echtem Fortschritt.",
+        "why": "Jeder Schritt baut auf dem vorherigen auf; übersprungene Schritte lassen Produkte scheitern.",
+        "next": "Arbeiten Sie am aktuellen Schritt oder lassen Sie das KI-Produktteam alles planen."
+      },
+      "board": {
+        "what": "Jedes aktive Produkt in seiner aktuellen Lebenszyklusphase.",
+        "why": "Erkennen Sie festhängende Produkte und Gates, die auf Freigabe warten.",
+        "next": "Öffnen Sie ein Produkt, um es voranzubringen."
+      },
+      "roadmapAll": {
+        "what": "Initiativen und Features nach Quartal geplant.",
+        "why": "Eine Roadmap zeigt Kunden und Team, was wann kommt.",
+        "next": "Weisen Sie Features einem Quartal zu und gruppieren Sie sie in Initiativen."
+      },
+      "featuresAll": {
+        "what": "Alles, was Sie bauen wollen, über alle Produkte hinweg.",
+        "why": "Klare Features mit Akzeptanzkriterien sind leichter zu bauen und zu testen.",
+        "next": "Bewerten Sie Features mit RICE, um die Reihenfolge festzulegen."
+      },
+      "ideasAll": {
+        "what": "Ideen aus Ihrem Team, mit Stimmen.",
+        "why": "Gute Produkte entstehen aus vielen Ideen, gefiltert nach echter Nachfrage.",
+        "next": "Abstimmen und die besten Ideen in Features umwandeln."
+      },
+      "feedbackAll": {
+        "what": "Was Kunden über Ihre Produkte sagen.",
+        "why": "Feedback zeigt, was zu beheben und was als Nächstes zu bauen ist.",
+        "next": "Verknüpfen Sie Feedback mit einem Produkt und einem Feature."
+      },
+      "releasesAll": {
+        "what": "Versionen, die Sie ausliefern, und ihr Änderungsprotokoll.",
+        "why": "Releases zeigen Kunden, was sich geändert hat, und halten das Team im Zeitplan.",
+        "next": "Planen Sie die nächste Version und fügen Sie ihre Features hinzu."
+      },
+      "prioritization": {
+        "what": "Features nach RICE gereiht: Reichweite × Wirkung × Zuversicht ÷ Aufwand.",
+        "why": "Die wertvollste Arbeit zuerst spart Zeit und Geld.",
+        "next": "Tragen Sie die vier RICE-Werte für unbewertete Features ein."
+      },
+      "research": {
+        "what": "Wettbewerber, Marktbelege und die Menschen, für die Sie bauen.",
+        "why": "Recherche zeigt, ob Menschen das wirklich brauchen, bevor Sie in die Entwicklung investieren.",
+        "next": "Fügen Sie Ihre wichtigsten Wettbewerber und eine zu testende Annahme hinzu."
+      },
+      "documents": {
+        "what": "Der schriftliche Plan: Geschäftsbedarf, Produktanforderungen, Architektur, Design und Launch.",
+        "why": "Dokumente halten alle – Menschen und KI – auf demselben Plan. Sie werden auch im Company Brain gespeichert.",
+        "next": "Öffnen Sie ein Dokument und schreiben Sie es oder lassen Sie die KI einen Entwurf erstellen."
+      },
+      "features": {
+        "what": "Was dieses Produkt tun wird, Feature für Feature.",
+        "why": "Kleine, gut beschriebene Features werden schneller und mit weniger Fehlern ausgeliefert.",
+        "next": "Ergänzen Sie jedes Feature um Anforderungen und Akzeptanzkriterien."
+      },
+      "roadmap": {
+        "what": "Wann die Features dieses Produkts geplant sind.",
+        "why": "Ein Zeitplan hält das Team fokussiert und Zusagen realistisch.",
+        "next": "Weisen Sie jedem Feature ein Quartal zu."
+      },
+      "backlog": {
+        "what": "Die Arbeitsaufgaben zum Bau dieses Produkts, nach Feature gruppiert.",
+        "why": "Aufgaben in Sprints machen aus Plänen ausgelieferte Software.",
+        "next": "Erstellen Sie Aufgaben für das wichtigste Feature und schieben Sie es in einen Sprint."
+      },
+      "releases": {
+        "what": "Die Versionen dieses Produkts und was sie enthalten.",
+        "why": "Releases markieren Fortschritt und zeigen Kunden, was neu ist.",
+        "next": "Planen Sie eine Version und entwerfen Sie dann Support-Artikel und Launch-Kampagne."
+      },
+      "feedback": {
+        "what": "Feedback, Support-Tickets und Kundenkonten zu diesem Produkt.",
+        "why": "Die echte Stimme der Kunden zeigt, was als Nächstes zu verbessern ist.",
+        "next": "Bewerten Sie die Stimmung des Feedbacks und verknüpfen Sie es mit Features."
+      },
+      "analytics": {
+        "what": "Kennzahlen aus der echten Aktivität dieses Produkts.",
+        "why": "Tempo, Qualität und Kundenstimmung auf einen Blick.",
+        "next": "Achten Sie auf langsame Phasen und steigendes negatives Feedback."
+      },
+      "plan": {
+        "what": "Ihr KI-Produktteam: Researcher, Analyst, Produktmanager, Architekt, Designer, QA und Release-Manager.",
+        "why": "Es schreibt in Minuten einen vollständigen ersten Plan, jeder Schritt baut auf dem vorherigen auf.",
+        "next": "Geben Sie ein kurzes Briefing und starten Sie das Team; prüfen Sie jedes fertige Dokument."
+      }
+    },
+    "journey": {
+      "title": "Ihr Produktweg",
+      "overall": "{percent} % des Weges geschafft",
+      "stepN": "Schritt {n}",
+      "means": "Was das bedeutet",
+      "why": "Warum",
+      "aiDoes": "Was die KI tut",
+      "helpMe": "Hilf mir dabei",
+      "helpAll": "Hilf mir bei allem",
+      "progressLabel": "Fortschritt von {step}",
+      "done": "erledigt",
+      "todo": "offen",
+      "status": {
+        "done": "Erledigt",
+        "current": "Sie sind hier",
+        "upcoming": "Als Nächstes"
+      },
+      "idea": {
+        "title": "Idee",
+        "means": "Beschreiben Sie das Problem, das Sie lösen wollen, und wer es hat.",
+        "why": "Ein klares Problem ist das Fundament für alles Weitere.",
+        "ai": "Das KI-Produktteam recherchiert und entwirft den gesamten Plan aus Ihrer Idee.",
+        "action": "Idee beschreiben"
+      },
+      "research": {
+        "title": "Recherche",
+        "means": "Lernen Sie Wettbewerber und Ihre Zielgruppe kennen und testen Sie Ihre Annahmen.",
+        "why": "So belegen Sie den Bedarf, bevor Sie in die Entwicklung investieren.",
+        "ai": "Der KI-Researcher entwirft aus Ihren Daten ein Marktrecherche-Dokument.",
+        "action": "Recherche ergänzen"
+      },
+      "plan": {
+        "title": "Planen",
+        "means": "Halten Sie Geschäftsziele fest und genau, was das Produkt können muss.",
+        "why": "Ein gemeinsamer Plan verhindert Nacharbeit und Missverständnisse.",
+        "ai": "Der KI-Produktmanager entwirft die Produktanforderungen (PRD).",
+        "action": "PRD schreiben"
+      },
+      "design": {
+        "title": "Gestalten",
+        "means": "Entscheiden Sie, wie es gebaut wird und wie es aussieht und sich anfühlt.",
+        "why": "Gutes Design macht das Produkt einfach zu nutzen und zu bauen.",
+        "ai": "Die KI-Designer entwerfen das Design-Briefing.",
+        "action": "Design-Briefing öffnen"
+      },
+      "build": {
+        "title": "Bauen",
+        "means": "Machen Sie aus Features Aufgaben, bauen Sie sie in Sprints und testen Sie sie.",
+        "why": "Kleine Schritte liefern funktionierende Software und zeigen Probleme früh.",
+        "ai": "Der KI-Analyst schlägt Features und Backlog-Aufgaben zur Freigabe vor.",
+        "action": "Backlog öffnen"
+      },
+      "launch": {
+        "title": "Launch",
+        "means": "Veröffentlichen, bekannt machen, Kunden unterstützen und aus Feedback lernen.",
+        "why": "Ein geplanter Launch bringt das Produkt zu den richtigen Menschen.",
+        "ai": "Der KI-Release-Manager entwirft den Release- und Launch-Plan.",
+        "action": "Release planen"
+      },
+      "checks": {
+        "described": "Problem beschrieben",
+        "audience": "Zielgruppe benannt",
+        "owner": "Verantwortlicher zugewiesen",
+        "competitors": "Wettbewerber erfasst",
+        "personas": "Personas erfasst",
+        "validated": "Eine Annahme validiert",
+        "researchDoc": "Recherchedokument",
+        "brd": "Geschäftsanforderungen",
+        "prd": "Produktanforderungen",
+        "prdApproved": "PRD freigegeben",
+        "features": "Features definiert",
+        "architecture": "Architektur",
+        "ux": "UX-Spezifikation",
+        "designBrief": "Design-Briefing",
+        "project": "Entwicklungsprojekt",
+        "backlog": "Backlog-Aufgaben",
+        "criteria": "Akzeptanzkriterien",
+        "qaPlan": "Testplan",
+        "releasePlan": "Release-Plan",
+        "release": "Version geplant",
+        "shipped": "Version veröffentlicht",
+        "campaign": "Launch-Kampagne"
+      }
+    },
+    "readiness": {
+      "title": "Launch-Bereitschaft",
+      "hint": "Was vor dem Launch erfüllt sein muss – geprüft anhand Ihrer echten Daten.",
+      "ready": "bereit",
+      "scoreLabel": "Launch-Bereitschaft {score} %",
+      "items": {
+        "prdApproved": "PRD freigegeben",
+        "qaPlanApproved": "Testplan freigegeben",
+        "qaGate": "QS-Gate freigegeben",
+        "featuresShipped": "Alle Features ausgeliefert",
+        "noOpenTasks": "Keine offenen Entwicklungsaufgaben",
+        "releaseNotes": "Release Notes verfasst",
+        "releaseDated": "Release-Datum festgelegt",
+        "releasePlan": "Release-Plan freigegeben",
+        "supportArticle": "Support-Artikel vorbereitet",
+        "campaign": "Launch-Kampagne entworfen"
+      }
+    },
+    "roadmapChart": {
+      "title": "Features nach Quartal",
+      "hint": "Nach Status gestapelt, aus der Roadmap unten.",
+      "label": "Features pro Quartal: {summary}"
+    },
+    "start": {
+      "title": "Ihr Produkt starten",
+      "subtitle": "Drei kurze Fragen. Ihre Antworten werden laufend gespeichert – Sie können jederzeit unterbrechen und weitermachen.",
+      "progress": "Schritt {step} von {total}",
+      "steps": {
+        "idea": "Ihre Idee",
+        "audience": "Für wen",
+        "setup": "Loslegen"
+      },
+      "ideaQuestion": "Was möchten Sie bauen?",
+      "ideaHint": "Einfache Worte sind perfekt. Sie können später alles ändern.",
+      "nameLabel": "Produktname",
+      "nameExample": "z. B. BackBox – Online-Bestellungen für lokale Bäckereien",
+      "problemLabel": "Welches Problem löst es?",
+      "problemExample": "z. B. Kleine Bäckereien verlieren Bestellungen, weil Kunden nicht online vorbestellen können.",
+      "audienceQuestion": "Für wen ist es?",
+      "audienceHint": "Nennen Sie die Menschen, die das Problem haben. Tippen Sie auf ein Beispiel oder schreiben Sie selbst.",
+      "audienceExamples": "Kleinunternehmer|Freiberufler|Familien|Studierende|Online-Käufer|Vertriebsteams",
+      "setupQuestion": "Wie möchten Sie weitermachen?",
+      "setupHint": "Wir empfehlen beide Optionen.",
+      "aiOption": "Das KI-Produktteam planen lassen",
+      "aiOptionHint": "Recherche, Geschäfts- und Produktanforderungen, Architektur, Design, Test- und Launch-Pläne – nacheinander für Ihre Prüfung entworfen.",
+      "aiUnavailable": "KI ist für Sie hier nicht verfügbar; Sie können selbst planen.",
+      "projectOption": "Entwicklungsprojekt anlegen",
+      "projectOptionHint": "Ein Ort für die Aufgaben und Sprints, mit denen das Produkt gebaut wird.",
+      "recommended": "Empfohlen",
+      "saveContinue": "Speichern und weiter",
+      "back": "Zurück",
+      "finish": "Meinen Produkt-Arbeitsbereich anlegen"
+    },
+    "research": {
+      "competitors": "Wettbewerber",
+      "competitorsHint": "Wer dieses Problem sonst löst und wie Sie sich unterscheiden.",
+      "competitor": "Wettbewerber",
+      "website": "Website",
+      "strengths": "Stärken",
+      "weaknesses": "Schwächen",
+      "notes": "Notizen",
+      "links": "Links",
+      "linksHint": "Ein Link pro Zeile (Bewertungen, Preisseiten, Artikel).",
+      "addCompetitor": "Wettbewerber hinzufügen",
+      "noCompetitors": "Noch keine Wettbewerber. Fügen Sie die zwei oder drei Alternativen hinzu, die Ihre Nutzer heute verwenden.",
+      "validations": "Marktvalidierung",
+      "validationSummary": "{validated} validiert · {invalidated} widerlegt · {pending} offen",
+      "hypothesis": "Zu testende Annahme",
+      "kind": "Methode",
+      "result": "Ergebnis",
+      "sampleSize": "Befragte Personen",
+      "source": "Quell-Link",
+      "evidence": "Belege",
+      "addValidation": "Validierung hinzufügen",
+      "noValidations": "Noch keine Validierung. Notieren Sie eine Annahme – z. B. „Bäckereien würden 20 € im Monat zahlen“ – und wie Sie sie testen.",
+      "personas": "Personas",
+      "personaName": "Name der Persona",
+      "role": "Rolle",
+      "goals": "Ziele",
+      "painPoints": "Probleme",
+      "addPersona": "Persona hinzufügen",
+      "noPersonas": "Noch keine Personas. Beschreiben Sie einen typischen Nutzer."
+    },
+    "validationKind": {
+      "INTERVIEW": "Interview",
+      "SURVEY": "Umfrage",
+      "EXPERIMENT": "Experiment",
+      "MARKET_DATA": "Marktdaten",
+      "PREORDER": "Vorbestellungen",
+      "OTHER": "Sonstiges"
+    },
+    "validationResult": {
+      "PENDING": "Offen",
+      "VALIDATED": "Validiert",
+      "INVALIDATED": "Widerlegt",
+      "INCONCLUSIVE": "Nicht eindeutig"
+    },
+    "docKinds": {
+      "RESEARCH": "Marktrecherche",
+      "BRD": "Geschäftsanforderungen (BRD)",
+      "PRD": "Produktanforderungen (PRD)",
+      "TECH_REQUIREMENTS": "Technische Anforderungen",
+      "ARCHITECTURE": "Architektur",
+      "UX_SPEC": "UX-Spezifikation",
+      "DESIGN_BRIEF": "Design-Briefing",
+      "QA_PLAN": "QS- und Testplan",
+      "RELEASE_PLAN": "Release- und Launch-Plan"
+    },
+    "docHints": {
+      "RESEARCH": "Markt, Wettbewerber, Kundenbedarf und Belege.",
+      "BRD": "Geschäftsziele, KPIs, Umfang und Business Case.",
+      "PRD": "Was das Produkt können muss: Nutzer, Anforderungen, Features und Akzeptanzkriterien.",
+      "TECH_REQUIREMENTS": "Leistung, Sicherheit, Integrationen und Datenanforderungen.",
+      "ARCHITECTURE": "Komponenten, Datenmodell, APIs und Technologiewahl.",
+      "UX_SPEC": "User Journeys, Abläufe und Barrierefreiheit.",
+      "DESIGN_BRIEF": "Visuelle Richtung, Screens, Komponenten und Zustände.",
+      "QA_PLAN": "Wie das Produkt vor dem Release getestet wird.",
+      "RELEASE_PLAN": "Rollout, Kommunikation, Support-Bereitschaft und Launch."
+    },
+    "docStatus": {
+      "DRAFT": "Entwurf",
+      "IN_REVIEW": "In Prüfung",
+      "APPROVED": "Freigegeben"
+    },
+    "docs": {
+      "hint": "Versionierte Dokumente. Jede gespeicherte Version wird auch im Company Brain indexiert, damit das ganze Unternehmen – und jeder KI-Mitarbeiter – sie findet.",
+      "notStarted": "Nicht begonnen",
+      "inBrain": "Im Brain",
+      "content": "Dokumentinhalt (Markdown)",
+      "placeholder": "In Markdown schreiben – oder einen ersten Entwurf mit KI erstellen.",
+      "changeNote": "Was geändert wurde (optional)",
+      "saveVersion": "Neue Version speichern",
+      "readOnly": "Sie können dieses Dokument lesen; zum Bearbeiten brauchen Sie Produktmanagement-Rechte.",
+      "openInBrain": "Im Company Brain öffnen",
+      "viewingVersion": "Sie sehen Version {version}; aktuell ist Version {current}.",
+      "restore": "Diese Version wiederherstellen",
+      "backToCurrent": "Zurück zur aktuellen",
+      "aiTitle": "Mit KI erstellen",
+      "aiHint": "{role} entwirft dieses Dokument aus den Produktdaten und früheren Dokumenten. Prüfen Sie es und übernehmen Sie es als neue Version.",
+      "generate": "Mit KI erstellen",
+      "guidance": "Worauf soll sich die KI konzentrieren? (optional)",
+      "useDraft": "KI-Entwurf übernehmen",
+      "draftUsed": "Übernommen",
+      "confirmUseDraft": "Diesen KI-Entwurf als neue Version des Dokuments speichern?",
+      "versions": "Versionen",
+      "noVersions": "Noch keine Versionen."
+    },
+    "feature": {
+      "requirements": "Anforderungen",
+      "requirementsHint": "Was das Feature können muss (Markdown).",
+      "acceptance": "Akzeptanzkriterien",
+      "acceptanceHint": "Ein Kriterium pro Zeile – woran Sie erkennen, dass es fertig ist.",
+      "criteriaCount": "{count, plural, one {# Kriterium} other {# Kriterien}}"
+    },
+    "backlog": {
+      "noProject": "Dieses Produkt hat noch kein Entwicklungsprojekt – dort liegen Aufgaben und Sprints.",
+      "projectHint": "Aufgaben liegen im Entwicklungsprojekt des Produkts.",
+      "openBoard": "Board öffnen",
+      "openSprints": "Sprints",
+      "byFeature": "Backlog nach Feature",
+      "byFeatureHint": "Höchster RICE-Wert zuerst. Schieben Sie ein Feature in einen Sprint, um seine Aufgaben einzuplanen.",
+      "toSprint": "In Sprint schieben",
+      "inSprint": "Im Sprint",
+      "pts": "{count, plural, one {# Pkt.} other {# Pkt.}}",
+      "add": "Backlog-Aufgaben hinzufügen",
+      "titles": "Aufgabentitel",
+      "titlesHint": "Eine Aufgabe pro Zeile (bis zu 50).",
+      "sprint": "Sprint",
+      "noSprint": "Backlog (kein Sprint)",
+      "points": "Story Points",
+      "create": "{count, plural, =0 {Aufgaben anlegen} one {# Aufgabe anlegen} other {# Aufgaben anlegen}}",
+      "unlinked": "Aufgaben ohne Feature",
+      "aiTitle": "KI-Backlog-Planung",
+      "aiHint": "Der KI-Business-Analyst liest das PRD und schlägt Features und Aufgaben vor. Sie geben jede unter Freigaben frei."
+    },
+    "releases": {
+      "title": "Releases und Änderungsprotokoll",
+      "cadence": "{count, plural, one {# Release ausgeliefert} other {# Releases ausgeliefert}}, das neueste am {date}.",
+      "kbDraft": "Support-Artikel-Entwurf",
+      "kbHint": "Erstellt einen Hilfe-Center-Entwurf aus Release Notes und Features."
+    },
+    "feedback": {
+      "search": "Feedback suchen…",
+      "sentiment": "Stimmung",
+      "unrated": "Nicht bewertet",
+      "tickets": "Support-Tickets",
+      "ticketsHint": "{total} Tickets erwähnen dieses Produkt, {open} offen.",
+      "noTickets": "Keine Support-Tickets erwähnen dieses Produkt.",
+      "accounts": "Kundenkonten",
+      "accountsHint": "Konten, die Feedback geben oder Tickets zu diesem Produkt eröffnen.",
+      "accountCounts": "{feedback} Feedback · {tickets} Tickets",
+      "noAccounts": "Noch keine Kundenkonten verknüpft."
+    },
+    "sentiment": {
+      "POSITIVE": "Positiv",
+      "NEUTRAL": "Neutral",
+      "NEGATIVE": "Negativ"
+    },
+    "analytics": {
+      "featuresShipped": "Ausgelieferte Features",
+      "ofTotal": "von {total} Features",
+      "lifecycleProgress": "Lebenszyklus-Fortschritt",
+      "daysInLifecycle": "{count, plural, one {# Tag} other {# Tage}} seit der Idee",
+      "releases": "Releases",
+      "lastRelease": "Zuletzt {date}",
+      "cadence": "Release-Rhythmus",
+      "cadenceHint": "Durchschnittliche Tage zwischen Releases",
+      "daysUnit": "T",
+      "feedback6m": "Feedback, 6 Monate",
+      "negativeShare": "Negatives Feedback",
+      "ratedCount": "{count} bewertet",
+      "cycleTime": "Zeit je Phase",
+      "cycleTimeHint": "Tage je Lebenszyklusphase (die aktuelle Phase zählt bis heute).",
+      "shippedByMonth": "Ausgelieferte Features pro Monat",
+      "feedbackByMonth": "Feedback pro Monat und Stimmung",
+      "features": "Features und Aufgaben"
+    },
+    "plan": {
+      "title": "Mit dem KI-Produktteam planen",
+      "hint": "Acht KI-Spezialisten arbeiten nacheinander; jeder liest die vorherigen Dokumente. Jedes Ergebnis wird als Dokumentversion zur Prüfung gespeichert.",
+      "brief": "Briefing",
+      "briefPlaceholder": "Optionales Briefing, z. B. „MVP in 3 Monaten, mobil zuerst, Kunden in der EU“.",
+      "start": "KI-Produktteam starten",
+      "running": "Das KI-Produktteam arbeitet an diesem Produkt…",
+      "run": "Plan vom {date}",
+      "confirmCancel": "KI-Produktteam stoppen? Fertige Dokumente bleiben erhalten.",
+      "retry": "Erneut versuchen",
+      "openDoc": "Dokument öffnen",
+      "openDocVersion": "Version {version} öffnen",
+      "open": "Mit dem KI-Produktteam planen →",
+      "applyTitle": "Plan umsetzen",
+      "applyHint": "Machen Sie aus dem PRD Features und Backlog-Aufgaben. Die KI schlägt jedes Element vor; Sie geben es unter Freigaben frei.",
+      "apply": "Features und Backlog vorschlagen"
+    },
+    "planStatus": {
+      "RUNNING": "Läuft",
+      "COMPLETED": "Abgeschlossen",
+      "FAILED": "Fehlgeschlagen",
+      "CANCELLED": "Abgebrochen"
+    },
+    "stepStatus": {
+      "PENDING": "Wartet",
+      "RUNNING": "Läuft",
+      "DONE": "Erledigt",
+      "FAILED": "Fehlgeschlagen"
+    },
+    "team": {
+      "title": "KI-Produktteam",
+      "hint": "Stellen Sie KI-Mitarbeiter für die Produktrollen ein; sie erscheinen in Ihrer KI-Belegschaft.",
+      "none": "Noch keine Mitglieder im KI-Produktteam.",
+      "hire": "Auswahl einstellen",
+      "hired": "Eingestellt",
+      "hiredCount": "{count, plural, one {# KI-Mitarbeiter eingestellt} other {# KI-Mitarbeiter eingestellt}}"
+    },
+    "metrics": {
+      "activeProducts": "Aktive Produkte",
+      "featuresShipped": "Ausgelieferte Features",
+      "productReleases": "Produkt-Releases",
+      "productFeedback": "Produkt-Feedback",
+      "negativeFeedbackShare": "Anteil negatives Feedback",
+      "stageCycleTime": "Durchlaufzeit je Phase",
+      "stageGatesApproved": "Freigegebene Phasen-Gates"
+    },
+    "visuals": {
+      "mapTitle": "Produktkarte",
+      "archTitle": "Produktarchitektur",
+      "mapLabel": "Produktkarte: {summary} Initiativen / Features",
+      "archLabel": "Architekturkomponenten: {summary}",
+      "mapCaption": "Initiativen rund um das Produkt, Features rund um ihre Initiative – nach Status eingefärbt.",
+      "archCaption": "Komponenten aus dem Architekturdokument.",
+      "graphEmpty": "Fügen Sie Initiativen und Features hinzu – oder ein Architekturdokument mit einem Abschnitt „Komponenten“ –, um die Produktkarte zu sehen.",
+      "funnelTitle": "Von Ideen zum Produkt",
+      "funnelHint": "Wie aus Ideen Features und ausgelieferter Nutzen werden.",
+      "funnelLabel": "Verlauf: {summary}",
+      "funnel": {
+        "ideas": "Ideen",
+        "features": "Features",
+        "planned": "Geplant",
+        "building": "In Arbeit",
+        "shipped": "Ausgeliefert"
+      },
+      "activityTitle": "Entwicklungsaktivität",
+      "activityHint": "Erledigte und neue Aufgaben pro Woche, letzte 12 Wochen.",
+      "activityLabel": "Letzte 12 Wochen: {done} Aufgaben erledigt, {created} angelegt",
+      "done": "Erledigt",
+      "created": "Angelegt",
+      "flowTitle": "Release-Prozess",
+      "flowHint": "Wo sich jede Version im Release-Ablauf befindet.",
+      "flowLabel": "Release-Ablauf: {summary}",
+      "flow": {
+        "planned": "Geplant",
+        "building": "In Arbeit",
+        "released": "Veröffentlicht",
+        "published": "Im Changelog"
+      },
+      "noReleases": "Noch keine Versionen."
+    }
+  },
+  "guide": {
+    "launcher": "KI-Guide",
+    "title": "KI-Guide",
+    "close": "Guide schließen",
+    "expand": "KI-Command öffnen",
+    "actionsLabel": "Guide-Aktionen",
+    "loading": "Wird geladen…",
+    "noCompany": "Lege zuerst ein Unternehmen an oder wähle eines – der Guide arbeitet mit den Daten deines Unternehmens.",
+    "noCompanyAction": "Unternehmen einrichten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "go": "Dorthin",
+    "done": "Erledigt",
+    "undo": "Als nicht erledigt markieren",
+    "markDone": "Als erledigt markieren",
+    "autoDone": "Erledigt – das sehen wir in deinen Daten",
+    "showMe": "Zeig es mir",
+    "notOnScreen": "Dieser Teil ist gerade nicht auf dem Bildschirm.",
+    "reset": "Neu beginnen",
+    "resume": "Fortsetzen",
+    "resumeAt": "Du warst bei: {step}",
+    "progress": "{done} von {total} Schritten erledigt",
+    "recent": "Deine letzten Fragen hier",
+    "askLabel": "Frag den Guide",
+    "askPlaceholder": "Frag etwas zu dieser Seite…",
+    "send": "Fragen",
+    "recommended": "empfohlen",
+    "actions": {
+      "explain": "Seite erklären",
+      "guide": "Führ mich",
+      "do": "Mach es für mich",
+      "next": "Was nun?",
+      "recommend": "Beste Option",
+      "ask": "Frage"
+    },
+    "labels": {
+      "what": "Was ist das?",
+      "why": "Warum es wichtig ist",
+      "can": "Was du hier tun kannst",
+      "next": "Was als Nächstes",
+      "state": "Dein Unternehmen gerade",
+      "related": "Wie es weitergeht",
+      "onThisPage": "Der nächste offene Schritt auf dieser Seite.",
+      "firstOpen": "Das ist der erste offene Schritt auf dieser Seite.",
+      "becauseZero": "Weil: {what}."
+    },
+    "ai": {
+      "explain": "Mit meinen Daten erklären (KI)",
+      "guide": "Persönliche Anleitung erstellen (KI)",
+      "next": "KI fragen, was als Nächstes kommt",
+      "recommend": "KI um Empfehlung bitten",
+      "notConfigured": "KI-Antworten sind noch nicht verfügbar: Ein Administrator muss den KI-Anbieter verbinden. Alles andere im Guide funktioniert.",
+      "forbidden": "Deine Rolle darf keine KI-Aufgaben starten. Bitte einen Admin um die Berechtigung „KI-Aufgaben ausführen“."
+    },
+    "do": {
+      "intro": "Wähle, was die KI tun soll. Sie fragt nur das Nötigste und legt dann los – du siehst jeden Schritt.",
+      "safety": "Die KI schlägt Änderungen nur vor: Alles, was etwas anlegt, ändert oder sendet, wartet unter Freigaben auf ein Ja von einem Menschen.",
+      "other": "Etwas anderes?",
+      "otherPlaceholder": "Beschreibe, was erledigt werden soll…",
+      "questionOf": "Frage {n} von {total}",
+      "task": "Die KI wird",
+      "start": "Starten"
+    },
+    "recommend": {
+      "stepWhy": "Dieser Schritt bringt auf dieser Seite gerade am meisten.",
+      "allDone": "Alles Wichtige hier ist erledigt. Gut gemacht!",
+      "question": "Was möchtest du entscheiden? (optional)",
+      "placeholder": "z. B. Auf welche Kunden sollen wir uns zuerst konzentrieren?"
+    },
+    "voice": {
+      "start": "Frage sprechen",
+      "stop": "Zuhören beenden"
+    },
+    "phase": {
+      "thinking": "Denkt nach",
+      "planning": "Plant",
+      "executing": "Führt aus",
+      "collaborating": "Arbeitet im Team",
+      "completing": "Schließt ab",
+      "done": "Fertig",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen"
+    },
+    "task": {
+      "missing": "Diese KI-Aufgabe ist nicht mehr verfügbar.",
+      "status": {
+        "QUEUED": "Wartet auf Start",
+        "RUNNING": "Arbeitet",
+        "COMPLETED": "Fertig",
+        "FAILED": "Fehlgeschlagen",
+        "CANCELLED": "Abgebrochen"
+      },
+      "steps": "{count, plural, one {# Schritt erledigt} other {# Schritte erledigt}}",
+      "failed": "Die KI konnte diese Aufgabe nicht abschließen.",
+      "review": "Von KI geschrieben – prüfe es, bevor du es nutzt oder teilst.",
+      "approvals": "{count, plural, one {# Änderung wartet auf Freigabe} other {# Änderungen warten auf Freigabe}}",
+      "reviewApprovals": "Unter Freigaben prüfen",
+      "open": "Ganze Aufgabe öffnen",
+      "next": "Weiter: {page}"
+    },
+    "approval": {
+      "PENDING": "Wartet",
+      "APPROVED": "Freigegeben",
+      "REJECTED": "Abgelehnt",
+      "EXPIRED": "Abgelaufen",
+      "EXECUTED": "Erledigt",
+      "FAILED": "Fehlgeschlagen"
+    },
+    "taskTitle": {
+      "EXPLAIN": "Erklären: {page}",
+      "GUIDE": "Anleitung: {page}",
+      "NEXT": "Was nun: {page}",
+      "RECOMMEND": "Empfehlung: {page}",
+      "ASK": "Frage zu {page}",
+      "DO": "Für mich erledigen: {step}"
+    },
+    "empty": {
+      "examples": "Zum Beispiel"
+    },
+    "intro": {
+      "label": "Über diese Seite"
+    },
+    "whatsNext": {
+      "title": "Was als Nächstes zu tun ist",
+      "subtitle": "Ausgewählt aus den echten Daten deines Unternehmens",
+      "allClear": "Nichts Dringendes – du hast alles im Griff.",
+      "askAi": "KI erledigen lassen"
+    },
+    "metrics": {
+      "leads": "{count, plural, =0 {Noch keine Leads} one {# Lead} other {# Leads}}",
+      "deals": "{count, plural, =0 {Noch keine Deals} one {# Deal} other {# Deals}}",
+      "openDeals": "{count, plural, =0 {Noch keine offene Deals} one {# offener Deal} other {# offene Deals}}",
+      "contacts": "{count, plural, =0 {Noch keine Kontakte} one {# Kontakt} other {# Kontakte}}",
+      "customers": "{count, plural, =0 {Noch keine Kunden} one {# Kunde} other {# Kunden}}",
+      "salesTargets": "{count, plural, =0 {Noch keine Verkaufsziele} one {# Verkaufsziel} other {# Verkaufsziele}}",
+      "proposals": "{count, plural, =0 {Noch keine Angebote} one {# Angebot} other {# Angebote}}",
+      "invoices": "{count, plural, =0 {Noch keine Rechnungen} one {# Rechnung} other {# Rechnungen}}",
+      "overdueInvoices": "{count, plural, =0 {Noch keine überfällige Rechnungen} one {# überfällige Rechnung} other {# überfällige Rechnungen}}",
+      "expenses": "{count, plural, =0 {Noch keine Ausgaben} one {# Ausgabe} other {# Ausgaben}}",
+      "bills": "{count, plural, =0 {Noch keine Eingangsrechnungen} one {# Eingangsrechnung} other {# Eingangsrechnungen}}",
+      "employees": "{count, plural, =0 {Noch keine Mitarbeitende} one {# Mitarbeitende Person} other {# Mitarbeitende}}",
+      "departments": "{count, plural, =0 {Noch keine Abteilungen} one {# Abteilung} other {# Abteilungen}}",
+      "openJobs": "{count, plural, =0 {Noch keine offene Stellen} one {# offene Stelle} other {# offene Stellen}}",
+      "candidates": "{count, plural, =0 {Noch keine Bewerbende} one {# Bewerbende Person} other {# Bewerbende}}",
+      "policies": "{count, plural, =0 {Noch keine Richtlinien} one {# Richtlinie} other {# Richtlinien}}",
+      "pendingLeave": "{count, plural, =0 {Noch keine offene Urlaubsanträge} one {# offener Urlaubsantrag} other {# offene Urlaubsanträge}}",
+      "projects": "{count, plural, =0 {Noch keine Projekte} one {# Projekt} other {# Projekte}}",
+      "openTasks": "{count, plural, =0 {Noch keine offene Aufgaben} one {# offene Aufgabe} other {# offene Aufgaben}}",
+      "productFeatures": "{count, plural, =0 {Noch keine Funktionen} one {# Funktion} other {# Funktionen}}",
+      "productIdeas": "{count, plural, =0 {Noch keine Produktideen} one {# Produktidee} other {# Produktideen}}",
+      "products": "{count, plural, =0 {Noch keine Produkte} one {# Produkt} other {# Produkte}}",
+      "opsProcesses": "{count, plural, =0 {Noch keine dokumentierte Prozesse} one {# dokumentierter Prozess} other {# dokumentierte Prozesse}}",
+      "campaigns": "{count, plural, =0 {Noch keine Kampagnen} one {# Kampagne} other {# Kampagnen}}",
+      "content": "{count, plural, =0 {Noch keine Inhalte} one {# Inhalt} other {# Inhalte}}",
+      "brandKit": "{count, plural, =0 {Noch keine Markenkits} one {# Markenkit} other {# Markenkits}}",
+      "openTickets": "{count, plural, =0 {Noch keine offene Tickets} one {# offenes Ticket} other {# offene Tickets}}",
+      "kbArticles": "{count, plural, =0 {Noch keine Hilfeartikel} one {# Hilfeartikel} other {# Hilfeartikel}}",
+      "workflows": "{count, plural, =0 {Noch keine Workflows} one {# Workflow} other {# Workflows}}",
+      "activeWorkflows": "{count, plural, =0 {Noch keine aktive Workflows} one {# aktiver Workflow} other {# aktive Workflows}}",
+      "aiEmployees": "{count, plural, =0 {Noch keine KI-Mitarbeitende} one {# KI-Mitarbeitende} other {# KI-Mitarbeitende}}",
+      "agentTasks": "{count, plural, =0 {Noch keine KI-Aufgaben} one {# KI-Aufgabe} other {# KI-Aufgaben}}",
+      "brainDocs": "{count, plural, =0 {Noch keine Dokumente im Company Brain} one {# Dokument im Company Brain} other {# Dokumente im Company Brain}}",
+      "graphEntities": "{count, plural, =0 {Noch keine Einträge im Company Graph} one {# Eintrag im Company Graph} other {# Einträge im Company Graph}}",
+      "objectives": "{count, plural, =0 {Noch keine aktive Ziele} one {# aktives Ziel} other {# aktive Ziele}}",
+      "companyGoals": "{count, plural, =0 {Noch keine Unternehmensziele} one {# Unternehmensziel} other {# Unternehmensziele}}",
+      "milestones": "{count, plural, =0 {Noch keine Meilensteine} one {# Meilenstein} other {# Meilensteine}}",
+      "strategy": "{count, plural, =0 {Noch keine Strategien} one {# Strategie} other {# Strategien}}",
+      "approvalsPending": "{count, plural, =0 {Noch keine offene Freigaben} one {# offene Freigabe} other {# offene Freigaben}}",
+      "connections": "{count, plural, =0 {Noch keine verbundene Apps} one {# verbundene App} other {# verbundene Apps}}",
+      "announcements": "{count, plural, =0 {Noch keine Ankündigungen} one {# Ankündigung} other {# Ankündigungen}}",
+      "channels": "{count, plural, =0 {Noch keine Kanäle} one {# Kanal} other {# Kanäle}}",
+      "meetings": "{count, plural, =0 {Noch keine Meetings} one {# Meeting} other {# Meetings}}",
+      "dashboards": "{count, plural, =0 {Noch keine Dashboards} one {# Dashboard} other {# Dashboards}}",
+      "reports": "{count, plural, =0 {Noch keine Berichte} one {# Bericht} other {# Berichte}}",
+      "installs": "{count, plural, =0 {Noch keine installierte Vorlagen} one {# installierte Vorlage} other {# installierte Vorlagen}}",
+      "members": "{count, plural, =0 {Noch keine Mitglieder} one {# Mitglied} other {# Mitglieder}}"
+    },
+    "recs": {
+      "approvals": {
+        "title": "{count, plural, one {# wartende Freigabe} other {# wartende Freigaben}} prüfen",
+        "why": "Deine KI-Mitarbeitenden warten auf dein Ja oder Nein."
+      },
+      "overdueInvoices": {
+        "title": "{count, plural, one {# überfällige Rechnung} other {# überfällige Rechnungen}} nachverfolgen",
+        "why": "Geld, das du verdient, aber noch nicht erhalten hast."
+      },
+      "openTickets": {
+        "title": "{count, plural, one {# offenes Support-Ticket} other {# offene Support-Tickets}} beantworten",
+        "why": "Kunden warten auf eine Antwort."
+      },
+      "brain": {
+        "title": "Bring der KI dein Unternehmen bei",
+        "why": "Lade ein Dokument hoch, damit jede KI-Antwort auf deinem Geschäft basiert."
+      },
+      "objective": {
+        "title": "Setze dein erstes Ziel",
+        "why": "Ein klares Ziel lässt die KI wichtige Arbeit planen."
+      },
+      "pendingLeave": {
+        "title": "Über {count, plural, one {# Urlaubsantrag} other {# Urlaubsanträge}} entscheiden",
+        "why": "Dein Team wartet auf eine Antwort."
+      },
+      "hire": {
+        "title": "Stelle deine erste KI-Mitarbeitende ein",
+        "why": "KI-Mitarbeitende erledigen echte Arbeit – mit deiner Freigabe."
+      },
+      "lead": {
+        "title": "Füge deinen ersten potenziellen Kunden hinzu",
+        "why": "Verkauf beginnt mit einer Liste von Menschen, die kaufen könnten."
+      },
+      "project": {
+        "title": "Starte dein erstes Projekt",
+        "why": "Projekte machen aus Plänen Aufgaben mit Verantwortlichen und Terminen."
+      },
+      "team": {
+        "title": "Füge dein Team hinzu",
+        "why": "Wisse, wer was macht und wem du Arbeit gibst."
+      },
+      "invoice": {
+        "title": "Erstelle deine erste Rechnung",
+        "why": "Werde für deine Arbeit bezahlt – mit einer professionellen Rechnung."
+      },
+      "campaign": {
+        "title": "Plane deine erste Marketingkampagne",
+        "why": "Kampagnen bringen neue Menschen zu deinem Unternehmen."
+      },
+      "connect": {
+        "title": "Verbinde deine Alltagstools",
+        "why": "E-Mail, Kalender und andere Apps machen die KI nützlicher."
+      },
+      "automate": {
+        "title": "Automatisiere eine wiederkehrende Aufgabe",
+        "why": "Lass einen Workflow die langweilige Arbeit jedes Mal erledigen."
+      },
+      "builderResume": {
+        "title": "Schließe die Einrichtung deines Unternehmens ab",
+        "why": "Die KI-Einrichtung ist noch nicht fertig – mach dort weiter, wo du aufgehört hast."
+      },
+      "builderStart": {
+        "title": "Lass die KI dein Unternehmen einrichten",
+        "why": "Beantworte ein paar Fragen und die KI bereitet dein Unternehmen vor."
+      }
+    },
+    "questions": {
+      "goal": {
+        "label": "Welches Ergebnis willst du?",
+        "example": "z. B. 20 neue Kunden bis Quartalsende"
+      },
+      "audience": {
+        "label": "Für wen ist es?",
+        "example": "z. B. Kleine Restaurants in Berlin"
+      },
+      "topic": {
+        "label": "Worum soll es gehen?",
+        "example": "z. B. Unser neuer Lieferservice"
+      },
+      "who": {
+        "label": "Welcher Kunde oder welche Firma?",
+        "example": "z. B. Muster GmbH"
+      },
+      "amount": {
+        "label": "Ungefähr wie viel? (Betrag und Währung)",
+        "example": "z. B. 1.500 EUR"
+      },
+      "role": {
+        "label": "Für welche Rolle stellst du ein?",
+        "example": "z. B. Buchhaltung in Teilzeit"
+      },
+      "process": {
+        "label": "Welcher Prozess oder Ablauf?",
+        "example": "z. B. Neue Kunden begrüßen"
+      },
+      "tone": {
+        "label": "Welcher Ton passt am besten?",
+        "options": {
+          "friendly": "Freundlich",
+          "professional": "Professionell",
+          "bold": "Mutig"
+        }
+      },
+      "deadline": {
+        "label": "Bis wann?",
+        "options": {
+          "thisWeek": "Diese Woche",
+          "thisMonth": "Diesen Monat",
+          "thisQuarter": "Dieses Quartal"
+        }
+      },
+      "count": {
+        "label": "Wie viele?"
+      },
+      "priority": {
+        "label": "Wie wichtig ist es?",
+        "options": {
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
+      },
+      "details": {
+        "label": "Was sollte die KI sonst noch wissen?",
+        "example": "z. B. Kurz und freundlich halten"
+      }
+    },
+    "trace": {
+      "tools": {
+        "search_company_brain": "Durchsucht das Company Brain",
+        "read_company_graph": "Liest den Company Graph",
+        "read_objectives": "Prüft deine Ziele",
+        "read_company_memory": "Erinnert sich, was es über dich weiß",
+        "read_pipeline_summary": "Liest die CRM-Pipeline",
+        "read_leads": "Sieht deine Leads durch",
+        "create_lead": "Bereitet einen neuen Lead vor",
+        "send_lead_email": "Entwirft eine E-Mail",
+        "read_financial_summary": "Liest deine Finanzen",
+        "read_invoices": "Prüft Rechnungen",
+        "create_invoice_draft": "Entwirft eine Rechnung",
+        "read_campaigns": "Prüft Kampagnen",
+        "create_campaign": "Bereitet eine Kampagne vor",
+        "create_content_draft": "Schreibt Inhalte",
+        "read_company_kpis": "Liest deine Kennzahlen",
+        "delegate_to_ai_employee": "Gibt einen Teil der Arbeit an eine Kollegin ab",
+        "read_ai_employees": "Prüft, wer im KI-Team ist",
+        "read_open_jobs": "Prüft offene Stellen",
+        "create_job_posting": "Entwirft eine Stellenanzeige",
+        "read_projects": "Prüft Projekte",
+        "create_work_task": "Bereitet eine Aufgabe vor",
+        "read_support_queue": "Liest die Support-Warteschlange",
+        "draft_ticket_reply": "Entwirft eine Antwort",
+        "read_workflows": "Prüft Workflows"
+      },
+      "verbs": {
+        "read": "Liest · {name}",
+        "search": "Sucht · {name}",
+        "draft": "Entwirft · {name}",
+        "change": "Bereitet Änderung vor · {name}",
+        "send": "Bereitet Versand vor · {name}",
+        "delegate": "Delegiert · {name}",
+        "analyze": "Analysiert · {name}",
+        "other": "Arbeitet · {name}"
+      }
+    },
+    "command": {
+      "title": "KI-Command",
+      "history": "Verlauf",
+      "new": "Neuer Befehl",
+      "noHistory": "Deine Befehle erscheinen hier.",
+      "delete": "„{title}“ löschen",
+      "working": "Dein KI-Team arbeitet",
+      "headline": "Was soll dein Unternehmen tun?",
+      "subline": "Gib einen Befehl in einfachen Worten. Die passenden KI-Mitarbeitenden übernehmen – du siehst jeden Schritt und gibst jede Änderung frei.",
+      "inputLabel": "Dein Befehl",
+      "placeholder": "z. B. Finde 100 potenzielle Kunden für mein Unternehmen",
+      "run": "Ausführen",
+      "safety": "KI-Mitarbeitende schlagen Änderungen nur vor – nichts wird angelegt, geändert oder gesendet, bevor ein Mensch es freigibt.",
+      "network": "KI-Team an diesem Befehl: {summary}",
+      "aiEmployee": "KI-Mitarbeitende",
+      "phases": "Fortschritt",
+      "queued": "Wartet auf eine freie KI…",
+      "thinking": "Liest deine Anfrage und denkt nach…",
+      "stepFailed": "dieser Schritt ist fehlgeschlagen",
+      "collaborators": "Helfende Kolleginnen und Kollegen",
+      "approve": "Freigeben",
+      "reject": "Ablehnen",
+      "taskTitle": "Befehl: {command}",
+      "intents": {
+        "prospecting": "Kunden finden",
+        "sales": "Vertrieb",
+        "marketing": "Marketing",
+        "content": "Inhalte",
+        "seo": "Sichtbarkeit in Suchmaschinen",
+        "product": "Produkt",
+        "finance": "Finanzen",
+        "recruiting": "Einstellung",
+        "people": "Personal",
+        "support": "Kundensupport",
+        "projects": "Projekte",
+        "automation": "Automatisierung",
+        "analytics": "Analysen",
+        "operations": "Betrieb",
+        "knowledge": "Wissen",
+        "fallback": "Unternehmensweit"
+      },
+      "suggest": {
+        "customers": "Finde 100 potenzielle Kunden für mein Unternehmen",
+        "campaign": "Starte eine Marketingkampagne für unser Hauptprodukt",
+        "product": "Lege ein neues Produkt an und schreibe seinen Plan",
+        "financeReport": "Erstelle den monatlichen Finanzbericht meines Unternehmens",
+        "approvals": "Fasse zusammen, was auf meine Freigabe wartet",
+        "overdueInvoices": "Entwirf freundliche Erinnerungen für überfällige Rechnungen",
+        "openTickets": "Entwirf Antworten auf unsere offenen Support-Tickets",
+        "brain": "Sag mir, welche Dokumente ich hinzufügen soll, damit die KI mein Geschäft kennt",
+        "objective": "Schlage drei Ziele für dieses Quartal vor",
+        "pendingLeave": "Fasse die Urlaubsanträge zusammen, die auf mich warten",
+        "hire": "Welche KI-Mitarbeitende soll ich zuerst einstellen und warum?",
+        "lead": "Finde 20 potenzielle Kunden, die zu meinem Geschäft passen",
+        "project": "Plane unser erstes Projekt mit Aufgaben und Terminen",
+        "team": "Welche Rollen braucht mein Unternehmen zuerst?",
+        "invoice": "Hilf mir, meine erste Rechnung zu erstellen",
+        "connect": "Welche Tools soll ich zuerst verbinden?",
+        "automate": "Finde eine wiederkehrende Aufgabe, die wir automatisieren können",
+        "builderResume": "Hilf mir, die Einrichtung meines Unternehmens abzuschließen",
+        "builderStart": "Richte mein Unternehmen mit KI ein"
+      }
+    },
+    "pages": {
+      "commandCenter": {
+        "title": "Command Center",
+        "what": "Die Zentrale deines Unternehmens: wichtigste Zahlen, Hinweise und KI-Aktivität an einem Ort.",
+        "why": "In Sekunden siehst du, was heute deine Aufmerksamkeit braucht.",
+        "can": "Kennzahlen ansehen, KI-Arbeit prüfen und in jede Abteilung springen.",
+        "steps": {
+          "goal": "Setze dein erstes Unternehmensziel",
+          "knowledge": "Füge ein Dokument über dein Geschäft hinzu",
+          "hire": "Stelle deine erste KI-Mitarbeitende ein"
+        }
+      },
+      "builder": {
+        "title": "KI-Unternehmensaufbau",
+        "what": "Eine geführte Einrichtung: Die KI fragt nach deinem Geschäft und bereitet dein Unternehmen vor.",
+        "why": "Spart Stunden und gibt jeder KI den richtigen Kontext.",
+        "can": "Geschäft beschreiben, Vorschlag prüfen und übernehmen.",
+        "steps": {
+          "describe": "Beschreibe dein Geschäft in ein paar Sätzen",
+          "review": "Prüfe den Vorschlag der KI",
+          "apply": "Übernimm die Einrichtung"
+        }
+      },
+      "intelligence": {
+        "title": "Intelligence",
+        "what": "Tägliche Briefings und Erkenntnisse, die die KI aus deinen Daten erstellt.",
+        "why": "Du erkennst Probleme und Chancen, bevor sie groß werden.",
+        "can": "Briefings lesen, offene Punkte sehen und handeln.",
+        "steps": {
+          "read": "Lies das heutige Briefing",
+          "issues": "Sieh dir die offenen Punkte an",
+          "act": "Gib wartende KI-Aktionen frei oder lehne sie ab"
+        }
+      },
+      "analytics": {
+        "title": "Analysen",
+        "what": "Diagramme und Zahlen, die zeigen, wie es deinem Unternehmen geht.",
+        "why": "Entscheidungen mit Zahlen schlagen Bauchgefühl.",
+        "can": "Kennzahlen prüfen, Dashboards bauen und Berichte speichern.",
+        "steps": {
+          "kpis": "Sieh dir deine Kennzahlen an",
+          "dashboard": "Erstelle dein erstes Dashboard",
+          "report": "Speichere einen Bericht"
+        }
+      },
+      "objectives": {
+        "title": "Ziele",
+        "what": "Die großen Ziele deines Unternehmens mit messbaren Ergebnissen.",
+        "why": "Alle – Menschen und KI – wissen, was am wichtigsten ist.",
+        "can": "Ziele anlegen, messbare Ergebnisse hinzufügen und Fortschritt verfolgen.",
+        "steps": {
+          "create": "Lege dein erstes Ziel an",
+          "goals": "Füge Unternehmensziele hinzu",
+          "milestones": "Teile es in Meilensteine auf"
+        }
+      },
+      "tasks": {
+        "title": "KI-Aufgaben",
+        "what": "Arbeit, die du KI-Mitarbeitenden gegeben hast, und was sie geliefert haben.",
+        "why": "Du behältst die Kontrolle über alles, was die KI tut.",
+        "can": "Aufgaben vergeben, Ergebnisse lesen und nachhaken.",
+        "steps": {
+          "assign": "Gib der KI ihre erste Aufgabe",
+          "review": "Lies ein fertiges Ergebnis",
+          "approve": "Entscheide über wartende Freigaben"
+        }
+      },
+      "taskDetail": {
+        "title": "KI-Aufgabe",
+        "what": "Eine Arbeit einer KI-Mitarbeitenden: was sie nachgeschlagen und geliefert hat.",
+        "why": "Du siehst, wie die KI zu ihrer Antwort kam.",
+        "can": "Ergebnis, Quellen und angefragte Freigaben ansehen.",
+        "steps": {
+          "readResult": "Lies das Ergebnis",
+          "approve": "Entscheide über die angefragten Freigaben"
+        }
+      },
+      "workforce": {
+        "title": "KI-Belegschaft",
+        "what": "Dein Team aus KI-Mitarbeitenden, jede mit einer Rolle wie Vertrieb, Marketing oder Finanzen.",
+        "why": "Sie arbeiten rund um die Uhr – immer mit deiner Freigabe.",
+        "can": "KI-Mitarbeitende einstellen, Arbeit geben und Nutzung beobachten.",
+        "steps": {
+          "hire": "Stelle eine KI-Mitarbeitende ein",
+          "assign": "Gib ihr eine erste Aufgabe",
+          "usage": "Prüfe die Nutzung"
+        }
+      },
+      "workforceHire": {
+        "title": "KI-Mitarbeitende einstellen",
+        "what": "Wähle eine Rolle für eine neue KI-Mitarbeitende.",
+        "why": "Die richtige Rolle bekommt die richtigen Werkzeuge und das richtige Wissen.",
+        "can": "Rollen vergleichen und die passende einstellen.",
+        "steps": {
+          "pick": "Wähle die Rolle, die du am dringendsten brauchst",
+          "hire": "Stelle sie ein",
+          "assign": "Gib ihr eine erste Aufgabe"
+        }
+      },
+      "plans": {
+        "title": "Pläne",
+        "what": "Meilensteine, die deine Ziele in konkrete Schritte über die Zeit verwandeln.",
+        "why": "Große Ziele werden erreichbar, wenn man sie aufteilt.",
+        "can": "Meilensteine anlegen und mit Zielen und Projekten verknüpfen.",
+        "steps": {
+          "milestone": "Lege deinen ersten Meilenstein an",
+          "link": "Verknüpfe ihn mit einem Ziel",
+          "projects": "Starte ein Projekt dafür"
+        }
+      },
+      "activity": {
+        "title": "Aktivität",
+        "what": "Alles, was in deinem Unternehmen passiert ist – durch Menschen und KI.",
+        "why": "Du weißt immer, wer was wann getan hat.",
+        "can": "Aktivitäten durchsehen und erkennen, was Aufmerksamkeit braucht.",
+        "steps": {
+          "review": "Sieh die letzten Aktivitäten durch",
+          "approvals": "Bearbeite wartende Freigaben"
+        }
+      },
+      "approvals": {
+        "title": "Freigaben",
+        "what": "Änderungen, die deine KI-Mitarbeitenden vornehmen wollen und die auf dein Ja oder Nein warten.",
+        "why": "Nichts Wichtiges passiert ohne deine Erlaubnis.",
+        "can": "Jeden Vorschlag lesen, dann freigeben oder ablehnen.",
+        "steps": {
+          "review": "Lies die wartenden Vorschläge",
+          "decide": "Gib jeden frei oder lehne ihn ab"
+        }
+      },
+      "company": {
+        "title": "Unternehmen",
+        "what": "Das Profil deines Unternehmens: wer ihr seid, was ihr verkauft und eure Strategie.",
+        "why": "Jede KI-Antwort wird besser, wenn sie dein Geschäft kennt.",
+        "can": "Profil vervollständigen, Strategie schreiben und Wissen hinzufügen.",
+        "steps": {
+          "profile": "Vervollständige dein Unternehmensprofil",
+          "strategy": "Schreibe deine Strategie",
+          "knowledge": "Füge Dokumente über dein Geschäft hinzu"
+        }
+      },
+      "organization": {
+        "title": "Organisation",
+        "what": "Wie dein Unternehmen aufgebaut ist: Abteilungen, Teams und Menschen.",
+        "why": "Klare Struktur heißt klare Verantwortung.",
+        "can": "Abteilungen und Menschen hinzufügen und das Organigramm ansehen.",
+        "steps": {
+          "departments": "Füge deine Abteilungen hinzu",
+          "people": "Füge deine Leute hinzu",
+          "chart": "Sieh dir dein Organigramm an"
+        }
+      },
+      "graph": {
+        "title": "Company Graph",
+        "what": "Eine Karte deines Unternehmens: Menschen, Teams, Produkte, Kunden und ihre Verbindungen.",
+        "why": "Die KI nutzt diese Karte, um dein Geschäft zu verstehen.",
+        "can": "Einträge hinzufügen, verbinden und die Karte erkunden.",
+        "steps": {
+          "add": "Füge deinen ersten Eintrag hinzu",
+          "connect": "Verbinde zwei Einträge",
+          "explore": "Erkunde die Karte"
+        }
+      },
+      "brain": {
+        "title": "Company Brain",
+        "what": "Das Gedächtnis deines Unternehmens: Dokumente, die die KI liest, um wie eine Insiderin zu antworten.",
+        "why": "Antworten aus deinen eigenen Dokumenten statt Vermutungen.",
+        "can": "Dokumente hochladen, Fragen stellen und das KI-Gedächtnis verwalten.",
+        "steps": {
+          "upload": "Lade dein erstes Dokument hoch",
+          "ask": "Stell dem Brain eine Frage",
+          "memory": "Prüfe, was die KI sich merkt"
+        }
+      },
+      "documents": {
+        "title": "Dokumente",
+        "what": "Alle Dokumente deines Unternehmens an einem Ort.",
+        "why": "Leicht zu finden, und die KI kann sie für dich lesen.",
+        "can": "Dokumente hochladen, finden und Fragen dazu stellen.",
+        "steps": {
+          "upload": "Lade ein Dokument hoch",
+          "ask": "Stell eine Frage zu deinen Dokumenten"
+        }
+      },
+      "products": {
+        "title": "Produkte",
+        "what": "Was dein Unternehmen verkauft.",
+        "why": "Marketing, Vertrieb und Support beginnen bei deinen Produkten.",
+        "can": "Produkte hinzufügen und beschreiben.",
+        "steps": {
+          "add": "Füge dein erstes Produkt hinzu",
+          "describe": "Beschreibe es in einem Dokument",
+          "roadmap": "Plane, was als Nächstes kommt"
+        }
+      },
+      "customers": {
+        "title": "Kunden",
+        "what": "Die Firmen und Menschen, die bei dir kaufen.",
+        "why": "Zufriedene Kunden sind die Basis eines gesunden Geschäfts.",
+        "can": "Kunden, ihre Kontakte und ihre Support-Historie ansehen.",
+        "steps": {
+          "add": "Füge deinen ersten Kunden hinzu",
+          "contacts": "Füge Ansprechpersonen hinzu",
+          "support": "Prüfe ihre Support-Anfragen"
+        }
+      },
+      "marketing": {
+        "title": "Marketing",
+        "what": "Alles, was neue Menschen zu deinem Geschäft bringt: Kampagnen, Inhalte, E-Mail und Social Media.",
+        "why": "Ohne Marketing finden dich Kunden nicht.",
+        "can": "Kampagnen planen, Inhalte erstellen und Ergebnisse messen.",
+        "steps": {
+          "brand": "Richte dein Markenkit ein",
+          "campaign": "Plane deine erste Kampagne",
+          "content": "Schreibe deinen ersten Inhalt"
+        }
+      },
+      "marketingCampaigns": {
+        "title": "Kampagnen",
+        "what": "Marketingaktionen mit Ziel, Zielgruppe und Zeitraum.",
+        "why": "Fokussierte Kampagnen wirken besser als zufällige Posts.",
+        "can": "Kampagnen anlegen, planen und starten.",
+        "steps": {
+          "create": "Lege eine Kampagne an",
+          "content": "Bereite ihre Inhalte vor",
+          "launch": "Starte sie"
+        }
+      },
+      "marketingCampaign": {
+        "title": "Kampagne",
+        "what": "Eine Marketingkampagne: Ziel, Inhalte und Ergebnisse.",
+        "why": "Alles zusammen zeigt, was funktioniert.",
+        "can": "Planen, Inhalte hinzufügen und Ergebnisse verfolgen.",
+        "steps": {
+          "plan": "Schreibe den Kampagnenplan",
+          "content": "Erstelle Inhalte dafür",
+          "measure": "Prüfe die Ergebnisse"
+        }
+      },
+      "marketingContent": {
+        "title": "Inhalte",
+        "what": "Blogartikel, Social-Media-Posts, Anzeigen und E-Mails.",
+        "why": "Gute Inhalte schaffen Vertrauen, bevor Menschen kaufen.",
+        "can": "Inhalte schreiben, prüfen und einplanen.",
+        "steps": {
+          "brand": "Lege deine Markenstimme fest",
+          "write": "Schreibe einen Inhalt",
+          "schedule": "Setze ihn in den Kalender"
+        }
+      },
+      "sales": {
+        "title": "Vertrieb",
+        "what": "Wie dein Vertriebsteam und deine Pipeline im Vergleich zu den Zielen laufen.",
+        "why": "Verkäufe halten das Unternehmen am Leben.",
+        "can": "Ziele setzen, Pipeline beobachten und das Team coachen.",
+        "steps": {
+          "targets": "Setze ein Verkaufsziel",
+          "pipeline": "Prüfe die Pipeline",
+          "team": "Sieh, wie es dem Team geht"
+        }
+      },
+      "crm": {
+        "title": "CRM",
+        "what": "Deine Liste potenzieller Kunden (Leads) und wie nah jeder am Kauf ist.",
+        "why": "Niemand geht verloren – jeder Lead wird nachverfolgt.",
+        "can": "Leads hinzufügen, qualifizieren und zu Deals machen.",
+        "steps": {
+          "lead": "Füge deinen ersten Lead hinzu",
+          "qualify": "Entscheide, welche Leads sich lohnen",
+          "deal": "Mach aus einem guten Lead einen Deal"
+        }
+      },
+      "crmLead": {
+        "title": "Lead",
+        "what": "Ein potenzieller Kunde mit allem, was du weißt, und jedem Kontakt.",
+        "why": "Das ganze Bild hilft, das Richtige zu sagen.",
+        "can": "Recherchieren, Nachfassen planen und in einen Deal umwandeln.",
+        "steps": {
+          "research": "Recherchiere diesen Lead",
+          "followUp": "Plane das nächste Nachfassen",
+          "convert": "Wandle ihn in einen Deal um"
+        }
+      },
+      "crmDeals": {
+        "title": "Deals",
+        "what": "Verkaufschancen mit Wert und Phase.",
+        "why": "Zeigt, wie viel Geld unterwegs ist.",
+        "can": "Deals anlegen, durch Phasen bewegen und Angebote senden.",
+        "steps": {
+          "create": "Lege deinen ersten Deal an",
+          "pipeline": "Sieh alle Deals in der Pipeline",
+          "proposal": "Sende ein Angebot"
+        }
+      },
+      "crmDeal": {
+        "title": "Deal",
+        "what": "Eine Verkaufschance: Wert, Phase und Verlauf.",
+        "why": "Wer den nächsten Schritt kennt, gewinnt mehr Deals.",
+        "can": "Phase aktualisieren, Angebot schreiben und Nachfassen planen.",
+        "steps": {
+          "review": "Prüfe, wo dieser Deal steht",
+          "proposal": "Schreibe ein Angebot",
+          "followUp": "Plane das nächste Nachfassen"
+        }
+      },
+      "crmAccount": {
+        "title": "Account",
+        "what": "Eine Kundenfirma mit ihren Menschen und Deals.",
+        "why": "Alles über einen Kunden an einem Ort.",
+        "can": "Kontakte und Deals sehen und ein Briefing vorbereiten.",
+        "steps": {
+          "brief": "Bereite ein Kundenbriefing vor",
+          "contacts": "Füge Ansprechpersonen hinzu",
+          "deal": "Eröffne einen neuen Deal"
+        }
+      },
+      "support": {
+        "title": "Support",
+        "what": "Fragen und Probleme deiner Kunden als Tickets.",
+        "why": "Schnelle, freundliche Antworten halten Kunden.",
+        "can": "Tickets beantworten, Hilfeartikel schreiben und Antwortzeiten festlegen.",
+        "steps": {
+          "queue": "Beantworte die offenen Tickets",
+          "knowledge": "Schreibe deinen ersten Hilfeartikel",
+          "settings": "Lege deine Antwortzeiten fest"
+        }
+      },
+      "supportTicket": {
+        "title": "Ticket",
+        "what": "Eine Kundenanfrage und das Gespräch dazu.",
+        "why": "Jeder Kunde verdient eine klare Antwort.",
+        "can": "Lesen, antworten und lösen.",
+        "steps": {
+          "read": "Lies die Anfrage des Kunden",
+          "reply": "Schreibe eine Antwort",
+          "resolve": "Markiere sie als gelöst"
+        }
+      },
+      "projects": {
+        "title": "Projekte",
+        "what": "Arbeit mit Ziel, Aufgaben, Verantwortlichen und Fristen.",
+        "why": "Projekte sorgen dafür, dass Arbeit rechtzeitig fertig wird.",
+        "can": "Projekte anlegen, Aufgaben hinzufügen und Fortschritt verfolgen.",
+        "steps": {
+          "create": "Lege dein erstes Projekt an",
+          "tasks": "Füge Aufgaben hinzu",
+          "mine": "Sieh deine eigenen Aufgaben"
+        }
+      },
+      "project": {
+        "title": "Projekt",
+        "what": "Ein Projekt: Aufgaben, Sprints, Risiken und Zeitplan.",
+        "why": "Auf einen Blick sehen, ob es im Plan ist.",
+        "can": "Aufgaben planen, das Board nutzen und Risiken beobachten.",
+        "steps": {
+          "plan": "Plane die Aufgaben des Projekts",
+          "board": "Verschiebe Aufgaben auf dem Board",
+          "risks": "Liste die Risiken auf"
+        }
+      },
+      "product": {
+        "title": "Produktentwicklung",
+        "what": "Ideen, Funktionen und Releases für das, was ihr baut.",
+        "why": "Das Richtige zu bauen ist wichtiger als schnell zu bauen.",
+        "can": "Ideen sammeln, Funktionen planen und priorisieren.",
+        "steps": {
+          "ideas": "Sammle Produktideen",
+          "features": "Schreibe einen Funktionsplan",
+          "prioritize": "Entscheide, was zuerst gebaut wird"
+        }
+      },
+      "operations": {
+        "title": "Betrieb",
+        "what": "Wie dein Unternehmen täglich läuft: Prozesse, Checklisten, Inventar und Vorfälle.",
+        "why": "Aufgeschriebene Prozesse machen Qualität wiederholbar.",
+        "can": "Prozesse dokumentieren, Checklisten nutzen und Vorfälle bearbeiten.",
+        "steps": {
+          "process": "Schreibe einen wichtigen Prozess auf",
+          "checklists": "Erstelle eine Checkliste",
+          "incidents": "Prüfe offene Vorfälle"
+        }
+      },
+      "finance": {
+        "title": "Finanzen",
+        "what": "Dein Geld: Rechnungen, Ausgaben, Liquidität und Berichte.",
+        "why": "Wer seine Zahlen kennt, hält das Geschäft sicher.",
+        "can": "Rechnungen senden, Ausgaben erfassen und Liquidität beobachten.",
+        "steps": {
+          "settings": "Prüfe deine Finanzeinstellungen",
+          "invoice": "Erstelle deine erste Rechnung",
+          "expense": "Erfasse eine Ausgabe"
+        }
+      },
+      "financeInvoices": {
+        "title": "Rechnungen",
+        "what": "Rechnungen, die du an Kunden sendest.",
+        "why": "Mit Rechnungen wirst du bezahlt.",
+        "can": "Rechnungen erstellen, Zahlungen verfolgen und Verspätete nachverfolgen.",
+        "steps": {
+          "create": "Erstelle eine Rechnung",
+          "overdue": "Verfolge überfällige Rechnungen nach",
+          "recurring": "Richte wiederkehrende Rechnungen ein"
+        }
+      },
+      "financeInvoiceNew": {
+        "title": "Neue Rechnung",
+        "what": "Ein Formular, um einem Kunden etwas in Rechnung zu stellen.",
+        "why": "Eine klare Rechnung wird schneller bezahlt.",
+        "can": "Kunden wählen, Leistungen hinzufügen und speichern.",
+        "steps": {
+          "customer": "Wähle den Kunden",
+          "lines": "Füge hinzu, was du berechnest",
+          "save": "Speichere die Rechnung"
+        }
+      },
+      "financeInvoice": {
+        "title": "Rechnung",
+        "what": "Eine Rechnung: wofür, Status und Zahlungen.",
+        "why": "Du weißt immer, was bezahlt ist und was nicht.",
+        "can": "Prüfen, senden und Zahlungen erfassen.",
+        "steps": {
+          "review": "Prüfe die Rechnung",
+          "send": "Sende sie an den Kunden",
+          "payment": "Erfasse die Zahlung"
+        }
+      },
+      "hr": {
+        "title": "Personal",
+        "what": "Deine Leute: Mitarbeitende, Einstellung, Urlaub, Richtlinien und Gehalt.",
+        "why": "Ein gut geführtes Team arbeitet besser.",
+        "can": "Mitarbeitende hinzufügen, Richtlinien schreiben und Urlaub bearbeiten.",
+        "steps": {
+          "employees": "Füge deine Mitarbeitenden hinzu",
+          "policies": "Schreibe deine erste Richtlinie",
+          "leave": "Beantworte Urlaubsanträge"
+        }
+      },
+      "hrRecruiting": {
+        "title": "Recruiting",
+        "what": "Offene Stellen und die Bewerbenden dafür.",
+        "why": "Die richtigen Einstellungen prägen dein Unternehmen.",
+        "can": "Stellen ausschreiben, Bewerbende prüfen und Gespräche planen.",
+        "steps": {
+          "job": "Schreibe deine erste Stelle aus",
+          "candidates": "Füge Bewerbende hinzu",
+          "interviews": "Plane Vorstellungsgespräche"
+        }
+      },
+      "hrJob": {
+        "title": "Stelle",
+        "what": "Eine offene Stelle und ihre Bewerbenden.",
+        "why": "Eine klare Stellenbeschreibung zieht die richtigen Menschen an.",
+        "can": "Beschreibung verbessern und eine Auswahlliste erstellen.",
+        "steps": {
+          "description": "Verbessere die Stellenbeschreibung",
+          "candidates": "Prüfe die Bewerbenden",
+          "shortlist": "Erstelle eine Auswahlliste"
+        }
+      },
+      "hrCandidate": {
+        "title": "Bewerbende Person",
+        "what": "Eine Bewerbung: Profil, Gespräche und Bewertungen.",
+        "why": "Faire, einheitliche Entscheidungen führen zu besseren Einstellungen.",
+        "can": "Prüfen, bewerten und entscheiden.",
+        "steps": {
+          "review": "Lies das Profil",
+          "score": "Bewerte diese Person",
+          "decide": "Entscheide über die nächsten Schritte"
+        }
+      },
+      "communication": {
+        "title": "Kommunikation",
+        "what": "Ankündigungen, Kanäle, Meetings und Posteingang für dein Team.",
+        "why": "Alle bleiben informiert – ohne endlose E-Mails.",
+        "can": "Ankündigungen posten, in Kanälen schreiben und Meetings führen.",
+        "steps": {
+          "announce": "Poste deine erste Ankündigung",
+          "channel": "Erstelle einen Kanal",
+          "meeting": "Plane ein Meeting"
+        }
+      },
+      "workflows": {
+        "title": "Workflows",
+        "what": "Automatisierungen, die wiederkehrende Arbeit erledigen, wenn etwas passiert.",
+        "why": "Spart Zeit, und kein Schritt wird vergessen.",
+        "can": "Mit einer Vorlage starten, einschalten und Läufe beobachten.",
+        "steps": {
+          "template": "Erstelle einen Workflow aus einer Vorlage",
+          "activate": "Schalte einen Workflow ein",
+          "runs": "Prüfe seine Läufe"
+        }
+      },
+      "workflow": {
+        "title": "Workflow",
+        "what": "Eine Automatisierung: was sie startet und was sie tut.",
+        "why": "Kleine Verbesserungen sparen bei jedem Lauf Zeit.",
+        "can": "Schritte prüfen, verbessern und einschalten.",
+        "steps": {
+          "review": "Prüfe die Schritte",
+          "improve": "Verbessere ihn",
+          "activate": "Schalte ihn ein"
+        }
+      },
+      "integrations": {
+        "title": "Integrationen",
+        "what": "Verbindungen zu den Apps, die du schon nutzt, wie E-Mail und Kalender.",
+        "why": "Verbundene Apps lassen die KI mit deinen echten Werkzeugen arbeiten.",
+        "can": "Apps verbinden, Daten synchronisieren und Webhooks einrichten.",
+        "steps": {
+          "connect": "Verbinde deine erste App",
+          "sync": "Prüfe die Synchronisierung",
+          "webhooks": "Richte Webhooks ein"
+        }
+      },
+      "marketplace": {
+        "title": "Marktplatz",
+        "what": "Fertige Vorlagen und Erweiterungen für dein Unternehmen.",
+        "why": "Starte mit bewährten Lösungen statt bei null.",
+        "can": "Vorlagen durchsuchen, installieren und verwalten.",
+        "steps": {
+          "browse": "Durchsuche die Vorlagen",
+          "install": "Installiere eine",
+          "installed": "Sieh, was installiert ist"
+        }
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "what": "Konto, Mitglieder, Rollen, Sicherheit und Abrechnung.",
+        "why": "Die richtigen Zugriffe schützen dein Unternehmen.",
+        "can": "Mitglieder einladen, Rollen festlegen und das Konto absichern.",
+        "steps": {
+          "members": "Lade ein Teammitglied ein",
+          "roles": "Prüfe Rollen und Berechtigungen",
+          "security": "Schalte zusätzliche Sicherheit ein"
+        }
+      }
+    }
   }
 }

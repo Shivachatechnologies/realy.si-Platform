@@ -73,8 +73,9 @@ export function EmployeeForm({
         router.refresh();
         setBusy(false);
       } else {
-        const created = await api<{ id: string }>(`${apiBase}/workforce/employees`, { body: { profileKey, ...payload } });
-        router.push(`/${locale}/workforce/${created.id}`);
+        // New hires start paused and go through the setup steps (role, goals, permissions) before activation.
+        const created = await api<{ id: string }>(`${apiBase}/workforce/employees`, { body: { profileKey, ...payload, activate: false } });
+        router.push(`/${locale}/workforce/${created.id}/setup`);
       }
     } catch (err) {
       setError(err);

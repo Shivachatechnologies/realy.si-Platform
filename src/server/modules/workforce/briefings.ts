@@ -12,6 +12,7 @@ import { criticalIssues, issueText } from "@/server/modules/bi/issues";
 import { englishT } from "@/server/modules/bi/labels";
 import { isoDay, resolveRange, type RangeKey } from "@/server/modules/bi/range";
 import { metricContext, metricValues } from "@/server/modules/bi/service";
+import { computeBriefingSections, sectionsText } from "./briefing-card";
 
 export const BRIEFING_MODES = ["DAILY", "WEEKLY", "MONTHLY", "TREND_RISK"] as const satisfies readonly AiBriefingMode[];
 export const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst"] as const;
@@ -26,7 +27,7 @@ const RANGE: Record<AiBriefingMode, RangeKey> = { DAILY: "7d", WEEKLY: "7d", MON
 const BRIEF: Record<AiBriefingMode, { title: string; ask: string }> = {
   DAILY: {
     title: "Daily briefing",
-    ask: "Write today's executive briefing: the three to five things that matter most today (wins, risks, decisions needed), each with the evidence and a concrete next step and owner. Keep it to one page. Delegate follow-up work to AI employees where useful.",
+    ask: "Write today's executive briefing with these sections: Business performance; Important events; AI work (completed / in progress); Revenue, sales and marketing updates; Risks; Blockers; Decisions needed; Priorities for today. Lead with the three to five things that matter most, each with the evidence and a concrete next step and owner. Keep it to one page. Delegate follow-up work to AI employees where useful.",
   },
   WEEKLY: {
     title: "Weekly review",
@@ -61,6 +62,7 @@ export async function generateBriefing(
   const values = await metricValues(metrics, scope, range);
   const weekly = RANGE[input.mode] === "7d" ? values : undefined;
   const issues = await criticalIssues(ctx, chain, scope, metrics, weekly);
+  const sections = await computeBriefingSections(ctx, chain, scope, values, issues);
 
   let profile: string = input.profile ?? defaultProfileFor(input.mode);
   let aiEmployeeId = input.aiEmployeeId;
@@ -80,6 +82,7 @@ export async function generateBriefing(
     `Period: ${period} (compared with the previous period of equal length).`,
     `KPI snapshot computed by Realy (verify details with your tools):\n${kpiLines.length ? kpiLines.join("\n") : "(no KPIs available)"}`,
     `Critical issues detected automatically:\n${issues.length ? issues.map((i) => `- [${i.severity}] ${issueText(i, englishT)}`).join("\n") : "(none)"}`,
+    `Operational snapshot (last 24 h):\n${sectionsText(sections)}`,
     raw.extra ? `Additional instructions:\n${raw.extra}` : null,
   ]
     .filter(Boolean)
@@ -104,6 +107,7 @@ export async function generateBriefing(
         periodEnd: range.to,
         kpis,
         issues: issues as unknown as object[],
+        sections: sections as unknown as object,
         scheduled: raw.scheduled ?? false,
         createdById: ctx.actor.id ?? organizationId,
       },

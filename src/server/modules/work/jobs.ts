@@ -2,6 +2,7 @@ import type { ModuleJobs } from "@/server/core/module-jobs";
 import { db, transaction } from "@/server/core/db";
 import { systemContext } from "@/server/core/context";
 import { openDueChecklistRuns } from "./operations";
+import { advanceProductPlans } from "./product-plan";
 import { today } from "./shared";
 import { spawnNextOccurrence } from "./tasks";
 
@@ -28,6 +29,7 @@ export const WORK_JOBS: ModuleJobs = {
   periodic: [
     { name: "work.recurring-tasks", everyMs: QUARTER_HOUR, run: () => spawnDueRecurrences() },
     { name: "work.checklist-runs", everyMs: QUARTER_HOUR, run: () => openDueChecklistRuns() },
+    { name: "work.product-plans", everyMs: 60_000, run: () => advanceProductPlans() },
   ],
   onEvent: [],
 };

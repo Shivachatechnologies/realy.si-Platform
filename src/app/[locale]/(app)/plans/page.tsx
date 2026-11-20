@@ -33,7 +33,7 @@ export default async function PlansPage() {
   const header = (
     <>
       <PageHeader title={t("plans.title")} subtitle={t("plans.subtitle")} />
-      <WorkforceTabs locale={locale} active="plans" labels={{ employees: t("workforce.tabs.employees"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
+      <WorkforceTabs locale={locale} active="plans" labels={{ employees: t("workforce.tabs.employees"), org: t("workforce.tabs.org"), hire: t("workforce.tabs.hire"), usage: t("workforce.tabs.usage"), plans: t("workforce.tabs.plans"), tasks: t("workforce.tabs.tasks") }} />
     </>
   );
   if (!company) return <PageState header={header} kind="empty" message={t("company.empty")} />;

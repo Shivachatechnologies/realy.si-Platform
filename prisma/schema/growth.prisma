@@ -1,0 +1,86 @@
+// Growth Engine (src/server/modules/growth): deterministic signals from real data → insights → AI work for the
+// responsible AI employee, at the company's growth autonomy level. Runs hourly per company with an active AI CEO.
+
+/// How far the growth loop goes on its own once a signal fires.
+enum GrowthAutonomy {
+  /// Record insights only.
+  OBSERVE
+  /// Assign an AI task that analyses and recommends (no changes proposed).
+  RECOMMEND
+  /// Assign an AI task that prepares drafts / internal changes (each filed for approval).
+  PREPARE
+  /// Assign an AI task that may propose any action its tools allow (each filed for approval via the tool gateway).
+  EXECUTE_WITH_APPROVAL
+}
+
+enum GrowthSignal {
+  NO_CUSTOMERS
+  LOW_CONVERSION
+  REVENUE_DECLINE
+  PROJECTS_DELAYED
+  COMPLAINTS_UP
+  STRONG_CAMPAIGN
+  DECISION_OVERLOAD
+}
+
+enum GrowthSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum GrowthInsightStatus {
+  OPEN
+  ACTED
+  DISMISSED
+}
+
+model GrowthSettings {
+  id                String         @id @default(uuid(7)) @db.Uuid
+  organizationId    String         @map("organization_id") @db.Uuid
+  companyId         String         @unique @map("company_id") @db.Uuid
+  enabled           Boolean        @default(true)
+  autonomy          GrowthAutonomy @default(RECOMMEND)
+  /// Pending approvals above this count fire DECISION_OVERLOAD.
+  decisionThreshold Int            @default(10) @map("decision_threshold")
+  lastEvaluatedAt   DateTime?      @map("last_evaluated_at") @db.Timestamptz(3)
+  /// The member whose permissions the loop acts with (the last person who changed the settings).
+  updatedById       String?        @map("updated_by_id") @db.Uuid
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("growth_settings")
+}
+
+/// A fired signal with its evidence; at most one per signal per ISO week (weekKey, e.g. "2026-W47").
+model GrowthInsight {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  signal         GrowthSignal
+  severity       GrowthSeverity
+  status         GrowthInsightStatus @default(OPEN)
+  /// { metric values, previous values, thresholds } — numbers only.
+  evidence       Json                @default("{}")
+  weekKey        String              @map("week_key")
+  /// Autonomy in force when it fired.
+  autonomy       GrowthAutonomy
+  aiEmployeeId   String?             @map("ai_employee_id") @db.Uuid
+  /// The AI task assigned for it (subject growth_insight:<id>).
+  taskId         String?             @map("task_id") @db.Uuid
+  /// Why no task was assigned (observe mode, no AI employee, budget, provider...).
+  note           String?
+  actedAt        DateTime?           @map("acted_at") @db.Timestamptz(3)
+  dismissedAt    DateTime?           @map("dismissed_at") @db.Timestamptz(3)
+  decidedById    String?             @map("decided_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, signal, weekKey])
+  @@index([organizationId, companyId, status, createdAt])
+  @@map("growth_insights")
+}

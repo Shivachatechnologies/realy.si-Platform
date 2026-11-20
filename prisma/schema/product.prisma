@@ -1,0 +1,300 @@
+// ───────────────────────────── Product management: products, lifecycle, research, documents, AI team ─────────────────────────────
+// Owned by the work module (src/server/modules/work/product*.ts). Permissions: projects.read / projects.manage.
+// Features, initiatives, ideas, feedback and releases (work.prisma) link to a Product through productId.
+
+/// Lifecycle pipeline of a product, in order.
+enum ProductStage {
+  IDEA
+  RESEARCH
+  VALIDATION
+  BUSINESS_REQUIREMENTS
+  PRODUCT_REQUIREMENTS
+  ARCHITECTURE
+  DESIGN
+  DEVELOPMENT
+  QA
+  RELEASE
+  LAUNCH
+  FEEDBACK
+  OPTIMIZATION
+}
+
+enum ProductLifecycleStatus {
+  ACTIVE
+  ON_HOLD
+  SUNSET
+}
+
+/// A product the company builds — the root of the product workspace.
+model Product {
+  id                   String                 @id @default(uuid(7)) @db.Uuid
+  organizationId       String                 @map("organization_id") @db.Uuid
+  companyId            String                 @map("company_id") @db.Uuid
+  name                 String
+  description          String?
+  /// Who the product is for.
+  targetUsers          String?                @map("target_users")
+  status               ProductLifecycleStatus @default(ACTIVE)
+  /// Product owner (approves stage gates). Plain user id; resolved for display.
+  ownerId              String?                @map("owner_id") @db.Uuid
+  stage                ProductStage           @default(IDEA)
+  stageEnteredAt       DateTime               @default(now()) @map("stage_entered_at") @db.Timestamptz(3)
+  /// Linked Company Graph PRODUCT entity (optional; validated on write).
+  graphEntityId        String?                @map("graph_entity_id") @db.Uuid
+  /// Project where the product's development tasks and sprints live.
+  developmentProjectId String?                @map("development_project_id") @db.Uuid
+  /// Marketing campaign drafted for the launch (marketing module id).
+  launchCampaignId     String?                @map("launch_campaign_id") @db.Uuid
+  archivedAt           DateTime?              @map("archived_at") @db.Timestamptz(3)
+  createdById          String                 @map("created_by_id") @db.Uuid
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company            Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  developmentProject Project?             @relation("ProductDevelopmentProject", fields: [developmentProjectId, companyId], references: [id, companyId], onDelete: NoAction)
+  gates              ProductStageGate[]
+  stageChanges       ProductStageChange[]
+  competitors        ProductCompetitor[]
+  validations        ProductValidation[]
+  personas           ProductPersona[]
+  docs               ProductDoc[]
+  planRuns           ProductPlanRun[]
+  features           ProductFeature[]
+  initiatives        ProductInitiative[]
+  ideas              ProductIdea[]
+  feedback           ProductFeedback[]
+  releases           ProductRelease[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@index([companyId, stage])
+  @@map("products")
+}
+
+/// Exit gate of one lifecycle stage: checklist + approval by the product owner.
+model ProductStageGate {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  companyId      String       @map("company_id") @db.Uuid
+  productId      String       @map("product_id") @db.Uuid
+  stage          ProductStage
+  /// [{ id, key?, label?, done, doneAt?, doneById? }] — built-in items carry an i18n key, custom ones a label.
+  checklist      Json         @default("[]")
+  notes          String?
+  approvedById   String?      @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?    @map("approved_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([productId, stage])
+  @@map("product_stage_gates")
+}
+
+/// Stage history: one row per stay in a stage (exitedAt null = current stage).
+model ProductStageChange {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  productId      String        @map("product_id") @db.Uuid
+  fromStage      ProductStage? @map("from_stage")
+  stage          ProductStage
+  enteredAt      DateTime      @default(now()) @map("entered_at") @db.Timestamptz(3)
+  exitedAt       DateTime?     @map("exited_at") @db.Timestamptz(3)
+  note           String?
+  changedById    String        @map("changed_by_id") @db.Uuid
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([productId, enteredAt])
+  @@index([companyId, exitedAt])
+  @@map("product_stage_changes")
+}
+
+model ProductCompetitor {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  name           String
+  website        String?
+  strengths      String?
+  weaknesses     String?
+  notes          String?
+  /// Further reference links (reviews, pricing pages, articles).
+  links          String[] @default([])
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_competitors")
+}
+
+enum ProductValidationKind {
+  INTERVIEW
+  SURVEY
+  EXPERIMENT
+  MARKET_DATA
+  PREORDER
+  OTHER
+}
+
+enum ProductValidationResult {
+  PENDING
+  VALIDATED
+  INVALIDATED
+  INCONCLUSIVE
+}
+
+/// A market-validation entry: hypothesis, evidence and outcome.
+model ProductValidation {
+  id             String                  @id @default(uuid(7)) @db.Uuid
+  organizationId String                  @map("organization_id") @db.Uuid
+  companyId      String                  @map("company_id") @db.Uuid
+  productId      String                  @map("product_id") @db.Uuid
+  kind           ProductValidationKind   @default(INTERVIEW)
+  hypothesis     String
+  evidence       String?
+  result         ProductValidationResult @default(PENDING)
+  sampleSize     Int?                    @map("sample_size")
+  sourceUrl      String?                 @map("source_url")
+  createdById    String                  @map("created_by_id") @db.Uuid
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@map("product_validations")
+}
+
+model ProductPersona {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  name           String
+  role           String?
+  description    String?
+  goals          String?
+  painPoints     String?  @map("pain_points")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_personas")
+}
+
+enum ProductDocKind {
+  RESEARCH
+  BRD
+  PRD
+  TECH_REQUIREMENTS
+  ARCHITECTURE
+  UX_SPEC
+  DESIGN_BRIEF
+  QA_PLAN
+  RELEASE_PLAN
+}
+
+enum ProductDocStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+}
+
+/// A versioned product document (one per kind and product); also indexed into Company Brain.
+model ProductDoc {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
+  companyId       String           @map("company_id") @db.Uuid
+  productId       String           @map("product_id") @db.Uuid
+  kind            ProductDocKind
+  title           String
+  status          ProductDocStatus @default(DRAFT)
+  currentVersion  Int              @default(1) @map("current_version")
+  /// Company Brain document holding the current version (sourceType "product_doc").
+  brainDocumentId String?          @map("brain_document_id") @db.Uuid
+  createdById     String           @map("created_by_id") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product  Product             @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+  versions ProductDocVersion[]
+
+  @@unique([id, companyId])
+  @@unique([productId, kind])
+  @@map("product_docs")
+}
+
+model ProductDocVersion {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  docId          String   @map("doc_id") @db.Uuid
+  version        Int
+  content        String
+  /// Set when the version was taken from an AI task's output.
+  agentTaskId    String?  @map("agent_task_id") @db.Uuid
+  changeNote     String?  @map("change_note")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  doc     ProductDoc @relation(fields: [docId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([docId, version])
+  @@map("product_doc_versions")
+}
+
+enum ProductPlanStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// "Plan with the AI product team": a chain of AI tasks where each step's output feeds the next.
+model ProductPlanRun {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  productId      String            @map("product_id") @db.Uuid
+  status         ProductPlanStatus @default(RUNNING)
+  brief          String?
+  /// Index of the step currently running (or last run).
+  currentStep    Int               @default(0) @map("current_step")
+  /// [{ key, profile, docKind, taskId?, status: PENDING|RUNNING|DONE|FAILED, docVersion? }]
+  steps          Json              @default("[]")
+  error          String?
+  createdById    String            @map("created_by_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  completedAt    DateTime?         @map("completed_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([status])
+  @@index([productId, createdAt])
+  @@map("product_plan_runs")
+}
+
+enum ProductFeedbackSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}

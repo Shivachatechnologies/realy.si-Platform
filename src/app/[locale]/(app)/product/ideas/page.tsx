@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { ActionButton, InlineSelect } from "@/components/work/actions";
-import { ProductTabs } from "@/components/work/area-tabs";
+import { ProductAreaTabs } from "@/components/work/product-nav";
+import { HelpStrip } from "@/components/work/product-studio";
 import { workContext } from "@/components/work/context";
 import { IdeaForm, VoteButton } from "@/components/work/product-forms";
 import { Empty, Pagination } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
 import { formatDate } from "@/i18n/format";
 import { IDEA_STATUSES, listIdeas, parseIdeaFilters } from "@/server/modules/work/product";
+import { productOptions } from "@/server/modules/work/product-core";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("work.product.tabs.ideas") };
@@ -27,14 +29,15 @@ export default async function IdeasPage({ searchParams }: PageProps<"/[locale]/p
   const raw = await searchParams;
   const filters = parseIdeaFilters(raw);
   const path = `/${locale}/product/ideas`;
-  const list = await listIdeas(viewer.ctx, org.id, company.id, filters);
+  const [list, products] = await Promise.all([listIdeas(viewer.ctx, org.id, company.id, filters), productOptions(org.id, company.id)]);
   return (
     <div className="mx-auto grid max-w-[1100px] min-w-0 gap-4">
       {w.header}
-      <ProductTabs t={t} locale={locale} active="ideas" />
+      <ProductAreaTabs t={t} locale={locale} active="ideas" />
+      <HelpStrip t={t} area="ideasAll" />
       <Card>
         <CardHeader title={t("work.product.submitIdea")} description={t("work.product.ideasHint")} />
-        <IdeaForm base={base} />
+        <IdeaForm base={base} products={products} />
       </Card>
       <Card>
         <CardHeader title={t("work.product.tabs.ideas")} description={t("work.product.ideaCount", { count: list.total })} />

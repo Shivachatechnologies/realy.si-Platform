@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { ActionButton, InlineSelect } from "@/components/work/actions";
-import { ProductTabs } from "@/components/work/area-tabs";
+import { ProductAreaTabs } from "@/components/work/product-nav";
+import { HelpStrip } from "@/components/work/product-studio";
 import { workContext } from "@/components/work/context";
 import { FeedbackForm } from "@/components/work/product-forms";
 import { Empty, Pagination } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { feedbackPickers, listFeedback } from "@/server/modules/work/product";
+import { productOptions } from "@/server/modules/work/product-core";
 import { param } from "@/server/modules/work/shared";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,15 +27,16 @@ export default async function FeedbackPage({ searchParams }: PageProps<"/[locale
   const { locale, viewer, org, company, canManage, base, tz } = w;
   const raw = await searchParams;
   const path = `/${locale}/product/feedback`;
-  const [list, pickers] = await Promise.all([listFeedback(viewer.ctx, org.id, company.id, raw), feedbackPickers(viewer.ctx, org.id, company.id)]);
+  const [list, pickers, products] = await Promise.all([listFeedback(viewer.ctx, org.id, company.id, raw), feedbackPickers(viewer.ctx, org.id, company.id), productOptions(org.id, company.id)]);
   const featureOptions = [{ value: "", label: t("work.product.noFeatureLinked") }, ...pickers.features.map((f) => ({ value: f.id, label: f.title }))];
   return (
     <div className="mx-auto grid max-w-[1200px] min-w-0 gap-4">
       {w.header}
-      <ProductTabs t={t} locale={locale} active="feedback" />
+      <ProductAreaTabs t={t} locale={locale} active="feedback" />
+      <HelpStrip t={t} area="feedbackAll" />
       <Card>
         <CardHeader title={t("work.product.tabs.feedback")} description={t("work.product.feedbackCount", { count: list.total })} />
-        <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_12rem_auto]" action={path}>
+        <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_12rem_12rem_auto]" action={path}>
           <Input name="q" type="search" defaultValue={param(raw, "q") ?? ""} maxLength={200} aria-label={t("work.search")} placeholder={t("work.search")} />
           <Select name="source" defaultValue={param(raw, "source") ?? ""} aria-label={t("work.product.source")}>
             <option value="">{t("work.product.allSources")}</option>
@@ -52,6 +55,14 @@ export default async function FeedbackPage({ searchParams }: PageProps<"/[locale
               </option>
             ))}
           </Select>
+          <Select name="product" defaultValue={param(raw, "product") ?? ""} aria-label={t("product.product")}>
+            <option value="">{t("product.allProducts")}</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
           <Button type="submit" variant="secondary">
             {t("work.apply")}
           </Button>
@@ -59,7 +70,7 @@ export default async function FeedbackPage({ searchParams }: PageProps<"/[locale
         {canManage ? (
           <details className="border-b">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.product.addFeedback")}</summary>
-            <FeedbackForm base={base} accounts={pickers.accounts} contacts={pickers.contacts} features={pickers.features.map((f) => ({ id: f.id, name: f.title }))} sources={list.sources} />
+            <FeedbackForm base={base} accounts={pickers.accounts} contacts={pickers.contacts} features={pickers.features.map((f) => ({ id: f.id, name: f.title }))} sources={list.sources} products={products} />
           </details>
         ) : null}
         {list.data.length ? (

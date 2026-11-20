@@ -1,4 +1,5 @@
 import type { AgentProfile } from "@/server/modules/agents/profile-types";
+import { PRODUCT_PROFILES } from "./product-ai-profiles";
 
 const READ = ["search_company_brain", "read_company_graph", "read_objectives"] as const;
 
@@ -20,4 +21,5 @@ export const WORK_PROFILES: AgentProfile[] = [
     tools: [...READ, "read_projects", "read_project", "read_sprint", "read_my_workload", "read_team_workload", "create_risk"],
     maxTurns: 8,
   },
+  ...PRODUCT_PROFILES,
 ];

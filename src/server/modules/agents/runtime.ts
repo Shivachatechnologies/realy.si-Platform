@@ -10,6 +10,8 @@ import type {
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { env } from "@/server/core/env";
 import { agentModel } from "@/server/core/platform-controls";
+import { db } from "@/server/core/db";
+import { effectiveModel } from "@/server/modules/workforce/models";
 import type { RequestContext } from "@/server/core/context";
 import { isAppError } from "@/server/core/errors";
 import { requestTool, ToolDenied } from "@/server/modules/tools/gateway";
@@ -92,6 +94,22 @@ export interface RunInput {
   tools?: readonly string[];
   /** The AI employee doing the work, if any: identity, custom instructions, autonomy guidance and memory. */
   employee?: { name: string; instructions: string | null; skills: string[]; autonomyGuidance: string; memory: string[] } | null;
+  /** Model override; by default the AI employee's configured model (if still allowed), else AGENT_MODEL. */
+  model?: string;
+}
+
+/** The model for a run: explicit, else the task's AI employee's configured model (only allowed ids), else the default. */
+async function modelFor(input: RunInput): Promise<string> {
+  // Platform default: the Super Admin's model override (Admin → AI), else AGENT_MODEL.
+  const platformDefault = await agentModel(env().AGENT_MODEL);
+  if (input.model) return effectiveModel(input.model);
+  if (!input.taskId) return platformDefault;
+  try {
+    const t = await db().agentTask.findUnique({ where: { id: input.taskId }, select: { aiEmployee: { select: { model: true } } } });
+    return t?.aiEmployee?.model ? effectiveModel(t.aiEmployee.model) : platformDefault;
+  } catch {
+    return platformDefault;
+  }
 }
 
 /** Lines starting with REMEMBER: in a deliverable are saved to the AI employee's memory (and removed from the output). */
@@ -149,6 +167,7 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     return def ? [{ name: t, description: def.description, strict: true, input_schema: def.modelSchema as BetaTool["input_schema"] }] : [];
   });
   const messages: BetaMessageParam[] = [{ role: "user", content: `Task: ${input.title}\n\n${input.instructions}` }];
+  const model = await modelFor(input);
 
   const cite = (c: Citable) => {
     let source = sources.get(c.passageId);
@@ -175,7 +194,7 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     let response: BetaMessage;
     try {
       response = await callModel({
-        model: await agentModel(env().AGENT_MODEL),
+        model,
         max_tokens: MAX_TOKENS,
         system,
         tools,

@@ -606,7 +606,69 @@
       "sole_owner": "This user is the only owner of an organization with other members. Transfer ownership first.",
       "last_super_admin": "The platform must keep at least one super admin.",
       "platform_lockdown_active": "End the emergency lockdown first.",
-      "platform_lockdown_inactive": "No emergency lockdown is active."
+      "platform_lockdown_inactive": "No emergency lockdown is active.",
+      "builder_idea_required": "Describe the business idea in a sentence or two.",
+      "builder_run_active": "This company already has a builder run in progress.",
+      "builder_not_draft": "Only a run that hasn't started yet can be started.",
+      "builder_not_active": "This builder run is no longer active.",
+      "builder_step_not_failed": "Only a failed step can be retried.",
+      "builder_feedback_required": "Tell the AI what to change.",
+      "builder_name_required": "Choose or enter a name.",
+      "builder_name_taken": "Another company in this organization already uses this name.",
+      "builder_decided": "This decision was already made.",
+      "builder_no_json": "The AI's answer did not contain the required JSON block.",
+      "builder_invalid_json": "The AI's JSON block could not be read.",
+      "builder_invalid_output": "The AI's structured output did not pass validation.",
+      "builder_no_output": "The AI task finished without a deliverable.",
+      "builder_task_missing": "The step's AI task no longer exists.",
+      "builder_task_cancelled": "The step's AI task was cancelled.",
+      "builder_task_failed": "The step's AI task failed.",
+      "builder_unknown_step": "This step is no longer supported.",
+      "builder_website_invalid_url": "The website address is not valid.",
+      "builder_website_unsupported_protocol": "Only http and https websites can be imported.",
+      "builder_website_blocked_port": "Websites on non-standard ports can't be imported.",
+      "builder_website_blocked_host": "This address points to a private or blocked network.",
+      "builder_website_dns_failed": "The website's domain could not be found.",
+      "builder_website_timeout": "The website took too long to answer.",
+      "builder_website_fetch_failed": "The website could not be reached.",
+      "builder_website_not_html": "The address is not a web page.",
+      "builder_website_too_large": "The web page is too large to import.",
+      "builder_website_too_many_redirects": "The website redirects too many times.",
+      "workforce_employee_model_not_allowed": "This model is not allowed on the platform.",
+      "workforce_manager_cycle": "This reporting line would loop back to the same AI employee.",
+      "workforce_manager_invalid": "The manager must be an AI employee of this company.",
+      "workforce_escalation_limit": "This task has already escalated several times.",
+      "workforce_task_not_reassignable": "Only queued, failed or cancelled tasks can be reassigned.",
+      "workforce_task_same_employee": "The task is already assigned to this AI employee.",
+      "growth_insight_status_unchanged": "The insight already has this status.",
+      "growth_insight_not_open": "Only open insights can be acted on.",
+      "growth_insight_already_assigned": "AI work is already assigned to this insight.",
+      "growth_no_ai_employee": "No active AI employee can take this insight. Hire one for the role first.",
+      "growth_assign_failed": "No AI work could be assigned to this insight.",
+      "work_product_archived": "The product is archived.",
+      "work_product_campaign_exists": "The launch campaign already exists.",
+      "work_product_doc_unchanged": "Nothing changed since the last version.",
+      "work_product_draft_mismatch": "This AI task is not a draft of this document.",
+      "work_product_draft_not_ready": "The AI task has not finished yet.",
+      "work_product_exists": "A product with this name already exists.",
+      "work_product_gate_builtin": "Built-in checklist items can't be removed.",
+      "work_product_gate_full": "A gate can have at most 30 items.",
+      "work_product_gate_incomplete": "Complete every checklist item before approving.",
+      "work_product_gate_not_approved": "The product owner must approve the current stage gate first.",
+      "work_product_gate_owner_only": "Only the product owner can approve stage gates.",
+      "work_product_has_project": "The product already has a development project.",
+      "work_product_last_stage": "The product is already in its last stage.",
+      "work_product_no_prd": "Write or generate the PRD first.",
+      "work_product_no_project": "Link or create the product's development project first.",
+      "work_product_plan_not_failed": "Only a failed plan can be retried.",
+      "work_product_plan_not_running": "The plan is not running.",
+      "work_product_plan_running": "The AI product team is already planning this product.",
+      "work_product_same_stage": "The product is already in this stage.",
+      "work_product_stage_skip": "Stages move forward one at a time.",
+      "guide_unknown_step": "That step doesn't exist on this page anymore. Reload and try again.",
+      "guide_step_not_automatable": "The AI can't do this step for you — follow the guide to do it yourself.",
+      "guide_answer_missing": "Please answer every question first.",
+      "guide_answer_invalid": "Please choose one of the offered options."
     }
   },
   "onboarding": {
@@ -1946,7 +2008,17 @@
       "create_bill_draft": "Create draft vendor bill",
       "read_proposals": "Read proposals",
       "create_proposal_draft": "Create proposal draft",
-      "web_research": "Web research"
+      "web_research": "Web research",
+      "report_to_manager": "Report to manager",
+      "escalate_to_manager": "Escalate to manager",
+      "read_growth_insights": "Read growth insights",
+      "read_product": "Read product",
+      "read_product_docs": "Read product documents",
+      "read_backlog": "Read product backlog",
+      "create_product_doc_draft": "Draft a product document",
+      "create_feature": "Create a feature",
+      "create_backlog_tasks": "Create backlog tasks",
+      "advance_product_stage": "Advance product stage"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -1954,7 +2026,8 @@
       "hire": "Hire",
       "usage": "Usage & cost",
       "plans": "Schedules",
-      "tasks": "AI tasks"
+      "tasks": "AI tasks",
+      "org": "Org chart"
     },
     "filters": {
       "search": "Search",
@@ -2125,6 +2198,193 @@
     "starterTeam": {
       "action": "Hire core AI team",
       "confirm": "Hire the core AI team (CEO, Sales, Marketing, Finance, HR, Projects, Support, Research)? Roles you already have are skipped."
+    },
+    "levels": {
+      "EXECUTIVE": {
+        "name": "Executive",
+        "hint": "Can delegate to any AI employee."
+      },
+      "MANAGER": {
+        "name": "Manager",
+        "hint": "Delegates to the AI employees who report to it."
+      },
+      "SPECIALIST": {
+        "name": "Specialist",
+        "hint": "Delegates only to its own reports, if any."
+      }
+    },
+    "profile": {
+      "title": "Profile",
+      "edit": "Edit profile",
+      "jobTitle": "Job title",
+      "jobDescription": "Job description",
+      "responsibilities": "Responsibilities",
+      "goals": "Goals",
+      "kpis": "KPIs",
+      "kpisHint": "Company metrics this AI employee is measured on, with a target for the last 30 days.",
+      "kpiMetric": "Metric",
+      "kpiTarget": "Target",
+      "addKpi": "Add KPI",
+      "removeKpi": "Remove KPI",
+      "model": "Model",
+      "modelHint": "Only models allowed on the platform are listed.",
+      "modelDefault": "Platform default ({model})",
+      "platformDefault": "Platform default",
+      "manager": "Reports to",
+      "managerHint": "A person (the founder) or another AI employee.",
+      "noManager": "No one",
+      "people": "People",
+      "aiEmployees": "AI employees",
+      "level": "Level",
+      "onePerLine": "One per line.",
+      "saved": "Saved.",
+      "reportsTo": "Reports to",
+      "noDescription": "No job description yet.",
+      "noKpis": "No KPIs set.",
+      "onTrack": "On track",
+      "offTrack": "Off track",
+      "directReports": "Direct reports",
+      "noReports": "No AI employees report to this one."
+    },
+    "org": {
+      "title": "Org chart",
+      "subtitle": "Your AI workforce from the founder down: executives, department managers and specialists.",
+      "founder": "Founder",
+      "founderRole": "Founder · top of the org chart",
+      "open": "Org chart",
+      "hint": "Change who reports to whom in each AI employee's profile. Managers delegate to their reports; escalations go up this chart."
+    },
+    "history": {
+      "title": "Performance history",
+      "hint": "Per week: tasks completed and failed, approval rate of proposed actions and estimated cost.",
+      "week": "Week of",
+      "approvalRate": "Approval rate"
+    },
+    "reports": {
+      "title": "Reports & escalations",
+      "hint": "Status reports and escalations filed by this AI employee or by its reports.",
+      "empty": "No reports or escalations yet.",
+      "kinds": {
+        "STATUS": "Status report",
+        "ESCALATION": "Escalation"
+      },
+      "to": "to {name}",
+      "from": "from {name}",
+      "sourceTask": "Source task",
+      "escalationTask": "Task for the manager"
+    },
+    "setup": {
+      "title": "Set up AI employee",
+      "heading": "Set up {name}",
+      "back": "Back to {name}",
+      "steps": {
+        "create": "Create",
+        "configure": "Configure",
+        "role": "Assign role",
+        "goals": "Goals",
+        "permissions": "Permissions",
+        "activate": "Activate"
+      },
+      "hints": {
+        "configure": "Job title, description, instructions, skills and the model it runs on.",
+        "role": "Who it reports to, its level in the org chart and its responsibilities.",
+        "goals": "What it should achieve and the KPIs it is measured on.",
+        "permissions": "Autonomy, whose permissions it acts with, its monthly budget and tools.",
+        "activate": "Review and activate. It starts taking tasks once active."
+      },
+      "next": "Next step",
+      "activate": "Activate",
+      "optional": "not set (optional)",
+      "active": "{name} is active.",
+      "open": "Open profile",
+      "pendingTitle": "Setup not finished",
+      "pending": "{done} of {total} setup steps done. Finish the setup to activate this AI employee.",
+      "continue": "Continue setup"
+    },
+    "emptyExplain": "AI employees are digital team members that research, draft and prepare work for you. Hire one for a job, or let AI suggest who to hire first.",
+    "help": {
+      "action": "Help me do this",
+      "starting": "Starting…",
+      "firstHiresTitle": "Recommend my first AI hires"
+    },
+    "strip": {
+      "what": "What is this?",
+      "why": "Why it matters",
+      "can": "What you can do here",
+      "next": "What to do next",
+      "whatText": "Your AI team: digital employees that each own a job, like sales or finance.",
+      "whyText": "They do the groundwork around the clock; every change they propose waits for your approval.",
+      "canText": "Hire, give each one goals and a manager, assign tasks and watch what they work on live.",
+      "nextHire": "Hire your first AI employee.",
+      "nextAssign": "Give an AI employee a task."
+    },
+    "live": {
+      "working": "{count, plural, =0 {No one working right now} one {# AI employee working} other {# AI employees working}}",
+      "queued": "{count, plural, one {# queued} other {# queued}}",
+      "workingNow": "Working now",
+      "hasQueue": "Has work queued",
+      "available": "Available",
+      "workingOn": "Working on",
+      "next": "Up next",
+      "weekly": "Completed per week"
+    },
+    "personality": {
+      "executive": "Sees the whole board and asks: what matters most today?",
+      "sales": "Persistent and friendly — never lets a lead go cold.",
+      "marketing": "Curious storyteller who tests, measures and repeats what works.",
+      "finance": "Calm with numbers; spots a cash problem before it happens.",
+      "hr": "Looks after people, policies and fair processes.",
+      "engineering": "Methodical builder who breaks big work into small steps.",
+      "product": "Thinks from the customer's problem to the right feature.",
+      "support": "Patient listener who resolves issues and learns from them.",
+      "operations": "Keeps plans, owners and deadlines in order.",
+      "research": "Digs into sources and separates facts from opinions."
+    },
+    "jobs": {
+      "question": "Which job would you like your AI employee to handle?",
+      "hint": "Pick a job in plain words — Realy chooses the right role. You can change everything in the next steps.",
+      "hire": "Hire for this job",
+      "after": "Next: you give it a role, goals and permissions, then activate it.",
+      "recommended": "Recommended",
+      "staffed": "Already on your team",
+      "advanced": "Advanced: browse every role",
+      "runCompany": {
+        "title": "Run the company with me",
+        "example": "Daily briefings, priorities and decisions — like a co-founder."
+      },
+      "findCustomers": {
+        "title": "Find and follow up customers",
+        "example": "e.g. qualify leads, follow up deals, prepare proposals."
+      },
+      "marketing": {
+        "title": "Get the word out",
+        "example": "e.g. plan campaigns, write posts and emails, track results."
+      },
+      "money": {
+        "title": "Watch the money",
+        "example": "e.g. cash flow, invoices, budgets and runway."
+      },
+      "answerCustomers": {
+        "title": "Answer customers",
+        "example": "e.g. triage tickets, draft replies, spot recurring problems."
+      },
+      "projects": {
+        "title": "Keep projects on track",
+        "example": "e.g. plans, deadlines, blockers and status updates."
+      },
+      "people": {
+        "title": "Look after the team",
+        "example": "e.g. hiring, leave, policies and team health."
+      },
+      "research": {
+        "title": "Research markets and competitors",
+        "example": "e.g. market sizing, competitor briefs, customer insights."
+      }
+    },
+    "skillsUsage": {
+      "title": "Skills in use",
+      "hint": "How often each tool was used in recent finished tasks.",
+      "empty": "No tool usage yet — it appears after the first finished tasks."
     }
   },
   "profiles": {
@@ -2255,6 +2515,46 @@
     "knowledge_manager": {
       "name": "Knowledge Manager",
       "summary": "Keeps Company Brain useful: summaries, gaps and facts for company memory."
+    },
+    "product_researcher": {
+      "name": "Product Researcher",
+      "summary": "Market, competitor and customer research with evidence."
+    },
+    "business_analyst": {
+      "name": "Business Analyst",
+      "summary": "Business requirements, features and backlog from research."
+    },
+    "ux_designer": {
+      "name": "UX Designer",
+      "summary": "User journeys, flows and accessibility requirements."
+    },
+    "ui_designer": {
+      "name": "UI Designer",
+      "summary": "Design briefs: visual direction, screens and components."
+    },
+    "software_architect": {
+      "name": "Software Architect",
+      "summary": "System architecture and technical requirements."
+    },
+    "frontend_developer": {
+      "name": "Frontend Developer",
+      "summary": "Frontend tasks, estimates and implementation notes."
+    },
+    "backend_developer": {
+      "name": "Backend Developer",
+      "summary": "Backend tasks: data, APIs, jobs and integrations."
+    },
+    "ai_engineer": {
+      "name": "AI Engineer",
+      "summary": "AI features: models, evaluation, guardrails and costs."
+    },
+    "qa_agent": {
+      "name": "QA Engineer",
+      "summary": "Test plans and QA tasks from acceptance criteria."
+    },
+    "release_manager": {
+      "name": "Release Manager",
+      "summary": "Release and launch plans, readiness and changelog."
     }
   },
   "projects": {
@@ -2508,7 +2808,11 @@
         "ideaStatus": "Your idea was updated: {title}",
         "checklistDue": "Checklist due: {title}",
         "assetAssigned": "Asset assigned to you: {title}",
-        "incident": "Incident: {title}"
+        "incident": "Incident: {title}",
+        "productOwner": "You are now the owner of {title}",
+        "productStage": "Product moved to a new stage: {title}",
+        "productPlan": "The AI product team stopped: {title}",
+        "productPlanDone": "The AI product team finished planning {title}"
       },
       "marketing": {
         "campaign_launched": "Campaign launched: {title}",
@@ -2589,6 +2893,18 @@
       },
       "integrations": {
         "connection_failing": "Integration failing repeatedly: {title}"
+      },
+      "builder": {
+        "input_needed": "The AI Company Builder needs your decision: {title}",
+        "completed": "The AI Company Builder finished: {title}",
+        "step_failed": "A builder step failed: {title}"
+      },
+      "workforce": {
+        "statusReport": "Status report: {title}",
+        "escalation": "Escalation: {title}"
+      },
+      "growth": {
+        "insight": "Critical growth signal: {title}"
       }
     },
     "viewAll": "View all"
@@ -3364,6 +3680,151 @@
       "approvals_expiring": "{count, plural, one {# approval request expires within 24 hours} other {# approval requests expire within 24 hours}}",
       "ai_tasks_failed": "{count, plural, one {# AI task failed in the last 24 hours} other {# AI tasks failed in the last 24 hours}}",
       "ai_employee_over_budget": "{name} has used this month's token budget"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "ceo": "Ask the CEO",
+      "growth": "Growth engine"
+    },
+    "chat": {
+      "title": "Ask the CEO",
+      "subtitle": "Ask your AI CEO anything about the business; answers come from your company's data.",
+      "placeholder": "Ask a question, e.g. How did sales do this month?",
+      "followUp": "Ask a follow-up…",
+      "ask": "Ask",
+      "asking": "Asking…",
+      "shortcut": "Ctrl/⌘ + Enter to send",
+      "suggested": "Suggested questions",
+      "threads": "Conversations",
+      "new": "New question",
+      "newHint": "Pick a suggestion or ask your own question.",
+      "search": "Search conversations",
+      "noThreads": "No conversations yet.",
+      "messages": "{count, plural, one {# message} other {# messages}}",
+      "thinking": "The AI CEO is looking into it. This page updates automatically.",
+      "sources": "How it was answered",
+      "rename": "Rename",
+      "archive": "Archive",
+      "confirmArchive": "Archive this conversation?",
+      "notFound": "This conversation does not exist or was archived.",
+      "allThreads": "All conversations",
+      "suggestions": {
+        "performance": "How is the business doing this week?",
+        "revenue": "Why did revenue change compared with last month?",
+        "deals": "Which deals should we focus on to close this month?",
+        "leads": "Where are we losing leads in the funnel?",
+        "decisions": "Which decisions are waiting for me?",
+        "projects": "Which projects are at risk of being late?",
+        "cash": "How much runway do we have and what affects it?",
+        "marketing": "Which marketing campaigns work best?",
+        "customers": "What are customers complaining about?",
+        "today": "What should I prioritise today?"
+      }
+    },
+    "actions": {
+      "title": "CEO actions",
+      "hint": "Act directly: assign work, reprioritise, decide approvals and steer the AI team.",
+      "tabs": {
+        "assign": "Assign work",
+        "priorities": "Priorities",
+        "approvals": "Approvals",
+        "team": "AI team"
+      },
+      "assignTo": "Assign to",
+      "toAi": "AI employee",
+      "toPerson": "Person",
+      "aiEmployee": "AI employee",
+      "person": "Person",
+      "unassigned": "Unassigned",
+      "description": "Description",
+      "dueDate": "Due date",
+      "priority": "Priority",
+      "assign": "Assign",
+      "setGoal": "Set a goal",
+      "workTasks": "Open work tasks",
+      "noWorkTasks": "No open work tasks.",
+      "overdue": "Overdue",
+      "aiTasks": "Queued or failed AI tasks",
+      "noAiTasks": "No queued or failed AI tasks.",
+      "reassign": "Reassign",
+      "approve": "Approve",
+      "reject": "Reject",
+      "allApprovals": "All approvals",
+      "activate": "Activate",
+      "priorities": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      }
+    },
+    "card": {
+      "priorities": "Priorities for today",
+      "noPriorities": "Nothing urgent today.",
+      "decisions": "Decisions needed",
+      "noDecisions": "No decisions waiting.",
+      "moreApprovals": "{count, plural, one {# more approval} other {# more approvals}}",
+      "performance": "Business performance",
+      "updates": "Revenue, sales & marketing",
+      "update": {
+        "revenue": "Revenue",
+        "sales": "Sales",
+        "marketing": "Marketing"
+      },
+      "aiWork": "AI work (24 h)",
+      "aiWorkCounts": "{completed} completed · {inProgress} in progress · {failed} failed",
+      "events": "Important events (24 h)",
+      "noEvents": "No events in the last 24 hours.",
+      "risks": "Risks",
+      "blockers": "Blockers",
+      "blocker": {
+        "overdueTasks": "Overdue tasks",
+        "overdueMilestones": "Overdue milestones",
+        "failedRuns": "Failed AI runs (24 h)",
+        "slaBreaches": "SLA breaches (24 h)"
+      },
+      "noData": "No data.",
+      "noAccess": "You don't have access to this information.",
+      "prio": {
+        "decide_approvals": "{count, plural, one {Decide # pending approval} other {Decide # pending approvals}}",
+        "critical_issue": "Resolve: {issue}",
+        "growth_insight": "Growth signal: {signal}",
+        "due_today": "{count, plural, one {# task is due today} other {# tasks are due today}}",
+        "overdue_tasks": "{count, plural, one {Clear # overdue task} other {Clear # overdue tasks}}",
+        "failed_ai": "{count, plural, one {Review # failed AI task} other {Review # failed AI tasks}}"
+      }
+    },
+    "strip": {
+      "what": "Your company's command center: numbers, AI work, goals and growth signals in one place.",
+      "why": "See what changed and what needs you, without opening every module.",
+      "can": "Read the briefing, ask the AI CEO, act on decisions and steer the AI team.",
+      "nextAsk": "Ask the AI CEO a question.",
+      "nextHire": "Hire an AI CEO to get briefings and answers."
+    },
+    "center": {
+      "title": "Command center",
+      "pulse": "{count, plural, =0 {AI team idle} one {# AI task running} other {# AI tasks running}}",
+      "vsPrev": "vs previous 7 days",
+      "aiWorking": "AI tasks running now",
+      "activity": "Live AI activity",
+      "activityHint": "Real tasks running or waiting, newest step first.",
+      "idle": "No AI work running right now.",
+      "recommendations": "Strategic recommendations",
+      "goals": "Goals"
+    },
+    "network": {
+      "title": "Company network",
+      "hint": "Departments, the AI employees in them and the key records they work on. Dashed lines show who manages whom.",
+      "aria": "Company network of departments, AI employees and key records",
+      "empty": "Hire AI employees to see your company network.",
+      "records": {
+        "customers": "Customers",
+        "deals": "Open deals",
+        "leads": "Open leads",
+        "projects": "Projects",
+        "tickets": "Open tickets",
+        "invoices": "Unpaid invoices"
+      }
     }
   },
   "analytics": {
@@ -3373,7 +3834,8 @@
       "departments": "Departments",
       "dashboards": "Dashboards",
       "reports": "Reports",
-      "ai": "AI insights"
+      "ai": "AI insights",
+      "ceo": "CEO dashboard"
     },
     "range": {
       "label": "Period",
@@ -3486,6 +3948,42 @@
       "generateHint": "Runs as an AI task; numbers come from your metrics, never invented.",
       "latest": "Latest analysis",
       "empty": "No analyses yet."
+    },
+    "ceo": {
+      "title": "CEO dashboard",
+      "subtitle": "The whole company on one page: money, sales, marketing, delivery, team, AI workforce, goals, risks and decisions.",
+      "sections": {
+        "revenue": "Revenue",
+        "expenses": "Expenses",
+        "cashFlow": "Cash flow",
+        "sales": "Sales",
+        "leads": "Leads",
+        "marketing": "Marketing",
+        "projects": "Projects",
+        "team": "Team",
+        "ai": "AI workforce",
+        "goals": "Goals"
+      },
+      "goals": "Goals & KPIs",
+      "goalsHint": "Active objectives and the KPI targets of your AI employees.",
+      "openGoals": "Goals",
+      "milestones": "{done}/{total} milestones",
+      "noObjectives": "No active objectives.",
+      "kpiTargets": "AI employee KPI targets",
+      "noKpiTargets": "No KPI targets set on AI employees.",
+      "approvals": "Approvals",
+      "pending": "{count, plural, one {# pending} other {# pending}}",
+      "risks": "Risks",
+      "opportunities": "Opportunities",
+      "opportunitiesHint": "Metrics up at least 20% in the right direction, and strong growth signals.",
+      "noOpportunities": "No opportunities detected in this period.",
+      "insight": "Growth signal",
+      "strip": {
+        "what": "Every key number of the company on one page.",
+        "why": "One look tells you whether money, sales, delivery and the team are healthy.",
+        "can": "Change the period, open any number for detail and compare with the previous period.",
+        "next": "Ask the AI CEO about anything that looks off."
+      }
     }
   },
   "activity": {
@@ -9844,5 +10342,2149 @@
     "adminValue2": "Every change is permission-checked, scoped and audited.",
     "adminValue3": "Administrative changes require recent two-factor verification.",
     "secureConnection": "Secure session"
+  },
+  "builder": {
+    "title": "AI Company Builder",
+    "subtitle": "Turn an idea or an existing business into a working company: research, strategy, structure, AI employees, projects and plans — created step by step by AI and approved by you.",
+    "startFor": "Start for {name}",
+    "addBusiness": "Add another business",
+    "open": "Open",
+    "card": {
+      "title": "Company Builder runs",
+      "description": "{count, plural, one {# run} other {# runs}} across your companies"
+    },
+    "activeNotice": {
+      "DRAFT": "{name} has a builder run waiting for its sources before the analysis starts.",
+      "RUNNING": "The AI is building {name} right now.",
+      "WAITING_INPUT": "The builder for {name} is waiting for your decision.",
+      "FAILED": "A step of the builder for {name} failed and can be retried."
+    },
+    "tabs": {
+      "runs": "Runs",
+      "new": "New business",
+      "existing": "Existing business",
+      "import": "Import business",
+      "another": "Another business"
+    },
+    "list": {
+      "search": "Search by company",
+      "sort": "Sort",
+      "sorts": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "company": "Company name"
+      },
+      "apply": "Apply",
+      "mode": "Type",
+      "progress": "Progress",
+      "started": "Started",
+      "steps": "{done} of {total} steps",
+      "decisions": "{count, plural, one {# decision} other {# decisions}}",
+      "empty": "No builder runs yet. Start one for a new idea or an existing business."
+    },
+    "modes": {
+      "NEW_IDEA": "New business from an idea",
+      "EXISTING": "Existing business",
+      "IMPORT": "Imported business"
+    },
+    "runStatus": {
+      "DRAFT": "Setting up",
+      "RUNNING": "Building",
+      "WAITING_INPUT": "Needs your input",
+      "FAILED": "Step failed",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "stepStatus": {
+      "PENDING": "Pending",
+      "RUNNING": "AI working",
+      "APPLYING": "Applying",
+      "WAITING_INPUT": "Waiting for you",
+      "COMPLETED": "Done",
+      "FAILED": "Failed",
+      "SKIPPED": "Skipped",
+      "CANCELLED": "Cancelled"
+    },
+    "sourceStatus": {
+      "INGESTED": "In Brain",
+      "FAILED": "Not imported"
+    },
+    "steps": {
+      "idea_analysis": "Idea analysis",
+      "market_research": "Market research",
+      "competitors": "Competitor analysis",
+      "demand": "Demand analysis",
+      "customers_personas": "Customers & personas",
+      "opportunities_risks": "Opportunities & risks",
+      "positioning": "Positioning, mission & values",
+      "business_model": "Business model, pricing & revenue",
+      "business_plan": "Business plan",
+      "brand": "Brand strategy & name ideas",
+      "product_roadmap": "Product roadmap",
+      "objectives_kpis": "Goals, objectives & KPIs",
+      "org_structure": "Organization structure",
+      "ai_employees": "AI employees",
+      "projects_tasks": "Projects, milestones & tasks",
+      "go_to_market": "Marketing, sales & go-to-market",
+      "operational_workflows": "Operational workflows",
+      "launch_plan": "Launch plan",
+      "financial_plan": "Initial financial plan",
+      "website_ingest": "Website import",
+      "business_analysis": "Business analysis",
+      "market_competitors": "Market & competitors",
+      "positioning_review": "Positioning review",
+      "opportunities_weaknesses": "Opportunities & weaknesses",
+      "goals": "Goals & KPIs",
+      "recommended_configuration": "Recommended configuration"
+    },
+    "sections": {
+      "departments": "Departments & teams",
+      "aiEmployees": "AI employees",
+      "projects": "Projects",
+      "workflows": "Workflows",
+      "pipelines": "Sales pipelines"
+    },
+    "entities": {
+      "department": "Departments",
+      "team": "Teams",
+      "role": "Roles",
+      "project": "Projects",
+      "work_task": "Tasks",
+      "objective": "Objectives",
+      "milestone": "Milestones"
+    },
+    "decisions": {
+      "awaiting": "Awaiting your decision",
+      "kinds": {
+        "NAME": {
+          "title": "Choose the company name",
+          "description": "Pick one of the AI's name ideas or enter your own. The company is renamed everywhere.",
+          "approve": "Use this name"
+        },
+        "STRUCTURE": {
+          "title": "Approve the organization structure",
+          "description": "Untick anything you don't want. Approved departments and teams are created in your company.",
+          "approve": "Create this structure"
+        },
+        "CONFIGURATION": {
+          "title": "Review the recommended configuration",
+          "description": "Untick anything you don't want, then activate it. Everything is created in your company and stays editable.",
+          "approve": "Activate configuration"
+        }
+      },
+      "customName": "Or enter your own name",
+      "currentName": "Current working name: {name}",
+      "teams": "Teams: {list}",
+      "tasks": "{count, plural, one {# task} other {# tasks}}",
+      "revise": "Ask for changes",
+      "sendRevision": "Send to the AI",
+      "feedback": "What should change?",
+      "feedbackPlaceholder": "Describe what the AI should change…"
+    },
+    "brief": {
+      "idea": "What do you want to build?",
+      "ideaHint": "A sentence or two is enough: what you want to sell, to whom, and why.",
+      "describe": "What does your business do today?",
+      "describeHint": "What it sells, to whom and how it operates today. Optional when your website and documents say it.",
+      "website": "Website",
+      "websiteHint": "The homepage and up to 10 pages it links to are read into Company Brain.",
+      "name": "Do you already have a name?",
+      "nameHint": "Optional — leave it empty and the AI will propose names for you to choose from.",
+      "industry": "Which industry is it in?",
+      "country": "Where is the business based?",
+      "businessModel": "How do you usually sell your product?",
+      "letAiChoose": "Let the AI choose",
+      "targetMarket": "Who are your customers, and where are they?",
+      "targetMarketHint": "Who you sell to, and where. Add countries below.",
+      "addMarket": "Add a country…",
+      "removeMarket": "Remove {name}",
+      "offering": "What will you sell?",
+      "budget": "How much can you invest to start?",
+      "budgetHint": "Used for the financial plan and budgets.",
+      "goals": "What would success look like in a year?",
+      "goalsHint": "E.g. first paying customers in 3 months, €10k monthly revenue in a year.",
+      "preferences": "Anything we should know about how you like to work?",
+      "preferencesHint": "Time you can invest, risk appetite, remote or local, what you want to avoid.",
+      "aiFill": "Let AI fill the rest",
+      "aiFillHint": "The AI chooses sensible answers for everything left open and labels them as assumptions.",
+      "advanced": "More details (optional)"
+    },
+    "models": {
+      "b2b": "B2B",
+      "b2c": "B2C",
+      "b2b2c": "B2B2C",
+      "marketplace": "Marketplace",
+      "subscription": "Subscription",
+      "ecommerce": "E-commerce",
+      "services": "Services",
+      "agency": "Agency",
+      "other": "Other"
+    },
+    "industries": {
+      "software": "Software",
+      "ecommerce": "E-commerce",
+      "consulting": "Consulting",
+      "health": "Health",
+      "education": "Education",
+      "finance": "Finance",
+      "food": "Food & beverage",
+      "travel": "Travel",
+      "media": "Media",
+      "manufacturing": "Manufacturing",
+      "realEstate": "Real estate",
+      "logistics": "Logistics"
+    },
+    "new": {
+      "title": "Start the builder",
+      "titles": {
+        "NEW_IDEA": "Build a new business",
+        "EXISTING": "Set up an existing business",
+        "IMPORT": "Import an existing business"
+      },
+      "descriptions": {
+        "NEW_IDEA": "Answer a few questions; the AI researches, plans and sets up the company step by step.",
+        "EXISTING": "Your website and documents go into Company Brain; the AI analyzes the business and recommends a configuration.",
+        "IMPORT": "Import customers, contacts and employees from CSV files, add documents, then let the AI analyze the business."
+      },
+      "questions": "About {name}",
+      "submit": "Start building",
+      "submitExisting": "Continue"
+    },
+    "setup": {
+      "title": "Add what the AI should learn from",
+      "description": "Everything you add goes into the company's own data. Start the analysis when you're ready.",
+      "website": "The website {url} is imported when the analysis starts.",
+      "noWebsite": "No website given — the analysis uses your documents and imports.",
+      "brainCount": "{count, plural, =0 {No documents in Company Brain yet.} one {# document in Company Brain.} other {# documents in Company Brain.}}",
+      "documents": "Upload documents (PDF, text, Markdown)",
+      "crm": "Import customers, contacts and deals (CSV)",
+      "employees": "Import employees (CSV)",
+      "products": "Products are taken from your website and documents by the analysis; you can also add them by hand.",
+      "productsLink": "Open products"
+    },
+    "run": {
+      "title": "Builder workspace",
+      "progress": "Progress",
+      "current": "Now:",
+      "openTask": "Open AI task",
+      "start": "Start the analysis",
+      "cancel": "Cancel run",
+      "confirmCancel": "Cancel this builder run? Records already created stay in your company.",
+      "retry": "Retry step",
+      "addFeedback": "Add instructions",
+      "completed": "The builder finished. Everything it created is in your company and can be edited in each module.",
+      "failed": "Step failed",
+      "otherCompany": "This run belongs to {name}. Switch to that company to work in its modules.",
+      "steps": "Steps",
+      "stepsDescription": "Each step is a real AI task; its deliverable is saved in Company Brain.",
+      "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+      "document": "Document",
+      "task": "AI task · {status}",
+      "documents": "Generated documents",
+      "noDocuments": "No documents yet.",
+      "structure": "Company structure",
+      "noStructure": "No departments yet.",
+      "products": "Products",
+      "noProducts": "No products yet.",
+      "aiEmployees": "AI employees",
+      "noAiEmployees": "No AI employees yet.",
+      "projects": "Projects & tasks",
+      "noProjects": "No projects yet.",
+      "objectives": "Objectives",
+      "noObjectives": "No objectives yet.",
+      "installed": "Created by the builder — {list}",
+      "sources": "Imported sources",
+      "view": "View"
+    },
+    "onboarding": {
+      "title": "Welcome to Realy",
+      "subtitle": "A few steps and the AI starts building your company with you.",
+      "progress": "Onboarding steps",
+      "steps": {
+        "profile": "Profile",
+        "workspace": "Workspace",
+        "plan": "Plan",
+        "business": "Business",
+        "questions": "Questions"
+      },
+      "chooseFirst": "Choose which business to set up first.",
+      "profile": {
+        "title": "Your profile & preferences",
+        "description": "How Realy addresses you and shows dates, times and text.",
+        "name": "Your name",
+        "timezone": "Your timezone",
+        "country": "Country you live in"
+      },
+      "workspace": {
+        "title": "Your workspace",
+        "existing": "You're working in {name}.",
+        "create": "Create workspace"
+      },
+      "plan": {
+        "title": "Your plan",
+        "description": "Plans and prices for your billing country. Change your plan any time in billing settings.",
+        "current": "Current plan: {plan}",
+        "none": "No subscription yet. You can choose a plan in billing settings whenever you're ready.",
+        "trialEnds": "trial ends {date}",
+        "renews": "renews {date}",
+        "yours": "Your plan",
+        "unavailable": "Not offered in your billing country",
+        "trialDays": "{count, plural, one {# day free trial} other {# days free trial}}",
+        "noPlans": "No plans are published yet.",
+        "billing": "Billing settings",
+        "interval": {
+          "MONTH": "month",
+          "YEAR": "year"
+        }
+      },
+      "business": {
+        "title": "Which business are we building?",
+        "description": "Pick how you want to start.",
+        "descriptionMore": "Add another business to this account, or continue with one you already have.",
+        "new": {
+          "title": "New business from an idea",
+          "description": "The AI researches the market and builds the company from scratch."
+        },
+        "existing": {
+          "title": "Set up an existing business",
+          "description": "Start from your website and documents; the AI analyzes and configures."
+        },
+        "import": {
+          "title": "Import an existing business",
+          "description": "Bring customers, contacts and employees from CSV files."
+        },
+        "another": {
+          "title": "Another business in this account",
+          "description": "Create a new company next to your existing ones."
+        },
+        "current": {
+          "title": "Continue with {name}",
+          "description": "Run the AI Company Builder for this company.",
+          "hasRun": "See its builder runs."
+        }
+      },
+      "questions": {
+        "NEW_IDEA": "Tell us about the idea",
+        "EXISTING": "Tell us about the business",
+        "IMPORT": "Tell us about the business",
+        "description": "Only the essentials — the AI asks for decisions along the way.",
+        "submit": "Create company & start the builder"
+      }
+    },
+    "journey": {
+      "stageOf": "Stage {n} of {total}",
+      "why": "Why it matters:",
+      "working": "{who} is working on: {step}",
+      "stageDone": "This stage is ready",
+      "queued": "Waiting for the earlier stages to finish…",
+      "draft": "Add your website, documents or imports, then start the analysis in the builder workspace.",
+      "inThisStage": "What the AI is doing in this stage",
+      "read": "Read it",
+      "yourAnswers": "What you told us",
+      "fromSources": "We're learning from your website and documents.",
+      "pagesRead": "{count, plural, one {# page read into Company Brain} other {# pages read into Company Brain}}",
+      "blueprintHint": "Your company's identity, in plain words.",
+      "mission": "Mission:",
+      "vision": "Vision:",
+      "notYet": "Not ready yet — this fills in as the AI finishes.",
+      "workforceHint": "AI employees work for you around the clock; you approve anything important.",
+      "finance": "Money plan",
+      "cashItems": "Planned money in & out",
+      "budgets": "Budgets",
+      "summary": "Everything your company has now",
+      "stillWorking": "The AI is still finishing some work — you can continue in the Command Center.",
+      "enter": "Enter your Command Center",
+      "continueWhileWorking": "Continue — the AI keeps working",
+      "fullWorkspace": "See every detail in the builder workspace",
+      "stages": {
+        "welcome": {
+          "title": "Let's build your company together",
+          "short": "Welcome",
+          "what": "A few quick questions, then the AI starts working with you.",
+          "why": "You stay in control: the AI proposes, you decide."
+        },
+        "tell": {
+          "title": "Tell us your idea or your business",
+          "short": "Your idea",
+          "what": "Answer in your own words — examples are fine, nothing has to be perfect.",
+          "why": "The more the AI knows, the better its plans fit you."
+        },
+        "vision": {
+          "title": "The AI understands your vision",
+          "short": "Vision",
+          "what": "The AI reads your answers (and your website) and writes down what your business is about.",
+          "why": "Everything that follows builds on this understanding."
+        },
+        "market": {
+          "title": "Market intelligence",
+          "short": "Market",
+          "what": "The AI looks at your market, competitors, demand and ideal customers.",
+          "why": "Knowing who buys and who you compete with keeps you from guessing."
+        },
+        "blueprint": {
+          "title": "Your company blueprint",
+          "short": "Blueprint",
+          "what": "Mission, positioning, business plan and brand — including name ideas you choose from.",
+          "why": "A clear identity makes every decision and message easier."
+        },
+        "products": {
+          "title": "Products & services",
+          "short": "Products",
+          "what": "What you sell, how it's priced and how it grows over time.",
+          "why": "Your products are added to your company so every team works from the same list."
+        },
+        "workforce": {
+          "title": "AI workforce activation",
+          "short": "AI team",
+          "what": "The AI picks the AI employees that take the most work off your hands.",
+          "why": "They handle research, marketing, sales and admin while you focus on decisions."
+        },
+        "structure": {
+          "title": "Departments & how work runs",
+          "short": "Structure",
+          "what": "Departments, teams, first projects with tasks and automatic workflows.",
+          "why": "Everyone — people and AI — knows who does what."
+        },
+        "goals": {
+          "title": "Goals & launch plan",
+          "short": "Goals",
+          "what": "Goals with milestones, your go-to-market and launch plan, and a first money plan.",
+          "why": "Clear targets show whether the business is on track."
+        },
+        "command": {
+          "title": "Enter your living Command Center",
+          "short": "Command Center",
+          "what": "Your company is set up. The Command Center shows what's happening and what needs you.",
+          "why": "From here you run the company day to day."
+        }
+      }
+    }
+  },
+  "growth": {
+    "title": "Growth engine",
+    "subtitle": "Signals from your own data drive work for the right AI employee — research to optimisation, every hour.",
+    "needsCeo": "The growth engine runs for companies with an active AI CEO.",
+    "loop": {
+      "title": "Growth loop",
+      "hint": "Each stage with its real numbers; stages with open signals are highlighted.",
+      "noData": "No data for this stage yet.",
+      "period": "Last 30 days compared with the 30 days before."
+    },
+    "stages": {
+      "research": "Research",
+      "strategy": "Strategy",
+      "product": "Product",
+      "marketing": "Marketing",
+      "leads": "Leads",
+      "sales": "Sales",
+      "customers": "Customers",
+      "revenue": "Revenue",
+      "analytics": "Analytics",
+      "optimization": "Optimisation"
+    },
+    "stageMetrics": {
+      "brainDocuments": "Documents in Company Brain",
+      "researchTasks": "Research tasks (30 days)",
+      "customers": "Customers",
+      "kpisTracked": "KPIs tracked",
+      "insightsOpen": "Open insights",
+      "insightsActed": "Insights acted on (30 days)",
+      "growthTasks": "Growth tasks completed (30 days)"
+    },
+    "openCount": "{count, plural, one {# open} other {# open}}",
+    "open": {
+      "title": "Open insights",
+      "hint": "Signals that fired this week, with the evidence and the AI work assigned.",
+      "empty": "No open insights. The engine checks your data every hour."
+    },
+    "signals": {
+      "NO_CUSTOMERS": {
+        "title": "No customers yet",
+        "description": "There are no customer accounts in the CRM. Acquisition goes to the marketing manager."
+      },
+      "LOW_CONVERSION": {
+        "title": "Low lead-to-deal conversion",
+        "description": "Conversion dropped against the previous 30 days (or stays very low with many leads)."
+      },
+      "REVENUE_DECLINE": {
+        "title": "Revenue decline",
+        "description": "Revenue fell at least 10% against the previous 30 days."
+      },
+      "PROJECTS_DELAYED": {
+        "title": "Projects delayed",
+        "description": "Work tasks or milestones are overdue."
+      },
+      "COMPLAINTS_UP": {
+        "title": "Complaints up",
+        "description": "More support tickets were opened than in the previous week."
+      },
+      "STRONG_CAMPAIGN": {
+        "title": "Strong campaign performance",
+        "description": "Marketing ROI or conversion rose at least 20% against the previous week."
+      },
+      "DECISION_OVERLOAD": {
+        "title": "Founder decision overload",
+        "description": "More approvals are waiting than your threshold."
+      }
+    },
+    "severity": {
+      "INFO": "Info",
+      "WARNING": "Warning",
+      "CRITICAL": "Critical"
+    },
+    "status": {
+      "OPEN": "Open",
+      "ACTED": "Acted on",
+      "DISMISSED": "Dismissed"
+    },
+    "evidence": {
+      "customers": "Customers",
+      "newLeads30d": "New leads (30 days)",
+      "conversionRate": "Conversion rate",
+      "previousConversionRate": "Previous conversion rate",
+      "changePct": "Change",
+      "threshold": "Threshold",
+      "revenueMinor": "Revenue (30 days)",
+      "previousRevenueMinor": "Previous 30 days",
+      "overdueTasks": "Overdue tasks",
+      "overdueMilestones": "Overdue milestones",
+      "ticketsOpened7d": "Tickets opened (7 days)",
+      "previous7d": "Previous 7 days",
+      "campaignRoi": "Campaign ROI",
+      "previousCampaignRoi": "Previous campaign ROI",
+      "marketingConversionRate": "Marketing conversion",
+      "previousMarketingConversionRate": "Previous marketing conversion",
+      "pendingApprovals": "Pending approvals"
+    },
+    "responsible": "Responsible: {roles}",
+    "viewWork": "View AI work",
+    "notes": {
+      "observe": "Observe mode: no AI work assigned.",
+      "no_ai_employee": "No active AI employee for this role — hire one to act on it.",
+      "ai_not_configured": "AI is not configured, so no work was assigned.",
+      "ai_budget_exhausted": "Today's AI allowance is used up.",
+      "workforce_employee_paused": "The responsible AI employee is paused.",
+      "workforce_employee_over_budget": "The responsible AI employee is over its monthly budget.",
+      "other": "No AI work assigned ({reason})."
+    },
+    "act": "Assign AI work",
+    "markActed": "Mark acted on",
+    "dismiss": "Dismiss",
+    "reopen": "Reopen",
+    "runNow": "Check now",
+    "autonomy": {
+      "OBSERVE": {
+        "name": "Observe",
+        "hint": "Record insights only; no AI work is assigned."
+      },
+      "RECOMMEND": {
+        "name": "Recommend",
+        "hint": "The responsible AI employee analyses and recommends; it proposes no changes."
+      },
+      "PREPARE": {
+        "name": "Prepare",
+        "hint": "It prepares plans and drafts and may propose internal changes, each filed for approval."
+      },
+      "EXECUTE_WITH_APPROVAL": {
+        "name": "Execute with approval",
+        "hint": "It acts with its tools; every change or external action waits for your approval."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "enabled": "Growth engine on",
+      "autonomy": "Growth autonomy",
+      "threshold": "Decision overload threshold",
+      "thresholdHint": "Pending approvals above this number fire a signal.",
+      "lastRun": "Last checked {time}",
+      "neverRun": "Not checked yet",
+      "schedule": "Checked every hour. Each signal fires at most once per week."
+    },
+    "history": {
+      "title": "History",
+      "acted": "{count, plural, one {# acted on on this page} other {# acted on on this page}}",
+      "empty": "No insights yet.",
+      "status": "Status",
+      "signal": "Signal"
+    },
+    "strip": {
+      "what": "An engine that watches your numbers every hour for growth signals.",
+      "why": "Problems and opportunities are caught early and handed to the right AI employee.",
+      "can": "See each stage of your growth loop, act on signals and choose how much the AI may do.",
+      "nextRun": "Check your data now.",
+      "nextAct": "Act on the open signals below."
+    },
+    "help": "Let AI review my growth",
+    "helpTitle": "Growth review: weakest stage and next actions"
+  },
+  "product": {
+    "studio": "Product Studio",
+    "studioTitle": "Turn ideas into products people love",
+    "studioSubtitle": "A guided path from idea to launch. Your AI product team researches, plans, designs and prepares the launch — you decide.",
+    "startHere": "Start here",
+    "subtitle": "Every product you build, from first idea to launch and beyond.",
+    "product": "Product",
+    "allProducts": "All products",
+    "allStages": "All stages",
+    "stage": "Stage",
+    "count": "{count, plural, one {# product} other {# products}}",
+    "search": "Search products…",
+    "sortUpdated": "Recently updated",
+    "sortStage": "Stage",
+    "showArchived": "Archived",
+    "create": "New product",
+    "linked": "Linked",
+    "linkedCounts": "{features} features · {docs} docs · {releases} releases · {feedback} feedback",
+    "inStageSince": "In stage since",
+    "emptyTitle": "No products yet",
+    "emptyHint": "Tell me your idea and I'll set it up: a product record, a workspace and — if you like — your AI product team to research and plan it.",
+    "emptyAction": "Tell me your idea",
+    "boardHint": "{count, plural, one {# active product} other {# active products}} by lifecycle stage.",
+    "noOwner": "No owner",
+    "sinceDate": "Since {date}",
+    "lifecycle": "Lifecycle",
+    "stageSince": "{stage} since {date}",
+    "history": "Stage history",
+    "noHistory": "No stage changes yet.",
+    "now": "now",
+    "createProject": "Create development project",
+    "launchCampaign": "Launch campaign",
+    "createCampaign": "Draft launch campaign",
+    "aiTasks": "AI tasks",
+    "railLabel": "Lifecycle: stage {n} of {total}, {stage}",
+    "stats": {
+      "products": "Products",
+      "discovery": "Discovering",
+      "discoveryHint": "Idea to requirements",
+      "building": "Building",
+      "buildingHint": "Architecture to release",
+      "launched": "Launched",
+      "launchedHint": "Launch and beyond"
+    },
+    "tabs": {
+      "products": "Products",
+      "board": "Stage board"
+    },
+    "workspace": {
+      "nav": "Product workspace",
+      "tabs": {
+        "overview": "Overview",
+        "research": "Research",
+        "documents": "Documents",
+        "features": "Features",
+        "roadmap": "Roadmap",
+        "backlog": "Backlog",
+        "releases": "Releases",
+        "feedback": "Feedback",
+        "analytics": "Analytics",
+        "plan": "AI team"
+      }
+    },
+    "stages": {
+      "IDEA": "Idea",
+      "RESEARCH": "Research",
+      "VALIDATION": "Validation",
+      "BUSINESS_REQUIREMENTS": "Business requirements",
+      "PRODUCT_REQUIREMENTS": "Product requirements",
+      "ARCHITECTURE": "Architecture",
+      "DESIGN": "Design",
+      "DEVELOPMENT": "Development",
+      "QA": "Quality assurance",
+      "RELEASE": "Release",
+      "LAUNCH": "Launch",
+      "FEEDBACK": "Feedback",
+      "OPTIMIZATION": "Optimization"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "ON_HOLD": "On hold",
+      "SUNSET": "Sunset"
+    },
+    "fields": {
+      "name": "Name",
+      "owner": "Product owner",
+      "ownerHint": "Approves each stage gate.",
+      "ownerMe": "Me",
+      "targetUsers": "Target users",
+      "targetUsersHint": "Who is it for? e.g. small bakeries that take online orders.",
+      "graphEntity": "Company Graph product",
+      "project": "Development project",
+      "createGraphEntity": "Add to the Company Graph",
+      "createProject": "Create a development project"
+    },
+    "gate": {
+      "title": "Exit checklist: {stage}",
+      "addItem": "Add a checklist item",
+      "approve": "Approve gate",
+      "reopen": "Reopen gate",
+      "approved": "Gate approved",
+      "approvedBy": "Approved by {name} on {date}",
+      "ownerApproves": "{name} approves this gate once every item is done.",
+      "managerApproves": "No owner yet: a product manager approves this gate.",
+      "approveFirst": "Approve the current gate first",
+      "advance": "Move to {stage}",
+      "moveBack": "Move back to…",
+      "moveBackButton": "Move back",
+      "note": "Note (optional)",
+      "progress": "{done}/{total} done",
+      "items": {
+        "problem_defined": "The problem is written down",
+        "target_users": "Target users are named",
+        "initial_value": "The value for users is clear",
+        "competitors_reviewed": "Competitors reviewed",
+        "personas_defined": "Personas defined",
+        "research_doc": "Research document written",
+        "hypotheses_tested": "Key assumptions tested",
+        "evidence_recorded": "Evidence recorded",
+        "go_decision": "Go / no-go decided",
+        "brd_written": "Business requirements written",
+        "business_case": "Business case agreed",
+        "stakeholders_aligned": "Stakeholders aligned",
+        "prd_written": "Product requirements written",
+        "features_prioritized": "Features prioritized",
+        "acceptance_defined": "Acceptance criteria defined",
+        "architecture_doc": "Architecture documented",
+        "tech_requirements": "Technical requirements written",
+        "risks_reviewed": "Technical risks reviewed",
+        "ux_spec": "User experience specified",
+        "design_brief": "Design brief written",
+        "design_review": "Designs reviewed",
+        "backlog_ready": "Backlog ready",
+        "dev_project_linked": "Development project linked",
+        "features_built": "Features built",
+        "qa_plan": "Test plan written",
+        "tests_passed": "Tests passed",
+        "bugs_triaged": "Bugs triaged",
+        "release_planned": "Release planned",
+        "release_notes": "Release notes written",
+        "release_shipped": "Release shipped",
+        "launch_campaign": "Launch campaign ready",
+        "support_ready": "Support team ready",
+        "launch_announced": "Launch announced",
+        "feedback_collected": "Feedback collected",
+        "feedback_analyzed": "Feedback analyzed",
+        "improvements_planned": "Improvements planned",
+        "kpis_reviewed": "KPIs reviewed"
+      }
+    },
+    "help": {
+      "whatLabel": "What is this",
+      "whyLabel": "Why it matters",
+      "nextLabel": "What to do next",
+      "portfolio": {
+        "what": "All the products your company is building, each with its own workspace.",
+        "why": "One place to see where every product stands and what it needs.",
+        "next": "Start with your idea — it takes two minutes."
+      },
+      "overview": {
+        "what": "Your product's journey from idea to launch, with real progress.",
+        "why": "Each step builds on the one before; skipping steps is how products fail.",
+        "next": "Work on the current step, or let the AI product team plan everything."
+      },
+      "board": {
+        "what": "Every active product in its current lifecycle stage.",
+        "why": "Spot products that are stuck and gates waiting for approval.",
+        "next": "Open a product to move it forward."
+      },
+      "roadmapAll": {
+        "what": "Initiatives and features planned by quarter.",
+        "why": "A roadmap shows customers and the team what comes when.",
+        "next": "Give features a quarter and group them into initiatives."
+      },
+      "featuresAll": {
+        "what": "Everything you plan to build, across products.",
+        "why": "Clear features with acceptance criteria are easier to build and test.",
+        "next": "Score features with RICE to decide what comes first."
+      },
+      "ideasAll": {
+        "what": "Ideas from your team, with votes.",
+        "why": "Good products start from many ideas, filtered by real demand.",
+        "next": "Vote, then turn the best ideas into features."
+      },
+      "feedbackAll": {
+        "what": "What customers say about your products.",
+        "why": "Feedback tells you what to fix and what to build next.",
+        "next": "Link feedback to a product and a feature."
+      },
+      "releasesAll": {
+        "what": "Versions you ship and their changelog.",
+        "why": "Releases tell customers what changed and keep the team on schedule.",
+        "next": "Plan the next version and add its features."
+      },
+      "prioritization": {
+        "what": "Features ranked by RICE: reach × impact × confidence ÷ effort.",
+        "why": "Doing the most valuable work first saves time and money.",
+        "next": "Fill in the four RICE numbers for unscored features."
+      },
+      "research": {
+        "what": "Competitors, market evidence and the people you build for.",
+        "why": "Research shows whether people really need this before you spend on building it.",
+        "next": "Add your main competitors and one assumption to test."
+      },
+      "documents": {
+        "what": "The written plan: business needs, product requirements, architecture, design and launch.",
+        "why": "Documents keep everyone — people and AI — working from the same plan. They are also saved to Company Brain.",
+        "next": "Open a document and write it, or let AI draft it."
+      },
+      "features": {
+        "what": "What this product will do, feature by feature.",
+        "why": "Small, well-described features ship faster and with fewer bugs.",
+        "next": "Add requirements and acceptance criteria to each feature."
+      },
+      "roadmap": {
+        "what": "When this product's features are planned.",
+        "why": "A timeline keeps the team focused and promises realistic.",
+        "next": "Give each feature a quarter."
+      },
+      "backlog": {
+        "what": "The work tasks for building this product, grouped by feature.",
+        "why": "Tasks in sprints turn plans into shipped software.",
+        "next": "Create tasks for the top feature and push it to a sprint."
+      },
+      "releases": {
+        "what": "This product's versions and what each contains.",
+        "why": "Releases mark progress and tell customers what is new.",
+        "next": "Plan a version, then draft the support article and launch campaign."
+      },
+      "feedback": {
+        "what": "Feedback, support tickets and customer accounts about this product.",
+        "why": "Real customer voice shows what to improve next.",
+        "next": "Rate feedback sentiment and link it to features."
+      },
+      "analytics": {
+        "what": "Numbers from this product's real activity.",
+        "why": "See speed, quality and customer sentiment at a glance.",
+        "next": "Look for slow stages and rising negative feedback."
+      },
+      "plan": {
+        "what": "Your AI product team: researcher, analyst, product manager, architect, designers, QA and release manager.",
+        "why": "They write a complete first plan in minutes, each building on the previous step.",
+        "next": "Give a short brief and start the team; review each document when it is ready."
+      }
+    },
+    "journey": {
+      "title": "Your product journey",
+      "overall": "{percent}% of the journey done",
+      "stepN": "Step {n}",
+      "means": "What it means",
+      "why": "Why",
+      "aiDoes": "What AI will do",
+      "helpMe": "Help me do this",
+      "helpAll": "Help me do all of this",
+      "progressLabel": "Progress of {step}",
+      "done": "done",
+      "todo": "to do",
+      "status": {
+        "done": "Done",
+        "current": "You are here",
+        "upcoming": "Next"
+      },
+      "idea": {
+        "title": "Idea",
+        "means": "Describe the problem you want to solve and who has it.",
+        "why": "A clear problem is the foundation everything else builds on.",
+        "ai": "The AI product team researches and drafts the whole plan from your idea.",
+        "action": "Describe the idea"
+      },
+      "research": {
+        "title": "Research",
+        "means": "Learn about competitors and the people you build for, and test your assumptions.",
+        "why": "It proves people need this before you invest in building it.",
+        "ai": "The AI researcher drafts a market research document from your data.",
+        "action": "Add research"
+      },
+      "plan": {
+        "title": "Plan",
+        "means": "Write down business goals and exactly what the product must do.",
+        "why": "A shared plan prevents rework and misunderstandings.",
+        "ai": "The AI product manager drafts the product requirements (PRD).",
+        "action": "Write the PRD"
+      },
+      "design": {
+        "title": "Design",
+        "means": "Decide how it is built and how it looks and feels.",
+        "why": "Good design makes the product easy to use and to build.",
+        "ai": "The AI designers draft the design brief.",
+        "action": "Open the design brief"
+      },
+      "build": {
+        "title": "Build",
+        "means": "Turn features into tasks, build them in sprints and test them.",
+        "why": "Small steps ship working software and catch problems early.",
+        "ai": "The AI analyst proposes features and backlog tasks for your approval.",
+        "action": "Open the backlog"
+      },
+      "launch": {
+        "title": "Launch",
+        "means": "Release it, tell the world, support customers and learn from feedback.",
+        "why": "A planned launch gets the product in front of the right people.",
+        "ai": "The AI release manager drafts the release and launch plan.",
+        "action": "Plan the release"
+      },
+      "checks": {
+        "described": "Problem described",
+        "audience": "Target users named",
+        "owner": "Owner assigned",
+        "competitors": "Competitors added",
+        "personas": "Personas added",
+        "validated": "An assumption validated",
+        "researchDoc": "Research document",
+        "brd": "Business requirements",
+        "prd": "Product requirements",
+        "prdApproved": "PRD approved",
+        "features": "Features defined",
+        "architecture": "Architecture",
+        "ux": "UX specification",
+        "designBrief": "Design brief",
+        "project": "Development project",
+        "backlog": "Backlog tasks",
+        "criteria": "Acceptance criteria",
+        "qaPlan": "Test plan",
+        "releasePlan": "Release plan",
+        "release": "Version planned",
+        "shipped": "Version released",
+        "campaign": "Launch campaign"
+      }
+    },
+    "readiness": {
+      "title": "Launch readiness",
+      "hint": "What must be true before you launch — checked against your real data.",
+      "ready": "ready",
+      "scoreLabel": "Launch readiness {score}%",
+      "items": {
+        "prdApproved": "PRD approved",
+        "qaPlanApproved": "Test plan approved",
+        "qaGate": "QA gate approved",
+        "featuresShipped": "All features shipped",
+        "noOpenTasks": "No open development tasks",
+        "releaseNotes": "Release notes written",
+        "releaseDated": "Release date set",
+        "releasePlan": "Release plan approved",
+        "supportArticle": "Support article prepared",
+        "campaign": "Launch campaign drafted"
+      }
+    },
+    "roadmapChart": {
+      "title": "Features by quarter",
+      "hint": "Stacked by status, from the roadmap below.",
+      "label": "Features per quarter: {summary}"
+    },
+    "start": {
+      "title": "Start your product",
+      "subtitle": "Three short questions. Your answers are saved as you go — you can stop and come back any time.",
+      "progress": "Step {step} of {total}",
+      "steps": {
+        "idea": "Your idea",
+        "audience": "Who it's for",
+        "setup": "Get going"
+      },
+      "ideaQuestion": "What do you want to build?",
+      "ideaHint": "Plain words are perfect. You can change everything later.",
+      "nameLabel": "Product name",
+      "nameExample": "e.g. BakeBox — online ordering for local bakeries",
+      "problemLabel": "What problem does it solve?",
+      "problemExample": "e.g. Small bakeries lose orders because customers can't pre-order online.",
+      "audienceQuestion": "Who is it for?",
+      "audienceHint": "Name the people who have the problem. Tap an example or write your own.",
+      "audienceExamples": "Small business owners|Freelancers|Families|Students|Online shoppers|Sales teams",
+      "setupQuestion": "How do you want to continue?",
+      "setupHint": "We recommend both options below.",
+      "aiOption": "Let the AI product team plan it",
+      "aiOptionHint": "Research, business and product requirements, architecture, design, test and launch plans — drafted one after another for you to review.",
+      "aiUnavailable": "AI isn't available for you here; you can plan it yourself.",
+      "projectOption": "Create a development project",
+      "projectOptionHint": "A place for the tasks and sprints that will build the product.",
+      "recommended": "Recommended",
+      "saveContinue": "Save and continue",
+      "back": "Back",
+      "finish": "Create my product workspace"
+    },
+    "research": {
+      "competitors": "Competitors",
+      "competitorsHint": "Who else solves this problem, and how you are different.",
+      "competitor": "Competitor",
+      "website": "Website",
+      "strengths": "Strengths",
+      "weaknesses": "Weaknesses",
+      "notes": "Notes",
+      "links": "Links",
+      "linksHint": "One link per line (reviews, pricing pages, articles).",
+      "addCompetitor": "Add competitor",
+      "noCompetitors": "No competitors yet. Add the two or three alternatives your users use today.",
+      "validations": "Market validation",
+      "validationSummary": "{validated} validated · {invalidated} invalidated · {pending} open",
+      "hypothesis": "Assumption to test",
+      "kind": "Method",
+      "result": "Result",
+      "sampleSize": "People asked",
+      "source": "Source link",
+      "evidence": "Evidence",
+      "addValidation": "Add validation",
+      "noValidations": "No validation yet. Write down one assumption — e.g. \"bakeries would pay 20 € a month\" — and how you will test it.",
+      "personas": "Personas",
+      "personaName": "Persona name",
+      "role": "Role",
+      "goals": "Goals",
+      "painPoints": "Pain points",
+      "addPersona": "Add persona",
+      "noPersonas": "No personas yet. Describe one typical user."
+    },
+    "validationKind": {
+      "INTERVIEW": "Interview",
+      "SURVEY": "Survey",
+      "EXPERIMENT": "Experiment",
+      "MARKET_DATA": "Market data",
+      "PREORDER": "Pre-orders",
+      "OTHER": "Other"
+    },
+    "validationResult": {
+      "PENDING": "Open",
+      "VALIDATED": "Validated",
+      "INVALIDATED": "Invalidated",
+      "INCONCLUSIVE": "Inconclusive"
+    },
+    "docKinds": {
+      "RESEARCH": "Market research",
+      "BRD": "Business requirements (BRD)",
+      "PRD": "Product requirements (PRD)",
+      "TECH_REQUIREMENTS": "Technical requirements",
+      "ARCHITECTURE": "Architecture",
+      "UX_SPEC": "UX specification",
+      "DESIGN_BRIEF": "Design brief",
+      "QA_PLAN": "QA and test plan",
+      "RELEASE_PLAN": "Release and launch plan"
+    },
+    "docHints": {
+      "RESEARCH": "Market, competitors, customer needs and evidence.",
+      "BRD": "Business goals, KPIs, scope and the business case.",
+      "PRD": "What the product must do: users, requirements, features and acceptance criteria.",
+      "TECH_REQUIREMENTS": "Performance, security, integrations and data requirements.",
+      "ARCHITECTURE": "Components, data model, APIs and technology choices.",
+      "UX_SPEC": "User journeys, flows and accessibility.",
+      "DESIGN_BRIEF": "Visual direction, screens, components and states.",
+      "QA_PLAN": "How the product is tested before release.",
+      "RELEASE_PLAN": "Rollout, communications, support readiness and launch."
+    },
+    "docStatus": {
+      "DRAFT": "Draft",
+      "IN_REVIEW": "In review",
+      "APPROVED": "Approved"
+    },
+    "docs": {
+      "hint": "Versioned documents. Every saved version is also indexed in Company Brain so the whole company — and every AI employee — can find it.",
+      "notStarted": "Not started",
+      "inBrain": "In Brain",
+      "content": "Document content (Markdown)",
+      "placeholder": "Write in Markdown — or generate a first draft with AI.",
+      "changeNote": "What changed (optional)",
+      "saveVersion": "Save new version",
+      "readOnly": "You can read this document; editing needs product management access.",
+      "openInBrain": "Open in Company Brain",
+      "viewingVersion": "You are viewing version {version}; the current version is {current}.",
+      "restore": "Restore this version",
+      "backToCurrent": "Back to current",
+      "aiTitle": "Generate with AI",
+      "aiHint": "{role} drafts this document from the product's data and earlier documents. Review it, then use it as a new version.",
+      "generate": "Generate with AI",
+      "guidance": "Anything the AI should focus on? (optional)",
+      "useDraft": "Use AI draft",
+      "draftUsed": "Used",
+      "confirmUseDraft": "Save this AI draft as a new version of the document?",
+      "versions": "Versions",
+      "noVersions": "No versions yet."
+    },
+    "feature": {
+      "requirements": "Requirements",
+      "requirementsHint": "What the feature must do (Markdown).",
+      "acceptance": "Acceptance criteria",
+      "acceptanceHint": "One criterion per line — how you know it is done.",
+      "criteriaCount": "{count, plural, one {# criterion} other {# criteria}}"
+    },
+    "backlog": {
+      "noProject": "This product has no development project yet — tasks and sprints live there.",
+      "projectHint": "Tasks live in the product's development project.",
+      "openBoard": "Open board",
+      "openSprints": "Sprints",
+      "byFeature": "Backlog by feature",
+      "byFeatureHint": "Highest RICE first. Push a feature to a sprint to plan its tasks.",
+      "toSprint": "Push to sprint",
+      "inSprint": "In sprint",
+      "pts": "{count, plural, one {# pt} other {# pts}}",
+      "add": "Add backlog tasks",
+      "titles": "Task titles",
+      "titlesHint": "One task per line (up to 50).",
+      "sprint": "Sprint",
+      "noSprint": "Backlog (no sprint)",
+      "points": "Story points",
+      "create": "{count, plural, =0 {Create tasks} one {Create # task} other {Create # tasks}}",
+      "unlinked": "Tasks without a feature",
+      "aiTitle": "AI backlog planning",
+      "aiHint": "The AI business analyst reads the PRD and proposes features and tasks. You approve each one in Approvals."
+    },
+    "releases": {
+      "title": "Releases and changelog",
+      "cadence": "{count, plural, one {# release shipped} other {# releases shipped}}, the latest on {date}.",
+      "kbDraft": "Support article draft",
+      "kbHint": "Creates a draft help-center article from the release notes and features."
+    },
+    "feedback": {
+      "search": "Search feedback…",
+      "sentiment": "Sentiment",
+      "unrated": "Not rated",
+      "tickets": "Support tickets",
+      "ticketsHint": "{total} tickets mention this product, {open} open.",
+      "noTickets": "No support tickets mention this product.",
+      "accounts": "Customer accounts",
+      "accountsHint": "Accounts giving feedback or raising tickets about this product.",
+      "accountCounts": "{feedback} feedback · {tickets} tickets",
+      "noAccounts": "No customer accounts linked yet."
+    },
+    "sentiment": {
+      "POSITIVE": "Positive",
+      "NEUTRAL": "Neutral",
+      "NEGATIVE": "Negative"
+    },
+    "analytics": {
+      "featuresShipped": "Features shipped",
+      "ofTotal": "of {total} features",
+      "lifecycleProgress": "Lifecycle progress",
+      "daysInLifecycle": "{count, plural, one {# day} other {# days}} since the idea",
+      "releases": "Releases",
+      "lastRelease": "Latest {date}",
+      "cadence": "Release cadence",
+      "cadenceHint": "Average days between releases",
+      "daysUnit": "d",
+      "feedback6m": "Feedback, 6 months",
+      "negativeShare": "Negative feedback",
+      "ratedCount": "{count} rated",
+      "cycleTime": "Time in each stage",
+      "cycleTimeHint": "Days spent per lifecycle stage (current stage counts until today).",
+      "shippedByMonth": "Features shipped per month",
+      "feedbackByMonth": "Feedback per month and sentiment",
+      "features": "Features and tasks"
+    },
+    "plan": {
+      "title": "Plan with the AI product team",
+      "hint": "Eight AI specialists work one after another; each reads the previous documents. Every result is saved as a document version for you to review.",
+      "brief": "Brief",
+      "briefPlaceholder": "Optional brief, e.g. \"MVP in 3 months, mobile first, EU customers\".",
+      "start": "Start the AI product team",
+      "running": "The AI product team is working on this product…",
+      "run": "Plan of {date}",
+      "confirmCancel": "Stop the AI product team? Finished documents are kept.",
+      "retry": "Retry",
+      "openDoc": "Open document",
+      "openDocVersion": "Open version {version}",
+      "open": "Plan with the AI product team →",
+      "applyTitle": "Apply the plan",
+      "applyHint": "Turn the PRD into features and backlog tasks. The AI proposes each one; you approve it in Approvals.",
+      "apply": "Propose features and backlog"
+    },
+    "planStatus": {
+      "RUNNING": "Running",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "stepStatus": {
+      "PENDING": "Waiting",
+      "RUNNING": "Running",
+      "DONE": "Done",
+      "FAILED": "Failed"
+    },
+    "team": {
+      "title": "AI product team",
+      "hint": "Hire AI employees for the product roles; they appear in your AI Workforce.",
+      "none": "No AI product team members yet.",
+      "hire": "Hire selected",
+      "hired": "Hired",
+      "hiredCount": "{count, plural, one {# AI employee hired} other {# AI employees hired}}"
+    },
+    "metrics": {
+      "activeProducts": "Active products",
+      "featuresShipped": "Features shipped",
+      "productReleases": "Product releases",
+      "productFeedback": "Product feedback",
+      "negativeFeedbackShare": "Negative feedback share",
+      "stageCycleTime": "Stage cycle time",
+      "stageGatesApproved": "Stage gates approved"
+    },
+    "visuals": {
+      "mapTitle": "Product map",
+      "archTitle": "Product architecture",
+      "mapLabel": "Product map: {summary} initiatives / features",
+      "archLabel": "Architecture components: {summary}",
+      "mapCaption": "Initiatives around the product, features around their initiative — colored by status.",
+      "archCaption": "Components from the architecture document.",
+      "graphEmpty": "Add initiatives and features — or an architecture document with a Components section — to see the product map.",
+      "funnelTitle": "From ideas to product",
+      "funnelHint": "How ideas become features and shipped value.",
+      "funnelLabel": "Progression: {summary}",
+      "funnel": {
+        "ideas": "Ideas",
+        "features": "Features",
+        "planned": "Planned",
+        "building": "Building",
+        "shipped": "Shipped"
+      },
+      "activityTitle": "Development activity",
+      "activityHint": "Tasks completed and created per week, last 12 weeks.",
+      "activityLabel": "Last 12 weeks: {done} tasks completed, {created} created",
+      "done": "Completed",
+      "created": "Created",
+      "flowTitle": "Release process",
+      "flowHint": "Where each version is in the release flow.",
+      "flowLabel": "Release flow: {summary}",
+      "flow": {
+        "planned": "Planned",
+        "building": "In progress",
+        "released": "Released",
+        "published": "Published"
+      },
+      "noReleases": "No versions yet."
+    }
+  },
+  "guide": {
+    "launcher": "AI Guide",
+    "title": "AI Guide",
+    "close": "Close guide",
+    "expand": "Open AI Command",
+    "actionsLabel": "Guide actions",
+    "loading": "Loading…",
+    "noCompany": "Create or choose a company first — the guide works with your company's data.",
+    "noCompanyAction": "Set up a company",
+    "back": "Back",
+    "next": "Next",
+    "go": "Go there",
+    "done": "Done",
+    "undo": "Mark as not done",
+    "markDone": "Mark as done",
+    "autoDone": "Done — we can see it in your data",
+    "showMe": "Show me",
+    "notOnScreen": "That part isn't on this screen right now.",
+    "reset": "Start over",
+    "resume": "Resume",
+    "resumeAt": "You stopped at: {step}",
+    "progress": "{done} of {total} steps done",
+    "recent": "Your recent questions here",
+    "askLabel": "Ask the guide anything",
+    "askPlaceholder": "Ask anything about this page…",
+    "send": "Ask",
+    "recommended": "recommended",
+    "actions": {
+      "explain": "Explain this page",
+      "guide": "Guide me",
+      "do": "Do it for me",
+      "next": "What next?",
+      "recommend": "Best option",
+      "ask": "Question"
+    },
+    "labels": {
+      "what": "What is this?",
+      "why": "Why it matters",
+      "can": "What you can do here",
+      "next": "What to do next",
+      "state": "Your company right now",
+      "related": "Where to go from here",
+      "onThisPage": "The next unfinished step on this page.",
+      "firstOpen": "This is the first unfinished step on this page.",
+      "becauseZero": "Because: {what}."
+    },
+    "ai": {
+      "explain": "Explain it with my data (AI)",
+      "guide": "Make me a personal walkthrough (AI)",
+      "next": "Ask AI what to do next",
+      "recommend": "Ask AI to recommend",
+      "notConfigured": "AI answers aren't available yet: an administrator needs to connect the AI provider. Everything else in the guide works.",
+      "forbidden": "Your role can't start AI tasks. Ask an admin for the \"Run AI tasks\" permission."
+    },
+    "do": {
+      "intro": "Pick what the AI should do. It asks only what it needs, then gets to work — you'll see every step.",
+      "safety": "The AI only proposes changes: anything that creates, changes or sends something waits in Approvals until a person says yes.",
+      "other": "Something else?",
+      "otherPlaceholder": "Describe what you want done…",
+      "questionOf": "Question {n} of {total}",
+      "task": "The AI will",
+      "start": "Start"
+    },
+    "recommend": {
+      "stepWhy": "This is the step that unlocks the most on this page right now.",
+      "allDone": "Everything important here is done. Nice work!",
+      "question": "What are you deciding? (optional)",
+      "placeholder": "e.g. Which customers should we focus on first?"
+    },
+    "voice": {
+      "start": "Speak your question",
+      "stop": "Stop listening"
+    },
+    "phase": {
+      "thinking": "Thinking",
+      "planning": "Planning",
+      "executing": "Executing",
+      "collaborating": "Collaborating",
+      "completing": "Completing",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "task": {
+      "missing": "This AI task is no longer available.",
+      "status": {
+        "QUEUED": "Waiting to start",
+        "RUNNING": "Working",
+        "COMPLETED": "Finished",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "steps": "{count, plural, one {# step taken} other {# steps taken}}",
+      "failed": "The AI couldn't finish this task.",
+      "review": "Written by AI — check it before you use or share it.",
+      "approvals": "{count, plural, one {# change waits for approval} other {# changes wait for approval}}",
+      "reviewApprovals": "Review in Approvals",
+      "open": "Open the full task",
+      "next": "Next: {page}"
+    },
+    "approval": {
+      "PENDING": "Waiting",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "EXPIRED": "Expired",
+      "EXECUTED": "Done",
+      "FAILED": "Failed"
+    },
+    "taskTitle": {
+      "EXPLAIN": "Explain: {page}",
+      "GUIDE": "Walkthrough: {page}",
+      "NEXT": "What next: {page}",
+      "RECOMMEND": "Recommendation: {page}",
+      "ASK": "Question about {page}",
+      "DO": "Do for me: {step}"
+    },
+    "empty": {
+      "examples": "For example"
+    },
+    "intro": {
+      "label": "About this page"
+    },
+    "whatsNext": {
+      "title": "What to do next",
+      "subtitle": "Picked from your company's real data",
+      "allClear": "Nothing urgent — you're on top of things.",
+      "askAi": "Let AI do it"
+    },
+    "metrics": {
+      "leads": "{count, plural, =0 {No leads yet} one {# lead} other {# leads}}",
+      "deals": "{count, plural, =0 {No deals yet} one {# deal} other {# deals}}",
+      "openDeals": "{count, plural, =0 {No open deals yet} one {# open deal} other {# open deals}}",
+      "contacts": "{count, plural, =0 {No contacts yet} one {# contact} other {# contacts}}",
+      "customers": "{count, plural, =0 {No customers yet} one {# customer} other {# customers}}",
+      "salesTargets": "{count, plural, =0 {No sales targets yet} one {# sales target} other {# sales targets}}",
+      "proposals": "{count, plural, =0 {No proposals yet} one {# proposal} other {# proposals}}",
+      "invoices": "{count, plural, =0 {No invoices yet} one {# invoice} other {# invoices}}",
+      "overdueInvoices": "{count, plural, =0 {No overdue invoices yet} one {# overdue invoice} other {# overdue invoices}}",
+      "expenses": "{count, plural, =0 {No expenses yet} one {# expense} other {# expenses}}",
+      "bills": "{count, plural, =0 {No bills yet} one {# bill} other {# bills}}",
+      "employees": "{count, plural, =0 {No employees yet} one {# employee} other {# employees}}",
+      "departments": "{count, plural, =0 {No departments yet} one {# department} other {# departments}}",
+      "openJobs": "{count, plural, =0 {No open jobs yet} one {# open job} other {# open jobs}}",
+      "candidates": "{count, plural, =0 {No candidates yet} one {# candidate} other {# candidates}}",
+      "policies": "{count, plural, =0 {No policies yet} one {# policy} other {# policies}}",
+      "pendingLeave": "{count, plural, =0 {No leave requests waiting yet} one {# leave request waiting} other {# leave requests waiting}}",
+      "projects": "{count, plural, =0 {No projects yet} one {# project} other {# projects}}",
+      "openTasks": "{count, plural, =0 {No open tasks yet} one {# open task} other {# open tasks}}",
+      "productFeatures": "{count, plural, =0 {No features yet} one {# feature} other {# features}}",
+      "productIdeas": "{count, plural, =0 {No product ideas yet} one {# product idea} other {# product ideas}}",
+      "products": "{count, plural, =0 {No products yet} one {# product} other {# products}}",
+      "opsProcesses": "{count, plural, =0 {No documented processes yet} one {# documented process} other {# documented processes}}",
+      "campaigns": "{count, plural, =0 {No campaigns yet} one {# campaign} other {# campaigns}}",
+      "content": "{count, plural, =0 {No content pieces yet} one {# content piece} other {# content pieces}}",
+      "brandKit": "{count, plural, =0 {No brand kits yet} one {# brand kit} other {# brand kits}}",
+      "openTickets": "{count, plural, =0 {No open tickets yet} one {# open ticket} other {# open tickets}}",
+      "kbArticles": "{count, plural, =0 {No help articles yet} one {# help article} other {# help articles}}",
+      "workflows": "{count, plural, =0 {No workflows yet} one {# workflow} other {# workflows}}",
+      "activeWorkflows": "{count, plural, =0 {No active workflows yet} one {# active workflow} other {# active workflows}}",
+      "aiEmployees": "{count, plural, =0 {No AI employees yet} one {# AI employee} other {# AI employees}}",
+      "agentTasks": "{count, plural, =0 {No AI tasks yet} one {# AI task} other {# AI tasks}}",
+      "brainDocs": "{count, plural, =0 {No documents in Company Brain yet} one {# document in Company Brain} other {# documents in Company Brain}}",
+      "graphEntities": "{count, plural, =0 {No items in the Company Graph yet} one {# item in the Company Graph} other {# items in the Company Graph}}",
+      "objectives": "{count, plural, =0 {No active objectives yet} one {# active objective} other {# active objectives}}",
+      "companyGoals": "{count, plural, =0 {No company goals yet} one {# company goal} other {# company goals}}",
+      "milestones": "{count, plural, =0 {No milestones yet} one {# milestone} other {# milestones}}",
+      "strategy": "{count, plural, =0 {No strategies yet} one {# strategy} other {# strategies}}",
+      "approvalsPending": "{count, plural, =0 {No approvals waiting yet} one {# approval waiting} other {# approvals waiting}}",
+      "connections": "{count, plural, =0 {No connected apps yet} one {# connected app} other {# connected apps}}",
+      "announcements": "{count, plural, =0 {No announcements yet} one {# announcement} other {# announcements}}",
+      "channels": "{count, plural, =0 {No channels yet} one {# channel} other {# channels}}",
+      "meetings": "{count, plural, =0 {No meetings yet} one {# meeting} other {# meetings}}",
+      "dashboards": "{count, plural, =0 {No dashboards yet} one {# dashboard} other {# dashboards}}",
+      "reports": "{count, plural, =0 {No reports yet} one {# report} other {# reports}}",
+      "installs": "{count, plural, =0 {No installed templates yet} one {# installed template} other {# installed templates}}",
+      "members": "{count, plural, =0 {No members yet} one {# member} other {# members}}"
+    },
+    "recs": {
+      "approvals": {
+        "title": "Review {count, plural, one {# waiting approval} other {# waiting approvals}}",
+        "why": "Your AI employees are paused until you say yes or no."
+      },
+      "overdueInvoices": {
+        "title": "Chase {count, plural, one {# overdue invoice} other {# overdue invoices}}",
+        "why": "Money you've earned but not received yet."
+      },
+      "openTickets": {
+        "title": "Answer {count, plural, one {# open support ticket} other {# open support tickets}}",
+        "why": "Customers are waiting for a reply."
+      },
+      "brain": {
+        "title": "Teach the AI about your company",
+        "why": "Upload a document so every AI answer is based on your business."
+      },
+      "objective": {
+        "title": "Set your first goal",
+        "why": "A clear goal lets the AI plan work that matters."
+      },
+      "pendingLeave": {
+        "title": "Decide on {count, plural, one {# leave request} other {# leave requests}}",
+        "why": "Your team is waiting for an answer."
+      },
+      "hire": {
+        "title": "Hire your first AI employee",
+        "why": "AI employees do real work for you, with your approval."
+      },
+      "lead": {
+        "title": "Add your first potential customer",
+        "why": "Sales start with a list of people who might buy."
+      },
+      "project": {
+        "title": "Start your first project",
+        "why": "Projects turn plans into tasks with owners and dates."
+      },
+      "team": {
+        "title": "Add your team",
+        "why": "Know who does what, and who to assign work to."
+      },
+      "invoice": {
+        "title": "Create your first invoice",
+        "why": "Get paid for your work, with a professional invoice."
+      },
+      "campaign": {
+        "title": "Plan your first marketing campaign",
+        "why": "Campaigns bring new people to your business."
+      },
+      "connect": {
+        "title": "Connect your everyday tools",
+        "why": "Email, calendar and other apps make the AI more useful."
+      },
+      "automate": {
+        "title": "Automate a repetitive task",
+        "why": "Let a workflow do the boring work every time."
+      },
+      "builderResume": {
+        "title": "Finish setting up your company",
+        "why": "Your AI company setup isn't finished yet — pick up where you left off."
+      },
+      "builderStart": {
+        "title": "Let AI set up your company",
+        "why": "Answer a few questions and the AI prepares your company for you."
+      }
+    },
+    "questions": {
+      "goal": {
+        "label": "What result do you want?",
+        "example": "e.g. 20 new customers by the end of the quarter"
+      },
+      "audience": {
+        "label": "Who is it for?",
+        "example": "e.g. Small restaurants in Berlin"
+      },
+      "topic": {
+        "label": "What should it be about?",
+        "example": "e.g. Our new delivery service"
+      },
+      "who": {
+        "label": "Which customer or company?",
+        "example": "e.g. Acme Ltd"
+      },
+      "amount": {
+        "label": "Roughly how much? (amount and currency)",
+        "example": "e.g. 1,500 EUR"
+      },
+      "role": {
+        "label": "Which role are you hiring for?",
+        "example": "e.g. Part-time bookkeeper"
+      },
+      "process": {
+        "label": "Which process or routine?",
+        "example": "e.g. Welcoming a new customer"
+      },
+      "tone": {
+        "label": "Which tone fits best?",
+        "options": {
+          "friendly": "Friendly",
+          "professional": "Professional",
+          "bold": "Bold"
+        }
+      },
+      "deadline": {
+        "label": "By when?",
+        "options": {
+          "thisWeek": "This week",
+          "thisMonth": "This month",
+          "thisQuarter": "This quarter"
+        }
+      },
+      "count": {
+        "label": "How many?"
+      },
+      "priority": {
+        "label": "How important is it?",
+        "options": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "details": {
+        "label": "Anything else the AI should know?",
+        "example": "e.g. Keep it short and friendly"
+      }
+    },
+    "trace": {
+      "tools": {
+        "search_company_brain": "Searching Company Brain",
+        "read_company_graph": "Reading the Company Graph",
+        "read_objectives": "Checking your goals",
+        "read_company_memory": "Remembering what it knows about you",
+        "read_pipeline_summary": "Reading the CRM pipeline",
+        "read_leads": "Looking through your leads",
+        "create_lead": "Preparing a new lead",
+        "send_lead_email": "Drafting an email",
+        "read_financial_summary": "Reading your finances",
+        "read_invoices": "Checking invoices",
+        "create_invoice_draft": "Drafting an invoice",
+        "read_campaigns": "Reviewing campaigns",
+        "create_campaign": "Preparing a campaign",
+        "create_content_draft": "Writing content",
+        "read_company_kpis": "Reading your key numbers",
+        "delegate_to_ai_employee": "Handing part of the work to a colleague",
+        "read_ai_employees": "Checking who's on the AI team",
+        "read_open_jobs": "Reviewing open jobs",
+        "create_job_posting": "Drafting a job posting",
+        "read_projects": "Reviewing projects",
+        "create_work_task": "Preparing a task",
+        "read_support_queue": "Reading the support queue",
+        "draft_ticket_reply": "Drafting a reply",
+        "read_workflows": "Reviewing workflows"
+      },
+      "verbs": {
+        "read": "Reading · {name}",
+        "search": "Searching · {name}",
+        "draft": "Drafting · {name}",
+        "change": "Preparing a change · {name}",
+        "send": "Preparing to send · {name}",
+        "delegate": "Delegating · {name}",
+        "analyze": "Analyzing · {name}",
+        "other": "Working · {name}"
+      }
+    },
+    "command": {
+      "title": "AI Command",
+      "history": "History",
+      "new": "New command",
+      "noHistory": "Your commands will appear here.",
+      "delete": "Delete “{title}”",
+      "working": "Your AI team is working",
+      "headline": "What should your company do?",
+      "subline": "Give a command in plain words. The right AI employees take it on — you watch every step and approve every change.",
+      "inputLabel": "Your command",
+      "placeholder": "e.g. Find 100 potential customers for my business",
+      "run": "Run",
+      "safety": "AI employees only propose changes — nothing is created, changed or sent until a person approves it.",
+      "network": "AI team working on this command: {summary}",
+      "aiEmployee": "AI employee",
+      "phases": "Progress",
+      "queued": "Waiting for a free AI worker…",
+      "thinking": "Reading your request and thinking…",
+      "stepFailed": "this step failed",
+      "collaborators": "Colleagues helping",
+      "approve": "Approve",
+      "reject": "Reject",
+      "taskTitle": "Command: {command}",
+      "intents": {
+        "prospecting": "Finding customers",
+        "sales": "Sales",
+        "marketing": "Marketing",
+        "content": "Content",
+        "seo": "Search visibility",
+        "product": "Product",
+        "finance": "Finance",
+        "recruiting": "Hiring",
+        "people": "People",
+        "support": "Customer support",
+        "projects": "Projects",
+        "automation": "Automation",
+        "analytics": "Analytics",
+        "operations": "Operations",
+        "knowledge": "Knowledge",
+        "fallback": "Company-wide"
+      },
+      "suggest": {
+        "customers": "Find 100 potential customers for my business",
+        "campaign": "Launch a marketing campaign for our main product",
+        "product": "Create a new product and write its plan",
+        "financeReport": "Prepare my company's monthly financial report",
+        "approvals": "Summarize what is waiting for my approval",
+        "overdueInvoices": "Draft friendly reminders for overdue invoices",
+        "openTickets": "Draft replies to our open support tickets",
+        "brain": "Tell me which documents I should add so the AI knows my business",
+        "objective": "Suggest three goals for this quarter",
+        "pendingLeave": "Summarize the leave requests waiting for me",
+        "hire": "Which AI employee should I hire first, and why?",
+        "lead": "Find 20 potential customers that fit my business",
+        "project": "Plan our first project with tasks and dates",
+        "team": "Which roles does my company need first?",
+        "invoice": "Help me create my first invoice",
+        "connect": "Which tools should I connect first?",
+        "automate": "Find a repetitive task we can automate",
+        "builderResume": "Help me finish setting up my company",
+        "builderStart": "Set up my company with AI"
+      }
+    },
+    "pages": {
+      "commandCenter": {
+        "title": "Command Center",
+        "what": "Your company's home: the most important numbers, alerts and AI activity in one place.",
+        "why": "It tells you in seconds what needs your attention today.",
+        "can": "See key numbers, review AI work, and jump to any department.",
+        "steps": {
+          "goal": "Set your first company goal",
+          "knowledge": "Add a document about your business",
+          "hire": "Hire your first AI employee"
+        }
+      },
+      "builder": {
+        "title": "AI Company Builder",
+        "what": "A guided setup where the AI asks about your business and prepares your company for you.",
+        "why": "It saves hours of setup and gives every AI employee the right context.",
+        "can": "Describe your business, review the AI's proposal, and apply it.",
+        "steps": {
+          "describe": "Describe your business in a few sentences",
+          "review": "Review what the AI proposes",
+          "apply": "Apply the setup to your company"
+        }
+      },
+      "intelligence": {
+        "title": "Intelligence",
+        "what": "Daily briefings and insights the AI prepares from your company's data.",
+        "why": "You learn about problems and chances before they grow.",
+        "can": "Read briefings, see open issues and act on them.",
+        "steps": {
+          "read": "Read today's briefing",
+          "issues": "Look at the open issues",
+          "act": "Approve or reject waiting AI actions"
+        }
+      },
+      "analytics": {
+        "title": "Analytics",
+        "what": "Charts and numbers that show how your company is doing.",
+        "why": "Decisions based on numbers beat guesses.",
+        "can": "Check key numbers, build dashboards and save reports.",
+        "steps": {
+          "kpis": "Look at your key numbers",
+          "dashboard": "Create your first dashboard",
+          "report": "Save a report"
+        }
+      },
+      "objectives": {
+        "title": "Objectives",
+        "what": "The big goals your company is working towards, with measurable results.",
+        "why": "Everyone — people and AI — knows what matters most.",
+        "can": "Create goals, add measurable results and track progress.",
+        "steps": {
+          "create": "Create your first objective",
+          "goals": "Add company goals",
+          "milestones": "Break it into milestones"
+        }
+      },
+      "tasks": {
+        "title": "AI Tasks",
+        "what": "Work you gave to AI employees, and what they delivered.",
+        "why": "You stay in control of everything the AI does.",
+        "can": "Assign tasks, read results and follow up.",
+        "steps": {
+          "assign": "Give the AI its first task",
+          "review": "Read a finished result",
+          "approve": "Decide on waiting approvals"
+        }
+      },
+      "taskDetail": {
+        "title": "AI task",
+        "what": "One piece of work done by an AI employee: what it looked up and what it delivered.",
+        "why": "You can check how the AI got to its answer.",
+        "can": "Read the result, its sources and the approvals it asked for.",
+        "steps": {
+          "readResult": "Read the result",
+          "approve": "Decide on the approvals it asked for"
+        }
+      },
+      "workforce": {
+        "title": "AI Workforce",
+        "what": "Your team of AI employees, each with a role like sales, marketing or finance.",
+        "why": "They do real work around the clock — always with your approval.",
+        "can": "Hire AI employees, give them work and watch their usage.",
+        "steps": {
+          "hire": "Hire an AI employee",
+          "assign": "Give them a first task",
+          "usage": "Check their usage"
+        }
+      },
+      "workforceHire": {
+        "title": "Hire an AI employee",
+        "what": "Choose a role for a new AI employee.",
+        "why": "The right role gets the right tools and knowledge.",
+        "can": "Compare roles and hire the one you need.",
+        "steps": {
+          "pick": "Pick the role you need most",
+          "hire": "Hire it",
+          "assign": "Give it a first task"
+        }
+      },
+      "plans": {
+        "title": "Plans",
+        "what": "Milestones that turn your goals into concrete steps over time.",
+        "why": "Big goals become achievable when broken into steps.",
+        "can": "Add milestones, link them to goals and projects.",
+        "steps": {
+          "milestone": "Add your first milestone",
+          "link": "Link it to a goal",
+          "projects": "Start a project for it"
+        }
+      },
+      "activity": {
+        "title": "Activity",
+        "what": "Everything that happened in your company, by people and AI.",
+        "why": "You always know who did what, and when.",
+        "can": "Browse recent activity and spot what needs attention.",
+        "steps": {
+          "review": "Look through recent activity",
+          "approvals": "Handle waiting approvals"
+        }
+      },
+      "approvals": {
+        "title": "Approvals",
+        "what": "Changes your AI employees want to make, waiting for your yes or no.",
+        "why": "Nothing important happens without your permission.",
+        "can": "Read each proposal, then approve or reject it.",
+        "steps": {
+          "review": "Read the waiting proposals",
+          "decide": "Approve or reject each one"
+        }
+      },
+      "company": {
+        "title": "Company",
+        "what": "Your company's profile: who you are, what you sell and your strategy.",
+        "why": "Every AI answer gets better when it knows your business.",
+        "can": "Complete your profile, write your strategy and add knowledge.",
+        "steps": {
+          "profile": "Complete your company profile",
+          "strategy": "Write your strategy",
+          "knowledge": "Add documents about your business"
+        }
+      },
+      "organization": {
+        "title": "Organization",
+        "what": "How your company is structured: departments, teams and people.",
+        "why": "Clear structure means clear responsibilities.",
+        "can": "Add departments, people and see the org chart.",
+        "steps": {
+          "departments": "Add your departments",
+          "people": "Add your people",
+          "chart": "Look at your org chart"
+        }
+      },
+      "graph": {
+        "title": "Company Graph",
+        "what": "A map of your company: people, teams, products, customers and how they connect.",
+        "why": "The AI uses this map to understand your business.",
+        "can": "Add things, connect them and explore the map.",
+        "steps": {
+          "add": "Add your first item",
+          "connect": "Connect two items",
+          "explore": "Explore the map"
+        }
+      },
+      "brain": {
+        "title": "Company Brain",
+        "what": "Your company's memory: documents the AI reads to answer like an insider.",
+        "why": "Answers based on your own documents, not guesses.",
+        "can": "Upload documents, ask questions and manage what the AI remembers.",
+        "steps": {
+          "upload": "Upload your first document",
+          "ask": "Ask the Brain a question",
+          "memory": "Check what the AI remembers"
+        }
+      },
+      "documents": {
+        "title": "Documents",
+        "what": "All your company documents in one place.",
+        "why": "Easy to find, and the AI can read them for you.",
+        "can": "Upload, find and ask about documents.",
+        "steps": {
+          "upload": "Upload a document",
+          "ask": "Ask a question about your documents"
+        }
+      },
+      "products": {
+        "title": "Products",
+        "what": "What your company sells.",
+        "why": "Marketing, sales and support all start from your products.",
+        "can": "Add products and describe them.",
+        "steps": {
+          "add": "Add your first product",
+          "describe": "Describe it in a document",
+          "roadmap": "Plan what comes next"
+        }
+      },
+      "customers": {
+        "title": "Customers",
+        "what": "The companies and people who buy from you.",
+        "why": "Happy customers are the base of a healthy business.",
+        "can": "See customers, their contacts and their support history.",
+        "steps": {
+          "add": "Add your first customer",
+          "contacts": "Add contact people",
+          "support": "Check their support requests"
+        }
+      },
+      "marketing": {
+        "title": "Marketing",
+        "what": "Everything that brings new people to your business: campaigns, content, email and social media.",
+        "why": "Without marketing, customers can't find you.",
+        "can": "Plan campaigns, create content and measure results.",
+        "steps": {
+          "brand": "Set up your brand kit",
+          "campaign": "Plan your first campaign",
+          "content": "Write your first piece of content"
+        }
+      },
+      "marketingCampaigns": {
+        "title": "Campaigns",
+        "what": "Marketing pushes with a goal, an audience and a time frame.",
+        "why": "Focused campaigns get better results than random posts.",
+        "can": "Create, plan and launch campaigns.",
+        "steps": {
+          "create": "Create a campaign",
+          "content": "Prepare its content",
+          "launch": "Launch it"
+        }
+      },
+      "marketingCampaign": {
+        "title": "Campaign",
+        "what": "One marketing campaign: its goal, content and results.",
+        "why": "Keeping it all together shows what works.",
+        "can": "Plan, add content and track results.",
+        "steps": {
+          "plan": "Write the campaign plan",
+          "content": "Create content for it",
+          "measure": "Check the results"
+        }
+      },
+      "marketingContent": {
+        "title": "Content",
+        "what": "Blog posts, social posts, ads and emails.",
+        "why": "Good content builds trust before people buy.",
+        "can": "Write, review and schedule content.",
+        "steps": {
+          "brand": "Set your brand voice",
+          "write": "Write a piece of content",
+          "schedule": "Put it on the calendar"
+        }
+      },
+      "sales": {
+        "title": "Sales",
+        "what": "How your sales team and pipeline are doing against targets.",
+        "why": "Sales keep the company alive.",
+        "can": "Set targets, watch the pipeline and coach the team.",
+        "steps": {
+          "targets": "Set a sales target",
+          "pipeline": "Review the pipeline",
+          "team": "Check how the team is doing"
+        }
+      },
+      "crm": {
+        "title": "CRM",
+        "what": "Your list of potential customers (leads) and how far each one is from buying.",
+        "why": "Nobody falls through the cracks — every lead gets followed up.",
+        "can": "Add leads, qualify them and turn them into deals.",
+        "steps": {
+          "lead": "Add your first lead",
+          "qualify": "Decide which leads are worth pursuing",
+          "deal": "Turn a good lead into a deal"
+        }
+      },
+      "crmLead": {
+        "title": "Lead",
+        "what": "One potential customer, with everything you know and every contact you've had.",
+        "why": "The full picture helps you say the right thing.",
+        "can": "Research them, plan a follow-up and convert them to a deal.",
+        "steps": {
+          "research": "Research this lead",
+          "followUp": "Plan the next follow-up",
+          "convert": "Turn them into a deal"
+        }
+      },
+      "crmDeals": {
+        "title": "Deals",
+        "what": "Sales opportunities with a value and a stage.",
+        "why": "Shows how much money is on the way.",
+        "can": "Create deals, move them through stages and send proposals.",
+        "steps": {
+          "create": "Create your first deal",
+          "pipeline": "See all deals on the pipeline",
+          "proposal": "Send a proposal"
+        }
+      },
+      "crmDeal": {
+        "title": "Deal",
+        "what": "One sales opportunity: its value, stage and history.",
+        "why": "Knowing the next step wins more deals.",
+        "can": "Update the stage, write a proposal and plan follow-ups.",
+        "steps": {
+          "review": "Check where this deal stands",
+          "proposal": "Write a proposal",
+          "followUp": "Plan the next follow-up"
+        }
+      },
+      "crmAccount": {
+        "title": "Account",
+        "what": "One customer company with its people and deals.",
+        "why": "Everything about a customer in one place.",
+        "can": "See contacts and deals, and prepare a brief.",
+        "steps": {
+          "brief": "Prepare a customer brief",
+          "contacts": "Add contact people",
+          "deal": "Open a new deal"
+        }
+      },
+      "support": {
+        "title": "Support",
+        "what": "Questions and problems from your customers, as tickets.",
+        "why": "Fast, friendly answers keep customers coming back.",
+        "can": "Answer tickets, build help articles and set response times.",
+        "steps": {
+          "queue": "Answer the open tickets",
+          "knowledge": "Write your first help article",
+          "settings": "Set your response times"
+        }
+      },
+      "supportTicket": {
+        "title": "Ticket",
+        "what": "One customer request and the conversation about it.",
+        "why": "Every customer deserves a clear answer.",
+        "can": "Read it, reply and resolve it.",
+        "steps": {
+          "read": "Read the customer's request",
+          "reply": "Write a reply",
+          "resolve": "Mark it as solved"
+        }
+      },
+      "projects": {
+        "title": "Projects",
+        "what": "Work with a goal, tasks, owners and deadlines.",
+        "why": "Projects make sure work gets finished on time.",
+        "can": "Create projects, add tasks and track progress.",
+        "steps": {
+          "create": "Create your first project",
+          "tasks": "Add tasks",
+          "mine": "See your own tasks"
+        }
+      },
+      "project": {
+        "title": "Project",
+        "what": "One project: its tasks, sprints, risks and timeline.",
+        "why": "See at a glance whether it's on track.",
+        "can": "Plan tasks, use the board and watch risks.",
+        "steps": {
+          "plan": "Plan the project's tasks",
+          "board": "Move tasks on the board",
+          "risks": "List the risks"
+        }
+      },
+      "product": {
+        "title": "Product",
+        "what": "Ideas, features and releases for what you build.",
+        "why": "Building the right thing matters more than building fast.",
+        "can": "Collect ideas, plan features and prioritize.",
+        "steps": {
+          "ideas": "Collect product ideas",
+          "features": "Write a feature plan",
+          "prioritize": "Decide what to build first"
+        }
+      },
+      "operations": {
+        "title": "Operations",
+        "what": "How your company runs day to day: processes, checklists, assets and incidents.",
+        "why": "Written processes make quality repeatable.",
+        "can": "Document processes, run checklists and handle incidents.",
+        "steps": {
+          "process": "Write down a key process",
+          "checklists": "Create a checklist",
+          "incidents": "Check open incidents"
+        }
+      },
+      "finance": {
+        "title": "Finance",
+        "what": "Your money: invoices, expenses, cash and reports.",
+        "why": "Knowing your numbers keeps the business safe.",
+        "can": "Send invoices, record expenses and watch cash flow.",
+        "steps": {
+          "settings": "Check your finance settings",
+          "invoice": "Create your first invoice",
+          "expense": "Record an expense"
+        }
+      },
+      "financeInvoices": {
+        "title": "Invoices",
+        "what": "Bills you send to customers.",
+        "why": "Invoices are how you get paid.",
+        "can": "Create invoices, track payments and chase late ones.",
+        "steps": {
+          "create": "Create an invoice",
+          "overdue": "Follow up overdue invoices",
+          "recurring": "Set up repeating invoices"
+        }
+      },
+      "financeInvoiceNew": {
+        "title": "New invoice",
+        "what": "A form to bill a customer.",
+        "why": "A clear invoice gets paid faster.",
+        "can": "Choose the customer, add what you sold and save.",
+        "steps": {
+          "customer": "Choose the customer",
+          "lines": "Add what you're charging for",
+          "save": "Save the invoice"
+        }
+      },
+      "financeInvoice": {
+        "title": "Invoice",
+        "what": "One invoice: what it's for, its status and payments.",
+        "why": "You always know what's paid and what isn't.",
+        "can": "Review it, send it and record payments.",
+        "steps": {
+          "review": "Check the invoice",
+          "send": "Send it to the customer",
+          "payment": "Record the payment"
+        }
+      },
+      "hr": {
+        "title": "HR",
+        "what": "Your people: employees, hiring, leave, policies and payroll.",
+        "why": "A well-run team does better work.",
+        "can": "Add employees, write policies and handle leave.",
+        "steps": {
+          "employees": "Add your employees",
+          "policies": "Write your first policy",
+          "leave": "Answer leave requests"
+        }
+      },
+      "hrRecruiting": {
+        "title": "Recruiting",
+        "what": "Open jobs and the candidates applying for them.",
+        "why": "The right hires shape your company.",
+        "can": "Post jobs, review candidates and plan interviews.",
+        "steps": {
+          "job": "Post your first job",
+          "candidates": "Add candidates",
+          "interviews": "Plan interviews"
+        }
+      },
+      "hrJob": {
+        "title": "Job",
+        "what": "One open position and its candidates.",
+        "why": "A clear job description attracts the right people.",
+        "can": "Improve the description and shortlist candidates.",
+        "steps": {
+          "description": "Improve the job description",
+          "candidates": "Review the candidates",
+          "shortlist": "Make a shortlist"
+        }
+      },
+      "hrCandidate": {
+        "title": "Candidate",
+        "what": "One applicant: their profile, interviews and scores.",
+        "why": "Fair, consistent decisions lead to better hires.",
+        "can": "Review them, score them and decide.",
+        "steps": {
+          "review": "Read their profile",
+          "score": "Score this candidate",
+          "decide": "Decide on next steps"
+        }
+      },
+      "communication": {
+        "title": "Communication",
+        "what": "Announcements, channels, meetings and inbox for your team.",
+        "why": "Everyone stays informed without endless emails.",
+        "can": "Post announcements, chat in channels and run meetings.",
+        "steps": {
+          "announce": "Post your first announcement",
+          "channel": "Create a channel",
+          "meeting": "Schedule a meeting"
+        }
+      },
+      "workflows": {
+        "title": "Workflows",
+        "what": "Automations that do repetitive work for you when something happens.",
+        "why": "Save time and never forget a step.",
+        "can": "Start from a template, switch it on and watch it run.",
+        "steps": {
+          "template": "Create a workflow from a template",
+          "activate": "Switch a workflow on",
+          "runs": "Check its runs"
+        }
+      },
+      "workflow": {
+        "title": "Workflow",
+        "what": "One automation: what starts it and what it does.",
+        "why": "Small improvements save time every single run.",
+        "can": "Review the steps, improve it and switch it on.",
+        "steps": {
+          "review": "Review its steps",
+          "improve": "Improve it",
+          "activate": "Switch it on"
+        }
+      },
+      "integrations": {
+        "title": "Integrations",
+        "what": "Connections to the apps you already use, like email and calendars.",
+        "why": "Connected apps let the AI work with your real tools.",
+        "can": "Connect apps, sync data and set up webhooks.",
+        "steps": {
+          "connect": "Connect your first app",
+          "sync": "Check the sync",
+          "webhooks": "Set up webhooks"
+        }
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "what": "Ready-made templates and add-ons for your company.",
+        "why": "Start from proven setups instead of from scratch.",
+        "can": "Browse, install and manage templates.",
+        "steps": {
+          "browse": "Browse the templates",
+          "install": "Install one",
+          "installed": "See what you installed"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "what": "Your account, members, roles, security and billing.",
+        "why": "The right access keeps your company safe.",
+        "can": "Invite members, set roles and secure your account.",
+        "steps": {
+          "members": "Invite a team member",
+          "roles": "Check roles and permissions",
+          "security": "Turn on extra security"
+        }
+      }
+    }
   }
 }

@@ -1,0 +1,112 @@
+// AI Guide: per-user progress through a page's guided steps, and the questions / "do this for me" requests people
+// make from the guide panel (each linked to the AI task that answers or performs it).
+
+enum GuideRequestKind {
+  EXPLAIN
+  GUIDE
+  NEXT
+  RECOMMEND
+  ASK
+  DO
+}
+
+/// One person's progress through the guided steps of one page (registry key, e.g. "crm" or "crm.deal").
+model GuideProgress {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  pageKey        String    @map("page_key")
+  /// Step keys the person marked done.
+  completedSteps String[]  @map("completed_steps")
+  /// The step the person was on when they left (resume point).
+  currentStep    String?   @map("current_step")
+  dismissedAt    DateTime? @map("dismissed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId, pageKey])
+  @@index([organizationId, companyId, userId])
+  @@map("guide_progress")
+}
+
+/// A question or "do this for me" request asked from the guide panel, answered by an AI task.
+model GuideRequest {
+  id             String           @id @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  kind           GuideRequestKind
+  pageKey        String           @map("page_key")
+  /// App path (without locale) the request was made from.
+  path           String
+  stepKey        String?          @map("step_key")
+  question       String?
+  /// { questionKey: answer } from the "do this for me" conversation.
+  answers        Json             @default("{}")
+  profile        String
+  /// The AI task that answers / performs the request.
+  taskId         String?          @map("task_id") @db.Uuid
+  subjectType    String           @map("subject_type")
+  subjectId      String           @map("subject_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, companyId, userId, pageKey, createdAt])
+  @@index([taskId])
+  @@map("guide_requests")
+}
+
+enum CommandMessageRole {
+  USER
+  ASSISTANT
+}
+
+/// AI Command: one conversation of commands a person gave the company's AI employees.
+model CommandSession {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages CommandMessage[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, userId, updatedAt])
+  @@map("command_sessions")
+}
+
+/// A command (USER) or one AI employee's assignment for it (ASSISTANT, linked to the agent task doing the work).
+model CommandMessage {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  sessionId      String             @map("session_id") @db.Uuid
+  role           CommandMessageRole
+  content        String
+  /// Intent the router matched (e.g. "prospecting", "fallback").
+  intent         String?
+  profile        String?
+  aiEmployeeId   String?            @map("ai_employee_id") @db.Uuid
+  taskId         String?            @map("task_id") @db.Uuid
+  /// Error reason when the task could not be created (e.g. ai_not_configured).
+  errorReason    String?            @map("error_reason")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  session CommandSession @relation(fields: [sessionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([taskId])
+  @@map("command_messages")
+}

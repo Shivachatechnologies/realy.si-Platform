@@ -294,6 +294,7 @@ model ProductInitiative {
   id             String            @id @default(uuid(7)) @db.Uuid
   organizationId String            @map("organization_id") @db.Uuid
   companyId      String            @map("company_id") @db.Uuid
+  productId      String?           @map("product_id") @db.Uuid
   title          String
   description    String?
   /// "2026-Q4".
@@ -304,6 +305,7 @@ model ProductInitiative {
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company  Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product  Product?         @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
   features ProductFeature[]
 
   @@unique([id, companyId])
@@ -313,28 +315,34 @@ model ProductInitiative {
 
 /// A product feature with its spec, roadmap placement, release and RICE prioritization inputs.
 model ProductFeature {
-  id             String            @id @default(uuid(7)) @db.Uuid
-  organizationId String            @map("organization_id") @db.Uuid
-  companyId      String            @map("company_id") @db.Uuid
-  initiativeId   String?           @map("initiative_id") @db.Uuid
-  projectId      String?           @map("project_id") @db.Uuid
-  releaseId      String?           @map("release_id") @db.Uuid
-  title          String
-  spec           String?
-  status         ProductItemStatus @default(PROPOSED)
-  quarter        String?
+  id                 String            @id @default(uuid(7)) @db.Uuid
+  organizationId     String            @map("organization_id") @db.Uuid
+  companyId          String            @map("company_id") @db.Uuid
+  productId          String?           @map("product_id") @db.Uuid
+  /// Functional requirements (markdown).
+  requirements       String?
+  /// Acceptance criteria (markdown, one per line).
+  acceptanceCriteria String?           @map("acceptance_criteria")
+  initiativeId       String?           @map("initiative_id") @db.Uuid
+  projectId          String?           @map("project_id") @db.Uuid
+  releaseId          String?           @map("release_id") @db.Uuid
+  title              String
+  spec               String?
+  status             ProductItemStatus @default(PROPOSED)
+  quarter            String?
   /// RICE: reach (people per quarter), impact (0.25–3), confidence (0–100 %), effort (person-months > 0).
-  reach          Int?
-  impact         Float?
-  confidence     Int?
-  effort         Float?
-  riceScore      Float?            @map("rice_score")
-  archivedAt     DateTime?         @map("archived_at") @db.Timestamptz(3)
-  createdById    String            @map("created_by_id") @db.Uuid
-  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  reach              Int?
+  impact             Float?
+  confidence         Int?
+  effort             Float?
+  riceScore          Float?            @map("rice_score")
+  archivedAt         DateTime?         @map("archived_at") @db.Timestamptz(3)
+  createdById        String            @map("created_by_id") @db.Uuid
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company    Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product    Product?           @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
   initiative ProductInitiative? @relation(fields: [initiativeId, companyId], references: [id, companyId], onDelete: NoAction)
   project    Project?           @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
   release    ProductRelease?    @relation(fields: [releaseId, companyId], references: [id, companyId], onDelete: NoAction)
@@ -360,6 +368,7 @@ model ProductIdea {
   id             String            @id @default(uuid(7)) @db.Uuid
   organizationId String            @map("organization_id") @db.Uuid
   companyId      String            @map("company_id") @db.Uuid
+  productId      String?           @map("product_id") @db.Uuid
   title          String
   description    String?
   status         ProductIdeaStatus @default(NEW)
@@ -371,6 +380,7 @@ model ProductIdea {
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product?          @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
   feature ProductFeature?   @relation(fields: [featureId, companyId], references: [id, companyId], onDelete: NoAction)
   votes   ProductIdeaVote[]
 
@@ -396,24 +406,28 @@ model ProductIdeaVote {
 
 /// Customer feedback, optionally tied to a CRM account/contact and to the feature it supports.
 model ProductFeedback {
-  id             String    @id @default(uuid(7)) @db.Uuid
-  organizationId String    @map("organization_id") @db.Uuid
-  companyId      String    @map("company_id") @db.Uuid
+  id             String                    @id @default(uuid(7)) @db.Uuid
+  organizationId String                    @map("organization_id") @db.Uuid
+  companyId      String                    @map("company_id") @db.Uuid
+  productId      String?                   @map("product_id") @db.Uuid
+  sentiment      ProductFeedbackSentiment?
   /// e.g. "email", "call", "support", "survey", "sales".
   source         String
   body           String
-  accountId      String?   @map("account_id") @db.Uuid
-  contactId      String?   @map("contact_id") @db.Uuid
-  featureId      String?   @map("feature_id") @db.Uuid
-  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
-  createdById    String    @map("created_by_id") @db.Uuid
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  accountId      String?                   @map("account_id") @db.Uuid
+  contactId      String?                   @map("contact_id") @db.Uuid
+  featureId      String?                   @map("feature_id") @db.Uuid
+  archivedAt     DateTime?                 @map("archived_at") @db.Timestamptz(3)
+  createdById    String                    @map("created_by_id") @db.Uuid
+  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product Product?        @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
   feature ProductFeature? @relation(fields: [featureId, companyId], references: [id, companyId], onDelete: NoAction)
 
   @@index([companyId, createdAt])
   @@index([featureId])
+  @@index([productId, createdAt])
   @@map("product_feedback")
 }
 
@@ -427,6 +441,7 @@ model ProductRelease {
   id             String               @id @default(uuid(7)) @db.Uuid
   organizationId String               @map("organization_id") @db.Uuid
   companyId      String               @map("company_id") @db.Uuid
+  productId      String?              @map("product_id") @db.Uuid
   /// Semantic version, e.g. "1.4.0".
   version        String
   name           String?
@@ -440,10 +455,11 @@ model ProductRelease {
   updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company  Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  product  Product?         @relation(fields: [productId, companyId], references: [id, companyId], onDelete: NoAction)
   features ProductFeature[]
 
   @@unique([id, companyId])
-  @@unique([companyId, version])
+  @@unique([companyId, productId, version])
   @@index([companyId, publishedAt])
   @@map("product_releases")
 }

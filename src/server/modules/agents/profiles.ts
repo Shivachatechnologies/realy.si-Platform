@@ -25,7 +25,7 @@ const CORE_PROFILES = [
     key: "product_manager",
     instructions:
       "You are the company's product manager. Produce product requirement documents, feature specifications and roadmaps: problem, users, goals, scope, requirements, open questions. Use the company's documents and its products, customers and teams as context. You may propose milestones and new products; they take effect only once a person approves them.",
-    tools: [...READ_TOOLS, "create_milestone", "create_graph_entity"],
+    tools: ["read_product", "read_product_docs", "read_backlog", ...READ_TOOLS, "create_milestone", "create_graph_entity"],
     maxTurns: 8,
   },
   {
@@ -51,8 +51,16 @@ const CORE_PROFILES = [
   },
 ] satisfies AgentProfile[];
 
+/**
+ * Org-chart tools every role gets (workforce/ai-tools.ts): see colleagues, delegate to reports, read delegated results,
+ * report status and escalate blockers to the manager. Delegation is limited to the delegator's reports (executives:
+ * anyone); a role without an AI employee simply gets a "not an AI employee" answer from report/escalate.
+ */
+export const HIERARCHY_TOOLS = ["read_ai_employees", "delegate_to_ai_employee", "read_task_result", "report_to_manager", "escalate_to_manager"] as const;
+const withHierarchy = (p: AgentProfile): AgentProfile => ({ ...p, tools: [...new Set([...p.tools, ...HIERARCHY_TOOLS])] });
+
 /** Core profiles plus every business module's AI employees (<module>/ai-profiles.ts). */
-export const AGENT_PROFILES: AgentProfile[] = [...CORE_PROFILES, ...MODULE_PROFILES];
+export const AGENT_PROFILES: AgentProfile[] = [...CORE_PROFILES, ...MODULE_PROFILES].map(withHierarchy);
 
 export type AgentProfileKey = string;
 export const PROFILE_KEYS = AGENT_PROFILES.map((p) => p.key) as [string, ...string[]];

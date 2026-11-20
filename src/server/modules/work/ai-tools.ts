@@ -4,6 +4,7 @@ import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { createRisk, getWorkProject, listWorkProjects, parseProjectFilters } from "./projects";
 import { getSprint, projectAgile } from "./agile";
 import { createWorkTask, myTasks, PRIORITIES, TASK_STATUSES, updateWorkTask, workload } from "./tasks";
+import { PRODUCT_TOOLS } from "./product-ai-tools";
 
 /** AI tools of the work module, registered in src/server/modules/tools/modules.ts. */
 
@@ -265,4 +266,5 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
       return { content: `Added risk "${r.title}" to the register.`, records: [`project_risk:${r.id}`] };
     },
   }),
+  ...PRODUCT_TOOLS,
 };
