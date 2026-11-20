@@ -1,6 +1,7 @@
 import "server-only";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatMoney } from "@/i18n/format";
@@ -31,6 +32,8 @@ const INTRO_NEXT: Record<FinanceTab, string | undefined> = {
   budgets: "/reports",
   vendors: "/bills",
   cashflow: "/start?flow=profit",
+  alerts: "/cashflow",
+  learn: "/start",
   accounting: "/reports",
   reports: "/start?flow=profit",
   settings: "/start",
@@ -46,10 +49,14 @@ export async function financePage(active: FinanceTab, title?: string) {
   const { viewer, org, company } = await requireOrgContext(locale);
   const tabs = <FinanceTabs locale={locale} active={active} t={t} />;
   const header = (
-    <div className="grid gap-1">
-      <h1 className="text-lg font-semibold tracking-tight">{title ?? t("modules.finance.title")}</h1>
-      {title ? null : <p className="text-muted-foreground">{t("finance.subtitle")}</p>}
-    </div>
+    <PageHeader
+      variant="editorial"
+      world="finance"
+      eyebrow={title ? t("modules.finance.title") : t(`finance.tabs.${active}`)}
+      title={title ?? t("modules.finance.title")}
+      description={title ? undefined : t("finance.subtitle")}
+      illustration={active === "dashboard" && !title ? undefined : false}
+    />
   );
   const frame = (children: ReactNode) => (
     <div className="mx-auto grid max-w-[1400px] gap-4">

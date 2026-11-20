@@ -733,7 +733,10 @@
       "support_feedback_exists": "此工单已作为该产品的反馈。",
       "work_deliverable_needs_link": "提交前请添加成果链接。",
       "work_deliverable_not_submitted": "只有已提交的交付成果才能审核。",
-      "work_deliverables_full": "一个项目最多可有 300 项交付成果。"
+      "work_deliverables_full": "一个项目最多可有 300 项交付成果。",
+      "hr_plan_state": "该计划岗位无法变更为此状态。",
+      "hr_plan_has_job": "该岗位已有职位，请取消而不是删除。",
+      "hr_doc_field": "请填写此信函所需的信息。"
     }
   },
   "onboarding": {
@@ -2915,7 +2918,11 @@
       "set_ad_budget": "调整广告预算",
       "set_ad_campaign_status": "启用或暂停广告活动",
       "reply_to_comment": "回复评论",
-      "send_influencer_outreach": "发送达人邀约"
+      "send_influencer_outreach": "发送达人邀约",
+      "read_workforce_plan": "读取人力规划",
+      "propose_planned_role": "提议计划岗位",
+      "read_financial_alerts": "读取财务警报",
+      "read_money_flow": "读取资金流"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -3906,7 +3913,10 @@
         "proposal_accepted": "方案已被接受：{title}",
         "proposal_declined": "方案已被拒绝：{title}",
         "proposal_expired": "方案已过期：{title}",
-        "sales_task_assigned": "分配给您的销售任务：{title}"
+        "sales_task_assigned": "分配给您的销售任务：{title}",
+        "outreach_pending": "有邮件待批准：{title}",
+        "sequence_replied": "已回复——序列已停止：{title}",
+        "sequence_failed": "序列邮件无法发送：{title}"
       },
       "finance": {
         "invoice_paid": "发票已付款：{title}",
@@ -3917,7 +3927,10 @@
         "approval_rejected": "已驳回：{title}",
         "bill_overdue": "账单逾期：{title}",
         "budget_warning": "预算已使用 80%：{title}",
-        "budget_exceeded": "预算超支：{title}"
+        "budget_exceeded": "预算超支：{title}",
+        "runway_low": "现金跑道正在变短：{title}",
+        "runway_critical": "现金跑道严重不足：{title}",
+        "cash_negative_forecast": "预测显示现金将耗尽：{title}"
       },
       "hr": {
         "candidate_applied": "新申请：{title}",
@@ -3930,7 +3943,8 @@
         "policy_published": "待确认制度：{title}",
         "request_created": "新的人事申请：{title}",
         "request_updated": "您的人事申请已回复：{title}",
-        "payslip_available": "您的工资单已可查看：{title}"
+        "payslip_available": "您的工资单已可查看：{title}",
+        "headcount_approved": "计划岗位已批准：{title}"
       },
       "comms": {
         "announcement": "新公告：{title}",
@@ -4117,7 +4131,12 @@
       "dashboard": "仪表板",
       "import": "导入与导出",
       "settings": "设置",
-      "proposals": "报价方案"
+      "proposals": "报价方案",
+      "today": "今日",
+      "discover": "寻找线索",
+      "outreach": "外联",
+      "sequences": "跟进序列",
+      "meetings": "会议"
     },
     "accountTypes": {
       "PROSPECT": "潜在客户",
@@ -4714,6 +4733,36 @@
         "why": "让客户满意是成本最低的增长方式。",
         "can": "查看每个客户及其人员、交易和历史。",
         "next": "寻找新客户（引导）"
+      },
+      "today": {
+        "what": "你的销售待办清单：每个未结线索和商机的最佳下一步。",
+        "why": "销售靠在对的时机跟进——这份清单确保不会遗漏。",
+        "can": "一键完成每一步。邮件只会生成草稿，发送前由你批准。",
+        "next": "查看待批准的邮件"
+      },
+      "discover": {
+        "what": "描述你的目标客户，我们在网上搜索匹配的企业。",
+        "why": "新客户始于一份合适的联系人名单。",
+        "can": "查看带来源的真实搜索结果，把合适的转为线索。",
+        "next": "前往你的线索"
+      },
+      "outreach": {
+        "what": "发给线索和客户的个性化邮件——由你撰写或由 AI 起草。",
+        "why": "简短、个性化的邮件是开启对话最快的方式。",
+        "can": "起草、编辑、批准并通过你自己已连接的邮箱发送。未经批准不会发送任何内容。",
+        "next": "设置自动跟进"
+      },
+      "sequences": {
+        "what": "跟进序列是一组按计划发送的跟进邮件和提醒。",
+        "why": "大多数商机需要多次跟进；序列替你记住。",
+        "can": "写一次步骤，添加联系人，对方一回复就自动停止。",
+        "next": "查看待批准的邮件"
+      },
+      "meetings": {
+        "what": "你与线索、联系人或商机预约的所有销售会议。",
+        "why": "会议是推动商机的关键——提前准备并记录约定事项。",
+        "can": "下载日历文件，带备注完成会议或取消会议。",
+        "next": "返回今日行动"
       }
     },
     "smartEmpty": {
@@ -4753,6 +4802,453 @@
         "primary": "开始销售",
         "ai": "让 AI 做调研"
       }
+    },
+    "rev": {
+      "connect": "前往集成页面连接",
+      "working": "处理中…",
+      "save": "保存",
+      "cancel": "取消",
+      "edit": "编辑",
+      "readOnly": "你可以查看，但只有负责销售的人员可以在此修改。",
+      "channels": {
+        "mailbox_gmail": "你的 Gmail",
+        "mailbox_outlook": "你的 Outlook 邮箱",
+        "sendgrid": "SendGrid",
+        "google_calendar": "Google 日历",
+        "outlook_calendar": "Outlook 日历"
+      },
+      "engine": {
+        "title": "你的销售引擎",
+        "research": "网络调研",
+        "ai": "AI 撰写与评分",
+        "email": "发送邮件",
+        "calendar": "日历邀请",
+        "on": "已开启 · {detail}",
+        "off": {
+          "research": "未连接——连接 Tavily、Exa 或 SerpApi 以寻找和调研线索。",
+          "ai": "未连接——连接 OpenAI 或 Gemini，让 AI 起草邮件并为线索评分。",
+          "email": "未连接——连接 Gmail、Outlook 或 SendGrid 以发送邮件。",
+          "calendar": "未连接——会议会被保存，并改为提供日历文件。"
+        }
+      },
+      "today": {
+        "eyebrow": "收入引擎",
+        "title": "今日",
+        "subtitle": "每个未结线索和商机的最佳下一步，最紧急的排在前面。",
+        "forecast": "加权预测",
+        "forecastHint": "每个未结商机 × 其赢单概率 · {deals, plural, other {# 个商机}}共 {open}",
+        "approvals": "待批准",
+        "approvalsHint": "等你检查并发送的邮件",
+        "meetings": "本周会议",
+        "meetingsHint": "未来 7 天与客户预约的会议",
+        "followUps": "到期跟进",
+        "followUpsHint": "明天前到期 · {enrolled} 人在序列中",
+        "otherCurrency": "{count, plural, other {# 个其他币种的商机}}未计入预测。",
+        "listTitle": "下一步做什么",
+        "listHint": "基于你的真实记录：负责人、邮件、跟进、回复、会议和报价。",
+        "everyone": "所有人",
+        "mine": "我的",
+        "filter": "显示",
+        "filters": {
+          "all": "全部",
+          "lead": "线索",
+          "deal": "商机"
+        },
+        "types": {
+          "lead": "线索",
+          "deal": "商机"
+        },
+        "focus": "今日重点",
+        "upcoming": "即将到来",
+        "allClear": "目前这里没有待办。",
+        "emptyTitle": "全部完成",
+        "emptyText": "目前没有需要处理的未结线索或商机。添加新线索，让销售持续推进。",
+        "emptyDiscover": "寻找新线索",
+        "emptyAdd": "添加线索"
+      },
+      "nba": {
+        "title": "最佳下一步",
+        "description": "什么最能推动进展，以及原因。",
+        "none": "没有紧急事项——这条记录状态良好。",
+        "open": "打开",
+        "doIt": "执行",
+        "draftIt": "用 AI 起草",
+        "draftNote": "已保存为草稿等待你批准——尚未发送。",
+        "writeYourself": "撰写邮件",
+        "reviewDraft": "查看草稿",
+        "more": "{count, plural, other {另有 # 条建议}}",
+        "priority": {
+          "1": "今天",
+          "2": "尽快",
+          "3": "有空时"
+        },
+        "done": {
+          "assigned": "现在由你负责。",
+          "enriched": "调研已保存。",
+          "qualified": "AI 评估已保存。",
+          "follow_up": "已设置 2 天后的提醒。",
+          "drafted": "草稿已保存待批准。"
+        },
+        "kinds": {
+          "assign_me": {
+            "title": "认领负责",
+            "why": "目前没有负责人，所以没人会跟进。"
+          },
+          "add_email": {
+            "title": "补充邮箱或电话",
+            "why": "你还无法联系到此人。调研没有找到联系方式。"
+          },
+          "enrich": {
+            "title": "调研这家公司",
+            "why": "还没有联系方式——网络调研也许能找到他们是谁以及如何联系。"
+          },
+          "first_email": {
+            "title": "发送第一封邮件",
+            "why": "你有对方的邮箱但尚未联系。一封简短的个人邮件就能开启对话。"
+          },
+          "overdue_follow_up": {
+            "title": "逾期跟进：{note}",
+            "why": "你答应过跟进，日期已过。"
+          },
+          "approve_email": {
+            "title": "批准待发邮件",
+            "why": "这条记录有一封邮件已准备好，等待你确认。"
+          },
+          "qualify": {
+            "title": "判断线索是否合适",
+            "why": "你们已经沟通过，但还没决定是否值得跟进。AI 可根据已知信息评估匹配度。"
+          },
+          "follow_up_email": {
+            "title": "跟进——已沉寂 {days} 天",
+            "why": "一周或更久没有联系。简短跟进能让对方记得你。"
+          },
+          "convert": {
+            "title": "将线索转为商机",
+            "why": "线索已合格。转化会创建联系人、公司和商机，方便跟踪销售。"
+          },
+          "plan_follow_up": {
+            "title": "规划下一步",
+            "why": "没有安排跟进。设置提醒，避免冷场。"
+          },
+          "reengage": {
+            "title": "重新开启对话",
+            "why": "已经沉寂很久（{days} 天）。轻松的问候可能让它重新活跃。"
+          },
+          "set_close_date": {
+            "title": "设置预计成交日期",
+            "why": "没有日期，这个商机无法按月计入预测。"
+          },
+          "close_date_passed": {
+            "title": "成交日期已过",
+            "why": "更新日期，或将商机标记为赢单或输单，让预测保持真实。"
+          },
+          "book_meeting": {
+            "title": "预约会议",
+            "why": "没有安排会议。通话通常是推进商机最快的方式。"
+          },
+          "prepare_meeting": {
+            "title": "准备：{title}",
+            "why": "这场会议在 2 天内。回顾历史和目标。"
+          },
+          "create_proposal": {
+            "title": "发送报价",
+            "why": "这个商机赢单可能性已足够，是时候提交书面报价了。"
+          },
+          "proposal_follow_up": {
+            "title": "跟进你的报价",
+            "why": "报价已发送超过 3 天，尚无决定。"
+          }
+        }
+      },
+      "score": {
+        "title": "为什么是这个分数",
+        "description": "线索评分是简单信号的累加，没有隐藏公式。",
+        "note": "热 ≥ 70 · 温 ≥ 45 · 更低：培育（保持联系）。",
+        "base": "起始分",
+        "workEmail": "工作邮箱",
+        "personalEmail": "个人邮箱（工作邮箱得分更高）",
+        "noEmail": "尚无邮箱",
+        "phone": "电话号码",
+        "company": "已知公司名称",
+        "value": "已填写预估价值",
+        "notesLong": "详细备注",
+        "notesSome": "部分备注",
+        "notesShort": "简短备注",
+        "noNotes": "尚无备注",
+        "stage": "管道中的进展",
+        "lostCap": "已输线索最高 30 分",
+        "cap": "最高 100 分"
+      },
+      "intel": {
+        "enrichTitle": "公司调研",
+        "enrichDescription": "在网上找到的事实，每条都附来源。",
+        "enrichEmpty": "尚无调研。点击调研在网上查找这家公司。",
+        "researchMissing": "网络调研未连接，暂时无法查找。",
+        "enrich": "调研",
+        "enrichAgain": "重新调研",
+        "qualTitle": "AI 匹配度评估",
+        "qualDescription": "AI 评估这个线索成为客户的可能性并说明原因。",
+        "qualEmpty": "尚未评估。AI 只使用这条记录及其调研中的信息。",
+        "aiMissing": "未连接 AI 写作服务，AI 暂时无法为该线索评分。",
+        "qualify": "评估匹配度",
+        "qualifyAgain": "重新评估",
+        "apply": "采用这些答案",
+        "ask": "向线索提问",
+        "noFacts": "AI 在来源中没有找到明确事实——请阅读下方来源。",
+        "sourcesOnly": "连接 AI 写作服务，把这些来源整理成简短事实。",
+        "sources": "{count, plural, other {# 个来源}}",
+        "source": "来源",
+        "by": "来自 {provider} · {date}",
+        "verdicts": {
+          "qualified": "非常匹配",
+          "nurture": "暂不——保持联系",
+          "disqualify": "不匹配",
+          "need_info": "需要更多信息"
+        }
+      },
+      "discover": {
+        "eyebrow": "线索发现",
+        "title": "寻找新线索",
+        "subtitle": "告诉我们你的理想客户是谁。我们在网上搜索并展示真实企业——由你决定联系谁。",
+        "audience": "你卖给谁？",
+        "audienceHint": "尽量具体：企业类型、规模或需求。",
+        "audiencePlaceholder": "例如：提供餐饮外包的独立烘焙店",
+        "location": "在哪里？（可选）",
+        "locationPlaceholder": "例如：上海",
+        "extra": "还有其他要求？（可选）",
+        "extraPlaceholder": "例如：最近开业",
+        "search": "网络搜索",
+        "searching": "搜索中…",
+        "honest": "只显示调研服务返回的真实结果，绝不编造。",
+        "noProvider": "要搜索线索，请连接调研服务（Tavily、Exa 或 SerpApi）。",
+        "results": "{count, plural, =0 {没有结果} other {# 条结果}}",
+        "resultsMeta": "“{query}” · {provider} · {date} · {fresh} 条未处理",
+        "noResults": "搜索没有返回结果。试试换一种方式描述你的客户。",
+        "next": "下一步：打开新线索，点击“调研”了解更多，或点击“用 AI 起草”撰写第一封邮件。",
+        "added": "已添加",
+        "dismissed": "已忽略",
+        "known": "这家公司可能已经是你的线索",
+        "openLead": "打开线索",
+        "addAsLead": "添加为线索",
+        "dismiss": "不合适",
+        "create": "创建线索",
+        "emailIfKnown": "邮箱（仅在已知时填写）",
+        "history": "以往搜索",
+        "historyEmpty": "你的搜索会显示在这里。",
+        "historyMeta": "{results} 条结果 · 已添加 {added} · {date}"
+      },
+      "outreach": {
+        "eyebrow": "个性化外联",
+        "title": "外联",
+        "subtitle": "撰写或用 AI 起草个性化邮件，检查后通过你已连接的邮箱发送。",
+        "queue": "邮件",
+        "compose": "新邮件",
+        "to": "收件人",
+        "noRecipients": "还没有带邮箱的线索或联系人",
+        "groups": {
+          "lead": "线索",
+          "contact": "联系人"
+        },
+        "aiTitle": "让 AI 写草稿",
+        "goal": "邮件的目的？",
+        "goals": {
+          "first_touch": "初次问候",
+          "follow_up": "跟进",
+          "book_meeting": "约会议",
+          "proposal_follow_up": "跟进报价",
+          "re_engage": "重启沉寂的对话",
+          "thank_you": "会后致谢"
+        },
+        "tone": "语气",
+        "tones": {
+          "friendly": "友好",
+          "formal": "正式",
+          "short": "非常简短"
+        },
+        "guidance": "需要 AI 提到什么吗？（可选）",
+        "guidancePlaceholder": "例如：提到我们的春季优惠",
+        "draftWithAi": "用 AI 起草",
+        "drafting": "撰写中…",
+        "aiNote": "AI 只使用记录中的信息。发送前由你检查。",
+        "aiMissing": "连接 OpenAI 或 Gemini 后 AI 才能起草邮件。你仍可自己撰写。",
+        "writeYourself": "自己撰写",
+        "subject": "主题",
+        "body": "正文",
+        "saveDraft": "保存草稿",
+        "saveForApproval": "保存并申请批准",
+        "savedNote": "已保存。可在下方或外联页面找到——在有人批准前不会发送。",
+        "recordTitle": "邮件",
+        "recordDescription": "此人的草稿、待批准和已发送邮件。",
+        "needEmail": "请先为这条记录添加邮箱地址。",
+        "noChannel": "未连接邮箱账号，邮件只能起草不能发送。请连接 Gmail、Outlook 或 SendGrid。",
+        "status": {
+          "DRAFT": "草稿",
+          "PENDING_APPROVAL": "待批准",
+          "SENT": "已发送",
+          "FAILED": "未发送",
+          "CANCELLED": "已丢弃"
+        },
+        "empty": {
+          "DRAFT": "没有草稿。",
+          "PENDING_APPROVAL": "没有待批准的邮件。",
+          "SENT": "还没有发送邮件。",
+          "FAILED": "没有发送失败的邮件。",
+          "CANCELLED": "没有丢弃的邮件。"
+        },
+        "aiDrafted": "AI 草稿",
+        "fromSequence": "{name} · 第 {step} 步",
+        "sentVia": "通过{channel}发送",
+        "approveSend": "批准并发送",
+        "confirmSend": "现在将这封邮件原样发送给 {email}？",
+        "askApproval": "申请批准",
+        "discard": "丢弃",
+        "skipStep": "跳过此步",
+        "kpi": {
+          "pending": "待批准",
+          "pendingHint": "优先检查并发送这些",
+          "sent": "已发送（30 天）",
+          "sentHint": "发给 {people, plural, other {# 人}}",
+          "replies": "回复（30 天）",
+          "repliesHint": "在已连接的收件箱中看到",
+          "rate": "回复率",
+          "rateHint": "回复人数 ÷ 发信人数"
+        }
+      },
+      "seq": {
+        "eyebrow": "自动跟进",
+        "title": "跟进序列",
+        "subtitle": "按计划运行的跟进，对方一回复就停止。",
+        "yours": "你的序列",
+        "empty": "还没有序列。从旁边的示例开始——修改文字即可。",
+        "new": "新建序列",
+        "newHint": "我们填好了一个简单的 4 步示例。把文字改成你的风格。",
+        "name": "名称",
+        "namePlaceholder": "例如：新线索跟进",
+        "description": "简短描述（可选）",
+        "stopOnReply": "对方回复时停止（需要连接 Gmail 或 Outlook 收件箱才能看到回复）",
+        "mergeHint": "可使用 '{{firstName}}'、'{{name}}'、'{{company}}' 和 '{{sender}}' 个性化——会为每个人自动填入。",
+        "kind": "步骤",
+        "kinds": {
+          "EMAIL": "邮件",
+          "TASK": "给你的提醒"
+        },
+        "wait": "等待（天）",
+        "waitDays": "等待 {count, plural, other {# 天}}",
+        "dayN": "第 {day} 天",
+        "up": "上移",
+        "down": "下移",
+        "remove": "删除步骤",
+        "taskNote": "你需要做什么？",
+        "addStep": "添加步骤",
+        "create": "创建序列",
+        "status": {
+          "DRAFT": "未开始",
+          "ACTIVE": "运行中",
+          "PAUSED": "已暂停",
+          "ARCHIVED": "已归档"
+        },
+        "autoBadge": "自动发送",
+        "reviewBadge": "每封邮件由你批准",
+        "stepsCount": "{count, plural, other {# 个步骤}}",
+        "listMeta": "{active} 进行中 · {replied} 已回复 · {completed} 已完成",
+        "back": "全部序列",
+        "stopsOnReply": "回复即停止",
+        "notRunning": "此序列未运行。启动前不会给任何人发邮件。",
+        "replyNeedsMailbox": "要在回复时停止，我们需要能看到回复：请在集成中连接 Gmail 或 Outlook 收件箱。",
+        "steps": "步骤",
+        "run": "启动或停止",
+        "autoSend": "自动发送邮件",
+        "autoSendHint": "开启此项并启动，即表示你批准这些文字——之后每封邮件将按计划发送，不再询问。保持关闭则逐封批准。",
+        "autoSendNoChannel": "请先连接邮箱账号。在此之前，每封邮件都会等待你批准。",
+        "confirmAuto": "将使用这些文字自动发送邮件。现在启动？",
+        "activate": "启动序列",
+        "pause": "暂停",
+        "archive": "归档",
+        "confirmArchive": "归档此序列？其中所有人都会停止，待发邮件将被丢弃。",
+        "addPeople": "添加联系人",
+        "searchPeople": "搜索线索和联系人",
+        "noPeople": "没有匹配且带邮箱的联系人。",
+        "enroll": "添加 {count, plural, =0 {联系人} other {# 人}}",
+        "enrolled": "已添加 {enrolled} 人。跳过 {skipped} 人（已在序列中或没有邮箱）。",
+        "people": "此序列中有 {count, plural, other {# 人}}",
+        "nobody": "还没有人。请在上方添加。",
+        "progress": "第 {done} / {total} 步",
+        "nextAt": "下次 {date}",
+        "waitingApproval": "等待批准",
+        "enrollStatus": {
+          "ACTIVE": "进行中",
+          "PAUSED": "已暂停",
+          "COMPLETED": "已完成",
+          "REPLIED": "已回复",
+          "STOPPED": "已停止",
+          "FAILED": "发送失败"
+        },
+        "stop": "移除",
+        "recordTitle": "跟进序列",
+        "recordDescription": "此人所在的自动跟进。",
+        "noneActive": "还没有运行中的序列。",
+        "pick": "序列",
+        "start": "开始",
+        "enrolledOne": "已加入序列。",
+        "alreadyIn": "已在此序列中（或没有邮箱）。",
+        "manage": "管理序列",
+        "starter": {
+          "s1": "'{{firstName}}'，想请教一个问题",
+          "b1": "'{{firstName}}' 您好：\n\n我了解到 '{{company}}'，想亲自和您联系。我们帮助像您这样的企业节省那些占用客户时间的工作。\n\n下周简短通个电话方便吗？\n\n祝好，\n'{{sender}}'",
+          "s2": "跟进一下",
+          "b2": "'{{firstName}}' 您好：\n\n把我之前的邮件提到您收件箱顶部。如果更方便，我也可以发一份简短介绍代替通话。\n\n'{{sender}}'",
+          "t3": "给 '{{firstName}}' 打电话或在 LinkedIn 上联系",
+          "s4": "需要我先结束这个话题吗？",
+          "b4": "'{{firstName}}' 您好：\n\n一直没有收到回复，我先暂停跟进。如果时机有变，直接回复这封邮件即可。\n\n祝一切顺利，\n'{{sender}}'"
+        }
+      },
+      "meet": {
+        "eyebrow": "客户会议",
+        "pageTitle": "会议",
+        "subtitle": "与线索、联系人或商机预约的所有会议。新会议请在对方页面预约。",
+        "recordTitle": "会议",
+        "recordDescription": "预约通话或拜访并保存备注。",
+        "defaultTitle": "与{name}的会议",
+        "bookNew": "预约会议",
+        "title": "标题",
+        "when": "时间",
+        "duration": "时长",
+        "minutes": "{count} 分钟",
+        "location": "地点",
+        "locationPlaceholder": "视频链接、电话或地址",
+        "agenda": "议程（可选）",
+        "willAdd": "将添加到{calendar}，并把客户设为嘉宾。",
+        "noCalendar": "未连接日历：会议会被保存，你可以下载日历文件自行发送。不会自动邀请任何人。",
+        "book": "预约会议",
+        "result": {
+          "added": "已预约并添加到你的日历。",
+          "not_connected": "已预约。未连接日历——下载日历文件即可分享。",
+          "failed": "已预约，但你的日历拒绝了它。请在会议中重试。",
+          "skipped": "已预约。"
+        },
+        "status": {
+          "SCHEDULED": "已计划",
+          "COMPLETED": "已完成",
+          "CANCELLED": "已取消"
+        },
+        "onCalendar": "已在你的日历中",
+        "onCalendarGuest": "已在你的日历中 · 嘉宾：{email}",
+        "notOnCalendar": "未添加到日历——没有自动邀请任何人",
+        "calendarFailed": "你的日历拒绝了这场会议",
+        "ics": "日历文件",
+        "done": "标记完成",
+        "cancel": "取消会议",
+        "confirmCancel": "取消这场会议？（不会自动通知客户。）",
+        "retry": "添加到日历",
+        "notes": "会议备注",
+        "notesPlaceholder": "约定了什么？下一步是什么？",
+        "saveDone": "保存为已完成",
+        "none": "没有已计划的会议。",
+        "upcoming": "即将到来（{count}）",
+        "emptyUpcoming": "没有已计划的会议。打开线索、联系人或商机，点击“预约会议”。",
+        "past": "更早"
+      },
+      "customersEyebrow": "客户关系"
     }
   },
   "plans": {
@@ -11024,7 +11520,9 @@
       "payables": "应付账款",
       "approvals": "审批",
       "claims": "费用报销",
-      "start": "从这里开始"
+      "start": "从这里开始",
+      "alerts": "警报",
+      "learn": "术语学习"
     },
     "accounting": {
       "tabs": {
@@ -11645,7 +12143,9 @@
       "byVendor": "按供应商",
       "byCostCenter": "按成本中心",
       "noVendor": "无供应商",
-      "noCostCenter": "无成本中心"
+      "noCostCenter": "无成本中心",
+      "learnHint": "第一次看这些报表？",
+      "learnLink": "了解每一行的含义"
     },
     "settings": {
       "documents": "单据与付款期限",
@@ -11947,6 +12447,18 @@
         "why": "正确的设置让每份单据都准确。",
         "can": "更改公司的默认设置。",
         "next": "返回引导任务"
+      },
+      "alerts": {
+        "what": "现在需要你关注的资金警告。",
+        "why": "逾期付款、跑道缩短或预算超支，越早处理越容易。",
+        "can": "查看每条警报及其重要性，并直接跳到解决办法。",
+        "next": "规划我的现金"
+      },
+      "learn": {
+        "what": "Realy 中用到的每个财务术语，用通俗的话解释。",
+        "why": "管理公司的钱，不需要成为会计。",
+        "can": "搜索一个词，阅读生活化的例子，并打开它所在的页面。",
+        "next": "开始引导任务"
       }
     },
     "os": {
@@ -12166,6 +12678,246 @@
       "payLinkNotConnected": "未连接支付服务商。连接 Razorpay 或 Stripe 即可创建付款链接。",
       "payLinkFailed": "支付服务商拒绝：{error}",
       "payOnline": "在线付款"
+    },
+    "flow": {
+      "title": "钱从哪里来、到哪里去",
+      "hint": "所选期间内，一侧是收入来源，另一侧是成本。带子越宽，金额越大。",
+      "whatIsThis": "这是什么？",
+      "aria": "资金流：收入 {income}，支出 {expenses}",
+      "center": "你的公司",
+      "kept": "留存利润 {amount}",
+      "lost": "支出比收入多 {amount}",
+      "empty": "此期间尚无收入或费用记录。记录一笔销售或费用后，图示就会出现在这里。",
+      "moneyIn": "资金流入",
+      "moneyOut": "资金流出",
+      "income": "收入",
+      "expense": "费用",
+      "profit": "留存利润",
+      "loss": "由储蓄弥补",
+      "other_income": "其他收入",
+      "other_expense": "其他成本"
+    },
+    "alerts": {
+      "runwayTitle": "现金跑道",
+      "runwayHint": "如果一切不变，你的钱能撑多久。",
+      "runwayLabel": "剩余现金月数",
+      "noBurn": "现金流为正",
+      "zones": {
+        "critical": "少于 3 个月",
+        "warning": "3–6 个月",
+        "healthy": "6 个月以上"
+      },
+      "runwayExplain": "跑道 = 银行现金 ÷ 最近 3 个完整月的平均月烧钱额。",
+      "historyTitle": "已发送的警报",
+      "historyHint": "系统发给财务人员的通知。",
+      "historyEmpty": "尚未发送任何现金警报。",
+      "kinds": {
+        "runway_low": "现金跑道正在变短",
+        "runway_critical": "现金跑道严重不足",
+        "cash_negative_forecast": "预测显示现金将耗尽"
+      },
+      "activeTitle": "需要关注",
+      "count": "{count, plural, =0 {无需处理} other {# 条警报}}",
+      "allClearTitle": "一切正常",
+      "allClearText": "没有逾期发票或账单，没有预算超支，跑道健康。一有变化我们会立即通知你。",
+      "planCash": "规划我的现金",
+      "runwayBody": "按目前速度，你的现金（{cash}）大约能撑 {months} 个月，因为你每月的支出比收入多 {burn}。",
+      "runwayTodo": "催收未付发票、推迟非必要支出，或在现金流预测中规划新的收入。",
+      "seeForecast": "查看预测",
+      "negativeBody": "如果未结发票、账单和经常性项目按预期到来，你的银行余额将在 {month} 降至 {amount}。",
+      "projectedLabel": "基于未结发票、账单、经常性项目和近 3 个月趋势的推算——并非事实。",
+      "overdueInvoices": "{count, plural, other {# 张客户发票已逾期}}（{amount}）",
+      "chase": "催收款项",
+      "daysLate": "{count, plural, other {逾期 # 天}}",
+      "overdueBills": "{count, plural, other {# 张供应商账单已逾期}}（{amount}）",
+      "payBills": "支付账单",
+      "budgetOver": "预算已超支：{name}",
+      "budgetNear": "预算即将用完：{name}",
+      "reviewBudget": "查看预算",
+      "budgetBody": "已花费 {actual}，预算 {budget}（{pct}%）。",
+      "howSent": "财务人员每月最多收到一次跑道和预测警报，每张逾期发票或账单一次，以及每个预算达到 80% 和 100% 时各一次。"
+    },
+    "glossary": {
+      "search": "搜索术语…",
+      "groupsLabel": "主题",
+      "tip": "提示：财务中的每个报表和图表在用到这些术语时都会链接到这里。",
+      "noMatch": "没有符合搜索的术语。",
+      "example": "例子",
+      "seeIt": "在你的公司中查看",
+      "groups": {
+        "moneyIn": "流入的钱",
+        "moneyOut": "流出的钱",
+        "bigPicture": "全局概览",
+        "planning": "提前规划",
+        "bookkeeping": "记账"
+      },
+      "terms": {
+        "revenue": {
+          "term": "收入",
+          "short": "在扣除任何成本之前，销售产品或服务赚到的全部钱。",
+          "example": "你以每个 1,000 的价格卖出 10 个网站：收入为 10,000。"
+        },
+        "invoice": {
+          "term": "发票",
+          "short": "发给客户、要求为已交付的内容付款的单据。",
+          "example": "项目完成后你开出一张 2,500 的发票，30 天内到期。"
+        },
+        "receivable": {
+          "term": "应收账款",
+          "short": "客户因尚未支付的发票而欠你的钱。",
+          "example": "三张各 1,000 的未付发票意味着 3,000 应收账款。"
+        },
+        "estimate": {
+          "term": "报价单",
+          "short": "开工前发出的价格方案；客户接受后转为发票。",
+          "example": "你为新标志报价 4,000；客户接受后转成发票。"
+        },
+        "creditNote": {
+          "term": "贷项通知单",
+          "short": "减少客户欠款的单据，例如退款或出错之后。",
+          "example": "你开票 1,200 但同意优惠 200：一张 200 的贷项通知单即可更正。"
+        },
+        "paymentLink": {
+          "term": "付款链接",
+          "short": "客户可以用银行卡在线支付发票的网页链接。",
+          "example": "你在发票邮件中加入付款链接，客户两次点击即可付款。"
+        },
+        "mrr": {
+          "term": "MRR（月度经常性收入）",
+          "short": "每月可依赖的订阅或固定服务费收入。",
+          "example": "20 位客户每月各付 50，MRR 为 1,000。"
+        },
+        "arr": {
+          "term": "ARR（年度经常性收入）",
+          "short": "一整年的经常性收入：MRR × 12。",
+          "example": "MRR 为 1,000 即 ARR 为 12,000。"
+        },
+        "expense": {
+          "term": "费用",
+          "short": "经营业务所花的钱：房租、软件、工资、差旅。",
+          "example": "每月 30 的软件订阅就是一项费用。"
+        },
+        "bill": {
+          "term": "供应商账单",
+          "short": "供应商开给你、需要你支付的发票。",
+          "example": "会计师发来一张 400 的账单，15 日到期。"
+        },
+        "payable": {
+          "term": "应付账款",
+          "short": "你因尚未支付的账单而欠供应商的钱。",
+          "example": "两张分别为 400 和 600 的未付账单意味着 1,000 应付账款。"
+        },
+        "overdue": {
+          "term": "逾期",
+          "short": "已过到期日但尚未付清的发票或账单。",
+          "example": "3 月 1 日到期、3 月 10 日仍未付的发票已逾期 9 天。"
+        },
+        "costCenter": {
+          "term": "成本中心",
+          "short": "你单独追踪支出的公司部分（通常是部门）。",
+          "example": "市场部是一个成本中心：所有广告和代理费用都记到它名下。"
+        },
+        "projectCost": {
+          "term": "项目成本",
+          "short": "在一个项目上的全部花费，与它带来的收入相比较。",
+          "example": "一个客户项目收入 10,000、成本 6,500，盈利 3,500。"
+        },
+        "profit": {
+          "term": "利润",
+          "short": "收入减去所有费用后剩下的部分。负利润即亏损。",
+          "example": "收入 10,000 减费用 7,000 = 利润 3,000。"
+        },
+        "margin": {
+          "term": "利润率",
+          "short": "利润占收入的百分比：每赚一份钱你能留下多少。",
+          "example": "收入 10,000、利润 3,000，利润率 30%。"
+        },
+        "pnl": {
+          "term": "利润表（损益表）",
+          "short": "列出一段时间的收入和费用并显示是否盈利的报表。",
+          "example": "你的 3 月利润表显示收入 12,000、费用 9,000、利润 3,000。"
+        },
+        "balanceSheet": {
+          "term": "资产负债表",
+          "short": "某一天的快照：公司拥有什么（资产）、欠什么（负债）以及所有者的份额（权益）。",
+          "example": "12 月 31 日你有现金 20,000、欠款 5,000，权益为 15,000。"
+        },
+        "asset": {
+          "term": "资产",
+          "short": "公司拥有的有价值的东西：现金、别人欠你的钱、设备。",
+          "example": "你的银行余额和买的笔记本电脑都是资产。"
+        },
+        "liability": {
+          "term": "负债",
+          "short": "公司欠下的东西：未付账单、贷款、应缴税款。",
+          "example": "一笔 10,000 的银行贷款是负债。"
+        },
+        "equity": {
+          "term": "所有者权益",
+          "short": "所有者在公司中的份额：资产减负债。",
+          "example": "资产 30,000 减负债 12,000，权益为 18,000。"
+        },
+        "cashFlow": {
+          "term": "现金流",
+          "short": "一段时间内实际流入和流出银行账户的钱。",
+          "example": "5 月流入 8,000、流出 9,500：现金流为 −1,500。"
+        },
+        "cashBalance": {
+          "term": "现金余额",
+          "short": "你此刻在银行和现金账户中有多少钱。",
+          "example": "两个账户分别有 4,000 和 6,000，现金余额为 10,000。"
+        },
+        "burnRate": {
+          "term": "烧钱速度",
+          "short": "平均每月流出比流入多出的现金。",
+          "example": "每月流出 12,000、流入 8,000，烧钱速度为 4,000。"
+        },
+        "runway": {
+          "term": "现金跑道",
+          "short": "按当前烧钱速度，你的现金还能撑几个月。",
+          "example": "银行有 40,000、每月烧 4,000，跑道为 10 个月。"
+        },
+        "budget": {
+          "term": "预算",
+          "short": "为某类别或部门在一段时间内设定的支出上限。",
+          "example": "你允许市场部每月花 2,000。"
+        },
+        "variance": {
+          "term": "差异",
+          "short": "计划（预算）与实际发生之间的差额。",
+          "example": "预算 2,000，实际 2,300：超支 300。"
+        },
+        "forecast": {
+          "term": "预测",
+          "short": "根据未结发票、账单、经常性项目和近期趋势估算的未来资金。是推算，不是事实。",
+          "example": "下月到期的未结发票预计带来 6,000 流入。"
+        },
+        "ledger": {
+          "term": "总账",
+          "short": "按科目归类的每一笔资金变动的完整清单。报表由它生成。",
+          "example": "“软件”科目列出今年的每笔软件支出。"
+        },
+        "journalEntry": {
+          "term": "会计分录",
+          "short": "一笔记录下来的资金变动，借贷两边始终相等。",
+          "example": "支付房租：房租费用增加 1,000，银行减少 1,000。"
+        },
+        "reconciliation": {
+          "term": "对账",
+          "short": "逐行核对账簿与真实银行对账单是否一致。",
+          "example": "银行显示 5,240，账簿也是 5,240：账户已对平。"
+        },
+        "tax": {
+          "term": "税（增值税 / GST / 销售税）",
+          "short": "加在价格上、向客户收取并上缴政府的税。",
+          "example": "一笔 100 的销售含 13% 增值税：客户付 113，你需缴 13。"
+        },
+        "accrual": {
+          "term": "权责发生制",
+          "short": "在收入或成本发生时记账，而不是在现金流动时。",
+          "example": "3 月完成的工作计入 3 月收入，即使客户 4 月才付款。"
+        }
+      }
     }
   },
   "hr": {
@@ -12239,7 +12991,9 @@
       "requests": "申请",
       "payroll": "薪资",
       "me": "我的人事",
-      "hire": "招聘人员"
+      "hire": "招聘人员",
+      "planning": "人力规划",
+      "documents": "文档"
     },
     "ai": {
       "analystAnswers": "人才分析师的回答",
@@ -13084,7 +13838,8 @@
       "tax": "税务",
       "certificate": "证书",
       "review": "考评",
-      "other": "其他"
+      "other": "其他",
+      "letter": "信函"
     },
     "hire": {
       "title": "招聘人员",
@@ -13424,6 +14179,18 @@
       "chart": {
         "emptyTitle": "架构图上还没有人",
         "addPeople": "添加人员"
+      },
+      "planning": {
+        "what": "你计划增加哪些岗位、何时增加以及成本多少。",
+        "why": "招聘是最大的开支——提前规划能避免现金和工作量上的意外。",
+        "can": "列出未来岗位、审批、查看每季度成本，并一键开始招聘。",
+        "next": "立即招人"
+      },
+      "documents": {
+        "what": "员工的信函和文件，集中在一处。",
+        "why": "员工经常需要正式信函，而你需要整洁的档案。",
+        "can": "根据你的数据生成信函，打开、下载或删除任何文档。",
+        "next": "打开团队名单"
       }
     },
     "empty": {
@@ -13435,6 +14202,181 @@
       "jobs": {
         "title": "没有空缺职位",
         "body": "告诉我们您需要什么样的帮手，AI 会为您撰写招聘启事。"
+      }
+    },
+    "calendar": {
+      "synced": "已在 {provider}",
+      "failed": "日历同步失败",
+      "manual": "未加入日历",
+      "downloadIcs": "添加到日历（.ics）",
+      "sendNow": "发送到日历",
+      "willSync": "面试将添加到 {provider}，并邀请候选人和面试官。",
+      "notConnected": "未连接日历：面试保存在这里，你可以用 .ics 文件将其加入任何日历。",
+      "connect": "连接 Google 或 Microsoft",
+      "providers": {
+        "google_calendar": "Google 日历",
+        "outlook_calendar": "Outlook"
+      }
+    },
+    "planning": {
+      "title": "人力规划",
+      "subtitle": "决定需要谁、什么时候需要、要花多少钱。",
+      "guide": {
+        "title": "三步规划你的团队",
+        "intro": "人力规划就是写下未来几个月需要的岗位，让招聘、资金和工作量相匹配。无需任何人事经验。",
+        "steps": {
+          "list": {
+            "title": "写下岗位",
+            "text": "每个岗位：做什么、几个人、哪个季度、大致年成本。"
+          },
+          "approve": {
+            "title": "批准负担得起的岗位",
+            "text": "把每月成本与现金跑道对照后再批准。"
+          },
+          "hire": {
+            "title": "开始招聘",
+            "text": "一键打开职位和引导式招聘流程。"
+          }
+        }
+      },
+      "stats": {
+        "today": "当前团队",
+        "planned": "计划招聘",
+        "plannedHint": "已批准 {approved} · 招聘中 {hiring}",
+        "annualCost": "计划年成本",
+        "monthlyCost": "新增月成本",
+        "monthlyHint": "这些招聘会给每月烧钱增加多少"
+      },
+      "trajectory": "团队规模变化",
+      "trajectoryHint": "当前人数加上每季度的计划招聘。",
+      "today": "今天",
+      "noQuarters": "添加一个计划岗位，看看团队如何增长。",
+      "byDepartment": "按部门",
+      "byDepartmentHint": "当前人数与计划新增。",
+      "editDepartments": "编辑部门",
+      "current": "当前",
+      "plannedLegend": "计划",
+      "noPeople": "还没有员工或计划岗位。",
+      "roles": "计划岗位",
+      "rolesHint": "按应开始的季度分组。",
+      "status": {
+        "PLANNED": "已计划",
+        "APPROVED": "已批准",
+        "HIRING": "招聘中",
+        "FILLED": "已到岗",
+        "CANCELLED": "已取消"
+      },
+      "priority": {
+        "LOW": "低",
+        "MEDIUM": "中",
+        "HIGH": "高",
+        "CRITICAL": "紧急"
+      },
+      "perYear": "每人每年 {amount}",
+      "hiredOf": "已招 {hired}/{total}",
+      "openHiring": "打开招聘流程",
+      "approve": "批准",
+      "startHiring": "开始招聘",
+      "starting": "正在打开…",
+      "cancel": "取消",
+      "confirmCancel": "取消这个计划岗位？",
+      "empty": "还没有计划岗位。在下方添加第一个。",
+      "add": "添加计划岗位",
+      "addSubmit": "加入计划",
+      "fields": {
+        "title": "岗位",
+        "titlePlaceholder": "例如：客户支持专员",
+        "headcount": "人数",
+        "targetStart": "大约开始时间",
+        "targetStartHint": "保存为该季度的第一天。",
+        "priority": "优先级",
+        "annualCost": "每人年成本（{currency}）",
+        "annualCostHint": "工资再加约 20–30% 的税费和福利。大概的数字即可。",
+        "reason": "为什么需要这个岗位？",
+        "reasonPlaceholder": "例如：支持工单翻倍，回复需要 2 天。"
+      },
+      "ai": {
+        "title": "帮我规划",
+        "hint": "AI 人才分析师会审阅你的团队、在招职位和本计划，并建议下一步招谁。",
+        "guidance": "有什么需要它知道的吗？（可选）",
+        "placeholder": "例如：我们计划明年春天进入德国市场。",
+        "run": "审阅我的计划",
+        "results": "计划审阅",
+        "resultsHint": "来自 AI 人才分析师的建议——由你决定添加什么。"
+      }
+    },
+    "documents": {
+      "title": "人事文档",
+      "subtitle": "生成正式信函，并把每位员工的文件集中存放。",
+      "generateTitle": "生成信函",
+      "generateHint": "选择员工和信函类型，我们会根据其档案自动填写。",
+      "honest": "信函根据 Realy 中的数据生成，并保存在员工文档中。不会自动发送——分享前请审阅、打印并签字。",
+      "libraryTitle": "全部文档",
+      "libraryHint": "已为员工保存 {count, plural, other {# 份文档}}。",
+      "all": "全部",
+      "searchPlaceholder": "按文档或人员搜索",
+      "noMatch": "没有匹配的文档。",
+      "empty": "还没有文档。生成一封信函，或在员工档案中上传文件。"
+    },
+    "docgen": {
+      "noTitle": "团队成员",
+      "noDepartment": "公司",
+      "noManager": "你的经理",
+      "signoff": "此致",
+      "footer": "由 Realy 于 {date} 生成。签字后有效。",
+      "noPeople": "请先添加团队成员——信函会根据其档案填写。",
+      "who": "信函给谁？",
+      "pickPerson": "选择人员",
+      "which": "哪种信函？",
+      "newTitle": "新职位名称",
+      "lastDay": "最后工作日",
+      "lastDayHint": "留空则使用今天。",
+      "language": "信函语言",
+      "details": "补充内容（可选）",
+      "detailsHint": "作为最后一段添加。",
+      "warningDetails": "发生了什么、需要改变什么",
+      "warningHint": "陈述事实：日期、期望、发生的情况、需要在何时前改变什么。",
+      "created": "已生成“{name}”并保存到其文档中。",
+      "open": "打开以打印",
+      "generating": "生成中…",
+      "generate": "生成信函",
+      "generateFor": "生成信函",
+      "tpl": {
+        "employment_verification": {
+          "name": "在职证明",
+          "when": "用于银行、房东或签证：证明此人在本公司工作。",
+          "subject": "在职证明",
+          "recipient": "致相关人士：",
+          "body": "兹证明 {name} 受雇于 {company}，在 {department} 担任 {title}。\n\n{name} 自 {startDate} 起以{employmentType}形式在本公司工作，目前在职。\n\n如需更多信息，请与我们联系。"
+        },
+        "experience": {
+          "name": "工作经历证明",
+          "when": "员工离职时：证明其岗位和任职时间。",
+          "subject": "工作经历证明",
+          "recipient": "致相关人士：",
+          "body": "兹证明 {name} 于 {startDate} 至 {endDate} 期间在 {company} 的 {department} 担任 {title}。\n\n任职期间，{name} 尽职尽责地完成了各项工作。感谢其贡献，并祝其前程似锦。"
+        },
+        "welcome": {
+          "name": "欢迎信",
+          "when": "入职前：欢迎新员工并说明入职安排。",
+          "subject": "欢迎加入 {company}",
+          "recipient": "亲爱的 {name}：",
+          "body": "我们非常高兴欢迎你以 {title} 的身份加入 {company} 的 {department}。\n\n你的入职日期是 {startDate}。{manager} 将担任你的经理，并在最初几周帮助你尽快适应。\n\n入职前如有任何问题，请直接回复我们。期待与你共事。"
+        },
+        "role_change": {
+          "name": "岗位变更确认函",
+          "when": "晋升或调岗：确认新职位和生效日期。",
+          "subject": "新岗位确认",
+          "recipient": "亲爱的 {name}：",
+          "body": "我们很高兴确认，自 {effectiveDate} 起，你在 {company} 的岗位由 {title} 调整为 {newTitle}。\n\n感谢你迄今为止的付出。除非另有书面约定，你的其他雇佣条款保持不变。"
+        },
+        "warning": {
+          "name": "书面警告",
+          "when": "关于行为或绩效的正式书面警告。",
+          "subject": "书面警告",
+          "recipient": "{name}：",
+          "body": "本函是针对你在 {company} 担任 {title} 期间的行为或工作表现发出的正式书面警告。\n\n具体情况如下所述。我们期望你有明显改进，并愿意为此提供支持。如情况没有改善，公司可能采取进一步措施。\n\n你可以书面回复本函，你的回复将与本文件一并存档。"
+        }
       }
     }
   },

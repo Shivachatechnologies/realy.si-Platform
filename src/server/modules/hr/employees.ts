@@ -32,7 +32,7 @@ import { startChecklistTx } from "./onboarding";
 export const EMPLOYEE_STATUSES = ["ONBOARDING", "ACTIVE", "ON_LEAVE", "OFFBOARDING", "TERMINATED"] as const;
 export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACTOR", "INTERN"] as const;
 export const EMPLOYEE_SORTS = ["name", "title", "department", "start", "status"] as const;
-export const DOCUMENT_CATEGORIES = ["contract", "id", "tax", "certificate", "review", "other"] as const;
+export const DOCUMENT_CATEGORIES = ["contract", "id", "tax", "certificate", "review", "letter", "other"] as const;
 export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 export const PAGE_SIZE = 25;
 

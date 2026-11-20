@@ -5,6 +5,7 @@ import { listPolicies } from "./policies";
 import { createJob, getCandidate, listOpenJobs, recordAiScore } from "./recruiting";
 import { headcountSummary } from "./summary";
 import { EMPLOYMENT_TYPES } from "./employees";
+import { createHeadcountPlan, PLAN_PRIORITIES, quarterKey, workforcePlan } from "./planning";
 
 /** AI tools of the hr module, registered in src/server/modules/tools/modules.ts. Use `def` from tools/define. */
 
@@ -160,6 +161,66 @@ export const HR_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const job = await createJob(ctx, organizationId, companyId, { ...input, status: "DRAFT" });
       return { content: `Created draft job posting "${job.title}" (${job.id}). HR can review and publish it.`, records: [`hr_job:${job.id}`] };
+    },
+  }),
+
+  read_workforce_plan: def({
+    name: "read_workforce_plan",
+    version: 1,
+    description: "Returns the company's workforce plan: today's headcount per department and every planned role (title, department, quarter, headcount, priority, status, reason). Costs are totals only, never individual salaries.",
+    input: z.object({}).strict(),
+    modelSchema: empty,
+    permissions: ["hr.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read the workforce plan",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const plan = await workforcePlan(ctx, organizationId, companyId);
+      const depts = plan.departments.map((d) => `- ${d.name ?? "No department"}: ${d.current} today, +${d.planned} planned`).join("\n");
+      const roles = plan.plans.map((p) => `- ${p.headcount} × ${p.title} (${p.departmentName ?? "no department"}, ${quarterKey(p.targetStart)}, ${p.priority}, ${p.status})${p.reason ? `: ${p.reason.slice(0, 200)}` : ""}`).join("\n");
+      return {
+        content: `Headcount today: ${plan.totals.currentHeadcount}. Planned people: ${plan.totals.plannedPeople}. Planned yearly cost (all roles, minor units of ${plan.currency}): ${plan.totals.plannedAnnualCost}.\n\nBy department:\n${depts || "(none)"}\n\nPlanned roles:\n${roles || "(none)"}`,
+        count: plan.plans.length,
+      };
+    },
+  }),
+
+  propose_planned_role: def({
+    name: "propose_planned_role",
+    version: 1,
+    description: "Adds a role to the workforce plan as PLANNED (a person approves it before hiring starts). Use for roles you recommend; give a short reason.",
+    input: z
+      .object({
+        title: z.string().trim().min(2).max(160),
+        headcount: z.number().int().min(1).max(50).default(1),
+        targetStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
+        priority: z.enum(PLAN_PRIORITIES).optional(),
+        reason: z.string().trim().min(5).max(2000),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        headcount: { type: "integer", minimum: 1, maximum: 50 },
+        targetStart: { type: "string", description: "Approximate start date YYYY-MM-DD (saved as the start of that quarter)" },
+        employmentType: { type: "string", enum: [...EMPLOYMENT_TYPES] },
+        priority: { type: "string", enum: [...PLAN_PRIORITIES] },
+        reason: { type: "string", description: "Why the company needs this role, from the data" },
+      },
+      required: ["title", "targetStart", "reason"],
+      additionalProperties: false,
+    },
+    permissions: ["hr.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ title, headcount }) => `Add ${headcount ?? 1} × "${title}" to the workforce plan`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const plan = await createHeadcountPlan(ctx, organizationId, companyId, input);
+      return { content: `Added "${plan.title}" (${plan.headcount}) to the workforce plan for ${quarterKey(plan.targetStart)} as PLANNED. A person approves it before hiring.`, records: [`hr_headcount_plan:${plan.id}`] };
     },
   }),
 };

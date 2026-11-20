@@ -1,0 +1,7 @@
+{
+  "name": "@realy/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Types shared by packages/backend and the apps, plus the literal constants they derive from (no logic).",
+  "exports": { "./*": "./src/*.ts" }
+}

@@ -1,6 +1,7 @@
 import "server-only";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Notice } from "@/components/ui/notice";
 import { PageIntro } from "@/components/guide-kit/page-intro";
 import type { AppLocale } from "@/i18n/config";
@@ -23,7 +24,7 @@ export function visibleTabs(access: HrAccess | null): HrTab[] {
   if (!access) return [];
   return HR_TABS.filter((k) => {
     if (k === "payroll") return access.payrollRead;
-    if (["recruiting", "onboarding", "hire"].includes(k)) return access.manage;
+    if (["recruiting", "onboarding", "hire", "documents"].includes(k)) return access.manage;
     if (k === "me") return !!access.me;
     return access.read;
   });
@@ -36,6 +37,8 @@ export function hrTabLabels(t: Translate) {
 /** "Next step" link of each tab's intro strip (null: the page itself is the next step). */
 const HR_NEXT: Partial<Record<HrTab, string>> = {
   employees: "/hr/hire",
+  planning: "/hr/hire",
+  documents: "/hr/employees",
   recruiting: "/hr/hire",
   onboarding: "/hr/employees?status=ONBOARDING",
   time: "/hr/leave",
@@ -86,13 +89,15 @@ export function HrFrame({
   const showIntro = hasCompany && allowed && tab !== "overview" && tab !== "hire";
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="grid gap-1">
-          <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-          {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
-        </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-      </div>
+      <PageHeader
+        variant="editorial"
+        world="people"
+        eyebrow={t("modules.hr.title")}
+        title={title}
+        description={subtitle}
+        actions={actions}
+        illustration={tab === "overview" || tab === "planning" ? undefined : false}
+      />
       {hasCompany && access?.read ? <HrTabs locale={locale} active={tab} labels={hrTabLabels(t)} visible={visibleTabs(access)} /> : null}
       {showIntro ? <TabIntro t={t} locale={locale} prefix={`hr.intro.${tab}`} next={HR_NEXT[tab]} /> : null}
       {!hasCompany ? (

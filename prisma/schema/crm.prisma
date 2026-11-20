@@ -140,6 +140,8 @@ model CrmDeal {
   attachments  CrmAttachment[]
   stageHistory CrmDealStageChange[]
   proposals    CrmProposal[]
+  outreach     CrmOutreachMessage[]
+  meetings     CrmMeeting[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -600,4 +602,290 @@ model GuidedFlowProgress {
 
   @@unique([companyId, flow])
   @@map("guided_flow_progress")
+}
+
+// ───────────── Revenue engine: discovery, intel, outreach, cadences, meetings ─────────────
+// Leads (core.prisma) and contacts (shared.prisma) are referenced by id only (validated inside the company by the
+// services) so these models add no back-relations outside this file except Company.
+
+enum CrmProspectStatus {
+  NEW
+  ADDED
+  DISMISSED
+}
+
+/// A lead-discovery run: a plain-language description of the ideal customer sent to a connected research provider.
+model CrmProspectSearch {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  query          String
+  /// Who we sell to, as typed by the user (kept for re-runs).
+  audience       String?
+  /// Provider that answered (tavily / exa / serpapi).
+  provider       String?
+  resultCount    Int      @default(0) @map("result_count")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  prospects CrmProspect[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@map("crm_prospect_searches")
+}
+
+/// One real web result of a discovery run (title, URL, snippet exactly as the provider returned them).
+model CrmProspect {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  searchId       String            @map("search_id") @db.Uuid
+  title          String
+  url            String
+  domain         String?
+  snippet        String            @default("")
+  publishedAt    String?           @map("published_at")
+  status         CrmProspectStatus @default(NEW)
+  /// Lead created from this result.
+  leadId         String?           @map("lead_id") @db.Uuid
+  decidedById    String?           @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?         @map("decided_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  search  CrmProspectSearch @relation(fields: [searchId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([searchId, url])
+  @@index([companyId, status])
+  @@index([companyId, domain])
+  @@map("crm_prospects")
+}
+
+enum CrmIntelKind {
+  ENRICHMENT
+  QUALIFICATION
+}
+
+/// Research about a lead or account: provider-backed enrichment (web sources) or an AI qualification with reasons.
+/// Every fact keeps the source it came from; nothing is stored when no provider answered.
+model CrmIntel {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  companyId      String       @map("company_id") @db.Uuid
+  kind           CrmIntelKind
+  leadId         String?      @map("lead_id") @db.Uuid
+  accountId      String?      @map("account_id") @db.Uuid
+  summary        String       @default("")
+  /// ENRICHMENT: { facts: [{ label, value, sourceUrl }] }. QUALIFICATION: { verdict, fit, reasons[], missing[], bant }.
+  data           Json         @default("{}")
+  /// [{ title, url, snippet }]
+  sources        Json         @default("[]")
+  /// 0–100 AI fit score (QUALIFICATION only).
+  fitScore       Int?         @map("fit_score")
+  provider       String?
+  model          String?
+  createdById    String       @map("created_by_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, leadId, kind, createdAt])
+  @@index([companyId, accountId, kind, createdAt])
+  @@map("crm_intel")
+}
+
+enum CrmOutreachStatus {
+  DRAFT
+  PENDING_APPROVAL
+  SENT
+  FAILED
+  CANCELLED
+}
+
+/// A personal sales email: drafted (by a person or AI), approved by a person, then sent through the company's connected
+/// mailbox (Gmail / Outlook) or SendGrid. SENT only when the provider accepted it.
+model CrmOutreachMessage {
+  id                String            @id @default(uuid(7)) @db.Uuid
+  organizationId    String            @map("organization_id") @db.Uuid
+  companyId         String            @map("company_id") @db.Uuid
+  leadId            String?           @map("lead_id") @db.Uuid
+  contactId         String?           @map("contact_id") @db.Uuid
+  dealId            String?           @map("deal_id") @db.Uuid
+  enrollmentId      String?           @map("enrollment_id") @db.Uuid
+  stepPosition      Int?              @map("step_position")
+  toEmail           String            @map("to_email")
+  toName            String?           @map("to_name")
+  subject           String
+  body              String
+  status            CrmOutreachStatus @default(DRAFT)
+  /// mailbox:gmail / mailbox:outlook / sendgrid
+  channel           String?
+  providerMessageId String?           @map("provider_message_id")
+  error             String?
+  /// AI provider + model that drafted the text (null = written by a person).
+  aiProvider        String?           @map("ai_provider")
+  createdById       String?           @map("created_by_id") @db.Uuid
+  approvedById      String?           @map("approved_by_id") @db.Uuid
+  approvedAt        DateTime?         @map("approved_at") @db.Timestamptz(3)
+  sentAt            DateTime?         @map("sent_at") @db.Timestamptz(3)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  deal       CrmDeal?              @relation(fields: [dealId, companyId], references: [id, companyId], onDelete: Cascade)
+  enrollment CrmCadenceEnrollment? @relation(fields: [enrollmentId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([companyId, leadId])
+  @@index([companyId, contactId])
+  @@index([companyId, toEmail])
+  @@map("crm_outreach_messages")
+}
+
+enum CrmCadenceStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum CrmCadenceStepKind {
+  EMAIL
+  TASK
+}
+
+enum CrmEnrollmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  REPLIED
+  STOPPED
+  FAILED
+}
+
+/// An automated follow-up sequence ("cadence"): timed email/task steps that stop as soon as the person replies.
+model CrmCadence {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  status         CrmCadenceStatus @default(DRAFT)
+  /// false: every email step waits in the approval queue. true: a person approved the step texts when activating, so
+  /// steps are sent on schedule without further review.
+  autoSend       Boolean          @default(false) @map("auto_send")
+  stopOnReply    Boolean          @default(true) @map("stop_on_reply")
+  activatedById  String?          @map("activated_by_id") @db.Uuid
+  activatedAt    DateTime?        @map("activated_at") @db.Timestamptz(3)
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company     Company                @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  steps       CrmCadenceStep[]
+  enrollments CrmCadenceEnrollment[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@map("crm_cadences")
+}
+
+/// A step of a cadence. Subject/body may use {{firstName}}, {{name}}, {{company}} and {{sender}}.
+model CrmCadenceStep {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  cadenceId      String             @map("cadence_id") @db.Uuid
+  position       Int
+  kind           CrmCadenceStepKind @default(EMAIL)
+  /// Days after the previous step (or after enrolment for the first step).
+  delayDays      Int                @default(2) @map("delay_days")
+  subject        String             @default("")
+  body           String
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  cadence CrmCadence @relation(fields: [cadenceId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([cadenceId, position])
+  @@map("crm_cadence_steps")
+}
+
+/// One person (lead or contact) going through a cadence.
+model CrmCadenceEnrollment {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  cadenceId      String              @map("cadence_id") @db.Uuid
+  leadId         String?             @map("lead_id") @db.Uuid
+  contactId      String?             @map("contact_id") @db.Uuid
+  toEmail        String              @map("to_email")
+  name           String
+  status         CrmEnrollmentStatus @default(ACTIVE)
+  /// Position of the next step to run.
+  nextStep       Int                 @default(0) @map("next_step")
+  nextRunAt      DateTime?           @map("next_run_at") @db.Timestamptz(3)
+  lastStepAt     DateTime?           @map("last_step_at") @db.Timestamptz(3)
+  stoppedReason  String?             @map("stopped_reason")
+  ownerId        String?             @map("owner_id") @db.Uuid
+  enrolledById   String              @map("enrolled_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  cadence  CrmCadence           @relation(fields: [cadenceId, companyId], references: [id, companyId], onDelete: Cascade)
+  messages CrmOutreachMessage[]
+
+  @@unique([id, companyId])
+  @@unique([cadenceId, toEmail])
+  @@index([status, nextRunAt])
+  @@index([companyId, leadId])
+  @@index([companyId, contactId])
+  @@map("crm_cadence_enrollments")
+}
+
+enum CrmMeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+/// A sales meeting with a customer. Pushed to the connected Google / Outlook calendar (with the customer as attendee)
+/// only when one is connected; otherwise the calendar file (.ics) is offered and inviteSentAt stays empty.
+model CrmMeeting {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  organizationId   String           @map("organization_id") @db.Uuid
+  companyId        String           @map("company_id") @db.Uuid
+  title            String
+  agenda           String?
+  location         String?
+  startsAt         DateTime         @map("starts_at") @db.Timestamptz(3)
+  endsAt           DateTime         @map("ends_at") @db.Timestamptz(3)
+  leadId           String?          @map("lead_id") @db.Uuid
+  contactId        String?          @map("contact_id") @db.Uuid
+  accountId        String?          @map("account_id") @db.Uuid
+  dealId           String?          @map("deal_id") @db.Uuid
+  attendeeEmail    String?          @map("attendee_email")
+  attendeeName     String?          @map("attendee_name")
+  status           CrmMeetingStatus @default(SCHEDULED)
+  calendarProvider String?          @map("calendar_provider")
+  externalId       String?          @map("external_id")
+  inviteSentAt     DateTime?        @map("invite_sent_at") @db.Timestamptz(3)
+  calendarError    String?          @map("calendar_error")
+  outcome          String?
+  organizerId      String           @map("organizer_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  deal    CrmDeal? @relation(fields: [dealId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, startsAt])
+  @@index([companyId, leadId])
+  @@index([companyId, contactId])
+  @@map("crm_meetings")
 }

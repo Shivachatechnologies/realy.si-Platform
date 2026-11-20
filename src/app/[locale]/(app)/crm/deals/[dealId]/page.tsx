@@ -8,6 +8,7 @@ import { ActionButton, AiActions } from "@/components/crm/kit";
 import { DealForm, DealStageControls } from "@/components/crm/record-forms";
 import { DealProposalsPanel, EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
 import { CrmFrame, DEAL_STATUS_TONE, Facts, SubjectTasks, TagList, crmContext } from "@/components/crm/shell";
+import { RevenueWorkspace } from "@/components/crm/revenue/panels";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -58,6 +59,7 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
       </div>
       {!active ? <Notice tone="warning">{t("crm.archivedRecordNotice")}</Notice> : null}
       {d.staleSince && d.status === "OPEN" ? <Notice tone="warning">{t("crm.deals.staleNotice", { days: daysInStage })}</Notice> : null}
+      {active && d.status === "OPEN" ? <RevenueWorkspace kind="deal" id={d.id} name={d.contact ? contactName(d.contact) : d.name} hasEmail={!!d.contact?.email} /> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 content-start gap-4">
           <Card>

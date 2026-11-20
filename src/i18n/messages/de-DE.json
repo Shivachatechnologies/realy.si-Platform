@@ -733,7 +733,10 @@
       "support_feedback_exists": "Dieses Ticket ist bereits Feedback für dieses Produkt.",
       "work_deliverable_needs_link": "Fügen Sie vor dem Einreichen einen Link zum Ergebnis hinzu.",
       "work_deliverable_not_submitted": "Nur eingereichte Ergebnisse können geprüft werden.",
-      "work_deliverables_full": "Ein Projekt kann höchstens 300 Ergebnisse haben."
+      "work_deliverables_full": "Ein Projekt kann höchstens 300 Ergebnisse haben.",
+      "hr_plan_state": "Diese geplante Rolle kann nicht in diesen Status wechseln.",
+      "hr_plan_has_job": "Für diese Rolle gibt es bereits eine Stelle. Brechen Sie sie ab, statt sie zu löschen.",
+      "hr_doc_field": "Füllen Sie die Angaben aus, die dieses Schreiben braucht."
     }
   },
   "onboarding": {
@@ -2915,7 +2918,11 @@
       "set_ad_budget": "Anzeigenbudget ändern",
       "set_ad_campaign_status": "Anzeigenkampagne aktivieren oder pausieren",
       "reply_to_comment": "Auf Kommentar antworten",
-      "send_influencer_outreach": "Influencer-Ansprache senden"
+      "send_influencer_outreach": "Influencer-Ansprache senden",
+      "read_workforce_plan": "Personalplan lesen",
+      "propose_planned_role": "Geplante Rolle vorschlagen",
+      "read_financial_alerts": "Finanzwarnungen lesen",
+      "read_money_flow": "Geldfluss lesen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -3906,7 +3913,10 @@
         "proposal_accepted": "Angebot angenommen: {title}",
         "proposal_declined": "Angebot abgelehnt: {title}",
         "proposal_expired": "Angebot abgelaufen: {title}",
-        "sales_task_assigned": "Vertriebsaufgabe für Sie: {title}"
+        "sales_task_assigned": "Vertriebsaufgabe für Sie: {title}",
+        "outreach_pending": "E-Mail wartet auf Freigabe: {title}",
+        "sequence_replied": "Antwort erhalten – Sequenz gestoppt: {title}",
+        "sequence_failed": "Sequenz-E-Mail konnte nicht gesendet werden: {title}"
       },
       "finance": {
         "invoice_paid": "Rechnung bezahlt: {title}",
@@ -3917,7 +3927,10 @@
         "approval_rejected": "Abgelehnt: {title}",
         "bill_overdue": "Eingangsrechnung überfällig: {title}",
         "budget_warning": "Budget zu 80 % ausgeschöpft: {title}",
-        "budget_exceeded": "Budget überschritten: {title}"
+        "budget_exceeded": "Budget überschritten: {title}",
+        "runway_low": "Liquiditätsreichweite wird knapp: {title}",
+        "runway_critical": "Liquiditätsreichweite kritisch kurz: {title}",
+        "cash_negative_forecast": "Laut Prognose geht das Geld aus: {title}"
       },
       "hr": {
         "candidate_applied": "Neue Bewerbung: {title}",
@@ -3930,7 +3943,8 @@
         "policy_published": "Richtlinie zu bestätigen: {title}",
         "request_created": "Neue HR-Anfrage: {title}",
         "request_updated": "Ihre HR-Anfrage wurde beantwortet: {title}",
-        "payslip_available": "Ihre Gehaltsabrechnung ist verfügbar: {title}"
+        "payslip_available": "Ihre Gehaltsabrechnung ist verfügbar: {title}",
+        "headcount_approved": "Geplante Rolle genehmigt: {title}"
       },
       "comms": {
         "announcement": "Neue Ankündigung: {title}",
@@ -4117,7 +4131,12 @@
       "dashboard": "Dashboard",
       "import": "Import & Export",
       "settings": "Einstellungen",
-      "proposals": "Angebote"
+      "proposals": "Angebote",
+      "today": "Heute",
+      "discover": "Leads finden",
+      "outreach": "Ansprache",
+      "sequences": "Sequenzen",
+      "meetings": "Termine"
     },
     "accountTypes": {
       "PROSPECT": "Interessent",
@@ -4714,6 +4733,36 @@
         "why": "Zufriedene Kunden sind der günstigste Weg zu wachsen.",
         "can": "Jeden Kunden mit Personen, Deals und Verlauf sehen.",
         "next": "Neue Kunden finden (geführt)"
+      },
+      "today": {
+        "what": "Deine Verkaufs-To-do-Liste: der beste nächste Schritt für jeden offenen Lead und Deal.",
+        "why": "Verkäufe gewinnt man durch Nachfassen im richtigen Moment – diese Liste sorgt dafür, dass nichts liegen bleibt.",
+        "can": "Erledige jeden Schritt mit einem Klick. E-Mails werden nur entworfen; du gibst sie frei, bevor etwas gesendet wird.",
+        "next": "Wartende E-Mails prüfen"
+      },
+      "discover": {
+        "what": "Beschreibe, an wen du verkaufst, und wir suchen im Web nach passenden Unternehmen.",
+        "why": "Neue Kunden beginnen mit einer Liste der richtigen Ansprechpartner.",
+        "can": "Sieh echte Suchergebnisse mit Quelle und mache die guten zu Leads.",
+        "next": "Zu deinen Leads"
+      },
+      "outreach": {
+        "what": "Persönliche E-Mails an Leads und Kunden – von dir geschrieben oder von KI entworfen.",
+        "why": "Eine kurze, persönliche E-Mail ist der schnellste Weg, ein Gespräch zu beginnen.",
+        "can": "Entwerfen, bearbeiten, freigeben und über dein eigenes verbundenes E-Mail-Konto senden. Nichts geht ohne Freigabe raus.",
+        "next": "Automatisches Nachfassen einrichten"
+      },
+      "sequences": {
+        "what": "Eine Sequenz ist eine Reihe von Nachfass-E-Mails und Erinnerungen nach Zeitplan.",
+        "why": "Die meisten Deals brauchen mehrmaliges Nachfassen; eine Sequenz denkt für dich daran.",
+        "can": "Schritte einmal schreiben, Personen hinzufügen – sie stoppt von selbst, sobald jemand antwortet.",
+        "next": "Wartende E-Mails ansehen"
+      },
+      "meetings": {
+        "what": "Alle Verkaufstermine, die du mit einem Lead, Kontakt oder Deal gebucht hast.",
+        "why": "In Terminen kommen Deals voran – bereite dich vor und halte fest, was vereinbart wurde.",
+        "can": "Kalenderdateien herunterladen, Termine mit Notizen abschließen oder absagen.",
+        "next": "Zurück zu den heutigen Aufgaben"
       }
     },
     "smartEmpty": {
@@ -4753,6 +4802,453 @@
         "primary": "Verkaufen starten",
         "ai": "KI recherchieren lassen"
       }
+    },
+    "rev": {
+      "connect": "Unter Integrationen verbinden",
+      "working": "Wird bearbeitet…",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "edit": "Bearbeiten",
+      "readOnly": "Du kannst alles ansehen, aber nur Personen mit Vertriebsrechten können hier etwas ändern.",
+      "channels": {
+        "mailbox_gmail": "dein Gmail",
+        "mailbox_outlook": "dein Outlook-Postfach",
+        "sendgrid": "SendGrid",
+        "google_calendar": "Google Kalender",
+        "outlook_calendar": "Outlook-Kalender"
+      },
+      "engine": {
+        "title": "Dein Vertriebsmotor",
+        "research": "Webrecherche",
+        "ai": "KI-Texte & Bewertung",
+        "email": "E-Mail-Versand",
+        "calendar": "Kalendereinladungen",
+        "on": "Aktiv · {detail}",
+        "off": {
+          "research": "Nicht verbunden – verbinde Tavily, Exa oder SerpApi, um Leads zu finden und zu recherchieren.",
+          "ai": "Nicht verbunden – verbinde OpenAI oder Gemini, damit KI E-Mails entwirft und Leads bewertet.",
+          "email": "Nicht verbunden – verbinde Gmail, Outlook oder SendGrid, um E-Mails zu senden.",
+          "calendar": "Nicht verbunden – Termine werden gespeichert und du erhältst stattdessen eine Kalenderdatei."
+        }
+      },
+      "today": {
+        "eyebrow": "Umsatzmotor",
+        "title": "Heute",
+        "subtitle": "Der beste nächste Schritt für jeden offenen Lead und Deal, das Dringendste zuerst.",
+        "forecast": "Gewichtete Prognose",
+        "forecastHint": "Jeder offene Deal × seine Gewinnchance · {open} offen in {deals, plural, one {# Deal} other {# Deals}}",
+        "approvals": "Warten auf Freigabe",
+        "approvalsHint": "E-Mails, die du prüfen und senden kannst",
+        "meetings": "Termine diese Woche",
+        "meetingsHint": "Mit Kunden in den nächsten 7 Tagen gebucht",
+        "followUps": "Fällige Nachfassaktionen",
+        "followUpsHint": "Fällig bis morgen · {enrolled} Personen in Sequenzen",
+        "otherCurrency": "{count, plural, one {# Deal in einer anderen Währung ist} other {# Deals in anderen Währungen sind}} nicht in der Prognose enthalten.",
+        "listTitle": "Was als Nächstes zu tun ist",
+        "listHint": "Erstellt aus deinen echten Daten: Verantwortliche, E-Mails, Nachfassaktionen, Antworten, Termine und Angebote.",
+        "everyone": "Alle",
+        "mine": "Meine",
+        "filter": "Anzeigen",
+        "filters": {
+          "all": "Alle",
+          "lead": "Leads",
+          "deal": "Deals"
+        },
+        "types": {
+          "lead": "Lead",
+          "deal": "Deal"
+        },
+        "focus": "Fokus heute",
+        "upcoming": "Demnächst",
+        "allClear": "Hier gibt es gerade nichts zu tun.",
+        "emptyTitle": "Alles erledigt",
+        "emptyText": "Kein offener Lead oder Deal braucht gerade einen Schritt. Füge neue Leads hinzu, damit der Verkauf weiterläuft.",
+        "emptyDiscover": "Neue Leads finden",
+        "emptyAdd": "Lead hinzufügen"
+      },
+      "nba": {
+        "title": "Bester nächster Schritt",
+        "description": "Was dies am meisten voranbringt – und warum.",
+        "none": "Nichts Dringendes – dieser Datensatz ist in gutem Zustand.",
+        "open": "Öffnen",
+        "doIt": "Erledigen",
+        "draftIt": "Mit KI entwerfen",
+        "draftNote": "Als Entwurf zur Freigabe gespeichert – nicht gesendet.",
+        "writeYourself": "E-Mail schreiben",
+        "reviewDraft": "Entwurf prüfen",
+        "more": "{count, plural, one {# weiterer Vorschlag} other {# weitere Vorschläge}}",
+        "priority": {
+          "1": "Heute",
+          "2": "Bald",
+          "3": "Wenn Zeit ist"
+        },
+        "done": {
+          "assigned": "Gehört jetzt dir.",
+          "enriched": "Recherche gespeichert.",
+          "qualified": "KI-Prüfung gespeichert.",
+          "follow_up": "Erinnerung in 2 Tagen gesetzt.",
+          "drafted": "Entwurf zur Freigabe gespeichert."
+        },
+        "kinds": {
+          "assign_me": {
+            "title": "Verantwortung übernehmen",
+            "why": "Niemand ist zuständig, also fasst auch niemand nach."
+          },
+          "add_email": {
+            "title": "E-Mail oder Telefonnummer ergänzen",
+            "why": "Du kannst diese Person noch nicht erreichen. Die Recherche hat keine Kontaktdaten gefunden."
+          },
+          "enrich": {
+            "title": "Dieses Unternehmen recherchieren",
+            "why": "Es gibt noch keinen Kontaktweg – eine Webrecherche findet vielleicht, wer sie sind und wie man sie erreicht."
+          },
+          "first_email": {
+            "title": "Erste E-Mail senden",
+            "why": "Du hast die E-Mail-Adresse, warst aber noch nicht in Kontakt. Eine kurze persönliche Nachricht startet das Gespräch."
+          },
+          "overdue_follow_up": {
+            "title": "Überfällige Nachfassaktion: {note}",
+            "why": "Du wolltest nachfassen und der Termin ist vorbei."
+          },
+          "approve_email": {
+            "title": "Wartende E-Mail freigeben",
+            "why": "Eine E-Mail zu diesem Datensatz ist fertig und wartet auf dein OK."
+          },
+          "qualify": {
+            "title": "Prüfen, ob der Lead passt",
+            "why": "Ihr habt gesprochen, aber es ist nicht entschieden, ob es sich lohnt. Die KI kann die Passung aus deinen Infos bewerten."
+          },
+          "follow_up_email": {
+            "title": "Nachfassen – seit {days} Tagen ruhig",
+            "why": "Seit einer Woche oder länger kein Kontakt. Eine kurze Nachricht hält dich in Erinnerung."
+          },
+          "convert": {
+            "title": "Lead in einen Deal umwandeln",
+            "why": "Der Lead ist qualifiziert. Die Umwandlung legt Kontakt, Firma und Deal an, damit du den Verkauf verfolgen kannst."
+          },
+          "plan_follow_up": {
+            "title": "Nächsten Schritt planen",
+            "why": "Es ist keine Nachfassaktion geplant. Setze eine Erinnerung, damit es nicht einschläft."
+          },
+          "reengage": {
+            "title": "Gespräch wieder aufnehmen",
+            "why": "Es ist schon lange ruhig ({days} Tage). Eine lockere Nachfrage kann es wiederbeleben."
+          },
+          "set_close_date": {
+            "title": "Erwartetes Abschlussdatum setzen",
+            "why": "Ohne Datum kann dieser Deal nicht monatlich in deiner Prognose gezählt werden."
+          },
+          "close_date_passed": {
+            "title": "Das Abschlussdatum ist vorbei",
+            "why": "Aktualisiere das Datum oder markiere den Deal als gewonnen oder verloren, damit deine Prognose ehrlich bleibt."
+          },
+          "book_meeting": {
+            "title": "Termin vereinbaren",
+            "why": "Es ist kein Termin geplant. Ein Gespräch bringt einen Deal meist am schnellsten voran."
+          },
+          "prepare_meeting": {
+            "title": "Vorbereiten: {title}",
+            "why": "Dieser Termin ist in weniger als 2 Tagen. Sieh dir Verlauf und Ziele an."
+          },
+          "create_proposal": {
+            "title": "Angebot senden",
+            "why": "Dieser Deal ist wahrscheinlich genug, um ein schriftliches Angebot zu machen."
+          },
+          "proposal_follow_up": {
+            "title": "Beim Angebot nachfassen",
+            "why": "Das Angebot wurde vor über 3 Tagen gesendet und es gibt noch keine Entscheidung."
+          }
+        }
+      },
+      "score": {
+        "title": "Warum diese Bewertung",
+        "description": "Die Lead-Bewertung zählt einfache Signale zusammen. Keine geheime Formel.",
+        "note": "Heiß ≥ 70 · Warm ≥ 45 · darunter: pflegen (in Kontakt bleiben).",
+        "base": "Startpunkte",
+        "workEmail": "Geschäftliche E-Mail-Adresse",
+        "personalEmail": "Private E-Mail (geschäftlich zählt mehr)",
+        "noEmail": "Noch keine E-Mail-Adresse",
+        "phone": "Telefonnummer",
+        "company": "Firmenname bekannt",
+        "value": "Geschätzter Wert eingetragen",
+        "notesLong": "Ausführliche Notizen",
+        "notesSome": "Einige Notizen",
+        "notesShort": "Kurze Notizen",
+        "noNotes": "Noch keine Notizen",
+        "stage": "Fortschritt in der Pipeline",
+        "lostCap": "Verlorene Leads sind auf 30 begrenzt",
+        "cap": "Auf 100 begrenzt"
+      },
+      "intel": {
+        "enrichTitle": "Firmenrecherche",
+        "enrichDescription": "Im Web gefundene Fakten, jeweils mit Quelle.",
+        "enrichEmpty": "Noch keine Recherche. Klicke auf Recherchieren, um diese Firma im Web nachzuschlagen.",
+        "researchMissing": "Webrecherche ist nicht verbunden, daher kann noch nichts nachgeschlagen werden.",
+        "enrich": "Recherchieren",
+        "enrichAgain": "Erneut recherchieren",
+        "qualTitle": "KI-Passungscheck",
+        "qualDescription": "Die KI schätzt ein, wie wahrscheinlich dieser Lead Kunde wird, und erklärt warum.",
+        "qualEmpty": "Noch nicht geprüft. Die KI nutzt nur, was in diesem Datensatz und seiner Recherche steht.",
+        "aiMissing": "Kein KI-Textdienst verbunden, daher kann die KI diesen Lead noch nicht bewerten.",
+        "qualify": "Passung prüfen",
+        "qualifyAgain": "Erneut prüfen",
+        "apply": "Diese Antworten übernehmen",
+        "ask": "Den Lead fragen",
+        "noFacts": "Die KI fand keine klaren Fakten in den Quellen – lies sie unten.",
+        "sourcesOnly": "Verbinde einen KI-Textdienst, um aus diesen Quellen kurze Fakten zu machen.",
+        "sources": "{count, plural, one {# Quelle} other {# Quellen}}",
+        "source": "Quelle",
+        "by": "Von {provider} · {date}",
+        "verdicts": {
+          "qualified": "Passt gut",
+          "nurture": "Noch nicht – in Kontakt bleiben",
+          "disqualify": "Passt schlecht",
+          "need_info": "Mehr Informationen nötig"
+        }
+      },
+      "discover": {
+        "eyebrow": "Lead-Suche",
+        "title": "Neue Leads finden",
+        "subtitle": "Sag uns, wer deine idealen Kunden sind. Wir durchsuchen das Web und zeigen echte Unternehmen – du entscheidest, wen du kontaktierst.",
+        "audience": "An wen verkaufst du?",
+        "audienceHint": "Sei konkret: Art des Unternehmens, Größe oder Bedarf.",
+        "audiencePlaceholder": "z. B. unabhängige Bäckereien mit Catering",
+        "location": "Wo? (optional)",
+        "locationPlaceholder": "z. B. Ljubljana",
+        "extra": "Sonst noch etwas? (optional)",
+        "extraPlaceholder": "z. B. kürzlich eröffnet",
+        "search": "Im Web suchen",
+        "searching": "Suche läuft…",
+        "honest": "Es werden nur echte Ergebnisse deines Recherchedienstes gezeigt. Nichts ist erfunden.",
+        "noProvider": "Um Leads zu suchen, verbinde einen Recherchedienst (Tavily, Exa oder SerpApi).",
+        "results": "{count, plural, =0 {Keine Ergebnisse} one {# Ergebnis} other {# Ergebnisse}}",
+        "resultsMeta": "„{query}“ · {provider} · {date} · {fresh} noch nicht geprüft",
+        "noResults": "Die Suche hat nichts ergeben. Beschreibe deine Kunden anders.",
+        "next": "Weiter: Öffne einen neuen Lead und klicke auf „Recherchieren“ oder „Mit KI entwerfen“ für eine erste E-Mail.",
+        "added": "Hinzugefügt",
+        "dismissed": "Verworfen",
+        "known": "Diese Firma ist vielleicht schon ein Lead",
+        "openLead": "Lead öffnen",
+        "addAsLead": "Als Lead hinzufügen",
+        "dismiss": "Passt nicht",
+        "create": "Lead anlegen",
+        "emailIfKnown": "E-Mail (nur wenn bekannt)",
+        "history": "Frühere Suchen",
+        "historyEmpty": "Deine Suchen erscheinen hier.",
+        "historyMeta": "{results} Ergebnisse · {added} hinzugefügt · {date}"
+      },
+      "outreach": {
+        "eyebrow": "Persönliche Ansprache",
+        "title": "Ansprache",
+        "subtitle": "Schreibe persönliche E-Mails oder lass sie von KI entwerfen, prüfe sie und sende sie über dein eigenes E-Mail-Konto.",
+        "queue": "E-Mails",
+        "compose": "Neue E-Mail",
+        "to": "An",
+        "noRecipients": "Noch keine Leads oder Kontakte mit E-Mail",
+        "groups": {
+          "lead": "Lead",
+          "contact": "Kontakt"
+        },
+        "aiTitle": "Entwurf von der KI schreiben lassen",
+        "goal": "Wofür ist die E-Mail?",
+        "goals": {
+          "first_touch": "Erstes Hallo",
+          "follow_up": "Nachfassen",
+          "book_meeting": "Um einen Termin bitten",
+          "proposal_follow_up": "Beim Angebot nachfassen",
+          "re_engage": "Ruhiges Gespräch wieder aufnehmen",
+          "thank_you": "Danke nach einem Termin"
+        },
+        "tone": "Ton",
+        "tones": {
+          "friendly": "Freundlich",
+          "formal": "Förmlich",
+          "short": "Sehr kurz"
+        },
+        "guidance": "Soll die KI etwas erwähnen? (optional)",
+        "guidancePlaceholder": "z. B. unser Frühlingsangebot erwähnen",
+        "draftWithAi": "Mit KI entwerfen",
+        "drafting": "Schreibt…",
+        "aiNote": "Die KI nutzt nur, was im Datensatz steht. Du prüfst vor dem Senden.",
+        "aiMissing": "Verbinde OpenAI oder Gemini, damit die KI E-Mails entwirft. Du kannst trotzdem selbst schreiben.",
+        "writeYourself": "Selbst schreiben",
+        "subject": "Betreff",
+        "body": "Nachricht",
+        "saveDraft": "Entwurf speichern",
+        "saveForApproval": "Speichern & Freigabe anfragen",
+        "savedNote": "Gespeichert. Du findest sie unten oder unter Ansprache – sie wird erst gesendet, wenn jemand sie freigibt.",
+        "recordTitle": "E-Mails",
+        "recordDescription": "Entwürfe, Freigaben und gesendete E-Mails für diese Person.",
+        "needEmail": "Füge diesem Datensatz zuerst eine E-Mail-Adresse hinzu.",
+        "noChannel": "Kein E-Mail-Konto verbunden: E-Mails können entworfen, aber nicht gesendet werden. Verbinde Gmail, Outlook oder SendGrid.",
+        "status": {
+          "DRAFT": "Entwurf",
+          "PENDING_APPROVAL": "Wartet auf Freigabe",
+          "SENT": "Gesendet",
+          "FAILED": "Nicht gesendet",
+          "CANCELLED": "Verworfen"
+        },
+        "empty": {
+          "DRAFT": "Keine Entwürfe.",
+          "PENDING_APPROVAL": "Nichts wartet auf Freigabe.",
+          "SENT": "Noch keine E-Mails gesendet.",
+          "FAILED": "Keine fehlgeschlagenen E-Mails.",
+          "CANCELLED": "Nichts verworfen."
+        },
+        "aiDrafted": "KI-Entwurf",
+        "fromSequence": "{name} · Schritt {step}",
+        "sentVia": "Gesendet über {channel}",
+        "approveSend": "Freigeben & senden",
+        "confirmSend": "Genau diese E-Mail jetzt an {email} senden?",
+        "askApproval": "Freigabe anfragen",
+        "discard": "Verwerfen",
+        "skipStep": "Schritt überspringen",
+        "kpi": {
+          "pending": "Warten auf Freigabe",
+          "pendingHint": "Diese zuerst prüfen und senden",
+          "sent": "Gesendet (30 Tage)",
+          "sentHint": "An {people, plural, one {# Person} other {# Personen}}",
+          "replies": "Antworten (30 Tage)",
+          "repliesHint": "In deinem verbundenen Postfach gesehen",
+          "rate": "Antwortquote",
+          "rateHint": "Personen mit Antwort ÷ angeschriebene Personen"
+        }
+      },
+      "seq": {
+        "eyebrow": "Automatisches Nachfassen",
+        "title": "Sequenzen",
+        "subtitle": "Nachfassaktionen nach Zeitplan, die stoppen, sobald jemand antwortet.",
+        "yours": "Deine Sequenzen",
+        "empty": "Noch keine Sequenzen. Starte mit dem Beispiel rechts – passe einfach den Text an.",
+        "new": "Neue Sequenz",
+        "newHint": "Wir haben ein einfaches Beispiel mit 4 Schritten eingetragen. Formuliere es so, wie du sprichst.",
+        "name": "Name",
+        "namePlaceholder": "z. B. Nachfassen bei neuen Leads",
+        "description": "Kurze Beschreibung (optional)",
+        "stopOnReply": "Stoppen, wenn die Person antwortet (dafür muss ein Gmail- oder Outlook-Postfach verbunden sein)",
+        "mergeHint": "Personalisiere mit '{{firstName}}', '{{name}}', '{{company}}' und '{{sender}}' – sie werden für jede Person ausgefüllt.",
+        "kind": "Schritt",
+        "kinds": {
+          "EMAIL": "E-Mail",
+          "TASK": "Erinnerung für dich"
+        },
+        "wait": "Warten (Tage)",
+        "waitDays": "{count, plural, one {# Tag} other {# Tage}} warten",
+        "dayN": "Tag {day}",
+        "up": "Nach oben",
+        "down": "Nach unten",
+        "remove": "Schritt entfernen",
+        "taskNote": "Was sollst du tun?",
+        "addStep": "Schritt hinzufügen",
+        "create": "Sequenz anlegen",
+        "status": {
+          "DRAFT": "Nicht gestartet",
+          "ACTIVE": "Läuft",
+          "PAUSED": "Pausiert",
+          "ARCHIVED": "Archiviert"
+        },
+        "autoBadge": "Sendet automatisch",
+        "reviewBadge": "Du gibst jede E-Mail frei",
+        "stepsCount": "{count, plural, one {# Schritt} other {# Schritte}}",
+        "listMeta": "{active} laufend · {replied} geantwortet · {completed} abgeschlossen",
+        "back": "Alle Sequenzen",
+        "stopsOnReply": "Stoppt bei Antwort",
+        "notRunning": "Diese Sequenz läuft nicht. Niemand bekommt E-Mails, bis du sie startest.",
+        "replyNeedsMailbox": "Um bei Antworten zu stoppen, müssen wir sie sehen: Verbinde unter Integrationen ein Gmail- oder Outlook-Postfach.",
+        "steps": "Schritte",
+        "run": "Starten oder stoppen",
+        "autoSend": "E-Mails automatisch senden",
+        "autoSendHint": "Wenn du mit dieser Option startest, gibst du diese Texte frei – jede E-Mail wird dann ohne Rückfrage nach Plan gesendet. Lass sie aus, um jede E-Mail einzeln freizugeben.",
+        "autoSendNoChannel": "Verbinde zuerst ein E-Mail-Konto. Bis dahin wartet jede E-Mail auf deine Freigabe.",
+        "confirmAuto": "E-Mails werden mit diesen Texten automatisch gesendet. Jetzt starten?",
+        "activate": "Sequenz starten",
+        "pause": "Pausieren",
+        "archive": "Archivieren",
+        "confirmArchive": "Diese Sequenz archivieren? Alle darin stoppen und wartende E-Mails werden verworfen.",
+        "addPeople": "Personen hinzufügen",
+        "searchPeople": "Leads und Kontakte suchen",
+        "noPeople": "Keine passenden Personen mit E-Mail-Adresse.",
+        "enroll": "{count, plural, =0 {Personen} one {# Person} other {# Personen}} hinzufügen",
+        "enrolled": "{enrolled} hinzugefügt. {skipped} übersprungen (schon dabei oder keine E-Mail).",
+        "people": "{count, plural, one {# Person} other {# Personen}} in dieser Sequenz",
+        "nobody": "Noch niemand. Füge oben Personen hinzu.",
+        "progress": "Schritt {done} von {total}",
+        "nextAt": "nächster {date}",
+        "waitingApproval": "wartet auf Freigabe",
+        "enrollStatus": {
+          "ACTIVE": "Läuft",
+          "PAUSED": "Pausiert",
+          "COMPLETED": "Abgeschlossen",
+          "REPLIED": "Geantwortet",
+          "STOPPED": "Gestoppt",
+          "FAILED": "Senden fehlgeschlagen"
+        },
+        "stop": "Entfernen",
+        "recordTitle": "Sequenzen",
+        "recordDescription": "Automatische Nachfassaktionen, in denen diese Person ist.",
+        "noneActive": "Noch keine laufende Sequenz.",
+        "pick": "Sequenz",
+        "start": "Starten",
+        "enrolledOne": "Zur Sequenz hinzugefügt.",
+        "alreadyIn": "Schon in dieser Sequenz (oder keine E-Mail).",
+        "manage": "Sequenzen verwalten",
+        "starter": {
+          "s1": "Kurze Frage, '{{firstName}}'",
+          "b1": "Hallo '{{firstName}}',\n\nich bin auf '{{company}}' gestoßen und wollte mich persönlich melden. Wir helfen Unternehmen wie deinem, Zeit bei Aufgaben zu sparen, die von den Kunden abhalten.\n\nWäre ein kurzes Gespräch nächste Woche hilfreich?\n\nViele Grüße\n'{{sender}}'",
+          "s2": "Kurze Nachfrage",
+          "b2": "Hallo '{{firstName}}',\n\nich hole meine Nachricht nur kurz nach oben in dein Postfach. Gerne schicke ich statt eines Gesprächs eine kurze Zusammenfassung.\n\n'{{sender}}'",
+          "t3": "'{{firstName}}' anrufen oder auf LinkedIn vernetzen",
+          "s4": "Soll ich das Thema schließen?",
+          "b4": "Hallo '{{firstName}}',\n\nich habe nichts gehört und melde mich daher vorerst nicht mehr. Wenn sich das Timing ändert, antworte einfach auf diese E-Mail.\n\nAlles Gute\n'{{sender}}'"
+        }
+      },
+      "meet": {
+        "eyebrow": "Kundentermine",
+        "pageTitle": "Termine",
+        "subtitle": "Alle mit einem Lead, Kontakt oder Deal gebuchten Termine. Neue buchst du auf der Seite der Person.",
+        "recordTitle": "Termine",
+        "recordDescription": "Anruf oder Besuch buchen und Notizen festhalten.",
+        "defaultTitle": "Termin mit {name}",
+        "bookNew": "Termin buchen",
+        "title": "Titel",
+        "when": "Wann",
+        "duration": "Dauer",
+        "minutes": "{count} Min.",
+        "location": "Wo",
+        "locationPlaceholder": "Videolink, Telefon oder Adresse",
+        "agenda": "Agenda (optional)",
+        "willAdd": "Er wird in {calendar} mit dem Kunden als Gast eingetragen.",
+        "noCalendar": "Kein Kalender verbunden: Der Termin wird gespeichert und du kannst eine Kalenderdatei herunterladen und selbst senden. Niemand wird automatisch eingeladen.",
+        "book": "Termin buchen",
+        "result": {
+          "added": "Gebucht und in deinen Kalender eingetragen.",
+          "not_connected": "Gebucht. Kein Kalender verbunden – lade die Kalenderdatei herunter, um sie zu teilen.",
+          "failed": "Gebucht, aber dein Kalender hat ihn abgelehnt. Versuche es erneut beim Termin.",
+          "skipped": "Gebucht."
+        },
+        "status": {
+          "SCHEDULED": "Geplant",
+          "COMPLETED": "Erledigt",
+          "CANCELLED": "Abgesagt"
+        },
+        "onCalendar": "In deinem Kalender",
+        "onCalendarGuest": "In deinem Kalender · Gast: {email}",
+        "notOnCalendar": "Nicht im Kalender – niemand wurde automatisch eingeladen",
+        "calendarFailed": "Dein Kalender hat diesen Termin abgelehnt",
+        "ics": "Kalenderdatei",
+        "done": "Als erledigt markieren",
+        "cancel": "Termin absagen",
+        "confirmCancel": "Diesen Termin absagen? (Der Kunde wird nicht automatisch benachrichtigt.)",
+        "retry": "In Kalender eintragen",
+        "notes": "Terminnotizen",
+        "notesPlaceholder": "Was wurde vereinbart? Was ist der nächste Schritt?",
+        "saveDone": "Als erledigt speichern",
+        "none": "Keine Termine geplant.",
+        "upcoming": "Demnächst ({count})",
+        "emptyUpcoming": "Keine Termine geplant. Öffne einen Lead, Kontakt oder Deal und klicke auf „Termin buchen“.",
+        "past": "Früher"
+      },
+      "customersEyebrow": "Kundenbeziehungen"
     }
   },
   "plans": {
@@ -11024,7 +11520,9 @@
       "payables": "Verbindlichkeiten",
       "approvals": "Freigaben",
       "claims": "Spesenabrechnungen",
-      "start": "Hier starten"
+      "start": "Hier starten",
+      "alerts": "Warnungen",
+      "learn": "Begriffe lernen"
     },
     "accounting": {
       "tabs": {
@@ -11645,7 +12143,9 @@
       "byVendor": "Nach Lieferant",
       "byCostCenter": "Nach Kostenstelle",
       "noVendor": "Kein Lieferant",
-      "noCostCenter": "Keine Kostenstelle"
+      "noCostCenter": "Keine Kostenstelle",
+      "learnHint": "Neu bei diesen Berichten?",
+      "learnLink": "Lesen, was jede Zeile bedeutet"
     },
     "settings": {
       "documents": "Dokumente & Zahlungsziele",
@@ -11947,6 +12447,18 @@
         "why": "Richtige Einstellungen machen jedes Dokument korrekt.",
         "can": "Standardwerte für Ihr Unternehmen ändern.",
         "next": "Zurück zu den geführten Aufgaben"
+      },
+      "alerts": {
+        "what": "Hinweise zu Geldthemen, die jetzt Ihre Aufmerksamkeit brauchen.",
+        "why": "Späte Zahlungen, schrumpfende Reichweite oder überzogene Budgets lassen sich früh leichter beheben.",
+        "can": "Alle Warnungen sehen, verstehen, warum sie wichtig sind, und direkt zur Lösung springen.",
+        "next": "Liquidität planen"
+      },
+      "learn": {
+        "what": "Jeder Finanzbegriff in Realy, in einfacher Sprache.",
+        "why": "Sie müssen kein Buchhalter sein, um die Finanzen Ihres Unternehmens zu führen.",
+        "can": "Einen Begriff suchen, ein Alltagsbeispiel lesen und die passende Seite öffnen.",
+        "next": "Geführte Aufgabe starten"
       }
     },
     "os": {
@@ -12166,6 +12678,246 @@
       "payLinkNotConnected": "Kein Zahlungsanbieter verbunden. Verbinden Sie Razorpay oder Stripe, um Zahlungslinks zu erstellen.",
       "payLinkFailed": "Der Zahlungsanbieter hat abgelehnt: {error}",
       "payOnline": "Online bezahlen"
+    },
+    "flow": {
+      "title": "Woher Ihr Geld kommt und wohin es geht",
+      "hint": "Einnahmequellen auf der einen, Kosten auf der anderen Seite, für den gewählten Zeitraum. Breitere Bänder bedeuten mehr Geld.",
+      "whatIsThis": "Was ist das?",
+      "aria": "Geldfluss: {income} eingenommen, {expenses} ausgegeben",
+      "center": "Ihr Unternehmen",
+      "kept": "{amount} als Gewinn behalten",
+      "lost": "{amount} mehr ausgegeben als eingenommen",
+      "empty": "In diesem Zeitraum sind noch keine Einnahmen oder Ausgaben erfasst. Erfassen Sie einen Verkauf oder eine Ausgabe, dann erscheint das Bild hier.",
+      "moneyIn": "Geld rein",
+      "moneyOut": "Geld raus",
+      "income": "Einnahme",
+      "expense": "Ausgabe",
+      "profit": "Behaltener Gewinn",
+      "loss": "Aus Rücklagen gedeckt",
+      "other_income": "Sonstige Einnahmen",
+      "other_expense": "Sonstige Kosten"
+    },
+    "alerts": {
+      "runwayTitle": "Liquiditätsreichweite",
+      "runwayHint": "Wie lange Ihr Geld reicht, wenn sich nichts ändert.",
+      "runwayLabel": "Monate mit Geld übrig",
+      "noBurn": "Positiver Cashflow",
+      "zones": {
+        "critical": "Unter 3 Monaten",
+        "warning": "3–6 Monate",
+        "healthy": "6+ Monate"
+      },
+      "runwayExplain": "Reichweite = Kontostand ÷ durchschnittlicher monatlicher Burn der letzten 3 vollen Monate.",
+      "historyTitle": "Gesendete Warnungen",
+      "historyHint": "Benachrichtigungen, die das System an Finanzverantwortliche gesendet hat.",
+      "historyEmpty": "Es wurden noch keine Liquiditätswarnungen gesendet.",
+      "kinds": {
+        "runway_low": "Die Liquiditätsreichweite wird knapp",
+        "runway_critical": "Die Liquiditätsreichweite ist kritisch kurz",
+        "cash_negative_forecast": "Laut Prognose geht das Geld aus"
+      },
+      "activeTitle": "Braucht Aufmerksamkeit",
+      "count": "{count, plural, =0 {Nichts zu tun} one {# Warnung} other {# Warnungen}}",
+      "allClearTitle": "Alles in Ordnung",
+      "allClearText": "Keine überfälligen Rechnungen, keine Budgetüberschreitungen und eine gesunde Reichweite. Wir melden uns, sobald sich etwas ändert.",
+      "planCash": "Liquidität planen",
+      "runwayBody": "Beim heutigen Tempo reicht Ihr Geld ({cash}) etwa {months} Monate, weil Sie jeden Monat {burn} mehr ausgeben als einnehmen.",
+      "runwayTodo": "Offene Rechnungen einfordern, nicht notwendige Ausgaben verschieben oder neue Einnahmen in der Cashflow-Prognose planen.",
+      "seeForecast": "Prognose ansehen",
+      "negativeBody": "Wenn offene Rechnungen und wiederkehrende Posten wie erwartet eintreffen, sinkt Ihr Kontostand im {month} auf {amount}.",
+      "projectedLabel": "Hochrechnung aus offenen Rechnungen, wiederkehrenden Posten und dem Trend der letzten 3 Monate – keine Tatsache.",
+      "overdueInvoices": "{count, plural, one {# Kundenrechnung ist überfällig} other {# Kundenrechnungen sind überfällig}} ({amount})",
+      "chase": "Zahlungen einfordern",
+      "daysLate": "{count, plural, one {# Tag zu spät} other {# Tage zu spät}}",
+      "overdueBills": "{count, plural, one {# Lieferantenrechnung ist überfällig} other {# Lieferantenrechnungen sind überfällig}} ({amount})",
+      "payBills": "Rechnungen bezahlen",
+      "budgetOver": "Budget überschritten: {name}",
+      "budgetNear": "Budget fast aufgebraucht: {name}",
+      "reviewBudget": "Budget prüfen",
+      "budgetBody": "{actual} von {budget} ausgegeben ({pct} %).",
+      "howSent": "Finanzverantwortliche erhalten einmal pro Monat Reichweiten- und Prognosewarnungen, einmal pro überfälliger Rechnung und bei 80 % und 100 % jedes Budgets."
+    },
+    "glossary": {
+      "search": "Begriff suchen…",
+      "groupsLabel": "Themen",
+      "tip": "Tipp: Jeder Bericht und jedes Diagramm in Finanzen verlinkt hierher, wenn einer dieser Begriffe vorkommt.",
+      "noMatch": "Kein Begriff passt zu Ihrer Suche.",
+      "example": "Beispiel",
+      "seeIt": "In Ihrem Unternehmen ansehen",
+      "groups": {
+        "moneyIn": "Geld, das hereinkommt",
+        "moneyOut": "Geld, das hinausgeht",
+        "bigPicture": "Das große Ganze",
+        "planning": "Vorausplanen",
+        "bookkeeping": "Buchhaltung"
+      },
+      "terms": {
+        "revenue": {
+          "term": "Umsatz",
+          "short": "Alles Geld, das Sie mit Ihren Produkten oder Leistungen einnehmen, bevor Kosten abgezogen werden.",
+          "example": "Sie verkaufen 10 Websites zu je 1.000: Ihr Umsatz beträgt 10.000."
+        },
+        "invoice": {
+          "term": "Rechnung",
+          "short": "Ein Dokument, mit dem Sie einen Kunden um Bezahlung für Ihre Leistung bitten.",
+          "example": "Nach einem Projekt senden Sie eine Rechnung über 2.500, fällig in 30 Tagen."
+        },
+        "receivable": {
+          "term": "Forderung",
+          "short": "Geld, das Kunden Ihnen für noch nicht bezahlte Rechnungen schulden.",
+          "example": "Drei offene Rechnungen zu je 1.000 bedeuten 3.000 Forderungen."
+        },
+        "estimate": {
+          "term": "Angebot",
+          "short": "Ein Preisvorschlag vor Arbeitsbeginn; nach Annahme wird daraus eine Rechnung.",
+          "example": "Sie bieten ein Logo für 4.000 an; der Kunde nimmt an und Sie erstellen die Rechnung."
+        },
+        "creditNote": {
+          "term": "Gutschrift",
+          "short": "Ein Dokument, das den offenen Betrag eines Kunden verringert, z. B. nach Erstattung oder Fehler.",
+          "example": "Sie haben 1.200 berechnet, aber 200 Rabatt vereinbart: eine Gutschrift über 200 korrigiert das."
+        },
+        "paymentLink": {
+          "term": "Zahlungslink",
+          "short": "Ein Weblink, über den ein Kunde eine Rechnung online per Karte bezahlen kann.",
+          "example": "Sie fügen der Rechnungs-E-Mail einen Zahlungslink hinzu und der Kunde zahlt mit zwei Klicks."
+        },
+        "mrr": {
+          "term": "MRR (monatlich wiederkehrender Umsatz)",
+          "short": "Einnahmen, auf die Sie sich jeden Monat aus Abos oder Pauschalen verlassen können.",
+          "example": "20 Kunden zahlen je 50 im Monat: MRR von 1.000."
+        },
+        "arr": {
+          "term": "ARR (jährlich wiederkehrender Umsatz)",
+          "short": "Ihr wiederkehrender Umsatz über ein ganzes Jahr: MRR × 12.",
+          "example": "Ein MRR von 1.000 ergibt einen ARR von 12.000."
+        },
+        "expense": {
+          "term": "Ausgabe",
+          "short": "Geld, das Sie für den Betrieb ausgeben: Miete, Software, Gehälter, Reisen.",
+          "example": "Ein Software-Abo für 30 im Monat ist eine Ausgabe."
+        },
+        "bill": {
+          "term": "Eingangsrechnung",
+          "short": "Eine Rechnung eines Lieferanten, die Sie bezahlen müssen.",
+          "example": "Ihr Steuerberater schickt eine Rechnung über 400, fällig am 15."
+        },
+        "payable": {
+          "term": "Verbindlichkeit (Lieferant)",
+          "short": "Geld, das Sie Lieferanten für noch nicht bezahlte Rechnungen schulden.",
+          "example": "Zwei offene Rechnungen über 400 und 600 bedeuten 1.000 Verbindlichkeiten."
+        },
+        "overdue": {
+          "term": "Überfällig",
+          "short": "Eine Rechnung, deren Fälligkeitsdatum vorbei ist und die noch nicht vollständig bezahlt ist.",
+          "example": "Eine am 1. März fällige, am 10. März noch offene Rechnung ist 9 Tage überfällig."
+        },
+        "costCenter": {
+          "term": "Kostenstelle",
+          "short": "Ein Teil des Unternehmens (oft eine Abteilung), dessen Ausgaben Sie verfolgen.",
+          "example": "Marketing ist eine Kostenstelle: Werbe- und Agenturkosten werden ihr zugeordnet."
+        },
+        "projectCost": {
+          "term": "Projektkosten",
+          "short": "Alles, was Sie für ein Projekt ausgegeben haben, verglichen mit den Einnahmen daraus.",
+          "example": "Ein Kundenprojekt brachte 10.000 und kostete 6.500 – also 3.500 Gewinn."
+        },
+        "profit": {
+          "term": "Gewinn",
+          "short": "Was nach Abzug aller Ausgaben vom Umsatz übrig bleibt. Negativer Gewinn ist ein Verlust.",
+          "example": "Umsatz 10.000 minus Ausgaben 7.000 = 3.000 Gewinn."
+        },
+        "margin": {
+          "term": "Gewinnmarge",
+          "short": "Gewinn in Prozent vom Umsatz: wie viel Sie von jedem eingenommenen Euro behalten.",
+          "example": "3.000 Gewinn bei 10.000 Umsatz sind 30 % Marge."
+        },
+        "pnl": {
+          "term": "Gewinn- und Verlustrechnung (GuV)",
+          "short": "Ein Bericht über Einnahmen und Ausgaben eines Zeitraums, der zeigt, ob Sie Gewinn gemacht haben.",
+          "example": "Ihre GuV für März zeigt 12.000 Einnahmen, 9.000 Ausgaben und 3.000 Gewinn."
+        },
+        "balanceSheet": {
+          "term": "Bilanz",
+          "short": "Eine Momentaufnahme an einem Tag: was das Unternehmen besitzt (Vermögen), schuldet (Verbindlichkeiten) und den Anteil der Eigentümer (Eigenkapital).",
+          "example": "Am 31. Dezember besitzen Sie 20.000 Bargeld und schulden 5.000 – Eigenkapital 15.000."
+        },
+        "asset": {
+          "term": "Vermögenswert",
+          "short": "Etwas Wertvolles, das dem Unternehmen gehört: Geld, Forderungen, Ausstattung.",
+          "example": "Ihr Bankguthaben und ein gekaufter Laptop sind Vermögenswerte."
+        },
+        "liability": {
+          "term": "Verbindlichkeit",
+          "short": "Etwas, das das Unternehmen schuldet: offene Rechnungen, Kredite, fällige Steuern.",
+          "example": "Ein Bankkredit über 10.000 ist eine Verbindlichkeit."
+        },
+        "equity": {
+          "term": "Eigenkapital",
+          "short": "Der Anteil der Eigentümer: Vermögen minus Verbindlichkeiten.",
+          "example": "Vermögen 30.000 minus Verbindlichkeiten 12.000 ergibt 18.000 Eigenkapital."
+        },
+        "cashFlow": {
+          "term": "Cashflow",
+          "short": "Geld, das tatsächlich auf Ihr Konto eingeht und abfließt, über die Zeit.",
+          "example": "Im Mai kamen 8.000 rein und 9.500 gingen raus: Cashflow −1.500."
+        },
+        "cashBalance": {
+          "term": "Kontostand",
+          "short": "Wie viel Geld Sie gerade auf Bank- und Kassenkonten haben.",
+          "example": "Zwei Konten mit 4.000 und 6.000 ergeben einen Kontostand von 10.000."
+        },
+        "burnRate": {
+          "term": "Burn Rate",
+          "short": "Wie viel mehr Geld im Monatsdurchschnitt abfließt als hereinkommt.",
+          "example": "Gehen jeden Monat 12.000 raus und 8.000 rein, liegt die Burn Rate bei 4.000."
+        },
+        "runway": {
+          "term": "Runway (Reichweite)",
+          "short": "Wie viele Monate Ihr Geld bei der aktuellen Burn Rate reicht.",
+          "example": "40.000 auf dem Konto bei 4.000 Burn pro Monat ergeben 10 Monate Runway."
+        },
+        "budget": {
+          "term": "Budget",
+          "short": "Ein Ausgabenlimit für eine Kategorie oder Abteilung in einem Zeitraum.",
+          "example": "Sie erlauben dem Marketing 2.000 pro Monat."
+        },
+        "variance": {
+          "term": "Abweichung",
+          "short": "Der Unterschied zwischen Plan (Budget) und Wirklichkeit (Ist).",
+          "example": "Budget 2.000, Ist 2.300: 300 über Budget."
+        },
+        "forecast": {
+          "term": "Prognose",
+          "short": "Eine Schätzung zukünftiger Geldflüsse aus offenen Rechnungen, wiederkehrenden Posten und Trends. Eine Hochrechnung, keine Tatsache.",
+          "example": "Offene Rechnungen für nächsten Monat lassen 6.000 Eingang erwarten."
+        },
+        "ledger": {
+          "term": "Hauptbuch",
+          "short": "Die vollständige Liste aller Geldbewegungen, nach Konten gruppiert. Berichte entstehen daraus.",
+          "example": "Das Konto „Software“ listet alle Softwareausgaben dieses Jahres."
+        },
+        "journalEntry": {
+          "term": "Buchungssatz",
+          "short": "Eine erfasste Geldbewegung mit Soll- und Habenzeilen, die immer ausgeglichen sind.",
+          "example": "Mietzahlung: Mietaufwand steigt um 1.000, Bank sinkt um 1.000."
+        },
+        "reconciliation": {
+          "term": "Abstimmung",
+          "short": "Zeile für Zeile prüfen, ob Ihre Bücher mit dem echten Kontoauszug übereinstimmen.",
+          "example": "Bank zeigt 5.240, Bücher zeigen 5.240: das Konto ist abgestimmt."
+        },
+        "tax": {
+          "term": "Steuer (USt / GST / Sales Tax)",
+          "short": "Auf Preise aufgeschlagene Steuer, die Sie von Kunden einnehmen und ans Finanzamt abführen.",
+          "example": "Verkauf über 100 mit 19 % USt: der Kunde zahlt 119, Sie schulden 19 USt."
+        },
+        "accrual": {
+          "term": "Periodengerechte Erfassung",
+          "short": "Einnahmen und Kosten werden erfasst, wenn sie entstehen – nicht, wenn das Geld fließt.",
+          "example": "Im März geleistete Arbeit zählt als März-Umsatz, auch wenn der Kunde im April zahlt."
+        }
+      }
     }
   },
   "hr": {
@@ -12239,7 +12991,9 @@
       "requests": "Anfragen",
       "payroll": "Gehaltsabrechnung",
       "me": "Mein HR",
-      "hire": "Jemanden einstellen"
+      "hire": "Jemanden einstellen",
+      "planning": "Personalplanung",
+      "documents": "Dokumente"
     },
     "ai": {
       "analystAnswers": "Antworten des People Analyst",
@@ -13084,7 +13838,8 @@
       "tax": "Steuern",
       "certificate": "Zertifikat",
       "review": "Beurteilung",
-      "other": "Sonstiges"
+      "other": "Sonstiges",
+      "letter": "Schreiben"
     },
     "hire": {
       "title": "Jemanden einstellen",
@@ -13424,6 +14179,18 @@
       "chart": {
         "emptyTitle": "Noch niemand im Organigramm",
         "addPeople": "Personen hinzufügen"
+      },
+      "planning": {
+        "what": "Die Rollen, die Sie hinzufügen wollen, wann und was sie kosten.",
+        "why": "Einstellungen sind Ihr größter Kostenblock – Planung vermeidet Überraschungen bei Geld und Arbeitslast.",
+        "can": "Künftige Rollen erfassen, genehmigen, Kosten pro Quartal sehen und mit einem Klick die Suche starten.",
+        "next": "Jetzt jemanden einstellen"
+      },
+      "documents": {
+        "what": "Schreiben und Dateien für Ihre Mitarbeitenden an einem Ort.",
+        "why": "Mitarbeitende brauchen regelmäßig offizielle Schreiben, und Sie brauchen eine ordentliche Ablage.",
+        "can": "Schreiben aus Ihren Daten erstellen, Dokumente öffnen, herunterladen oder entfernen.",
+        "next": "Teamliste öffnen"
       }
     },
     "empty": {
@@ -13435,6 +14202,181 @@
       "jobs": {
         "title": "Keine offenen Stellen",
         "body": "Sagen Sie uns, welche Unterstützung Sie brauchen, und die KI schreibt die Stellenanzeige für Sie."
+      }
+    },
+    "calendar": {
+      "synced": "In {provider}",
+      "failed": "Kalendersynchronisierung fehlgeschlagen",
+      "manual": "Nicht im Kalender",
+      "downloadIcs": "Zum Kalender hinzufügen (.ics)",
+      "sendNow": "An Kalender senden",
+      "willSync": "Das Interview wird in {provider} eingetragen und Kandidat sowie Interviewer werden eingeladen.",
+      "notConnected": "Kein Kalender verbunden: Das Interview wird hier gespeichert und Sie können es per .ics-Datei in jeden Kalender übernehmen.",
+      "connect": "Google oder Microsoft verbinden",
+      "providers": {
+        "google_calendar": "Google Kalender",
+        "outlook_calendar": "Outlook"
+      }
+    },
+    "planning": {
+      "title": "Personalplanung",
+      "subtitle": "Entscheiden Sie, wen Sie wann brauchen und was es kostet.",
+      "guide": {
+        "title": "Ihr Team in drei Schritten planen",
+        "intro": "Personalplanung heißt einfach: die Rollen der nächsten Monate aufschreiben, damit Einstellungen, Geld und Arbeitslast zusammenpassen. Keine HR-Erfahrung nötig.",
+        "steps": {
+          "list": {
+            "title": "Rollen aufschreiben",
+            "text": "Für jede Rolle: was, wie viele, welches Quartal und grobe Jahreskosten."
+          },
+          "approve": {
+            "title": "Genehmigen, was bezahlbar ist",
+            "text": "Monatliche Kosten mit der Reichweite abgleichen, dann genehmigen."
+          },
+          "hire": {
+            "title": "Suche starten",
+            "text": "Ein Klick öffnet die Stelle und den geführten Einstellungsprozess."
+          }
+        }
+      },
+      "stats": {
+        "today": "Team heute",
+        "planned": "Geplante Einstellungen",
+        "plannedHint": "{approved} genehmigt · {hiring} in Suche",
+        "annualCost": "Geplante Jahreskosten",
+        "monthlyCost": "Zusätzliche Monatskosten",
+        "monthlyHint": "Was diese Einstellungen zu Ihrem monatlichen Burn hinzufügen"
+      },
+      "trajectory": "Teamgröße im Zeitverlauf",
+      "trajectoryHint": "Heutige Mitarbeiterzahl plus geplante Einstellungen je Quartal.",
+      "today": "Heute",
+      "noQuarters": "Fügen Sie eine geplante Rolle hinzu, um das Wachstum zu sehen.",
+      "byDepartment": "Nach Abteilung",
+      "byDepartmentHint": "Mitarbeitende heute und geplante Zugänge.",
+      "editDepartments": "Abteilungen bearbeiten",
+      "current": "Heute",
+      "plannedLegend": "Geplant",
+      "noPeople": "Noch keine Mitarbeitenden oder geplanten Rollen.",
+      "roles": "Geplante Rollen",
+      "rolesHint": "Gruppiert nach dem Quartal, in dem sie starten sollen.",
+      "status": {
+        "PLANNED": "Geplant",
+        "APPROVED": "Genehmigt",
+        "HIRING": "In Suche",
+        "FILLED": "Besetzt",
+        "CANCELLED": "Abgebrochen"
+      },
+      "priority": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "CRITICAL": "Kritisch"
+      },
+      "perYear": "{amount} / Jahr pro Person",
+      "hiredOf": "{hired} von {total} eingestellt",
+      "openHiring": "Einstellungsprozess öffnen",
+      "approve": "Genehmigen",
+      "startHiring": "Suche starten",
+      "starting": "Wird geöffnet…",
+      "cancel": "Abbrechen",
+      "confirmCancel": "Diese geplante Rolle abbrechen?",
+      "empty": "Noch keine geplanten Rollen. Fügen Sie unten die erste hinzu.",
+      "add": "Geplante Rolle hinzufügen",
+      "addSubmit": "Zum Plan hinzufügen",
+      "fields": {
+        "title": "Rolle",
+        "titlePlaceholder": "z. B. Kundensupport-Spezialist",
+        "headcount": "Wie viele Personen",
+        "targetStart": "Start etwa",
+        "targetStartHint": "Wird als Beginn dieses Quartals gespeichert.",
+        "priority": "Priorität",
+        "annualCost": "Jahreskosten pro Person ({currency})",
+        "annualCostHint": "Gehalt plus etwa 20–30 % für Abgaben und Leistungen. Ein grober Wert genügt.",
+        "reason": "Warum brauchen Sie diese Rolle?",
+        "reasonPlaceholder": "z. B. Supportanfragen haben sich verdoppelt; Antworten dauern 2 Tage."
+      },
+      "ai": {
+        "title": "Hilf mir planen",
+        "hint": "Der KI-People-Analyst prüft Team, offene Stellen und diesen Plan und schlägt vor, wen Sie als Nächstes einstellen.",
+        "guidance": "Was sollte er wissen? (optional)",
+        "placeholder": "z. B. Wir wollen im Frühjahr in Deutschland starten.",
+        "run": "Plan prüfen",
+        "results": "Planprüfungen",
+        "resultsHint": "Vorschläge des KI-People-Analysten – Sie entscheiden, was Sie übernehmen."
+      }
+    },
+    "documents": {
+      "title": "HR-Dokumente",
+      "subtitle": "Offizielle Schreiben erstellen und alle Personalunterlagen an einem Ort aufbewahren.",
+      "generateTitle": "Schreiben erstellen",
+      "generateHint": "Person und Schreiben wählen; wir füllen es aus den Stammdaten aus.",
+      "honest": "Schreiben werden aus den Daten in Realy erstellt und bei den Dokumenten der Person gespeichert. Nichts wird versendet – vor der Weitergabe prüfen, drucken und unterschreiben.",
+      "libraryTitle": "Alle Dokumente",
+      "libraryHint": "{count, plural, one {# Dokument} other {# Dokumente}} für Ihre Mitarbeitenden gespeichert.",
+      "all": "Alle",
+      "searchPlaceholder": "Nach Dokument oder Person suchen",
+      "noMatch": "Kein Dokument gefunden.",
+      "empty": "Noch keine Dokumente. Erstellen Sie ein Schreiben oder laden Sie Dateien im Profil einer Person hoch."
+    },
+    "docgen": {
+      "noTitle": "Teammitglied",
+      "noDepartment": "dem Unternehmen",
+      "noManager": "Ihre Führungskraft",
+      "signoff": "Mit freundlichen Grüßen",
+      "footer": "Erstellt mit Realy am {date}. Gültig mit Unterschrift.",
+      "noPeople": "Fügen Sie zuerst Personen zu Ihrem Team hinzu – Schreiben werden aus deren Daten befüllt.",
+      "who": "Für wen ist das Schreiben?",
+      "pickPerson": "Person wählen",
+      "which": "Welches Schreiben?",
+      "newTitle": "Neue Stellenbezeichnung",
+      "lastDay": "Letzter Arbeitstag",
+      "lastDayHint": "Leer lassen für heute.",
+      "language": "Sprache des Schreibens",
+      "details": "Ergänzung (optional)",
+      "detailsHint": "Wird als letzter Absatz angefügt.",
+      "warningDetails": "Was ist passiert und was muss sich ändern",
+      "warningHint": "Sachlich bleiben: Daten, Erwartung, Vorfall, was sich bis wann ändern muss.",
+      "created": "„{name}“ erstellt und bei den Dokumenten gespeichert.",
+      "open": "Zum Drucken öffnen",
+      "generating": "Wird erstellt…",
+      "generate": "Schreiben erstellen",
+      "generateFor": "Schreiben erstellen",
+      "tpl": {
+        "employment_verification": {
+          "name": "Arbeitsbescheinigung",
+          "when": "Für Bank, Vermieter oder Visum: bestätigt das Arbeitsverhältnis.",
+          "subject": "Bestätigung des Arbeitsverhältnisses",
+          "recipient": "Sehr geehrte Damen und Herren,",
+          "body": "hiermit bestätigen wir, dass {name} bei {company} als {title} im Bereich {department} beschäftigt ist.\n\n{name} ist seit dem {startDate} in {employmentType} bei uns tätig und befindet sich in einem ungekündigten Arbeitsverhältnis.\n\nFür weitere Auskünfte stehen wir gerne zur Verfügung."
+        },
+        "experience": {
+          "name": "Arbeitsbestätigung",
+          "when": "Beim Austritt: bestätigt Rolle und Beschäftigungsdauer.",
+          "subject": "Arbeitsbestätigung",
+          "recipient": "Sehr geehrte Damen und Herren,",
+          "body": "hiermit bestätigen wir, dass {name} vom {startDate} bis zum {endDate} bei {company} als {title} im Bereich {department} tätig war.\n\nIn dieser Zeit hat {name} die übertragenen Aufgaben engagiert erfüllt. Wir danken für die Zusammenarbeit und wünschen für die Zukunft alles Gute."
+        },
+        "welcome": {
+          "name": "Willkommensschreiben",
+          "when": "Vor dem ersten Tag: begrüßt eine neue Person und erklärt den Start.",
+          "subject": "Willkommen bei {company}",
+          "recipient": "Liebe/r {name},",
+          "body": "wir freuen uns sehr, Sie bei {company} als {title} im Bereich {department} begrüßen zu dürfen.\n\nIhr erster Arbeitstag ist der {startDate}. {manager} ist Ihre Führungskraft und unterstützt Sie in den ersten Wochen beim Ankommen.\n\nWenn Sie vorher Fragen haben, antworten Sie uns einfach. Wir freuen uns auf die Zusammenarbeit."
+        },
+        "role_change": {
+          "name": "Bestätigung neue Rolle",
+          "when": "Beförderung oder neue Position: bestätigt Titel und Datum.",
+          "subject": "Bestätigung Ihrer neuen Rolle",
+          "recipient": "Liebe/r {name},",
+          "body": "wir freuen uns, Ihnen zu bestätigen, dass sich Ihre Rolle bei {company} mit Wirkung zum {effectiveDate} von {title} zu {newTitle} ändert.\n\nVielen Dank für Ihre bisherige Arbeit. Alle übrigen Bedingungen Ihres Arbeitsverhältnisses bleiben unverändert, sofern nicht schriftlich anders vereinbart."
+        },
+        "warning": {
+          "name": "Schriftliche Ermahnung",
+          "when": "Eine formelle, dokumentierte Ermahnung zu Verhalten oder Leistung.",
+          "subject": "Schriftliche Ermahnung",
+          "recipient": "Liebe/r {name},",
+          "body": "dieses Schreiben ist eine formelle schriftliche Ermahnung bezüglich Ihres Verhaltens oder Ihrer Leistung in Ihrer Rolle als {title} bei {company}.\n\nDie Einzelheiten sind unten beschrieben. Wir erwarten eine deutliche Verbesserung und unterstützen Sie gerne dabei. Bessert sich die Situation nicht, können weitere Schritte folgen.\n\nSie können schriftlich Stellung nehmen; Ihre Stellungnahme wird zu diesem Dokument genommen."
+        }
       }
     }
   },

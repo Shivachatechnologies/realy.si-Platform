@@ -1,0 +1,6 @@
+{
+  "name": "@realy/shared-utils",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-light utilities shared by both apps and the backend: src/lib (cn, safe-next, …) and the i18n runtime (config, translate, format, client provider, locale negotiation). Message catalogs live in each app."
+}

@@ -10,6 +10,10 @@ import { addFollowUp } from "./service";
 import { transaction } from "@/server/core/db";
 import { authorize } from "./common";
 import { getProposal, insertProposal, listProposals, parseProposalFilters, proposalInput } from "./proposals";
+import { nextActions } from "./next-actions";
+import { createOutreachDraft } from "./outreach";
+import { enrichLead, latestIntel } from "./intel";
+import { enroll } from "./cadences";
 
 const money = (m: bigint, currency: string) => `${toMajor(m, currency) || "0"} ${currency}`;
 const uuidField = (description: string) => ({ type: "string", description });
@@ -419,6 +423,108 @@ export const CRM_TOOLS: Record<string, ToolDefinition> = {
         return insertProposal(tx, ctx, organizationId, companyId, parsed);
       });
       return { content: `Created draft proposal ${p.number} "${p.title}" (total ${money(p.totalMinor, p.currency)}). It has not been sent.`, records: [`crm_proposal:${p.id}`] };
+    },
+  }),
+  read_next_actions: def({
+    name: "read_next_actions",
+    version: 1,
+    description:
+      "Lists the suggested next best actions for open leads and deals (or one record), most urgent first, each with its kind, priority (1 = today) and the record. Use it to decide what to work on.",
+    input: z.object({ leadId: z.string().uuid().optional(), dealId: z.string().uuid().optional() }).strict(),
+    modelSchema: { type: "object", properties: { leadId: uuidField("Only this lead"), dealId: uuidField("Only this deal") }, required: [], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read next best actions",
+    async execute(input, { ctx, organizationId, companyId }) {
+      const rows = await nextActions(ctx, organizationId, companyId, input);
+      const lines = rows.slice(0, 40).map((s) => `${s.type} ${s.id} "${s.name}"${s.meta ? ` (${s.meta})` : ""}: ${s.actions.map((a) => `${a.kind}[p${a.priority}]`).join(", ")}`);
+      return { content: lines.length ? lines.join("\n") : "No suggested actions.", records: rows.slice(0, 40).map((s) => `${s.type}:${s.id}`) };
+    },
+  }),
+  read_lead_intel: def({
+    name: "read_lead_intel",
+    version: 1,
+    description: "Reads the latest web research (facts with source URLs) and AI fit check (score, verdict, reasons, missing info) saved on a lead.",
+    input: z.object({ leadId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { leadId: uuidField("Lead id") }, required: ["leadId"], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 10_000,
+    summarize: () => "Read lead research",
+    async execute({ leadId }, { ctx, organizationId, companyId }) {
+      const i = await latestIntel(ctx, organizationId, companyId, { leadId });
+      const parts = [
+        i.enrichment ? `Research (${i.enrichment.createdAt.toISOString().slice(0, 10)}): ${i.enrichment.summary}\n${i.enrichment.facts.map((f) => `- ${f.label}: ${f.value} [${f.sourceUrl ?? "no source"}]`).join("\n")}` : "No web research yet.",
+        i.qualification ? `Fit check: ${i.qualification.fit}/100, ${i.qualification.verdict}. ${i.qualification.summary}\nMissing: ${i.qualification.missing.join("; ") || "none"}` : "No AI fit check yet.",
+      ];
+      return { content: parts.join("\n\n"), records: [`lead:${leadId}`] };
+    },
+  }),
+  research_lead: def({
+    name: "research_lead",
+    version: 1,
+    description:
+      "Propose looking a lead's company up on the web through the connected research provider and saving the facts (with sources) on the lead. Runs only after a person approves; fails honestly when no research provider is connected.",
+    input: z.object({ leadId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { leadId: uuidField("Lead id") }, required: ["leadId"], additionalProperties: false },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 60_000,
+    summarize: () => "Research a lead's company on the web",
+    async execute({ leadId }, { ctx, organizationId, companyId }) {
+      const r = await enrichLead(ctx, organizationId, companyId, leadId);
+      return { content: `Saved research from ${r.sources} web sources (${r.facts} facts).`, records: [`lead:${leadId}`] };
+    },
+  }),
+  draft_outreach_email: def({
+    name: "draft_outreach_email",
+    version: 1,
+    description:
+      "Propose saving a personal email to a lead, contact or deal's contact in the outreach approval queue. Nothing is sent: a person reviews it in Outreach and sends it through the company's connected email. Give exactly one of leadId, contactId, dealId.",
+    input: z
+      .object({ leadId: z.string().uuid().optional(), contactId: z.string().uuid().optional(), dealId: z.string().uuid().optional(), subject: z.string().trim().min(1).max(200), body: z.string().trim().min(1).max(10_000) })
+      .strict()
+      .refine((v) => [v.leadId, v.contactId, v.dealId].filter(Boolean).length === 1, { message: "Give exactly one of leadId, contactId, dealId" }),
+    modelSchema: {
+      type: "object",
+      properties: { leadId: uuidField("Lead id"), contactId: uuidField("Contact id"), dealId: uuidField("Deal id"), subject: { type: "string" }, body: { type: "string", description: "Plain-text body" } },
+      required: ["subject", "body"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ subject }) => `Queue email for approval: "${subject}"`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const m = await createOutreachDraft(ctx, organizationId, companyId, { ...input, submit: true }, { aiProvider: "agent" });
+      return { content: `Saved "${input.subject}" to ${m.toEmail} in the approval queue. It has NOT been sent.`, records: [`crm_outreach_message:${m.id}`] };
+    },
+  }),
+  enroll_in_sequence: def({
+    name: "enroll_in_sequence",
+    version: 1,
+    description:
+      "Propose adding leads or contacts to an existing follow-up sequence. Runs after a person approves; each sequence email still follows the sequence's own approval setting.",
+    input: z.object({ sequenceId: z.string().uuid(), leadIds: z.array(z.string().uuid()).max(50).optional(), contactIds: z.array(z.string().uuid()).max(50).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { sequenceId: uuidField("Sequence id"), leadIds: { type: "array", items: { type: "string" } }, contactIds: { type: "array", items: { type: "string" } } },
+      required: ["sequenceId"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ leadIds, contactIds }) => `Add ${(leadIds?.length ?? 0) + (contactIds?.length ?? 0)} people to a sequence`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const r = await enroll(ctx, organizationId, companyId, input.sequenceId, { leadIds: input.leadIds ?? [], contactIds: input.contactIds ?? [] });
+      return { content: `Added ${r.enrolled} people (${r.skipped} skipped).`, records: [`crm_cadence:${input.sequenceId}`] };
     },
   }),
 };

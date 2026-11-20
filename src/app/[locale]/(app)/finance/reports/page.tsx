@@ -7,6 +7,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { financePage } from "@/components/finance/page-context";
+import { MoneyFlowCard } from "@/components/finance/money-flow-card";
 import { Empty, RangeForm, rangePresets, UsageBar } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
 import { addDays, param, parseRange } from "@/server/modules/finance/common";
@@ -311,6 +312,13 @@ export default async function ReportsPage({ searchParams }: PageProps<"/[locale]
         />
         {body}
       </Card>
+      {report === "pnl" ? <MoneyFlowCard ctx={ctx} organizationId={org.id} companyId={company.id} range={range} t={t} locale={locale} money={money} qs={qs} /> : null}
+      <p className="text-xs text-muted-foreground">
+        {t("finance.reports.learnHint")}{" "}
+        <Link href={`/${locale}/finance/learn#${report === "balance" ? "balanceSheet" : report === "cashflow" ? "cashFlow" : report === "budget" ? "variance" : "pnl"}`} className="font-medium text-primary hover:underline">
+          {t("finance.reports.learnLink")}
+        </Link>
+      </p>
     </>,
   );
 }

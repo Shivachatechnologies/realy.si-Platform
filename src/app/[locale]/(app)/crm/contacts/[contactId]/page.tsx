@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/crm/kit";
 import { MergeRecordButton } from "@/components/crm/merge-button";
 import { ContactForm } from "@/components/crm/record-forms";
 import { CrmFrame, Facts, TagList, crmContext } from "@/components/crm/shell";
+import { RevenueWorkspace } from "@/components/crm/revenue/panels";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -60,6 +61,7 @@ export default async function ContactPage({ params }: { params: Promise<{ contac
           )}
         </Notice>
       ) : null}
+      {active ? <RevenueWorkspace kind="contact" id={contact.id} name={name} hasEmail={!!contact.email} /> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 content-start gap-4">
           <Card>

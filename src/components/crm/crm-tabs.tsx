@@ -7,11 +7,16 @@ import { cn } from "@/lib/utils";
 /** Secondary navigation of the CRM (/crm/*) and Sales (/sales/*) areas. */
 
 const CRM_TABS = [
+  { key: "today", path: "/crm/today" },
   { key: "leads", path: "/crm" },
+  { key: "discover", path: "/crm/discover" },
   { key: "contacts", path: "/crm/contacts" },
   { key: "accounts", path: "/crm/accounts" },
   { key: "deals", path: "/crm/deals" },
   { key: "pipeline", path: "/crm/pipeline" },
+  { key: "outreach", path: "/crm/outreach" },
+  { key: "sequences", path: "/crm/sequences" },
+  { key: "meetings", path: "/crm/meetings" },
   { key: "proposals", path: "/crm/proposals" },
   { key: "calendar", path: "/crm/calendar" },
   { key: "dashboard", path: "/crm/dashboard" },

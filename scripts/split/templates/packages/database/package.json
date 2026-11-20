@@ -1,0 +1,22 @@
+{
+  "name": "@realy/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prisma schema, migrations, seed and the generated client (src/generated/prisma).",
+  "scripts": {
+    "generate": "prisma generate",
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "$root",
+    "@prisma/client": "$root"
+  },
+  "devDependencies": {
+    "dotenv": "$root",
+    "prisma": "$root",
+    "tsx": "$root"
+  }
+}

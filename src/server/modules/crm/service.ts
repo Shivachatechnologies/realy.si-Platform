@@ -219,7 +219,7 @@ export async function getLead(ctx: RequestContext, organizationId: string, compa
   };
 }
 
-const leadEventData = (l: { name: string; email: string | null; stage: LeadStage; score: number; scoreLabel: LeadScoreLabel; source: string | null; ownerId: string | null; valueMinor: bigint | null; currency: string; account: string | null; qualified: boolean }) => ({
+export const leadEventData = (l: { name: string; email: string | null; stage: LeadStage; score: number; scoreLabel: LeadScoreLabel; source: string | null; ownerId: string | null; valueMinor: bigint | null; currency: string; account: string | null; qualified: boolean }) => ({
   name: l.name,
   email: l.email,
   account: l.account,

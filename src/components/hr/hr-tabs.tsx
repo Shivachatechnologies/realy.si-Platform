@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export const HR_TABS = ["overview", "hire", "employees", "recruiting", "onboarding", "performance", "time", "leave", "policies", "requests", "payroll", "me"] as const;
+export const HR_TABS = ["overview", "hire", "planning", "employees", "recruiting", "onboarding", "performance", "documents", "time", "leave", "policies", "requests", "payroll", "me"] as const;
 export type HrTab = (typeof HR_TABS)[number];
 
 const HREF: Record<HrTab, string> = {
   overview: "/hr",
   hire: "/hr/hire",
+  planning: "/hr/planning",
+  documents: "/hr/documents",
   employees: "/hr/employees",
   recruiting: "/hr/recruiting",
   onboarding: "/hr/onboarding",

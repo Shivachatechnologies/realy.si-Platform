@@ -733,7 +733,10 @@
       "support_feedback_exists": "This ticket is already feedback for that product.",
       "work_deliverable_needs_link": "Add a link to the result before submitting.",
       "work_deliverable_not_submitted": "Only submitted deliverables can be reviewed.",
-      "work_deliverables_full": "A project can have at most 300 deliverables."
+      "work_deliverables_full": "A project can have at most 300 deliverables.",
+      "hr_plan_state": "This planned role can't change to that status.",
+      "hr_plan_has_job": "This role already has a job. Cancel it instead of deleting it.",
+      "hr_doc_field": "Fill in the details this letter needs."
     }
   },
   "onboarding": {
@@ -2915,7 +2918,11 @@
       "set_ad_budget": "Change ad budget",
       "set_ad_campaign_status": "Activate or pause ad campaign",
       "reply_to_comment": "Reply to comment",
-      "send_influencer_outreach": "Send influencer outreach"
+      "send_influencer_outreach": "Send influencer outreach",
+      "read_workforce_plan": "Read workforce plan",
+      "propose_planned_role": "Propose a planned role",
+      "read_financial_alerts": "Read financial alerts",
+      "read_money_flow": "Read money flow"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -3906,7 +3913,10 @@
         "proposal_accepted": "Proposal accepted: {title}",
         "proposal_declined": "Proposal declined: {title}",
         "proposal_expired": "Proposal expired: {title}",
-        "sales_task_assigned": "Sales task for you: {title}"
+        "sales_task_assigned": "Sales task for you: {title}",
+        "outreach_pending": "Email waiting for approval: {title}",
+        "sequence_replied": "Replied — sequence stopped: {title}",
+        "sequence_failed": "Sequence email couldn't be sent: {title}"
       },
       "finance": {
         "invoice_paid": "Invoice paid: {title}",
@@ -3917,7 +3927,10 @@
         "approval_rejected": "Rejected: {title}",
         "bill_overdue": "Bill overdue: {title}",
         "budget_warning": "Budget 80% used: {title}",
-        "budget_exceeded": "Budget exceeded: {title}"
+        "budget_exceeded": "Budget exceeded: {title}",
+        "runway_low": "Cash runway is getting short: {title}",
+        "runway_critical": "Cash runway is critically short: {title}",
+        "cash_negative_forecast": "Cash is forecast to run out: {title}"
       },
       "hr": {
         "candidate_applied": "New application: {title}",
@@ -3930,7 +3943,8 @@
         "policy_published": "Policy to acknowledge: {title}",
         "request_created": "New HR request: {title}",
         "request_updated": "Your HR request was answered: {title}",
-        "payslip_available": "Your payslip is available: {title}"
+        "payslip_available": "Your payslip is available: {title}",
+        "headcount_approved": "Planned role approved: {title}"
       },
       "comms": {
         "announcement": "New announcement: {title}",
@@ -4117,7 +4131,12 @@
       "dashboard": "Dashboard",
       "import": "Import & export",
       "settings": "Settings",
-      "proposals": "Proposals"
+      "proposals": "Proposals",
+      "today": "Today",
+      "discover": "Find leads",
+      "outreach": "Outreach",
+      "sequences": "Sequences",
+      "meetings": "Meetings"
     },
     "accountTypes": {
       "PROSPECT": "Prospect",
@@ -4714,6 +4733,36 @@
         "why": "Keeping customers happy is the cheapest way to grow.",
         "can": "See every customer, their people, deals and history.",
         "next": "Find new customers (guided)"
+      },
+      "today": {
+        "what": "Your to-do list for selling: the one best next step for every open lead and deal.",
+        "why": "Sales are won by following up at the right moment — this list makes sure nothing slips.",
+        "can": "Do each step with one click. Emails are only drafted; you approve before anything is sent.",
+        "next": "Review emails waiting for approval"
+      },
+      "discover": {
+        "what": "Describe who you sell to and we search the web for matching businesses.",
+        "why": "New customers start with a list of the right people to talk to.",
+        "can": "See real search results with their source, and turn the good ones into leads.",
+        "next": "Go to your leads"
+      },
+      "outreach": {
+        "what": "Personal emails to leads and customers — written by you or drafted by AI.",
+        "why": "A short, personal email is the fastest way to start a conversation.",
+        "can": "Draft, edit, approve and send through your own connected email. Nothing is sent without approval.",
+        "next": "Set up an automatic follow-up"
+      },
+      "sequences": {
+        "what": "A sequence is a series of follow-up emails and reminders sent on a schedule.",
+        "why": "Most deals need several follow-ups; a sequence does the remembering for you.",
+        "can": "Write the steps once, add people, and it stops by itself when someone replies.",
+        "next": "See emails waiting for approval"
+      },
+      "meetings": {
+        "what": "Every sales meeting you booked with a lead, contact or deal.",
+        "why": "Meetings are where deals move forward — prepare and record what was agreed.",
+        "can": "Download calendar files, mark meetings done with notes, or cancel them.",
+        "next": "Back to today's actions"
       }
     },
     "smartEmpty": {
@@ -4753,6 +4802,453 @@
         "primary": "Start selling",
         "ai": "Let AI do the research"
       }
+    },
+    "rev": {
+      "connect": "Connect it in Integrations",
+      "working": "Working…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "readOnly": "You can look, but only people who manage sales can make changes here.",
+      "channels": {
+        "mailbox_gmail": "your Gmail",
+        "mailbox_outlook": "your Outlook mailbox",
+        "sendgrid": "SendGrid",
+        "google_calendar": "Google Calendar",
+        "outlook_calendar": "Outlook Calendar"
+      },
+      "engine": {
+        "title": "Your sales engine",
+        "research": "Web research",
+        "ai": "AI writing & scoring",
+        "email": "Sending email",
+        "calendar": "Calendar invites",
+        "on": "On · {detail}",
+        "off": {
+          "research": "Not connected — connect Tavily, Exa or SerpApi to find and research leads.",
+          "ai": "Not connected — connect OpenAI or Gemini so AI can draft emails and score leads.",
+          "email": "Not connected — connect Gmail, Outlook or SendGrid to send emails.",
+          "calendar": "Not connected — meetings are saved and you get a calendar file instead."
+        }
+      },
+      "today": {
+        "eyebrow": "Revenue engine",
+        "title": "Today",
+        "subtitle": "The next best step for every open lead and deal, most urgent first.",
+        "forecast": "Weighted forecast",
+        "forecastHint": "Each open deal × its win chance · {open} open in {deals, plural, one {# deal} other {# deals}}",
+        "approvals": "Waiting for approval",
+        "approvalsHint": "Emails ready for you to check and send",
+        "meetings": "Meetings this week",
+        "meetingsHint": "Booked with customers in the next 7 days",
+        "followUps": "Follow-ups due",
+        "followUpsHint": "Due by tomorrow · {enrolled} people in sequences",
+        "otherCurrency": "{count, plural, one {# deal in another currency is} other {# deals in other currencies are}} not included in the forecast.",
+        "listTitle": "What to do next",
+        "listHint": "Built from your real records: owners, emails, follow-ups, replies, meetings and proposals.",
+        "everyone": "Everyone",
+        "mine": "Mine",
+        "filter": "Show",
+        "filters": {
+          "all": "All",
+          "lead": "Leads",
+          "deal": "Deals"
+        },
+        "types": {
+          "lead": "Lead",
+          "deal": "Deal"
+        },
+        "focus": "Today's focus",
+        "upcoming": "Coming up",
+        "allClear": "Nothing to do here right now.",
+        "emptyTitle": "You're all caught up",
+        "emptyText": "No open lead or deal needs a step right now. Add new leads to keep sales moving.",
+        "emptyDiscover": "Find new leads",
+        "emptyAdd": "Add a lead"
+      },
+      "nba": {
+        "title": "Next best step",
+        "description": "What will move this forward most, and why.",
+        "none": "Nothing urgent — this record is in good shape.",
+        "open": "Open",
+        "doIt": "Do it",
+        "draftIt": "Draft with AI",
+        "draftNote": "Saved as a draft for you to approve — not sent.",
+        "writeYourself": "Write the email",
+        "reviewDraft": "Review the draft",
+        "more": "{count, plural, one {# more suggestion} other {# more suggestions}}",
+        "priority": {
+          "1": "Today",
+          "2": "Soon",
+          "3": "When you can"
+        },
+        "done": {
+          "assigned": "It's yours now.",
+          "enriched": "Research saved.",
+          "qualified": "AI check saved.",
+          "follow_up": "Reminder set for 2 days from now.",
+          "drafted": "Draft saved for approval."
+        },
+        "kinds": {
+          "assign_me": {
+            "title": "Take ownership",
+            "why": "Nobody owns this yet, so nobody will follow up."
+          },
+          "add_email": {
+            "title": "Add an email or phone number",
+            "why": "You can't reach this person yet. Research didn't find contact details."
+          },
+          "enrich": {
+            "title": "Research this company",
+            "why": "There's no way to reach them yet — web research may find who they are and how to contact them."
+          },
+          "first_email": {
+            "title": "Send a first email",
+            "why": "You have their email but haven't been in touch yet. A quick personal note starts the conversation."
+          },
+          "overdue_follow_up": {
+            "title": "Overdue follow-up: {note}",
+            "why": "You promised to follow up and the date has passed."
+          },
+          "approve_email": {
+            "title": "Approve the waiting email",
+            "why": "An email for this record is ready and waiting for your OK."
+          },
+          "qualify": {
+            "title": "Check if this lead is a good fit",
+            "why": "You've talked, but haven't decided if it's worth pursuing. AI can score the fit from what you know."
+          },
+          "follow_up_email": {
+            "title": "Follow up — {days} days quiet",
+            "why": "No contact for a week or more. A short follow-up keeps you top of mind."
+          },
+          "convert": {
+            "title": "Turn this lead into a deal",
+            "why": "The lead is qualified. Converting it creates a contact, company and deal so you can track the sale."
+          },
+          "plan_follow_up": {
+            "title": "Plan the next step",
+            "why": "There's no follow-up planned. Set a reminder so it doesn't go cold."
+          },
+          "reengage": {
+            "title": "Re-start the conversation",
+            "why": "It's been quiet for a long time ({days} days). A light check-in can revive it."
+          },
+          "set_close_date": {
+            "title": "Set an expected close date",
+            "why": "Without a date, this deal can't be counted in your forecast by month."
+          },
+          "close_date_passed": {
+            "title": "The close date has passed",
+            "why": "Update the date, or mark the deal won or lost so your forecast stays honest."
+          },
+          "book_meeting": {
+            "title": "Book a meeting",
+            "why": "No meeting is planned. A call is usually the fastest way to move a deal forward."
+          },
+          "prepare_meeting": {
+            "title": "Prepare for: {title}",
+            "why": "This meeting is within 2 days. Review the history and goals."
+          },
+          "create_proposal": {
+            "title": "Send a proposal",
+            "why": "This deal is likely enough to win that it's time to put an offer in writing."
+          },
+          "proposal_follow_up": {
+            "title": "Follow up on your proposal",
+            "why": "The proposal was sent more than 3 days ago without a decision."
+          }
+        }
+      },
+      "score": {
+        "title": "Why this score",
+        "description": "The lead score adds up simple signals. No hidden formula.",
+        "note": "Hot ≥ 70 · Warm ≥ 45 · below that: nurture (keep in touch).",
+        "base": "Starting points",
+        "workEmail": "Work email address",
+        "personalEmail": "Personal email (a work email scores more)",
+        "noEmail": "No email address yet",
+        "phone": "Phone number",
+        "company": "Company name known",
+        "value": "Estimated value entered",
+        "notesLong": "Detailed notes",
+        "notesSome": "Some notes",
+        "notesShort": "Short notes",
+        "noNotes": "No notes yet",
+        "stage": "Progress in the pipeline",
+        "lostCap": "Lost leads are capped at 30",
+        "cap": "Capped at 100"
+      },
+      "intel": {
+        "enrichTitle": "Company research",
+        "enrichDescription": "Facts found on the web, each with its source.",
+        "enrichEmpty": "No research yet. Click research to look this company up on the web.",
+        "researchMissing": "Web research isn't connected, so nothing can be looked up yet.",
+        "enrich": "Research",
+        "enrichAgain": "Research again",
+        "qualTitle": "AI fit check",
+        "qualDescription": "AI rates how likely this lead becomes a customer and explains why.",
+        "qualEmpty": "Not checked yet. AI uses only what's in this record and its research.",
+        "aiMissing": "No AI writing service is connected, so AI can't score this lead yet.",
+        "qualify": "Check fit",
+        "qualifyAgain": "Check again",
+        "apply": "Use these answers",
+        "ask": "Ask the lead",
+        "noFacts": "AI found no clear facts in the sources — read them below.",
+        "sourcesOnly": "Connect an AI writing service to turn these sources into short facts.",
+        "sources": "{count, plural, one {# source} other {# sources}}",
+        "source": "Source",
+        "by": "By {provider} · {date}",
+        "verdicts": {
+          "qualified": "Good fit",
+          "nurture": "Not yet — keep in touch",
+          "disqualify": "Poor fit",
+          "need_info": "Need more information"
+        }
+      },
+      "discover": {
+        "eyebrow": "Lead discovery",
+        "title": "Find new leads",
+        "subtitle": "Tell us who your ideal customers are. We search the web and show you real businesses — you pick who to contact.",
+        "audience": "Who do you sell to?",
+        "audienceHint": "Be specific: type of business, size or need.",
+        "audiencePlaceholder": "e.g. independent bakeries that offer catering",
+        "location": "Where? (optional)",
+        "locationPlaceholder": "e.g. Ljubljana",
+        "extra": "Anything else? (optional)",
+        "extraPlaceholder": "e.g. recently opened",
+        "search": "Search the web",
+        "searching": "Searching…",
+        "honest": "Only real results from your research provider are shown. Nothing is made up.",
+        "noProvider": "To search for leads, connect a research service (Tavily, Exa or SerpApi).",
+        "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
+        "resultsMeta": "“{query}” · {provider} · {date} · {fresh} not reviewed yet",
+        "noResults": "The search returned nothing. Try describing your customers differently.",
+        "next": "Next: open a new lead and click “Research” to learn more, or “Draft with AI” to write a first email.",
+        "added": "Added",
+        "dismissed": "Dismissed",
+        "known": "You may already have this company as a lead",
+        "openLead": "Open the lead",
+        "addAsLead": "Add as lead",
+        "dismiss": "Not a fit",
+        "create": "Create lead",
+        "emailIfKnown": "Email (only if you know it)",
+        "history": "Earlier searches",
+        "historyEmpty": "Your searches will appear here.",
+        "historyMeta": "{results} results · {added} added · {date}"
+      },
+      "outreach": {
+        "eyebrow": "Personal outreach",
+        "title": "Outreach",
+        "subtitle": "Write or AI-draft personal emails, check them, then send from your own connected email.",
+        "queue": "Emails",
+        "compose": "New email",
+        "to": "To",
+        "noRecipients": "No leads or contacts with an email yet",
+        "groups": {
+          "lead": "Lead",
+          "contact": "Contact"
+        },
+        "aiTitle": "Let AI write a draft",
+        "goal": "What's the email for?",
+        "goals": {
+          "first_touch": "First hello",
+          "follow_up": "Follow-up",
+          "book_meeting": "Ask for a meeting",
+          "proposal_follow_up": "Follow up on a proposal",
+          "re_engage": "Re-start a quiet conversation",
+          "thank_you": "Thank you after a meeting"
+        },
+        "tone": "Tone",
+        "tones": {
+          "friendly": "Friendly",
+          "formal": "Formal",
+          "short": "Very short"
+        },
+        "guidance": "Anything AI should mention? (optional)",
+        "guidancePlaceholder": "e.g. mention our spring offer",
+        "draftWithAi": "Draft with AI",
+        "drafting": "Writing…",
+        "aiNote": "AI uses only what's in the record. You review before sending.",
+        "aiMissing": "Connect OpenAI or Gemini to let AI draft emails. You can still write one yourself.",
+        "writeYourself": "Write it yourself",
+        "subject": "Subject",
+        "body": "Message",
+        "saveDraft": "Save draft",
+        "saveForApproval": "Save & ask for approval",
+        "savedNote": "Saved. Find it below or under Outreach — it is not sent until someone approves it.",
+        "recordTitle": "Emails",
+        "recordDescription": "Drafts, approvals and sent emails for this person.",
+        "needEmail": "Add an email address to this record first.",
+        "noChannel": "No email account is connected, so emails can be drafted but not sent. Connect Gmail, Outlook or SendGrid.",
+        "status": {
+          "DRAFT": "Draft",
+          "PENDING_APPROVAL": "Waiting for approval",
+          "SENT": "Sent",
+          "FAILED": "Not sent",
+          "CANCELLED": "Discarded"
+        },
+        "empty": {
+          "DRAFT": "No drafts.",
+          "PENDING_APPROVAL": "Nothing is waiting for approval.",
+          "SENT": "No emails sent yet.",
+          "FAILED": "No failed emails.",
+          "CANCELLED": "Nothing discarded."
+        },
+        "aiDrafted": "AI draft",
+        "fromSequence": "{name} · step {step}",
+        "sentVia": "Sent via {channel}",
+        "approveSend": "Approve & send",
+        "confirmSend": "Send this exact email to {email} now?",
+        "askApproval": "Ask for approval",
+        "discard": "Discard",
+        "skipStep": "Skip this step",
+        "kpi": {
+          "pending": "Waiting for approval",
+          "pendingHint": "Check and send these first",
+          "sent": "Sent (30 days)",
+          "sentHint": "To {people, plural, one {# person} other {# people}}",
+          "replies": "Replies (30 days)",
+          "repliesHint": "Seen in your connected inbox",
+          "rate": "Reply rate",
+          "rateHint": "People who replied ÷ people emailed"
+        }
+      },
+      "seq": {
+        "eyebrow": "Automatic follow-up",
+        "title": "Sequences",
+        "subtitle": "Follow-ups that run on a schedule and stop as soon as someone replies.",
+        "yours": "Your sequences",
+        "empty": "No sequences yet. Start with the example on the right — just edit the text.",
+        "new": "New sequence",
+        "newHint": "We filled in a simple 4-step example. Change the words to sound like you.",
+        "name": "Name",
+        "namePlaceholder": "e.g. New lead follow-up",
+        "description": "Short description (optional)",
+        "stopOnReply": "Stop when the person replies (needs a connected Gmail or Outlook inbox to see replies)",
+        "mergeHint": "Personalise with '{{firstName}}', '{{name}}', '{{company}}' and '{{sender}}' — they are filled in for each person.",
+        "kind": "Step",
+        "kinds": {
+          "EMAIL": "Email",
+          "TASK": "Reminder for you"
+        },
+        "wait": "Wait (days)",
+        "waitDays": "wait {count, plural, one {# day} other {# days}}",
+        "dayN": "day {day}",
+        "up": "Move up",
+        "down": "Move down",
+        "remove": "Remove step",
+        "taskNote": "What should you do?",
+        "addStep": "Add step",
+        "create": "Create sequence",
+        "status": {
+          "DRAFT": "Not started",
+          "ACTIVE": "Running",
+          "PAUSED": "Paused",
+          "ARCHIVED": "Archived"
+        },
+        "autoBadge": "Sends automatically",
+        "reviewBadge": "You approve each email",
+        "stepsCount": "{count, plural, one {# step} other {# steps}}",
+        "listMeta": "{active} in progress · {replied} replied · {completed} finished",
+        "back": "All sequences",
+        "stopsOnReply": "Stops on reply",
+        "notRunning": "This sequence isn't running. Nobody gets emails until you start it.",
+        "replyNeedsMailbox": "To stop on replies we need to see them: connect a Gmail or Outlook inbox under Integrations.",
+        "steps": "Steps",
+        "run": "Start or stop",
+        "autoSend": "Send emails automatically",
+        "autoSendHint": "By starting with this on, you approve these texts — each email is then sent on schedule without asking. Leave it off to approve every email.",
+        "autoSendNoChannel": "Connect an email account first. Until then, every email waits for your approval.",
+        "confirmAuto": "Emails will be sent automatically with these texts. Start now?",
+        "activate": "Start sequence",
+        "pause": "Pause",
+        "archive": "Archive",
+        "confirmArchive": "Archive this sequence? Everyone in it stops and waiting emails are discarded.",
+        "addPeople": "Add people",
+        "searchPeople": "Search leads and contacts",
+        "noPeople": "No matching people with an email address.",
+        "enroll": "Add {count, plural, =0 {people} one {# person} other {# people}}",
+        "enrolled": "Added {enrolled}. Skipped {skipped} (already in it or no email).",
+        "people": "{count, plural, one {# person} other {# people}} in this sequence",
+        "nobody": "Nobody yet. Add people above.",
+        "progress": "step {done} of {total}",
+        "nextAt": "next {date}",
+        "waitingApproval": "waiting for approval",
+        "enrollStatus": {
+          "ACTIVE": "In progress",
+          "PAUSED": "Paused",
+          "COMPLETED": "Finished",
+          "REPLIED": "Replied",
+          "STOPPED": "Stopped",
+          "FAILED": "Couldn't send"
+        },
+        "stop": "Remove",
+        "recordTitle": "Sequences",
+        "recordDescription": "Automatic follow-ups this person is in.",
+        "noneActive": "No running sequence yet.",
+        "pick": "Sequence",
+        "start": "Start",
+        "enrolledOne": "Added to the sequence.",
+        "alreadyIn": "Already in this sequence (or no email).",
+        "manage": "Manage sequences",
+        "starter": {
+          "s1": "Quick question, '{{firstName}}'",
+          "b1": "Hi '{{firstName}}',\n\nI came across '{{company}}' and wanted to reach out personally. We help businesses like yours save time on the work that keeps you from customers.\n\nWould a short call next week be useful?\n\nBest,\n'{{sender}}'",
+          "s2": "Following up",
+          "b2": "Hi '{{firstName}}',\n\nJust bringing my note to the top of your inbox. Happy to send a short summary instead of a call if that's easier.\n\n'{{sender}}'",
+          "t3": "Call '{{firstName}}' or connect on LinkedIn",
+          "s4": "Should I close your file?",
+          "b4": "Hi '{{firstName}}',\n\nI haven't heard back, so I'll stop following up for now. If timing changes, just reply to this email.\n\nAll the best,\n'{{sender}}'"
+        }
+      },
+      "meet": {
+        "eyebrow": "Customer meetings",
+        "pageTitle": "Meetings",
+        "subtitle": "Every meeting booked with a lead, contact or deal. Book new ones from the person's page.",
+        "recordTitle": "Meetings",
+        "recordDescription": "Book a call or visit and keep the notes.",
+        "defaultTitle": "Meeting with {name}",
+        "bookNew": "Book a meeting",
+        "title": "Title",
+        "when": "When",
+        "duration": "Length",
+        "minutes": "{count} min",
+        "location": "Where",
+        "locationPlaceholder": "Video link, phone or address",
+        "agenda": "Agenda (optional)",
+        "willAdd": "It will be added to {calendar} with the customer as a guest.",
+        "noCalendar": "No calendar is connected: the meeting is saved and you can download a calendar file to send yourself. Nobody is invited automatically.",
+        "book": "Book meeting",
+        "result": {
+          "added": "Booked and added to your calendar.",
+          "not_connected": "Booked. No calendar connected — download the calendar file to share it.",
+          "failed": "Booked, but your calendar refused it. Try again from the meeting.",
+          "skipped": "Booked."
+        },
+        "status": {
+          "SCHEDULED": "Planned",
+          "COMPLETED": "Done",
+          "CANCELLED": "Cancelled"
+        },
+        "onCalendar": "On your calendar",
+        "onCalendarGuest": "On your calendar · guest: {email}",
+        "notOnCalendar": "Not on a calendar — nobody was invited automatically",
+        "calendarFailed": "Your calendar refused this meeting",
+        "ics": "Calendar file",
+        "done": "Mark done",
+        "cancel": "Cancel meeting",
+        "confirmCancel": "Cancel this meeting? (The customer is not notified automatically.)",
+        "retry": "Add to calendar",
+        "notes": "Meeting notes",
+        "notesPlaceholder": "What was agreed? What's the next step?",
+        "saveDone": "Save as done",
+        "none": "No meetings planned.",
+        "upcoming": "Coming up ({count})",
+        "emptyUpcoming": "No meetings planned. Open a lead, contact or deal and click “Book a meeting”.",
+        "past": "Earlier"
+      },
+      "customersEyebrow": "Customer relationships"
     }
   },
   "plans": {
@@ -11024,7 +11520,9 @@
       "payables": "Payables",
       "approvals": "Approvals",
       "claims": "Expense claims",
-      "start": "Start here"
+      "start": "Start here",
+      "alerts": "Alerts",
+      "learn": "Learn the words"
     },
     "accounting": {
       "tabs": {
@@ -11645,7 +12143,9 @@
       "byVendor": "By vendor",
       "byCostCenter": "By cost center",
       "noVendor": "No vendor",
-      "noCostCenter": "No cost center"
+      "noCostCenter": "No cost center",
+      "learnHint": "New to these reports?",
+      "learnLink": "Read what every line means"
     },
     "settings": {
       "documents": "Documents & payment terms",
@@ -11947,6 +12447,18 @@
         "why": "Correct settings make every document right.",
         "can": "Change defaults for your company.",
         "next": "Back to the guided tasks"
+      },
+      "alerts": {
+        "what": "Warnings about money that needs your attention right now.",
+        "why": "Late payments, a shrinking runway or a blown budget are easier to fix early.",
+        "can": "See every alert, why it matters and jump straight to the fix.",
+        "next": "Plan my cash"
+      },
+      "learn": {
+        "what": "Every finance word used in Realy, in plain language.",
+        "why": "You don't need to be an accountant to run your company's money.",
+        "can": "Search a word, read an everyday example and open the page where it lives.",
+        "next": "Start a guided task"
       }
     },
     "os": {
@@ -12166,6 +12678,246 @@
       "payLinkNotConnected": "No payment provider is connected. Connect Razorpay or Stripe to create payment links.",
       "payLinkFailed": "The payment provider refused: {error}",
       "payOnline": "Pay online"
+    },
+    "flow": {
+      "title": "Where your money comes from and goes",
+      "hint": "Income streams on one side, costs on the other, for the selected period. Thicker ribbons mean more money.",
+      "whatIsThis": "What is this?",
+      "aria": "Money flow: {income} earned, {expenses} spent",
+      "center": "Your company",
+      "kept": "{amount} kept as profit",
+      "lost": "{amount} more spent than earned",
+      "empty": "No income or expenses recorded in this period yet. Record a sale or an expense and the picture appears here.",
+      "moneyIn": "Money in",
+      "moneyOut": "Money out",
+      "income": "Income",
+      "expense": "Expense",
+      "profit": "Profit kept",
+      "loss": "Covered from savings",
+      "other_income": "Other income",
+      "other_expense": "Other costs"
+    },
+    "alerts": {
+      "runwayTitle": "Cash runway",
+      "runwayHint": "How long your money lasts if nothing changes.",
+      "runwayLabel": "Months of cash left",
+      "noBurn": "Cash-flow positive",
+      "zones": {
+        "critical": "Under 3 months",
+        "warning": "3–6 months",
+        "healthy": "6+ months"
+      },
+      "runwayExplain": "Runway = cash in the bank ÷ average monthly burn of the last 3 full months.",
+      "historyTitle": "Alerts sent",
+      "historyHint": "Notifications the system sent to finance people.",
+      "historyEmpty": "No cash alerts have been sent yet.",
+      "kinds": {
+        "runway_low": "Cash runway is getting short",
+        "runway_critical": "Cash runway is critically short",
+        "cash_negative_forecast": "Cash is forecast to run out"
+      },
+      "activeTitle": "Needs attention",
+      "count": "{count, plural, =0 {Nothing to fix} one {# alert} other {# alerts}}",
+      "allClearTitle": "All clear",
+      "allClearText": "No overdue invoices or bills, no budget overruns and a healthy runway. We'll notify you as soon as something changes.",
+      "planCash": "Plan my cash",
+      "runwayBody": "At today's pace your cash ({cash}) lasts about {months} months, because you spend {burn} more than you earn each month.",
+      "runwayTodo": "Chase unpaid invoices, delay non-essential spending or plan new income in the cash flow forecast.",
+      "seeForecast": "See the forecast",
+      "negativeBody": "If open invoices, bills and recurring items arrive as expected, your bank balance drops to {amount} in {month}.",
+      "projectedLabel": "Projection based on open invoices, bills, recurring items and the last 3 months' trend — not a fact.",
+      "overdueInvoices": "{count, plural, one {# customer invoice is overdue} other {# customer invoices are overdue}} ({amount})",
+      "chase": "Chase payments",
+      "daysLate": "{count, plural, one {# day late} other {# days late}}",
+      "overdueBills": "{count, plural, one {# supplier bill is overdue} other {# supplier bills are overdue}} ({amount})",
+      "payBills": "Pay bills",
+      "budgetOver": "Budget exceeded: {name}",
+      "budgetNear": "Budget almost used: {name}",
+      "reviewBudget": "Review budget",
+      "budgetBody": "{actual} spent of {budget} ({pct}%).",
+      "howSent": "Finance people get a notification once per month for runway and forecast alerts, once per overdue invoice or bill, and at 80% and 100% of every budget."
+    },
+    "glossary": {
+      "search": "Search a word…",
+      "groupsLabel": "Topics",
+      "tip": "Tip: every report and chart in Finance links here when it uses one of these words.",
+      "noMatch": "No word matches your search.",
+      "example": "Example",
+      "seeIt": "See it in your company",
+      "groups": {
+        "moneyIn": "Money coming in",
+        "moneyOut": "Money going out",
+        "bigPicture": "The big picture",
+        "planning": "Planning ahead",
+        "bookkeeping": "Bookkeeping"
+      },
+      "terms": {
+        "revenue": {
+          "term": "Revenue",
+          "short": "All the money you earn from selling your products or services, before any costs are taken off.",
+          "example": "You sell 10 websites at 1,000 each: your revenue is 10,000."
+        },
+        "invoice": {
+          "term": "Invoice",
+          "short": "A document you send a customer asking to be paid for what you delivered.",
+          "example": "After finishing a project you send an invoice for 2,500, due in 30 days."
+        },
+        "receivable": {
+          "term": "Receivable",
+          "short": "Money customers owe you for invoices they have not paid yet.",
+          "example": "Three unpaid invoices of 1,000 each mean 3,000 in receivables."
+        },
+        "estimate": {
+          "term": "Estimate (quote)",
+          "short": "A price offer you send before the work starts; it becomes an invoice once accepted.",
+          "example": "You quote 4,000 for a new logo; the client accepts and you turn it into an invoice."
+        },
+        "creditNote": {
+          "term": "Credit note",
+          "short": "A document that reduces what a customer owes, for example after a refund or a mistake.",
+          "example": "You invoiced 1,200 but agreed a 200 discount: a credit note of 200 fixes it."
+        },
+        "paymentLink": {
+          "term": "Payment link",
+          "short": "A web link where a customer can pay an invoice online by card.",
+          "example": "You add a payment link to the invoice email and the customer pays in two clicks."
+        },
+        "mrr": {
+          "term": "MRR (monthly recurring revenue)",
+          "short": "Income you can count on every month from subscriptions or retainers.",
+          "example": "20 clients paying 50 a month give an MRR of 1,000."
+        },
+        "arr": {
+          "term": "ARR (annual recurring revenue)",
+          "short": "Your recurring income over a full year: MRR × 12.",
+          "example": "An MRR of 1,000 means an ARR of 12,000."
+        },
+        "expense": {
+          "term": "Expense",
+          "short": "Money you spend to run the business: rent, software, salaries, travel.",
+          "example": "A 30 monthly software subscription is an expense."
+        },
+        "bill": {
+          "term": "Bill",
+          "short": "An invoice you receive from a supplier that you have to pay.",
+          "example": "Your accountant sends a bill for 400, due on the 15th."
+        },
+        "payable": {
+          "term": "Payable",
+          "short": "Money you owe suppliers for bills you have not paid yet.",
+          "example": "Two open bills of 400 and 600 mean 1,000 in payables."
+        },
+        "overdue": {
+          "term": "Overdue",
+          "short": "An invoice or bill whose due date has passed and is still not fully paid.",
+          "example": "An invoice due on 1 March and still unpaid on 10 March is 9 days overdue."
+        },
+        "costCenter": {
+          "term": "Cost center",
+          "short": "A part of the company (often a department) that you track spending for.",
+          "example": "Marketing is a cost center: all ad and agency costs are tagged to it."
+        },
+        "projectCost": {
+          "term": "Project cost",
+          "short": "Everything you spent on one project, compared with what it earned.",
+          "example": "A client project earned 10,000 and cost 6,500, so it made 3,500."
+        },
+        "profit": {
+          "term": "Profit",
+          "short": "What is left after taking all expenses away from your revenue. Negative profit is a loss.",
+          "example": "Revenue 10,000 minus expenses 7,000 = 3,000 profit."
+        },
+        "margin": {
+          "term": "Profit margin",
+          "short": "Profit as a percentage of revenue: how many cents you keep from each unit you earn.",
+          "example": "3,000 profit on 10,000 revenue is a 30% margin."
+        },
+        "pnl": {
+          "term": "Profit & loss (P&L)",
+          "short": "A report that lists income and expenses for a period and shows whether you made a profit.",
+          "example": "Your P&L for March shows 12,000 income, 9,000 expenses and 3,000 profit."
+        },
+        "balanceSheet": {
+          "term": "Balance sheet",
+          "short": "A snapshot on one day of what the company owns (assets), owes (liabilities) and the owners' share (equity).",
+          "example": "On 31 December you own 20,000 in cash, owe 5,000, so equity is 15,000."
+        },
+        "asset": {
+          "term": "Asset",
+          "short": "Something the company owns that has value: cash, money owed to you, equipment.",
+          "example": "Your bank balance and a laptop you bought are assets."
+        },
+        "liability": {
+          "term": "Liability",
+          "short": "Something the company owes: unpaid bills, loans, taxes due.",
+          "example": "A bank loan of 10,000 is a liability."
+        },
+        "equity": {
+          "term": "Equity",
+          "short": "The owners' share of the company: assets minus liabilities.",
+          "example": "Assets 30,000 minus liabilities 12,000 leaves 18,000 equity."
+        },
+        "cashFlow": {
+          "term": "Cash flow",
+          "short": "Money actually coming in and going out of your bank account over time.",
+          "example": "In May 8,000 came in and 9,500 went out: cash flow was −1,500."
+        },
+        "cashBalance": {
+          "term": "Cash balance",
+          "short": "How much money you have in your bank and cash accounts right now.",
+          "example": "Two bank accounts with 4,000 and 6,000 give a cash balance of 10,000."
+        },
+        "burnRate": {
+          "term": "Burn rate",
+          "short": "How much more cash goes out than comes in each month, on average.",
+          "example": "If 12,000 goes out and 8,000 comes in each month, your burn rate is 4,000."
+        },
+        "runway": {
+          "term": "Runway",
+          "short": "How many months your cash lasts at the current burn rate.",
+          "example": "40,000 in the bank with a 4,000 monthly burn gives 10 months of runway."
+        },
+        "budget": {
+          "term": "Budget",
+          "short": "A spending limit you set for a category or department for a period.",
+          "example": "You allow marketing 2,000 per month."
+        },
+        "variance": {
+          "term": "Variance",
+          "short": "The difference between what you planned (budget) and what really happened (actual).",
+          "example": "Budget 2,000, actual 2,300: a variance of 300 over budget."
+        },
+        "forecast": {
+          "term": "Forecast",
+          "short": "An estimate of future money, built from open invoices, bills, recurring items and recent trends. It is a projection, not a fact.",
+          "example": "Open invoices due next month suggest 6,000 coming in."
+        },
+        "ledger": {
+          "term": "Ledger",
+          "short": "The full list of every money movement, grouped by account. Reports are built from it.",
+          "example": "The 'Software' ledger account lists every software expense this year."
+        },
+        "journalEntry": {
+          "term": "Journal entry",
+          "short": "One recorded money movement with matching debit and credit lines that always balance.",
+          "example": "Paying rent: rent expense goes up 1,000, bank goes down 1,000."
+        },
+        "reconciliation": {
+          "term": "Reconciliation",
+          "short": "Checking that the money in your books matches your real bank statement, line by line.",
+          "example": "Your bank says 5,240 and your books say 5,240: the account is reconciled."
+        },
+        "tax": {
+          "term": "Tax (VAT / GST / sales tax)",
+          "short": "Tax added to prices that you collect from customers and pay to the government.",
+          "example": "A 100 sale with 20% VAT: the customer pays 120 and you owe 20 in VAT."
+        },
+        "accrual": {
+          "term": "Accrual",
+          "short": "Recording income or costs when they are earned or used, not when the cash moves.",
+          "example": "Work done in March counts as March revenue even if the client pays in April."
+        }
+      }
     }
   },
   "hr": {
@@ -12239,7 +12991,9 @@
       "requests": "Requests",
       "payroll": "Payroll",
       "me": "My HR",
-      "hire": "Hire someone"
+      "hire": "Hire someone",
+      "planning": "Workforce plan",
+      "documents": "Documents"
     },
     "ai": {
       "analystAnswers": "People analyst answers",
@@ -13084,7 +13838,8 @@
       "tax": "Tax",
       "certificate": "Certificate",
       "review": "Review",
-      "other": "Other"
+      "other": "Other",
+      "letter": "Letter"
     },
     "hire": {
       "title": "Hire someone",
@@ -13424,6 +14179,18 @@
       "chart": {
         "emptyTitle": "Nobody on the chart yet",
         "addPeople": "Add people"
+      },
+      "planning": {
+        "what": "The roles you plan to add, when, and what they will cost.",
+        "why": "Hiring is your biggest cost — planning it avoids surprises in cash and workload.",
+        "can": "List future roles, approve them, see cost per quarter and start hiring in one click.",
+        "next": "Hire someone now"
+      },
+      "documents": {
+        "what": "Letters and files for your people, all in one place.",
+        "why": "Employees regularly need official letters, and you need a tidy record.",
+        "can": "Generate letters from your data, open, download or remove any document.",
+        "next": "Open the team list"
       }
     },
     "empty": {
@@ -13435,6 +14202,181 @@
       "jobs": {
         "title": "No open jobs",
         "body": "Tell us what kind of help you need and the AI will write the job ad for you."
+      }
+    },
+    "calendar": {
+      "synced": "In {provider}",
+      "failed": "Calendar sync failed",
+      "manual": "Not in a calendar",
+      "downloadIcs": "Add to calendar (.ics)",
+      "sendNow": "Send to calendar",
+      "willSync": "The interview will be added to {provider} with the candidate and interviewers invited.",
+      "notConnected": "No calendar is connected: the interview is saved here and you can add it to any calendar with the .ics file.",
+      "connect": "Connect Google or Microsoft",
+      "providers": {
+        "google_calendar": "Google Calendar",
+        "outlook_calendar": "Outlook"
+      }
+    },
+    "planning": {
+      "title": "Workforce plan",
+      "subtitle": "Decide who you will need, when, and what it will cost.",
+      "guide": {
+        "title": "Plan your team in three steps",
+        "intro": "Workforce planning simply means writing down the roles you'll need in the coming months, so hiring, money and workload line up. No HR experience needed.",
+        "steps": {
+          "list": {
+            "title": "Write down the roles",
+            "text": "For each role: what, how many, which quarter, and a rough yearly cost."
+          },
+          "approve": {
+            "title": "Approve what you can afford",
+            "text": "Check the monthly cost against your cash runway, then approve."
+          },
+          "hire": {
+            "title": "Start hiring",
+            "text": "One click opens the job and the guided hiring journey."
+          }
+        }
+      },
+      "stats": {
+        "today": "Team today",
+        "planned": "Planned hires",
+        "plannedHint": "{approved} approved · {hiring} being hired",
+        "annualCost": "Planned yearly cost",
+        "monthlyCost": "Added monthly cost",
+        "monthlyHint": "What these hires add to your monthly burn"
+      },
+      "trajectory": "Team size over time",
+      "trajectoryHint": "Today's headcount plus the planned hires of each quarter.",
+      "today": "Today",
+      "noQuarters": "Add a planned role to see how your team grows.",
+      "byDepartment": "By department",
+      "byDepartmentHint": "People today and planned additions.",
+      "editDepartments": "Edit departments",
+      "current": "Today",
+      "plannedLegend": "Planned",
+      "noPeople": "No people or planned roles yet.",
+      "roles": "Planned roles",
+      "rolesHint": "Grouped by the quarter they should start in.",
+      "status": {
+        "PLANNED": "Planned",
+        "APPROVED": "Approved",
+        "HIRING": "Hiring",
+        "FILLED": "Filled",
+        "CANCELLED": "Cancelled"
+      },
+      "priority": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      },
+      "perYear": "{amount} / year each",
+      "hiredOf": "{hired} of {total} hired",
+      "openHiring": "Open hiring journey",
+      "approve": "Approve",
+      "startHiring": "Start hiring",
+      "starting": "Opening…",
+      "cancel": "Cancel",
+      "confirmCancel": "Cancel this planned role?",
+      "empty": "No planned roles yet. Add the first one below.",
+      "add": "Add a planned role",
+      "addSubmit": "Add to plan",
+      "fields": {
+        "title": "Role",
+        "titlePlaceholder": "e.g. Customer support specialist",
+        "headcount": "How many people",
+        "targetStart": "Start around",
+        "targetStartHint": "Saved as the start of that quarter.",
+        "priority": "Priority",
+        "annualCost": "Yearly cost per person ({currency})",
+        "annualCostHint": "Salary plus roughly 20–30% for taxes and benefits. A rough number is fine.",
+        "reason": "Why do you need this role?",
+        "reasonPlaceholder": "e.g. Support tickets doubled; replies take 2 days."
+      },
+      "ai": {
+        "title": "Help me plan",
+        "hint": "The AI people analyst reviews your team, open jobs and this plan, and suggests what to hire next.",
+        "guidance": "Anything it should know? (optional)",
+        "placeholder": "e.g. We want to launch in Germany next spring.",
+        "run": "Review my plan",
+        "results": "Plan reviews",
+        "resultsHint": "Suggestions from the AI people analyst — you decide what to add."
+      }
+    },
+    "documents": {
+      "title": "HR documents",
+      "subtitle": "Generate official letters and keep every employee file in one place.",
+      "generateTitle": "Create a letter",
+      "generateHint": "Pick a person and a letter; we fill it in from their record.",
+      "honest": "Letters are generated from the data in Realy and stored with the employee's documents. Nothing is sent — review, print and sign before sharing.",
+      "libraryTitle": "All documents",
+      "libraryHint": "{count, plural, one {# document} other {# documents}} stored for your people.",
+      "all": "All",
+      "searchPlaceholder": "Search by document or person",
+      "noMatch": "No document matches.",
+      "empty": "No documents yet. Generate a letter or upload files from an employee's profile."
+    },
+    "docgen": {
+      "noTitle": "team member",
+      "noDepartment": "the company",
+      "noManager": "your manager",
+      "signoff": "Kind regards,",
+      "footer": "Generated with Realy on {date}. Valid with signature.",
+      "noPeople": "Add people to your team first — letters are filled in from their records.",
+      "who": "Who is the letter for?",
+      "pickPerson": "Choose a person",
+      "which": "Which letter?",
+      "newTitle": "New job title",
+      "lastDay": "Last working day",
+      "lastDayHint": "Leave empty to use today.",
+      "language": "Language of the letter",
+      "details": "Anything to add (optional)",
+      "detailsHint": "Added as a final paragraph.",
+      "warningDetails": "What happened and what must change",
+      "warningHint": "Be factual: dates, what was expected, what happened, what must change and by when.",
+      "created": "Created “{name}” and saved it with their documents.",
+      "open": "Open to print",
+      "generating": "Creating…",
+      "generate": "Create letter",
+      "generateFor": "Create a letter",
+      "tpl": {
+        "employment_verification": {
+          "name": "Employment verification",
+          "when": "For banks, landlords or visas: confirms the person works here.",
+          "subject": "Confirmation of employment",
+          "recipient": "To whom it may concern",
+          "body": "This letter confirms that {name} is employed by {company} as {title} in {department}.\n\n{name} has worked with us since {startDate} on a {employmentType} basis and is currently employed in good standing.\n\nPlease contact us if you need any further information."
+        },
+        "experience": {
+          "name": "Experience letter",
+          "when": "When someone leaves: confirms their role and time with you.",
+          "subject": "Experience letter",
+          "recipient": "To whom it may concern",
+          "body": "This is to certify that {name} worked at {company} as {title} in {department} from {startDate} to {endDate}.\n\nDuring this time {name} carried out their responsibilities with dedication. We thank them for their contribution and wish them every success in the future."
+        },
+        "welcome": {
+          "name": "Welcome letter",
+          "when": "Before day one: welcomes a new hire and explains the start.",
+          "subject": "Welcome to {company}",
+          "recipient": "Dear {name},",
+          "body": "We are delighted to welcome you to {company} as {title} in {department}.\n\nYour first day is {startDate}. {manager} will be your manager and will help you settle in during your first weeks.\n\nIf you have any questions before you start, just reply to us. We look forward to working with you."
+        },
+        "role_change": {
+          "name": "Role change letter",
+          "when": "Promotion or new position: confirms the new title and date.",
+          "subject": "Confirmation of your new role",
+          "recipient": "Dear {name},",
+          "body": "We are pleased to confirm that, effective {effectiveDate}, your role at {company} changes from {title} to {newTitle}.\n\nThank you for your work so far. All other terms of your employment remain unchanged unless agreed otherwise in writing."
+        },
+        "warning": {
+          "name": "Written warning",
+          "when": "A formal, documented warning about conduct or performance.",
+          "subject": "Written warning",
+          "recipient": "Dear {name},",
+          "body": "This letter is a formal written warning regarding your conduct or performance in your role as {title} at {company}.\n\nThe details are described below. We expect a clear improvement, and we are ready to support you in achieving it. If the situation does not improve, further steps may follow.\n\nYou may respond to this letter in writing, and your response will be kept with this document."
+        }
       }
     }
   },

@@ -10,6 +10,7 @@ import { ActionButton, AiActions } from "@/components/crm/kit";
 import { MergeRecordButton } from "@/components/crm/merge-button";
 import { AccountForm } from "@/components/crm/record-forms";
 import { CrmFrame, Facts, Stat, SubjectTasks, TagList, crmContext } from "@/components/crm/shell";
+import { AccountIntel } from "@/components/crm/revenue/account-intel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -158,6 +159,7 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
               <p className="p-4 text-sm text-muted-foreground">{t("crm.deals.none")}</p>
             )}
           </Card>
+          {active ? <AccountIntel accountId={a.id} /> : null}
           <SubjectActivity subjectType="account" subjectId={a.id} owners={owners} active={active} defaultAssignee={a.ownerId} />
           <EmailHistoryPanel subjectType="account" subjectId={a.id} />
         </div>

@@ -10,6 +10,7 @@ import { notifyUsers, usersWithPermission } from "@/server/modules/notifications
 import { extractPdfText } from "@/server/modules/brain/pdf";
 import { actorId, authorize, day, employeeName, enumParam, isUuid, money, myEmployee, oneParam, optText, pageParam, patchText, requireEmployees, toDay, toMinor, uuid } from "./access";
 import { createEmployee, EMPLOYMENT_TYPES } from "./employees";
+import { pushInterviewToCalendar } from "./interview-calendar";
 
 /** Recruiting (ATS): jobs, candidates and their pipeline, resumes, notes, interviews, scorecards, offers and hiring. */
 
@@ -498,7 +499,7 @@ const toInstant = (v: string) => {
 
 export async function scheduleInterview(ctx: RequestContext, organizationId: string, companyId: string, candidateId: string, raw: z.input<typeof interviewInput>) {
   const input = interviewInput.parse(raw);
-  return transaction(async (tx) => {
+  const created = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "hr.manage", tx);
     const c = await requireCandidate(tx, organizationId, companyId, candidateId);
     if (c.stage === "HIRED" || c.stage === "REJECTED") throw invalid("This candidate is no longer in the pipeline", { reason: "hr_candidate_closed" });
@@ -517,11 +518,14 @@ export async function scheduleInterview(ctx: RequestContext, organizationId: str
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "hr.interview.scheduled", resourceType: "hr_interview", resourceId: iv.id, newValue: { candidateId, scheduledAt, type: input.type } });
     return iv;
   });
+  // Outside the transaction: the interview is saved even if the calendar provider is down.
+  const calendar = await pushInterviewToCalendar(organizationId, companyId, created.id);
+  return { ...created, calendar };
 }
 
 export async function updateInterview(ctx: RequestContext, organizationId: string, companyId: string, interviewId: string, raw: z.input<typeof interviewPatch>) {
   const input = interviewPatch.parse(raw);
-  return transaction(async (tx) => {
+  const updated = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "hr.manage", tx);
     if (!isUuid(interviewId)) throw notFound("Interview");
     const iv = await tx.hrInterview.findFirst({ where: { id: interviewId, organizationId, companyId } });
@@ -538,6 +542,8 @@ export async function updateInterview(ctx: RequestContext, organizationId: strin
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "hr.interview.updated", resourceType: "hr_interview", resourceId: interviewId, oldValue: { status: iv.status }, newValue: input });
     return updated;
   });
+  const calendar = updated.status === "SCHEDULED" && (input.scheduledAt || input.location !== undefined || input.status) ? await pushInterviewToCalendar(organizationId, companyId, updated.id) : null;
+  return { ...updated, calendar };
 }
 
 /** Interviews the viewer is on (as an employee), upcoming first — for the self-service page. */

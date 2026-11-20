@@ -677,6 +677,16 @@ model Company {
   commandRuns                     CommandRun[]
   commandPlanSteps                CommandPlanStep[]
   commsReminders                  CommsReminder[]
+  crmProspectSearches             CrmProspectSearch[]
+  crmProspects                    CrmProspect[]
+  crmIntels                       CrmIntel[]
+  crmOutreachMessages             CrmOutreachMessage[]
+  crmCadences                     CrmCadence[]
+  crmCadenceSteps                 CrmCadenceStep[]
+  crmCadenceEnrollments           CrmCadenceEnrollment[]
+  crmMeetings                     CrmMeeting[]
+  financeAlertLogs                FinanceAlertLog[]
+  hrHeadcountPlans                HrHeadcountPlan[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
