@@ -7,7 +7,13 @@ import { listCountries } from "@/server/modules/globalization/service";
 export default async function ProfileSettingsPage() {
   const locale = await getLocale();
   const viewer = await requireViewer(locale);
-  const [countries, me] = await Promise.all([listCountries(), db().user.findUniqueOrThrow({ where: { id: viewer.user.id }, select: { emailVerifiedAt: true } })]);
+  const [countries, me] = await Promise.all([
+    listCountries(),
+    db().user.findUniqueOrThrow({
+      where: { id: viewer.user.id },
+      select: { emailVerifiedAt: true },
+    }),
+  ]);
   return (
     <div className="grid gap-4">
       <EmailStatus email={viewer.user.email} verified={!!me.emailVerifiedAt} />

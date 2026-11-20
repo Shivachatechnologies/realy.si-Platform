@@ -1,0 +1,72 @@
+// Business Intelligence (src/server/modules/bi): custom dashboards, widgets and saved reports over the metric registry.
+
+enum BiChartType {
+  NUMBER
+  LINE
+  BAR
+}
+
+model BiDashboard {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  /// Visible to everyone in the company with analytics.read (otherwise only the owner).
+  shared         Boolean  @default(false)
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  widgets BiWidget[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId])
+  @@map("bi_dashboards")
+}
+
+model BiWidget {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  companyId      String      @map("company_id") @db.Uuid
+  dashboardId    String      @map("dashboard_id") @db.Uuid
+  metricKey      String      @map("metric_key")
+  chartType      BiChartType @default(NUMBER) @map("chart_type")
+  /// Range key: 7d, 30d, 90d, month, quarter, year.
+  range          String      @default("30d")
+  title          String?
+  position       Int         @default(0)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  dashboard BiDashboard @relation(fields: [dashboardId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([dashboardId, position])
+  @@map("bi_widgets")
+}
+
+/// A saved report definition: metrics over a range → table / CSV.
+model BiReport {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  metricKeys     String[]  @map("metric_keys")
+  /// Range key (7d, 30d, 90d, month, quarter, year, custom).
+  range          String    @default("30d")
+  customFrom     DateTime? @map("custom_from") @db.Date
+  customTo       DateTime? @map("custom_to") @db.Date
+  /// Bucket the report by period (rows per bucket) instead of a single total.
+  bucketed       Boolean   @default(false)
+  shared         Boolean   @default(true)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId])
+  @@map("bi_reports")
+}

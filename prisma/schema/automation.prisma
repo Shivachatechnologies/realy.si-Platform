@@ -1,0 +1,176 @@
+// Automation OS (src/server/modules/automation). Workflows with immutable versions, runs pinned to a version,
+// step-by-step run logs and human approval steps.
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum WorkflowRunStatus {
+  QUEUED
+  RUNNING
+  WAITING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum WorkflowStepStatus {
+  RUNNING
+  WAITING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum WorkflowApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Workflow {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  organizationId   String         @map("organization_id") @db.Uuid
+  companyId        String         @map("company_id") @db.Uuid
+  name             String
+  description      String?
+  status           WorkflowStatus @default(DRAFT)
+  /// The user whose permissions the workflow's actions run with.
+  ownerId          String         @map("owner_id") @db.Uuid
+  /// Working (unpublished) definition edited in the builder.
+  draft            Json
+  currentVersionId String?        @map("current_version_id") @db.Uuid
+  currentVersion   Int            @default(0) @map("current_version")
+  /// From the current version, for matching: "event" | "schedule" | "webhook".
+  triggerType      String?        @map("trigger_type")
+  /// Event type (event), hook id (webhook) or null (schedule).
+  triggerKey       String?        @map("trigger_key")
+  /// Last schedule slot that fired (schedule triggers fire once per slot).
+  lastScheduleSlot String?        @map("last_schedule_slot")
+  templateKey      String?        @map("template_key")
+  createdById      String         @map("created_by_id") @db.Uuid
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  versions WorkflowVersion[]
+  runs     WorkflowRun[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([status, triggerType, triggerKey])
+  @@map("workflows")
+}
+
+/// Immutable published definition.
+model WorkflowVersion {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  workflowId     String   @map("workflow_id") @db.Uuid
+  version        Int
+  definition     Json
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workflow Workflow      @relation(fields: [workflowId, companyId], references: [id, companyId], onDelete: Cascade)
+  runs     WorkflowRun[]
+
+  @@unique([id, companyId])
+  @@unique([workflowId, version])
+  @@map("workflow_versions")
+}
+
+model WorkflowRun {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  workflowId     String            @map("workflow_id") @db.Uuid
+  /// Pinned version (null only for test runs of the unpublished draft, which carry `definition`).
+  versionId      String?           @map("version_id") @db.Uuid
+  definition     Json?
+  /// Event id, "schedule:<slot>" or "test:<uuid>" — unique per workflow (duplicate prevention).
+  triggerEventId String            @map("trigger_event_id")
+  triggerType    String            @map("trigger_type")
+  /// { event: { id, type, entityId, entityType, occurredAt, data } }
+  triggerData    Json              @map("trigger_data")
+  status         WorkflowRunStatus @default(QUEUED)
+  /// 0 for runs started by people or external events; n+1 for events caused by a depth-n run's actions.
+  depth          Int               @default(0)
+  isTest         Boolean           @default(false) @map("is_test")
+  nextRunAt      DateTime?         @map("next_run_at") @db.Timestamptz(3)
+  claimToken     String?           @map("claim_token")
+  claimedAt      DateTime?         @map("claimed_at") @db.Timestamptz(3)
+  waitingFor     String?           @map("waiting_for")
+  error          String?
+  startedById    String?           @map("started_by_id") @db.Uuid
+  startedAt      DateTime?         @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime?         @map("finished_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company                   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workflow  Workflow                  @relation(fields: [workflowId, companyId], references: [id, companyId], onDelete: Cascade)
+  version   WorkflowVersion?          @relation(fields: [versionId, companyId], references: [id, companyId], onDelete: NoAction)
+  steps     WorkflowRunStep[]
+  approvals WorkflowApprovalRequest[]
+
+  @@unique([id, companyId])
+  @@unique([workflowId, triggerEventId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([status, nextRunAt])
+  @@index([workflowId, createdAt])
+  @@map("workflow_runs")
+}
+
+model WorkflowRunStep {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  runId          String             @map("run_id") @db.Uuid
+  stepId         String             @map("step_id")
+  stepType       String             @map("step_type")
+  status         WorkflowStepStatus
+  input          Json               @default("{}")
+  output         Json?
+  error          String?
+  attempts       Int                @default(0)
+  startedAt      DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime?          @map("finished_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     WorkflowRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, stepId])
+  @@map("workflow_run_steps")
+}
+
+/// A "request approval" step waiting for a person's decision on /workflows/approvals.
+model WorkflowApprovalRequest {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  companyId      String                 @map("company_id") @db.Uuid
+  runId          String                 @map("run_id") @db.Uuid
+  stepId         String                 @map("step_id")
+  title          String
+  message        String?
+  /// Who may decide (empty: anyone with workflows.execute).
+  approverIds    String[]               @default([]) @map("approver_ids")
+  status         WorkflowApprovalStatus @default(PENDING)
+  decidedById    String?                @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?              @map("decided_at") @db.Timestamptz(3)
+  note           String?
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     WorkflowRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, stepId])
+  @@index([organizationId, companyId, status])
+  @@map("workflow_approval_requests")
+}

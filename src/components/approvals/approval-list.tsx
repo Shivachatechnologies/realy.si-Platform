@@ -28,6 +28,8 @@ export function ApprovalList({
     <ul className="divide-y">
       {approvals.map((a) => {
         const result = a.result as { content?: string } | null;
+        // Outbound messages: the approver sees exactly what will be sent.
+        const message = a.tool === "send_lead_email" ? (a.input as { subject?: string; body?: string } | null) : null;
         return (
           <li key={a.id} className="grid gap-2 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
             <div className="grid gap-1">
@@ -50,6 +52,13 @@ export function ApprovalList({
                 ) : null}
               </p>
               {a.status === "PENDING" ? <p className="text-xs text-muted-foreground">{t("approvals.expires", { at: formatDateTime(a.expiresAt, locale, timeZone) })}</p> : null}
+              {message?.body ? (
+                <details className="rounded-md border p-2 text-sm" open={a.status === "PENDING"}>
+                  <summary className="cursor-pointer text-xs text-muted-foreground">{t("approvals.messagePreview")}</summary>
+                  <p className="mt-1 font-medium">{message.subject}</p>
+                  <p className="whitespace-pre-wrap">{message.body}</p>
+                </details>
+              ) : null}
               {a.decisionNote ? <p className="text-sm">“{a.decisionNote}”</p> : null}
               {a.status === "EXECUTED" && result?.content ? <p className="text-sm text-success">{result.content}</p> : null}
               {a.status === "FAILED" && a.error ? <p className="text-sm text-danger">{a.error}</p> : null}

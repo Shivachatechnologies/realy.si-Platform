@@ -3,19 +3,49 @@ import { db, transaction, type Prisma } from "@/server/core/db";
 import { userContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, isAppError, notFound } from "@/server/core/errors";
 import { enqueueAgentTask } from "@/server/core/jobs";
+import { env } from "@/server/core/env";
 import { logger } from "@/server/core/logger";
 import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
-import { requirePermission } from "@/server/modules/rbac/service";
+import { emitDomainEvent } from "@/server/modules/events/emit";
+import { can, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
+import { getTool, loadTools } from "@/server/modules/tools/registry";
+import { AUTONOMY_GUIDANCE, toolsForAutonomy } from "@/server/modules/workforce/autonomy";
+import { employeeMonthUsage } from "@/server/modules/workforce/usage";
+import { AGENT_TASK_STATUSES } from "./statuses";
 import { PROFILE_KEYS, profileByKey } from "./profiles";
-import { aiConfigured, runTask, TaskError } from "./runtime";
+import { aiConfigured, REMEMBER_LINE, runTask, TaskError } from "./runtime";
 
 export const createTaskInput = z.object({
-  profile: z.enum(PROFILE_KEYS),
+  /** Optional milestone (same company) the task advances. */
+  milestoneId: z.string().uuid().optional(),
+  /** Optional CRM lead (same company) the task is about. */
+  leadId: z.string().uuid().optional(),
+  /** Optional generic subject (module record) the task is about, e.g. { type: "invoice", id }. */
+  subject: z.object({ type: z.string().regex(/^[a-z_]{2,40}$/), id: z.string().uuid() }).optional(),
+  /** Role profile; optional when an AI employee is given (its profile is used). */
+  profile: z.enum(PROFILE_KEYS).optional(),
+  /** Optional AI employee (same company, active, within budget) that does the work. */
+  aiEmployeeId: z.string().uuid().optional(),
   title: z.string().trim().min(1).max(200),
   instructions: z.string().trim().min(1).max(8000),
+}).refine((v) => v.profile || v.aiEmployeeId, { path: ["profile"], message: "Choose an AI employee or a role" });
+
+/** Delegated tasks may nest at most this deep (a person's task is depth 0). */
+export const MAX_DELEGATION_DEPTH = 2;
+/** Memory notes included in an AI employee's prompt (pinned first, then newest). */
+export const MEMORY_IN_PROMPT = 12;
+
+export const taskFilters = z.object({
+  aiEmployeeId: z.string().uuid().optional().catch(undefined),
+  status: z.enum(AGENT_TASK_STATUSES).optional().catch(undefined),
+  profile: z.string().regex(/^[a-z_]{2,60}$/).optional().catch(undefined),
+  subjectType: z.string().regex(/^[a-z_]{2,40}$/).optional().catch(undefined),
+  parentTaskId: z.string().uuid().optional().catch(undefined),
+  q: z.string().trim().max(200).optional().catch(undefined),
 });
+export type TaskFilters = z.infer<typeof taskFilters>;
 
 const isUuid = (v: string) => z.string().uuid().safeParse(v).success;
 const ACTIVE = ["QUEUED", "RUNNING"] as const;
@@ -26,6 +56,16 @@ const summaryFields = {
   companyId: true,
   profile: true,
   title: true,
+  milestoneId: true,
+  leadId: true,
+  subjectType: true,
+  subjectId: true,
+  aiEmployeeId: true,
+  parentTaskId: true,
+  depth: true,
+  model: true,
+  inputTokens: true,
+  outputTokens: true,
   status: true,
   attempts: true,
   errorCode: true,
@@ -44,6 +84,31 @@ function requireProvider() {
   if (!aiConfigured()) throw new AppError("not_configured", "AI provider not configured (ANTHROPIC_API_KEY)", { reason: "ai_not_configured" });
 }
 
+/** Start of the current UTC day. */
+const utcDayStart = () => {
+  const d = new Date();
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+};
+
+/** Tokens a company's AI tasks used today (input + output), and its daily allowance (null = unlimited). */
+export async function aiUsageToday(organizationId: string, companyId: string) {
+  const limit = env().AI_DAILY_TOKEN_LIMIT || null;
+  const r = await db().agentTask.aggregate({
+    where: { organizationId, companyId, startedAt: { gte: utcDayStart() } },
+    _sum: { inputTokens: true, outputTokens: true },
+  });
+  const used = (r._sum.inputTokens ?? 0) + (r._sum.outputTokens ?? 0);
+  return { used, limit, exhausted: limit !== null && used >= limit };
+}
+
+async function requireBudget(organizationId: string, companyId: string) {
+  const usage = await aiUsageToday(organizationId, companyId);
+  if (usage.exhausted) throw new AppError("not_available", "Today's AI allowance for this company is used up; try again tomorrow", { reason: "ai_budget_exhausted", ...usage });
+  // Organization-wide daily AI token limit (Settings → Usage).
+  const { assertWithinLimit } = await import("@/server/modules/enterprise/policy");
+  await assertWithinLimit(organizationId, "aiTokens", { companyId });
+}
+
 const jobIdFor = (taskId: string, n: number) => `${taskId}_${n}`;
 
 /** Queue the task; if the queue is unreachable the task is marked FAILED (never left looking queued) and 503 returned. */
@@ -59,28 +124,115 @@ async function enqueue(taskId: string, execution: number) {
   }
 }
 
-export async function createTask(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createTaskInput>) {
+/**
+ * Create and queue a task. `opts.parentTaskId` (internal: delegation) links it to the delegating task. With an AI
+ * employee, the employee must be active and within its monthly token budget.
+ */
+export async function createTask(
+  ctx: RequestContext,
+  organizationId: string,
+  companyId: string,
+  raw: z.input<typeof createTaskInput>,
+  opts: { parentTaskId?: string } = {},
+) {
   const input = createTaskInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "agents.run");
   requireProvider();
+  await requireBudget(organizationId, companyId);
   const task = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.run", tx);
+    if (input.milestoneId && !(await tx.milestone.findFirst({ where: { id: input.milestoneId, organizationId, companyId }, select: { id: true } }))) {
+      throw notFound("Milestone");
+    }
+    if (input.leadId && !(await tx.lead.findFirst({ where: { id: input.leadId, organizationId, companyId }, select: { id: true } }))) {
+      throw notFound("Lead");
+    }
+    let profile = input.profile;
+    if (input.aiEmployeeId) {
+      const employee = await tx.aiEmployee.findFirst({
+        where: { id: input.aiEmployeeId, organizationId, companyId, archivedAt: null },
+        select: { id: true, name: true, status: true, profileKey: true, monthlyTokenBudget: true },
+      });
+      if (!employee) throw notFound("AI employee");
+      if (employee.status === "PAUSED") throw conflict(`${employee.name} is paused`, { reason: "workforce_employee_paused" });
+      const usage = await employeeMonthUsage(organizationId, companyId, employee);
+      if (usage.exhausted) {
+        throw new AppError("not_available", `${employee.name} has used this month's token budget`, { reason: "workforce_employee_over_budget", used: usage.used, budget: usage.budget });
+      }
+      profile = employee.profileKey as typeof profile;
+    }
+    if (!profile || !profileByKey(profile)) throw notFound("Profile");
+    let depth = 0;
+    if (opts.parentTaskId) {
+      const parent = await tx.agentTask.findFirst({ where: { id: opts.parentTaskId, organizationId, companyId }, select: { depth: true } });
+      if (!parent) throw notFound("Task");
+      depth = parent.depth + 1;
+      if (depth > MAX_DELEGATION_DEPTH) throw conflict("Delegation is limited to two levels", { reason: "workforce_delegation_too_deep" });
+    }
     const t = await tx.agentTask.create({
-      data: { organizationId, companyId, profile: input.profile, title: input.title, instructions: input.instructions, createdById: ctx.actor.id ?? organizationId },
+      data: {
+        organizationId,
+        companyId,
+        profile,
+        title: input.title,
+        instructions: input.instructions,
+        milestoneId: input.milestoneId ?? null,
+        leadId: input.leadId ?? null,
+        subjectType: input.subject?.type ?? null,
+        subjectId: input.subject?.id ?? null,
+        aiEmployeeId: input.aiEmployeeId ?? null,
+        parentTaskId: opts.parentTaskId ?? null,
+        depth,
+        createdById: ctx.actor.id ?? organizationId,
+      },
       select: summaryFields,
     });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "agent.task.created", resourceType: "agent_task", resourceId: t.id, newValue: { profile: t.profile, title: t.title } });
+    await writeAudit(tx, ctx, {
+      category: "TENANT",
+      organizationId,
+      action: "agent.task.created",
+      resourceType: "agent_task",
+      resourceId: t.id,
+      newValue: { profile: t.profile, title: t.title, companyId, aiEmployeeId: t.aiEmployeeId, parentTaskId: t.parentTaskId },
+    });
     return t;
   });
   await enqueue(task.id, 1);
   return task;
 }
 
-export async function listTasks(ctx: RequestContext, organizationId: string, companyId: string, rawPage: Partial<PageInput> = {}) {
+export async function listTasks(ctx: RequestContext, organizationId: string, companyId: string, rawPage: Partial<PageInput> & Record<string, unknown> = {}) {
   const page = pageInput.parse(rawPage);
+  const f = taskFilters.parse(rawPage);
   await authorize(ctx, organizationId, companyId, "agents.read");
-  const rows = await db().agentTask.findMany({ where: { organizationId, companyId }, orderBy: { id: "desc" }, select: summaryFields, ...prismaPage(page) });
+  const rows = await db().agentTask.findMany({
+    where: {
+      organizationId,
+      companyId,
+      ...(f.aiEmployeeId ? { aiEmployeeId: f.aiEmployeeId } : {}),
+      ...(f.status ? { status: f.status } : {}),
+      ...(f.profile ? { profile: f.profile } : {}),
+      ...(f.subjectType ? { subjectType: f.subjectType } : {}),
+      ...(f.parentTaskId ? { parentTaskId: f.parentTaskId } : {}),
+      ...(f.q ? { title: { contains: f.q, mode: "insensitive" as const } } : {}),
+    },
+    orderBy: { id: "desc" },
+    select: summaryFields,
+    ...prismaPage(page),
+  });
   return toPage(rows, page);
+}
+
+/** Tasks a task delegated (direct children), oldest first. */
+export async function listChildTasks(ctx: RequestContext, organizationId: string, companyId: string, parentTaskId: string) {
+  await authorize(ctx, organizationId, companyId, "agents.read");
+  return db().agentTask.findMany({ where: { organizationId, companyId, parentTaskId }, orderBy: { createdAt: "asc" }, select: summaryFields });
+}
+
+/** AI tasks attached to one module record (newest first). */
+export async function listSubjectTasks(ctx: RequestContext, organizationId: string, companyId: string, subjectType: string, subjectId: string, take = 10) {
+  await authorize(ctx, organizationId, companyId, "agents.read");
+  return db().agentTask.findMany({ where: { organizationId, companyId, subjectType, subjectId }, orderBy: { createdAt: "desc" }, take, select: { ...summaryFields, output: true } });
 }
 
 export async function getTask(ctx: RequestContext, organizationId: string, companyId: string, taskId: string) {
@@ -112,6 +264,7 @@ export async function cancelTask(ctx: RequestContext, organizationId: string, co
 export async function retryTask(ctx: RequestContext, organizationId: string, companyId: string, taskId: string) {
   await authorize(ctx, organizationId, companyId, "agents.run");
   requireProvider();
+  await requireBudget(organizationId, companyId);
   const attempts = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.run", tx);
     if (!isUuid(taskId)) throw notFound("Task");
@@ -143,15 +296,49 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
   if (!claimed.count) return "skipped";
   const held = { id: taskId, status: "RUNNING" as const, runToken: jobId };
 
-  const task = await db().agentTask.findUniqueOrThrow({ where: { id: taskId }, include: { company: true } });
-  const ctx = userContext(task.createdById, { requestId: `task_${taskId}` });
+  const task = await db().agentTask.findUniqueOrThrow({
+    where: { id: taskId },
+    include: {
+      company: true,
+      aiEmployee: { include: { memories: { orderBy: [{ pinned: "desc" }, { createdAt: "desc" }], take: MEMORY_IN_PROMPT, select: { content: true } } } },
+    },
+  });
+  const requester = userContext(task.createdById, { requestId: `task_${taskId}` });
+  const employee = task.aiEmployee;
+  // An AI employee may act as a configured member; tools then run with that member's permissions.
+  const ctx = employee?.runsAsUserId ? userContext(employee.runsAsUserId, { requestId: `task_${taskId}` }) : requester;
   const log = logger.child({ component: "agent-task", taskId, jobId });
+  const eventData = { profile: task.profile, title: task.title, aiEmployeeId: task.aiEmployeeId, parentTaskId: task.parentTaskId, subjectType: task.subjectType, subjectId: task.subjectId };
 
   try {
     // The requester must still be allowed to run tasks in this company when the task executes.
-    await authorize(ctx, task.organizationId, task.companyId, "agents.run");
+    await authorize(requester, task.organizationId, task.companyId, "agents.run");
+    if ((await aiUsageToday(task.organizationId, task.companyId)).exhausted) {
+      throw new TaskError("budget_exhausted", "Today's AI allowance for this company is used up; retry tomorrow");
+    }
     const profile = profileByKey(task.profile);
     if (!profile) throw new TaskError("unknown_profile", "This AI employee profile no longer exists");
+    let tools: readonly string[] = profile.tools;
+    if (employee) {
+      if (employee.archivedAt) throw new TaskError("employee_archived", "This AI employee was removed");
+      if (employee.status === "PAUSED") throw new TaskError("employee_paused", `${employee.name} is paused; resume and retry`);
+      if ((await employeeMonthUsage(task.organizationId, task.companyId, employee)).exhausted) {
+        throw new TaskError("employee_over_budget", `${employee.name} has used this month's token budget`);
+      }
+      const allowed = employee.allowedTools.length ? profile.tools.filter((t) => employee.allowedTools.includes(t)) : profile.tools;
+      await loadTools();
+      tools = toolsForAutonomy(allowed, employee.autonomy);
+      if (ctx !== requester) {
+        // Never more than the requester could do: offer only tools whose permissions the requester also holds.
+        const chain = await companyChain(db(), task.organizationId, task.companyId);
+        const keep: string[] = [];
+        for (const name of tools) {
+          const def = getTool(name);
+          if (def && (await Promise.all(def.permissions.map((p) => can(requester, p, chain)))).every(Boolean)) keep.push(name);
+        }
+        tools = keep;
+      }
+    }
     const result = await runTask({
       ctx,
       organizationId: task.organizationId,
@@ -162,13 +349,25 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       instructions: task.instructions,
       taskId: task.id,
       isCancelled: async () => !(await db().agentTask.count({ where: held })),
+      tools,
+      employee: employee
+        ? {
+            name: employee.name,
+            instructions: employee.instructions,
+            skills: employee.skills,
+            autonomyGuidance: AUTONOMY_GUIDANCE[employee.autonomy],
+            memory: employee.memories.map((m) => m.content),
+          }
+        : null,
     });
+    const remembered = employee ? [...result.output.matchAll(REMEMBER_LINE)].map((m) => m[1]!.trim().slice(0, 1000)).filter(Boolean).slice(0, 3) : [];
+    const output = employee ? result.output.replace(REMEMBER_LINE, "").trim() || result.output : result.output;
     const stored = await transaction(async (tx) => {
       const { count } = await tx.agentTask.updateMany({
         where: held,
         data: {
           status: "COMPLETED",
-          output: result.output,
+          output,
           citations: result.citations as unknown as Prisma.InputJsonValue,
           toolCalls: result.toolCalls as unknown as Prisma.InputJsonValue,
           model: result.model,
@@ -179,7 +378,19 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
         },
       });
       if (count) {
-        await writeAudit(tx, ctx, { category: "TENANT", organizationId: task.organizationId, action: "agent.task.completed", resourceType: "agent_task", resourceId: taskId, newValue: { model: result.model, citations: result.citations.length } });
+        await writeAudit(tx, ctx, { category: "TENANT", organizationId: task.organizationId, action: "agent.task.completed", resourceType: "agent_task", resourceId: taskId, newValue: { model: result.model, citations: result.citations.length, companyId: task.companyId } });
+        if (employee && remembered.length) {
+          await tx.aiEmployeeMemory.createMany({
+            data: remembered.map((content) => ({ organizationId: task.organizationId, companyId: task.companyId, aiEmployeeId: employee.id, content, source: "TASK" as const, sourceTaskId: taskId })),
+          });
+        }
+        await emitDomainEvent(tx, ctx, "agent.task.completed", {
+          organizationId: task.organizationId,
+          companyId: task.companyId,
+          entityType: "agent_task",
+          entityId: taskId,
+          data: { ...eventData, status: "COMPLETED", model: result.model, inputTokens: result.inputTokens, outputTokens: result.outputTokens },
+        });
       }
       return count > 0;
     });
@@ -199,7 +410,18 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       throw err;
     }
     log.error({ code: failure.code, err: err instanceof Error ? err.message : String(err) }, "agent task failed");
-    await db().agentTask.updateMany({ where: held, data: { status: "FAILED", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date(), runToken: null } });
+    await transaction(async (tx) => {
+      const { count } = await tx.agentTask.updateMany({ where: held, data: { status: "FAILED", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date(), runToken: null } });
+      if (count) {
+        await emitDomainEvent(tx, ctx, "agent.task.failed", {
+          organizationId: task.organizationId,
+          companyId: task.companyId,
+          entityType: "agent_task",
+          entityId: taskId,
+          data: { ...eventData, status: "FAILED", errorCode: failure.code },
+        });
+      }
+    });
     return "failed";
   }
 }

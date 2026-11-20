@@ -8,7 +8,6 @@ import {
   CheckSquare,
   CircleDollarSign,
   ClipboardCheck,
-  Cloud,
   FolderKanban,
   Gauge,
   Handshake,
@@ -26,30 +25,16 @@ import {
   UserRound,
   Users,
   Workflow,
-  Wrench,
   Contact,
   Building2,
   Network,
 } from "lucide-react";
 
-/** Roadmap phase in which each not-yet-built module ships (docs/roadmap.md). */
+/** Modules outside the current product scope; reachable only by URL, they render the roadmap placeholder. */
 export const MODULE_PHASE = {
-  intelligence: 3,
-  plans: 3,
-  activity: 3,
   studio: 6,
   deployments: 6,
   environments: 6,
-  marketing: 6,
-  sales: 6,
-  crm: 6,
-  analytics: 6,
-  finance: 6,
-  operations: 6,
-  support: 6,
-  workflows: 4,
-  integrations: 5,
-  marketplace: 7,
 } as const;
 
 export type ModuleKey = keyof typeof MODULE_PHASE;
@@ -69,56 +54,67 @@ export interface NavSection {
   items: NavItem[];
 }
 
-const mod = (key: ModuleKey, icon: LucideIcon): NavItem => ({
-  label: `modules.${key}.title`,
-  href: `/${key}`,
-  icon,
-  phase: MODULE_PHASE[key],
-});
+const item = (label: string, href: string, icon: LucideIcon): NavItem => ({ label, href, icon });
 
 export const NAV: NavSection[] = [
-  { label: null, items: [{ label: "nav.commandCenter", href: "", icon: LayoutDashboard }] },
+  { label: null, items: [item("nav.commandCenter", "", LayoutDashboard)] },
   {
     label: "nav.sections.intelligence",
     items: [
-      mod("intelligence", Sparkles),
-      { label: "modules.objectives.title", href: "/objectives", icon: Target },
-      mod("plans", ListTree),
-      { label: "modules.tasks.title", href: "/tasks", icon: CheckSquare },
-      { label: "modules.workforce.title", href: "/workforce", icon: Users },
-      mod("activity", Activity),
-      { label: "modules.approvals.title", href: "/approvals", icon: ClipboardCheck },
+      item("modules.intelligence.title", "/intelligence", Sparkles),
+      item("modules.analytics.title", "/analytics", BarChart3),
+      item("modules.objectives.title", "/objectives", Target),
+      item("modules.tasks.title", "/tasks", CheckSquare),
+      item("modules.workforce.title", "/workforce", Users),
+      item("modules.plans.title", "/plans", ListTree),
+      item("modules.activity.title", "/activity", Activity),
+      item("modules.approvals.title", "/approvals", ClipboardCheck),
     ],
   },
   {
     label: "nav.sections.company",
     items: [
-      { label: "modules.overview.title", href: "/company", icon: Building2 },
-      { label: "graph.title", href: "/graph", icon: Network },
-      { label: "modules.brain.title", href: "/brain", icon: Brain },
-      { label: "modules.products.title", href: "/products", icon: Boxes },
-      { label: "modules.customers.title", href: "/customers", icon: Contact },
-      { label: "modules.people.title", href: "/people", icon: UserRound },
+      item("modules.overview.title", "/company", Building2),
+      item("modules.organization.title", "/organization", Network),
+      item("graph.title", "/graph", Network),
+      item("modules.brain.title", "/brain", Brain),
+      item("modules.documents.title", "/documents", FolderKanban),
+      item("modules.products.title", "/products", Boxes),
+      item("modules.customers.title", "/customers", Contact),
+    ],
+  },
+  {
+    label: "nav.sections.growth",
+    items: [
+      item("modules.marketing.title", "/marketing", Megaphone),
+      item("modules.sales.title", "/sales", Handshake),
+      item("modules.crm.title", "/crm", Layers),
+      item("modules.support.title", "/support", Headphones),
     ],
   },
   {
     label: "nav.sections.build",
-    items: [{ label: "modules.projects.title", href: "/projects", icon: FolderKanban }, mod("studio", Wrench), mod("deployments", Rocket), mod("environments", Cloud)],
-  },
-  {
-    label: "nav.sections.growth",
-    items: [mod("marketing", Megaphone), mod("sales", Handshake), mod("crm", Layers), mod("analytics", BarChart3)],
+    items: [
+      item("modules.projects.title", "/projects", FolderKanban),
+      item("modules.product.title", "/product", Rocket),
+      item("modules.operations.title", "/operations", Gauge),
+    ],
   },
   {
     label: "nav.sections.operations",
-    items: [mod("finance", CircleDollarSign), mod("operations", Gauge), mod("support", Headphones), mod("workflows", Workflow)],
+    items: [
+      item("modules.finance.title", "/finance", CircleDollarSign),
+      item("modules.hr.title", "/hr", UserRound),
+      item("modules.communication.title", "/communication", Megaphone),
+      item("modules.workflows.title", "/workflows", Workflow),
+    ],
   },
   {
     label: "nav.sections.platform",
     items: [
-      { label: "nav.integrations", href: "/integrations", icon: Blocks, phase: MODULE_PHASE.integrations },
-      { label: "nav.marketplace", href: "/marketplace", icon: Store, phase: MODULE_PHASE.marketplace },
-      { label: "nav.settings", href: "/settings", icon: Settings },
+      item("nav.integrations", "/integrations", Blocks),
+      item("nav.marketplace", "/marketplace", Store),
+      item("nav.settings", "/settings", Settings),
     ],
   },
 ];

@@ -6,7 +6,53 @@ import { z } from "zod";
  */
 const id = z.string().uuid();
 
-export const eventCatalog = {
+/**
+ * Events emitted by business modules. Payload: { companyId, entityId, data } where `data` is a flat snapshot
+ * (strings, numbers, booleans, null) of the record — what workflow conditions and AI triggers read.
+ */
+export const DOMAIN_EVENTS = [
+  "lead.created",
+  "lead.updated",
+  "lead.assigned",
+  "deal.created",
+  "deal.stage_changed",
+  "deal.won",
+  "deal.lost",
+  "customer.created",
+  "contact.created",
+  "invoice.created",
+  "invoice.sent",
+  "invoice.paid",
+  "invoice.overdue",
+  "expense.created",
+  "payment.received",
+  "task.created",
+  "task.completed",
+  "project.created",
+  "employee.joined",
+  "employee.left",
+  "candidate.applied",
+  "candidate.hired",
+  "leave.requested",
+  "form.submitted",
+  "campaign.launched",
+  "content.published",
+  "ticket.created",
+  "ticket.updated",
+  "ticket.resolved",
+  "meeting.completed",
+  "announcement.published",
+  "webhook.received",
+  "schedule.tick",
+  "integration.synced",
+  "agent.task.completed",
+  "agent.task.failed",
+] as const;
+export type DomainEventType = (typeof DOMAIN_EVENTS)[number];
+const scalar = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+export const domainEvent = z.object({ companyId: id, entityId: z.string().min(1).max(200), data: z.record(z.string(), scalar).default({}) });
+
+const baseCatalog = {
   "user.registered": { 1: z.object({ userId: id, locale: z.string() }) },
   "organization.created": { 1: z.object({ organizationId: id, name: z.string() }) },
   "member.invited": { 1: z.object({ invitationId: id, organizationId: id, roleKey: z.string() }) },
@@ -55,6 +101,9 @@ export const eventCatalog = {
   "objective.created": { 1: z.object({ objectiveId: id, companyId: id }) },
   "milestone.completed": { 1: z.object({ milestoneId: id, objectiveId: id, companyId: id }) },
 } as const;
+
+export const eventCatalog = baseCatalog as typeof baseCatalog & Record<DomainEventType, { 1: typeof domainEvent }>;
+for (const t of DOMAIN_EVENTS) (eventCatalog as Record<string, unknown>)[t] = { 1: domainEvent };
 
 export type EventType = keyof typeof eventCatalog;
 export type EventPayload<T extends EventType, V extends keyof (typeof eventCatalog)[T] = 1> =

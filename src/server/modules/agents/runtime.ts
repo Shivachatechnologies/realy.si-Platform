@@ -12,7 +12,7 @@ import { env } from "@/server/core/env";
 import type { RequestContext } from "@/server/core/context";
 import { isAppError } from "@/server/core/errors";
 import { requestTool, ToolDenied } from "@/server/modules/tools/gateway";
-import { TOOLS, type Citable } from "@/server/modules/tools/registry";
+import { getTool, loadTools, type Citable } from "@/server/modules/tools/registry";
 import type { AgentProfile } from "./profiles";
 
 /** A failure with a stable code and a message safe to show the user. `retryable` failures may be retried by the queue. */
@@ -86,7 +86,14 @@ export interface RunInput {
   instructions: string;
   taskId: string | null;
   isCancelled: () => Promise<boolean>;
+  /** Tools offered for this run (defaults to the profile's). An AI employee narrows them by allow-list and autonomy. */
+  tools?: readonly string[];
+  /** The AI employee doing the work, if any: identity, custom instructions, autonomy guidance and memory. */
+  employee?: { name: string; instructions: string | null; skills: string[]; autonomyGuidance: string; memory: string[] } | null;
 }
+
+/** Lines starting with REMEMBER: in a deliverable are saved to the AI employee's memory (and removed from the output). */
+export const REMEMBER_LINE = /^\s*REMEMBER:\s*(.+)$/gim;
 
 export interface RunResult {
   output: string;
@@ -117,8 +124,26 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     input.company.operatingCountryCodes.length ? `Operating countries: ${input.company.operatingCountryCodes.join(", ")}` : null,
     input.company.targetMarketCodes.length ? `Target markets: ${input.company.targetMarketCodes.join(", ")}` : null,
   ].filter(Boolean);
-  const system = `${SYSTEM_PROMPT}\n\n${companyFacts.join("\n")}\n\nYour role:\n${profile.instructions}`;
-  const tools: BetaToolUnion[] = profile.tools.map((t) => ({ name: t, description: TOOLS[t].description, strict: true, input_schema: TOOLS[t].modelSchema as BetaTool["input_schema"] }));
+  const offered = input.tools ?? profile.tools;
+  const emp = input.employee;
+  const employeeSection = emp
+    ? [
+        `\n\nYou are ${emp.name}.`,
+        emp.skills.length ? `Skills: ${emp.skills.join(", ")}.` : null,
+        emp.instructions ? `Instructions from your manager:\n${emp.instructions}` : null,
+        emp.autonomyGuidance,
+        emp.memory.length ? `Notes you saved from earlier tasks (may be outdated; verify before relying on them):\n${emp.memory.map((m) => `- ${m}`).join("\n")}` : null,
+        "To keep a durable fact for future tasks, add at most three lines at the very end of your deliverable that start with REMEMBER: followed by the fact.",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+  const system = `${SYSTEM_PROMPT}\n\n${companyFacts.join("\n")}\n\nYour role:\n${profile.instructions}${employeeSection}`;
+  await loadTools();
+  const tools: BetaToolUnion[] = offered.flatMap((t) => {
+    const def = getTool(t);
+    return def ? [{ name: t, description: def.description, strict: true, input_schema: def.modelSchema as BetaTool["input_schema"] }] : [];
+  });
   const messages: BetaMessageParam[] = [{ role: "user", content: `Task: ${input.title}\n\n${input.instructions}` }];
 
   const cite = (c: Citable) => {
@@ -132,7 +157,7 @@ export async function runTask(input: RunInput): Promise<RunResult> {
 
   /** Every tool call goes through the gateway: allow-list, schema, the requester's permissions, autonomy policy. */
   async function runTool(name: string, rawInput: unknown): Promise<string> {
-    const r = await requestTool(name, rawInput, { ctx, organizationId, companyId, allowedTools: profile.tools, profileKey: profile.key, taskId: input.taskId, cite });
+    const r = await requestTool(name, rawInput, { ctx, organizationId, companyId, allowedTools: offered, profileKey: profile.key, taskId: input.taskId, cite });
     const shown = rawInput && typeof rawInput === "object" ? (rawInput as Record<string, unknown>) : {};
     if (r.status === "approval_requested") toolCalls.push({ tool: name, input: shown, results: 0, approvalId: r.approvalId });
     else toolCalls.push({ tool: name, input: shown, results: r.count ?? 0 });

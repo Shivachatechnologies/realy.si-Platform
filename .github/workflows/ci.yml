@@ -42,7 +42,7 @@ jobs:
       - name: Migrations apply cleanly and match the schema (drift check)
         run: |
           pnpm db:migrate
-          pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+          pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema --exit-code
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test

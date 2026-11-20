@@ -3,25 +3,17 @@
  * tools it may use and its limits. It is not an autonomous agent: it acts only through the tools listed here.
  */
 
-/**
- * Tools in the registry (src/server/modules/tools/registry.ts). Reads run directly; the create_* tools are SUPERVISED:
- * calling them only files an approval request — nothing changes until a person approves it.
- */
-export const TOOL_NAMES = ["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity", "create_project", "create_milestone"] as const;
-export type ToolName = (typeof TOOL_NAMES)[number];
+import type { AgentProfile } from "./profile-types";
+import { MODULE_PROFILES } from "./module-profiles";
 
-export interface AgentProfile {
-  key: string;
-  /** Role-specific guidance appended to the shared system prompt. */
-  instructions: string;
-  tools: readonly ToolName[];
-  /** Upper bound on model turns (each turn may call tools) for one execution. */
-  maxTurns: number;
-}
+export type { AgentProfile } from "./profile-types";
+export type ToolName = string;
 
-const READ_TOOLS = ["search_company_brain", "read_company_graph", "read_objectives"] as const;
+/** Read tools every profile can use. */
+export const READ_TOOLS = ["search_company_brain", "read_company_graph", "read_objectives"] as const;
+export const CORE_READ_TOOLS = READ_TOOLS;
 
-export const AGENT_PROFILES = [
+const CORE_PROFILES = [
   {
     key: "research_analyst",
     instructions:
@@ -46,8 +38,8 @@ export const AGENT_PROFILES = [
   {
     key: "sales_researcher",
     instructions:
-      "You are the company's sales researcher. Prepare account briefs, ideal-customer profiles and outreach drafts. Use the company's customers, products and documents. Outreach is a draft for a human to review and send — you cannot send messages. You may propose adding customers or partners to the Company Graph; they are added only once a person approves.",
-    tools: [...READ_TOOLS, "create_graph_entity"],
+      "You are the company's sales researcher. Prepare account briefs, ideal-customer profiles and outreach drafts. Use the company's customers, products and documents. Outreach is a draft for a human to review and send — you cannot send messages. You may read the CRM pipeline and a lead's full history (read_lead), and propose adding leads to the CRM or customers and partners to the Company Graph; they are added only once a person approves. You may propose emailing a lead with send_lead_email: it is sent only after a person approves it, so never say a message was sent unless the tool result says so.",
+    tools: [...READ_TOOLS, "read_leads", "read_lead", "create_graph_entity", "create_lead", "send_lead_email"],
     maxTurns: 8,
   },
   {
@@ -57,8 +49,11 @@ export const AGENT_PROFILES = [
     tools: [...READ_TOOLS, "create_project", "create_milestone"],
     maxTurns: 8,
   },
-] as const satisfies readonly AgentProfile[];
+] satisfies AgentProfile[];
 
-export type AgentProfileKey = (typeof AGENT_PROFILES)[number]["key"];
-export const PROFILE_KEYS = AGENT_PROFILES.map((p) => p.key) as [AgentProfileKey, ...AgentProfileKey[]];
+/** Core profiles plus every business module's AI employees (<module>/ai-profiles.ts). */
+export const AGENT_PROFILES: AgentProfile[] = [...CORE_PROFILES, ...MODULE_PROFILES];
+
+export type AgentProfileKey = string;
+export const PROFILE_KEYS = AGENT_PROFILES.map((p) => p.key) as [string, ...string[]];
 export const profileByKey = (key: string): AgentProfile | undefined => AGENT_PROFILES.find((p) => p.key === key);

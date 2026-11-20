@@ -1,0 +1,171 @@
+// ───────────────────────────── Marketplace OS ─────────────────────────────
+// Listings (AI employees, agents, skills, workflows, integrations, company/department templates, industry blueprints).
+// The built-in catalog lives in code (src/server/modules/marketplace/catalog.ts); organizations publish their own
+// listings here. Installations and reviews reference a listing by its stable `listingKey` ("publisher/slug") so they
+// work for built-in and published listings alike. Permissions: marketplace.read / marketplace.install.
+
+enum MarketplaceListingType {
+  AI_EMPLOYEE
+  AI_AGENT
+  SKILL
+  WORKFLOW
+  INTEGRATION
+  COMPANY_TEMPLATE
+  DEPARTMENT_TEMPLATE
+  INDUSTRY_BLUEPRINT
+}
+
+enum MarketplaceListingStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum MarketplacePricingModel {
+  FREE
+  ONE_TIME
+  MONTHLY
+}
+
+enum MarketplaceInstallStatus {
+  ACTIVE
+  UNINSTALLED
+}
+
+/// An organization's public publisher profile (one per organization).
+model MarketplacePublisher {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @unique @map("organization_id") @db.Uuid
+  name           String
+  slug           String   @unique
+  description    String   @default("")
+  website        String?
+  logoUrl        String?  @map("logo_url")
+  verified       Boolean  @default(false)
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  listings     MarketplaceListing[]
+
+  @@map("marketplace_publishers")
+}
+
+model MarketplaceListing {
+  id             String                   @id @default(uuid(7)) @db.Uuid
+  publisherId    String                   @map("publisher_id") @db.Uuid
+  organizationId String                   @map("organization_id") @db.Uuid
+  /// "<publisher slug>/<listing slug>", stable across versions.
+  listingKey     String                   @unique @map("listing_key")
+  type           MarketplaceListingType
+  category       String
+  name           String
+  summary        String
+  description    String                   @default("")
+  tags           String[]                 @default([])
+  iconUrl        String?                  @map("icon_url")
+  status         MarketplaceListingStatus @default(DRAFT)
+  pricingModel   MarketplacePricingModel  @default(FREE) @map("pricing_model")
+  /// Price in minor units of `currency` (pricing architecture only; no payment capture).
+  priceMinor     BigInt?                  @map("price_minor")
+  currency       String?                  @db.Char(3)
+  latestVersion  String?                  @map("latest_version")
+  reviewNote     String?                  @map("review_note")
+  submittedAt    DateTime?                @map("submitted_at") @db.Timestamptz(3)
+  publishedAt    DateTime?                @map("published_at") @db.Timestamptz(3)
+  reviewedById   String?                  @map("reviewed_by_id") @db.Uuid
+  createdById    String                   @map("created_by_id") @db.Uuid
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  publisher MarketplacePublisher        @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  versions  MarketplaceListingVersion[]
+
+  @@index([status, type])
+  @@index([organizationId])
+  @@map("marketplace_listings")
+}
+
+model MarketplaceListingVersion {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  version   String
+  changelog String   @default("")
+  /// What the version installs (validated by marketplace/manifest.ts).
+  manifest  Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, version])
+  @@map("marketplace_listing_versions")
+}
+
+/// One review per user per listing; visible to everyone browsing the marketplace.
+model MarketplaceReview {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  listingKey     String   @map("listing_key")
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  authorName     String   @map("author_name")
+  rating         Int
+  title          String   @default("")
+  body           String   @default("")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([listingKey, userId])
+  @@index([listingKey, createdAt])
+  @@map("marketplace_reviews")
+}
+
+model MarketplaceInstallation {
+  id             String                   @id @default(uuid(7)) @db.Uuid
+  organizationId String                   @map("organization_id") @db.Uuid
+  companyId      String                   @map("company_id") @db.Uuid
+  listingKey     String                   @map("listing_key")
+  listingType    MarketplaceListingType   @map("listing_type")
+  listingName    String                   @map("listing_name")
+  version        String
+  /// Pinned installations are not offered upgrades automatically.
+  pinned         Boolean                  @default(false)
+  config         Json                     @default("{}")
+  status         MarketplaceInstallStatus @default(ACTIVE)
+  /// Counts of what the last install/upgrade created, skipped and left pending (bridges).
+  summary        Json                     @default("{}")
+  installedById  String                   @map("installed_by_id") @db.Uuid
+  installedAt    DateTime                 @default(now()) @map("installed_at") @db.Timestamptz(3)
+  uninstalledAt  DateTime?                @map("uninstalled_at") @db.Timestamptz(3)
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  items   MarketplaceInstallItem[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, listingKey])
+  @@index([organizationId, companyId, status])
+  @@map("marketplace_installations")
+}
+
+/// A record an installation created (department, team, role, project, task, objective, milestone...).
+model MarketplaceInstallItem {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  installationId String   @map("installation_id") @db.Uuid
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  name           String
+  version        String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  installation MarketplaceInstallation @relation(fields: [installationId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([installationId])
+  @@map("marketplace_install_items")
+}

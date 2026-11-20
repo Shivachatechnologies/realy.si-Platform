@@ -9,11 +9,20 @@ const optional = z
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().url(),
+  /** Optional for the web app in production (rate limits fall back to Postgres); required by the worker (queues). */
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
   REALY_ENCRYPTION_KEY: z
     .string()
     .refine((v) => Buffer.from(v, "base64").length === 32, "must be 32 bytes, base64-encoded"),
   APP_URL: z.string().url().default("http://localhost:3000"),
+  /** Deployment surface: "user" (company app), "admin" (platform admin console) or unset (both). See src/proxy.ts. */
+  APP_SURFACE: z.enum(["user", "admin"]).optional().or(z.literal("").transform(() => undefined)),
+  /** First-run access: the email that becomes SUPER_ADMIN when it registers while no SUPER_ADMIN exists. */
+  REALY_BOOTSTRAP_ADMIN_EMAIL: optional,
+  /** On the user surface: the admin console's base URL (e.g. https://admin.realy.si); /admin redirects there. */
+  ADMIN_URL: optional,
+  /** On the admin surface: the company app's base URL, for the "Open the app" link. */
+  USER_APP_URL: optional,
   REALY_DEV_RELAX_MFA: z
     .enum(["true", "false"])
     .default("false")
@@ -38,9 +47,31 @@ const schema = z.object({
   OAUTH_MICROSOFT_CLIENT_ID: optional,
   OAUTH_MICROSOFT_CLIENT_SECRET: optional,
   OAUTH_MICROSOFT_TENANT: z.string().regex(/^[A-Za-z0-9.-]{1,64}$/).default("common"),
+  // Integrations OS: OAuth apps for provider connections (all optional; Google/Microsoft reuse the login OAuth apps above).
+  // Redirect URI to register with each provider: {APP_URL}/api/v1/integrations/oauth/{provider}/callback
+  SLACK_CLIENT_ID: optional,
+  SLACK_CLIENT_SECRET: optional,
+  HUBSPOT_CLIENT_ID: optional,
+  HUBSPOT_CLIENT_SECRET: optional,
+  SALESFORCE_CLIENT_ID: optional,
+  SALESFORCE_CLIENT_SECRET: optional,
+  SALESFORCE_LOGIN_URL: z.string().url().default("https://login.salesforce.com"),
+  LINKEDIN_CLIENT_ID: optional,
+  LINKEDIN_CLIENT_SECRET: optional,
+  X_CLIENT_ID: optional,
+  X_CLIENT_SECRET: optional,
+  FACEBOOK_APP_ID: optional,
+  FACEBOOK_APP_SECRET: optional,
+  QUICKBOOKS_CLIENT_ID: optional,
+  QUICKBOOKS_CLIENT_SECRET: optional,
+  QUICKBOOKS_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
+  XERO_CLIENT_ID: optional,
+  XERO_CLIENT_SECRET: optional,
   // AI task execution (Claude API). Without a key, AI tasks report "not configured" and are never simulated.
   ANTHROPIC_API_KEY: optional,
   AGENT_MODEL: z.string().regex(/^[a-z0-9.-]{3,64}$/).default("claude-opus-5-5"),
+  /** Daily AI token allowance per company (input + output, UTC day). 0 disables the limit. */
+  AI_DAILY_TOKEN_LIMIT: z.coerce.number().int().min(0).default(2_000_000),
   SENTRY_DSN: optional,
   SENTRY_ENVIRONMENT: optional,
   OTEL_EXPORTER_OTLP_ENDPOINT: optional,

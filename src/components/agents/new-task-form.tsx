@@ -12,13 +12,31 @@ import { useI18n, useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
 import { PROFILE_KEYS } from "@/server/modules/agents/profiles";
 
-export function NewTaskForm({ organizationId, companyId, initialProfile }: { organizationId: string; companyId: string; initialProfile?: string }) {
+export function NewTaskForm({
+  organizationId,
+  companyId,
+  initialProfile,
+  milestones = [],
+  employees = [],
+  initialEmployeeId,
+}: {
+  organizationId: string;
+  companyId: string;
+  initialProfile?: string;
+  /** Open milestones the task can advance, labelled "Objective — Milestone". */
+  milestones?: { id: string; label: string }[];
+  /** Active AI employees; choosing one assigns the task to it (its role is used). */
+  employees?: { id: string; name: string }[];
+  initialEmployeeId?: string;
+}) {
   const t = useT();
   const { locale } = useI18n();
   const router = useRouter();
   const [profile, setProfile] = useState<string>(PROFILE_KEYS.includes(initialProfile as never) ? initialProfile! : PROFILE_KEYS[0]);
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [milestoneId, setMilestoneId] = useState("");
+  const [aiEmployeeId, setAiEmployeeId] = useState(employees.some((e) => e.id === initialEmployeeId) ? initialEmployeeId! : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const fields = error instanceof ApiError ? error.fieldErrors() : {};
@@ -28,7 +46,9 @@ export function NewTaskForm({ organizationId, companyId, initialProfile }: { org
     setBusy(true);
     setError(null);
     try {
-      const task = await api<{ id: string }>(`/api/v1/organizations/${organizationId}/companies/${companyId}/tasks`, { body: { profile, title, instructions } });
+      const task = await api<{ id: string }>(`/api/v1/organizations/${organizationId}/companies/${companyId}/tasks`, {
+        body: { ...(aiEmployeeId ? { aiEmployeeId } : { profile }), title, instructions, milestoneId: milestoneId || undefined },
+      });
       router.push(`/${locale}/tasks/${task.id}`);
     } catch (err) {
       setError(err);
@@ -41,9 +61,21 @@ export function NewTaskForm({ organizationId, companyId, initialProfile }: { org
       <CardHeader title={t("agentTasks.new")} />
       <CardBody>
         <form onSubmit={submit} className="grid gap-3">
+          {employees.length ? (
+            <Field label={t("agentTasks.aiEmployee")} htmlFor="task-employee" hint={t("agentTasks.aiEmployeeHint")}>
+              <Select id="task-employee" value={aiEmployeeId} onChange={(e) => setAiEmployeeId(e.target.value)}>
+                <option value="">{t("agentTasks.noEmployee")}</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-[16rem_minmax(0,1fr)]">
             <Field label={t("agentTasks.profile")} htmlFor="task-profile">
-              <Select id="task-profile" value={profile} onChange={(e) => setProfile(e.target.value)}>
+              <Select id="task-profile" value={profile} disabled={!!aiEmployeeId} onChange={(e) => setProfile(e.target.value)}>
                 {PROFILE_KEYS.map((k) => (
                   <option key={k} value={k}>
                     {t(`profiles.${k}.name`)}
@@ -58,6 +90,18 @@ export function NewTaskForm({ organizationId, companyId, initialProfile }: { org
           <Field label={t("agentTasks.instructions")} htmlFor="task-instructions" hint={t("agentTasks.instructionsHint")} error={fields.instructions}>
             <Textarea id="task-instructions" rows={5} value={instructions} maxLength={8000} required onChange={(e) => setInstructions(e.target.value)} />
           </Field>
+          {milestones.length ? (
+            <Field label={t("agentTasks.milestone")} htmlFor="task-milestone" hint={t("agentTasks.milestoneHint")}>
+              <Select id="task-milestone" value={milestoneId} onChange={(e) => setMilestoneId(e.target.value)}>
+                <option value="">{t("agentTasks.noMilestone")}</option>
+                {milestones.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
           <FormError error={error} />
           <div>
             <Button type="submit" disabled={busy}>

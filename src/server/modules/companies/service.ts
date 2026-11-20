@@ -4,7 +4,7 @@ import type { RequestContext } from "@/server/core/context";
 import { conflict, invalid } from "@/server/core/errors";
 import { prismaPage, toPage, pageInput, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
-import { emitEvent } from "@/server/modules/events/emit";
+import { emitDomainEvent, emitEvent } from "@/server/modules/events/emit";
 import { can, loadGrants, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain, orgChain, workspaceChain } from "@/server/modules/rbac/scope";
 import { slugify } from "@/server/modules/organizations/service";
@@ -44,6 +44,8 @@ export async function createCompany(ctx: RequestContext, organizationId: string,
   const input = createCompanyInput.parse(raw);
   return transaction(async (tx) => {
     await requirePermission(ctx, "companies.manage", orgChain(organizationId), tx);
+    const { assertWithinLimit } = await import("@/server/modules/enterprise/policy");
+    await assertWithinLimit(organizationId, "companies", { client: tx });
 
     const codes = [...new Set([input.incorporationCountryCode, ...input.operatingCountryCodes, ...input.targetMarketCodes].filter(Boolean) as string[])];
     const countries = await tx.country.findMany({ where: { code: { in: codes } }, include: { region: true } });
@@ -179,8 +181,13 @@ export async function createProject(ctx: RequestContext, organizationId: string,
     const chain = await workspaceChain(tx, organizationId, workspaceId);
     await requirePermission(ctx, "projects.manage", chain, tx);
     const companyId = chain.find((s) => s.type === "COMPANY")!.id;
-    const project = await tx.project.create({ data: { organizationId, companyId, workspaceId, name: input.name } });
+    const company = await tx.company.findFirstOrThrow({ where: { id: companyId, organizationId }, select: { baseCurrency: true } });
+    const project = await tx.project.create({
+      data: { organizationId, companyId, workspaceId, name: input.name, currency: company.baseCurrency, ownerId: ctx.actor.type === "USER" ? ctx.actor.id : null, createdById: ctx.actor.id ?? null },
+    });
+    if (project.ownerId) await tx.projectMember.create({ data: { organizationId, companyId, projectId: project.id, userId: project.ownerId, role: "Owner" } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "project.created", resourceType: "project", resourceId: project.id, newValue: project });
+    await emitDomainEvent(tx, ctx, "project.created", { organizationId, companyId, entityType: "project", entityId: project.id, data: { name: project.name, status: project.status, ownerId: project.ownerId } });
     return project;
   });
 }
@@ -190,9 +197,9 @@ export async function listProjects(ctx: RequestContext, organizationId: string, 
   const chain = await companyChain(db(), organizationId, companyId);
   await requirePermission(ctx, "projects.read", chain);
   return db().project.findMany({
-    where: { organizationId, companyId },
+    where: { organizationId, companyId, archivedAt: null },
     orderBy: { createdAt: "desc" },
     take: 500,
-    select: { id: true, name: true, createdAt: true, workspace: { select: { id: true, name: true } } },
+    select: { id: true, name: true, status: true, createdAt: true, workspace: { select: { id: true, name: true } } },
   });
 }

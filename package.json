@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && node scripts/deploy-db.mjs && NODE_OPTIONS=--max-old-space-size=6144 next build",
     "start": "next start",
     "worker": "tsx src/worker/index.ts",
     "lint": "eslint .",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && NODE_OPTIONS=--max-old-space-size=6144 tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate deploy",

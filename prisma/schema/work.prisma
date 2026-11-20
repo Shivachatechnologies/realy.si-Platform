@@ -1,0 +1,621 @@
+// ───────────────────────────── Work: projects, tasks, agile, product, operations ─────────────────────────────
+// Owned by the work module (src/server/modules/work). Permissions: projects.read/manage (projects, tasks, agile,
+// product management) and operations.read/manage (SOPs, checklists, assets, incidents). Project and WorkTask live in
+// core.prisma / shared.prisma; everything else is here.
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectHealth {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
+
+enum WorkRecurrence {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+/// A user working on a project, with an optional hourly cost rate for budget tracking.
+model ProjectMember {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  role            String?
+  /// Cost per hour in minor units of the project currency (used for logged time cost).
+  hourlyRateMinor BigInt?  @map("hourly_rate_minor")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+  user    User    @relation("ProjectMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+/// A reusable project blueprint saved by the company ("save project as template"). Built-in templates live in code.
+model ProjectTemplate {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  /// { milestones: [{ title, offsetDays }], tasks: [{ title, description?, priority, offsetDays, durationDays, points?, labels[], milestone? }] }
+  blueprint      Json
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("project_templates")
+}
+
+model ProjectMilestone {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  title          String
+  description    String?
+  dueDate        DateTime? @map("due_date") @db.Date
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project    @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+  tasks   WorkTask[]
+
+  @@unique([id, companyId])
+  @@index([projectId, dueDate])
+  @@map("project_milestones")
+}
+
+enum ProjectRiskStatus {
+  OPEN
+  MITIGATING
+  CLOSED
+  OCCURRED
+}
+
+/// Risk register entry. Probability and impact are 1–5; exposure = probability × impact.
+model ProjectRisk {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  projectId      String            @map("project_id") @db.Uuid
+  title          String
+  description    String?
+  probability    Int
+  impact         Int
+  mitigation     String?
+  ownerId        String?           @map("owner_id") @db.Uuid
+  status         ProjectRiskStatus @default(OPEN)
+  createdById    String            @map("created_by_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([organizationId, companyId, status])
+  @@map("project_risks")
+}
+
+/// A cost booked against a project budget (in the project currency).
+model ProjectExpense {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  description    String
+  amountMinor    BigInt   @map("amount_minor")
+  currency       String   @db.Char(3)
+  incurredOn     DateTime @map("incurred_on") @db.Date
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_expenses")
+}
+
+/// Finish-to-start dependency: `task` cannot start before `dependsOn` is finished.
+model WorkTaskDependency {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  dependsOnId    String   @map("depends_on_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  task      WorkTask @relation("TaskDependsOn", fields: [taskId, companyId], references: [id, companyId], onDelete: Cascade)
+  dependsOn WorkTask @relation("TaskBlocks", fields: [dependsOnId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnId])
+  @@index([dependsOnId])
+  @@map("work_task_dependencies")
+}
+
+model WorkTaskComment {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  authorId       String   @map("author_id") @db.Uuid
+  body           String
+  /// Users @mentioned in the body (notified).
+  mentionIds     String[] @default([]) @map("mention_ids") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  task    WorkTask @relation(fields: [taskId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("work_task_comments")
+}
+
+/// A file attached to a task (≤ 5 MB, stored in the database; downloads require projects.read).
+model WorkTaskAttachment {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  fileName       String   @map("file_name")
+  contentType    String   @map("content_type")
+  sizeBytes      Int      @map("size_bytes")
+  data           Bytes
+  uploadedById   String   @map("uploaded_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  task    WorkTask @relation(fields: [taskId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("work_task_attachments")
+}
+
+/// Time logged on a project (optionally on a task). Cost = minutes × the member's hourly rate at logging time.
+model WorkTimeEntry {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  taskId         String?  @map("task_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  workDate       DateTime @map("work_date") @db.Date
+  minutes        Int
+  note           String?
+  /// Hourly rate (minor units, project currency) captured when the entry was logged.
+  rateMinor      BigInt?  @map("rate_minor")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project   @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+  task    WorkTask? @relation(fields: [taskId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([projectId, workDate])
+  @@index([taskId])
+  @@index([userId, workDate])
+  @@map("work_time_entries")
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+model Sprint {
+  id              String       @id @default(uuid(7)) @db.Uuid
+  organizationId  String       @map("organization_id") @db.Uuid
+  companyId       String       @map("company_id") @db.Uuid
+  projectId       String       @map("project_id") @db.Uuid
+  name            String
+  goal            String?
+  status          SprintStatus @default(PLANNED)
+  startDate       DateTime     @map("start_date") @db.Date
+  endDate         DateTime     @map("end_date") @db.Date
+  capacityPoints  Int?         @map("capacity_points")
+  /// Points in the sprint when it started (burndown baseline).
+  committedPoints Int?         @map("committed_points")
+  /// Points completed when the sprint was closed (velocity).
+  completedPoints Int?         @map("completed_points")
+  startedAt       DateTime?    @map("started_at") @db.Timestamptz(3)
+  completedAt     DateTime?    @map("completed_at") @db.Timestamptz(3)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project    Project           @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+  tasks      WorkTask[]
+  retroItems SprintRetroItem[]
+
+  @@unique([id, companyId])
+  @@index([projectId, status])
+  @@map("sprints")
+}
+
+enum RetroItemKind {
+  WENT_WELL
+  TO_IMPROVE
+  ACTION
+}
+
+model SprintRetroItem {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  sprintId       String        @map("sprint_id") @db.Uuid
+  kind           RetroItemKind
+  text           String
+  /// Task created from an action item.
+  taskId         String?       @map("task_id") @db.Uuid
+  authorId       String        @map("author_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  sprint  Sprint  @relation(fields: [sprintId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([sprintId])
+  @@map("sprint_retro_items")
+}
+
+// ─── Product management ───
+
+enum ProductItemStatus {
+  PROPOSED
+  PLANNED
+  IN_PROGRESS
+  SHIPPED
+  CANCELLED
+}
+
+/// A roadmap initiative (theme) grouping features, placed in a quarter.
+model ProductInitiative {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  /// "2026-Q4".
+  quarter        String?
+  status         ProductItemStatus @default(PLANNED)
+  archivedAt     DateTime?         @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  features ProductFeature[]
+
+  @@unique([id, companyId])
+  @@index([companyId, quarter])
+  @@map("product_initiatives")
+}
+
+/// A product feature with its spec, roadmap placement, release and RICE prioritization inputs.
+model ProductFeature {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  initiativeId   String?           @map("initiative_id") @db.Uuid
+  projectId      String?           @map("project_id") @db.Uuid
+  releaseId      String?           @map("release_id") @db.Uuid
+  title          String
+  spec           String?
+  status         ProductItemStatus @default(PROPOSED)
+  quarter        String?
+  /// RICE: reach (people per quarter), impact (0.25–3), confidence (0–100 %), effort (person-months > 0).
+  reach          Int?
+  impact         Float?
+  confidence     Int?
+  effort         Float?
+  riceScore      Float?            @map("rice_score")
+  archivedAt     DateTime?         @map("archived_at") @db.Timestamptz(3)
+  createdById    String            @map("created_by_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  initiative ProductInitiative? @relation(fields: [initiativeId, companyId], references: [id, companyId], onDelete: NoAction)
+  project    Project?           @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
+  release    ProductRelease?    @relation(fields: [releaseId, companyId], references: [id, companyId], onDelete: NoAction)
+  tasks      WorkTask[]
+  feedback   ProductFeedback[]
+  ideas      ProductIdea[]
+
+  @@unique([id, companyId])
+  @@index([companyId, status])
+  @@index([companyId, riceScore])
+  @@map("product_features")
+}
+
+enum ProductIdeaStatus {
+  NEW
+  UNDER_REVIEW
+  PLANNED
+  DECLINED
+  DONE
+}
+
+model ProductIdea {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  status         ProductIdeaStatus @default(NEW)
+  voteCount      Int               @default(0) @map("vote_count")
+  /// Feature the idea was turned into.
+  featureId      String?           @map("feature_id") @db.Uuid
+  submittedById  String            @map("submitted_by_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  feature ProductFeature?   @relation(fields: [featureId, companyId], references: [id, companyId], onDelete: NoAction)
+  votes   ProductIdeaVote[]
+
+  @@unique([id, companyId])
+  @@index([companyId, status, voteCount])
+  @@map("product_ideas")
+}
+
+model ProductIdeaVote {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  ideaId         String   @map("idea_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  idea    ProductIdea @relation(fields: [ideaId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
+  @@map("product_idea_votes")
+}
+
+/// Customer feedback, optionally tied to a CRM account/contact and to the feature it supports.
+model ProductFeedback {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  /// e.g. "email", "call", "support", "survey", "sales".
+  source         String
+  body           String
+  accountId      String?   @map("account_id") @db.Uuid
+  contactId      String?   @map("contact_id") @db.Uuid
+  featureId      String?   @map("feature_id") @db.Uuid
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  feature ProductFeature? @relation(fields: [featureId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([companyId, createdAt])
+  @@index([featureId])
+  @@map("product_feedback")
+}
+
+enum ProductReleaseStatus {
+  PLANNED
+  IN_PROGRESS
+  RELEASED
+}
+
+model ProductRelease {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  /// Semantic version, e.g. "1.4.0".
+  version        String
+  name           String?
+  releaseDate    DateTime?            @map("release_date") @db.Date
+  status         ProductReleaseStatus @default(PLANNED)
+  /// Changelog notes (shown on the public changelog once published).
+  notes          String?
+  /// Set when the release is published to the public changelog.
+  publishedAt    DateTime?            @map("published_at") @db.Timestamptz(3)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  features ProductFeature[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, version])
+  @@index([companyId, publishedAt])
+  @@map("product_releases")
+}
+
+// ─── Operations ───
+
+/// A standard operating procedure. Each edit of the steps creates a new OpsProcessVersion.
+model OpsProcess {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  category       String?
+  ownerId        String?   @map("owner_id") @db.Uuid
+  currentVersion Int       @default(1) @map("current_version")
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  versions OpsProcessVersion[]
+
+  @@unique([id, companyId])
+  @@index([companyId, category])
+  @@map("ops_processes")
+}
+
+model OpsProcessVersion {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  processId      String   @map("process_id") @db.Uuid
+  version        Int
+  /// [{ title, detail? }]
+  steps          Json
+  changeNote     String?  @map("change_note")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  process OpsProcess @relation(fields: [processId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([processId, version])
+  @@map("ops_process_versions")
+}
+
+enum OpsSchedule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+/// A recurring operational checklist; the work job opens a run each time `nextRunOn` is reached.
+model OpsChecklist {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  companyId      String      @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  /// [{ id, text }]
+  items          Json
+  schedule       OpsSchedule @default(NONE)
+  nextRunOn      DateTime?   @map("next_run_on") @db.Date
+  assigneeId     String?     @map("assignee_id") @db.Uuid
+  archivedAt     DateTime?   @map("archived_at") @db.Timestamptz(3)
+  createdById    String      @map("created_by_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  runs    OpsChecklistRun[]
+
+  @@unique([id, companyId])
+  @@index([schedule, nextRunOn])
+  @@map("ops_checklists")
+}
+
+model OpsChecklistRun {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  checklistId    String    @map("checklist_id") @db.Uuid
+  dueOn          DateTime  @map("due_on") @db.Date
+  /// [{ id, text, done, doneById?, doneAt? }]
+  items          Json
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  checklist OpsChecklist @relation(fields: [checklistId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([checklistId, dueOn])
+  @@index([companyId, completedAt])
+  @@map("ops_checklist_runs")
+}
+
+enum OpsAssetStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+/// Company-wide asset and equipment inventory.
+model OpsAsset {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  name           String
+  assetTag       String?        @map("asset_tag")
+  category       String?
+  serialNumber   String?        @map("serial_number")
+  location       String?
+  status         OpsAssetStatus @default(AVAILABLE)
+  assignedToId   String?        @map("assigned_to_id") @db.Uuid
+  purchaseDate   DateTime?      @map("purchase_date") @db.Date
+  costMinor      BigInt?        @map("cost_minor")
+  currency       String?        @db.Char(3)
+  notes          String?
+  archivedAt     DateTime?      @map("archived_at") @db.Timestamptz(3)
+  createdById    String         @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, assetTag])
+  @@index([companyId, status])
+  @@map("ops_assets")
+}
+
+enum OpsIncidentSeverity {
+  SEV1
+  SEV2
+  SEV3
+  SEV4
+}
+
+enum OpsIncidentStatus {
+  OPEN
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+  CLOSED
+}
+
+model OpsIncident {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  projectId      String?             @map("project_id") @db.Uuid
+  title          String
+  description    String?
+  severity       OpsIncidentSeverity @default(SEV3)
+  status         OpsIncidentStatus   @default(OPEN)
+  ownerId        String?             @map("owner_id") @db.Uuid
+  occurredAt     DateTime            @map("occurred_at") @db.Timestamptz(3)
+  resolvedAt     DateTime?           @map("resolved_at") @db.Timestamptz(3)
+  /// Root cause, impact, timeline and follow-ups.
+  postmortem     String?
+  createdById    String              @map("created_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project Project? @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([companyId, status])
+  @@index([companyId, occurredAt])
+  @@map("ops_incidents")
+}

@@ -8,7 +8,7 @@ import { emitEvent } from "@/server/modules/events/emit";
 import { loadGrants, mfaSatisfied, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { authorizeTool, ToolDenied, withTimeout } from "@/server/modules/tools/gateway";
-import { getTool } from "@/server/modules/tools/registry";
+import { getTool, loadTools } from "@/server/modules/tools/registry";
 
 export const decideInput = z.object({ decision: z.enum(["approve", "reject"]), note: z.string().trim().max(1000).optional() });
 export const listApprovalsInput = z.object({ status: z.enum(["PENDING", "APPROVED", "REJECTED", "EXPIRED", "EXECUTED", "FAILED"]).optional() });
@@ -65,6 +65,7 @@ export async function decideApproval(ctx: RequestContext, organizationId: string
     });
   }
 
+  await loadTools();
   const tool = getTool(a.tool);
   if (!tool || tool.version !== a.toolVersion) throw conflict("This action is no longer available in this form; reject it", { reason: "tool_changed" });
   const input = tool.input.safeParse(a.input);

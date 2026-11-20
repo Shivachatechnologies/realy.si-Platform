@@ -30,14 +30,16 @@ function useSubmit<T>(fn: (values: T) => Promise<void>) {
   return { error, fields, run };
 }
 
-export function SignInForm() {
+/** `variant="admin"`: the admin console's own login (lands on /admin, no sign-up link). */
+export function SignInForm({ variant = "user" }: { variant?: "user" | "admin" }) {
   const { t, locale } = useI18n();
+  const admin = variant === "admin";
   const search = useLocationSearch();
   const router = useRouter();
   const form = useForm<{ email: string; password: string }>();
   const { error, run } = useSubmit(async (v: { email: string; password: string }) => {
     const r = await api<{ mfaRequired: boolean }>("/api/v1/auth/sign-in", { body: v });
-    const next = nextFromLocation(`/${locale}`);
+    const next = nextFromLocation(admin ? `/${locale}/admin` : `/${locale}`);
     router.replace(r.mfaRequired ? `/${locale}/mfa?next=${encodeURIComponent(next)}` : next);
     router.refresh();
   });
@@ -56,12 +58,14 @@ export function SignInForm() {
       <Button type="submit" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? t("common.loading") : t("auth.signIn")}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        {t("auth.noAccount")}{" "}
-        <Link className="text-primary hover:underline" href={`/${locale}/sign-up${search}`}>
-          {t("auth.signUp")}
-        </Link>
-      </p>
+      {admin ? null : (
+        <p className="text-center text-xs text-muted-foreground">
+          {t("auth.noAccount")}{" "}
+          <Link className="text-primary hover:underline" href={`/${locale}/sign-up${search}`}>
+            {t("auth.signUp")}
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

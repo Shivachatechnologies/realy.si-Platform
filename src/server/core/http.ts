@@ -61,9 +61,34 @@ export function errorResponse(err: unknown, requestId: string): Response {
   if (isAppError(err)) {
     return json({ error: { code: err.code, message: err.message, requestId, details: err.details } }, { status: err.status, requestId });
   }
+  const db = databaseError(err);
+  if (db) {
+    logger.error({ err, requestId, prismaCode: db.prismaCode }, "database error");
+    captureException(err, { requestId });
+    return json({ error: { code: db.code, message: db.message, requestId, details: { reason: db.reason } } }, { status: db.status, requestId });
+  }
   logger.error({ err, requestId }, "unhandled error");
   captureException(err, { requestId });
   return json({ error: { code: "internal_error", message: "Something went wrong", requestId } }, { status: 500, requestId });
+}
+
+/**
+ * Operator-actionable database failures (missing migrations, unreachable database, unique conflicts) get a specific
+ * code and reason instead of a generic 500. Messages name the fix, never connection strings or query text.
+ */
+function databaseError(err: unknown): { status: number; code: "conflict" | "service_unavailable" | "not_configured"; reason: string; message: string; prismaCode?: string } | null {
+  if (!err || typeof err !== "object") return null;
+  const e = err as { code?: unknown; name?: unknown; errorCode?: unknown };
+  const code = typeof e.code === "string" ? e.code : typeof e.errorCode === "string" ? e.errorCode : "";
+  const name = typeof e.name === "string" ? e.name : "";
+  if (code === "P2021" || code === "P2022") {
+    return { status: 503, code: "not_configured", reason: "database_not_migrated", message: "The database schema is not up to date. Run `prisma migrate deploy` against this database.", prismaCode: code };
+  }
+  if (code === "P2002") return { status: 409, code: "conflict", reason: "duplicate", message: "A record with these details already exists.", prismaCode: code };
+  if (["P1000", "P1001", "P1002", "P1003", "P1008", "P1010", "P1017", "P2024"].includes(code) || name === "PrismaClientInitializationError") {
+    return { status: 503, code: "service_unavailable", reason: "database_unavailable", message: "The database is unreachable. Check DATABASE_URL and that the database accepts connections.", prismaCode: code || name };
+  }
+  return null;
 }
 
 /** CSRF defense for cookie-authenticated mutations: the Origin must be this app. */
@@ -103,9 +128,9 @@ async function readBody(req: NextRequest, max: number): Promise<string> {
   return text;
 }
 
-function limitSubject(by: LimitKey, req: NextRequest, ip: string | null, session: SessionInfo | null): string | null {
+function limitSubject(by: LimitKey, req: NextRequest, ip: string | null, session: SessionInfo | null, principalId: string | null): string | null {
   if (by === "ip") return ip ?? "no-ip";
-  if (by === "principal") return session?.userId ?? null;
+  if (by === "principal") return principalId ?? session?.userId ?? null;
   if (by === "session") return session?.id ?? null;
   try {
     const value = (JSON.parse(rawBodies.get(req) || "{}") as Record<string, unknown>)[by.bodyField];
@@ -134,7 +159,10 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
       };
       try {
         const mutating = MUTATING.has(req.method);
-        if (mutating && !sameOrigin(req)) {
+        // Developer API keys (Authorization: Bearer rly_…, docs/api.md): bearer credentials are not sent by browsers on
+        // their own, so the cookie CSRF check does not apply; the key's service account carries exactly its scopes.
+        const apiKeyAuth = opts.auth !== "none" && /^Bearer rly_/i.test(req.headers.get("authorization") ?? "");
+        if (mutating && !apiKeyAuth && !sameOrigin(req)) {
           securityEvent("csrf.origin_rejected", { route: name });
           throw new AppError("forbidden", "Cross-origin request refused");
         }
@@ -142,7 +170,11 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
 
         const ip = clientIp(req);
         let session: SessionInfo | null = null;
-        if (opts.auth !== "none") {
+        let apiCtx: RequestContext | null = null;
+        if (apiKeyAuth) {
+          const { authenticateApiKey } = await import("@/server/modules/enterprise/api-keys");
+          apiCtx = (await authenticateApiKey(req.headers, { requestId, ip, userAgent: req.headers.get("user-agent") })).ctx;
+        } else if (opts.auth !== "none") {
           session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
           if (!session) throw new AppError("unauthenticated", "Sign in required");
           if (session.mfaPending && opts.auth === "required") throw new AppError("mfa_required", "Complete two-factor verification");
@@ -151,7 +183,7 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         if (opts.rateLimits?.length) {
           const results: RateLimitResult[] = [];
           for (const rule of opts.rateLimits) {
-            const subject = limitSubject(rule.by, req, ip, session);
+            const subject = limitSubject(rule.by, req, ip, session, apiCtx?.actor.id ?? null);
             if (subject) results.push(await consume(rule, subject));
           }
           limitResult = mostRestrictive(results);
@@ -164,14 +196,24 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
 
         const userAgent = req.headers.get("user-agent");
         // Anonymous requests get a USER actor with no id: RBAC denies it everything; it is never SYSTEM.
-        const ctx: RequestContext = session
+        const ctx: RequestContext = apiCtx
+          ? apiCtx
+          : session
           ? userContext(session.userId, { requestId, ip, userAgent, sessionId: session.id, mfaVerifiedAt: session.mfaVerifiedAt })
           : { requestId, actor: { type: "USER", id: null }, mfaVerifiedAt: null, sessionId: null, ip, userAgent };
 
+        // Organization security policy (require MFA, session timeout, IP allowlist) for members on org-scoped APIs.
+        const orgMatch = /^\/api\/v1\/organizations\/([0-9a-f-]{36})(?:\/|$)/.exec(req.nextUrl.pathname);
+        if (orgMatch && session && ctx.actor.type === "USER" && ctx.actor.id) {
+          const { assertOrgAccess } = await import("@/server/modules/enterprise/policy");
+          await assertOrgAccess(ctx, orgMatch[1]!);
+        }
+
         const idemKey = req.headers.get("idempotency-key");
-        if (opts.idempotent && idemKey && mutating && session) {
+        const principalId = apiCtx?.actor.id ?? session?.userId ?? null;
+        if (opts.idempotent && idemKey && mutating && principalId) {
           const claim = await claimIdempotencyKey({
-            principalId: session.userId,
+            principalId,
             endpoint: name,
             key: idemKey,
             requestHash: requestHash(req.method, req.nextUrl.pathname, rawBodies.get(req) ?? ""),

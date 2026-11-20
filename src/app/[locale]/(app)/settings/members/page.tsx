@@ -31,7 +31,13 @@ export default async function MembersPage() {
     can(viewer.ctx, "roles.manage", chain),
     effectivePermissions(viewer.ctx, chain),
   ]);
-  const roleOptions = roles.map((r) => ({ id: r.id, key: r.key, name: r.name, isSystem: r.isSystem, assignableAt: r.assignableAt }));
+  const roleOptions = roles.map((r) => ({
+    id: r.id,
+    key: r.key,
+    name: r.name,
+    isSystem: r.isSystem,
+    assignableAt: r.assignableAt,
+  }));
 
   return (
     <div className="grid gap-4">
@@ -78,7 +84,13 @@ export default async function MembersPage() {
           <PendingInvitations
             orgId={org.id}
             canManage={canInvite}
-            invitations={invitations.map((i) => ({ id: i.id, email: i.email, roleName: i.role.name, expiresAt: i.expiresAt.toISOString(), deliveryStatus: i.deliveryStatus }))}
+            invitations={invitations.map((i) => ({
+              id: i.id,
+              email: i.email,
+              roleName: i.role.name,
+              expiresAt: i.expiresAt.toISOString(),
+              deliveryStatus: i.deliveryStatus,
+            }))}
           />
         </Card>
       ) : null}
@@ -90,7 +102,11 @@ export default async function MembersPage() {
             <li key={r.id} className="flex items-center gap-3 px-4 py-2">
               <span className="font-medium">{r.name}</span>
               <Badge>{r.isSystem ? t("settings.members.system") : t("settings.members.custom")}</Badge>
-              <span className="ms-auto text-xs text-muted-foreground">{t("settings.members.permissionCount", { count: r.permissions.length })}</span>
+              <span className="ms-auto text-xs text-muted-foreground">
+                {t("settings.members.permissionCount", {
+                  count: r.permissions.length,
+                })}
+              </span>
             </li>
           ))}
         </ul>
