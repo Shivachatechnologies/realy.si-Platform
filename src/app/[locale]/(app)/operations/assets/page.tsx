@@ -6,10 +6,14 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { ActionButton } from "@/components/work/actions";
-import { OpsTabs } from "@/components/work/area-tabs";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { AssetVisuals, OpsHeader, OpsIntro } from "@/components/ops-hub/ops-visuals";
+import { CardBody } from "@/components/ui/card";
+import { Package } from "lucide-react";
+import { assetSummary } from "@/server/modules/cockpit/ops-insights";
 import { workContext } from "@/components/work/context";
 import { AssetEditor, AssetForm } from "@/components/work/ops-forms";
-import { Empty, Pagination, StatCard } from "@/components/work/ui";
+import { Empty, Pagination } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
 import { formatDate, formatMoney } from "@/i18n/format";
 import { ASSET_STATUSES, listAssets } from "@/server/modules/work/operations";
@@ -28,19 +32,22 @@ export default async function AssetsPage({ searchParams }: PageProps<"/[locale]/
   const { locale, viewer, org, company, canManage, base } = w;
   const raw = await searchParams;
   const path = `/${locale}/operations/assets`;
-  const [list, people] = await Promise.all([listAssets(viewer.ctx, org.id, company.id, raw), canManage ? listPeople(viewer.ctx, org.id, company.id) : []]);
+  const [list, people, summary] = await Promise.all([listAssets(viewer.ctx, org.id, company.id, raw), canManage ? listPeople(viewer.ctx, org.id, company.id) : [], assetSummary(viewer.ctx, org.id, company.id)]);
   const filtered = !!(param(raw, "q") || param(raw, "status") || param(raw, "category") || param(raw, "archived"));
   const major = (m: bigint | null) => (m == null ? "" : `${m / 100n}${m % 100n ? `.${(m % 100n).toString().padStart(2, "0")}` : ""}`);
   const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
-      {w.header}
-      <OpsTabs t={t} locale={locale} active="assets" />
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label={t("work.ops.stats.assets")} value={list.total} />
-        <StatCard label={t("work.ops.inventoryValue")} value={list.value.length ? list.value.map((v) => formatMoney(v, locale)).join(" · ") : "—"} hint={t("work.ops.inventoryValueHint")} />
-        <StatCard label={t("work.ops.categories")} value={list.categories.length} />
-      </div>
+      <OpsHeader t={t} locale={locale} active="assets" />
+      <OpsIntro t={t} page="assets" next={canManage ? { label: t("work.ops.addAsset"), href: "#add" } : undefined} />
+      {summary.total ? (
+        <Card variant="elevated">
+          <CardHeader icon={<Package />} title={t("opsHub.assets.title")} description={t("opsHub.assets.hint", { count: summary.total, categories: list.categories.length })} />
+          <CardBody>
+            <AssetVisuals summary={summary} value={list.value.length ? list.value.map((v) => formatMoney(v, locale)).join(" · ") : null} t={t} locale={locale} />
+          </CardBody>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader title={t("work.ops.tabs.assets")} description={t("work.ops.assetsHint")} />
         <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_10rem_9rem_auto]" action={path}>
@@ -83,7 +90,7 @@ export default async function AssetsPage({ searchParams }: PageProps<"/[locale]/
           </div>
         </form>
         {canManage ? (
-          <details className="border-b">
+          <details className="scroll-mt-20 border-b" id="add" open={summary.total === 0}>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.ops.addAsset")}</summary>
             <AssetForm base={base} people={people} currency={company.baseCurrency} />
           </details>
@@ -139,7 +146,11 @@ export default async function AssetsPage({ searchParams }: PageProps<"/[locale]/
             </TBody>
           </Table>
         ) : (
-          <Empty>{filtered ? t("common.noResults") : t("work.ops.noAssets")}</Empty>
+          filtered ? (
+            <Empty>{t("common.noResults")}</Empty>
+          ) : (
+            <SmartEmpty icon={<Package />} title={t("opsHub.empty.assets.title")} body={t("opsHub.empty.assets.body")} />
+          )
         )}
         <Pagination path={path} params={raw} page={list.page} pageSize={list.pageSize} total={list.total} labels={{ prev: t("common.previous"), next: t("common.next"), summary: t("work.pageOf", { page: list.page, pages: Math.max(1, Math.ceil(list.total / list.pageSize)) }) }} />
       </Card>

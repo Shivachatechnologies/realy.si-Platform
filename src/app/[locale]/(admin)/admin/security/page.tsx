@@ -1,14 +1,16 @@
 import Link from "next/link";
+import { Fingerprint, MonitorSmartphone, ShieldAlert, ShieldCheck, UserCog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader } from "@/components/ui/card";
-import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AdminHeader, Empty, guard } from "@/components/admin/kit";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { LiveDot } from "@/components/motion/live-dot";
+import { AdminHeader, AuditTimeline, Avatar, EmptyState, SectionLink, guard } from "@/components/admin/kit";
+import { BarList, Gauge } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime, formatNumber, formatRelativeTime } from "@/i18n/format";
 import { securityOverview } from "@/server/modules/admin/security";
 import { requestTime, requireViewer } from "@/server/session";
 
-/** Security events, platform administrators (MFA state, roles) and their active sessions. */
+/** Security: event volume by action, administrator MFA coverage, admin sessions and the security event timeline. */
 export default async function AdminSecurityPage() {
   const locale = await getLocale();
   const t = await getT(locale);
@@ -19,98 +21,121 @@ export default async function AdminSecurityPage() {
   const tz = viewer.user.timezone;
   const now = requestTime();
   const base = `/${locale}/admin`;
+  const mfaOn = s.admins.filter((a) => a.mfaEnabled).length;
+  const verifiedSessions = s.adminSessions.filter((x) => x.mfaVerifiedAt).length;
   return (
-    <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.security")} description={t("admin.security.subtitle")} />
-      <Card>
-        <CardHeader title={t("admin.security.byAction")} description={t("admin.overview.last30")} />
-        {s.byAction.length === 0 ? (
-          <Empty>{t("admin.audit.empty")}</Empty>
-        ) : (
-          <div className="flex flex-wrap gap-2 p-3">
-            {s.byAction.map((a) => (
-              <Link key={a.action} href={`${base}/audit?category=SECURITY&action=${encodeURIComponent(a.action)}&scope=all`} className="rounded-md border px-2 py-1 text-xs hover:bg-muted">
-                <span className="font-mono">{a.action}</span> <span className="tabular font-medium">{formatNumber(a.count, locale)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Card>
+    <div className="grid gap-5">
+      <AdminHeader
+        icon={<ShieldCheck />}
+        title={t("admin.nav.security")}
+        description={t("admin.security.subtitle")}
+        why={t("admin.security.why")}
+        actions={<SectionLink href={`${base}/audit?category=SECURITY&scope=all`}>{t("admin.nav.audit")}</SectionLink>}
+      />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader icon={<Fingerprint />} title={t("admin.security.mfaCoverage")} description={t("admin.security.mfaCoverageHint")} />
+          <CardBody className="grid grid-cols-2 gap-3">
+            <Gauge
+              label={t("admin.security.admins")}
+              value={mfaOn}
+              max={Math.max(1, s.admins.length)}
+              tone={mfaOn === s.admins.length ? "success" : "danger"}
+              display={`${formatNumber(mfaOn, locale)}/${formatNumber(s.admins.length, locale)}`}
+              sub={t("admin.users.mfaOn")}
+            />
+            <Gauge
+              label={t("admin.security.adminSessions")}
+              value={verifiedSessions}
+              max={Math.max(1, s.adminSessions.length)}
+              tone={verifiedSessions === s.adminSessions.length ? "success" : "warning"}
+              display={`${formatNumber(verifiedSessions, locale)}/${formatNumber(s.adminSessions.length, locale)}`}
+              sub={t("admin.security.verified")}
+            />
+          </CardBody>
+        </Card>
+        <Card className="lg:col-span-2">
+          <CardHeader icon={<ShieldAlert />} title={t("admin.security.byAction")} description={t("admin.overview.last30")} />
+          <CardBody>
+            <BarList
+              label={t("admin.security.byAction")}
+              tone="warning"
+              items={s.byAction.slice(0, 10).map((a) => ({
+                key: a.action,
+                label: <span className="font-mono text-xs">{a.action}</span>,
+                value: a.count,
+                tone: s.highlighted.includes(a.action) ? "danger" : "warning",
+                href: `${base}/audit?category=SECURITY&action=${encodeURIComponent(a.action)}&scope=all`,
+              }))}
+              empty={<EmptyState icon={<ShieldCheck />} title={t("admin.audit.empty")} body={t("admin.security.quietHint")} />}
+            />
+          </CardBody>
+        </Card>
+      </div>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader title={t("admin.security.admins")} />
-          <Table>
-            <THead>
-              <Tr>
-                <Th>{t("admin.users.columns.user")}</Th>
-                <Th>{t("admin.users.detail.roles")}</Th>
-                <Th>{t("admin.users.columns.security")}</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {s.admins.map((a) => (
-                <Tr key={a.id}>
-                  <Td>
-                    <Link href={`${base}/users/${a.id}`} className="hover:underline">
-                      {a.name}
-                    </Link>
-                    <div className="text-xs text-muted-foreground">{a.email}</div>
-                  </Td>
-                  <Td className="font-mono text-[11px]">{a.roles.join(", ")}</Td>
-                  <Td>
-                    <Badge tone={a.mfaEnabled ? "success" : "danger"}>{a.mfaEnabled ? t("admin.users.mfaOn") : t("admin.users.mfaOff")}</Badge>
-                  </Td>
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
+          <CardHeader icon={<UserCog />} title={t("admin.security.admins")} />
+          <ul className="divide-y">
+            {s.admins.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
+                <Avatar name={a.name || a.email} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <Link href={`${base}/users/${a.id}`} className="truncate text-sm font-medium hover:underline">
+                    {a.name}
+                  </Link>
+                  <div className="truncate font-mono text-[11px] text-muted-foreground">{a.roles.join(", ")}</div>
+                </div>
+                <Badge shape="pill" tone={a.mfaEnabled ? "success" : "danger"}>
+                  {a.mfaEnabled ? t("admin.users.mfaOn") : t("admin.users.mfaOff")}
+                </Badge>
+              </li>
+            ))}
+          </ul>
         </Card>
         <Card>
-          <CardHeader title={t("admin.security.adminSessions")} />
+          <CardHeader icon={<MonitorSmartphone />} title={t("admin.security.adminSessions")} />
           {s.adminSessions.length === 0 ? (
-            <Empty>{t("admin.security.noSessions")}</Empty>
+            <EmptyState icon={<MonitorSmartphone />} title={t("admin.security.noSessions")} />
           ) : (
-            <Table>
-              <THead>
-                <Tr>
-                  <Th>{t("admin.users.columns.user")}</Th>
-                  <Th>IP</Th>
-                  <Th>{t("admin.users.detail.lastSeen")}</Th>
-                  <Th>MFA</Th>
-                </Tr>
-              </THead>
-              <TBody>
-                {s.adminSessions.map((x) => (
-                  <Tr key={x.id}>
-                    <Td className="text-xs">{x.email}</Td>
-                    <Td className="font-mono text-[11px]">{x.ip ?? "—"}</Td>
-                    <Td className="text-xs whitespace-nowrap">{formatRelativeTime(x.lastSeenAt, locale, now)}</Td>
-                    <Td>
-                      <Badge tone={x.mfaVerifiedAt ? "success" : "warning"}>{x.mfaVerifiedAt ? t("admin.security.verified") : t("admin.security.notVerified")}</Badge>
-                    </Td>
-                  </Tr>
-                ))}
-              </TBody>
-            </Table>
+            <ul className="divide-y">
+              {s.adminSessions.map((x) => (
+                <li key={x.id} className="flex items-center gap-3 px-4 py-2.5 text-xs">
+                  <LiveDot tone={x.mfaVerifiedAt ? "success" : "warning"} pulse={now - x.lastSeenAt.getTime() < 5 * 60_000} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm">{x.email}</div>
+                    <div className="truncate font-mono text-[11px] text-muted-foreground">{x.ip ?? "—"}</div>
+                  </div>
+                  <span className="text-muted-foreground">{formatRelativeTime(x.lastSeenAt, locale, now)}</span>
+                  <Badge tone={x.mfaVerifiedAt ? "success" : "warning"}>{x.mfaVerifiedAt ? t("admin.security.verified") : t("admin.security.notVerified")}</Badge>
+                </li>
+              ))}
+            </ul>
           )}
         </Card>
       </div>
       <Card>
-        <CardHeader title={t("admin.security.events")} />
+        <CardHeader icon={<ShieldAlert />} title={t("admin.security.events")} />
         {s.events.length === 0 ? (
-          <Empty>{t("admin.audit.empty")}</Empty>
+          <EmptyState icon={<ShieldCheck />} title={t("admin.audit.empty")} body={t("admin.security.quietHint")} />
         ) : (
-          <ul className="divide-y">
-            {s.events.map((e) => (
-              <li key={e.id} className="flex flex-wrap items-center gap-2 px-4 py-2 text-xs">
-                <span className="text-muted-foreground">{formatDateTime(e.createdAt, locale, tz)}</span>
-                <Badge tone={s.highlighted.includes(e.action) ? "danger" : "warning"}>{e.action}</Badge>
-                <span>{e.actorEmail ?? e.actorType}</span>
-                {e.ip ? <span className="font-mono text-[11px] text-muted-foreground">{e.ip}</span> : null}
-                {e.reason ? <span className="min-w-0 truncate">{e.reason}</span> : null}
-              </li>
-            ))}
-          </ul>
+          <AuditTimeline
+            items={s.events.map((e) => ({
+              id: e.id,
+              who: e.actorEmail ?? e.actorType,
+              action: e.action,
+              security: true,
+              reason: e.reason,
+              iso: e.createdAt.toISOString(),
+              exact: formatDateTime(e.createdAt, locale, tz),
+              relative: formatRelativeTime(e.createdAt, locale, now),
+              extra: (
+                <>
+                  {s.highlighted.includes(e.action) ? <Badge tone="danger">{t("admin.security.important")}</Badge> : null}
+                  {e.ip ? <span className="font-mono text-[11px] text-muted-foreground">{e.ip}</span> : null}
+                </>
+              ),
+            }))}
+          />
         )}
       </Card>
     </div>

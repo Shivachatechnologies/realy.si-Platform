@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { OpsTabs } from "@/components/work/area-tabs";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { IncidentBoard, OpsHeader, OpsIntro } from "@/components/ops-hub/ops-visuals";
+import { Term } from "@/components/guide-kit/term";
+import { CardBody } from "@/components/ui/card";
+import { Siren } from "lucide-react";
+import { incidentBoard } from "@/server/modules/cockpit/ops-insights";
 import { workContext } from "@/components/work/context";
 import { IncidentForm } from "@/components/work/ops-forms";
 import { Empty, INCIDENT_TONE, Pagination, SEVERITY_TONE } from "@/components/work/ui";
@@ -31,16 +36,31 @@ export default async function IncidentsPage({ searchParams }: PageProps<"/[local
   const raw = await searchParams;
   const path = `/${locale}/operations/incidents`;
   const canProjects = await can(viewer.ctx, "projects.read", await companyChain(db(), org.id, company.id));
-  const [list, people, projects] = await Promise.all([
+  const [list, people, projects, board] = await Promise.all([
     listIncidents(viewer.ctx, org.id, company.id, raw),
     canManage ? listPeople(viewer.ctx, org.id, company.id, "operations.read") : [],
     canManage && canProjects ? listProjects(viewer.ctx, org.id, company.id) : [],
+    incidentBoard(viewer.ctx, org.id, company.id),
   ]);
   const filtered = !!(param(raw, "q") || param(raw, "status") || param(raw, "severity"));
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
-      {w.header}
-      <OpsTabs t={t} locale={locale} active="incidents" />
+      <OpsHeader t={t} locale={locale} active="incidents" />
+      <OpsIntro t={t} page="incidents" next={canManage ? { label: t("work.ops.logIncident"), href: "#log" } : undefined} />
+      <Card>
+        <CardHeader
+          icon={<Siren />}
+          title={t("opsHub.incidents.boardTitle")}
+          description={
+            <Term explain={t("opsHub.incidents.severityExplain")} label={t("opsHub.whatsThis")}>
+              {t("opsHub.incidents.severityWord")}
+            </Term>
+          }
+        />
+        <CardBody>
+          <IncidentBoard incidents={board} t={t} locale={locale} />
+        </CardBody>
+      </Card>
       <Card>
         <CardHeader title={t("work.ops.tabs.incidents")} description={t("work.ops.incidentsHint")} />
         <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]" action={path}>
@@ -74,7 +94,7 @@ export default async function IncidentsPage({ searchParams }: PageProps<"/[local
           </div>
         </form>
         {canManage ? (
-          <details className="border-b">
+          <details className="scroll-mt-20 border-b" id="log">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.ops.logIncident")}</summary>
             <IncidentForm base={base} locale={locale} people={people} projects={projects.map((p) => ({ id: p.id, name: p.name }))} />
           </details>
@@ -114,7 +134,11 @@ export default async function IncidentsPage({ searchParams }: PageProps<"/[local
             </TBody>
           </Table>
         ) : (
-          <Empty>{filtered ? t("common.noResults") : t("work.ops.noIncidents")}</Empty>
+          filtered ? (
+            <Empty>{t("common.noResults")}</Empty>
+          ) : (
+            <SmartEmpty icon={<Siren />} title={t("opsHub.empty.incidents.title")} body={t("opsHub.empty.incidents.body")} />
+          )
         )}
         <Pagination path={path} params={raw} page={list.page} pageSize={list.pageSize} total={list.total} labels={{ prev: t("common.previous"), next: t("common.next"), summary: t("work.pageOf", { page: list.page, pages: Math.max(1, Math.ceil(list.total / list.pageSize)) }) }} />
       </Card>

@@ -7,6 +7,7 @@ import { TaskStatusBadge } from "@/components/agents/status-badge";
 import { ActionButton } from "@/components/workforce/action-button";
 import { AssignTaskForm } from "@/components/workforce/assign-task-form";
 import { AiAvatar } from "@/components/workforce/avatar";
+import { AiAvatar as RoleAvatar } from "@/components/graphics/ai-avatar";
 import { EditEmployeeDialog } from "@/components/workforce/hire-dialog";
 import { MemoryForm } from "@/components/workforce/memory-form";
 import { ProfileDialog } from "@/components/workforce/profile-dialog";
@@ -35,6 +36,9 @@ import { profileOptions, profileValues } from "@/server/modules/workforce/profil
 import { resolveRange } from "@/server/modules/bi/range";
 import { metricValues, pickMetrics, visibleMetrics } from "@/server/modules/bi/service";
 import { employeeMonthUsage } from "@/server/modules/workforce/usage";
+import { AUTONOMY_MODE, delegationMode } from "@/server/modules/workforce/autonomy";
+import { budgetRefusal, employeeBudget } from "@/server/modules/workforce/budgets";
+import { workforcePerformance } from "@/server/modules/workforce/performance";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -65,6 +69,17 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
     canManage ? listMembers(viewer.ctx, org.id, company.id) : Promise.resolve([]),
   ]);
   const kpis = kpisOf(e.kpis);
+  const [budget, perf30, delegations] = await Promise.all([
+    employeeBudget(org.id, company.id, e),
+    workforcePerformance(org.id, company.id, [e], 30).then((p) => p.byEmployee.get(e.id)!),
+    db().aiDelegation.findMany({
+      where: { organizationId: org.id, companyId: company.id, OR: [{ fromEmployeeId: e.id }, { toEmployeeId: e.id }] },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: { fromEmployee: { select: { id: true, name: true } }, toEmployee: { select: { id: true, name: true } } },
+    }),
+  ]);
+  const overBudget = budgetRefusal(e.name, budget);
   const [history, reports, reportsTo, profileOpts, managerUser, kpiValues] = await Promise.all([
     performanceHistory(org.id, company.id, e.id, 12),
     directReports(org.id, company.id, e.id),
@@ -109,7 +124,7 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
   });
   const seconds = (ms: number | null) => (ms === null ? "—" : formatNumber(ms / 1000, locale, { style: "unit", unit: "second", unitDisplay: "short", maximumFractionDigits: 0 }));
   const finished = stats.completed + stats.failed;
-  const pausedOrOver = e.status === "PAUSED" || usage.exhausted;
+  const pausedOrOver = e.status === "PAUSED" || !!overBudget;
   const done10 = done.data.filter((x) => x.status !== "QUEUED" && x.status !== "RUNNING").slice(0, 10);
 
   return (
@@ -121,9 +136,9 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <AiAvatar id={e.id} initials={e.initials} paused={e.status === "PAUSED"} working={running.data.length > 0} size="lg" />
+          <RoleAvatar seed={e.id} department={e.department} size={64} active={running.data.length > 0} className={e.status === "PAUSED" ? "opacity-60 grayscale" : undefined} />
           <div className="grid min-w-0 gap-0.5">
-            <h1 className="flex flex-wrap items-center gap-2 text-lg font-semibold tracking-tight">
+            <h1 className="flex flex-wrap items-center gap-2 font-display text-3xl">
               {e.name}
               <Badge tone={e.status === "ACTIVE" ? "success" : "neutral"}>{t(`workforce.status.${e.status}`)}</Badge>
               {running.data.length ? <SystemPulse active label={t("workforce.live.workingNow")} /> : null}
@@ -184,7 +199,11 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
         </Notice>
       ) : null}
       {e.status === "PAUSED" ? <Notice tone="warning">{t("workforce.employee.pausedNotice")}</Notice> : null}
-      {usage.exhausted ? <Notice tone="warning">{t("workforce.employee.overBudgetNotice")}</Notice> : null}
+      {overBudget ? (
+        <Notice tone="warning" action={<Link className="text-sm text-primary hover:underline" href={`/${locale}/workforce/performance`}>{t("workforce.tabs.performance")}</Link>}>
+          {overBudget.code === "department_over_budget" ? t("workforce.budgets.departmentExhaustedNotice", { department: t(`workforce.departments.${e.department}`) }) : t("workforce.employee.overBudgetNotice")}
+        </Notice>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
@@ -216,6 +235,27 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
                 <dd className="tabular text-lg font-semibold">{formatNumber(stats.approvalsApproved, locale)}</dd>
               </div>
             </dl>
+            <dl className="mt-3 grid grid-cols-2 gap-3 border-t pt-3 text-sm">
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.performance.turnaround")} (30d)</dt>
+                <dd className="tabular font-semibold">{perf30.medianTurnaroundMs === null ? "—" : formatNumber(Math.max(1, Math.round(perf30.medianTurnaroundMs / 60_000)), locale, { style: "unit", unit: "minute", unitDisplay: "short" })}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.performance.costPerTask")} (30d)</dt>
+                <dd className="tabular font-semibold">{perf30.costPerCompletedMicros === null ? "—" : usd(perf30.costPerCompletedMicros)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.performance.delegated")} (30d)</dt>
+                <dd className="tabular font-semibold">{formatNumber(perf30.delegated, locale)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.performance.escalations")} (30d)</dt>
+                <dd className="tabular font-semibold">
+                  {formatNumber(perf30.escalationsFiled, locale)}
+                  {perf30.escalationsOpen ? <span className="ms-1 text-xs font-normal text-warning">{t("workforce.performance.openNow", { count: perf30.escalationsOpen })}</span> : null}
+                </dd>
+              </div>
+            </dl>
           </CardBody>
         </Card>
         <Card>
@@ -228,6 +268,23 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
             <p className="text-muted-foreground">
               {usage.budget ? t("workforce.employee.budget", { budget: formatNumber(usage.budget, locale) }) : t("workforce.employee.noBudget")}
             </p>
+            {budget.employee.costBudgetCents !== null ? (
+              <p className="text-muted-foreground">
+                {t("workforce.budgets.costOf", { used: formatMoney({ amountMinor: BigInt(budget.employee.costCentsUsed), currency: "USD" }, locale), budget: formatMoney({ amountMinor: BigInt(budget.employee.costBudgetCents), currency: "USD" }, locale) })}
+              </p>
+            ) : null}
+            {budget.department ? (
+              <p className="text-muted-foreground">
+                {t("workforce.budgets.departmentLine", { department: t(`workforce.departments.${e.department}`) })}:{" "}
+                {[
+                  budget.department.costBudgetCents !== null ? t("workforce.budgets.costOf", { used: formatMoney({ amountMinor: BigInt(budget.department.costCentsUsed), currency: "USD" }, locale), budget: formatMoney({ amountMinor: BigInt(budget.department.costBudgetCents), currency: "USD" }, locale) }) : null,
+                  budget.department.tokenBudget !== null ? t("workforce.budgets.tokensOf", { used: formatNumber(budget.department.tokensUsed, locale, { notation: "compact" }), budget: formatNumber(budget.department.tokenBudget, locale, { notation: "compact" }) }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
+            {budget.remainingTokens !== null ? <p className="text-xs text-muted-foreground">{t("workforce.budgets.runCap", { tokens: formatNumber(budget.remainingTokens, locale, { notation: "compact" }) })}</p> : null}
           </CardBody>
         </Card>
         <Card>
@@ -235,7 +292,10 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
           <CardBody className="grid gap-2 text-sm">
             <p>
               <span className="text-muted-foreground">{t("workforce.form.autonomy")}: </span>
-              {t(`workforce.autonomy.${e.autonomy}.name`)}
+              {t(`workforce.autonomy.${e.autonomy}.name`)} · {t(`workforce.autonomyModes.${AUTONOMY_MODE[e.autonomy]}`)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {AUTONOMY_MODE[e.autonomy] === "suggest" ? t("workforce.delegations.modeNone") : delegationMode(e.autonomy) === "propose" ? t("workforce.delegations.modePropose") : t("workforce.delegations.modeDirect")}
             </p>
             <p>
               <span className="text-muted-foreground">{t("workforce.form.runsAs")}: </span>
@@ -364,6 +424,39 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
           </TBody>
         </Table>
       </Card>
+
+      {delegations.length ? (
+        <Card id="delegations">
+          <CardHeader
+            title={t("workforce.delegations.employeeTitle")}
+            description={t("workforce.delegations.employeeHint")}
+            actions={
+              <Link className="text-sm text-primary hover:underline" href={`/${locale}/workforce/escalations#delegations`}>
+                {t("workforce.tabs.escalations")}
+              </Link>
+            }
+          />
+          <ul className="divide-y text-sm">
+            {delegations.map((d) => (
+              <li key={d.id} className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+                <Badge tone={d.status === "PROPOSED" ? "warning" : d.status === "CREATED" ? "success" : d.status === "FAILED" ? "danger" : "neutral"}>{t(`workforce.delegations.status.${d.status}`)}</Badge>
+                <span className="text-muted-foreground">
+                  {d.fromEmployee.name} → {d.toEmployee.name}
+                </span>
+                <span className="min-w-0 break-words font-medium" dir="auto">
+                  {d.title}
+                </span>
+                <span className="text-xs text-muted-foreground">{formatRelativeTime(d.createdAt, locale)}</span>
+                {d.childTaskId ? (
+                  <Link className="text-xs text-primary hover:underline" href={`/${locale}/tasks/${d.childTaskId}`}>
+                    {t("workforce.delegations.childTask")}
+                  </Link>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
 
       <Card id="reports">
         <CardHeader title={t("workforce.reports.title")} description={t("workforce.reports.hint")} />

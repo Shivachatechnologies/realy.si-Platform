@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { OpsTabs } from "@/components/work/area-tabs";
 import { workContext } from "@/components/work/context";
 import { ChecklistForm } from "@/components/work/ops-forms";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { OpsHeader, OpsIntro } from "@/components/ops-hub/ops-visuals";
+import { ChecklistWizard } from "@/components/ops-hub/process-wizard";
+import { CardBody } from "@/components/ui/card";
+import { ClipboardList } from "lucide-react";
+import { getDraft } from "@/server/modules/cockpit/drafts";
 import { Empty, Progress } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
 import { formatDate } from "@/i18n/format";
@@ -25,11 +30,29 @@ export default async function ChecklistsPage({ searchParams }: PageProps<"/[loca
   const { locale, viewer, org, company, canManage, base } = w;
   const raw = await searchParams;
   const path = `/${locale}/operations/checklists`;
-  const [rows, people] = await Promise.all([listChecklists(viewer.ctx, org.id, company.id, raw), canManage ? listPeople(viewer.ctx, org.id, company.id, "operations.read") : []]);
+  const [rows, people, draft] = await Promise.all([
+    listChecklists(viewer.ctx, org.id, company.id, raw),
+    canManage ? listPeople(viewer.ctx, org.id, company.id, "operations.read") : [],
+    canManage ? getDraft(viewer.ctx, org.id, company.id, "ops.checklist").catch(() => null) : null,
+  ]);
+  const filtered = !!(param(raw, "q") || param(raw, "schedule") || param(raw, "archived"));
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
-      {w.header}
-      <OpsTabs t={t} locale={locale} active="checklists" />
+      <OpsHeader t={t} locale={locale} active="checklists" />
+      <OpsIntro t={t} page="checklists" next={canManage ? { label: t("opsHub.checklist.title"), href: "#start" } : undefined} />
+      {canManage ? (
+        <Card variant={rows.length === 0 && !filtered ? "highlight" : "default"} id="start" className="scroll-mt-20">
+          <details open={(rows.length === 0 && !filtered) || !!draft}>
+            <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold">
+              <ClipboardList className="size-4 text-primary" aria-hidden /> {t("opsHub.checklist.title")}
+              <span className="text-xs font-normal text-muted-foreground">{t("opsHub.checklist.subtitle")}</span>
+            </summary>
+            <CardBody className="border-t">
+              <ChecklistWizard base={base} locale={locale} people={people} draft={draft ? { step: draft.step, data: draft.data } : null} />
+            </CardBody>
+          </details>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader title={t("work.ops.tabs.checklists")} description={t("work.ops.checklistsHint")} />
         <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_9rem_auto]" action={path}>
@@ -52,7 +75,7 @@ export default async function ChecklistsPage({ searchParams }: PageProps<"/[loca
         </form>
         {canManage ? (
           <details className="border-b">
-            <summary className="cursor-pointer p-3 text-sm font-medium">{t("work.ops.addChecklist")}</summary>
+            <summary className="cursor-pointer p-3 text-sm font-medium">{t("opsHub.quickAdd")}</summary>
             <ChecklistForm base={base} locale={locale} people={people} />
           </details>
         ) : null}
@@ -96,7 +119,11 @@ export default async function ChecklistsPage({ searchParams }: PageProps<"/[loca
             </TBody>
           </Table>
         ) : (
-          <Empty>{t("work.ops.noChecklists")}</Empty>
+          filtered ? (
+            <Empty>{t("common.noResults")}</Empty>
+          ) : (
+            <SmartEmpty icon={<ClipboardList />} title={t("opsHub.empty.checklists.title")} body={t("opsHub.empty.checklists.body")} primary={canManage ? <a href="#start" className="text-sm font-medium text-primary hover:underline">{t("opsHub.checklist.title")}</a> : undefined} />
+          )
         )}
       </Card>
     </div>

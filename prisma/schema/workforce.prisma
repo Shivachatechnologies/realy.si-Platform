@@ -25,6 +25,16 @@ enum AiOrgLevel {
 enum AiReportKind {
   STATUS
   ESCALATION
+  /// Automatic roll-up: a delegated task (or a whole delegated batch) finished; filed with the manager.
+  ROLLUP
+}
+
+/// A delegation proposed by a supervised AI employee: nothing runs until a person approves it.
+enum AiDelegationStatus {
+  PROPOSED
+  CREATED
+  REJECTED
+  FAILED
 }
 
 enum CeoMessageRole {
@@ -57,44 +67,46 @@ enum AiBriefingMode {
 
 /// An AI employee: a role profile (AGENT_PROFILES) with a name, custom instructions, tool subset, autonomy and budget.
 model AiEmployee {
-  id                 String           @id @default(uuid(7)) @db.Uuid
-  organizationId     String           @map("organization_id") @db.Uuid
-  companyId          String           @map("company_id") @db.Uuid
-  name               String
+  id                     String           @id @default(uuid(7)) @db.Uuid
+  organizationId         String           @map("organization_id") @db.Uuid
+  companyId              String           @map("company_id") @db.Uuid
+  name                   String
   /// Avatar initials (1–3 chars).
-  initials           String
-  profileKey         String           @map("profile_key")
-  department         String
+  initials               String
+  profileKey             String           @map("profile_key")
+  department             String
   /// Appended to the profile's role prompt.
-  instructions       String?
-  skills             String[]         @default([])
+  instructions           String?
+  skills                 String[]         @default([])
   /// Subset of the profile's tools; empty = all of the profile's tools.
-  allowedTools       String[]         @default([]) @map("allowed_tools")
+  allowedTools           String[]         @default([]) @map("allowed_tools")
   /// The member whose permissions the AI acts with (null = the person who assigns each task).
-  runsAsUserId       String?          @map("runs_as_user_id") @db.Uuid
-  status             AiEmployeeStatus @default(ACTIVE)
-  autonomy           AiAutonomyLevel  @default(EXECUTE_WITH_APPROVAL)
+  runsAsUserId           String?          @map("runs_as_user_id") @db.Uuid
+  status                 AiEmployeeStatus @default(ACTIVE)
+  autonomy               AiAutonomyLevel  @default(EXECUTE_WITH_APPROVAL)
   /// Monthly token allowance (input + output, UTC month); null = unlimited.
-  monthlyTokenBudget Int?             @map("monthly_token_budget")
+  monthlyTokenBudget     Int?             @map("monthly_token_budget")
+  /// Monthly estimated-cost allowance in USD cents (minor units, UTC month); null = unlimited. Enforced before and during runs.
+  monthlyCostBudgetCents BigInt?          @map("monthly_cost_budget_cents")
   /// Org chart: the AI manager this employee reports to (null = reports to a person, see managerUserId).
-  managerEmployeeId  String?          @map("manager_employee_id") @db.Uuid
+  managerEmployeeId      String?          @map("manager_employee_id") @db.Uuid
   /// The member (founder) this employee reports to when it has no AI manager. Validated as an active member.
-  managerUserId      String?          @map("manager_user_id") @db.Uuid
-  level              AiOrgLevel       @default(SPECIALIST)
-  jobTitle           String?          @map("job_title")
-  jobDescription     String?          @map("job_description")
-  responsibilities   String[]         @default([])
-  goals              String[]         @default([])
+  managerUserId          String?          @map("manager_user_id") @db.Uuid
+  level                  AiOrgLevel       @default(SPECIALIST)
+  jobTitle               String?          @map("job_title")
+  jobDescription         String?          @map("job_description")
+  responsibilities       String[]         @default([])
+  goals                  String[]         @default([])
   /// [{ key: metric registry key, target: number }]
-  kpis               Json             @default("[]")
+  kpis                   Json             @default("[]")
   /// Model id (one of the allowed models); null = the platform default (AGENT_MODEL).
-  model              String?
+  model                  String?
   /// Set when the lifecycle setup (configure → role → goals → permissions → activate) was completed.
-  setupCompletedAt   DateTime?        @map("setup_completed_at") @db.Timestamptz(3)
-  createdById        String           @map("created_by_id") @db.Uuid
-  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
-  archivedAt         DateTime?        @map("archived_at") @db.Timestamptz(3)
+  setupCompletedAt       DateTime?        @map("setup_completed_at") @db.Timestamptz(3)
+  createdById            String           @map("created_by_id") @db.Uuid
+  createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt             DateTime?        @map("archived_at") @db.Timestamptz(3)
 
   company         Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   runsAs          User?              @relation("AiEmployeeRunsAs", fields: [runsAsUserId], references: [id], onDelete: SetNull)
@@ -105,6 +117,8 @@ model AiEmployee {
   tasks           AgentTask[]
   writtenReports  AiEmployeeReport[] @relation("AiReportAuthor")
   receivedReports AiEmployeeReport[] @relation("AiReportManager")
+  delegationsFrom AiDelegation[]     @relation("AiDelegationFrom")
+  delegationsTo   AiDelegation[]     @relation("AiDelegationTo")
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -231,6 +245,11 @@ model AiEmployeeReport {
   taskId            String?      @map("task_id") @db.Uuid
   /// Escalations: the task created for the manager.
   escalationTaskId  String?      @map("escalation_task_id") @db.Uuid
+  /// Escalations: closed by a person or automatically when the manager's escalation task completed.
+  resolvedAt        DateTime?    @map("resolved_at") @db.Timestamptz(3)
+  resolvedById      String?      @map("resolved_by_id") @db.Uuid
+  /// Escalation ladder: when the founder was notified (immediately at the top of the chart, or after the AI manager did not resolve it).
+  founderNotifiedAt DateTime?    @map("founder_notified_at") @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
@@ -240,7 +259,59 @@ model AiEmployeeReport {
   @@index([organizationId, companyId, createdAt])
   @@index([managerEmployeeId, createdAt])
   @@index([aiEmployeeId, createdAt])
+  @@index([companyId, kind, resolvedAt])
   @@map("ai_employee_reports")
+}
+
+/// Monthly AI allowance of a whole department (all its AI employees together); enforced before and during runs.
+model AiDepartmentBudget {
+  id                     String   @id @default(uuid(7)) @db.Uuid
+  organizationId         String   @map("organization_id") @db.Uuid
+  companyId              String   @map("company_id") @db.Uuid
+  /// workforce DEPARTMENTS key, e.g. "sales".
+  department             String
+  /// Tokens per UTC month (input + output); null = unlimited.
+  monthlyTokenBudget     Int?     @map("monthly_token_budget")
+  /// Estimated cost per UTC month in USD cents; null = unlimited.
+  monthlyCostBudgetCents BigInt?  @map("monthly_cost_budget_cents")
+  updatedById            String   @map("updated_by_id") @db.Uuid
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, department])
+  @@index([organizationId, companyId])
+  @@map("ai_department_budgets")
+}
+
+/// A sub-task a supervised AI manager wants to hand to one of its reports (delegate_to_ai_employee). A person approves
+/// (the child task is then created with the approver as principal) or rejects it.
+model AiDelegation {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  /// The task that proposed it.
+  parentTaskId   String             @map("parent_task_id") @db.Uuid
+  fromEmployeeId String             @map("from_employee_id") @db.Uuid
+  toEmployeeId   String             @map("to_employee_id") @db.Uuid
+  title          String
+  instructions   String
+  status         AiDelegationStatus @default(PROPOSED)
+  /// The child task created on approval.
+  childTaskId    String?            @map("child_task_id") @db.Uuid
+  decidedById    String?            @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?          @map("decided_at") @db.Timestamptz(3)
+  decisionNote   String?            @map("decision_note")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  fromEmployee AiEmployee @relation("AiDelegationFrom", fields: [fromEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+  toEmployee   AiEmployee @relation("AiDelegationTo", fields: [toEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, status, createdAt])
+  @@index([parentTaskId])
+  @@map("ai_delegations")
 }
 
 /// "Ask the CEO": a conversation thread between a member and the AI CEO.

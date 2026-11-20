@@ -29,6 +29,7 @@ export interface ProfileValues {
   autonomy: (typeof AUTONOMY_OPTIONS)[number];
   runsAsUserId: string | null;
   monthlyTokenBudget: number | null;
+  monthlyCostBudgetUsd: number | null;
   allowedTools: string[];
 }
 
@@ -90,7 +91,7 @@ export function ProfileForm({
     if (has("configure")) Object.assign(body, { jobTitle: v.jobTitle || null, jobDescription: v.jobDescription || null, instructions: v.instructions || null, skills: skills.split(",").map((s) => s.trim()).filter(Boolean), model: v.model || null });
     if (has("role")) Object.assign(body, { managerEmployeeId: v.managerEmployeeId, managerUserId: v.managerEmployeeId ? null : v.managerUserId, level: v.level, responsibilities: lines(responsibilities) });
     if (has("goals")) Object.assign(body, { goals: lines(goals), kpis: v.kpis.filter((k) => k.key && Number.isFinite(k.target)) });
-    if (has("permissions")) Object.assign(body, { autonomy: v.autonomy, runsAsUserId: v.runsAsUserId || null, monthlyTokenBudget: v.monthlyTokenBudget || null, allowedTools: limitTools ? v.allowedTools : [] });
+    if (has("permissions")) Object.assign(body, { autonomy: v.autonomy, runsAsUserId: v.runsAsUserId || null, monthlyTokenBudget: v.monthlyTokenBudget || null, monthlyCostBudgetCents: v.monthlyCostBudgetUsd ? Math.round(v.monthlyCostBudgetUsd * 100) : null, allowedTools: limitTools ? v.allowedTools : [] });
     try {
       await api(`${apiBase}/workforce/employees/${employeeId}`, { method: "PATCH", body });
       setSaved(true);
@@ -246,6 +247,9 @@ export function ProfileForm({
           </div>
           <Field label={t("workforce.form.budget")} htmlFor={`${id}-budget`} hint={t("workforce.form.budgetHint")} error={fields.monthlyTokenBudget}>
             <Input id={`${id}-budget`} type="number" min={1000} step={1000} inputMode="numeric" value={v.monthlyTokenBudget ?? ""} onChange={(e) => set("monthlyTokenBudget", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+          <Field label={t("workforce.budgets.costBudget")} htmlFor={`${id}-cost`} hint={t("workforce.budgets.costBudgetHint")} error={fields.monthlyCostBudgetCents}>
+            <Input id={`${id}-cost`} type="number" min={0.01} step={0.01} inputMode="decimal" value={v.monthlyCostBudgetUsd ?? ""} onChange={(e) => set("monthlyCostBudgetUsd", e.target.value ? Number(e.target.value) : null)} />
           </Field>
           <fieldset className="grid gap-2 rounded-md border p-3">
             <legend className="px-1 text-sm font-medium">{t("workforce.tools")}</legend>

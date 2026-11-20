@@ -18,7 +18,8 @@ export function toolsForAutonomy(tools: readonly string[], level: AiAutonomyLeve
       case "READ_ONLY":
         return t.autonomy === "AUTONOMOUS" && !INTERNAL_WRITES.has(name);
       case "RECOMMEND":
-        return t.autonomy === "AUTONOMOUS";
+        // Suggest-only: may report and escalate, but never hands work to others.
+        return t.autonomy === "AUTONOMOUS" && name !== "delegate_to_ai_employee";
       case "PREPARE":
         return t.autonomy === "AUTONOMOUS" || (t.autonomy === "SUPERVISED" && (t.risk === "LOW" || t.risk === "MEDIUM"));
       case "EXECUTE_WITH_APPROVAL":
@@ -37,3 +38,20 @@ export const AUTONOMY_GUIDANCE: Record<AiAutonomyLevel, string> = {
   AUTONOMOUS_LOW_RISK:
     "Autonomy: autonomous for low-risk work. Carry the task through end to end without asking for clarification; make reasonable, stated assumptions. Actions that change data are still filed for approval automatically.",
 };
+
+/** The three plain-language autonomy modes the levels fall into (UI grouping). */
+export type AutonomyMode = "suggest" | "supervised" | "autonomous";
+export const AUTONOMY_MODE: Record<AiAutonomyLevel, AutonomyMode> = {
+  READ_ONLY: "suggest",
+  RECOMMEND: "suggest",
+  PREPARE: "supervised",
+  EXECUTE_WITH_APPROVAL: "supervised",
+  AUTONOMOUS_LOW_RISK: "autonomous",
+};
+
+/**
+ * How delegate_to_ai_employee behaves for an employee: supervised employees only propose a delegation (a person
+ * approves it before any work starts); autonomous ones create the sub-task directly, within the depth, fan-out and
+ * budget limits (workforce/delegation.ts). Suggest-only employees are not offered the tool at all.
+ */
+export const delegationMode = (level: AiAutonomyLevel): "propose" | "direct" => (level === "AUTONOMOUS_LOW_RISK" ? "direct" : "propose");

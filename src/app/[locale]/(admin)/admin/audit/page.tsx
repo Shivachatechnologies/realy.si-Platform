@@ -1,10 +1,10 @@
-import { Download } from "lucide-react";
+import { Download, ScrollText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AdminHeader, Empty, FilterBar, NextPage, guard, sp } from "@/components/admin/kit";
+import { AdminHeader, EmptyState, FilterBar, NextPage, guard, sp } from "@/components/admin/kit";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { searchAudit } from "@/server/modules/admin/security";
@@ -27,8 +27,10 @@ export default async function AuditPage({ searchParams }: PageProps<"/[locale]/a
   return (
     <div className="grid gap-4">
       <AdminHeader
+        icon={<ScrollText />}
         title={t("admin.nav.audit")}
         description={t("admin.audit.subtitle")}
+        why={t("admin.audit.why")}
         actions={
           <Button asChild size="sm" variant="secondary">
             <a href={`/api/v1/admin/audit-logs/export?${exportQs}`} download>
@@ -59,7 +61,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/[locale]/a
           }
         />
         {page.data.length === 0 ? (
-          <Empty>{t("admin.audit.empty")}</Empty>
+          <EmptyState icon={<ScrollText />} title={t("admin.audit.empty")} body={t("admin.common.tryOtherFilters")} />
         ) : (
           <Table>
             <THead>

@@ -1,0 +1,25 @@
+// Cockpit (AI tasks, approvals, activity, plans, operations hub, notifications): save & resume for the guided
+// "Start here" journeys (e.g. "Give an AI employee a job", "Set up your first process").
+
+/// One person's unfinished answers in one guided journey, so they can leave and continue later (server-side).
+model GuidedDraft {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  /// Journey key, e.g. "tasks.composer", "plans.editor", "ops.process", "ops.checklist".
+  flowKey        String   @map("flow_key")
+  /// Index of the step the person was on.
+  step           Int      @default(0)
+  /// The answers so far (shape owned by the journey's UI; validated again when the record is created).
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId, flowKey])
+  @@index([organizationId, companyId, userId])
+  @@map("guided_drafts")
+}

@@ -13,7 +13,7 @@ import { can, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { AUTONOMY_GUIDANCE, toolsForAutonomy } from "@/server/modules/workforce/autonomy";
-import { employeeMonthUsage } from "@/server/modules/workforce/usage";
+import { assertEmployeeBudget, budgetRefusal, employeeBudget } from "@/server/modules/workforce/budgets";
 import { AGENT_TASK_STATUSES } from "./statuses";
 import { PROFILE_KEYS, profileByKey } from "./profiles";
 import { aiConfigured, REMEMBER_LINE, runTask, TaskError } from "./runtime";
@@ -155,14 +155,12 @@ export async function createTask(
     if (input.aiEmployeeId) {
       const employee = await tx.aiEmployee.findFirst({
         where: { id: input.aiEmployeeId, organizationId, companyId, archivedAt: null },
-        select: { id: true, name: true, status: true, profileKey: true, monthlyTokenBudget: true },
+        select: { id: true, name: true, status: true, profileKey: true, department: true, model: true, monthlyTokenBudget: true, monthlyCostBudgetCents: true },
       });
       if (!employee) throw notFound("AI employee");
       if (employee.status === "PAUSED") throw conflict(`${employee.name} is paused`, { reason: "workforce_employee_paused" });
-      const usage = await employeeMonthUsage(organizationId, companyId, employee);
-      if (usage.exhausted) {
-        throw new AppError("not_available", `${employee.name} has used this month's token budget`, { reason: "workforce_employee_over_budget", used: usage.used, budget: usage.budget });
-      }
+      // The employee's own and its department's monthly allowances (tokens and estimated cost).
+      await assertEmployeeBudget(organizationId, companyId, employee);
       profile = employee.profileKey as typeof profile;
     }
     if (!profile || !profileByKey(profile)) throw notFound("Profile");
@@ -328,12 +326,15 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
     const profile = profileByKey(task.profile);
     if (!profile) throw new TaskError("unknown_profile", "This AI employee profile no longer exists");
     let tools: readonly string[] = profile.tools;
+    let tokenCeiling: number | null = null;
     if (employee) {
       if (employee.archivedAt) throw new TaskError("employee_archived", "This AI employee was removed");
       if (employee.status === "PAUSED") throw new TaskError("employee_paused", `${employee.name} is paused; resume and retry`);
-      if ((await employeeMonthUsage(task.organizationId, task.companyId, employee)).exhausted) {
-        throw new TaskError("employee_over_budget", `${employee.name} has used this month's token budget`);
-      }
+      // Budgets may have been spent since the task was queued; the remainder caps this run (runtime stops at it).
+      const budget = await employeeBudget(task.organizationId, task.companyId, employee);
+      const refusal = budgetRefusal(employee.name, budget);
+      if (refusal) throw new TaskError(refusal.code, refusal.message);
+      tokenCeiling = budget.remainingTokens;
       const allowed = employee.allowedTools.length ? profile.tools.filter((t) => employee.allowedTools.includes(t)) : profile.tools;
       await loadTools();
       tools = toolsForAutonomy(allowed, employee.autonomy);
@@ -359,6 +360,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       taskId: task.id,
       isCancelled: async () => !(await db().agentTask.count({ where: held })),
       tools,
+      tokenCeiling,
       employee: employee
         ? {
             name: employee.name,
@@ -420,7 +422,9 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
     }
     log.error({ code: failure.code, err: err instanceof Error ? err.message : String(err) }, "agent task failed");
     await transaction(async (tx) => {
-      const { count } = await tx.agentTask.updateMany({ where: held, data: { status: "FAILED", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date(), runToken: null } });
+      // Tokens a failed run already spent are recorded too, so budgets and cost reports never hide them.
+      const spent = failure.usage ? { model: failure.usage.model, inputTokens: failure.usage.inputTokens, outputTokens: failure.usage.outputTokens } : {};
+      const { count } = await tx.agentTask.updateMany({ where: held, data: { status: "FAILED", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date(), runToken: null, ...spent } });
       if (count) {
         await emitDomainEvent(tx, ctx, "agent.task.failed", {
           organizationId: task.organizationId,

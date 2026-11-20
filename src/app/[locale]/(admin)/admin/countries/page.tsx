@@ -1,7 +1,9 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
+import { Earth } from "lucide-react";
 import { CountryBillingToggle } from "@/components/admin/country-billing-toggle";
+import { AdminHeader } from "@/components/admin/kit";
 import { getLocale, getT } from "@/i18n/server";
 import { displayName } from "@/i18n/format";
 import { listCountries, listRegions } from "@/server/modules/globalization/service";
@@ -20,6 +22,7 @@ export default async function CountriesPage() {
 
   return (
     <div className="grid grid-cols-1 gap-4">
+      <AdminHeader icon={<Earth />} title={t("admin.nav.countries")} description={t("admin.countries.subtitle")} why={t("admin.countries.why")} />
       <Card>
         <CardHeader title={t("admin.countries.regions")} />
         <Table>

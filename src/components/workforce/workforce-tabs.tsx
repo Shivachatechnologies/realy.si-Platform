@@ -1,13 +1,28 @@
 import Link from "next/link";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
-export type WorkforceTab = "employees" | "org" | "hire" | "usage" | "plans" | "tasks";
+export type WorkforceTab = "employees" | "org" | "hire" | "usage" | "plans" | "tasks" | "performance" | "escalations";
 
-/** Secondary navigation of the AI Workforce area (the org chart tab shows when its label is given). */
-export function WorkforceTabs({ locale, active, labels }: { locale: string; active: WorkforceTab; labels: Record<Exclude<WorkforceTab, "org">, string> & { org?: string } }) {
+/**
+ * Secondary navigation of the AI Workforce area (server component). The org chart tab shows when its label is given;
+ * the performance and escalations tabs are always shown and labelled here.
+ */
+export async function WorkforceTabs({
+  locale,
+  active,
+  labels,
+}: {
+  locale: string;
+  active: WorkforceTab;
+  labels: Record<Exclude<WorkforceTab, "org" | "performance" | "escalations">, string> & { org?: string };
+}) {
+  const t = await getT();
   const tabs: { key: WorkforceTab; href: string; label?: string }[] = [
     { key: "employees", href: `/${locale}/workforce`, label: labels.employees },
     { key: "org", href: `/${locale}/workforce/org`, label: labels.org },
+    { key: "performance", href: `/${locale}/workforce/performance`, label: t("workforce.tabs.performance") },
+    { key: "escalations", href: `/${locale}/workforce/escalations`, label: t("workforce.tabs.escalations") },
     { key: "hire", href: `/${locale}/workforce/hire`, label: labels.hire },
     { key: "usage", href: `/${locale}/workforce/usage`, label: labels.usage },
     { key: "plans", href: `/${locale}/plans`, label: labels.plans },
@@ -22,7 +37,7 @@ export function WorkforceTabs({ locale, active, labels }: { locale: string; acti
             key={tab.key}
             href={tab.href}
             aria-current={active === tab.key ? "page" : undefined}
-            className={cn("-mb-px shrink-0 border-b-2 px-3 py-2", active === tab.key ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("-mb-px shrink-0 border-b-2 px-3 py-2.5", active === tab.key ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}
           >
             {tab.label}
           </Link>

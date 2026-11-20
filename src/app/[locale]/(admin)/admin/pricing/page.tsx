@@ -1,6 +1,7 @@
 import { Notice } from "@/components/ui/notice";
 import { PricingConsole } from "@/components/admin/pricing-console";
 import type { PlanDTO } from "@/components/admin/pricing-types";
+import { Tags } from "lucide-react";
 import { AdminHeader } from "@/components/admin/kit";
 import { PlanLimits } from "@/components/admin/plan-limits";
 import { PLAN_LIMIT_KEYS, PLATFORM_MODULES } from "@/server/core/platform-controls";
@@ -58,7 +59,7 @@ export default async function PricingConsolePage() {
   const canManage = await canPlatform(viewer.ctx, "pricing.manage");
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.pricing")} description={t("admin.plans.subtitle")} />
+      <AdminHeader icon={<Tags />} title={t("admin.nav.pricing")} description={t("admin.plans.subtitle")} why={t("admin.plans.why")} />
       <PricingConsole
       plans={plans}
       scope={scope}

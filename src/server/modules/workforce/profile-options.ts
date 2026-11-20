@@ -49,5 +49,7 @@ export const profileValues = (e: Employee) => ({
   autonomy: e.autonomy,
   runsAsUserId: e.runsAsUserId,
   monthlyTokenBudget: e.monthlyTokenBudget,
+  /** Whole USD per month (the form edits dollars; stored as cents). */
+  monthlyCostBudgetUsd: e.monthlyCostBudgetCents === null ? null : Number(e.monthlyCostBudgetCents) / 100,
   allowedTools: e.allowedTools,
 });

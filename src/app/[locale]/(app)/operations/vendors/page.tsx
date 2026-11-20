@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { OpsTabs } from "@/components/work/area-tabs";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { OpsHeader, OpsIntro } from "@/components/ops-hub/ops-visuals";
+import { Truck } from "lucide-react";
 import { workContext } from "@/components/work/context";
 import { Empty, Pagination } from "@/components/work/ui";
 import { getT } from "@/i18n/server";
@@ -27,8 +29,8 @@ export default async function VendorsPage({ searchParams }: PageProps<"/[locale]
   const list = await listVendors(viewer.ctx, org.id, company.id, raw);
   return (
     <div className="mx-auto grid max-w-[1400px] min-w-0 gap-4">
-      {w.header}
-      <OpsTabs t={t} locale={locale} active="vendors" />
+      <OpsHeader t={t} locale={locale} active="vendors" />
+      <OpsIntro t={t} page="vendors" next={{ label: t("opsHub.intro.vendors.next"), href: `/${locale}/crm/accounts` }} />
       <Card>
         <CardHeader
           title={t("work.ops.tabs.vendors")}
@@ -74,7 +76,11 @@ export default async function VendorsPage({ searchParams }: PageProps<"/[locale]
             </TBody>
           </Table>
         ) : (
-          <Empty>{t("work.ops.noVendors")}</Empty>
+          param(raw, "q") ? (
+            <Empty>{t("common.noResults")}</Empty>
+          ) : (
+            <SmartEmpty icon={<Truck />} title={t("opsHub.empty.vendors.title")} body={t("opsHub.empty.vendors.body")} primary={<Link href={`/${locale}/crm/accounts`} className="text-sm font-medium text-primary hover:underline">{t("opsHub.intro.vendors.next")}</Link>} />
+          )
         )}
         <Pagination path={path} params={raw} page={list.page} pageSize={list.pageSize} total={list.total} labels={{ prev: t("common.previous"), next: t("common.next"), summary: t("work.pageOf", { page: list.page, pages: Math.max(1, Math.ceil(list.total / list.pageSize)) }) }} />
       </Card>

@@ -212,6 +212,7 @@ model User {
   guideProgresses   GuideProgress[]
   guideRequests     GuideRequest[]
   commandSessions   CommandSession[]
+  guidedDrafts      GuidedDraft[]
 
   @@map("users")
 }
@@ -666,6 +667,9 @@ model Company {
   marketingInfluencers            MarketingInfluencer[]
   marketingJourneys               MarketingJourney[]
   visualAssets                    VisualAsset[]
+  guidedDrafts                    GuidedDraft[]
+  aiDepartmentBudgets             AiDepartmentBudget[]
+  aiDelegations                   AiDelegation[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

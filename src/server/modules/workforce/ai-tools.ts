@@ -4,6 +4,8 @@ import { AppError } from "@/server/core/errors";
 import type { RequestContext } from "@/server/core/context";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { createTask, getTask } from "@/server/modules/agents/service";
+import { delegationMode } from "./autonomy";
+import { delegationLimitReason, MAX_DELEGATIONS_PER_TASK, proposeDelegation, receiverUnavailableReason } from "./delegation";
 import { canDelegate, currentEmployee, escalate, fileStatusReport } from "./hierarchy";
 import { listEmployees } from "./service";
 
@@ -43,7 +45,7 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
     name: "delegate_to_ai_employee",
     version: 1,
     description:
-      "Delegate a sub-task to another active AI employee (use read_ai_employees for ids). Managers delegate to their own reports (direct or indirect); executives to anyone. Creates a separate task that runs in the background; read its result later with read_task_result. Delegation is limited to two levels. Give complete, self-contained instructions.",
+      `Delegate a sub-task to another active AI employee (use read_ai_employees for ids). Managers delegate to their own reports (direct or indirect); executives to anyone. If you work under supervision, this files a proposal that a person approves before the work starts; otherwise it creates a separate task that runs in the background. Read results later with read_task_result; finished sub-tasks are also rolled up to you automatically. Limits: two delegation levels, at most ${MAX_DELEGATIONS_PER_TASK} sub-tasks per task, and the colleague must have budget left. Give complete, self-contained instructions.`,
     input: z.object({ aiEmployeeId: z.string().uuid(), title: z.string().trim().min(1).max(200), instructions: z.string().trim().min(1).max(6000) }).strict(),
     modelSchema: {
       type: "object",
@@ -62,13 +64,32 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
     summarize: ({ title }) => `Delegate "${title}" to an AI employee`,
     async execute({ aiEmployeeId, title, instructions }, { ctx, organizationId, companyId }) {
       const parentTaskId = currentTaskId(ctx);
-      if (!parentTaskId) throw new AppError("conflict", "Delegation is only possible from inside a task");
+      if (!parentTaskId) {
+        // Executed after a person approved it in Approvals (the platform requires approval for AI writes): the person
+        // assigns the work themselves, with their own permissions and the normal budget checks.
+        const t = await createTask(ctx, organizationId, companyId, { aiEmployeeId, title, instructions });
+        return { content: `Assigned as task ${t.id} (status ${t.status}).`, records: [`agent_task:${t.id}`] };
+      }
       const me = await currentEmployee(organizationId, companyId, parentTaskId);
       if (me && !(await canDelegate(organizationId, companyId, me, aiEmployeeId))) {
         return { content: "Not delegated: you can only delegate to AI employees who report to you (see read_ai_employees). Escalate to your manager with escalate_to_manager if someone else must do it.", count: 0 };
       }
+      const limit = await delegationLimitReason(organizationId, companyId, parentTaskId);
+      if (limit) return { content: `Not delegated: ${limit}`, count: 0 };
+      const unavailable = await receiverUnavailableReason(organizationId, companyId, aiEmployeeId);
+      if (unavailable) return { content: `Not delegated: ${unavailable}`, count: 0 };
+      if (me) {
+        const autonomy = (await db().aiEmployee.findFirst({ where: { id: me.id, companyId }, select: { autonomy: true } }))?.autonomy ?? "EXECUTE_WITH_APPROVAL";
+        if (delegationMode(autonomy) === "propose") {
+          const d = await proposeDelegation(ctx, organizationId, companyId, { parentTaskId, fromEmployeeId: me.id, fromName: me.name, toEmployeeId: aiEmployeeId, title, instructions });
+          return {
+            content: `Proposed (not started yet): a person must approve this delegation first (proposal ${d.id}). Continue with what you can do yourself and list the proposal as pending in your deliverable; if approved, the result is rolled up to you.`,
+            records: [`ai_delegation:${d.id}`],
+          };
+        }
+      }
       const child = await createTask(ctx, organizationId, companyId, { aiEmployeeId, title, instructions }, { parentTaskId });
-      return { content: `Delegated as task ${child.id} (status ${child.status}). Read its result later with read_task_result; it may take a few minutes.`, records: [`agent_task:${child.id}`] };
+      return { content: `Delegated as task ${child.id} (status ${child.status}). Read its result later with read_task_result; it may take a few minutes, and it is rolled up to you when done.`, records: [`agent_task:${child.id}`] };
     },
   }),
 

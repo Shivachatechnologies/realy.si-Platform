@@ -3,9 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { ActionButton } from "@/components/admin/action-dialog";
-import { AdminHeader, Empty, FilterBar, guard, sp } from "@/components/admin/kit";
+import { Activity, KeyRound, Network, Plug, Webhook } from "lucide-react";
+import { CardBody } from "@/components/ui/card";
+import { AdminHeader, Empty, EmptyState, FilterBar, SectionLink, guard, sp } from "@/components/admin/kit";
+import { BarList, StackedBar } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
-import { formatDateTime, formatNumber } from "@/i18n/format";
+import { formatDateTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { integrationsOverview } from "@/server/modules/admin/integrations";
 import { PROVIDERS } from "@/server/modules/integrations/catalog";
@@ -28,44 +31,38 @@ export default async function AdminIntegrationsPage({ searchParams }: PageProps<
   const providerName = (k: string) => PROVIDERS.find((p) => p.key === k)?.name ?? k;
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.integrations")} description={t("admin.integrations.subtitle")} actions={<Link href={`/${locale}/admin/controls`} className="text-xs underline">{t("admin.integrations.manageProviders")}</Link>} />
+      <AdminHeader icon={<Network />} title={t("admin.nav.integrations")} description={t("admin.integrations.subtitle")} why={t("admin.integrations.why")} actions={<SectionLink href={`/${locale}/admin/controls`}>{t("admin.integrations.manageProviders")}</SectionLink>} />
       <Card>
-        <CardHeader title={t("admin.integrations.providers")} />
+        <CardHeader icon={<Plug />} title={t("admin.integrations.providers")} description={t("admin.integrations.providersHint")} />
         {o.providers.length === 0 ? (
-          <Empty>{t("admin.integrations.noConnections")}</Empty>
+          <EmptyState icon={<Plug />} title={t("admin.integrations.noConnections")} body={t("admin.integrations.noConnectionsHint")} />
         ) : (
-          <Table>
-            <THead>
-              <Tr>
-                <Th>{t("admin.integrations.provider")}</Th>
-                <Th>{t("admin.integrations.status.CONNECTED")}</Th>
-                <Th>{t("admin.integrations.status.ERROR")}</Th>
-                <Th>{t("admin.integrations.status.DISCONNECTED")}</Th>
-                <Th>{t("admin.integrations.platform")}</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {o.providers.map((p) => (
-                <Tr key={p.provider}>
-                  <Td>
-                    <Link href={`${base}?provider=${p.provider}`} className="hover:underline">
-                      {providerName(p.provider)}
-                    </Link>
-                  </Td>
-                  <Td className="tabular">{p.connected}</Td>
-                  <Td className={p.error ? "tabular text-danger" : "tabular"}>{p.error}</Td>
-                  <Td className="tabular">{p.disconnected}</Td>
-                  <Td>
-                    <Badge tone={p.disabled ? "danger" : "success"}>{p.disabled ? t("admin.controls.disabled") : t("admin.controls.enabled")}</Badge>
-                  </Td>
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
+          <ul className="stagger grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+            {o.providers.map((p) => (
+              <li key={p.provider} className="grid gap-3 rounded-lg border bg-surface p-3">
+                <div className="flex items-center gap-2">
+                  <Link href={`${base}?provider=${p.provider}`} className="truncate text-sm font-medium hover:underline">
+                    {providerName(p.provider)}
+                  </Link>
+                  <Badge className="ms-auto" tone={p.disabled ? "danger" : "success"}>
+                    {p.disabled ? t("admin.controls.disabled") : t("admin.controls.enabled")}
+                  </Badge>
+                </div>
+                <StackedBar
+                  label={providerName(p.provider)}
+                  segments={[
+                    { key: "c", label: t("admin.integrations.status.CONNECTED"), value: p.connected, tone: "success", href: `${base}?provider=${p.provider}&status=CONNECTED` },
+                    { key: "e", label: t("admin.integrations.status.ERROR"), value: p.error, tone: "danger", href: `${base}?provider=${p.provider}&status=ERROR` },
+                    { key: "d", label: t("admin.integrations.status.DISCONNECTED"), value: p.disconnected, tone: "muted", href: `${base}?provider=${p.provider}&status=DISCONNECTED` },
+                  ]}
+                />
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
       <Card>
-        <CardHeader title={t("admin.integrations.connections")} />
+        <CardHeader icon={<Activity />} title={t("admin.integrations.connections")} />
         <FilterBar
           action={base}
           values={params}
@@ -114,7 +111,7 @@ export default async function AdminIntegrationsPage({ searchParams }: PageProps<
       </Card>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader title={t("admin.integrations.apiKeys")} />
+          <CardHeader icon={<KeyRound />} title={t("admin.integrations.apiKeys")} />
           {o.apiKeys.length === 0 ? (
             <Empty>{t("admin.integrations.noKeys")}</Empty>
           ) : (
@@ -157,25 +154,21 @@ export default async function AdminIntegrationsPage({ searchParams }: PageProps<
           )}
         </Card>
         <Card>
-          <CardHeader title={t("admin.integrations.apiUsage")} description={t("admin.overview.last30")} />
-          {o.apiUsage.length === 0 ? (
-            <Empty>{t("admin.integrations.noUsage")}</Empty>
-          ) : (
-            <ul className="divide-y">
-              {o.apiUsage.map((u) => (
-                <li key={u.organizationId} className="flex items-center gap-2 px-4 py-2 text-sm">
-                  <span className="truncate">{u.organizationName}</span>
-                  <span className="ms-auto tabular">{formatNumber(u.requests, locale)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <CardHeader icon={<Activity />} title={t("admin.integrations.apiUsage")} description={t("admin.overview.last30")} />
+          <CardBody>
+            <BarList
+              label={t("admin.integrations.apiUsage")}
+              tone="info"
+              items={o.apiUsage.map((u) => ({ key: u.organizationId, label: u.organizationName, value: u.requests, href: `/${locale}/admin/organizations/${u.organizationId}` }))}
+              empty={<EmptyState icon={<Activity />} title={t("admin.integrations.noUsage")} />}
+            />
+          </CardBody>
         </Card>
       </div>
       <Card>
-        <CardHeader title={t("admin.integrations.webhookFailures")} />
+        <CardHeader icon={<Webhook />} title={t("admin.integrations.webhookFailures")} />
         {o.failedDeliveries.length === 0 ? (
-          <Empty>{t("admin.integrations.noFailures")}</Empty>
+          <EmptyState icon={<Webhook />} title={t("admin.integrations.noFailures")} body={t("admin.integrations.noFailuresHint")} />
         ) : (
           <Table>
             <THead>

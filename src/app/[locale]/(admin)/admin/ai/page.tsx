@@ -1,12 +1,18 @@
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AdminHeader, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
-import { ControlListEditor, ControlSwitch, ControlValueEditor, ListMemberToggle } from "@/components/admin/control-editors";
+import { Bot, BrainCircuit, Cpu, PauseCircle, Sparkles } from "lucide-react";
+import { CardBody } from "@/components/ui/card";
+import { CountUp } from "@/components/motion/count-up";
+import { SystemPulse } from "@/components/motion/system-pulse";
+import { AdminHeader, SectionLink, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
+import { ControlListEditor, ControlSwitch, ControlValueEditor, KillSwitchCard, ListMemberToggle } from "@/components/admin/control-editors";
+import { BarList, Sparkline, TrendChart } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatNumber } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { aiOverview } from "@/server/modules/admin/ai";
+import { aiDailySeries } from "@/server/modules/admin/trends";
 import { requireViewer } from "@/server/session";
 
 /** AI Control Center: workforce, roles, models, budgets and policy across the platform. */
@@ -14,9 +20,9 @@ export default async function AdminAiPage() {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
-  const r = await guard(aiOverview(viewer.ctx), t("errors.forbidden"));
+  const r = await guard(Promise.all([aiOverview(viewer.ctx), aiDailySeries(viewer.ctx, 30)]), t("errors.forbidden"));
   if (!r.ok) return r.node;
-  const o = r.value;
+  const [o, series] = r.value;
   const c = o.controls;
   const [canAi, canControls] = await Promise.all([canPlatform(viewer.ctx, "platform.ai.manage"), canPlatform(viewer.ctx, "platform.controls.manage")]);
   const n = (v: number) => formatNumber(v, locale);
@@ -24,29 +30,95 @@ export default async function AdminAiPage() {
   const fmtBudget = (v: number | null) => (v === null ? t("admin.controls.unlimited") : n(v));
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.ai")} description={t("admin.ai.subtitle")} />
+      <AdminHeader
+        icon={<BrainCircuit />}
+        title={t("admin.nav.ai")}
+        description={t("admin.ai.subtitle")}
+        why={t("admin.ai.why")}
+        meta={<SystemPulse active={(o.tasks24h.RUNNING ?? 0) > 0} tone={(o.tasks24h.RUNNING ?? 0) > 0 ? "success" : "neutral"} label={t("admin.overview.workingNow", { count: o.tasks24h.RUNNING ?? 0 })} />}
+      />
       <StatGrid>
         <StatTile
+          icon={<Cpu />}
           label={t("admin.ai.provider")}
           value={o.provider.configured ? t("admin.system.configured") : t("admin.system.notConfigured")}
           tone={o.provider.configured ? "success" : "danger"}
           hint={<span className="font-mono">{o.provider.effectiveModel}</span>}
         />
-        <StatTile label={t("admin.overview.aiEmployees")} value={n(o.employees.active)} hint={t("admin.overview.paused", { count: n(o.employees.paused) })} />
+        <StatTile icon={<Bot />} label={t("admin.overview.aiEmployees")} value={<CountUp value={o.employees.active} />} hint={t("admin.overview.paused", { count: n(o.employees.paused) })} />
         <StatTile
+          icon={<Sparkles />}
           label={t("admin.ai.tasks24h")}
-          value={n((o.tasks24h.RUNNING ?? 0) + (o.tasks24h.QUEUED ?? 0))}
+          value={<CountUp value={(o.tasks24h.RUNNING ?? 0) + (o.tasks24h.QUEUED ?? 0)} />}
           hint={t("admin.ai.tasks24hHint", { completed: n(o.tasks24h.COMPLETED ?? 0), failed: n(o.tasks24h.FAILED ?? 0) })}
           href={`${base}/tasks`}
           tone={o.tasks24h.FAILED ? "warning" : undefined}
+          spark={<Sparkline values={series.tasks} label={t("admin.ai.seriesTasks")} />}
         />
-        <StatTile label={t("admin.ai.tokensMonth")} value={n(o.usage.month.tokens)} hint={`${usd(o.usage.month.costMicros, locale)} · ${t("admin.ai.today", { tokens: n(o.usage.today.tokens) })}`} href={`${base}/usage`} />
+        <StatTile
+          icon={<PauseCircle />}
+          label={t("admin.ai.tokensMonth")}
+          value={<CountUp value={o.usage.month.tokens} format="compact" />}
+          hint={`${usd(o.usage.month.costMicros, locale)} · ${t("admin.ai.today", { tokens: n(o.usage.today.tokens) })}`}
+          href={`${base}/usage`}
+          spark={<Sparkline values={series.costMicros} tone="warning" label={t("admin.ai.seriesCost")} />}
+        />
       </StatGrid>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader title={t("admin.ai.usageChart")} description={t("admin.ai.usageChartHint")} actions={<SectionLink href={`${base}/usage`}>{t("admin.overview.viewAll")}</SectionLink>} />
+          <CardBody className="grid gap-6">
+            <TrendChart
+              title={t("admin.ai.usageChart")}
+              days={series.days}
+              height={160}
+              series={[
+                { label: t("admin.ai.seriesTasks"), values: series.tasks, tone: "primary" },
+                { label: t("admin.ai.seriesFailed"), values: series.failed, tone: "danger" },
+              ]}
+            />
+            <TrendChart title={t("admin.ai.seriesCost")} days={series.days} height={120} series={[{ label: t("admin.ai.seriesCost"), values: series.costMicros, tone: "warning", format: "usdMicros" }]} />
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title={t("admin.ai.costByModel")} description={t("admin.ai.last30")} />
+          <CardBody>
+            <BarList
+              label={t("admin.ai.costByModel")}
+              tone="warning"
+              items={o.models.filter((m) => m.tasks30d > 0).sort((a, b) => b.costMicros30d - a.costMicros30d).slice(0, 8).map((m) => ({ key: m.id, label: <span className="font-mono text-xs">{m.id}</span>, value: m.costMicros30d, display: usd(m.costMicros30d, locale) }))}
+              empty={<p className="text-xs text-muted-foreground">{t("admin.ai.noUsage")}</p>}
+            />
+          </CardBody>
+        </Card>
+      </div>
+      <div className="stagger grid gap-3 md:grid-cols-2">
+        <KillSwitchCard
+          controlKey="aiWorkforceEnabled"
+          value={c.aiWorkforceEnabled}
+          normal
+          critical
+          canManage={canControls}
+          locked={!!c.lockdown}
+          icon={<Bot />}
+          label={t("admin.controls.keys.aiWorkforceEnabled.label")}
+          statusText={t(`admin.controls.cards.aiWorkforceEnabled.${c.aiWorkforceEnabled ? "normal" : "changed"}`)}
+          consequence={t(`admin.controls.cards.aiWorkforceEnabled.${c.aiWorkforceEnabled ? "flip" : "restore"}`)}
+        />
+        <KillSwitchCard
+          controlKey="aiExecutionPaused"
+          value={c.aiExecutionPaused}
+          normal={false}
+          canManage={canControls}
+          icon={<PauseCircle />}
+          label={t("admin.controls.keys.aiExecutionPaused.label")}
+          statusText={t(`admin.controls.cards.aiExecutionPaused.${c.aiExecutionPaused ? "changed" : "normal"}`)}
+          consequence={t(`admin.controls.cards.aiExecutionPaused.${c.aiExecutionPaused ? "restore" : "flip"}`)}
+        />
+      </div>
       <Card>
-        <CardHeader title={t("admin.ai.switches")} />
+        <CardHeader title={t("admin.ai.switches")} description={t("admin.ai.policyHint")} />
         <div className="divide-y">
-          <ControlSwitch controlKey="aiWorkforceEnabled" value={c.aiWorkforceEnabled} normal critical canManage={canControls} locked={!!c.lockdown} label={t("admin.controls.keys.aiWorkforceEnabled.label")} description={t("admin.controls.keys.aiWorkforceEnabled.hint")} />
-          <ControlSwitch controlKey="aiExecutionPaused" value={c.aiExecutionPaused} normal={false} canManage={canControls} label={t("admin.controls.keys.aiExecutionPaused.label")} description={t("admin.controls.keys.aiExecutionPaused.hint")} />
           <ControlSwitch controlKey="aiRequireApprovalForWrites" value={c.aiRequireApprovalForWrites} normal={false} canManage={canAi} label={t("admin.controls.keys.aiRequireApprovalForWrites.label")} description={t("admin.controls.keys.aiRequireApprovalForWrites.hint")} />
           <ControlValueEditor
             controlKey="aiAutonomyCeiling"

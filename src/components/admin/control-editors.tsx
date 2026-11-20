@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { Lock } from "lucide-react";
+import { LiveDot } from "@/components/motion/live-dot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -267,5 +269,108 @@ export function ListMemberToggle({ controlKey, list, member, canManage, label }:
       confirmLabel={disabled ? t("admin.controls.enable") : t("admin.controls.disable")}
       onConfirm={(reason) => run(CONTROLS_API, "PUT", { key: controlKey, value: disabled ? list.filter((x) => x !== member) : [...list, member], reason })}
     />
+  );
+}
+
+/**
+ * Large kill-switch card: what the switch does in plain language, a status light, and what flipping it will do.
+ * Same API call and typed-confirmation rule as ControlSwitch (the server enforces both).
+ */
+export function KillSwitchCard({
+  controlKey,
+  value,
+  normal,
+  critical,
+  canManage,
+  locked,
+  label,
+  icon,
+  statusText,
+  consequence,
+}: {
+  controlKey: string;
+  value: boolean;
+  normal: boolean;
+  critical?: boolean;
+  canManage: boolean;
+  locked?: boolean;
+  label: string;
+  icon?: ReactNode;
+  /** What is happening right now, in plain words. */
+  statusText: string;
+  /** What flipping the switch will do. */
+  consequence: string;
+}) {
+  const { t } = useI18n();
+  const run = useAdminAction();
+  const next = !value;
+  const abnormal = value !== normal;
+  const dangerous = !!critical && next !== normal;
+  const tone = abnormal ? (critical ? "danger" : "warning") : "success";
+  const toggle = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={value}
+      aria-label={label}
+      disabled={!canManage || locked}
+      className={cn(
+        "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+        value ? "border-primary bg-primary" : "border-border-strong bg-muted",
+      )}
+    >
+      <span className={cn("inline-block size-5 rounded-full bg-surface shadow-elev-2 transition-transform duration-300 ease-[var(--ease-spring)]", value ? "translate-x-6 rtl:-translate-x-6" : "translate-x-1 rtl:-translate-x-1")} />
+    </button>
+  );
+  return (
+    <article
+      className={cn(
+        "hover-lift relative flex flex-col gap-3 overflow-hidden rounded-xl border bg-surface p-4 shadow-elev-1",
+        abnormal && (critical ? "border-danger/45 bg-danger/5" : "border-warning/45 bg-warning/5"),
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {icon ? (
+          <span aria-hidden className={cn("grid size-10 shrink-0 place-items-center rounded-lg [&_svg]:size-5", abnormal ? (critical ? "bg-danger/12 text-danger" : "bg-warning/12 text-warning") : "bg-accent text-accent-foreground")}>
+            {icon}
+          </span>
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold">{label}</h3>
+          <p className="mt-1 flex items-center gap-1.5 text-xs font-medium">
+            <LiveDot tone={tone} pulse={abnormal} />
+            <span className={abnormal ? (critical ? "text-danger" : "text-warning") : "text-success"}>{abnormal ? t("admin.controls.stateChanged") : t("admin.controls.stateNormal")}</span>
+            <span className="text-muted-foreground">· {value ? t("admin.controls.on") : t("admin.controls.off")}</span>
+          </p>
+        </div>
+        {canManage && !locked ? (
+          <ActionDialog
+            trigger={toggle}
+            title={`${label}: ${next ? t("admin.controls.on") : t("admin.controls.off")}`}
+            description={consequence}
+            confirmLabel={next ? t("admin.controls.turnOn") : t("admin.controls.turnOff")}
+            phrase={dangerous ? controlKey : undefined}
+            danger={dangerous}
+            onConfirm={(reason, confirm) => run(CONTROLS_API, "PUT", { key: controlKey, value: next, reason, confirm })}
+          />
+        ) : (
+          toggle
+        )}
+      </div>
+      <p className="text-sm">{statusText}</p>
+      <div className="mt-auto rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{t("admin.controls.ifYouFlip")}</span> {consequence}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {critical ? <Badge tone="danger">{t("admin.controls.critical")}</Badge> : null}
+        {locked ? (
+          <Badge tone="warning">
+            <Lock className="size-3" aria-hidden />
+            {t("admin.controls.lockedByLockdown")}
+          </Badge>
+        ) : null}
+        {!canManage ? <Badge>{t("admin.controls.readOnly")}</Badge> : null}
+      </div>
+    </article>
   );
 }
