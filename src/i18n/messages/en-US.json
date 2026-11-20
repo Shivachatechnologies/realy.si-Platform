@@ -1945,7 +1945,8 @@
       "read_budget_status": "Read budget status",
       "create_bill_draft": "Create draft vendor bill",
       "read_proposals": "Read proposals",
-      "create_proposal_draft": "Create proposal draft"
+      "create_proposal_draft": "Create proposal draft",
+      "web_research": "Web research"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -2585,6 +2586,9 @@
         "follow_up": "Follow-up for you: {title}",
         "sla_breached": "SLA breached: {title}",
         "escalated": "Ticket escalated: {title}"
+      },
+      "integrations": {
+        "connection_failing": "Integration failing repeatedly: {title}"
       }
     },
     "viewAll": "View all"
@@ -3569,12 +3573,15 @@
       "marketplace": "Marketplace",
       "connected": "Connected",
       "webhooks": "Webhooks",
-      "syncs": "Sync history"
+      "syncs": "Sync history",
+      "usage": "Usage & cost"
     },
     "metrics": {
       "connected": "Connected integrations",
       "syncErrors": "Sync errors",
-      "webhookFailures": "Failed webhook deliveries"
+      "webhookFailures": "Failed webhook deliveries",
+      "providerUsage": "Provider calls",
+      "providerFailures": "Failed provider calls"
     },
     "ofAvailable": "of {count} available",
     "failing": "Needs attention",
@@ -3601,7 +3608,16 @@
       "crm": "CRM",
       "social": "Social media",
       "accounting": "Accounting",
-      "developer": "Developer"
+      "developer": "Developer",
+      "ai": "AI",
+      "research": "Research",
+      "creative": "Creative",
+      "ads": "Ads",
+      "search": "Search",
+      "cms": "CMS & commerce",
+      "email": "Email",
+      "messaging": "Messaging",
+      "storage": "Storage & infrastructure"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (sign in with the provider)",
@@ -3620,60 +3636,194 @@
       "contacts": "Contacts & accounts import",
       "social_publishing": "Social publishing",
       "accounting": "Accounting data",
-      "webhooks": "Incoming webhooks"
+      "webhooks": "Incoming webhooks",
+      "ai_text": "AI text generation",
+      "research": "Web research",
+      "image_generation": "Image generation",
+      "video_generation": "Video generation",
+      "video_publishing": "Video publishing",
+      "ads": "Ad campaigns & reporting",
+      "search_analytics": "Search performance",
+      "cms_publishing": "Website publishing",
+      "ecommerce": "Online store",
+      "email_sending": "Email sending",
+      "email_marketing": "Email marketing",
+      "sms": "SMS",
+      "storage": "File storage",
+      "infrastructure": "Infrastructure"
     },
     "providers": {
       "google": {
         "description": "Gmail, Google Calendar and Drive for email, meetings and files.",
-        "sync": "Meetings sync both ways with Google Calendar (7 days back, 60 days ahead)."
+        "sync": "Meetings sync both ways with Google Calendar (7 days back, 60 days ahead).",
+        "setup": "Enable the Gmail, Google Calendar and Drive APIs for the platform's Google OAuth app."
       },
       "microsoft": {
         "description": "Outlook mail, calendar and Teams messages.",
-        "sync": "Meetings sync both ways with the Outlook calendar (7 days back, 60 days ahead) when Google Calendar is not connected."
+        "sync": "Meetings sync both ways with the Outlook calendar (7 days back, 60 days ahead) when Google Calendar is not connected.",
+        "setup": "Register an app in Microsoft Entra ID with the listed Microsoft Graph delegated permissions."
       },
       "slack": {
-        "description": "Post messages to Slack channels from workflows and alerts."
+        "description": "Post messages to Slack channels from workflows and alerts.",
+        "setup": "Create a Slack app at api.slack.com/apps with the listed bot scopes."
       },
       "stripe": {
         "description": "Import payments and react to new revenue with workflows.",
-        "sync": "Successful charges after the connection date become “Payment received” events."
+        "sync": "Successful charges after the connection date become “Payment received” events.",
+        "setup": "Create a restricted key in the Stripe Dashboard → Developers → API keys (read balance and charges; write prices and payment links if you send payment links)."
       },
       "whatsapp": {
-        "description": "WhatsApp Business Cloud API for customer messaging."
+        "description": "WhatsApp Business Cloud API for customer messaging.",
+        "setup": "In Meta Business Suite create a system user token with whatsapp_business_messaging and copy the phone number ID from WhatsApp Manager."
       },
       "hubspot": {
         "description": "Import HubSpot contacts and companies into your CRM.",
-        "sync": "Contacts are imported and deduplicated by email; their companies become accounts, matched by domain."
+        "sync": "Contacts are imported and deduplicated by email; their companies become accounts, matched by domain.",
+        "setup": "Create a public app in your HubSpot developer account with the listed scopes."
       },
       "salesforce": {
         "description": "Import Salesforce contacts and accounts into your CRM.",
-        "sync": "Contacts changed since the last sync are imported and deduplicated by email; accounts are matched by domain or name."
+        "sync": "Contacts changed since the last sync are imported and deduplicated by email; accounts are matched by domain or name.",
+        "setup": "Create a Connected App in Salesforce Setup with OAuth enabled and the listed scopes."
       },
       "linkedin": {
-        "description": "Publish posts to LinkedIn on behalf of a member."
+        "description": "Publish posts to LinkedIn on behalf of a member.",
+        "setup": "Create an app at developer.linkedin.com with “Sign In with LinkedIn using OpenID Connect” and “Share on LinkedIn”."
       },
       "x": {
-        "description": "Publish posts to X (Twitter)."
+        "description": "Publish posts to X (Twitter).",
+        "setup": "Create a project and app at developer.x.com with OAuth 2.0 (confidential client) and read/write permissions."
       },
       "facebook": {
-        "description": "Publish to and read engagement from Facebook Pages."
+        "description": "Publish to and read engagement from Facebook Pages.",
+        "setup": "Create a Meta app (Business type) with Facebook Login and request the listed Page permissions."
       },
       "instagram": {
-        "description": "Publish content to an Instagram business account."
+        "description": "Publish content to an Instagram business account.",
+        "setup": "Link each Instagram professional account to a Facebook Page; the Meta app needs the listed Instagram permissions."
       },
       "quickbooks": {
         "description": "Connect QuickBooks Online accounting.",
-        "sync": "Customers become CRM accounts and contacts; invoices are imported once as Finance drafts in your base currency."
+        "sync": "Customers become CRM accounts and contacts; invoices are imported once as Finance drafts in your base currency.",
+        "setup": "Create an app at developer.intuit.com with the Accounting scope."
       },
       "xero": {
         "description": "Connect Xero accounting (transactions and contacts).",
-        "sync": "Customer contacts become CRM accounts and contacts; sales invoices are imported once as Finance drafts in your base currency."
+        "sync": "Customer contacts become CRM accounts and contacts; sales invoices are imported once as Finance drafts in your base currency.",
+        "setup": "Create a web app at developer.xero.com/app/manage."
       },
       "webhook": {
-        "description": "Receive signed HTTP callbacks from any system and trigger workflows."
+        "description": "Receive signed HTTP callbacks from any system and trigger workflows.",
+        "setup": "Create an incoming webhook below and paste its URL into the sending system."
       },
       "custom_api": {
-        "description": "Call any HTTPS API with an API key from your workflows."
+        "description": "Call any HTTPS API with an API key from your workflows.",
+        "setup": "Get an API key for the service and note its base URL and authentication header."
+      },
+      "google_ads": {
+        "settingsHelp": "Optional: use your own developer token (otherwise the platform's) and the manager account ID to log in through.",
+        "description": "Google Ads customer accounts: campaigns, spend and conversions.",
+        "setup": "Enable the Google Ads API in Google Cloud and get a developer token from a Google Ads manager account (API Center).\nThe platform admin sets GOOGLE_ADS_DEVELOPER_TOKEN, or you enter your own token in the connection settings."
+      },
+      "openai": {
+        "description": "Quick rewrites, summaries and image generation with your own OpenAI account.",
+        "setup": "Create a secret key at platform.openai.com → API keys (a project key is recommended).\nOptionally set a default model and your organization ID."
+      },
+      "gemini": {
+        "description": "Google Gemini models for text features, as a fallback to OpenAI.",
+        "setup": "Create an API key in Google AI Studio (aistudio.google.com → Get API key)."
+      },
+      "tavily": {
+        "description": "Real-time web search for AI employees and research features (primary provider).",
+        "setup": "Sign in at app.tavily.com and copy your API key (starts with tvly-)."
+      },
+      "exa": {
+        "description": "Neural web search with page contents; first fallback for web research.",
+        "setup": "Create an API key in the Exa dashboard (dashboard.exa.ai → API keys)."
+      },
+      "serpapi": {
+        "description": "Google search results through SerpApi; second fallback for web research.",
+        "setup": "Copy your private API key from serpapi.com → Your account → API key."
+      },
+      "stability": {
+        "description": "Stable Image models for marketing visuals.",
+        "setup": "Create an API key at platform.stability.ai → Account → API keys and make sure the account has credits."
+      },
+      "replicate": {
+        "description": "Run open image and video models (Flux, MiniMax and more) on Replicate.",
+        "setup": "Create an API token at replicate.com → Account → API tokens and add billing.\nOptionally choose the image and video models to run."
+      },
+      "runway": {
+        "description": "AI video generation from text or an image with Runway.",
+        "setup": "Create an API key in the Runway developer portal (dev.runwayml.com) and buy API credits."
+      },
+      "youtube": {
+        "description": "Upload and manage videos on your YouTube channels.",
+        "setup": "In Google Cloud, enable the YouTube Data API v3 for the platform's OAuth app."
+      },
+      "tiktok": {
+        "description": "Publish videos to your TikTok account.",
+        "setup": "Create an app at developers.tiktok.com with Login Kit and Content Posting API, and request the listed scopes."
+      },
+      "threads": {
+        "description": "Publish posts to Threads and read their insights.",
+        "setup": "Create a Meta app with the Threads API use case at developers.facebook.com and add the threads permissions."
+      },
+      "pinterest": {
+        "description": "Create pins on your Pinterest boards.",
+        "setup": "Create an app at developers.pinterest.com and request standard access for the listed scopes."
+      },
+      "meta_ads": {
+        "description": "Facebook and Instagram ad accounts: campaigns, spend and results.",
+        "setup": "Add the Marketing API product to the platform's Meta app and request ads_management (advanced access)."
+      },
+      "linkedin_ads": {
+        "description": "LinkedIn Campaign Manager ad accounts and reporting.",
+        "setup": "Request the Advertising API product for the platform's LinkedIn app (developer.linkedin.com)."
+      },
+      "tiktok_ads": {
+        "description": "TikTok for Business advertiser accounts and reporting.",
+        "setup": "Create a developer app at business-api.tiktok.com and set its advertiser redirect URL to the redirect URI below."
+      },
+      "google_search_console": {
+        "description": "Search clicks, impressions and queries of your verified sites.",
+        "setup": "Enable the Google Search Console API in Google Cloud for the platform's OAuth app; sign in with an account that owns the sites."
+      },
+      "wordpress": {
+        "description": "Publish articles to a self-hosted or WordPress.com site.",
+        "setup": "In WordPress go to Users → Profile → Application Passwords, add one named “Realy” and copy it.\nThe site must use HTTPS and allow the REST API."
+      },
+      "webflow": {
+        "description": "Publish CMS items to your Webflow sites.",
+        "setup": "In Webflow open Site settings → Apps & integrations → API access and generate a site token with CMS read/write."
+      },
+      "shopify": {
+        "description": "Your Shopify store: products, blog articles and orders.",
+        "setup": "In Shopify admin go to Settings → Apps → Develop apps, create an app with the Admin API scopes you need, install it and copy the Admin API access token."
+      },
+      "sendgrid": {
+        "description": "Send your company's emails from your own SendGrid account and domain.",
+        "setup": "Create an API key with Mail Send permission at app.sendgrid.com → Settings → API Keys.\nVerify the sender address or domain under Sender Authentication."
+      },
+      "mailchimp": {
+        "description": "Mailchimp audiences and email campaigns.",
+        "setup": "Create an API key under Profile → Extras → API keys; the server prefix is the part after the dash (e.g. us21)."
+      },
+      "twilio": {
+        "description": "SMS and WhatsApp messages from your Twilio numbers.",
+        "setup": "Copy the Account SID and Auth token from the Twilio Console home page.\nAdd a sender number (or messaging service SID) for SMS and an approved WhatsApp sender if you use WhatsApp."
+      },
+      "razorpay": {
+        "description": "Payment links and payments with Razorpay (India).",
+        "setup": "Generate API keys in the Razorpay Dashboard → Account & Settings → API keys (test or live mode)."
+      },
+      "s3": {
+        "description": "Store generated images, videos and files in your own S3-compatible bucket (AWS, R2, B2, MinIO...).",
+        "setup": "Create a bucket and an access key limited to it (s3:PutObject, s3:GetObject, s3:ListBucket).\nFor Cloudflare R2, Backblaze B2 or MinIO enter the endpoint; leave it empty for AWS."
+      },
+      "cloudflare": {
+        "description": "Cloudflare account access (DNS, R2, Pages) for infrastructure automation.",
+        "setup": "Create an API token at dash.cloudflare.com → My Profile → API Tokens with only the permissions you need.\nOptionally enter the account ID to use."
       }
     },
     "backToMarketplace": "All integrations",
@@ -3726,7 +3876,34 @@
       "baseUrl": "Base URL",
       "headerName": "Auth header name",
       "headerPrefix": "Header value prefix",
-      "testPath": "Test path"
+      "testPath": "Test path",
+      "organization": "Organization ID",
+      "model": "Default model",
+      "imageModel": "Image model",
+      "videoModel": "Video model",
+      "siteUrl": "Site URL",
+      "username": "Username",
+      "applicationPassword": "Application password",
+      "shopDomain": "Shop domain",
+      "adminToken": "Admin API access token",
+      "fromEmail": "Sender email",
+      "fromName": "Sender name",
+      "serverPrefix": "Server prefix",
+      "accountSid": "Account SID",
+      "authToken": "Auth token",
+      "fromNumber": "Sender number or messaging service",
+      "whatsappFrom": "WhatsApp sender number",
+      "keyId": "Key ID",
+      "keySecret": "Key secret",
+      "endpoint": "Endpoint (leave empty for AWS)",
+      "region": "Region",
+      "bucket": "Bucket",
+      "accessKeyId": "Access key ID",
+      "secretAccessKey": "Secret access key",
+      "apiToken": "API token",
+      "accountId": "Account ID",
+      "developerToken": "Developer token",
+      "loginCustomerId": "Manager (login) customer ID"
     },
     "syncStatus": {
       "RUNNING": "Running",
@@ -3838,6 +4015,88 @@
       "summary": "Response",
       "noResponse": "no response",
       "attempts": "{count, plural, one {# attempt} other {# attempts}}"
+    },
+    "requiresCredentials": "Requires credentials",
+    "orApiKey": "Or connect with an API key:",
+    "health": {
+      "lastSuccess": "Last successful call",
+      "lastFailure": "Last failed call",
+      "streak": "{count, plural, one {# failure in a row} other {# failures in a row}}"
+    },
+    "setup": {
+      "title": "Setup steps",
+      "help": "What is needed before this integration can be used.",
+      "oauthEnv": "The platform admin sets these environment variables: {vars}.",
+      "oauthRedirect": "Register this redirect URI with the provider:",
+      "oauthConnect": "Click “Connect with {name}” and approve the requested permissions.",
+      "apiKeyPaste": "Enter {fields} above; they are verified with a live call before anything is saved."
+    },
+    "accounts": {
+      "title": "Connected accounts",
+      "help": "Accounts this connection can act on. Features use the active one.",
+      "empty": "No accounts found. Run a connection test to refresh the list.",
+      "search": "Search accounts",
+      "active": "Active",
+      "use": "Use this account",
+      "types": {
+        "page": "Facebook Page",
+        "instagram": "Instagram account",
+        "channel": "Channel",
+        "ad_account": "Ad account",
+        "site": "Site",
+        "board": "Board",
+        "audience": "Audience",
+        "account": "Account"
+      }
+    },
+    "settings": {
+      "title": "Connection settings",
+      "save": "Save settings",
+      "saved": "Settings saved.",
+      "secretStored": "A value is stored; leave empty to keep it."
+    },
+    "usage": {
+      "title": "Usage & cost",
+      "help": "Metered calls of the platform's provider services (research, AI text, images, video, storage, messaging, payments, email). Costs are estimates from list prices; your provider's invoice is authoritative.",
+      "calls": "Provider calls",
+      "failed": "Failed",
+      "failedHint": "{count, plural, one {# failed} other {# failed}}",
+      "estimatedCost": "Estimated cost",
+      "estimateNote": "Estimate (USD list prices)",
+      "units": "Units",
+      "operation": "Operation",
+      "provider": "Provider",
+      "allOperations": "All operations",
+      "details": "Details",
+      "byOperation": "By operation",
+      "empty": "No usage recorded yet.",
+      "open": "Open usage",
+      "cardSummary": "Last 30 days: {calls} calls, {failed} failed, {cost} estimated.",
+      "range": "Period",
+      "lastDays": "{count, plural, one {Last day} other {Last # days}}",
+      "statuses": {
+        "SUCCEEDED": "Succeeded",
+        "FAILED": "Failed"
+      },
+      "unitNames": {
+        "request": "requests",
+        "token": "tokens",
+        "image": "images",
+        "second": "seconds",
+        "byte": "bytes",
+        "message": "messages"
+      },
+      "operations": {
+        "research_search": "Web search",
+        "ai_text": "AI text generation",
+        "images_generate": "Image generation",
+        "video_start": "Video generation",
+        "storage_put": "File upload",
+        "sms_send": "SMS",
+        "whatsapp_send": "WhatsApp message",
+        "payments_link": "Payment link",
+        "email_send": "Email"
+      }
     }
   },
   "workflows": {

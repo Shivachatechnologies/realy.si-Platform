@@ -614,6 +614,8 @@ model Company {
   strategyPillars                 StrategyPillar[]
   companyGoals                    CompanyGoal[]
   objectiveKeyResults             ObjectiveKeyResult[]
+  integrationUsages               IntegrationUsage[]
+  integrationStoredObjects        IntegrationStoredObject[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SyncTable } from "@/components/integrations/sync-table";
-import { IntegrationsTabs } from "@/components/integrations/tabs";
+import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
 import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,7 @@ export default async function IntegrationLogsPage({ params, searchParams }: Page
       <IntegrationsTabs
         locale={locale}
         active="connected"
-        labels={{ marketplace: t("integrations.tabs.marketplace"), connected: t("integrations.tabs.connected"), webhooks: t("integrations.tabs.webhooks"), syncs: t("integrations.tabs.syncs") }}
+        labels={integrationTabLabels(t)}
       />
       <Card>
         <CardHeader title={t("integrations.logs.requests")} description={t("integrations.logs.privacy")} />

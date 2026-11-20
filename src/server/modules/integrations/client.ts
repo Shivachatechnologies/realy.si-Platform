@@ -3,6 +3,7 @@ import { db } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
 import { consume } from "@/server/core/rate-limit";
 import type { Connection } from "./connections";
+import { recordCallOutcome } from "./health";
 import { authHeaders, ProviderError } from "./providers";
 
 /**
@@ -15,11 +16,15 @@ export interface ProviderRequest {
   /** JSON body (sent as application/json) or a pre-encoded form. */
   json?: unknown;
   form?: Record<string, string>;
+  /** Raw body (binary uploads, multipart FormData). Set `headers["content-type"]` for non-FormData bodies. */
+  raw?: string | Uint8Array | FormData;
   headers?: Record<string, string>;
   timeoutMs?: number;
   retries?: number;
   /** Skip adding the connection's auth header (e.g. signed URLs). */
   noAuth?: boolean;
+  /** Do not count this call toward the connection's health (e.g. requests to third-party URLs). */
+  skipHealth?: boolean;
 }
 
 export interface ProviderResponse<T = unknown> {
@@ -71,6 +76,7 @@ function requestSummary(req: ProviderRequest) {
     return keys ? `JSON body · fields: ${keys.slice(0, 8).join(", ")}${keys.length > 8 ? "…" : ""}` : "JSON body";
   }
   if (req.form) return `form body · fields: ${Object.keys(req.form).slice(0, 8).join(", ")}`;
+  if (req.raw !== undefined) return typeof FormData !== "undefined" && req.raw instanceof FormData ? "multipart body" : `raw body · ${typeof req.raw === "string" ? req.raw.length : req.raw instanceof Uint8Array ? req.raw.byteLength : 0} bytes`;
   return "no body";
 }
 
@@ -127,7 +133,7 @@ export async function logProviderCall(conn: Pick<Connection, "id" | "provider"> 
 
 export async function providerFetch<T = unknown>(conn: Connection, url: string, req: ProviderRequest = {}): Promise<ProviderResponse<T>> {
   const started = Date.now();
-  const method = req.method ?? (req.json !== undefined || req.form ? "POST" : "GET");
+  const method = req.method ?? (req.json !== undefined || req.form || req.raw !== undefined ? "POST" : "GET");
   let attempts = 0;
   const log = (status: number | null, responseSummary: string | null, error: string | null) =>
     logProviderCall(conn, { method, url: safeUrl(url), status, durationMs: Date.now() - started, attempts, requestSummary: requestSummary(req), responseSummary, error });
@@ -135,9 +141,13 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
     const res = await providerFetchInner<T>(conn, url, req, () => attempts++);
     const type = res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
     await log(res.status, `${res.status} · ${type} · ${res.text.length} chars${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
+    if (!req.skipHealth) await recordCallOutcome(conn, res.status, errorCode(res.data) ? `${new URL(url).host} responded ${res.status} (${errorCode(res.data)})` : null);
     return res;
   } catch (err) {
-    await log(err instanceof ProviderError ? err.status : null, null, err instanceof Error ? err.message : "request failed");
+    const status = err instanceof ProviderError ? err.status : null;
+    await log(status, null, err instanceof Error ? err.message : "request failed");
+    // The local rate limit (429) and missing credentials are not provider failures.
+    if (!req.skipHealth && status !== 429 && status !== 401) await recordCallOutcome(conn, status, err instanceof Error ? err.message : null);
     throw err;
   }
 }
@@ -147,8 +157,10 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
   const retries = req.retries ?? 3;
   const headers: Record<string, string> = { accept: "application/json", "user-agent": "Realy", ...(req.headers ?? {}) };
   if (!req.noAuth && conn.accessToken) Object.assign(headers, authHeaders(conn.provider, conn.accessToken, conn.config));
-  let body: string | undefined;
-  if (req.json !== undefined) {
+  let body: string | Uint8Array | FormData | undefined;
+  if (req.raw !== undefined) {
+    body = req.raw;
+  } else if (req.json !== undefined) {
     headers["content-type"] = "application/json";
     body = JSON.stringify(req.json);
   } else if (req.form) {
@@ -160,7 +172,7 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
     onAttempt();
     await throttle(conn.id);
     try {
-      const res = await fetch(url, { method: req.method ?? (body ? "POST" : "GET"), headers, body, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000), redirect: "follow" });
+      const res = await fetch(url, { method: req.method ?? (body !== undefined ? "POST" : "GET"), headers, body: body as BodyInit | undefined, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000), redirect: "follow" });
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
         await sleep(retryAfterMs(res, attempt));
         continue;

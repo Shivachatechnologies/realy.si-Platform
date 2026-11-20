@@ -1945,7 +1945,8 @@
       "read_budget_status": "读取预算状态",
       "create_bill_draft": "创建供应商账单草稿",
       "read_proposals": "读取方案",
-      "create_proposal_draft": "创建方案草稿"
+      "create_proposal_draft": "创建方案草稿",
+      "web_research": "网络研究"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -2585,6 +2586,9 @@
         "follow_up": "你的跟进任务：{title}",
         "sla_breached": "SLA 已违约：{title}",
         "escalated": "工单已升级：{title}"
+      },
+      "integrations": {
+        "connection_failing": "集成反复失败：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -3569,12 +3573,15 @@
       "marketplace": "应用市场",
       "connected": "已连接",
       "webhooks": "Webhook",
-      "syncs": "同步记录"
+      "syncs": "同步记录",
+      "usage": "用量与成本"
     },
     "metrics": {
       "connected": "已连接的集成",
       "syncErrors": "同步错误",
-      "webhookFailures": "失败的 Webhook 投递"
+      "webhookFailures": "失败的 Webhook 投递",
+      "providerUsage": "提供商调用",
+      "providerFailures": "失败的提供商调用"
     },
     "ofAvailable": "共 {count} 个可用",
     "failing": "需要处理",
@@ -3601,7 +3608,16 @@
       "crm": "CRM",
       "social": "社交媒体",
       "accounting": "会计",
-      "developer": "开发者"
+      "developer": "开发者",
+      "ai": "人工智能",
+      "research": "研究",
+      "creative": "创意",
+      "ads": "广告",
+      "search": "搜索",
+      "cms": "内容管理与电商",
+      "email": "电子邮件",
+      "messaging": "消息",
+      "storage": "存储与基础设施"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0（通过服务商登录）",
@@ -3620,60 +3636,194 @@
       "contacts": "联系人与客户导入",
       "social_publishing": "社交发布",
       "accounting": "会计数据",
-      "webhooks": "传入 Webhook"
+      "webhooks": "传入 Webhook",
+      "ai_text": "AI 文本生成",
+      "research": "网络研究",
+      "image_generation": "图像生成",
+      "video_generation": "视频生成",
+      "video_publishing": "视频发布",
+      "ads": "广告投放与报表",
+      "search_analytics": "搜索表现",
+      "cms_publishing": "网站发布",
+      "ecommerce": "在线商店",
+      "email_sending": "邮件发送",
+      "email_marketing": "邮件营销",
+      "sms": "短信",
+      "storage": "文件存储",
+      "infrastructure": "基础设施"
     },
     "providers": {
       "google": {
         "description": "Gmail、Google 日历和云端硬盘，用于邮件、会议和文件。",
-        "sync": "会议与 Google 日历双向同步（向前 7 天，向后 60 天）。"
+        "sync": "会议与 Google 日历双向同步（向前 7 天，向后 60 天）。",
+        "setup": "为平台的 Google OAuth 应用启用 Gmail、Google 日历和 Drive API。"
       },
       "microsoft": {
         "description": "Outlook 邮件、日历和 Teams 消息。",
-        "sync": "未连接 Google 日历时，会议与 Outlook 日历双向同步（向前 7 天，向后 60 天）。"
+        "sync": "未连接 Google 日历时，会议与 Outlook 日历双向同步（向前 7 天，向后 60 天）。",
+        "setup": "在 Microsoft Entra ID 注册应用，并授予所列的 Microsoft Graph 委托权限。"
       },
       "slack": {
-        "description": "从工作流和提醒向 Slack 频道发送消息。"
+        "description": "从工作流和提醒向 Slack 频道发送消息。",
+        "setup": "在 api.slack.com/apps 创建具有所列机器人权限的 Slack 应用。"
       },
       "stripe": {
         "description": "导入付款，并通过工作流响应新收入。",
-        "sync": "连接日期之后的成功扣款会生成“收到付款”事件。"
+        "sync": "连接日期之后的成功扣款会生成“收到付款”事件。",
+        "setup": "在 Stripe 控制台 → 开发者 → API 密钥创建受限密钥（读取余额和收款；如需发送支付链接，还需写入价格和支付链接）。"
       },
       "whatsapp": {
-        "description": "用于客户沟通的 WhatsApp Business 云 API。"
+        "description": "用于客户沟通的 WhatsApp Business 云 API。",
+        "setup": "在 Meta Business Suite 创建具有 whatsapp_business_messaging 权限的系统用户令牌，并从 WhatsApp Manager 复制电话号码 ID。"
       },
       "hubspot": {
         "description": "将 HubSpot 联系人和公司导入您的 CRM。",
-        "sync": "联系人按邮箱去重导入；其公司按域名匹配为客户。"
+        "sync": "联系人按邮箱去重导入；其公司按域名匹配为客户。",
+        "setup": "在您的 HubSpot 开发者账户中创建具有所列权限的公共应用。"
       },
       "salesforce": {
         "description": "将 Salesforce 联系人和客户导入您的 CRM。",
-        "sync": "导入自上次同步以来变更的联系人并按邮箱去重；客户按域名或名称匹配。"
+        "sync": "导入自上次同步以来变更的联系人并按邮箱去重；客户按域名或名称匹配。",
+        "setup": "在 Salesforce 设置中创建启用 OAuth 并具有所列权限的 Connected App。"
       },
       "linkedin": {
-        "description": "代表成员在 LinkedIn 发布帖子。"
+        "description": "代表成员在 LinkedIn 发布帖子。",
+        "setup": "在 developer.linkedin.com 创建启用 “Sign In with LinkedIn using OpenID Connect” 和 “Share on LinkedIn” 的应用。"
       },
       "x": {
-        "description": "在 X（Twitter）发布帖子。"
+        "description": "在 X（Twitter）发布帖子。",
+        "setup": "在 developer.x.com 创建使用 OAuth 2.0（机密客户端）并具有读写权限的项目和应用。"
       },
       "facebook": {
-        "description": "发布到 Facebook 主页并读取互动数据。"
+        "description": "发布到 Facebook 主页并读取互动数据。",
+        "setup": "创建带 Facebook Login 的 Meta 应用（企业类型）并申请所列主页权限。"
       },
       "instagram": {
-        "description": "向 Instagram 企业账号发布内容。"
+        "description": "向 Instagram 企业账号发布内容。",
+        "setup": "将每个 Instagram 专业账户关联到一个 Facebook 主页；Meta 应用需要所列的 Instagram 权限。"
       },
       "quickbooks": {
         "description": "连接 QuickBooks Online 会计。",
-        "sync": "客户成为 CRM 客户公司和联系人；发票以您的本位币作为财务草稿导入一次。"
+        "sync": "客户成为 CRM 客户公司和联系人；发票以您的本位币作为财务草稿导入一次。",
+        "setup": "在 developer.intuit.com 创建具有会计权限的应用。"
       },
       "xero": {
         "description": "连接 Xero 会计（交易与联系人）。",
-        "sync": "客户联系人成为 CRM 客户公司和联系人；销售发票以您的本位币作为财务草稿导入一次。"
+        "sync": "客户联系人成为 CRM 客户公司和联系人；销售发票以您的本位币作为财务草稿导入一次。",
+        "setup": "在 developer.xero.com/app/manage 创建 Web 应用。"
       },
       "webhook": {
-        "description": "接收来自任意系统的签名 HTTP 回调并触发工作流。"
+        "description": "接收来自任意系统的签名 HTTP 回调并触发工作流。",
+        "setup": "在下方创建传入 Webhook，并将其 URL 粘贴到发送系统中。"
       },
       "custom_api": {
-        "description": "在工作流中使用 API 密钥调用任意 HTTPS API。"
+        "description": "在工作流中使用 API 密钥调用任意 HTTPS API。",
+        "setup": "获取该服务的 API 密钥，并记下其基础 URL 和认证请求头。"
+      },
+      "google_ads": {
+        "settingsHelp": "可选：使用您自己的开发者令牌（否则使用平台的）以及用于登录的经理账户 ID。",
+        "description": "Google Ads 客户账户：广告系列、花费和转化。",
+        "setup": "在 Google Cloud 启用 Google Ads API，并从 Google Ads 经理账户（API 中心）获取开发者令牌。\n平台管理员设置 GOOGLE_ADS_DEVELOPER_TOKEN，或您在连接设置中填写自己的令牌。"
+      },
+      "openai": {
+        "description": "使用您自己的 OpenAI 账户进行快速改写、摘要和图像生成。",
+        "setup": "在 platform.openai.com → API keys 创建密钥（建议使用项目密钥）。\n可选：设置默认模型和组织 ID。"
+      },
+      "gemini": {
+        "description": "用于文本功能的 Google Gemini 模型，作为 OpenAI 的备用。",
+        "setup": "在 Google AI Studio 创建 API 密钥（aistudio.google.com → Get API key）。"
+      },
+      "tavily": {
+        "description": "为 AI 员工和研究功能提供实时网络搜索（主要提供商）。",
+        "setup": "登录 app.tavily.com 并复制 API 密钥（以 tvly- 开头）。"
+      },
+      "exa": {
+        "description": "带页面内容的神经网络搜索；网络研究的第一备用。",
+        "setup": "在 Exa 控制台创建 API 密钥（dashboard.exa.ai → API keys）。"
+      },
+      "serpapi": {
+        "description": "通过 SerpApi 获取 Google 搜索结果；网络研究的第二备用。",
+        "setup": "从 serpapi.com → Your account → API key 复制您的私有 API 密钥。"
+      },
+      "stability": {
+        "description": "用于营销视觉的 Stable Image 模型。",
+        "setup": "在 platform.stability.ai → Account → API keys 创建 API 密钥，并确保账户有余额。"
+      },
+      "replicate": {
+        "description": "在 Replicate 上运行开放的图像和视频模型（Flux、MiniMax 等）。",
+        "setup": "在 replicate.com → Account → API tokens 创建 API 令牌并添加付款方式。\n可选：选择要运行的图像和视频模型。"
+      },
+      "runway": {
+        "description": "使用 Runway 从文本或图像生成 AI 视频。",
+        "setup": "在 Runway 开发者门户（dev.runwayml.com）创建 API 密钥并购买 API 额度。"
+      },
+      "youtube": {
+        "description": "在您的 YouTube 频道上传和管理视频。",
+        "setup": "在 Google Cloud 中为平台的 OAuth 应用启用 YouTube Data API v3。"
+      },
+      "tiktok": {
+        "description": "将视频发布到您的 TikTok 账户。",
+        "setup": "在 developers.tiktok.com 创建启用 Login Kit 和 Content Posting API 的应用，并申请所列权限。"
+      },
+      "threads": {
+        "description": "在 Threads 发布帖子并读取数据洞察。",
+        "setup": "在 developers.facebook.com 创建带 Threads API 用例的 Meta 应用并添加 Threads 权限。"
+      },
+      "pinterest": {
+        "description": "在您的 Pinterest 图板上创建 Pin。",
+        "setup": "在 developers.pinterest.com 创建应用并为所列权限申请标准访问。"
+      },
+      "meta_ads": {
+        "description": "Facebook 和 Instagram 广告账户：广告系列、花费和效果。",
+        "setup": "在平台的 Meta 应用中添加 Marketing API 产品并申请 ads_management（高级访问）。"
+      },
+      "linkedin_ads": {
+        "description": "LinkedIn Campaign Manager 广告账户与报表。",
+        "setup": "为平台的 LinkedIn 应用申请 Advertising API 产品（developer.linkedin.com）。"
+      },
+      "tiktok_ads": {
+        "description": "TikTok for Business 广告主账户与报表。",
+        "setup": "在 business-api.tiktok.com 创建开发者应用，并将其广告主重定向 URL 设置为下方的重定向 URI。"
+      },
+      "google_search_console": {
+        "description": "您已验证网站的搜索点击、展示和查询。",
+        "setup": "在 Google Cloud 中为平台的 OAuth 应用启用 Google Search Console API；使用拥有这些网站的账户登录。"
+      },
+      "wordpress": {
+        "description": "将文章发布到自托管或 WordPress.com 站点。",
+        "setup": "在 WordPress 中进入 用户 → 个人资料 → 应用程序密码，添加名为“Realy”的密码并复制。\n站点必须使用 HTTPS 并允许 REST API。"
+      },
+      "webflow": {
+        "description": "将 CMS 条目发布到您的 Webflow 站点。",
+        "setup": "在 Webflow 打开 Site settings → Apps & integrations → API access，生成具有 CMS 读写权限的站点令牌。"
+      },
+      "shopify": {
+        "description": "您的 Shopify 店铺：商品、博客文章和订单。",
+        "setup": "在 Shopify 后台进入 设置 → 应用 → 开发应用，创建具有所需 Admin API 权限的应用，安装后复制 Admin API 访问令牌。"
+      },
+      "sendgrid": {
+        "description": "通过您自己的 SendGrid 账户和域名发送公司邮件。",
+        "setup": "在 app.sendgrid.com → Settings → API Keys 创建具有 Mail Send 权限的 API 密钥。\n在 Sender Authentication 中验证发件地址或域名。"
+      },
+      "mailchimp": {
+        "description": "Mailchimp 受众与邮件营销活动。",
+        "setup": "在 个人资料 → Extras → API keys 创建 API 密钥；服务器前缀是连字符后的部分（如 us21）。"
+      },
+      "twilio": {
+        "description": "通过您的 Twilio 号码发送短信和 WhatsApp 消息。",
+        "setup": "从 Twilio 控制台首页复制 Account SID 和 Auth token。\n为短信添加发送号码（或消息服务 SID），如使用 WhatsApp 请添加已获批准的 WhatsApp 发送方。"
+      },
+      "razorpay": {
+        "description": "通过 Razorpay（印度）创建支付链接和收款。",
+        "setup": "在 Razorpay 控制台 → Account & Settings → API keys 生成 API 密钥（测试或正式模式）。"
+      },
+      "s3": {
+        "description": "将生成的图片、视频和文件存储在您自己的 S3 兼容存储桶中（AWS、R2、B2、MinIO 等）。",
+        "setup": "创建存储桶及仅限该桶的访问密钥（s3:PutObject、s3:GetObject、s3:ListBucket）。\nCloudflare R2、Backblaze B2 或 MinIO 请填写端点；AWS 请留空。"
+      },
+      "cloudflare": {
+        "description": "用于基础设施自动化的 Cloudflare 账户访问（DNS、R2、Pages）。",
+        "setup": "在 dash.cloudflare.com → My Profile → API Tokens 创建仅含所需权限的 API 令牌。\n可选：填写要使用的账户 ID。"
       }
     },
     "backToMarketplace": "全部集成",
@@ -3726,7 +3876,34 @@
       "baseUrl": "基础 URL",
       "headerName": "认证请求头名称",
       "headerPrefix": "请求头值前缀",
-      "testPath": "测试路径"
+      "testPath": "测试路径",
+      "organization": "组织 ID",
+      "model": "默认模型",
+      "imageModel": "图像模型",
+      "videoModel": "视频模型",
+      "siteUrl": "站点 URL",
+      "username": "用户名",
+      "applicationPassword": "应用程序密码",
+      "shopDomain": "店铺域名",
+      "adminToken": "Admin API 访问令牌",
+      "fromEmail": "发件人邮箱",
+      "fromName": "发件人名称",
+      "serverPrefix": "服务器前缀",
+      "accountSid": "账户 SID",
+      "authToken": "认证令牌",
+      "fromNumber": "发送号码或消息服务",
+      "whatsappFrom": "WhatsApp 发送号码",
+      "keyId": "密钥 ID",
+      "keySecret": "密钥 Secret",
+      "endpoint": "端点（AWS 请留空）",
+      "region": "区域",
+      "bucket": "存储桶",
+      "accessKeyId": "访问密钥 ID",
+      "secretAccessKey": "秘密访问密钥",
+      "apiToken": "API 令牌",
+      "accountId": "账户 ID",
+      "developerToken": "开发者令牌",
+      "loginCustomerId": "经理（登录）客户 ID"
     },
     "syncStatus": {
       "RUNNING": "运行中",
@@ -3838,6 +4015,88 @@
       "summary": "响应",
       "noResponse": "无响应",
       "attempts": "{count, plural, other {# 次尝试}}"
+    },
+    "requiresCredentials": "需要凭据",
+    "orApiKey": "或使用 API 密钥连接：",
+    "health": {
+      "lastSuccess": "最近一次成功调用",
+      "lastFailure": "最近一次失败调用",
+      "streak": "{count, plural, other {连续失败 # 次}}"
+    },
+    "setup": {
+      "title": "设置步骤",
+      "help": "使用此集成前需要完成的事项。",
+      "oauthEnv": "平台管理员设置以下环境变量：{vars}。",
+      "oauthRedirect": "在提供商处登记此重定向 URI：",
+      "oauthConnect": "点击“连接 {name}”并批准所请求的权限。",
+      "apiKeyPaste": "在上方填写 {fields}；保存前会通过实时调用进行验证。"
+    },
+    "accounts": {
+      "title": "已连接账户",
+      "help": "此连接可操作的账户。功能将使用当前启用的账户。",
+      "empty": "未找到账户。运行连接测试以刷新列表。",
+      "search": "搜索账户",
+      "active": "已启用",
+      "use": "使用此账户",
+      "types": {
+        "page": "Facebook 主页",
+        "instagram": "Instagram 账户",
+        "channel": "频道",
+        "ad_account": "广告账户",
+        "site": "站点",
+        "board": "图板",
+        "audience": "受众",
+        "account": "账户"
+      }
+    },
+    "settings": {
+      "title": "连接设置",
+      "save": "保存设置",
+      "saved": "设置已保存。",
+      "secretStored": "已存储一个值；留空即保留。"
+    },
+    "usage": {
+      "title": "用量与成本",
+      "help": "平台提供商服务（研究、AI 文本、图像、视频、存储、消息、支付、邮件）的计量调用。成本为按标价估算，以提供商账单为准。",
+      "calls": "提供商调用",
+      "failed": "失败",
+      "failedHint": "{count, plural, other {# 次失败}}",
+      "estimatedCost": "预估成本",
+      "estimateNote": "估算（美元标价）",
+      "units": "单位",
+      "operation": "操作",
+      "provider": "提供商",
+      "allOperations": "全部操作",
+      "details": "详情",
+      "byOperation": "按操作",
+      "empty": "尚无用量记录。",
+      "open": "查看用量",
+      "cardSummary": "最近 30 天：{calls} 次调用，{failed} 次失败，预估 {cost}。",
+      "range": "时间范围",
+      "lastDays": "{count, plural, other {最近 # 天}}",
+      "statuses": {
+        "SUCCEEDED": "成功",
+        "FAILED": "失败"
+      },
+      "unitNames": {
+        "request": "次请求",
+        "token": "个 token",
+        "image": "张图片",
+        "second": "秒",
+        "byte": "字节",
+        "message": "条消息"
+      },
+      "operations": {
+        "research_search": "网络搜索",
+        "ai_text": "AI 文本生成",
+        "images_generate": "图像生成",
+        "video_start": "视频生成",
+        "storage_put": "文件上传",
+        "sms_send": "短信",
+        "whatsapp_send": "WhatsApp 消息",
+        "payments_link": "支付链接",
+        "email_send": "邮件"
+      }
     }
   },
   "workflows": {

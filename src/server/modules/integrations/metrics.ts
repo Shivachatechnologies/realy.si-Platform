@@ -39,4 +39,28 @@ export const INTEGRATIONS_METRICS: MetricDefinition[] = [
     compute: ({ organizationId, companyId }, { from, to }) =>
       db().integrationWebhookDelivery.count({ where: { organizationId, companyId, status: "FAILED", updatedAt: { gte: from, lt: to } } }),
   },
+  {
+    key: "integrations.provider_usage",
+    labelKey: "integrations.metrics.providerUsage",
+    department: "operations",
+    unit: "count",
+    permission: "integrations.read",
+    kind: "flow",
+    higherIsBetter: true,
+    href: "/integrations/usage",
+    compute: ({ organizationId, companyId }, { from, to }) =>
+      db().integrationUsage.count({ where: { organizationId, companyId, status: "SUCCEEDED", createdAt: { gte: from, lt: to } } }),
+  },
+  {
+    key: "integrations.provider_failures",
+    labelKey: "integrations.metrics.providerFailures",
+    department: "operations",
+    unit: "count",
+    permission: "integrations.read",
+    kind: "flow",
+    higherIsBetter: false,
+    href: "/integrations/usage",
+    compute: ({ organizationId, companyId }, { from, to }) =>
+      db().integrationUsage.count({ where: { organizationId, companyId, status: "FAILED", createdAt: { gte: from, lt: to } } }),
+  },
 ];

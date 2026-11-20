@@ -1,6 +1,6 @@
 import "server-only";
 import type { ReactNode } from "react";
-import { IntegrationsTabs, type IntegrationsTab } from "@/components/integrations/tabs";
+import { integrationTabLabels, IntegrationsTabs, type IntegrationsTab } from "@/components/integrations/tabs";
 import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
@@ -22,7 +22,7 @@ export async function integrationsPage(tab: IntegrationsTab, opts: { title?: str
         <IntegrationsTabs
           locale={locale}
           active={tab}
-          labels={{ marketplace: t("integrations.tabs.marketplace"), connected: t("integrations.tabs.connected"), webhooks: t("integrations.tabs.webhooks"), syncs: t("integrations.tabs.syncs") }}
+          labels={integrationTabLabels(t)}
         />
       ) : null}
       {children}

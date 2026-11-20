@@ -52,7 +52,7 @@ export function buildAuthorizeUrl(provider: string, ctx: { organizationId: strin
   const info = providerInfo(provider);
   const def = oauthDef(provider);
   const client = oauthClient(provider);
-  if (!info || info.authType !== "oauth2" || !def || !client) throw new IntegrationOAuthError("not_configured");
+  if (!info || (info.authType !== "oauth2" && !info.oauthAlternative) || !def || !client) throw new IntegrationOAuthError("not_configured");
   const payload: IntegrationOAuthState = {
     provider,
     state: randomToken(32),
@@ -65,7 +65,7 @@ export function buildAuthorizeUrl(provider: string, ctx: { organizationId: strin
   };
   const url = new URL(def.authorizeUrl);
   const params: Record<string, string> = {
-    client_id: client.clientId,
+    [def.clientIdParam ?? "client_id"]: client.clientId,
     redirect_uri: integrationRedirectUri(provider),
     response_type: "code",
     scope: info.scopes.join(def.scopeSeparator),

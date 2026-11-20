@@ -1945,7 +1945,8 @@
       "read_budget_status": "Budgetstatus lesen",
       "create_bill_draft": "Entwurf einer Eingangsrechnung erstellen",
       "read_proposals": "Angebote lesen",
-      "create_proposal_draft": "Angebotsentwurf erstellen"
+      "create_proposal_draft": "Angebotsentwurf erstellen",
+      "web_research": "Webrecherche"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2585,6 +2586,9 @@
         "follow_up": "Folgeaufgabe für Sie: {title}",
         "sla_breached": "SLA verletzt: {title}",
         "escalated": "Ticket eskaliert: {title}"
+      },
+      "integrations": {
+        "connection_failing": "Integration schlägt wiederholt fehl: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -3569,12 +3573,15 @@
       "marketplace": "Marktplatz",
       "connected": "Verbunden",
       "webhooks": "Webhooks",
-      "syncs": "Synchronisierungsverlauf"
+      "syncs": "Synchronisierungsverlauf",
+      "usage": "Nutzung & Kosten"
     },
     "metrics": {
       "connected": "Verbundene Integrationen",
       "syncErrors": "Synchronisierungsfehler",
-      "webhookFailures": "Fehlgeschlagene Webhook-Zustellungen"
+      "webhookFailures": "Fehlgeschlagene Webhook-Zustellungen",
+      "providerUsage": "Anbieteraufrufe",
+      "providerFailures": "Fehlgeschlagene Anbieteraufrufe"
     },
     "ofAvailable": "von {count} verfügbaren",
     "failing": "Benötigt Aufmerksamkeit",
@@ -3601,7 +3608,16 @@
       "crm": "CRM",
       "social": "Soziale Medien",
       "accounting": "Buchhaltung",
-      "developer": "Entwickler"
+      "developer": "Entwickler",
+      "ai": "KI",
+      "research": "Recherche",
+      "creative": "Kreativ",
+      "ads": "Werbung",
+      "search": "Suche",
+      "cms": "CMS & Commerce",
+      "email": "E-Mail",
+      "messaging": "Messaging",
+      "storage": "Speicher & Infrastruktur"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (Anmeldung beim Anbieter)",
@@ -3620,60 +3636,194 @@
       "contacts": "Import von Kontakten & Firmen",
       "social_publishing": "Social-Media-Veröffentlichung",
       "accounting": "Buchhaltungsdaten",
-      "webhooks": "Eingehende Webhooks"
+      "webhooks": "Eingehende Webhooks",
+      "ai_text": "KI-Textgenerierung",
+      "research": "Webrecherche",
+      "image_generation": "Bildgenerierung",
+      "video_generation": "Videogenerierung",
+      "video_publishing": "Video-Veröffentlichung",
+      "ads": "Werbekampagnen & Reporting",
+      "search_analytics": "Suchleistung",
+      "cms_publishing": "Website-Veröffentlichung",
+      "ecommerce": "Onlineshop",
+      "email_sending": "E-Mail-Versand",
+      "email_marketing": "E-Mail-Marketing",
+      "sms": "SMS",
+      "storage": "Dateispeicher",
+      "infrastructure": "Infrastruktur"
     },
     "providers": {
       "google": {
         "description": "Gmail, Google Kalender und Drive für E-Mail, Termine und Dateien.",
-        "sync": "Meetings werden in beide Richtungen mit Google Kalender synchronisiert (7 Tage zurück, 60 Tage voraus)."
+        "sync": "Meetings werden in beide Richtungen mit Google Kalender synchronisiert (7 Tage zurück, 60 Tage voraus).",
+        "setup": "Aktivieren Sie die Gmail-, Google-Kalender- und Drive-APIs für die Google-OAuth-App der Plattform."
       },
       "microsoft": {
         "description": "Outlook-Mail, Kalender und Teams-Nachrichten.",
-        "sync": "Meetings werden in beide Richtungen mit dem Outlook-Kalender synchronisiert (7 Tage zurück, 60 Tage voraus), wenn Google Kalender nicht verbunden ist."
+        "sync": "Meetings werden in beide Richtungen mit dem Outlook-Kalender synchronisiert (7 Tage zurück, 60 Tage voraus), wenn Google Kalender nicht verbunden ist.",
+        "setup": "Registrieren Sie in Microsoft Entra ID eine App mit den aufgeführten delegierten Microsoft-Graph-Berechtigungen."
       },
       "slack": {
-        "description": "Nachrichten aus Workflows und Warnungen in Slack-Kanäle posten."
+        "description": "Nachrichten aus Workflows und Warnungen in Slack-Kanäle posten.",
+        "setup": "Erstellen Sie unter api.slack.com/apps eine Slack-App mit den aufgeführten Bot-Berechtigungen."
       },
       "stripe": {
         "description": "Zahlungen importieren und mit Workflows auf neuen Umsatz reagieren.",
-        "sync": "Erfolgreiche Zahlungen ab dem Verbindungsdatum werden zu „Zahlung erhalten“-Ereignissen."
+        "sync": "Erfolgreiche Zahlungen ab dem Verbindungsdatum werden zu „Zahlung erhalten“-Ereignissen.",
+        "setup": "Erstellen Sie im Stripe-Dashboard → Entwickler → API-Schlüssel einen eingeschränkten Schlüssel (Guthaben und Zahlungen lesen; Preise und Zahlungslinks schreiben, wenn Sie Zahlungslinks versenden)."
       },
       "whatsapp": {
-        "description": "WhatsApp Business Cloud API für Kundennachrichten."
+        "description": "WhatsApp Business Cloud API für Kundennachrichten.",
+        "setup": "Erstellen Sie in der Meta Business Suite ein System-User-Token mit whatsapp_business_messaging und kopieren Sie die Telefonnummer-ID aus dem WhatsApp Manager."
       },
       "hubspot": {
         "description": "HubSpot-Kontakte und -Firmen in Ihr CRM importieren.",
-        "sync": "Kontakte werden importiert und per E-Mail dedupliziert; ihre Firmen werden zu Accounts, abgeglichen per Domain."
+        "sync": "Kontakte werden importiert und per E-Mail dedupliziert; ihre Firmen werden zu Accounts, abgeglichen per Domain.",
+        "setup": "Erstellen Sie in Ihrem HubSpot-Entwicklerkonto eine öffentliche App mit den aufgeführten Berechtigungen."
       },
       "salesforce": {
         "description": "Salesforce-Kontakte und -Accounts in Ihr CRM importieren.",
-        "sync": "Seit der letzten Synchronisierung geänderte Kontakte werden importiert und per E-Mail dedupliziert; Accounts per Domain oder Name abgeglichen."
+        "sync": "Seit der letzten Synchronisierung geänderte Kontakte werden importiert und per E-Mail dedupliziert; Accounts per Domain oder Name abgeglichen.",
+        "setup": "Erstellen Sie im Salesforce-Setup eine Connected App mit aktiviertem OAuth und den aufgeführten Berechtigungen."
       },
       "linkedin": {
-        "description": "Beiträge im Namen eines Mitglieds auf LinkedIn veröffentlichen."
+        "description": "Beiträge im Namen eines Mitglieds auf LinkedIn veröffentlichen.",
+        "setup": "Erstellen Sie unter developer.linkedin.com eine App mit „Sign In with LinkedIn using OpenID Connect“ und „Share on LinkedIn“."
       },
       "x": {
-        "description": "Beiträge auf X (Twitter) veröffentlichen."
+        "description": "Beiträge auf X (Twitter) veröffentlichen.",
+        "setup": "Erstellen Sie unter developer.x.com ein Projekt und eine App mit OAuth 2.0 (vertraulicher Client) und Lese-/Schreibrechten."
       },
       "facebook": {
-        "description": "Auf Facebook-Seiten veröffentlichen und Interaktionen auslesen."
+        "description": "Auf Facebook-Seiten veröffentlichen und Interaktionen auslesen.",
+        "setup": "Erstellen Sie eine Meta-App (Typ Business) mit Facebook Login und beantragen Sie die aufgeführten Seitenberechtigungen."
       },
       "instagram": {
-        "description": "Inhalte in einem Instagram-Business-Konto veröffentlichen."
+        "description": "Inhalte in einem Instagram-Business-Konto veröffentlichen.",
+        "setup": "Verknüpfen Sie jedes Instagram-Profikonto mit einer Facebook-Seite; die Meta-App benötigt die aufgeführten Instagram-Berechtigungen."
       },
       "quickbooks": {
         "description": "QuickBooks Online-Buchhaltung verbinden.",
-        "sync": "Kunden werden zu CRM-Firmen und -Kontakten; Rechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert."
+        "sync": "Kunden werden zu CRM-Firmen und -Kontakten; Rechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert.",
+        "setup": "Erstellen Sie unter developer.intuit.com eine App mit der Accounting-Berechtigung."
       },
       "xero": {
         "description": "Xero-Buchhaltung verbinden (Buchungen und Kontakte).",
-        "sync": "Kundenkontakte werden zu CRM-Firmen und -Kontakten; Ausgangsrechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert."
+        "sync": "Kundenkontakte werden zu CRM-Firmen und -Kontakten; Ausgangsrechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert.",
+        "setup": "Erstellen Sie unter developer.xero.com/app/manage eine Web-App."
       },
       "webhook": {
-        "description": "Signierte HTTP-Callbacks von beliebigen Systemen empfangen und Workflows auslösen."
+        "description": "Signierte HTTP-Callbacks von beliebigen Systemen empfangen und Workflows auslösen.",
+        "setup": "Erstellen Sie unten einen eingehenden Webhook und fügen Sie dessen URL im sendenden System ein."
       },
       "custom_api": {
-        "description": "Beliebige HTTPS-APIs mit API-Schlüssel aus Ihren Workflows aufrufen."
+        "description": "Beliebige HTTPS-APIs mit API-Schlüssel aus Ihren Workflows aufrufen.",
+        "setup": "Besorgen Sie einen API-Schlüssel für den Dienst und notieren Sie Basis-URL und Authentifizierungs-Header."
+      },
+      "google_ads": {
+        "settingsHelp": "Optional: eigenes Entwickler-Token (sonst das der Plattform) und die Manager-Konto-ID für die Anmeldung.",
+        "description": "Google-Ads-Kundenkonten: Kampagnen, Ausgaben und Conversions.",
+        "setup": "Aktivieren Sie die Google Ads API in Google Cloud und holen Sie ein Entwickler-Token aus einem Google-Ads-Verwaltungskonto (API-Center).\nDer Plattform-Admin setzt GOOGLE_ADS_DEVELOPER_TOKEN, oder Sie tragen Ihr eigenes Token in den Verbindungseinstellungen ein."
+      },
+      "openai": {
+        "description": "Schnelle Umformulierungen, Zusammenfassungen und Bildgenerierung mit Ihrem eigenen OpenAI-Konto.",
+        "setup": "Erstellen Sie einen geheimen Schlüssel unter platform.openai.com → API keys (ein Projektschlüssel wird empfohlen).\nOptional: Standardmodell und Organisations-ID festlegen."
+      },
+      "gemini": {
+        "description": "Google-Gemini-Modelle für Textfunktionen, als Ausweichlösung zu OpenAI.",
+        "setup": "Erstellen Sie einen API-Schlüssel in Google AI Studio (aistudio.google.com → Get API key)."
+      },
+      "tavily": {
+        "description": "Echtzeit-Websuche für KI-Mitarbeiter und Recherchefunktionen (primärer Anbieter).",
+        "setup": "Melden Sie sich bei app.tavily.com an und kopieren Sie Ihren API-Schlüssel (beginnt mit tvly-)."
+      },
+      "exa": {
+        "description": "Neuronale Websuche mit Seiteninhalten; erste Ausweichlösung für die Webrecherche.",
+        "setup": "Erstellen Sie einen API-Schlüssel im Exa-Dashboard (dashboard.exa.ai → API keys)."
+      },
+      "serpapi": {
+        "description": "Google-Suchergebnisse über SerpApi; zweite Ausweichlösung für die Webrecherche.",
+        "setup": "Kopieren Sie Ihren privaten API-Schlüssel unter serpapi.com → Your account → API key."
+      },
+      "stability": {
+        "description": "Stable-Image-Modelle für Marketing-Visuals.",
+        "setup": "Erstellen Sie einen API-Schlüssel unter platform.stability.ai → Account → API keys und sorgen Sie für Guthaben."
+      },
+      "replicate": {
+        "description": "Offene Bild- und Videomodelle (Flux, MiniMax u. a.) auf Replicate ausführen.",
+        "setup": "Erstellen Sie ein API-Token unter replicate.com → Account → API tokens und hinterlegen Sie eine Zahlungsmethode.\nOptional: Bild- und Videomodell wählen."
+      },
+      "runway": {
+        "description": "KI-Videogenerierung aus Text oder Bild mit Runway.",
+        "setup": "Erstellen Sie einen API-Schlüssel im Runway-Entwicklerportal (dev.runwayml.com) und kaufen Sie API-Credits."
+      },
+      "youtube": {
+        "description": "Videos auf Ihren YouTube-Kanälen hochladen und verwalten.",
+        "setup": "Aktivieren Sie in Google Cloud die YouTube Data API v3 für die OAuth-App der Plattform."
+      },
+      "tiktok": {
+        "description": "Videos in Ihrem TikTok-Konto veröffentlichen.",
+        "setup": "Erstellen Sie unter developers.tiktok.com eine App mit Login Kit und Content Posting API und beantragen Sie die aufgeführten Berechtigungen."
+      },
+      "threads": {
+        "description": "Beiträge auf Threads veröffentlichen und ihre Statistiken lesen.",
+        "setup": "Erstellen Sie unter developers.facebook.com eine Meta-App mit dem Anwendungsfall „Threads API“ und fügen Sie die Threads-Berechtigungen hinzu."
+      },
+      "pinterest": {
+        "description": "Pins auf Ihren Pinterest-Pinnwänden erstellen.",
+        "setup": "Erstellen Sie unter developers.pinterest.com eine App und beantragen Sie Standardzugriff für die aufgeführten Berechtigungen."
+      },
+      "meta_ads": {
+        "description": "Facebook- und Instagram-Werbekonten: Kampagnen, Ausgaben und Ergebnisse.",
+        "setup": "Fügen Sie der Meta-App der Plattform das Produkt „Marketing API“ hinzu und beantragen Sie ads_management (Advanced Access)."
+      },
+      "linkedin_ads": {
+        "description": "LinkedIn-Campaign-Manager-Werbekonten und Reporting.",
+        "setup": "Beantragen Sie das Produkt „Advertising API“ für die LinkedIn-App der Plattform (developer.linkedin.com)."
+      },
+      "tiktok_ads": {
+        "description": "TikTok-for-Business-Werbekonten und Reporting.",
+        "setup": "Erstellen Sie unter business-api.tiktok.com eine Entwickler-App und setzen Sie deren Advertiser-Redirect-URL auf die unten stehende Weiterleitungs-URI."
+      },
+      "google_search_console": {
+        "description": "Suchklicks, Impressionen und Suchanfragen Ihrer bestätigten Websites.",
+        "setup": "Aktivieren Sie die Google Search Console API in Google Cloud für die OAuth-App der Plattform; melden Sie sich mit einem Konto an, das die Websites besitzt."
+      },
+      "wordpress": {
+        "description": "Artikel auf einer selbst gehosteten oder WordPress.com-Website veröffentlichen.",
+        "setup": "Gehen Sie in WordPress zu Benutzer → Profil → Anwendungspasswörter, fügen Sie eines namens „Realy“ hinzu und kopieren Sie es.\nDie Website muss HTTPS nutzen und die REST-API erlauben."
+      },
+      "webflow": {
+        "description": "CMS-Einträge auf Ihren Webflow-Websites veröffentlichen.",
+        "setup": "Öffnen Sie in Webflow Site settings → Apps & integrations → API access und erzeugen Sie ein Site-Token mit CMS-Lese-/Schreibrechten."
+      },
+      "shopify": {
+        "description": "Ihr Shopify-Shop: Produkte, Blogartikel und Bestellungen.",
+        "setup": "Gehen Sie im Shopify-Admin zu Einstellungen → Apps → Apps entwickeln, erstellen Sie eine App mit den benötigten Admin-API-Berechtigungen, installieren Sie sie und kopieren Sie das Admin-API-Zugriffstoken."
+      },
+      "sendgrid": {
+        "description": "E-Mails Ihres Unternehmens über Ihr eigenes SendGrid-Konto und Ihre Domain senden.",
+        "setup": "Erstellen Sie unter app.sendgrid.com → Settings → API Keys einen API-Schlüssel mit der Berechtigung „Mail Send“.\nBestätigen Sie Absenderadresse oder Domain unter Sender Authentication."
+      },
+      "mailchimp": {
+        "description": "Mailchimp-Zielgruppen und E-Mail-Kampagnen.",
+        "setup": "Erstellen Sie unter Profil → Extras → API keys einen API-Schlüssel; das Server-Präfix ist der Teil nach dem Bindestrich (z. B. us21)."
+      },
+      "twilio": {
+        "description": "SMS- und WhatsApp-Nachrichten von Ihren Twilio-Nummern.",
+        "setup": "Kopieren Sie Account SID und Auth-Token von der Startseite der Twilio-Konsole.\nFügen Sie eine Absendernummer (oder Messaging-Service-SID) für SMS und einen freigegebenen WhatsApp-Absender hinzu, wenn Sie WhatsApp nutzen."
+      },
+      "razorpay": {
+        "description": "Zahlungslinks und Zahlungen mit Razorpay (Indien).",
+        "setup": "Erzeugen Sie API-Schlüssel im Razorpay-Dashboard → Account & Settings → API keys (Test- oder Live-Modus)."
+      },
+      "s3": {
+        "description": "Generierte Bilder, Videos und Dateien in Ihrem eigenen S3-kompatiblen Bucket speichern (AWS, R2, B2, MinIO …).",
+        "setup": "Erstellen Sie einen Bucket und einen darauf beschränkten Zugriffsschlüssel (s3:PutObject, s3:GetObject, s3:ListBucket).\nFür Cloudflare R2, Backblaze B2 oder MinIO den Endpunkt eintragen; für AWS leer lassen."
+      },
+      "cloudflare": {
+        "description": "Cloudflare-Kontozugriff (DNS, R2, Pages) für Infrastruktur-Automatisierung.",
+        "setup": "Erstellen Sie unter dash.cloudflare.com → My Profile → API Tokens ein API-Token mit nur den nötigen Berechtigungen.\nOptional: zu verwendende Konto-ID eintragen."
       }
     },
     "backToMarketplace": "Alle Integrationen",
@@ -3726,7 +3876,34 @@
       "baseUrl": "Basis-URL",
       "headerName": "Name des Auth-Headers",
       "headerPrefix": "Präfix des Header-Werts",
-      "testPath": "Testpfad"
+      "testPath": "Testpfad",
+      "organization": "Organisations-ID",
+      "model": "Standardmodell",
+      "imageModel": "Bildmodell",
+      "videoModel": "Videomodell",
+      "siteUrl": "Website-URL",
+      "username": "Benutzername",
+      "applicationPassword": "Anwendungspasswort",
+      "shopDomain": "Shop-Domain",
+      "adminToken": "Admin-API-Zugriffstoken",
+      "fromEmail": "Absender-E-Mail",
+      "fromName": "Absendername",
+      "serverPrefix": "Server-Präfix",
+      "accountSid": "Konto-SID",
+      "authToken": "Auth-Token",
+      "fromNumber": "Absendernummer oder Messaging-Service",
+      "whatsappFrom": "WhatsApp-Absendernummer",
+      "keyId": "Schlüssel-ID",
+      "keySecret": "Schlüssel-Secret",
+      "endpoint": "Endpunkt (für AWS leer lassen)",
+      "region": "Region",
+      "bucket": "Bucket",
+      "accessKeyId": "Zugriffsschlüssel-ID",
+      "secretAccessKey": "Geheimer Zugriffsschlüssel",
+      "apiToken": "API-Token",
+      "accountId": "Konto-ID",
+      "developerToken": "Entwickler-Token",
+      "loginCustomerId": "Manager-Kundennummer (Login)"
     },
     "syncStatus": {
       "RUNNING": "Läuft",
@@ -3838,6 +4015,88 @@
       "summary": "Antwort",
       "noResponse": "keine Antwort",
       "attempts": "{count, plural, one {# Versuch} other {# Versuche}}"
+    },
+    "requiresCredentials": "Zugangsdaten erforderlich",
+    "orApiKey": "Oder mit einem API-Schlüssel verbinden:",
+    "health": {
+      "lastSuccess": "Letzter erfolgreicher Aufruf",
+      "lastFailure": "Letzter fehlgeschlagener Aufruf",
+      "streak": "{count, plural, one {# Fehler in Folge} other {# Fehler in Folge}}"
+    },
+    "setup": {
+      "title": "Einrichtungsschritte",
+      "help": "Was nötig ist, bevor diese Integration genutzt werden kann.",
+      "oauthEnv": "Der Plattform-Admin setzt diese Umgebungsvariablen: {vars}.",
+      "oauthRedirect": "Registrieren Sie diese Weiterleitungs-URI beim Anbieter:",
+      "oauthConnect": "Klicken Sie auf „Mit {name} verbinden“ und bestätigen Sie die angeforderten Berechtigungen.",
+      "apiKeyPaste": "Geben Sie oben {fields} ein; sie werden vor dem Speichern mit einem Live-Aufruf geprüft."
+    },
+    "accounts": {
+      "title": "Verbundene Konten",
+      "help": "Konten, auf die diese Verbindung zugreifen kann. Funktionen nutzen das aktive Konto.",
+      "empty": "Keine Konten gefunden. Führen Sie einen Verbindungstest aus, um die Liste zu aktualisieren.",
+      "search": "Konten suchen",
+      "active": "Aktiv",
+      "use": "Dieses Konto verwenden",
+      "types": {
+        "page": "Facebook-Seite",
+        "instagram": "Instagram-Konto",
+        "channel": "Kanal",
+        "ad_account": "Werbekonto",
+        "site": "Website",
+        "board": "Pinnwand",
+        "audience": "Zielgruppe",
+        "account": "Konto"
+      }
+    },
+    "settings": {
+      "title": "Verbindungseinstellungen",
+      "save": "Einstellungen speichern",
+      "saved": "Einstellungen gespeichert.",
+      "secretStored": "Ein Wert ist gespeichert; leer lassen, um ihn zu behalten."
+    },
+    "usage": {
+      "title": "Nutzung & Kosten",
+      "help": "Gemessene Aufrufe der Anbieterdienste der Plattform (Recherche, KI-Text, Bilder, Video, Speicher, Messaging, Zahlungen, E-Mail). Kosten sind Schätzungen nach Listenpreisen; maßgeblich ist die Rechnung Ihres Anbieters.",
+      "calls": "Anbieteraufrufe",
+      "failed": "Fehlgeschlagen",
+      "failedHint": "{count, plural, one {# fehlgeschlagen} other {# fehlgeschlagen}}",
+      "estimatedCost": "Geschätzte Kosten",
+      "estimateNote": "Schätzung (USD-Listenpreise)",
+      "units": "Einheiten",
+      "operation": "Vorgang",
+      "provider": "Anbieter",
+      "allOperations": "Alle Vorgänge",
+      "details": "Details",
+      "byOperation": "Nach Vorgang",
+      "empty": "Noch keine Nutzung erfasst.",
+      "open": "Nutzung öffnen",
+      "cardSummary": "Letzte 30 Tage: {calls} Aufrufe, {failed} fehlgeschlagen, {cost} geschätzt.",
+      "range": "Zeitraum",
+      "lastDays": "{count, plural, one {Letzter Tag} other {Letzte # Tage}}",
+      "statuses": {
+        "SUCCEEDED": "Erfolgreich",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "unitNames": {
+        "request": "Anfragen",
+        "token": "Tokens",
+        "image": "Bilder",
+        "second": "Sekunden",
+        "byte": "Bytes",
+        "message": "Nachrichten"
+      },
+      "operations": {
+        "research_search": "Websuche",
+        "ai_text": "KI-Textgenerierung",
+        "images_generate": "Bildgenerierung",
+        "video_start": "Videogenerierung",
+        "storage_put": "Datei-Upload",
+        "sms_send": "SMS",
+        "whatsapp_send": "WhatsApp-Nachricht",
+        "payments_link": "Zahlungslink",
+        "email_send": "E-Mail"
+      }
     }
   },
   "workflows": {

@@ -47,7 +47,7 @@ export function decryptCredentials(companyId: string, provider: string, payload:
   }
 }
 
-const asConfig = (v: Prisma.JsonValue): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+export const asConfig = (v: Prisma.JsonValue): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 /**
  * The company's connection to `providerKey` with a fresh access token, or null when not connected.
@@ -62,8 +62,10 @@ export async function getConnection(organizationId: string, companyId: string, p
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return null;
   const info = providerInfo(providerKey);
   const creds = decryptCredentials(companyId, providerKey, row.credentialsEnc);
-  const base = { id: row.id, provider: row.provider, config: asConfig(row.config), status: row.status as ConnectionStatus, organizationId: row.organizationId, companyId: row.companyId };
-  if (info?.authType !== "oauth2") return { ...base, accessToken: creds.apiKey ?? creds.accessToken ?? null };
+  // Secret settings (e.g. a Google Ads developer token) are stored encrypted and only merged in here, server side.
+  const withSecrets = (c: Prisma.JsonValue) => ({ ...asConfig(c), ...(creds.secrets ?? {}) });
+  const base = { id: row.id, provider: row.provider, config: withSecrets(row.config), status: row.status as ConnectionStatus, organizationId: row.organizationId, companyId: row.companyId };
+  if (info?.authType !== "oauth2" && !(info?.oauthAlternative && !creds.apiKey && creds.refreshToken)) return { ...base, accessToken: creds.apiKey ?? creds.accessToken ?? null };
 
   const expiring = row.tokenExpiresAt && row.tokenExpiresAt.getTime() - Date.now() < REFRESH_WINDOW_MS;
   if (!expiring) return { ...base, accessToken: creds.accessToken ?? null };
@@ -79,20 +81,20 @@ export async function getConnection(organizationId: string, companyId: string, p
         const current = decryptCredentials(companyId, providerKey, fresh.credentialsEnc);
         // Another caller refreshed while we waited for the lock.
         if (fresh.tokenExpiresAt && fresh.tokenExpiresAt.getTime() - Date.now() >= REFRESH_WINDOW_MS) {
-          return { ...base, config: asConfig(fresh.config), status: fresh.status as ConnectionStatus, accessToken: current.accessToken ?? null };
+          return { ...base, config: withSecrets(fresh.config), status: fresh.status as ConnectionStatus, accessToken: current.accessToken ?? null };
         }
         const tokens = await refreshAccessToken(providerKey, current.refreshToken ?? creds.refreshToken!);
         await tx.integrationConnection.update({
           where: { id: row.id },
           data: {
-            credentialsEnc: encryptCredentials(companyId, providerKey, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
+            credentialsEnc: encryptCredentials(companyId, providerKey, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, ...(current.secrets ? { secrets: current.secrets } : {}) }),
             tokenExpiresAt: tokens.expiresAt,
             status: "CONNECTED",
             lastError: null,
             lastErrorAt: null,
           },
         });
-        return { ...base, config: asConfig(fresh.config), status: "CONNECTED" as const, accessToken: tokens.accessToken };
+        return { ...base, config: withSecrets(fresh.config), status: "CONNECTED" as const, accessToken: tokens.accessToken };
       },
       { timeout: 25_000 },
     );
@@ -160,4 +162,11 @@ export async function recordSync(r: SyncRecord): Promise<string> {
   if (r.status === "FAILED") await markConnectionError(r.connectionId, errors[0]?.message ?? "Sync failed");
   else await markConnectionHealthy(r.connectionId);
   return run.id;
+}
+
+/** The selected sub-account (page, channel, ad account, site...) of a multi-account connection, or the first one. */
+export function activeAccount(conn: Pick<Connection, "config">): { id: string; name: string; type: string } | null {
+  const accounts = Array.isArray(conn.config.accounts) ? (conn.config.accounts as { id: string; name: string; type: string }[]) : [];
+  const active = typeof conn.config.activeAccountId === "string" ? conn.config.activeAccountId : null;
+  return accounts.find((a) => a.id === active) ?? accounts[0] ?? null;
 }

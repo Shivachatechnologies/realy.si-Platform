@@ -1945,7 +1945,8 @@
       "read_budget_status": "बजट स्थिति पढ़ें",
       "create_bill_draft": "विक्रेता बिल ड्राफ़्ट बनाएँ",
       "read_proposals": "प्रस्ताव पढ़ें",
-      "create_proposal_draft": "प्रस्ताव ड्राफ़्ट बनाएँ"
+      "create_proposal_draft": "प्रस्ताव ड्राफ़्ट बनाएँ",
+      "web_research": "वेब रिसर्च"
     },
     "needsApproval": "अनुमोदन आवश्यक",
     "tabs": {
@@ -2585,6 +2586,9 @@
         "follow_up": "आपके लिए फ़ॉलो-अप: {title}",
         "sla_breached": "SLA उल्लंघन: {title}",
         "escalated": "टिकट एस्केलेट हुआ: {title}"
+      },
+      "integrations": {
+        "connection_failing": "इंटीग्रेशन बार-बार विफल हो रहा है: {title}"
       }
     },
     "viewAll": "सभी देखें"
@@ -3569,12 +3573,15 @@
       "marketplace": "मार्केटप्लेस",
       "connected": "कनेक्टेड",
       "webhooks": "वेबहुक",
-      "syncs": "सिंक इतिहास"
+      "syncs": "सिंक इतिहास",
+      "usage": "उपयोग और लागत"
     },
     "metrics": {
       "connected": "कनेक्टेड इंटीग्रेशन",
       "syncErrors": "सिंक त्रुटियाँ",
-      "webhookFailures": "विफल वेबहुक डिलीवरी"
+      "webhookFailures": "विफल वेबहुक डिलीवरी",
+      "providerUsage": "प्रदाता कॉल",
+      "providerFailures": "विफल प्रदाता कॉल"
     },
     "ofAvailable": "{count} उपलब्ध में से",
     "failing": "ध्यान देने की ज़रूरत",
@@ -3601,7 +3608,16 @@
       "crm": "CRM",
       "social": "सोशल मीडिया",
       "accounting": "लेखांकन",
-      "developer": "डेवलपर"
+      "developer": "डेवलपर",
+      "ai": "एआई",
+      "research": "रिसर्च",
+      "creative": "क्रिएटिव",
+      "ads": "विज्ञापन",
+      "search": "सर्च",
+      "cms": "सीएमएस और कॉमर्स",
+      "email": "ईमेल",
+      "messaging": "मैसेजिंग",
+      "storage": "स्टोरेज और इंफ्रास्ट्रक्चर"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (प्रदाता से साइन इन)",
@@ -3620,60 +3636,194 @@
       "contacts": "संपर्क और अकाउंट आयात",
       "social_publishing": "सोशल प्रकाशन",
       "accounting": "लेखांकन डेटा",
-      "webhooks": "इनकमिंग वेबहुक"
+      "webhooks": "इनकमिंग वेबहुक",
+      "ai_text": "एआई टेक्स्ट जनरेशन",
+      "research": "वेब रिसर्च",
+      "image_generation": "इमेज जनरेशन",
+      "video_generation": "वीडियो जनरेशन",
+      "video_publishing": "वीडियो पब्लिशिंग",
+      "ads": "विज्ञापन अभियान और रिपोर्टिंग",
+      "search_analytics": "सर्च परफॉर्मेंस",
+      "cms_publishing": "वेबसाइट पब्लिशिंग",
+      "ecommerce": "ऑनलाइन स्टोर",
+      "email_sending": "ईमेल भेजना",
+      "email_marketing": "ईमेल मार्केटिंग",
+      "sms": "एसएमएस",
+      "storage": "फ़ाइल स्टोरेज",
+      "infrastructure": "इंफ्रास्ट्रक्चर"
     },
     "providers": {
       "google": {
         "description": "ईमेल, मीटिंग और फ़ाइलों के लिए Gmail, Google Calendar और Drive।",
-        "sync": "मीटिंग Google कैलेंडर के साथ दोनों ओर सिंक होती हैं (7 दिन पीछे, 60 दिन आगे)।"
+        "sync": "मीटिंग Google कैलेंडर के साथ दोनों ओर सिंक होती हैं (7 दिन पीछे, 60 दिन आगे)।",
+        "setup": "प्लेटफ़ॉर्म के Google OAuth ऐप के लिए Gmail, Google Calendar और Drive API सक्षम करें।"
       },
       "microsoft": {
         "description": "Outlook मेल, कैलेंडर और Teams संदेश।",
-        "sync": "Google कैलेंडर कनेक्ट न होने पर मीटिंग Outlook कैलेंडर के साथ दोनों ओर सिंक होती हैं (7 दिन पीछे, 60 दिन आगे)।"
+        "sync": "Google कैलेंडर कनेक्ट न होने पर मीटिंग Outlook कैलेंडर के साथ दोनों ओर सिंक होती हैं (7 दिन पीछे, 60 दिन आगे)।",
+        "setup": "Microsoft Entra ID में सूचीबद्ध Microsoft Graph डेलीगेटेड अनुमतियों के साथ ऐप रजिस्टर करें।"
       },
       "slack": {
-        "description": "वर्कफ़्लो और अलर्ट से Slack चैनलों में संदेश पोस्ट करें।"
+        "description": "वर्कफ़्लो और अलर्ट से Slack चैनलों में संदेश पोस्ट करें।",
+        "setup": "api.slack.com/apps पर सूचीबद्ध बॉट स्कोप के साथ Slack ऐप बनाएँ।"
       },
       "stripe": {
         "description": "भुगतान आयात करें और वर्कफ़्लो से नए राजस्व पर प्रतिक्रिया दें।",
-        "sync": "कनेक्शन की तारीख के बाद के सफल भुगतान “भुगतान प्राप्त” इवेंट बनते हैं।"
+        "sync": "कनेक्शन की तारीख के बाद के सफल भुगतान “भुगतान प्राप्त” इवेंट बनते हैं।",
+        "setup": "Stripe डैशबोर्ड → Developers → API keys में रिस्ट्रिक्टेड की बनाएँ (बैलेंस और चार्ज पढ़ें; पेमेंट लिंक भेजने पर प्राइस और पेमेंट लिंक लिखें)।"
       },
       "whatsapp": {
-        "description": "ग्राहक संदेशों के लिए WhatsApp Business Cloud API।"
+        "description": "ग्राहक संदेशों के लिए WhatsApp Business Cloud API।",
+        "setup": "Meta Business Suite में whatsapp_business_messaging के साथ सिस्टम यूज़र टोकन बनाएँ और WhatsApp Manager से फ़ोन नंबर आईडी कॉपी करें।"
       },
       "hubspot": {
         "description": "HubSpot संपर्क और कंपनियाँ अपने CRM में आयात करें।",
-        "sync": "संपर्क आयात होते हैं और ईमेल से डुप्लिकेट हटाए जाते हैं; उनकी कंपनियाँ डोमेन से मिलान कर अकाउंट बनती हैं।"
+        "sync": "संपर्क आयात होते हैं और ईमेल से डुप्लिकेट हटाए जाते हैं; उनकी कंपनियाँ डोमेन से मिलान कर अकाउंट बनती हैं।",
+        "setup": "अपने HubSpot डेवलपर अकाउंट में सूचीबद्ध स्कोप के साथ पब्लिक ऐप बनाएँ।"
       },
       "salesforce": {
         "description": "Salesforce संपर्क और अकाउंट अपने CRM में आयात करें।",
-        "sync": "पिछले सिंक के बाद बदले गए संपर्क आयात होते हैं और ईमेल से डुप्लिकेट हटाए जाते हैं; अकाउंट डोमेन या नाम से मिलाए जाते हैं।"
+        "sync": "पिछले सिंक के बाद बदले गए संपर्क आयात होते हैं और ईमेल से डुप्लिकेट हटाए जाते हैं; अकाउंट डोमेन या नाम से मिलाए जाते हैं।",
+        "setup": "Salesforce Setup में OAuth सक्षम और सूचीबद्ध स्कोप के साथ Connected App बनाएँ।"
       },
       "linkedin": {
-        "description": "किसी सदस्य की ओर से LinkedIn पर पोस्ट प्रकाशित करें।"
+        "description": "किसी सदस्य की ओर से LinkedIn पर पोस्ट प्रकाशित करें।",
+        "setup": "developer.linkedin.com पर “Sign In with LinkedIn using OpenID Connect” और “Share on LinkedIn” के साथ ऐप बनाएँ।"
       },
       "x": {
-        "description": "X (Twitter) पर पोस्ट प्रकाशित करें।"
+        "description": "X (Twitter) पर पोस्ट प्रकाशित करें।",
+        "setup": "developer.x.com पर OAuth 2.0 (कॉन्फ़िडेंशियल क्लाइंट) और read/write अनुमतियों के साथ प्रोजेक्ट और ऐप बनाएँ।"
       },
       "facebook": {
-        "description": "Facebook पेजों पर प्रकाशित करें और जुड़ाव पढ़ें।"
+        "description": "Facebook पेजों पर प्रकाशित करें और जुड़ाव पढ़ें।",
+        "setup": "Facebook Login के साथ Meta ऐप (Business टाइप) बनाएँ और सूचीबद्ध पेज अनुमतियों का अनुरोध करें।"
       },
       "instagram": {
-        "description": "Instagram बिज़नेस अकाउंट पर सामग्री प्रकाशित करें।"
+        "description": "Instagram बिज़नेस अकाउंट पर सामग्री प्रकाशित करें।",
+        "setup": "हर Instagram प्रोफ़ेशनल अकाउंट को किसी Facebook पेज से लिंक करें; Meta ऐप को सूचीबद्ध Instagram अनुमतियाँ चाहिए।"
       },
       "quickbooks": {
         "description": "QuickBooks Online लेखांकन जोड़ें।",
-        "sync": "ग्राहक CRM अकाउंट और संपर्क बनते हैं; इनवॉइस आपकी आधार मुद्रा में वित्त ड्राफ़्ट के रूप में एक बार आयात होते हैं।"
+        "sync": "ग्राहक CRM अकाउंट और संपर्क बनते हैं; इनवॉइस आपकी आधार मुद्रा में वित्त ड्राफ़्ट के रूप में एक बार आयात होते हैं।",
+        "setup": "developer.intuit.com पर Accounting स्कोप के साथ ऐप बनाएँ।"
       },
       "xero": {
         "description": "Xero लेखांकन जोड़ें (लेन-देन और संपर्क)।",
-        "sync": "ग्राहक संपर्क CRM अकाउंट और संपर्क बनते हैं; बिक्री इनवॉइस आपकी आधार मुद्रा में वित्त ड्राफ़्ट के रूप में एक बार आयात होते हैं।"
+        "sync": "ग्राहक संपर्क CRM अकाउंट और संपर्क बनते हैं; बिक्री इनवॉइस आपकी आधार मुद्रा में वित्त ड्राफ़्ट के रूप में एक बार आयात होते हैं।",
+        "setup": "developer.xero.com/app/manage पर वेब ऐप बनाएँ।"
       },
       "webhook": {
-        "description": "किसी भी सिस्टम से साइन किए गए HTTP कॉलबैक प्राप्त करें और वर्कफ़्लो चलाएँ।"
+        "description": "किसी भी सिस्टम से साइन किए गए HTTP कॉलबैक प्राप्त करें और वर्कफ़्लो चलाएँ।",
+        "setup": "नीचे एक इनकमिंग वेबहुक बनाएँ और उसका URL भेजने वाले सिस्टम में पेस्ट करें।"
       },
       "custom_api": {
-        "description": "अपने वर्कफ़्लो से API कुंजी के साथ किसी भी HTTPS API को कॉल करें।"
+        "description": "अपने वर्कफ़्लो से API कुंजी के साथ किसी भी HTTPS API को कॉल करें।",
+        "setup": "सेवा के लिए API की लें और उसका बेस URL व ऑथेंटिकेशन हेडर नोट करें।"
+      },
+      "google_ads": {
+        "settingsHelp": "वैकल्पिक: अपना डेवलपर टोकन (अन्यथा प्लेटफ़ॉर्म का) और लॉगिन के लिए मैनेजर अकाउंट आईडी।",
+        "description": "Google Ads कस्टमर अकाउंट: अभियान, खर्च और कन्वर्ज़न।",
+        "setup": "Google Cloud में Google Ads API सक्षम करें और Google Ads मैनेजर अकाउंट (API Center) से डेवलपर टोकन लें।\nप्लेटफ़ॉर्म एडमिन GOOGLE_ADS_DEVELOPER_TOKEN सेट करता है, या आप कनेक्शन सेटिंग्स में अपना टोकन दर्ज करते हैं।"
+      },
+      "openai": {
+        "description": "अपने OpenAI अकाउंट से त्वरित री-राइट, सारांश और इमेज जनरेशन।",
+        "setup": "platform.openai.com → API keys पर एक सीक्रेट की बनाएँ (प्रोजेक्ट की की सलाह दी जाती है)।\nवैकल्पिक रूप से डिफ़ॉल्ट मॉडल और संगठन आईडी सेट करें।"
+      },
+      "gemini": {
+        "description": "टेक्स्ट फ़ीचर्स के लिए Google Gemini मॉडल, OpenAI के फ़ॉलबैक के रूप में।",
+        "setup": "Google AI Studio में API की बनाएँ (aistudio.google.com → Get API key)।"
+      },
+      "tavily": {
+        "description": "एआई कर्मचारियों और रिसर्च फ़ीचर्स के लिए रियल-टाइम वेब सर्च (प्राथमिक प्रदाता)।",
+        "setup": "app.tavily.com पर साइन इन करें और अपनी API की कॉपी करें (tvly- से शुरू होती है)।"
+      },
+      "exa": {
+        "description": "पेज कंटेंट के साथ न्यूरल वेब सर्च; वेब रिसर्च का पहला फ़ॉलबैक।",
+        "setup": "Exa डैशबोर्ड में API की बनाएँ (dashboard.exa.ai → API keys)।"
+      },
+      "serpapi": {
+        "description": "SerpApi के ज़रिए Google सर्च परिणाम; वेब रिसर्च का दूसरा फ़ॉलबैक।",
+        "setup": "serpapi.com → Your account → API key से अपनी निजी API की कॉपी करें।"
+      },
+      "stability": {
+        "description": "मार्केटिंग विज़ुअल्स के लिए Stable Image मॉडल।",
+        "setup": "platform.stability.ai → Account → API keys पर API की बनाएँ और सुनिश्चित करें कि अकाउंट में क्रेडिट हों।"
+      },
+      "replicate": {
+        "description": "Replicate पर ओपन इमेज और वीडियो मॉडल (Flux, MiniMax आदि) चलाएँ।",
+        "setup": "replicate.com → Account → API tokens पर API टोकन बनाएँ और बिलिंग जोड़ें।\nवैकल्पिक रूप से इमेज और वीडियो मॉडल चुनें।"
+      },
+      "runway": {
+        "description": "Runway के साथ टेक्स्ट या इमेज से एआई वीडियो जनरेशन।",
+        "setup": "Runway डेवलपर पोर्टल (dev.runwayml.com) में API की बनाएँ और API क्रेडिट खरीदें।"
+      },
+      "youtube": {
+        "description": "अपने YouTube चैनलों पर वीडियो अपलोड और मैनेज करें।",
+        "setup": "Google Cloud में प्लेटफ़ॉर्म के OAuth ऐप के लिए YouTube Data API v3 सक्षम करें।"
+      },
+      "tiktok": {
+        "description": "अपने TikTok अकाउंट पर वीडियो प्रकाशित करें।",
+        "setup": "developers.tiktok.com पर Login Kit और Content Posting API के साथ ऐप बनाएँ और सूचीबद्ध स्कोप का अनुरोध करें।"
+      },
+      "threads": {
+        "description": "Threads पर पोस्ट प्रकाशित करें और उनकी इनसाइट्स पढ़ें।",
+        "setup": "developers.facebook.com पर Threads API यूज़ केस के साथ Meta ऐप बनाएँ और threads अनुमतियाँ जोड़ें।"
+      },
+      "pinterest": {
+        "description": "अपने Pinterest बोर्ड पर पिन बनाएँ।",
+        "setup": "developers.pinterest.com पर ऐप बनाएँ और सूचीबद्ध स्कोप के लिए स्टैंडर्ड एक्सेस का अनुरोध करें।"
+      },
+      "meta_ads": {
+        "description": "Facebook और Instagram विज्ञापन अकाउंट: अभियान, खर्च और परिणाम।",
+        "setup": "प्लेटफ़ॉर्म के Meta ऐप में Marketing API प्रोडक्ट जोड़ें और ads_management (एडवांस्ड एक्सेस) का अनुरोध करें।"
+      },
+      "linkedin_ads": {
+        "description": "LinkedIn Campaign Manager विज्ञापन अकाउंट और रिपोर्टिंग।",
+        "setup": "प्लेटफ़ॉर्म के LinkedIn ऐप (developer.linkedin.com) के लिए Advertising API प्रोडक्ट का अनुरोध करें।"
+      },
+      "tiktok_ads": {
+        "description": "TikTok for Business विज्ञापनदाता अकाउंट और रिपोर्टिंग।",
+        "setup": "business-api.tiktok.com पर डेवलपर ऐप बनाएँ और उसका एडवर्टाइज़र रीडायरेक्ट URL नीचे दिए रीडायरेक्ट URI पर सेट करें।"
+      },
+      "google_search_console": {
+        "description": "आपकी वेरिफ़ाइड साइट्स के सर्च क्लिक, इंप्रेशन और क्वेरी।",
+        "setup": "Google Cloud में प्लेटफ़ॉर्म के OAuth ऐप के लिए Google Search Console API सक्षम करें; उन साइट्स के मालिक अकाउंट से साइन इन करें।"
+      },
+      "wordpress": {
+        "description": "सेल्फ़-होस्टेड या WordPress.com साइट पर लेख प्रकाशित करें।",
+        "setup": "WordPress में Users → Profile → Application Passwords पर जाएँ, “Realy” नाम से एक जोड़ें और कॉपी करें।\nसाइट को HTTPS इस्तेमाल करना चाहिए और REST API की अनुमति देनी चाहिए।"
+      },
+      "webflow": {
+        "description": "अपनी Webflow साइट्स पर CMS आइटम प्रकाशित करें।",
+        "setup": "Webflow में Site settings → Apps & integrations → API access खोलें और CMS read/write के साथ साइट टोकन बनाएँ।"
+      },
+      "shopify": {
+        "description": "आपका Shopify स्टोर: उत्पाद, ब्लॉग लेख और ऑर्डर।",
+        "setup": "Shopify एडमिन में Settings → Apps → Develop apps पर जाएँ, ज़रूरी Admin API स्कोप के साथ ऐप बनाएँ, इंस्टॉल करें और Admin API एक्सेस टोकन कॉपी करें।"
+      },
+      "sendgrid": {
+        "description": "अपने SendGrid अकाउंट और डोमेन से अपनी कंपनी के ईमेल भेजें।",
+        "setup": "app.sendgrid.com → Settings → API Keys पर Mail Send अनुमति के साथ API की बनाएँ।\nSender Authentication में प्रेषक पता या डोमेन वेरिफ़ाई करें।"
+      },
+      "mailchimp": {
+        "description": "Mailchimp ऑडियंस और ईमेल अभियान।",
+        "setup": "Profile → Extras → API keys में API की बनाएँ; सर्वर प्रीफ़िक्स डैश के बाद का हिस्सा है (जैसे us21)।"
+      },
+      "twilio": {
+        "description": "आपके Twilio नंबरों से SMS और WhatsApp संदेश।",
+        "setup": "Twilio Console होम पेज से Account SID और Auth token कॉपी करें।\nSMS के लिए प्रेषक नंबर (या मैसेजिंग सर्विस SID) और WhatsApp उपयोग करने पर स्वीकृत WhatsApp प्रेषक जोड़ें।"
+      },
+      "razorpay": {
+        "description": "Razorpay (भारत) के साथ पेमेंट लिंक और भुगतान।",
+        "setup": "Razorpay डैशबोर्ड → Account & Settings → API keys में API की बनाएँ (टेस्ट या लाइव मोड)।"
+      },
+      "s3": {
+        "description": "जनरेट की गई इमेज, वीडियो और फ़ाइलें अपने S3-संगत बकेट (AWS, R2, B2, MinIO...) में स्टोर करें।",
+        "setup": "एक बकेट और उसी तक सीमित एक्सेस की बनाएँ (s3:PutObject, s3:GetObject, s3:ListBucket)।\nCloudflare R2, Backblaze B2 या MinIO के लिए एंडपॉइंट दर्ज करें; AWS के लिए खाली छोड़ें।"
+      },
+      "cloudflare": {
+        "description": "इंफ्रास्ट्रक्चर ऑटोमेशन के लिए Cloudflare अकाउंट एक्सेस (DNS, R2, Pages)।",
+        "setup": "dash.cloudflare.com → My Profile → API Tokens पर केवल ज़रूरी अनुमतियों के साथ API टोकन बनाएँ।\nवैकल्पिक रूप से उपयोग की जाने वाली अकाउंट आईडी दर्ज करें।"
       }
     },
     "backToMarketplace": "सभी इंटीग्रेशन",
@@ -3726,7 +3876,34 @@
       "baseUrl": "बेस URL",
       "headerName": "ऑथ हेडर नाम",
       "headerPrefix": "हेडर मान उपसर्ग",
-      "testPath": "टेस्ट पाथ"
+      "testPath": "टेस्ट पाथ",
+      "organization": "संगठन आईडी",
+      "model": "डिफ़ॉल्ट मॉडल",
+      "imageModel": "इमेज मॉडल",
+      "videoModel": "वीडियो मॉडल",
+      "siteUrl": "साइट URL",
+      "username": "यूज़रनेम",
+      "applicationPassword": "एप्लिकेशन पासवर्ड",
+      "shopDomain": "शॉप डोमेन",
+      "adminToken": "एडमिन API एक्सेस टोकन",
+      "fromEmail": "प्रेषक ईमेल",
+      "fromName": "प्रेषक नाम",
+      "serverPrefix": "सर्वर प्रीफ़िक्स",
+      "accountSid": "अकाउंट SID",
+      "authToken": "ऑथ टोकन",
+      "fromNumber": "प्रेषक नंबर या मैसेजिंग सर्विस",
+      "whatsappFrom": "WhatsApp प्रेषक नंबर",
+      "keyId": "की आईडी",
+      "keySecret": "की सीक्रेट",
+      "endpoint": "एंडपॉइंट (AWS के लिए खाली छोड़ें)",
+      "region": "रीजन",
+      "bucket": "बकेट",
+      "accessKeyId": "एक्सेस की आईडी",
+      "secretAccessKey": "सीक्रेट एक्सेस की",
+      "apiToken": "API टोकन",
+      "accountId": "अकाउंट आईडी",
+      "developerToken": "डेवलपर टोकन",
+      "loginCustomerId": "मैनेजर (लॉगिन) कस्टमर आईडी"
     },
     "syncStatus": {
       "RUNNING": "चल रहा है",
@@ -3838,6 +4015,88 @@
       "summary": "प्रतिक्रिया",
       "noResponse": "कोई प्रतिक्रिया नहीं",
       "attempts": "{count, plural, one {# प्रयास} other {# प्रयास}}"
+    },
+    "requiresCredentials": "क्रेडेंशियल आवश्यक",
+    "orApiKey": "या API की से कनेक्ट करें:",
+    "health": {
+      "lastSuccess": "आख़िरी सफल कॉल",
+      "lastFailure": "आख़िरी विफल कॉल",
+      "streak": "{count, plural, one {लगातार # विफलता} other {लगातार # विफलताएँ}}"
+    },
+    "setup": {
+      "title": "सेटअप चरण",
+      "help": "इस इंटीग्रेशन का उपयोग करने से पहले क्या ज़रूरी है।",
+      "oauthEnv": "प्लेटफ़ॉर्म एडमिन ये एनवायरनमेंट वेरिएबल सेट करता है: {vars}।",
+      "oauthRedirect": "प्रदाता के पास यह रीडायरेक्ट URI रजिस्टर करें:",
+      "oauthConnect": "“{name} से कनेक्ट करें” पर क्लिक करें और माँगी गई अनुमतियाँ स्वीकृत करें।",
+      "apiKeyPaste": "ऊपर {fields} दर्ज करें; कुछ भी सहेजने से पहले लाइव कॉल से इनकी जाँच होती है।"
+    },
+    "accounts": {
+      "title": "कनेक्टेड अकाउंट",
+      "help": "वे अकाउंट जिन पर यह कनेक्शन काम कर सकता है। फ़ीचर्स सक्रिय अकाउंट का उपयोग करते हैं।",
+      "empty": "कोई अकाउंट नहीं मिला। सूची रीफ़्रेश करने के लिए कनेक्शन टेस्ट चलाएँ।",
+      "search": "अकाउंट खोजें",
+      "active": "सक्रिय",
+      "use": "यह अकाउंट उपयोग करें",
+      "types": {
+        "page": "Facebook पेज",
+        "instagram": "Instagram अकाउंट",
+        "channel": "चैनल",
+        "ad_account": "विज्ञापन अकाउंट",
+        "site": "साइट",
+        "board": "बोर्ड",
+        "audience": "ऑडियंस",
+        "account": "अकाउंट"
+      }
+    },
+    "settings": {
+      "title": "कनेक्शन सेटिंग्स",
+      "save": "सेटिंग्स सहेजें",
+      "saved": "सेटिंग्स सहेजी गईं।",
+      "secretStored": "एक मान सहेजा गया है; उसे रखने के लिए खाली छोड़ें।"
+    },
+    "usage": {
+      "title": "उपयोग और लागत",
+      "help": "प्लेटफ़ॉर्म की प्रदाता सेवाओं (रिसर्च, एआई टेक्स्ट, इमेज, वीडियो, स्टोरेज, मैसेजिंग, भुगतान, ईमेल) की मापी गई कॉल। लागतें सूची मूल्यों से अनुमानित हैं; आपके प्रदाता का इनवॉइस ही अंतिम है।",
+      "calls": "प्रदाता कॉल",
+      "failed": "विफल",
+      "failedHint": "{count, plural, one {# विफल} other {# विफल}}",
+      "estimatedCost": "अनुमानित लागत",
+      "estimateNote": "अनुमान (USD सूची मूल्य)",
+      "units": "इकाइयाँ",
+      "operation": "ऑपरेशन",
+      "provider": "प्रदाता",
+      "allOperations": "सभी ऑपरेशन",
+      "details": "विवरण",
+      "byOperation": "ऑपरेशन के अनुसार",
+      "empty": "अभी तक कोई उपयोग दर्ज नहीं हुआ।",
+      "open": "उपयोग खोलें",
+      "cardSummary": "पिछले 30 दिन: {calls} कॉल, {failed} विफल, {cost} अनुमानित।",
+      "range": "अवधि",
+      "lastDays": "{count, plural, one {पिछला दिन} other {पिछले # दिन}}",
+      "statuses": {
+        "SUCCEEDED": "सफल",
+        "FAILED": "विफल"
+      },
+      "unitNames": {
+        "request": "अनुरोध",
+        "token": "टोकन",
+        "image": "इमेज",
+        "second": "सेकंड",
+        "byte": "बाइट",
+        "message": "संदेश"
+      },
+      "operations": {
+        "research_search": "वेब सर्च",
+        "ai_text": "एआई टेक्स्ट जनरेशन",
+        "images_generate": "इमेज जनरेशन",
+        "video_start": "वीडियो जनरेशन",
+        "storage_put": "फ़ाइल अपलोड",
+        "sms_send": "एसएमएस",
+        "whatsapp_send": "WhatsApp संदेश",
+        "payments_link": "पेमेंट लिंक",
+        "email_send": "ईमेल"
+      }
     }
   },
   "workflows": {

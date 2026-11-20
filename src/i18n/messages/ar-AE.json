@@ -1945,7 +1945,8 @@
       "read_budget_status": "قراءة حالة الميزانية",
       "create_bill_draft": "إنشاء مسودة فاتورة مورد",
       "read_proposals": "قراءة العروض",
-      "create_proposal_draft": "إنشاء مسودة عرض"
+      "create_proposal_draft": "إنشاء مسودة عرض",
+      "web_research": "البحث على الويب"
     },
     "needsApproval": "يحتاج موافقة",
     "tabs": {
@@ -2585,6 +2586,9 @@
         "follow_up": "متابعة لك: {title}",
         "sla_breached": "مخالفة SLA: {title}",
         "escalated": "تم تصعيد التذكرة: {title}"
+      },
+      "integrations": {
+        "connection_failing": "تكامل يفشل بشكل متكرر: {title}"
       }
     },
     "viewAll": "عرض الكل"
@@ -3569,12 +3573,15 @@
       "marketplace": "السوق",
       "connected": "المتصلة",
       "webhooks": "خطافات الويب",
-      "syncs": "سجل المزامنة"
+      "syncs": "سجل المزامنة",
+      "usage": "الاستخدام والتكلفة"
     },
     "metrics": {
       "connected": "التكاملات المتصلة",
       "syncErrors": "أخطاء المزامنة",
-      "webhookFailures": "عمليات تسليم خطافات فاشلة"
+      "webhookFailures": "عمليات تسليم خطافات فاشلة",
+      "providerUsage": "استدعاءات المزوّدين",
+      "providerFailures": "استدعاءات مزوّدين فاشلة"
     },
     "ofAvailable": "من أصل {count} متاحة",
     "failing": "تحتاج إلى انتباه",
@@ -3601,7 +3608,16 @@
       "crm": "إدارة علاقات العملاء",
       "social": "وسائل التواصل الاجتماعي",
       "accounting": "المحاسبة",
-      "developer": "المطورون"
+      "developer": "المطورون",
+      "ai": "الذكاء الاصطناعي",
+      "research": "البحث",
+      "creative": "الإبداع",
+      "ads": "الإعلانات",
+      "search": "البحث في الويب",
+      "cms": "إدارة المحتوى والتجارة",
+      "email": "البريد الإلكتروني",
+      "messaging": "المراسلة",
+      "storage": "التخزين والبنية التحتية"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (تسجيل الدخول لدى المزوّد)",
@@ -3620,60 +3636,194 @@
       "contacts": "استيراد جهات الاتصال والحسابات",
       "social_publishing": "النشر الاجتماعي",
       "accounting": "بيانات المحاسبة",
-      "webhooks": "خطافات واردة"
+      "webhooks": "خطافات واردة",
+      "ai_text": "توليد النصوص بالذكاء الاصطناعي",
+      "research": "البحث على الويب",
+      "image_generation": "توليد الصور",
+      "video_generation": "توليد الفيديو",
+      "video_publishing": "نشر الفيديو",
+      "ads": "الحملات الإعلانية والتقارير",
+      "search_analytics": "أداء البحث",
+      "cms_publishing": "النشر على الموقع",
+      "ecommerce": "المتجر الإلكتروني",
+      "email_sending": "إرسال البريد الإلكتروني",
+      "email_marketing": "التسويق عبر البريد الإلكتروني",
+      "sms": "الرسائل القصيرة",
+      "storage": "تخزين الملفات",
+      "infrastructure": "البنية التحتية"
     },
     "providers": {
       "google": {
         "description": "Gmail وتقويم Google وDrive للبريد والاجتماعات والملفات.",
-        "sync": "تتم مزامنة الاجتماعات في الاتجاهين مع تقويم Google (7 أيام للخلف و60 يوماً للأمام)."
+        "sync": "تتم مزامنة الاجتماعات في الاتجاهين مع تقويم Google (7 أيام للخلف و60 يوماً للأمام).",
+        "setup": "فعّل واجهات Gmail وتقويم Google وDrive لتطبيق Google OAuth الخاص بالمنصة."
       },
       "microsoft": {
         "description": "بريد Outlook والتقويم ورسائل Teams.",
-        "sync": "تتم مزامنة الاجتماعات في الاتجاهين مع تقويم Outlook (7 أيام للخلف و60 يوماً للأمام) عندما لا يكون تقويم Google متصلاً."
+        "sync": "تتم مزامنة الاجتماعات في الاتجاهين مع تقويم Outlook (7 أيام للخلف و60 يوماً للأمام) عندما لا يكون تقويم Google متصلاً.",
+        "setup": "سجّل تطبيقًا في Microsoft Entra ID بصلاحيات Microsoft Graph المفوّضة المذكورة."
       },
       "slack": {
-        "description": "انشر رسائل في قنوات Slack من سير العمل والتنبيهات."
+        "description": "انشر رسائل في قنوات Slack من سير العمل والتنبيهات.",
+        "setup": "أنشئ تطبيق Slack في api.slack.com/apps بصلاحيات البوت المذكورة."
       },
       "stripe": {
         "description": "استورد المدفوعات وتفاعل مع الإيرادات الجديدة عبر سير العمل.",
-        "sync": "تتحول المدفوعات الناجحة بعد تاريخ الربط إلى أحداث «تم استلام دفعة»."
+        "sync": "تتحول المدفوعات الناجحة بعد تاريخ الربط إلى أحداث «تم استلام دفعة».",
+        "setup": "أنشئ مفتاحًا مقيّدًا في لوحة Stripe ← المطورون ← مفاتيح API (قراءة الرصيد والمدفوعات؛ وكتابة الأسعار وروابط الدفع إذا كنت ترسل روابط دفع)."
       },
       "whatsapp": {
-        "description": "واجهة WhatsApp Business السحابية لمراسلة العملاء."
+        "description": "واجهة WhatsApp Business السحابية لمراسلة العملاء.",
+        "setup": "في Meta Business Suite أنشئ رمز مستخدم نظام بصلاحية whatsapp_business_messaging وانسخ معرّف رقم الهاتف من WhatsApp Manager."
       },
       "hubspot": {
         "description": "استورد جهات اتصال وشركات HubSpot إلى نظام CRM لديك.",
-        "sync": "تُستورد جهات الاتصال وتُزال المكررات حسب البريد؛ وتصبح شركاتها حسابات مطابقة حسب النطاق."
+        "sync": "تُستورد جهات الاتصال وتُزال المكررات حسب البريد؛ وتصبح شركاتها حسابات مطابقة حسب النطاق.",
+        "setup": "أنشئ تطبيقًا عامًا في حساب مطوري HubSpot بالصلاحيات المذكورة."
       },
       "salesforce": {
         "description": "استورد جهات اتصال وحسابات Salesforce إلى نظام CRM لديك.",
-        "sync": "تُستورد جهات الاتصال المعدّلة منذ آخر مزامنة وتُزال المكررات حسب البريد؛ وتُطابق الحسابات حسب النطاق أو الاسم."
+        "sync": "تُستورد جهات الاتصال المعدّلة منذ آخر مزامنة وتُزال المكررات حسب البريد؛ وتُطابق الحسابات حسب النطاق أو الاسم.",
+        "setup": "أنشئ Connected App في إعدادات Salesforce مع تفعيل OAuth والصلاحيات المذكورة."
       },
       "linkedin": {
-        "description": "انشر منشورات على LinkedIn نيابة عن عضو."
+        "description": "انشر منشورات على LinkedIn نيابة عن عضو.",
+        "setup": "أنشئ تطبيقًا في developer.linkedin.com مع “Sign In with LinkedIn using OpenID Connect” و“Share on LinkedIn”."
       },
       "x": {
-        "description": "انشر منشورات على X (تويتر)."
+        "description": "انشر منشورات على X (تويتر).",
+        "setup": "أنشئ مشروعًا وتطبيقًا في developer.x.com مع OAuth 2.0 (عميل سري) وصلاحيات قراءة/كتابة."
       },
       "facebook": {
-        "description": "انشر على صفحات فيسبوك واقرأ التفاعل."
+        "description": "انشر على صفحات فيسبوك واقرأ التفاعل.",
+        "setup": "أنشئ تطبيق Meta (نوع أعمال) مع Facebook Login واطلب صلاحيات الصفحات المذكورة."
       },
       "instagram": {
-        "description": "انشر محتوى على حساب Instagram تجاري."
+        "description": "انشر محتوى على حساب Instagram تجاري.",
+        "setup": "اربط كل حساب Instagram احترافي بصفحة Facebook؛ ويحتاج تطبيق Meta إلى صلاحيات Instagram المذكورة."
       },
       "quickbooks": {
         "description": "اربط محاسبة QuickBooks Online.",
-        "sync": "يتحول العملاء إلى حسابات وجهات اتصال في CRM؛ وتُستورد الفواتير مرة واحدة كمسودات في المالية بعملتك الأساسية."
+        "sync": "يتحول العملاء إلى حسابات وجهات اتصال في CRM؛ وتُستورد الفواتير مرة واحدة كمسودات في المالية بعملتك الأساسية.",
+        "setup": "أنشئ تطبيقًا في developer.intuit.com بصلاحية المحاسبة."
       },
       "xero": {
         "description": "اربط محاسبة Xero (المعاملات وجهات الاتصال).",
-        "sync": "تتحول جهات اتصال العملاء إلى حسابات وجهات اتصال في CRM؛ وتُستورد فواتير المبيعات مرة واحدة كمسودات في المالية بعملتك الأساسية."
+        "sync": "تتحول جهات اتصال العملاء إلى حسابات وجهات اتصال في CRM؛ وتُستورد فواتير المبيعات مرة واحدة كمسودات في المالية بعملتك الأساسية.",
+        "setup": "أنشئ تطبيق ويب في developer.xero.com/app/manage."
       },
       "webhook": {
-        "description": "استقبل استدعاءات HTTP موقّعة من أي نظام وشغّل سير العمل."
+        "description": "استقبل استدعاءات HTTP موقّعة من أي نظام وشغّل سير العمل.",
+        "setup": "أنشئ Webhook واردًا أدناه والصق عنوانه في النظام المُرسِل."
       },
       "custom_api": {
-        "description": "استدعِ أي واجهة HTTPS بمفتاح API من سير العمل."
+        "description": "استدعِ أي واجهة HTTPS بمفتاح API من سير العمل.",
+        "setup": "احصل على مفتاح API للخدمة ودوّن عنوانها الأساسي وترويسة المصادقة."
+      },
+      "google_ads": {
+        "settingsHelp": "اختياري: استخدم رمز المطوّر الخاص بك (وإلا رمز المنصة) ومعرّف حساب المدير لتسجيل الدخول عبره.",
+        "description": "حسابات عملاء Google Ads: الحملات والإنفاق والتحويلات.",
+        "setup": "فعّل Google Ads API في Google Cloud واحصل على رمز مطوّر من حساب مدير Google Ads (مركز API).\nيضبط مسؤول المنصة GOOGLE_ADS_DEVELOPER_TOKEN، أو تُدخل رمزك الخاص في إعدادات الاتصال."
+      },
+      "openai": {
+        "description": "إعادة صياغة سريعة وملخصات وتوليد صور باستخدام حساب OpenAI الخاص بك.",
+        "setup": "أنشئ مفتاحًا سريًا في platform.openai.com ← API keys (يُفضّل مفتاح مشروع).\nيمكنك اختياريًا تحديد نموذج افتراضي ومعرّف مؤسستك."
+      },
+      "gemini": {
+        "description": "نماذج Google Gemini لميزات النصوص كبديل احتياطي لـ OpenAI.",
+        "setup": "أنشئ مفتاح API في Google AI Studio (aistudio.google.com ← Get API key)."
+      },
+      "tavily": {
+        "description": "بحث فوري على الويب للموظفين الافتراضيين وميزات البحث (المزوّد الأساسي).",
+        "setup": "سجّل الدخول إلى app.tavily.com وانسخ مفتاح API (يبدأ بـ tvly-)."
+      },
+      "exa": {
+        "description": "بحث عصبي على الويب مع محتوى الصفحات؛ البديل الأول للبحث على الويب.",
+        "setup": "أنشئ مفتاح API في لوحة Exa (dashboard.exa.ai ← API keys)."
+      },
+      "serpapi": {
+        "description": "نتائج بحث Google عبر SerpApi؛ البديل الثاني للبحث على الويب.",
+        "setup": "انسخ مفتاح API الخاص من serpapi.com ← Your account ← API key."
+      },
+      "stability": {
+        "description": "نماذج Stable Image للمرئيات التسويقية.",
+        "setup": "أنشئ مفتاح API في platform.stability.ai ← Account ← API keys وتأكد من وجود رصيد في الحساب."
+      },
+      "replicate": {
+        "description": "تشغيل نماذج صور وفيديو مفتوحة (Flux وMiniMax وغيرها) على Replicate.",
+        "setup": "أنشئ رمز API في replicate.com ← Account ← API tokens وأضف وسيلة دفع.\nيمكنك اختياريًا تحديد نموذجي الصور والفيديو."
+      },
+      "runway": {
+        "description": "توليد فيديو بالذكاء الاصطناعي من نص أو صورة باستخدام Runway.",
+        "setup": "أنشئ مفتاح API في بوابة مطوري Runway (dev.runwayml.com) واشترِ أرصدة API."
+      },
+      "youtube": {
+        "description": "رفع الفيديوهات وإدارتها على قنوات YouTube الخاصة بك.",
+        "setup": "في Google Cloud، فعّل YouTube Data API v3 لتطبيق OAuth الخاص بالمنصة."
+      },
+      "tiktok": {
+        "description": "نشر الفيديوهات على حسابك في TikTok.",
+        "setup": "أنشئ تطبيقًا في developers.tiktok.com مع Login Kit وContent Posting API واطلب الصلاحيات المذكورة."
+      },
+      "threads": {
+        "description": "نشر المنشورات على Threads وقراءة إحصاءاتها.",
+        "setup": "أنشئ تطبيق Meta بحالة استخدام Threads API في developers.facebook.com وأضف صلاحيات Threads."
+      },
+      "pinterest": {
+        "description": "إنشاء دبابيس على لوحات Pinterest الخاصة بك.",
+        "setup": "أنشئ تطبيقًا في developers.pinterest.com واطلب الوصول القياسي للصلاحيات المذكورة."
+      },
+      "meta_ads": {
+        "description": "حسابات إعلانات Facebook وInstagram: الحملات والإنفاق والنتائج.",
+        "setup": "أضف منتج Marketing API إلى تطبيق Meta الخاص بالمنصة واطلب ads_management (وصول متقدم)."
+      },
+      "linkedin_ads": {
+        "description": "حسابات إعلانات LinkedIn Campaign Manager والتقارير.",
+        "setup": "اطلب منتج Advertising API لتطبيق LinkedIn الخاص بالمنصة (developer.linkedin.com)."
+      },
+      "tiktok_ads": {
+        "description": "حسابات معلني TikTok for Business والتقارير.",
+        "setup": "أنشئ تطبيق مطوّر في business-api.tiktok.com واضبط رابط إعادة توجيه المعلن على عنوان إعادة التوجيه أدناه."
+      },
+      "google_search_console": {
+        "description": "النقرات ومرات الظهور وعبارات البحث لمواقعك الموثّقة.",
+        "setup": "فعّل Google Search Console API في Google Cloud لتطبيق OAuth الخاص بالمنصة، وسجّل الدخول بحساب يملك المواقع."
+      },
+      "wordpress": {
+        "description": "نشر المقالات على موقع WordPress مستضاف ذاتيًا أو على WordPress.com.",
+        "setup": "في WordPress انتقل إلى المستخدمون ← الملف الشخصي ← كلمات مرور التطبيقات، وأضف واحدة باسم “Realy” وانسخها.\nيجب أن يستخدم الموقع HTTPS ويسمح بواجهة REST."
+      },
+      "webflow": {
+        "description": "نشر عناصر نظام إدارة المحتوى على مواقع Webflow الخاصة بك.",
+        "setup": "في Webflow افتح Site settings ← Apps & integrations ← API access وأنشئ رمز موقع بصلاحية قراءة/كتابة CMS."
+      },
+      "shopify": {
+        "description": "متجرك على Shopify: المنتجات ومقالات المدونة والطلبات.",
+        "setup": "في لوحة إدارة Shopify انتقل إلى الإعدادات ← التطبيقات ← تطوير التطبيقات، وأنشئ تطبيقًا بصلاحيات Admin API اللازمة، وثبّته وانسخ رمز الوصول."
+      },
+      "sendgrid": {
+        "description": "إرسال رسائل شركتك من حساب SendGrid ونطاقك الخاص.",
+        "setup": "أنشئ مفتاح API بصلاحية Mail Send في app.sendgrid.com ← Settings ← API Keys.\nوثّق عنوان المرسل أو النطاق في Sender Authentication."
+      },
+      "mailchimp": {
+        "description": "جماهير Mailchimp وحملات البريد الإلكتروني.",
+        "setup": "أنشئ مفتاح API من الملف الشخصي ← Extras ← API keys؛ بادئة الخادم هي الجزء بعد الشرطة (مثل us21)."
+      },
+      "twilio": {
+        "description": "رسائل SMS وواتساب من أرقام Twilio الخاصة بك.",
+        "setup": "انسخ Account SID ورمز المصادقة من الصفحة الرئيسية لوحدة تحكم Twilio.\nأضف رقم مرسل (أو معرّف خدمة مراسلة) للرسائل القصيرة ومرسل واتساب معتمدًا إذا كنت تستخدم واتساب."
+      },
+      "razorpay": {
+        "description": "روابط الدفع والمدفوعات عبر Razorpay (الهند).",
+        "setup": "أنشئ مفاتيح API في لوحة Razorpay ← Account & Settings ← API keys (وضع الاختبار أو الإنتاج)."
+      },
+      "s3": {
+        "description": "تخزين الصور والفيديوهات والملفات المولّدة في حاوية متوافقة مع S3 خاصة بك (AWS وR2 وB2 وMinIO...).",
+        "setup": "أنشئ حاوية ومفتاح وصول مقيّدًا بها (s3:PutObject وs3:GetObject وs3:ListBucket).\nلـ Cloudflare R2 أو Backblaze B2 أو MinIO أدخل نقطة الاتصال؛ واتركها فارغة لـ AWS."
+      },
+      "cloudflare": {
+        "description": "الوصول إلى حساب Cloudflare (DNS وR2 وPages) لأتمتة البنية التحتية.",
+        "setup": "أنشئ رمز API في dash.cloudflare.com ← My Profile ← API Tokens بالصلاحيات اللازمة فقط.\nيمكنك اختياريًا إدخال معرّف الحساب."
       }
     },
     "backToMarketplace": "كل التكاملات",
@@ -3726,7 +3876,34 @@
       "baseUrl": "عنوان URL الأساسي",
       "headerName": "اسم ترويسة المصادقة",
       "headerPrefix": "بادئة قيمة الترويسة",
-      "testPath": "مسار الاختبار"
+      "testPath": "مسار الاختبار",
+      "organization": "معرّف المؤسسة",
+      "model": "النموذج الافتراضي",
+      "imageModel": "نموذج الصور",
+      "videoModel": "نموذج الفيديو",
+      "siteUrl": "رابط الموقع",
+      "username": "اسم المستخدم",
+      "applicationPassword": "كلمة مرور التطبيق",
+      "shopDomain": "نطاق المتجر",
+      "adminToken": "رمز الوصول لواجهة الإدارة",
+      "fromEmail": "بريد المرسل",
+      "fromName": "اسم المرسل",
+      "serverPrefix": "بادئة الخادم",
+      "accountSid": "معرّف الحساب (SID)",
+      "authToken": "رمز المصادقة",
+      "fromNumber": "رقم المرسل أو خدمة المراسلة",
+      "whatsappFrom": "رقم مرسل واتساب",
+      "keyId": "معرّف المفتاح",
+      "keySecret": "سر المفتاح",
+      "endpoint": "نقطة الاتصال (اتركها فارغة لـ AWS)",
+      "region": "المنطقة",
+      "bucket": "الحاوية (Bucket)",
+      "accessKeyId": "معرّف مفتاح الوصول",
+      "secretAccessKey": "مفتاح الوصول السري",
+      "apiToken": "رمز API",
+      "accountId": "معرّف الحساب",
+      "developerToken": "رمز المطوّر",
+      "loginCustomerId": "معرّف العميل المدير (تسجيل الدخول)"
     },
     "syncStatus": {
       "RUNNING": "قيد التشغيل",
@@ -3838,6 +4015,88 @@
       "summary": "الاستجابة",
       "noResponse": "لا استجابة",
       "attempts": "{count, plural, zero {لا محاولات} one {محاولة واحدة} two {محاولتان} few {# محاولات} many {# محاولة} other {# محاولة}}"
+    },
+    "requiresCredentials": "يتطلب بيانات اعتماد",
+    "orApiKey": "أو اتصل باستخدام مفتاح API:",
+    "health": {
+      "lastSuccess": "آخر استدعاء ناجح",
+      "lastFailure": "آخر استدعاء فاشل",
+      "streak": "{count, plural, one {إخفاق واحد متتالٍ} other {# إخفاقات متتالية}}"
+    },
+    "setup": {
+      "title": "خطوات الإعداد",
+      "help": "ما يلزم قبل استخدام هذا التكامل.",
+      "oauthEnv": "يضبط مسؤول المنصة متغيرات البيئة التالية: {vars}.",
+      "oauthRedirect": "سجّل عنوان إعادة التوجيه هذا لدى المزوّد:",
+      "oauthConnect": "انقر على “الاتصال بـ {name}” ووافق على الصلاحيات المطلوبة.",
+      "apiKeyPaste": "أدخل {fields} أعلاه؛ يتم التحقق منها باستدعاء مباشر قبل حفظ أي شيء."
+    },
+    "accounts": {
+      "title": "الحسابات المتصلة",
+      "help": "الحسابات التي يمكن لهذا الاتصال العمل عليها. تستخدم الميزات الحساب النشط.",
+      "empty": "لم يُعثر على حسابات. شغّل اختبار الاتصال لتحديث القائمة.",
+      "search": "البحث في الحسابات",
+      "active": "نشط",
+      "use": "استخدام هذا الحساب",
+      "types": {
+        "page": "صفحة Facebook",
+        "instagram": "حساب Instagram",
+        "channel": "قناة",
+        "ad_account": "حساب إعلاني",
+        "site": "موقع",
+        "board": "لوحة",
+        "audience": "جمهور",
+        "account": "حساب"
+      }
+    },
+    "settings": {
+      "title": "إعدادات الاتصال",
+      "save": "حفظ الإعدادات",
+      "saved": "تم حفظ الإعدادات.",
+      "secretStored": "هناك قيمة محفوظة؛ اتركه فارغًا للإبقاء عليها."
+    },
+    "usage": {
+      "title": "الاستخدام والتكلفة",
+      "help": "الاستدعاءات المقيسة لخدمات المزوّدين في المنصة (البحث والنصوص والصور والفيديو والتخزين والمراسلة والمدفوعات والبريد). التكاليف تقديرية وفق الأسعار المعلنة؛ والمرجع هو فاتورة المزوّد.",
+      "calls": "استدعاءات المزوّدين",
+      "failed": "فاشلة",
+      "failedHint": "{count, plural, one {# فاشل} other {# فاشلة}}",
+      "estimatedCost": "التكلفة التقديرية",
+      "estimateNote": "تقدير (أسعار معلنة بالدولار)",
+      "units": "الوحدات",
+      "operation": "العملية",
+      "provider": "المزوّد",
+      "allOperations": "كل العمليات",
+      "details": "التفاصيل",
+      "byOperation": "حسب العملية",
+      "empty": "لم يُسجّل أي استخدام بعد.",
+      "open": "فتح الاستخدام",
+      "cardSummary": "آخر 30 يومًا: {calls} استدعاء، {failed} فاشل، {cost} تقديريًا.",
+      "range": "الفترة",
+      "lastDays": "{count, plural, one {آخر يوم} other {آخر # يومًا}}",
+      "statuses": {
+        "SUCCEEDED": "ناجح",
+        "FAILED": "فاشل"
+      },
+      "unitNames": {
+        "request": "طلبات",
+        "token": "رموز",
+        "image": "صور",
+        "second": "ثوانٍ",
+        "byte": "بايت",
+        "message": "رسائل"
+      },
+      "operations": {
+        "research_search": "بحث على الويب",
+        "ai_text": "توليد نص بالذكاء الاصطناعي",
+        "images_generate": "توليد صور",
+        "video_start": "توليد فيديو",
+        "storage_put": "رفع ملف",
+        "sms_send": "رسالة قصيرة",
+        "whatsapp_send": "رسالة واتساب",
+        "payments_link": "رابط دفع",
+        "email_send": "بريد إلكتروني"
+      }
     }
   },
   "workflows": {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ExternalLink, PlugZap, RefreshCw, ShieldCheck, Unplug } from "lucide-react";
+import { Check, ExternalLink, PlugZap, RefreshCw, Save, ShieldCheck, Unplug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Notice } from "@/components/ui/notice";
 import { FormError } from "@/components/form-error";
 import { useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
-import type { CredentialField } from "@/server/modules/integrations/catalog";
+import type { ConnectionAccount, CredentialField } from "@/server/modules/integrations/catalog";
 import { useAction } from "@/components/automation/use-action";
 
 /** "Connect with <provider>" (OAuth) — a top-level navigation to the start route, which redirects to the provider. */
@@ -48,7 +48,7 @@ export function ApiKeyForm({ base, provider, fields, connected }: { base: string
   return (
     <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2" autoComplete="off">
       {fields.map((f) => (
-        <Field key={f.key} label={`${t(`integrations.fields.${f.key}`)}${f.required ? "" : ` (${t("common.optional")})`}`} htmlFor={`f-${f.key}`} error={fieldErrors[f.key]} hint={f.secret ? t("integrations.secretHint") : undefined}>
+        <Field key={f.key} label={`${t(`integrations.fields.${f.labelKey ?? f.key}`)}${f.required ? "" : ` (${t("common.optional")})`}`} htmlFor={`f-${f.key}`} error={fieldErrors[f.key]} hint={f.secret ? t("integrations.secretHint") : undefined}>
           <Input
             id={`f-${f.key}`}
             type={f.secret ? "password" : "text"}
@@ -144,5 +144,104 @@ export function DocsLink({ href, label }: { href: string; label: string }) {
       {label}
       <ExternalLink className="size-3.5" aria-hidden />
     </a>
+  );
+}
+
+/** Selectable sub-accounts (pages, channels, ad accounts, sites, audiences...) of a connection; one is active. */
+export function AccountPicker({ base, provider, accounts, activeId, canManage }: { base: string; provider: string; accounts: ConnectionAccount[]; activeId: string | null; canManage: boolean }) {
+  const t = useT();
+  const { busy, error, run } = useAction();
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const shown = needle ? accounts.filter((a) => a.name.toLowerCase().includes(needle) || a.id.toLowerCase().includes(needle)) : accounts;
+  const choose = (accountId: string) => run(() => api(`${base}/integrations/${provider}/account`, { body: { accountId } }));
+  return (
+    <div className="grid gap-2">
+      {accounts.length > 8 ? <Input type="search" value={q} maxLength={100} onChange={(e) => setQ(e.target.value)} placeholder={t("integrations.accounts.search")} aria-label={t("integrations.accounts.search")} /> : null}
+      <ul className="divide-y rounded-md border">
+        {shown.map((a) => {
+          const active = a.id === activeId;
+          return (
+            <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{a.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {t(`integrations.accounts.types.${a.type}`)} · <span dir="ltr">{a.id}</span>
+                </p>
+              </div>
+              {active ? (
+                <span className="inline-flex items-center gap-1 text-sm text-success">
+                  <Check className="size-4" aria-hidden />
+                  {t("integrations.accounts.active")}
+                </span>
+              ) : canManage ? (
+                <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => void choose(a.id)}>
+                  {t("integrations.accounts.use")}
+                </Button>
+              ) : null}
+            </li>
+          );
+        })}
+        {shown.length === 0 ? <li className="p-3 text-sm text-muted-foreground">{t("common.noResults")}</li> : null}
+      </ul>
+      <FormError error={error} />
+    </div>
+  );
+}
+
+/** Provider settings after connecting (catalog configFields). Secret values are write-only: a stored one shows as "set". */
+export function ConnectionSettingsForm({ base, provider, fields, values, storedSecrets }: { base: string; provider: string; fields: CredentialField[]; values: Record<string, string>; storedSecrets: string[] }) {
+  const t = useT();
+  const initial = Object.fromEntries(fields.map((f) => [f.key, f.secret ? "" : (values[f.key] ?? "")]));
+  const [form, setForm] = useState<Record<string, string>>(initial);
+  const [saved, setSaved] = useState(false);
+  const { busy, error, run } = useAction();
+  const fieldErrors = error instanceof ApiError ? error.fieldErrors() : {};
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setSaved(false);
+    // Secret fields left empty keep their stored value.
+    const payload = Object.fromEntries(Object.entries(form).filter(([k, v]) => !(fields.find((f) => f.key === k)?.secret && !v.trim())));
+    void run(
+      () => api(`${base}/integrations/${provider}/settings`, { body: payload }),
+      () => {
+        setSaved(true);
+        setForm((v) => Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fields.find((f) => f.key === k)?.secret ? "" : x])));
+      },
+    );
+  };
+  return (
+    <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2" autoComplete="off">
+      {fields.map((f) => (
+        <Field
+          key={f.key}
+          label={`${t(`integrations.fields.${f.labelKey ?? f.key}`)} (${t("common.optional")})`}
+          htmlFor={`s-${f.key}`}
+          error={fieldErrors[f.key]}
+          hint={f.secret ? (storedSecrets.includes(f.key) ? t("integrations.settings.secretStored") : t("integrations.secretHint")) : undefined}
+        >
+          <Input
+            id={`s-${f.key}`}
+            type={f.secret ? "password" : "text"}
+            value={form[f.key] ?? ""}
+            placeholder={f.placeholder}
+            maxLength={4000}
+            autoComplete="off"
+            spellCheck={false}
+            onChange={(e) => setForm((v) => ({ ...v, [f.key]: e.target.value }))}
+          />
+        </Field>
+      ))}
+      <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
+        <Button type="submit" disabled={busy}>
+          <Save aria-hidden />
+          {t("integrations.settings.save")}
+        </Button>
+        {saved ? <span className="text-sm text-success">{t("integrations.settings.saved")}</span> : null}
+      </div>
+      <div className="sm:col-span-2">
+        <FormError error={error} />
+      </div>
+    </form>
   );
 }
