@@ -6227,11 +6227,11 @@
         "location": "Wo",
         "locationPlaceholder": "Videolink, Telefon oder Adresse",
         "agenda": "Agenda (optional)",
-        "willAdd": "Er wird in {calendar} mit dem Kunden als Gast eingetragen.",
+        "willAdd": "Er wird in {calendar} mit dem Kunden als Gast eingetragen, und der Kunde erhält die Einladung per E-Mail.",
         "noCalendar": "Kein Kalender verbunden: Der Termin wird gespeichert und du kannst eine Kalenderdatei herunterladen und selbst senden. Niemand wird automatisch eingeladen.",
         "book": "Termin buchen",
         "result": {
-          "added": "Gebucht und in deinen Kalender eingetragen.",
+          "added": "Gebucht und in deinen Kalender eingetragen. Gäste erhalten die Einladung per E-Mail.",
           "not_connected": "Gebucht. Kein Kalender verbunden – lade die Kalenderdatei herunter, um sie zu teilen.",
           "failed": "Gebucht, aber dein Kalender hat ihn abgelehnt. Versuche es erneut beim Termin.",
           "skipped": "Gebucht."
@@ -6242,7 +6242,7 @@
           "CANCELLED": "Abgesagt"
         },
         "onCalendar": "In deinem Kalender",
-        "onCalendarGuest": "In deinem Kalender · Gast: {email}",
+        "onCalendarGuest": "In deinem Kalender · Einladung per E-Mail an {email}",
         "notOnCalendar": "Nicht im Kalender – niemand wurde automatisch eingeladen",
         "calendarFailed": "Dein Kalender hat diesen Termin abgelehnt",
         "ics": "Kalenderdatei",
@@ -8189,7 +8189,16 @@
       "agent_task_completed": "KI-Aufgabe erledigt",
       "agent_task_failed": "KI-Aufgabe fehlgeschlagen",
       "milestone_completed": "Meilenstein erreicht",
-      "objective_created": "Ziel angelegt"
+      "objective_created": "Ziel angelegt",
+      "voice_call_placed": "Anruf gestartet",
+      "voice_call_completed": "Anruf beendet",
+      "autonomy_action_auto_approved": "KI-Aktion automatisch freigegeben",
+      "autonomy_demoted": "Auto-Modus herabgestuft",
+      "marketing_run_completed": "Marketing-Lauf abgeschlossen",
+      "crm_prospect_found": "Interessent gefunden",
+      "crm_outreach_sent": "Outreach-E-Mail gesendet",
+      "livechat_lead_captured": "Lead aus Live-Chat erfasst",
+      "briefing_delivered": "Briefing zugestellt"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -18089,7 +18098,16 @@
       "approval_resolved": "hat über eine Freigabe entschieden",
       "objective_created": "hat ein neues Ziel gesetzt",
       "member_joined": "ist dem Team beigetreten",
-      "company_created": "hat das Unternehmen angelegt"
+      "company_created": "hat das Unternehmen angelegt",
+      "voice_call_placed": "hat einen Anruf gestartet",
+      "voice_call_completed": "hat einen Anruf beendet",
+      "autonomy_action_auto_approved": "hat eine KI-Aktion automatisch ausgeführt",
+      "autonomy_demoted": "hat den Auto-Modus herabgestuft bekommen",
+      "marketing_run_completed": "hat einen Marketing-Lauf abgeschlossen",
+      "crm_prospect_found": "hat einen neuen Interessenten gefunden",
+      "crm_outreach_sent": "hat eine Outreach-E-Mail gesendet",
+      "livechat_lead_captured": "hat einen Lead aus dem Live-Chat erfasst",
+      "briefing_delivered": "hat ein Briefing zugestellt"
     }
   },
   "site": {

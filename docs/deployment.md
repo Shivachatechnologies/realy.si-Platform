@@ -120,6 +120,16 @@ keys under Integrations; they are verified with the provider before the connecti
 **Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker + Redis), `deploy/worker/fly.toml`
 (Fly.io), `deploy/worker/worker.env.example` (variable names), `docker-compose.yml` profile `app` (local full stack).
 
+**Running server modules outside Next.** The worker loads the same `src/server/**` modules as the web apps, many of
+which start with `import "server-only"`. Next resolves that marker to an empty module (`react-server` condition);
+plain Node takes the package's default entry, which throws. `src/worker/index.ts` therefore imports
+`src/worker/preload.ts` **first**: it redirects `server-only` to the package's empty module (a CommonJS
+`Module._resolveFilename` wrapper — tsx runs this package as CommonJS — plus `module.registerHooks` for ESM imports on
+Node ≥ 22.15) and points the app-provided `@/i18n/server` at `src/worker/i18n-server.ts` (user catalogs;
+`DEFAULT_LOCALE` when a job passes no locale). The web apps never import the preload, so Next behaviour is unchanged.
+Keep `import "./preload"` the first import of the worker entry; any other tsx entry that loads server modules must
+import it first too.
+
 What it runs:
 
 | Queue | Producer | Work | Retries (exponential backoff) |

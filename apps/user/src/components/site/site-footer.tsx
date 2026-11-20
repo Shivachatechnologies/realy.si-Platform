@@ -53,6 +53,13 @@ export async function SiteFooter({ locale }: { locale: string }) {
       <div className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 pt-6 text-xs text-muted-foreground sm:px-6">
         <span>{t("site.footer.copyright", { year: new Date().getFullYear() })}</span>
         <span>{t("site.footer.languages")}</span>
+        <nav aria-label={t("legal.footerLabel")} className="flex flex-wrap gap-x-4 gap-y-1 sm:ms-auto">
+          {(["privacy", "terms", "cookies", "dpa"] as const).map((doc) => (
+            <Link key={doc} href={`/${locale}/legal/${doc}`} className="inline-flex min-h-9 items-center transition-colors hover:text-foreground">
+              {t(`legal.docs.${doc}.short`)}
+            </Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );

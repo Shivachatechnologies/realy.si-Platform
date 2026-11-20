@@ -6227,11 +6227,11 @@
         "location": "कहां",
         "locationPlaceholder": "वीडियो लिंक, फ़ोन या पता",
         "agenda": "एजेंडा (वैकल्पिक)",
-        "willAdd": "इसे ग्राहक को मेहमान बनाकर {calendar} में जोड़ा जाएगा।",
+        "willAdd": "इसे ग्राहक को मेहमान बनाकर {calendar} में जोड़ा जाएगा, और ग्राहक को निमंत्रण ईमेल किया जाएगा।",
         "noCalendar": "कोई कैलेंडर नहीं जुड़ा: मीटिंग सेव होगी और आप कैलेंडर फ़ाइल डाउनलोड करके ख़ुद भेज सकते हैं। किसी को अपने-आप निमंत्रण नहीं जाता।",
         "book": "मीटिंग बुक करें",
         "result": {
-          "added": "बुक हुई और आपके कैलेंडर में जुड़ गई।",
+          "added": "बुक हुई और आपके कैलेंडर में जुड़ गई। मेहमानों को निमंत्रण ईमेल किया जाता है।",
           "not_connected": "बुक हुई। कोई कैलेंडर नहीं जुड़ा — साझा करने के लिए कैलेंडर फ़ाइल डाउनलोड करें।",
           "failed": "बुक हुई, पर आपके कैलेंडर ने मना कर दिया। मीटिंग से फिर कोशिश करें।",
           "skipped": "बुक हुई।"
@@ -6242,7 +6242,7 @@
           "CANCELLED": "रद्द"
         },
         "onCalendar": "आपके कैलेंडर में",
-        "onCalendarGuest": "आपके कैलेंडर में · मेहमान: {email}",
+        "onCalendarGuest": "आपके कैलेंडर में · निमंत्रण {email} को ईमेल किया गया",
         "notOnCalendar": "किसी कैलेंडर में नहीं — किसी को अपने-आप निमंत्रण नहीं गया",
         "calendarFailed": "आपके कैलेंडर ने यह मीटिंग अस्वीकार की",
         "ics": "कैलेंडर फ़ाइल",
@@ -8189,7 +8189,16 @@
       "agent_task_completed": "AI टास्क पूरा हुआ",
       "agent_task_failed": "AI टास्क विफल हुआ",
       "milestone_completed": "माइलस्टोन पूरा हुआ",
-      "objective_created": "लक्ष्य बनाया गया"
+      "objective_created": "लक्ष्य बनाया गया",
+      "voice_call_placed": "कॉल की गई",
+      "voice_call_completed": "कॉल पूरी हुई",
+      "autonomy_action_auto_approved": "AI कार्रवाई अपने-आप स्वीकृत हुई",
+      "autonomy_demoted": "ऑटो मोड घटाया गया",
+      "marketing_run_completed": "मार्केटिंग रन पूरा हुआ",
+      "crm_prospect_found": "संभावित ग्राहक मिला",
+      "crm_outreach_sent": "आउटरीच ईमेल भेजा गया",
+      "livechat_lead_captured": "लाइव चैट से लीड मिली",
+      "briefing_delivered": "ब्रीफ़िंग भेजी गई"
     },
     "compare": {
       "title": "संस्करणों की तुलना करें",
@@ -18089,7 +18098,16 @@
       "approval_resolved": "ने मंज़ूरी पर निर्णय लिया",
       "objective_created": "ने नया लक्ष्य तय किया",
       "member_joined": "टीम में शामिल हुए",
-      "company_created": "ने कंपनी बनाई"
+      "company_created": "ने कंपनी बनाई",
+      "voice_call_placed": "ने एक कॉल की",
+      "voice_call_completed": "ने एक कॉल पूरी की",
+      "autonomy_action_auto_approved": "की एक AI कार्रवाई अपने-आप चली",
+      "autonomy_demoted": "का ऑटो मोड घटाया गया",
+      "marketing_run_completed": "ने एक मार्केटिंग रन पूरा किया",
+      "crm_prospect_found": "को एक नया संभावित ग्राहक मिला",
+      "crm_outreach_sent": "ने एक आउटरीच ईमेल भेजा",
+      "livechat_lead_captured": "ने लाइव चैट से एक लीड पाई",
+      "briefing_delivered": "ने एक ब्रीफ़िंग भेजी"
     }
   },
   "site": {

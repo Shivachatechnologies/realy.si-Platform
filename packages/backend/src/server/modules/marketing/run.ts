@@ -7,6 +7,7 @@ import { AppError, conflict, isAppError, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { getControls, isModuleEnabled } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
+import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { createTask } from "@/server/modules/agents/service";
 import { aiConfigured } from "@/server/modules/agents/runtime";
@@ -631,7 +632,10 @@ async function stepRunning(run: MarketingRun) {
   if (plan && plan.periodEnd.getTime() + 86_400_000 < Date.now()) {
     for (const apId of run.autopilotIds) await autopilotAction(sys(), run.organizationId, run.companyId, apId, { action: "pause" }).catch(() => null);
     await save(run, [entry("complete", "done", "The plan period ended — autopilots paused. Start a new run to plan the next period.")], { status: "COMPLETED", completedAt: new Date() });
-    await transaction((tx) => notifyUsers(tx, run.organizationId, [run.createdById], "marketing.run_completed", { companyId: run.companyId, title: "Marketing period completed", href: "/marketing/run" }));
+    await transaction(async (tx) => {
+      await notifyUsers(tx, run.organizationId, [run.createdById], "marketing.run_completed", { companyId: run.companyId, title: "Marketing period completed", href: "/marketing/run" });
+      await emitDomainEvent(tx, sys(), "marketing.run_completed", { organizationId: run.organizationId, companyId: run.companyId, entityType: "marketing_run", entityId: run.id, data: { planId: run.planId } });
+    });
     return;
   }
   // Keep the autopilots aligned with the run's (possibly platform-lowered) autonomy.

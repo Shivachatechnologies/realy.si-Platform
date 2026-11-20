@@ -6227,11 +6227,11 @@
         "location": "地点",
         "locationPlaceholder": "视频链接、电话或地址",
         "agenda": "议程（可选）",
-        "willAdd": "将添加到{calendar}，并把客户设为嘉宾。",
+        "willAdd": "将添加到{calendar}，把客户设为嘉宾，并通过邮件向客户发送邀请。",
         "noCalendar": "未连接日历：会议会被保存，你可以下载日历文件自行发送。不会自动邀请任何人。",
         "book": "预约会议",
         "result": {
-          "added": "已预约并添加到你的日历。",
+          "added": "已预约并添加到你的日历。嘉宾会收到邮件邀请。",
           "not_connected": "已预约。未连接日历——下载日历文件即可分享。",
           "failed": "已预约，但你的日历拒绝了它。请在会议中重试。",
           "skipped": "已预约。"
@@ -6242,7 +6242,7 @@
           "CANCELLED": "已取消"
         },
         "onCalendar": "已在你的日历中",
-        "onCalendarGuest": "已在你的日历中 · 嘉宾：{email}",
+        "onCalendarGuest": "已在你的日历中 · 邀请已发送至 {email}",
         "notOnCalendar": "未添加到日历——没有自动邀请任何人",
         "calendarFailed": "你的日历拒绝了这场会议",
         "ics": "日历文件",
@@ -8189,7 +8189,16 @@
       "agent_task_completed": "AI 任务已完成",
       "agent_task_failed": "AI 任务失败",
       "milestone_completed": "里程碑已完成",
-      "objective_created": "目标已创建"
+      "objective_created": "目标已创建",
+      "voice_call_placed": "已拨出电话",
+      "voice_call_completed": "通话已结束",
+      "autonomy_action_auto_approved": "AI 操作已自动批准",
+      "autonomy_demoted": "自动模式已降级",
+      "marketing_run_completed": "营销周期已完成",
+      "crm_prospect_found": "发现潜在客户",
+      "crm_outreach_sent": "已发送外联邮件",
+      "livechat_lead_captured": "在线聊天获取了线索",
+      "briefing_delivered": "简报已送达"
     },
     "compare": {
       "title": "比较版本",
@@ -18089,7 +18098,16 @@
       "approval_resolved": "处理了一项审批",
       "objective_created": "设定了一个新目标",
       "member_joined": "加入了团队",
-      "company_created": "创建了公司"
+      "company_created": "创建了公司",
+      "voice_call_placed": "拨出了一通电话",
+      "voice_call_completed": "完成了一通电话",
+      "autonomy_action_auto_approved": "的一项 AI 操作已自动执行",
+      "autonomy_demoted": "的自动模式被降级",
+      "marketing_run_completed": "完成了一个营销周期",
+      "crm_prospect_found": "发现了一位新的潜在客户",
+      "crm_outreach_sent": "发送了一封外联邮件",
+      "livechat_lead_captured": "从在线聊天获取了一条线索",
+      "briefing_delivered": "送达了一份简报"
     }
   },
   "site": {

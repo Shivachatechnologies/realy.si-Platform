@@ -4681,11 +4681,11 @@
         "location": "Where",
         "locationPlaceholder": "Video link, phone or address",
         "agenda": "Agenda (optional)",
-        "willAdd": "It will be added to {calendar} with the customer as a guest.",
+        "willAdd": "It will be added to {calendar} with the customer as a guest, and the customer is emailed the invitation.",
         "noCalendar": "No calendar is connected: the meeting is saved and you can download a calendar file to send yourself. Nobody is invited automatically.",
         "book": "Book meeting",
         "result": {
-          "added": "Booked and added to your calendar.",
+          "added": "Booked and added to your calendar. Guests are emailed the invitation.",
           "not_connected": "Booked. No calendar connected — download the calendar file to share it.",
           "failed": "Booked, but your calendar refused it. Try again from the meeting.",
           "skipped": "Booked."
@@ -4696,7 +4696,7 @@
           "CANCELLED": "Cancelled"
         },
         "onCalendar": "On your calendar",
-        "onCalendarGuest": "On your calendar · guest: {email}",
+        "onCalendarGuest": "On your calendar · invitation emailed to {email}",
         "notOnCalendar": "Not on a calendar — nobody was invited automatically",
         "calendarFailed": "Your calendar refused this meeting",
         "ics": "Calendar file",
@@ -6795,7 +6795,16 @@
       "agent_task_completed": "AI task completed",
       "agent_task_failed": "AI task failed",
       "milestone_completed": "Milestone completed",
-      "objective_created": "Objective created"
+      "objective_created": "Objective created",
+      "voice_call_placed": "Call placed",
+      "voice_call_completed": "Call completed",
+      "autonomy_action_auto_approved": "AI action auto-approved",
+      "autonomy_demoted": "Auto mode demoted",
+      "marketing_run_completed": "Marketing run completed",
+      "crm_prospect_found": "Prospect found",
+      "crm_outreach_sent": "Outreach email sent",
+      "livechat_lead_captured": "Live chat lead captured",
+      "briefing_delivered": "Briefing delivered"
     },
     "compare": {
       "title": "Compare versions",
@@ -18911,7 +18920,16 @@
       "approval_resolved": "decided an approval",
       "objective_created": "set a new objective",
       "member_joined": "joined the team",
-      "company_created": "created the company"
+      "company_created": "created the company",
+      "voice_call_placed": "placed a call",
+      "voice_call_completed": "completed a call",
+      "autonomy_action_auto_approved": "had an AI action run automatically",
+      "autonomy_demoted": "had Auto mode demoted",
+      "marketing_run_completed": "completed a marketing run",
+      "crm_prospect_found": "found a new prospect",
+      "crm_outreach_sent": "sent an outreach email",
+      "livechat_lead_captured": "captured a lead from live chat",
+      "briefing_delivered": "delivered a briefing"
     }
   },
   "aiPlans": {
@@ -21633,5 +21651,41 @@
   },
   "cms": {
     "publishedOn": "Published {date}"
+  },
+  "legal": {
+    "eyebrow": "Legal",
+    "draftBanner": "Draft — must be reviewed by a lawyer before launch",
+    "draftHelp": "This text describes what Realy actually does today, but it has not been legally reviewed and contains placeholders. It is not yet a binding legal document.",
+    "englishOnly": "Legal text is provided in English.",
+    "lastUpdated": "Last updated: {date}",
+    "footerLabel": "Legal",
+    "docs": {
+      "privacy": {
+        "title": "Privacy Policy",
+        "short": "Privacy",
+        "description": "What personal data Realy processes, why, who receives it and your GDPR rights."
+      },
+      "terms": {
+        "title": "Terms of Service",
+        "short": "Terms",
+        "description": "The terms for using Realy."
+      },
+      "cookies": {
+        "title": "Cookie Policy",
+        "short": "Cookies",
+        "description": "The strictly necessary cookies Realy uses — no analytics or advertising cookies."
+      },
+      "dpa": {
+        "title": "Data Processing Agreement",
+        "short": "DPA",
+        "description": "How Realy processes personal data on behalf of customers (GDPR Art. 28), including sub-processors."
+      }
+    },
+    "cookieNotice": {
+      "label": "Cookie notice",
+      "text": "Realy uses only strictly necessary cookies (sign-in, language and your selected company) — no analytics or advertising cookies.",
+      "link": "Cookie Policy",
+      "ok": "OK"
+    }
   }
 }
