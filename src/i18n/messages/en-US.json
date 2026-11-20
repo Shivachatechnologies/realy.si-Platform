@@ -246,7 +246,8 @@
       "already_linked": "This {provider} account is already connected to another Realy account.",
       "not_configured": "OAuth provider not configured.",
       "account_disabled": "This account is not active.",
-      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox."
+      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox.",
+      "registrations_closed": "New registrations are currently closed."
     },
     "verifySignInFirst": "Sign in to the account this link was sent for, and your email address will be confirmed.",
     "ssoSignIn": "Sign in with SSO"
@@ -585,7 +586,27 @@
       "objectives_plan_running": "A plan is already being generated.",
       "objectives_plan_partial": "Part of this plan was already applied; finish applying it first.",
       "objectives_plan_keys": "The plan contains duplicate items.",
-      "objectives_goal_inactive": "Only active goals can be planned."
+      "objectives_goal_inactive": "Only active goals can be planned.",
+      "maintenance": "The platform is under maintenance. Please try again shortly.",
+      "read_only": "The platform is temporarily read-only; changes can't be saved right now.",
+      "registrations_closed": "New registrations are currently closed.",
+      "signup_domain_not_allowed": "Sign-up is limited to approved email domains.",
+      "company_creation_disabled": "Creating companies is temporarily disabled.",
+      "organization_suspended": "This organization is suspended by the platform. Contact support.",
+      "module_disabled": "This module is currently disabled.",
+      "platform_ai_disabled": "The AI workforce is turned off by the platform.",
+      "platform_ai_org_disabled": "AI is disabled for this organization by the platform.",
+      "platform_ai_profile_disabled": "This AI role is disabled by the platform.",
+      "platform_ai_model_disabled": "The configured AI model is disabled by the platform.",
+      "platform_ai_budget_exhausted": "The AI token budget is used up. Try again later.",
+      "plan_ai_tokens_exhausted": "Your plan's monthly AI allowance is used up. Upgrade or wait for the next month.",
+      "plan_limit_reached": "Your plan's limit is reached. Upgrade to add more.",
+      "plan_api_quota_exhausted": "Your plan's monthly API quota is used up.",
+      "confirmation_mismatch": "The confirmation text doesn't match.",
+      "sole_owner": "This user is the only owner of an organization with other members. Transfer ownership first.",
+      "last_super_admin": "The platform must keep at least one super admin.",
+      "platform_lockdown_active": "End the emergency lockdown first.",
+      "platform_lockdown_inactive": "No emergency lockdown is active."
     }
   },
   "onboarding": {
@@ -847,7 +868,20 @@
       "audit": "Audit log",
       "system": "System status",
       "users": "Users",
-      "organizations": "Organizations"
+      "organizations": "Organizations",
+      "companies": "Companies",
+      "ai": "AI & Workforce",
+      "aiOverview": "Control center",
+      "aiTasks": "AI task logs",
+      "aiUsage": "Cost & usage",
+      "billing": "Plans & Billing",
+      "subscriptions": "Subscriptions",
+      "features": "Platform Features",
+      "controls": "Platform Controls",
+      "integrations": "Integrations & API",
+      "securityAudit": "Security & Audit",
+      "security": "Security",
+      "settings": "Settings"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -917,7 +951,8 @@
       "noRules": "No targeting rules.",
       "remove": "Remove",
       "turnOn": "Turn on",
-      "turnOff": "Turn off"
+      "turnOff": "Turn off",
+      "subtitle": "Feature flags with targeting rules."
     },
     "audit": {
       "time": "Time",
@@ -931,7 +966,17 @@
         "ADMIN": "Admin",
         "SECURITY": "Security"
       },
-      "empty": "No audit entries."
+      "empty": "No audit entries.",
+      "subtitle": "Every administrative and security change, with actor and reason. Filter and export as CSV.",
+      "exportCsv": "Export CSV",
+      "actorEmail": "Actor email",
+      "from": "From",
+      "to": "To",
+      "scope": "Scope",
+      "scopes": {
+        "platform": "Platform & security",
+        "all": "Everything (incl. tenants)"
+      }
     },
     "system": {
       "title": "External services",
@@ -948,6 +993,33 @@
         "sentry": "Error tracking (Sentry)",
         "otel": "Tracing (OpenTelemetry)",
         "redis": "Rate-limit store (Redis)"
+      },
+      "subtitle": "Live health, queues, worker heartbeat and recent errors.",
+      "health": "Health",
+      "reachable": "Reachable",
+      "unreachable": "Unreachable",
+      "worker": "Background worker",
+      "lastHeartbeat": "Last heartbeat {time}",
+      "noHeartbeat": "No worker heartbeat yet.",
+      "queues": "Queues",
+      "queue": "Queue",
+      "waiting": "Waiting",
+      "active": "Active",
+      "delayed": "Delayed",
+      "failed": "Failed",
+      "completed": "Completed",
+      "workers": "Worker processes",
+      "startedAt": "started {time}",
+      "recentErrors": "Recent errors",
+      "recentErrorsHint": "Failed jobs, AI tasks, syncs, workflow runs and webhook deliveries (7 days).",
+      "noErrors": "No errors in the last 7 days.",
+      "errorCount": "{count} errors",
+      "kinds": {
+        "job": "Job",
+        "task": "AI task",
+        "sync": "Sync",
+        "workflow": "Workflow",
+        "webhook": "Webhook"
       }
     },
     "users": {
@@ -966,12 +1038,58 @@
         "status": "Status",
         "security": "Security",
         "organizations": "Organizations",
-        "created": "Joined"
+        "created": "Joined",
+        "lastLogin": "Last sign-in"
       },
       "status": {
         "ACTIVE": "Active",
         "SUSPENDED": "Suspended",
         "DELETED": "Deleted"
+      },
+      "subtitle": "Every account on the platform. Suspend, sign out, delete safely or change platform roles — always with a reason.",
+      "total": "{count} users",
+      "filters": {
+        "status": "Status",
+        "mfa": "Two-factor",
+        "created": "Joined",
+        "login": "Last sign-in"
+      },
+      "login": {
+        "7d": "Signed in within 7 days",
+        "30d": "Signed in within 30 days",
+        "inactive30": "Inactive for 30+ days",
+        "never": "Never signed in"
+      },
+      "revokeSessions": "Revoke all sessions",
+      "revokeSessionsHint": "The user is signed out on every device immediately.",
+      "delete": "Delete user",
+      "deleteHint": "The account is deactivated and its email and name are anonymized; sessions, sign-in links and two-factor are removed. Audit history is kept. Not possible while the user is the only owner of an organization with other members.",
+      "grantRole": "Grant platform role",
+      "grantRoleHint": "Requires two-factor verification. You can only grant permissions you hold yourself.",
+      "revokeRole": "Remove",
+      "role": "Role",
+      "detail": {
+        "lastLogin": "Last sign-in",
+        "activeSessions": "{count} active sessions",
+        "registered": "Registered",
+        "aiTasks": "AI tasks created",
+        "aiTokens": "AI tokens this month",
+        "profile": "Profile",
+        "signIn": "Sign-in methods",
+        "password": "Password",
+        "locale": "Language & time zone",
+        "country": "Country",
+        "platformRoles": "Platform roles",
+        "noPlatformRoles": "No platform roles.",
+        "memberships": "Organizations",
+        "noMemberships": "Not a member of any organization.",
+        "roles": "Roles",
+        "sessions": "Sign-in history",
+        "signedIn": "Signed in",
+        "lastSeen": "Last seen",
+        "revoked": "Ended",
+        "active": "Active",
+        "securityLog": "Security & admin events"
       }
     },
     "organizations": {
@@ -982,12 +1100,464 @@
         "members": "Members",
         "companies": "Companies",
         "subscription": "Subscription",
-        "created": "Created"
+        "created": "Created",
+        "aiTasks": "AI tasks (30 d)"
+      },
+      "total": "{count} organizations",
+      "noSubscription": "No subscription",
+      "status": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "CLOSED": "Closed"
+      },
+      "suspend": "Suspend organization",
+      "reactivate": "Reactivate organization",
+      "suspendHint": "Members lose access to every page and API of this organization and its AI tasks stop, until it is reactivated.",
+      "restrictions": "Platform restrictions",
+      "restrictionsHint": "Disable modules or AI for this organization and set its token budgets. Enforced on every request.",
+      "editRestrictions": "Restrictions",
+      "disabledModules": "Disabled modules",
+      "aiDisabled": "AI disabled for this organization",
+      "aiDaily": "Daily AI token budget",
+      "aiMonthly": "Monthly AI token budget",
+      "viewGate": {
+        "title": "Open {name}",
+        "hint": "Tenant details are confidential. Your reason is recorded in the audit log (platform.tenant_viewed) and asked once per session.",
+        "placeholder": "e.g. support ticket #1234",
+        "open": "Open details"
+      },
+      "detail": {
+        "aiTasks30": "AI tasks (30 days)",
+        "failed": "{count} failed",
+        "aiTokensMonth": "AI tokens this month",
+        "plan": "Plan & limits",
+        "usage": "Usage this month",
+        "modules": "Modules in use",
+        "modulesHint": "Record counts per module.",
+        "inUse": "In use",
+        "members": "Members",
+        "deleted": "Deleted",
+        "recentTasks": "Recent AI tasks",
+        "activity": "Activity log"
+      },
+      "counts": {
+        "leads": "Leads",
+        "deals": "Deals",
+        "contacts": "Contacts",
+        "accounts": "Accounts",
+        "campaigns": "Campaigns",
+        "content": "Content",
+        "invoices": "Invoices",
+        "transactions": "Transactions",
+        "employees": "Employees",
+        "candidates": "Candidates",
+        "projects": "Projects",
+        "tasks": "Tasks",
+        "channels": "Channels",
+        "announcements": "Announcements",
+        "tickets": "Tickets",
+        "workflows": "Workflows",
+        "runs": "Runs",
+        "connections": "Connections",
+        "aiEmployees": "AI employees",
+        "dashboards": "Dashboards",
+        "installs": "Installs",
+        "documents": "Documents",
+        "objectives": "Objectives"
       }
     },
     "signInTitle": "Admin console sign-in",
     "signInSubtitle": "Platform administrators only. Use your platform admin account.",
-    "openApp": "Open the app"
+    "openApp": "Open the app",
+    "common": {
+      "edit": "Edit",
+      "add": "Add",
+      "reasonAudited": "Required. Stored in the audit log with your name.",
+      "criticalWarning": "This is a critical action that affects the whole platform.",
+      "typeToConfirm": "Type {phrase} to confirm",
+      "thisMonth": "This month",
+      "lastDays": "Last {count} days",
+      "period": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      }
+    },
+    "search": {
+      "placeholder": "Search users, companies, tasks, settings…",
+      "title": "Search",
+      "hint": "Search across users, organizations, companies, AI tasks, switches and integrations.",
+      "resultsFor": "{count} results for “{q}”",
+      "tooShort": "Type at least two characters.",
+      "organizations": "Organizations",
+      "companies": "Companies",
+      "controls": "Switches & settings",
+      "connections": "{count} connections"
+    },
+    "emergency": {
+      "title": "Emergency state active:",
+      "manage": "Platform Controls"
+    },
+    "overview": {
+      "users": "Users",
+      "newUsers": "New: {d7} in 7 days · {d30} in 30 days",
+      "activeUsers": "Active users (7 days)",
+      "active30": "{count} in the last 30 days",
+      "organizations": "Organizations",
+      "companiesSuspended": "{companies} companies · {suspended} suspended",
+      "subscriptions": "Active subscriptions",
+      "mrr": "MRR",
+      "noMrr": "No paying subscriptions yet",
+      "aiEmployees": "AI employees active",
+      "paused": "{count} paused",
+      "aiTasks": "AI tasks running",
+      "tasksHint": "{queued} queued · {failed} failed (24 h)",
+      "aiUsage": "AI tokens this month",
+      "aiCost": "Estimated cost {cost}",
+      "apiUsage": "API requests",
+      "last30": "Last 30 days",
+      "approvals": "Pending approvals",
+      "approvalsHint": "AI actions waiting for a person",
+      "queues": "Queued jobs",
+      "unavailable": "Unavailable (Redis not reachable)",
+      "health": "System health",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "recentActivity": "Recent admin activity",
+      "viewAll": "View all"
+    },
+    "health": {
+      "database": "Database",
+      "redis": "Redis",
+      "email": "Email",
+      "ai": "AI provider",
+      "stripe": "Stripe"
+    },
+    "modules": {
+      "crm": "CRM & Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "hr": "HR",
+      "work": "Projects & Operations",
+      "comms": "Communication",
+      "support": "Support",
+      "automation": "Automation",
+      "integrations": "Integrations",
+      "workforce": "AI Workforce",
+      "bi": "Analytics & BI",
+      "marketplace": "Marketplace",
+      "enterprise": "Enterprise",
+      "brain": "Company Brain",
+      "objectives": "Objectives"
+    },
+    "controls": {
+      "subtitle": "Global kill switches with real enforcement. Every change needs a reason, critical ones a typed confirmation, and all are audited.",
+      "readOnlyNotice": "You can view these switches but not change them (needs platform.controls.manage).",
+      "groups": {
+        "emergency": "Maintenance & read-only",
+        "kill": "Kill switches",
+        "modules": "Modules & integrations"
+      },
+      "changed": "Changed",
+      "critical": "Critical",
+      "on": "On",
+      "off": "Off",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "none": "None",
+      "notSet": "Not set",
+      "unlimited": "Unlimited",
+      "emptyNoLimit": "Leave empty for no limit.",
+      "onePerLine": "One value per line.",
+      "addValue": "Add value",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "history": "Last changes",
+      "noChanges": "Everything runs on defaults.",
+      "control": "Control",
+      "value": "Value",
+      "lockdown": {
+        "title": "Emergency lockdown",
+        "hint": "One click: maintenance mode on, AI workforce off, background jobs paused and every non-admin session revoked.",
+        "activeSince": "Active since {date} · {sessions} sessions revoked",
+        "start": "Start emergency lockdown",
+        "startHint": "Users are signed out and see the maintenance page; AI and background work stop. Administrators keep access.",
+        "end": "End lockdown",
+        "endHint": "Restores the switch values from before the lockdown."
+      },
+      "keys": {
+        "lockdown": {
+          "label": "Emergency lockdown",
+          "hint": "Maintenance, AI off, jobs paused, sessions revoked."
+        },
+        "aiWorkforceEnabled": {
+          "label": "AI workforce",
+          "hint": "Off: no AI task can be created or run anywhere on the platform."
+        },
+        "aiExecutionPaused": {
+          "label": "Pause AI task execution",
+          "hint": "The worker stops picking up AI tasks; queued tasks wait and resume afterwards."
+        },
+        "registrationsEnabled": {
+          "label": "New registrations",
+          "hint": "Off: sign-up is refused with “registrations closed”."
+        },
+        "companyCreationEnabled": {
+          "label": "Company creation",
+          "hint": "Off: no organization can create new companies."
+        },
+        "automationsEnabled": {
+          "label": "Automations",
+          "hint": "Off: workflow schedules, triggers and runs are skipped by the worker."
+        },
+        "backgroundJobsPaused": {
+          "label": "Pause all background jobs",
+          "hint": "Module jobs and event handlers stop; events keep queuing and are processed when resumed."
+        },
+        "maintenanceMode": {
+          "label": "Maintenance mode",
+          "hint": "All non-admin pages show the maintenance page and APIs answer 503. Administrators keep working."
+        },
+        "readOnlyMode": {
+          "label": "Read-only mode",
+          "hint": "Every change through the API is refused with 503; reading and admin work continue."
+        },
+        "disabledModules": {
+          "label": "Disabled modules",
+          "hint": "Pages and APIs of these modules are closed for every organization."
+        },
+        "disabledIntegrations": {
+          "label": "Disabled integration providers",
+          "hint": "These providers cannot be connected or used."
+        },
+        "aiDisabledModels": {
+          "label": "Disabled models",
+          "hint": "Tasks on a disabled model are refused."
+        },
+        "aiAllowedModels": {
+          "label": "Allowed models",
+          "hint": "Empty: every model is allowed. Otherwise only these model ids may run."
+        },
+        "aiDefaultModel": {
+          "label": "Default model override",
+          "hint": "Model id used instead of the server's AGENT_MODEL. Empty: use the server default."
+        },
+        "aiDisabledProfiles": {
+          "label": "Disabled AI roles",
+          "hint": "Tasks for these roles are refused."
+        },
+        "aiDailyTokenBudget": {
+          "label": "Platform daily token budget",
+          "hint": "All organizations together, per UTC day."
+        },
+        "aiMonthlyTokenBudget": {
+          "label": "Platform monthly token budget",
+          "hint": "All organizations together, per UTC month."
+        },
+        "aiRequireApprovalForWrites": {
+          "label": "Require approval for all AI writes",
+          "hint": "Every non-read AI tool becomes an approval request."
+        },
+        "aiAutonomyCeiling": {
+          "label": "Autonomy ceiling",
+          "hint": "The most any AI employee may do on its own, platform-wide."
+        },
+        "platformName": {
+          "label": "Platform name",
+          "hint": "Shown on system pages such as maintenance."
+        },
+        "supportEmail": {
+          "label": "Support email",
+          "hint": "Contact address shown to users when something is unavailable."
+        },
+        "defaultLocale": {
+          "label": "Default language",
+          "hint": "Platform default language."
+        },
+        "signupDomainAllowlist": {
+          "label": "Sign-up domain allowlist",
+          "hint": "Empty: anyone can sign up. Otherwise only emails from these domains (and subdomains)."
+        },
+        "maintenanceMessage": {
+          "label": "Maintenance message",
+          "hint": "Optional text on the maintenance page and in 503 responses."
+        }
+      }
+    },
+    "ai": {
+      "subtitle": "The AI workforce across all organizations: provider, switches, budgets, models and roles. API keys are never shown.",
+      "provider": "AI provider",
+      "tasks24h": "AI tasks active",
+      "tasks24hHint": "24 h: {completed} completed · {failed} failed",
+      "tokensMonth": "Tokens this month",
+      "today": "{tokens} today",
+      "switches": "Execution & policy",
+      "budgets": "Token budgets",
+      "budgetsHint": "Platform-wide budgets, checked when a task is created and when it runs. Per-company daily limit from the server: {perCompany}.",
+      "models": "Models",
+      "modelsHint": "Server default (AGENT_MODEL): {env}. Usage over the last 30 days.",
+      "envDefault": "Server default ({model})",
+      "inUse": "In use",
+      "notAllowed": "Not allowed",
+      "profiles": "AI roles",
+      "profilesHint": "Disabling a role refuses new tasks for it and stops queued ones when they run.",
+      "columns": {
+        "model": "Model",
+        "tasks30": "Tasks (30 d)",
+        "tasks": "Tasks",
+        "tokens": "Tokens",
+        "cost": "Est. cost",
+        "profile": "Role",
+        "department": "Department",
+        "tools": "Tools",
+        "task": "Task",
+        "status": "Status",
+        "name": "Name"
+      },
+      "ceiling": {
+        "full": "As configured per AI employee",
+        "supervised": "Supervised: every write needs approval",
+        "read_only": "Read-only: AI may only read"
+      },
+      "status": {
+        "QUEUED": "Queued",
+        "RUNNING": "Running",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "tasksSubtitle": "Every AI task on the platform. Search by id or title, filter failures, cancel or retry.",
+      "failures": "Failures (7 days)",
+      "failuresHint": "Grouped by error code.",
+      "searchTasks": "Task id or title",
+      "noTasks": "No AI tasks.",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "usageSubtitle": "Tokens and estimated cost (list prices) by organization, model and day.",
+      "byOrg": "By organization",
+      "byModel": "By model",
+      "byDay": "By day",
+      "noUsage": "No AI usage in this period."
+    },
+    "plans": {
+      "subtitle": "Plans, market prices, entitlements and usage quotas.",
+      "limitsTitle": "Plan limits & module access",
+      "limitsHint": "Enforced for subscribed organizations: seats, companies, AI tokens and API calls per month, and module access. Empty = unlimited.",
+      "modules": "Modules",
+      "allModules": "All modules",
+      "trial": "{count}-day trial",
+      "limits": {
+        "seats": {
+          "max": "Seats"
+        },
+        "companies": {
+          "max": "Companies"
+        },
+        "ai": {
+          "tokens": {
+            "month": "AI tokens / month"
+          }
+        },
+        "api": {
+          "calls": {
+            "month": "API calls / month"
+          }
+        },
+        "storage": {
+          "mb": "Storage (MB)"
+        },
+        "agents": {
+          "max": "AI employees"
+        }
+      }
+    },
+    "subscriptions": {
+      "subtitle": "Subscription status across all organizations. MRR comes only from real subscription items.",
+      "byPlan": "Live subscriptions by plan",
+      "plan": "Plan",
+      "periodEnd": "Period end",
+      "cancelsAtEnd": "Cancels at period end",
+      "trialEnds": "Trial ends {date}",
+      "interval": {
+        "MONTH": "Monthly",
+        "YEAR": "Yearly"
+      },
+      "status": {
+        "INCOMPLETE": "Incomplete",
+        "INCOMPLETE_EXPIRED": "Expired",
+        "TRIALING": "Trial",
+        "ACTIVE": "Active",
+        "PAST_DUE": "Past due",
+        "CANCELED": "Canceled",
+        "UNPAID": "Unpaid",
+        "PAUSED": "Paused"
+      }
+    },
+    "integrations": {
+      "subtitle": "Provider connections, API keys and webhook deliveries across organizations. Credentials are never shown.",
+      "manageProviders": "Disable providers",
+      "providers": "Providers",
+      "provider": "Provider",
+      "platform": "Platform",
+      "connections": "Connections",
+      "noConnections": "No connections.",
+      "lastError": "Last error",
+      "lastSync": "Last sync",
+      "status": {
+        "CONNECTED": "Connected",
+        "ERROR": "Error",
+        "DISCONNECTED": "Disconnected"
+      },
+      "apiKeys": "API keys",
+      "noKeys": "No API keys.",
+      "key": "Key",
+      "lastUsed": "Last used",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "active": "Active",
+      "revoke": "Revoke",
+      "revokeHint": "The key stops working immediately and its service account is disabled.",
+      "apiUsage": "API usage by organization",
+      "noUsage": "No API requests.",
+      "webhookFailures": "Webhook delivery failures",
+      "noFailures": "No failed deliveries.",
+      "event": "Event",
+      "endpoint": "Endpoint",
+      "attempts": "{count} attempts"
+    },
+    "security": {
+      "subtitle": "Security events, platform administrators and their sessions.",
+      "byAction": "Security events by type",
+      "admins": "Platform administrators",
+      "adminSessions": "Active admin sessions",
+      "noSessions": "No active admin sessions.",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "events": "Security events (30 days)"
+    },
+    "settings": {
+      "subtitle": "Platform-wide settings. Changes are audited.",
+      "general": "General",
+      "registration": "Registration",
+      "anyDomain": "Any email domain"
+    },
+    "unavailable": {
+      "title": "Unavailable",
+      "titles": {
+        "maintenance": "Down for maintenance",
+        "organization_suspended": "Organization suspended",
+        "module_disabled": "Module unavailable"
+      },
+      "maintenance": "We're doing scheduled maintenance. Please try again shortly.",
+      "suspended": "This organization has been suspended by the platform. Contact support for help.",
+      "moduleDisabled": "{module} is currently disabled for your organization.",
+      "contact": "Contact:",
+      "switchOrg": "Switch organization",
+      "home": "Go to home",
+      "retry": "Try again"
+    }
   },
   "email": {
     "invitation": {

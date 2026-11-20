@@ -246,7 +246,8 @@
       "already_linked": "该 {provider} 账户已连接到另一个 Realy 账户。",
       "not_configured": "OAuth 提供商未配置。",
       "account_disabled": "该账户未激活。",
-      "verify_email_first": "连接 {provider} 之前，请先验证你的邮箱地址。请在收件箱中查找验证链接。"
+      "verify_email_first": "连接 {provider} 之前，请先验证你的邮箱地址。请在收件箱中查找验证链接。",
+      "registrations_closed": "目前暂停新用户注册。"
     },
     "verifySignInFirst": "请登录此链接所对应的账户，随后你的邮箱地址将被确认。",
     "ssoSignIn": "使用 SSO 登录"
@@ -585,7 +586,27 @@
       "objectives_plan_running": "已有计划正在生成。",
       "objectives_plan_partial": "此计划已部分应用；请先完成应用。",
       "objectives_plan_keys": "计划中包含重复项。",
-      "objectives_goal_inactive": "只能为进行中的公司目标制定计划。"
+      "objectives_goal_inactive": "只能为进行中的公司目标制定计划。",
+      "maintenance": "平台正在维护，请稍后再试。",
+      "read_only": "平台暂时为只读，目前无法保存更改。",
+      "registrations_closed": "目前暂停新用户注册。",
+      "signup_domain_not_allowed": "仅允许已批准的邮箱域名注册。",
+      "company_creation_disabled": "暂时无法创建公司。",
+      "organization_suspended": "该组织已被平台暂停，请联系支持。",
+      "module_disabled": "该模块目前已禁用。",
+      "platform_ai_disabled": "平台已关闭 AI 员工。",
+      "platform_ai_org_disabled": "平台已为该组织禁用 AI。",
+      "platform_ai_profile_disabled": "平台已禁用该 AI 角色。",
+      "platform_ai_model_disabled": "平台已禁用所配置的 AI 模型。",
+      "platform_ai_budget_exhausted": "AI 令牌预算已用完，请稍后再试。",
+      "plan_ai_tokens_exhausted": "您套餐的每月 AI 额度已用完。请升级或等待下个月。",
+      "plan_limit_reached": "已达到套餐上限。请升级以添加更多。",
+      "plan_api_quota_exhausted": "您套餐的每月 API 配额已用完。",
+      "confirmation_mismatch": "确认文字不匹配。",
+      "sole_owner": "该用户是某个有其他成员的组织的唯一所有者。请先转移所有权。",
+      "last_super_admin": "平台必须保留至少一名超级管理员。",
+      "platform_lockdown_active": "请先结束紧急封锁。",
+      "platform_lockdown_inactive": "当前没有生效的紧急封锁。"
     }
   },
   "onboarding": {
@@ -847,7 +868,20 @@
       "audit": "审计日志",
       "system": "系统状态",
       "users": "用户",
-      "organizations": "组织"
+      "organizations": "组织",
+      "companies": "公司",
+      "ai": "AI 与员工",
+      "aiOverview": "控制中心",
+      "aiTasks": "AI 任务日志",
+      "aiUsage": "成本与用量",
+      "billing": "套餐与计费",
+      "subscriptions": "订阅",
+      "features": "平台功能",
+      "controls": "平台控制",
+      "integrations": "集成与 API",
+      "securityAudit": "安全与审计",
+      "security": "安全",
+      "settings": "设置"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -917,7 +951,8 @@
       "noRules": "暂无定向规则。",
       "remove": "移除",
       "turnOn": "开启",
-      "turnOff": "关闭"
+      "turnOff": "关闭",
+      "subtitle": "带定向规则的功能开关。"
     },
     "audit": {
       "time": "时间",
@@ -931,7 +966,17 @@
         "ADMIN": "管理",
         "SECURITY": "安全"
       },
-      "empty": "暂无审计记录。"
+      "empty": "暂无审计记录。",
+      "subtitle": "所有管理与安全变更，含操作者与原因。可筛选并导出 CSV。",
+      "exportCsv": "导出 CSV",
+      "actorEmail": "操作者邮箱",
+      "from": "从",
+      "to": "至",
+      "scope": "范围",
+      "scopes": {
+        "platform": "平台与安全",
+        "all": "全部（含租户）"
+      }
     },
     "system": {
       "title": "外部服务",
@@ -948,6 +993,33 @@
         "sentry": "错误跟踪（Sentry）",
         "otel": "链路追踪（OpenTelemetry）",
         "redis": "限流存储（Redis）"
+      },
+      "subtitle": "实时健康、队列、Worker 心跳与最近错误。",
+      "health": "健康",
+      "reachable": "可连接",
+      "unreachable": "无法连接",
+      "worker": "后台 Worker",
+      "lastHeartbeat": "最近心跳 {time}",
+      "noHeartbeat": "尚无 Worker 心跳。",
+      "queues": "队列",
+      "queue": "队列",
+      "waiting": "等待",
+      "active": "进行中",
+      "delayed": "延迟",
+      "failed": "失败",
+      "completed": "已完成",
+      "workers": "Worker 进程",
+      "startedAt": "启动于 {time}",
+      "recentErrors": "最近错误",
+      "recentErrorsHint": "失败的作业、AI 任务、同步、工作流运行与 Webhook 投递（7 天）。",
+      "noErrors": "最近 7 天没有错误。",
+      "errorCount": "{count} 个错误",
+      "kinds": {
+        "job": "作业",
+        "task": "AI 任务",
+        "sync": "同步",
+        "workflow": "工作流",
+        "webhook": "Webhook"
       }
     },
     "users": {
@@ -966,12 +1038,58 @@
         "status": "状态",
         "security": "安全",
         "organizations": "组织",
-        "created": "加入时间"
+        "created": "加入时间",
+        "lastLogin": "最近登录"
       },
       "status": {
         "ACTIVE": "正常",
         "SUSPENDED": "已停用",
         "DELETED": "已删除"
+      },
+      "subtitle": "平台上的所有账户。暂停、登出、安全删除或更改平台角色——始终需要填写原因。",
+      "total": "{count} 位用户",
+      "filters": {
+        "status": "状态",
+        "mfa": "双重验证",
+        "created": "注册时间",
+        "login": "最近登录"
+      },
+      "login": {
+        "7d": "7 天内登录过",
+        "30d": "30 天内登录过",
+        "inactive30": "30 天以上未活跃",
+        "never": "从未登录"
+      },
+      "revokeSessions": "撤销所有会话",
+      "revokeSessionsHint": "该用户将立即在所有设备上登出。",
+      "delete": "删除用户",
+      "deleteHint": "账户将被停用，邮箱和姓名将被匿名化；会话、登录关联和双重验证将被移除。审计记录保留。若该用户是某个有其他成员的组织的唯一所有者，则无法删除。",
+      "grantRole": "授予平台角色",
+      "grantRoleHint": "需要双重验证。您只能授予自己拥有的权限。",
+      "revokeRole": "移除",
+      "role": "角色",
+      "detail": {
+        "lastLogin": "最近登录",
+        "activeSessions": "{count} 个活跃会话",
+        "registered": "注册于",
+        "aiTasks": "创建的 AI 任务",
+        "aiTokens": "本月 AI 令牌",
+        "profile": "资料",
+        "signIn": "登录方式",
+        "password": "密码",
+        "locale": "语言与时区",
+        "country": "国家/地区",
+        "platformRoles": "平台角色",
+        "noPlatformRoles": "无平台角色。",
+        "memberships": "组织",
+        "noMemberships": "不属于任何组织。",
+        "roles": "角色",
+        "sessions": "登录历史",
+        "signedIn": "登录时间",
+        "lastSeen": "最后活跃",
+        "revoked": "已结束",
+        "active": "活跃",
+        "securityLog": "安全与管理事件"
       }
     },
     "organizations": {
@@ -982,12 +1100,464 @@
         "members": "成员",
         "companies": "公司",
         "subscription": "订阅",
-        "created": "创建时间"
+        "created": "创建时间",
+        "aiTasks": "AI 任务（30 天）"
+      },
+      "total": "{count} 个组织",
+      "noSubscription": "无订阅",
+      "status": {
+        "ACTIVE": "活跃",
+        "SUSPENDED": "已暂停",
+        "CLOSED": "已关闭"
+      },
+      "suspend": "暂停组织",
+      "reactivate": "恢复组织",
+      "suspendHint": "在恢复之前，成员将无法访问该组织的任何页面和 API，其 AI 任务也会停止。",
+      "restrictions": "平台限制",
+      "restrictionsHint": "为该组织禁用模块或 AI，并设置令牌预算。每个请求都会强制执行。",
+      "editRestrictions": "限制",
+      "disabledModules": "已禁用的模块",
+      "aiDisabled": "为该组织禁用 AI",
+      "aiDaily": "每日 AI 令牌预算",
+      "aiMonthly": "每月 AI 令牌预算",
+      "viewGate": {
+        "title": "打开 {name}",
+        "hint": "租户详情属于机密。您的原因将记录在审计日志中（platform.tenant_viewed），每个会话只询问一次。",
+        "placeholder": "例如：支持工单 #1234",
+        "open": "打开详情"
+      },
+      "detail": {
+        "aiTasks30": "AI 任务（30 天）",
+        "failed": "{count} 个失败",
+        "aiTokensMonth": "本月 AI 令牌",
+        "plan": "套餐与限额",
+        "usage": "本月用量",
+        "modules": "使用中的模块",
+        "modulesHint": "各模块的记录数。",
+        "inUse": "使用中",
+        "members": "成员",
+        "deleted": "已删除",
+        "recentTasks": "最近的 AI 任务",
+        "activity": "活动日志"
+      },
+      "counts": {
+        "leads": "线索",
+        "deals": "交易",
+        "contacts": "联系人",
+        "accounts": "客户",
+        "campaigns": "活动",
+        "content": "内容",
+        "invoices": "发票",
+        "transactions": "交易记录",
+        "employees": "员工",
+        "candidates": "候选人",
+        "projects": "项目",
+        "tasks": "任务",
+        "channels": "频道",
+        "announcements": "公告",
+        "tickets": "工单",
+        "workflows": "工作流",
+        "runs": "运行",
+        "connections": "连接",
+        "aiEmployees": "AI 员工",
+        "dashboards": "仪表板",
+        "installs": "安装",
+        "documents": "文档",
+        "objectives": "目标"
       }
     },
     "signInTitle": "管理控制台登录",
     "signInSubtitle": "仅限平台管理员。请使用平台管理员账号登录。",
-    "openApp": "打开应用"
+    "openApp": "打开应用",
+    "common": {
+      "edit": "编辑",
+      "add": "添加",
+      "reasonAudited": "必填。将连同您的姓名记录到审计日志。",
+      "criticalWarning": "这是影响整个平台的关键操作。",
+      "typeToConfirm": "输入 {phrase} 以确认",
+      "thisMonth": "本月",
+      "lastDays": "最近 {count} 天",
+      "period": {
+        "7d": "最近 7 天",
+        "30d": "最近 30 天",
+        "90d": "最近 90 天"
+      }
+    },
+    "search": {
+      "placeholder": "搜索用户、公司、任务、设置…",
+      "title": "搜索",
+      "hint": "在用户、组织、公司、AI 任务、开关和集成中搜索。",
+      "resultsFor": "“{q}”的 {count} 条结果",
+      "tooShort": "请至少输入两个字符。",
+      "organizations": "组织",
+      "companies": "公司",
+      "controls": "开关与设置",
+      "connections": "{count} 个连接"
+    },
+    "emergency": {
+      "title": "紧急状态已激活：",
+      "manage": "平台控制"
+    },
+    "overview": {
+      "users": "用户",
+      "newUsers": "新增：7 天 {d7} · 30 天 {d30}",
+      "activeUsers": "活跃用户（7 天）",
+      "active30": "最近 30 天 {count}",
+      "organizations": "组织",
+      "companiesSuspended": "{companies} 家公司 · {suspended} 个已暂停",
+      "subscriptions": "有效订阅",
+      "mrr": "月经常性收入",
+      "noMrr": "暂无付费订阅",
+      "aiEmployees": "活跃 AI 员工",
+      "paused": "{count} 个已暂停",
+      "aiTasks": "运行中的 AI 任务",
+      "tasksHint": "{queued} 排队 · {failed} 失败（24 小时）",
+      "aiUsage": "本月 AI 令牌",
+      "aiCost": "预计成本 {cost}",
+      "apiUsage": "API 请求",
+      "last30": "最近 30 天",
+      "approvals": "待审批",
+      "approvalsHint": "等待人工处理的 AI 操作",
+      "queues": "排队作业",
+      "unavailable": "不可用（无法连接 Redis）",
+      "health": "系统健康",
+      "healthy": "正常",
+      "degraded": "降级",
+      "recentActivity": "最近的管理员活动",
+      "viewAll": "查看全部"
+    },
+    "health": {
+      "database": "数据库",
+      "redis": "Redis",
+      "email": "邮件",
+      "ai": "AI 提供商",
+      "stripe": "Stripe"
+    },
+    "modules": {
+      "crm": "CRM 与销售",
+      "marketing": "营销",
+      "finance": "财务",
+      "hr": "人力资源",
+      "work": "项目与运营",
+      "comms": "沟通",
+      "support": "支持",
+      "automation": "自动化",
+      "integrations": "集成",
+      "workforce": "AI 员工团队",
+      "bi": "分析与 BI",
+      "marketplace": "应用市场",
+      "enterprise": "企业版",
+      "brain": "公司大脑",
+      "objectives": "目标"
+    },
+    "controls": {
+      "subtitle": "全局紧急开关，真实生效。每次更改都需要原因，关键更改需要输入确认，全部记录审计。",
+      "readOnlyNotice": "您可以查看但不能更改这些开关（需要 platform.controls.manage）。",
+      "groups": {
+        "emergency": "维护与只读",
+        "kill": "紧急开关",
+        "modules": "模块与集成"
+      },
+      "changed": "已更改",
+      "critical": "关键",
+      "on": "开",
+      "off": "关",
+      "turnOn": "开启",
+      "turnOff": "关闭",
+      "none": "无",
+      "notSet": "未设置",
+      "unlimited": "无限制",
+      "emptyNoLimit": "留空表示不限制。",
+      "onePerLine": "每行一个值。",
+      "addValue": "添加值",
+      "enable": "启用",
+      "disable": "禁用",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "history": "最近更改",
+      "noChanges": "所有设置均为默认值。",
+      "control": "控制项",
+      "value": "值",
+      "lockdown": {
+        "title": "紧急封锁",
+        "hint": "一键：开启维护模式、关闭 AI 员工、暂停后台作业并撤销所有非管理员会话。",
+        "activeSince": "自 {date} 起生效 · 已撤销 {sessions} 个会话",
+        "start": "启动紧急封锁",
+        "startHint": "用户将被登出并看到维护页面；AI 与后台工作停止。管理员保留访问权限。",
+        "end": "结束封锁",
+        "endHint": "恢复封锁前的开关值。"
+      },
+      "keys": {
+        "lockdown": {
+          "label": "紧急封锁",
+          "hint": "维护、关闭 AI、暂停作业、撤销会话。"
+        },
+        "aiWorkforceEnabled": {
+          "label": "AI 员工",
+          "hint": "关闭后：平台上任何地方都无法创建或运行 AI 任务。"
+        },
+        "aiExecutionPaused": {
+          "label": "暂停 AI 任务执行",
+          "hint": "Worker 停止领取 AI 任务；排队任务等待，恢复后继续。"
+        },
+        "registrationsEnabled": {
+          "label": "新用户注册",
+          "hint": "关闭后：注册将被拒绝并提示“注册已关闭”。"
+        },
+        "companyCreationEnabled": {
+          "label": "创建公司",
+          "hint": "关闭后：任何组织都无法创建新公司。"
+        },
+        "automationsEnabled": {
+          "label": "自动化",
+          "hint": "关闭后：Worker 将跳过工作流计划、触发器和运行。"
+        },
+        "backgroundJobsPaused": {
+          "label": "暂停所有后台作业",
+          "hint": "模块作业与事件处理器停止；事件继续排队，恢复后处理。"
+        },
+        "maintenanceMode": {
+          "label": "维护模式",
+          "hint": "所有非管理员页面显示维护页面，API 返回 503。管理员可继续工作。"
+        },
+        "readOnlyMode": {
+          "label": "只读模式",
+          "hint": "所有通过 API 的修改都会被拒绝（503）；读取与管理工作照常。"
+        },
+        "disabledModules": {
+          "label": "已禁用的模块",
+          "hint": "这些模块的页面和 API 对所有组织关闭。"
+        },
+        "disabledIntegrations": {
+          "label": "已禁用的集成提供商",
+          "hint": "这些提供商无法连接或使用。"
+        },
+        "aiDisabledModels": {
+          "label": "已禁用的模型",
+          "hint": "使用已禁用模型的任务将被拒绝。"
+        },
+        "aiAllowedModels": {
+          "label": "允许的模型",
+          "hint": "留空：允许所有模型。否则仅允许这些模型 ID。"
+        },
+        "aiDefaultModel": {
+          "label": "默认模型覆盖",
+          "hint": "替代服务器 AGENT_MODEL 的模型 ID。留空：使用服务器默认值。"
+        },
+        "aiDisabledProfiles": {
+          "label": "已禁用的 AI 角色",
+          "hint": "这些角色的任务将被拒绝。"
+        },
+        "aiDailyTokenBudget": {
+          "label": "平台每日令牌预算",
+          "hint": "所有组织合计，按 UTC 日计。"
+        },
+        "aiMonthlyTokenBudget": {
+          "label": "平台每月令牌预算",
+          "hint": "所有组织合计，按 UTC 月计。"
+        },
+        "aiRequireApprovalForWrites": {
+          "label": "所有 AI 写入均需审批",
+          "hint": "所有非只读 AI 工具都会变为审批请求。"
+        },
+        "aiAutonomyCeiling": {
+          "label": "自主度上限",
+          "hint": "全平台范围内 AI 员工可自主执行的最大限度。"
+        },
+        "platformName": {
+          "label": "平台名称",
+          "hint": "显示在维护等系统页面上。"
+        },
+        "supportEmail": {
+          "label": "支持邮箱",
+          "hint": "当功能不可用时向用户显示的联系地址。"
+        },
+        "defaultLocale": {
+          "label": "默认语言",
+          "hint": "平台默认语言。"
+        },
+        "signupDomainAllowlist": {
+          "label": "注册域名白名单",
+          "hint": "留空：任何人都可注册。否则仅限这些域名（及子域名）的邮箱。"
+        },
+        "maintenanceMessage": {
+          "label": "维护提示",
+          "hint": "维护页面及 503 响应中的可选文字。"
+        }
+      }
+    },
+    "ai": {
+      "subtitle": "所有组织的 AI 员工：提供商、开关、预算、模型与角色。从不显示 API 密钥。",
+      "provider": "AI 提供商",
+      "tasks24h": "活跃 AI 任务",
+      "tasks24hHint": "24 小时：{completed} 完成 · {failed} 失败",
+      "tokensMonth": "本月令牌",
+      "today": "今日 {tokens}",
+      "switches": "执行与策略",
+      "budgets": "令牌预算",
+      "budgetsHint": "全平台预算，在任务创建和运行时检查。服务器设定的每家公司每日上限：{perCompany}。",
+      "models": "模型",
+      "modelsHint": "服务器默认（AGENT_MODEL）：{env}。最近 30 天用量。",
+      "envDefault": "服务器默认（{model}）",
+      "inUse": "使用中",
+      "notAllowed": "不允许",
+      "profiles": "AI 角色",
+      "profilesHint": "禁用角色后将拒绝其新任务，排队任务在运行时停止。",
+      "columns": {
+        "model": "模型",
+        "tasks30": "任务（30 天）",
+        "tasks": "任务",
+        "tokens": "令牌",
+        "cost": "预计成本",
+        "profile": "角色",
+        "department": "部门",
+        "tools": "工具",
+        "task": "任务",
+        "status": "状态",
+        "name": "名称"
+      },
+      "ceiling": {
+        "full": "按每个 AI 员工的配置",
+        "supervised": "监督：每次写入都需审批",
+        "read_only": "只读：AI 仅能读取"
+      },
+      "status": {
+        "QUEUED": "排队中",
+        "RUNNING": "运行中",
+        "COMPLETED": "已完成",
+        "FAILED": "失败",
+        "CANCELLED": "已取消"
+      },
+      "tasksSubtitle": "平台上的所有 AI 任务。按 ID 或标题搜索、筛选失败、取消或重试。",
+      "failures": "失败（7 天）",
+      "failuresHint": "按错误代码分组。",
+      "searchTasks": "任务 ID 或标题",
+      "noTasks": "没有 AI 任务。",
+      "cancel": "取消",
+      "retry": "重试",
+      "usageSubtitle": "按组织、模型和日期统计的令牌与预计成本（标价）。",
+      "byOrg": "按组织",
+      "byModel": "按模型",
+      "byDay": "按日期",
+      "noUsage": "此期间没有 AI 用量。"
+    },
+    "plans": {
+      "subtitle": "套餐、市场价格、权益与用量配额。",
+      "limitsTitle": "套餐限额与模块权限",
+      "limitsHint": "对已订阅组织强制执行：席位、公司数、每月 AI 令牌与 API 调用及模块权限。留空 = 无限制。",
+      "modules": "模块",
+      "allModules": "全部模块",
+      "trial": "{count} 天试用",
+      "limits": {
+        "seats": {
+          "max": "席位"
+        },
+        "companies": {
+          "max": "公司数"
+        },
+        "ai": {
+          "tokens": {
+            "month": "AI 令牌 / 月"
+          }
+        },
+        "api": {
+          "calls": {
+            "month": "API 调用 / 月"
+          }
+        },
+        "storage": {
+          "mb": "存储（MB）"
+        },
+        "agents": {
+          "max": "AI 员工数"
+        }
+      }
+    },
+    "subscriptions": {
+      "subtitle": "所有组织的订阅状态。MRR 仅来自真实订阅项目。",
+      "byPlan": "按套餐统计的有效订阅",
+      "plan": "套餐",
+      "periodEnd": "周期结束",
+      "cancelsAtEnd": "周期结束时取消",
+      "trialEnds": "试用于 {date} 结束",
+      "interval": {
+        "MONTH": "按月",
+        "YEAR": "按年"
+      },
+      "status": {
+        "INCOMPLETE": "未完成",
+        "INCOMPLETE_EXPIRED": "已过期",
+        "TRIALING": "试用中",
+        "ACTIVE": "有效",
+        "PAST_DUE": "逾期",
+        "CANCELED": "已取消",
+        "UNPAID": "未付款",
+        "PAUSED": "已暂停"
+      }
+    },
+    "integrations": {
+      "subtitle": "所有组织的提供商连接、API 密钥与 Webhook 投递。从不显示凭据。",
+      "manageProviders": "禁用提供商",
+      "providers": "提供商",
+      "provider": "提供商",
+      "platform": "平台",
+      "connections": "连接",
+      "noConnections": "没有连接。",
+      "lastError": "最近错误",
+      "lastSync": "最近同步",
+      "status": {
+        "CONNECTED": "已连接",
+        "ERROR": "错误",
+        "DISCONNECTED": "已断开"
+      },
+      "apiKeys": "API 密钥",
+      "noKeys": "没有 API 密钥。",
+      "key": "密钥",
+      "lastUsed": "最近使用",
+      "revoked": "已撤销",
+      "expired": "已过期",
+      "active": "有效",
+      "revoke": "撤销",
+      "revokeHint": "密钥立即失效，其服务账户被停用。",
+      "apiUsage": "按组织的 API 用量",
+      "noUsage": "没有 API 请求。",
+      "webhookFailures": "Webhook 投递失败",
+      "noFailures": "没有失败的投递。",
+      "event": "事件",
+      "endpoint": "端点",
+      "attempts": "{count} 次尝试"
+    },
+    "security": {
+      "subtitle": "安全事件、平台管理员及其会话。",
+      "byAction": "按类型的安全事件",
+      "admins": "平台管理员",
+      "adminSessions": "活跃的管理员会话",
+      "noSessions": "没有活跃的管理员会话。",
+      "verified": "已验证",
+      "notVerified": "未验证",
+      "events": "安全事件（30 天）"
+    },
+    "settings": {
+      "subtitle": "全平台设置。更改会被审计。",
+      "general": "常规",
+      "registration": "注册",
+      "anyDomain": "任意邮箱域名"
+    },
+    "unavailable": {
+      "title": "不可用",
+      "titles": {
+        "maintenance": "维护中",
+        "organization_suspended": "组织已暂停",
+        "module_disabled": "模块不可用"
+      },
+      "maintenance": "我们正在进行计划维护，请稍后再试。",
+      "suspended": "该组织已被平台暂停。请联系支持获取帮助。",
+      "moduleDisabled": "{module} 目前对您的组织不可用。",
+      "contact": "联系方式：",
+      "switchOrg": "切换组织",
+      "home": "返回首页",
+      "retry": "重试"
+    }
   },
   "email": {
     "invitation": {

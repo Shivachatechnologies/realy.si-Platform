@@ -246,7 +246,8 @@
       "already_linked": "Dieses {provider}-Konto ist bereits mit einem anderen Realy-Konto verbunden.",
       "not_configured": "OAuth-Anbieter nicht konfiguriert.",
       "account_disabled": "Dieses Konto ist nicht aktiv.",
-      "verify_email_first": "Bestätigen Sie Ihre E-Mail-Adresse, bevor Sie {provider} verbinden. Den Bestätigungslink finden Sie in Ihrem Posteingang."
+      "verify_email_first": "Bestätigen Sie Ihre E-Mail-Adresse, bevor Sie {provider} verbinden. Den Bestätigungslink finden Sie in Ihrem Posteingang.",
+      "registrations_closed": "Neue Registrierungen sind derzeit geschlossen."
     },
     "verifySignInFirst": "Melden Sie sich bei dem Konto an, für das dieser Link gesendet wurde. Danach wird Ihre E-Mail-Adresse bestätigt.",
     "ssoSignIn": "Mit SSO anmelden"
@@ -585,7 +586,27 @@
       "objectives_plan_running": "Es wird bereits ein Plan erstellt.",
       "objectives_plan_partial": "Ein Teil dieses Plans wurde bereits angewendet; wenden Sie ihn zuerst vollständig an.",
       "objectives_plan_keys": "Der Plan enthält doppelte Elemente.",
-      "objectives_goal_inactive": "Nur aktive Unternehmensziele können geplant werden."
+      "objectives_goal_inactive": "Nur aktive Unternehmensziele können geplant werden.",
+      "maintenance": "Die Plattform wird gewartet. Bitte versuchen Sie es in Kürze erneut.",
+      "read_only": "Die Plattform ist vorübergehend schreibgeschützt; Änderungen können gerade nicht gespeichert werden.",
+      "registrations_closed": "Neue Registrierungen sind derzeit geschlossen.",
+      "signup_domain_not_allowed": "Die Registrierung ist auf freigegebene E-Mail-Domains beschränkt.",
+      "company_creation_disabled": "Das Anlegen von Unternehmen ist vorübergehend deaktiviert.",
+      "organization_suspended": "Diese Organisation ist von der Plattform gesperrt. Wenden Sie sich an den Support.",
+      "module_disabled": "Dieses Modul ist derzeit deaktiviert.",
+      "platform_ai_disabled": "Die KI-Belegschaft ist von der Plattform abgeschaltet.",
+      "platform_ai_org_disabled": "KI ist für diese Organisation von der Plattform deaktiviert.",
+      "platform_ai_profile_disabled": "Diese KI-Rolle ist von der Plattform deaktiviert.",
+      "platform_ai_model_disabled": "Das konfigurierte KI-Modell ist von der Plattform deaktiviert.",
+      "platform_ai_budget_exhausted": "Das KI-Token-Budget ist aufgebraucht. Versuchen Sie es später erneut.",
+      "plan_ai_tokens_exhausted": "Das monatliche KI-Kontingent Ihres Plans ist aufgebraucht. Upgraden oder bis zum nächsten Monat warten.",
+      "plan_limit_reached": "Das Limit Ihres Plans ist erreicht. Upgraden, um mehr hinzuzufügen.",
+      "plan_api_quota_exhausted": "Das monatliche API-Kontingent Ihres Plans ist aufgebraucht.",
+      "confirmation_mismatch": "Der Bestätigungstext stimmt nicht überein.",
+      "sole_owner": "Dieser Benutzer ist einziger Inhaber einer Organisation mit weiteren Mitgliedern. Zuerst die Inhaberschaft übertragen.",
+      "last_super_admin": "Die Plattform muss mindestens einen Super-Admin behalten.",
+      "platform_lockdown_active": "Beenden Sie zuerst die Notfall-Sperre.",
+      "platform_lockdown_inactive": "Es ist keine Notfall-Sperre aktiv."
     }
   },
   "onboarding": {
@@ -847,7 +868,20 @@
       "audit": "Audit-Protokoll",
       "system": "Systemstatus",
       "users": "Benutzer",
-      "organizations": "Organisationen"
+      "organizations": "Organisationen",
+      "companies": "Unternehmen",
+      "ai": "KI & Belegschaft",
+      "aiOverview": "Steuerzentrale",
+      "aiTasks": "KI-Aufgabenprotokolle",
+      "aiUsage": "Kosten & Nutzung",
+      "billing": "Pläne & Abrechnung",
+      "subscriptions": "Abonnements",
+      "features": "Plattformfunktionen",
+      "controls": "Plattformsteuerung",
+      "integrations": "Integrationen & API",
+      "securityAudit": "Sicherheit & Audit",
+      "security": "Sicherheit",
+      "settings": "Einstellungen"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -917,7 +951,8 @@
       "noRules": "Keine Targeting-Regeln.",
       "remove": "Entfernen",
       "turnOn": "Einschalten",
-      "turnOff": "Ausschalten"
+      "turnOff": "Ausschalten",
+      "subtitle": "Feature-Flags mit Zielregeln."
     },
     "audit": {
       "time": "Zeit",
@@ -931,7 +966,17 @@
         "ADMIN": "Verwaltung",
         "SECURITY": "Sicherheit"
       },
-      "empty": "Keine Audit-Einträge."
+      "empty": "Keine Audit-Einträge.",
+      "subtitle": "Jede Verwaltungs- und Sicherheitsänderung mit Akteur und Begründung. Filtern und als CSV exportieren.",
+      "exportCsv": "CSV exportieren",
+      "actorEmail": "E-Mail des Akteurs",
+      "from": "Von",
+      "to": "Bis",
+      "scope": "Umfang",
+      "scopes": {
+        "platform": "Plattform & Sicherheit",
+        "all": "Alles (inkl. Mandanten)"
+      }
     },
     "system": {
       "title": "Externe Dienste",
@@ -948,6 +993,33 @@
         "sentry": "Fehlerverfolgung (Sentry)",
         "otel": "Tracing (OpenTelemetry)",
         "redis": "Rate-Limit-Speicher (Redis)"
+      },
+      "subtitle": "Live-Zustand, Warteschlangen, Worker-Heartbeat und letzte Fehler.",
+      "health": "Zustand",
+      "reachable": "Erreichbar",
+      "unreachable": "Nicht erreichbar",
+      "worker": "Hintergrund-Worker",
+      "lastHeartbeat": "Letzter Heartbeat {time}",
+      "noHeartbeat": "Noch kein Worker-Heartbeat.",
+      "queues": "Warteschlangen",
+      "queue": "Warteschlange",
+      "waiting": "Wartend",
+      "active": "Aktiv",
+      "delayed": "Verzögert",
+      "failed": "Fehlgeschlagen",
+      "completed": "Abgeschlossen",
+      "workers": "Worker-Prozesse",
+      "startedAt": "gestartet {time}",
+      "recentErrors": "Letzte Fehler",
+      "recentErrorsHint": "Fehlgeschlagene Jobs, KI-Aufgaben, Synchronisierungen, Workflow-Ausführungen und Webhook-Zustellungen (7 Tage).",
+      "noErrors": "Keine Fehler in den letzten 7 Tagen.",
+      "errorCount": "{count} Fehler",
+      "kinds": {
+        "job": "Job",
+        "task": "KI-Aufgabe",
+        "sync": "Sync",
+        "workflow": "Workflow",
+        "webhook": "Webhook"
       }
     },
     "users": {
@@ -966,12 +1038,58 @@
         "status": "Status",
         "security": "Sicherheit",
         "organizations": "Organisationen",
-        "created": "Beigetreten"
+        "created": "Beigetreten",
+        "lastLogin": "Letzte Anmeldung"
       },
       "status": {
         "ACTIVE": "Aktiv",
         "SUSPENDED": "Gesperrt",
         "DELETED": "Gelöscht"
+      },
+      "subtitle": "Alle Konten der Plattform. Sperren, abmelden, sicher löschen oder Plattformrollen ändern – immer mit Begründung.",
+      "total": "{count} Benutzer",
+      "filters": {
+        "status": "Status",
+        "mfa": "Zwei-Faktor",
+        "created": "Beigetreten",
+        "login": "Letzte Anmeldung"
+      },
+      "login": {
+        "7d": "In den letzten 7 Tagen angemeldet",
+        "30d": "In den letzten 30 Tagen angemeldet",
+        "inactive30": "Seit über 30 Tagen inaktiv",
+        "never": "Nie angemeldet"
+      },
+      "revokeSessions": "Alle Sitzungen beenden",
+      "revokeSessionsHint": "Der Benutzer wird sofort auf allen Geräten abgemeldet.",
+      "delete": "Benutzer löschen",
+      "deleteHint": "Das Konto wird deaktiviert, E-Mail und Name werden anonymisiert; Sitzungen, Anmeldeverknüpfungen und Zwei-Faktor werden entfernt. Der Audit-Verlauf bleibt erhalten. Nicht möglich, solange der Benutzer einziger Inhaber einer Organisation mit weiteren Mitgliedern ist.",
+      "grantRole": "Plattformrolle vergeben",
+      "grantRoleHint": "Erfordert Zwei-Faktor-Verifizierung. Sie können nur Berechtigungen vergeben, die Sie selbst besitzen.",
+      "revokeRole": "Entfernen",
+      "role": "Rolle",
+      "detail": {
+        "lastLogin": "Letzte Anmeldung",
+        "activeSessions": "{count} aktive Sitzungen",
+        "registered": "Registriert",
+        "aiTasks": "Erstellte KI-Aufgaben",
+        "aiTokens": "KI-Tokens diesen Monat",
+        "profile": "Profil",
+        "signIn": "Anmeldemethoden",
+        "password": "Passwort",
+        "locale": "Sprache & Zeitzone",
+        "country": "Land",
+        "platformRoles": "Plattformrollen",
+        "noPlatformRoles": "Keine Plattformrollen.",
+        "memberships": "Organisationen",
+        "noMemberships": "Mitglied keiner Organisation.",
+        "roles": "Rollen",
+        "sessions": "Anmeldeverlauf",
+        "signedIn": "Angemeldet",
+        "lastSeen": "Zuletzt gesehen",
+        "revoked": "Beendet",
+        "active": "Aktiv",
+        "securityLog": "Sicherheits- & Admin-Ereignisse"
       }
     },
     "organizations": {
@@ -982,12 +1100,464 @@
         "members": "Mitglieder",
         "companies": "Unternehmen",
         "subscription": "Abonnement",
-        "created": "Erstellt"
+        "created": "Erstellt",
+        "aiTasks": "KI-Aufgaben (30 T)"
+      },
+      "total": "{count} Organisationen",
+      "noSubscription": "Kein Abonnement",
+      "status": {
+        "ACTIVE": "Aktiv",
+        "SUSPENDED": "Gesperrt",
+        "CLOSED": "Geschlossen"
+      },
+      "suspend": "Organisation sperren",
+      "reactivate": "Organisation reaktivieren",
+      "suspendHint": "Mitglieder verlieren den Zugriff auf alle Seiten und APIs dieser Organisation, ihre KI-Aufgaben stoppen – bis zur Reaktivierung.",
+      "restrictions": "Plattformbeschränkungen",
+      "restrictionsHint": "Module oder KI für diese Organisation deaktivieren und Token-Budgets festlegen. Wird bei jeder Anfrage durchgesetzt.",
+      "editRestrictions": "Beschränkungen",
+      "disabledModules": "Deaktivierte Module",
+      "aiDisabled": "KI für diese Organisation deaktiviert",
+      "aiDaily": "Tägliches KI-Token-Budget",
+      "aiMonthly": "Monatliches KI-Token-Budget",
+      "viewGate": {
+        "title": "{name} öffnen",
+        "hint": "Mandantendetails sind vertraulich. Ihre Begründung wird im Audit-Protokoll erfasst (platform.tenant_viewed) und einmal pro Sitzung abgefragt.",
+        "placeholder": "z. B. Support-Ticket #1234",
+        "open": "Details öffnen"
+      },
+      "detail": {
+        "aiTasks30": "KI-Aufgaben (30 Tage)",
+        "failed": "{count} fehlgeschlagen",
+        "aiTokensMonth": "KI-Tokens diesen Monat",
+        "plan": "Plan & Limits",
+        "usage": "Nutzung diesen Monat",
+        "modules": "Genutzte Module",
+        "modulesHint": "Datensätze je Modul.",
+        "inUse": "Genutzt",
+        "members": "Mitglieder",
+        "deleted": "Gelöscht",
+        "recentTasks": "Letzte KI-Aufgaben",
+        "activity": "Aktivitätsprotokoll"
+      },
+      "counts": {
+        "leads": "Leads",
+        "deals": "Deals",
+        "contacts": "Kontakte",
+        "accounts": "Accounts",
+        "campaigns": "Kampagnen",
+        "content": "Inhalte",
+        "invoices": "Rechnungen",
+        "transactions": "Buchungen",
+        "employees": "Mitarbeitende",
+        "candidates": "Bewerbende",
+        "projects": "Projekte",
+        "tasks": "Aufgaben",
+        "channels": "Kanäle",
+        "announcements": "Ankündigungen",
+        "tickets": "Tickets",
+        "workflows": "Workflows",
+        "runs": "Ausführungen",
+        "connections": "Verbindungen",
+        "aiEmployees": "KI-Mitarbeiter",
+        "dashboards": "Dashboards",
+        "installs": "Installationen",
+        "documents": "Dokumente",
+        "objectives": "Ziele"
       }
     },
     "signInTitle": "Anmeldung Admin-Konsole",
     "signInSubtitle": "Nur für Plattform-Administratoren. Melden Sie sich mit Ihrem Admin-Konto an.",
-    "openApp": "App öffnen"
+    "openApp": "App öffnen",
+    "common": {
+      "edit": "Bearbeiten",
+      "add": "Hinzufügen",
+      "reasonAudited": "Pflichtfeld. Wird mit Ihrem Namen im Audit-Protokoll gespeichert.",
+      "criticalWarning": "Dies ist eine kritische Aktion mit Auswirkungen auf die gesamte Plattform.",
+      "typeToConfirm": "Zur Bestätigung {phrase} eingeben",
+      "thisMonth": "Diesen Monat",
+      "lastDays": "Letzte {count} Tage",
+      "period": {
+        "7d": "Letzte 7 Tage",
+        "30d": "Letzte 30 Tage",
+        "90d": "Letzte 90 Tage"
+      }
+    },
+    "search": {
+      "placeholder": "Benutzer, Unternehmen, Aufgaben, Einstellungen suchen…",
+      "title": "Suche",
+      "hint": "Suche über Benutzer, Organisationen, Unternehmen, KI-Aufgaben, Schalter und Integrationen.",
+      "resultsFor": "{count} Ergebnisse für „{q}“",
+      "tooShort": "Mindestens zwei Zeichen eingeben.",
+      "organizations": "Organisationen",
+      "companies": "Unternehmen",
+      "controls": "Schalter & Einstellungen",
+      "connections": "{count} Verbindungen"
+    },
+    "emergency": {
+      "title": "Notfallzustand aktiv:",
+      "manage": "Plattformsteuerung"
+    },
+    "overview": {
+      "users": "Benutzer",
+      "newUsers": "Neu: {d7} in 7 Tagen · {d30} in 30 Tagen",
+      "activeUsers": "Aktive Benutzer (7 Tage)",
+      "active30": "{count} in den letzten 30 Tagen",
+      "organizations": "Organisationen",
+      "companiesSuspended": "{companies} Unternehmen · {suspended} gesperrt",
+      "subscriptions": "Aktive Abonnements",
+      "mrr": "MRR",
+      "noMrr": "Noch keine zahlenden Abonnements",
+      "aiEmployees": "Aktive KI-Mitarbeiter",
+      "paused": "{count} pausiert",
+      "aiTasks": "Laufende KI-Aufgaben",
+      "tasksHint": "{queued} in Warteschlange · {failed} fehlgeschlagen (24 h)",
+      "aiUsage": "KI-Tokens diesen Monat",
+      "aiCost": "Geschätzte Kosten {cost}",
+      "apiUsage": "API-Anfragen",
+      "last30": "Letzte 30 Tage",
+      "approvals": "Offene Freigaben",
+      "approvalsHint": "KI-Aktionen, die auf eine Person warten",
+      "queues": "Jobs in Warteschlange",
+      "unavailable": "Nicht verfügbar (Redis nicht erreichbar)",
+      "health": "Systemzustand",
+      "healthy": "Gesund",
+      "degraded": "Beeinträchtigt",
+      "recentActivity": "Letzte Admin-Aktivität",
+      "viewAll": "Alle anzeigen"
+    },
+    "health": {
+      "database": "Datenbank",
+      "redis": "Redis",
+      "email": "E-Mail",
+      "ai": "KI-Anbieter",
+      "stripe": "Stripe"
+    },
+    "modules": {
+      "crm": "CRM & Vertrieb",
+      "marketing": "Marketing",
+      "finance": "Finanzen",
+      "hr": "Personal",
+      "work": "Projekte & Betrieb",
+      "comms": "Kommunikation",
+      "support": "Support",
+      "automation": "Automatisierung",
+      "integrations": "Integrationen",
+      "workforce": "KI-Belegschaft",
+      "bi": "Analysen & BI",
+      "marketplace": "Marktplatz",
+      "enterprise": "Enterprise",
+      "brain": "Company Brain",
+      "objectives": "Ziele"
+    },
+    "controls": {
+      "subtitle": "Globale Notschalter mit echter Durchsetzung. Jede Änderung braucht eine Begründung, kritische eine getippte Bestätigung; alles wird protokolliert.",
+      "readOnlyNotice": "Sie können diese Schalter sehen, aber nicht ändern (erfordert platform.controls.manage).",
+      "groups": {
+        "emergency": "Wartung & Nur-Lesen",
+        "kill": "Notschalter",
+        "modules": "Module & Integrationen"
+      },
+      "changed": "Geändert",
+      "critical": "Kritisch",
+      "on": "An",
+      "off": "Aus",
+      "turnOn": "Einschalten",
+      "turnOff": "Ausschalten",
+      "none": "Keine",
+      "notSet": "Nicht gesetzt",
+      "unlimited": "Unbegrenzt",
+      "emptyNoLimit": "Leer lassen für kein Limit.",
+      "onePerLine": "Ein Wert pro Zeile.",
+      "addValue": "Wert hinzufügen",
+      "enable": "Aktivieren",
+      "disable": "Deaktivieren",
+      "enabled": "Aktiv",
+      "disabled": "Deaktiviert",
+      "history": "Letzte Änderungen",
+      "noChanges": "Alles läuft mit Standardwerten.",
+      "control": "Schalter",
+      "value": "Wert",
+      "lockdown": {
+        "title": "Notfall-Sperre",
+        "hint": "Ein Klick: Wartungsmodus an, KI-Belegschaft aus, Hintergrundjobs pausiert und alle Nicht-Admin-Sitzungen beendet.",
+        "activeSince": "Aktiv seit {date} · {sessions} Sitzungen beendet",
+        "start": "Notfall-Sperre starten",
+        "startHint": "Benutzer werden abgemeldet und sehen die Wartungsseite; KI und Hintergrundarbeit stoppen. Administratoren behalten Zugriff.",
+        "end": "Sperre beenden",
+        "endHint": "Stellt die Schalterwerte von vor der Sperre wieder her."
+      },
+      "keys": {
+        "lockdown": {
+          "label": "Notfall-Sperre",
+          "hint": "Wartung, KI aus, Jobs pausiert, Sitzungen beendet."
+        },
+        "aiWorkforceEnabled": {
+          "label": "KI-Belegschaft",
+          "hint": "Aus: Nirgends auf der Plattform können KI-Aufgaben erstellt oder ausgeführt werden."
+        },
+        "aiExecutionPaused": {
+          "label": "KI-Ausführung pausieren",
+          "hint": "Der Worker nimmt keine KI-Aufgaben mehr an; wartende Aufgaben laufen danach weiter."
+        },
+        "registrationsEnabled": {
+          "label": "Neue Registrierungen",
+          "hint": "Aus: Registrierungen werden mit „Registrierung geschlossen“ abgelehnt."
+        },
+        "companyCreationEnabled": {
+          "label": "Unternehmen anlegen",
+          "hint": "Aus: Keine Organisation kann neue Unternehmen anlegen."
+        },
+        "automationsEnabled": {
+          "label": "Automatisierungen",
+          "hint": "Aus: Workflow-Zeitpläne, Auslöser und Ausführungen werden vom Worker übersprungen."
+        },
+        "backgroundJobsPaused": {
+          "label": "Alle Hintergrundjobs pausieren",
+          "hint": "Modul-Jobs und Ereignis-Handler stoppen; Ereignisse werden weiter gesammelt und danach verarbeitet."
+        },
+        "maintenanceMode": {
+          "label": "Wartungsmodus",
+          "hint": "Alle Nicht-Admin-Seiten zeigen die Wartungsseite, APIs antworten mit 503. Administratoren arbeiten weiter."
+        },
+        "readOnlyMode": {
+          "label": "Nur-Lesen-Modus",
+          "hint": "Jede Änderung über die API wird mit 503 abgelehnt; Lesen und Admin-Arbeit gehen weiter."
+        },
+        "disabledModules": {
+          "label": "Deaktivierte Module",
+          "hint": "Seiten und APIs dieser Module sind für alle Organisationen gesperrt."
+        },
+        "disabledIntegrations": {
+          "label": "Deaktivierte Integrationsanbieter",
+          "hint": "Diese Anbieter können nicht verbunden oder genutzt werden."
+        },
+        "aiDisabledModels": {
+          "label": "Deaktivierte Modelle",
+          "hint": "Aufgaben auf einem deaktivierten Modell werden abgelehnt."
+        },
+        "aiAllowedModels": {
+          "label": "Erlaubte Modelle",
+          "hint": "Leer: alle Modelle erlaubt. Sonst dürfen nur diese Modell-IDs laufen."
+        },
+        "aiDefaultModel": {
+          "label": "Standardmodell überschreiben",
+          "hint": "Modell-ID statt AGENT_MODEL des Servers. Leer: Serverstandard."
+        },
+        "aiDisabledProfiles": {
+          "label": "Deaktivierte KI-Rollen",
+          "hint": "Aufgaben für diese Rollen werden abgelehnt."
+        },
+        "aiDailyTokenBudget": {
+          "label": "Tägliches Token-Budget der Plattform",
+          "hint": "Alle Organisationen zusammen, pro UTC-Tag."
+        },
+        "aiMonthlyTokenBudget": {
+          "label": "Monatliches Token-Budget der Plattform",
+          "hint": "Alle Organisationen zusammen, pro UTC-Monat."
+        },
+        "aiRequireApprovalForWrites": {
+          "label": "Freigabe für alle KI-Änderungen verlangen",
+          "hint": "Jedes nicht lesende KI-Werkzeug wird zur Freigabeanfrage."
+        },
+        "aiAutonomyCeiling": {
+          "label": "Autonomie-Obergrenze",
+          "hint": "Das Höchstmaß an Eigenständigkeit für KI-Mitarbeiter, plattformweit."
+        },
+        "platformName": {
+          "label": "Plattformname",
+          "hint": "Wird auf Systemseiten wie der Wartungsseite angezeigt."
+        },
+        "supportEmail": {
+          "label": "Support-E-Mail",
+          "hint": "Kontaktadresse für Benutzer, wenn etwas nicht verfügbar ist."
+        },
+        "defaultLocale": {
+          "label": "Standardsprache",
+          "hint": "Standardsprache der Plattform."
+        },
+        "signupDomainAllowlist": {
+          "label": "Erlaubte Domains für Registrierung",
+          "hint": "Leer: alle dürfen sich registrieren. Sonst nur E-Mails dieser Domains (inkl. Subdomains)."
+        },
+        "maintenanceMessage": {
+          "label": "Wartungshinweis",
+          "hint": "Optionaler Text auf der Wartungsseite und in 503-Antworten."
+        }
+      }
+    },
+    "ai": {
+      "subtitle": "Die KI-Belegschaft aller Organisationen: Anbieter, Schalter, Budgets, Modelle und Rollen. API-Schlüssel werden nie angezeigt.",
+      "provider": "KI-Anbieter",
+      "tasks24h": "Aktive KI-Aufgaben",
+      "tasks24hHint": "24 h: {completed} abgeschlossen · {failed} fehlgeschlagen",
+      "tokensMonth": "Tokens diesen Monat",
+      "today": "{tokens} heute",
+      "switches": "Ausführung & Richtlinie",
+      "budgets": "Token-Budgets",
+      "budgetsHint": "Plattformweite Budgets, geprüft bei Erstellung und Ausführung. Tageslimit je Unternehmen laut Server: {perCompany}.",
+      "models": "Modelle",
+      "modelsHint": "Serverstandard (AGENT_MODEL): {env}. Nutzung der letzten 30 Tage.",
+      "envDefault": "Serverstandard ({model})",
+      "inUse": "In Verwendung",
+      "notAllowed": "Nicht erlaubt",
+      "profiles": "KI-Rollen",
+      "profilesHint": "Eine deaktivierte Rolle lehnt neue Aufgaben ab und stoppt wartende bei der Ausführung.",
+      "columns": {
+        "model": "Modell",
+        "tasks30": "Aufgaben (30 T)",
+        "tasks": "Aufgaben",
+        "tokens": "Tokens",
+        "cost": "Gesch. Kosten",
+        "profile": "Rolle",
+        "department": "Abteilung",
+        "tools": "Werkzeuge",
+        "task": "Aufgabe",
+        "status": "Status",
+        "name": "Name"
+      },
+      "ceiling": {
+        "full": "Wie je KI-Mitarbeiter konfiguriert",
+        "supervised": "Beaufsichtigt: jede Änderung braucht Freigabe",
+        "read_only": "Nur-Lesen: KI darf nur lesen"
+      },
+      "status": {
+        "QUEUED": "In Warteschlange",
+        "RUNNING": "Läuft",
+        "COMPLETED": "Abgeschlossen",
+        "FAILED": "Fehlgeschlagen",
+        "CANCELLED": "Abgebrochen"
+      },
+      "tasksSubtitle": "Alle KI-Aufgaben der Plattform. Nach ID oder Titel suchen, Fehler filtern, abbrechen oder wiederholen.",
+      "failures": "Fehler (7 Tage)",
+      "failuresHint": "Nach Fehlercode gruppiert.",
+      "searchTasks": "Aufgaben-ID oder Titel",
+      "noTasks": "Keine KI-Aufgaben.",
+      "cancel": "Abbrechen",
+      "retry": "Wiederholen",
+      "usageSubtitle": "Tokens und geschätzte Kosten (Listenpreise) nach Organisation, Modell und Tag.",
+      "byOrg": "Nach Organisation",
+      "byModel": "Nach Modell",
+      "byDay": "Nach Tag",
+      "noUsage": "Keine KI-Nutzung in diesem Zeitraum."
+    },
+    "plans": {
+      "subtitle": "Pläne, Marktpreise, Berechtigungen und Nutzungskontingente.",
+      "limitsTitle": "Plan-Limits & Modulzugang",
+      "limitsHint": "Für abonnierte Organisationen durchgesetzt: Plätze, Unternehmen, KI-Tokens und API-Aufrufe pro Monat sowie Modulzugang. Leer = unbegrenzt.",
+      "modules": "Module",
+      "allModules": "Alle Module",
+      "trial": "{count} Tage Testphase",
+      "limits": {
+        "seats": {
+          "max": "Plätze"
+        },
+        "companies": {
+          "max": "Unternehmen"
+        },
+        "ai": {
+          "tokens": {
+            "month": "KI-Tokens / Monat"
+          }
+        },
+        "api": {
+          "calls": {
+            "month": "API-Aufrufe / Monat"
+          }
+        },
+        "storage": {
+          "mb": "Speicher (MB)"
+        },
+        "agents": {
+          "max": "KI-Mitarbeiter"
+        }
+      }
+    },
+    "subscriptions": {
+      "subtitle": "Abonnementstatus aller Organisationen. MRR stammt nur aus echten Abonnementposten.",
+      "byPlan": "Laufende Abonnements nach Plan",
+      "plan": "Plan",
+      "periodEnd": "Periodenende",
+      "cancelsAtEnd": "Kündigung zum Periodenende",
+      "trialEnds": "Testphase endet {date}",
+      "interval": {
+        "MONTH": "Monatlich",
+        "YEAR": "Jährlich"
+      },
+      "status": {
+        "INCOMPLETE": "Unvollständig",
+        "INCOMPLETE_EXPIRED": "Abgelaufen",
+        "TRIALING": "Testphase",
+        "ACTIVE": "Aktiv",
+        "PAST_DUE": "Überfällig",
+        "CANCELED": "Gekündigt",
+        "UNPAID": "Unbezahlt",
+        "PAUSED": "Pausiert"
+      }
+    },
+    "integrations": {
+      "subtitle": "Anbieterverbindungen, API-Schlüssel und Webhook-Zustellungen aller Organisationen. Zugangsdaten werden nie angezeigt.",
+      "manageProviders": "Anbieter deaktivieren",
+      "providers": "Anbieter",
+      "provider": "Anbieter",
+      "platform": "Plattform",
+      "connections": "Verbindungen",
+      "noConnections": "Keine Verbindungen.",
+      "lastError": "Letzter Fehler",
+      "lastSync": "Letzte Synchronisierung",
+      "status": {
+        "CONNECTED": "Verbunden",
+        "ERROR": "Fehler",
+        "DISCONNECTED": "Getrennt"
+      },
+      "apiKeys": "API-Schlüssel",
+      "noKeys": "Keine API-Schlüssel.",
+      "key": "Schlüssel",
+      "lastUsed": "Zuletzt genutzt",
+      "revoked": "Widerrufen",
+      "expired": "Abgelaufen",
+      "active": "Aktiv",
+      "revoke": "Widerrufen",
+      "revokeHint": "Der Schlüssel funktioniert sofort nicht mehr, sein Dienstkonto wird deaktiviert.",
+      "apiUsage": "API-Nutzung nach Organisation",
+      "noUsage": "Keine API-Anfragen.",
+      "webhookFailures": "Fehlgeschlagene Webhook-Zustellungen",
+      "noFailures": "Keine fehlgeschlagenen Zustellungen.",
+      "event": "Ereignis",
+      "endpoint": "Endpunkt",
+      "attempts": "{count} Versuche"
+    },
+    "security": {
+      "subtitle": "Sicherheitsereignisse, Plattformadministratoren und ihre Sitzungen.",
+      "byAction": "Sicherheitsereignisse nach Typ",
+      "admins": "Plattformadministratoren",
+      "adminSessions": "Aktive Admin-Sitzungen",
+      "noSessions": "Keine aktiven Admin-Sitzungen.",
+      "verified": "Verifiziert",
+      "notVerified": "Nicht verifiziert",
+      "events": "Sicherheitsereignisse (30 Tage)"
+    },
+    "settings": {
+      "subtitle": "Plattformweite Einstellungen. Änderungen werden protokolliert.",
+      "general": "Allgemein",
+      "registration": "Registrierung",
+      "anyDomain": "Jede E-Mail-Domain"
+    },
+    "unavailable": {
+      "title": "Nicht verfügbar",
+      "titles": {
+        "maintenance": "Wartungsarbeiten",
+        "organization_suspended": "Organisation gesperrt",
+        "module_disabled": "Modul nicht verfügbar"
+      },
+      "maintenance": "Wir führen geplante Wartungsarbeiten durch. Bitte versuchen Sie es in Kürze erneut.",
+      "suspended": "Diese Organisation wurde von der Plattform gesperrt. Wenden Sie sich an den Support.",
+      "moduleDisabled": "{module} ist für Ihre Organisation derzeit deaktiviert.",
+      "contact": "Kontakt:",
+      "switchOrg": "Organisation wechseln",
+      "home": "Zur Startseite",
+      "retry": "Erneut versuchen"
+    }
   },
   "email": {
     "invitation": {

@@ -1,6 +1,10 @@
 import { Notice } from "@/components/ui/notice";
 import { PricingConsole } from "@/components/admin/pricing-console";
 import type { PlanDTO } from "@/components/admin/pricing-types";
+import { AdminHeader } from "@/components/admin/kit";
+import { PlanLimits } from "@/components/admin/plan-limits";
+import { PLAN_LIMIT_KEYS, PLATFORM_MODULES } from "@/server/core/platform-controls";
+import { canPlatform } from "@/server/modules/admin/access";
 import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { isAppError } from "@/server/core/errors";
@@ -51,8 +55,11 @@ export default async function PricingConsolePage() {
     })),
   }));
 
+  const canManage = await canPlatform(viewer.ctx, "pricing.manage");
   return (
-    <PricingConsole
+    <div className="grid gap-4">
+      <AdminHeader title={t("admin.nav.pricing")} description={t("admin.plans.subtitle")} />
+      <PricingConsole
       plans={plans}
       scope={scope}
       timeZone={viewer.user.timezone}
@@ -62,6 +69,19 @@ export default async function PricingConsolePage() {
         countries: countries.map((c) => ({ code: c.code, regionCode: c.regionCode, currencies: c.supportedCurrencies })),
         currencies: currencies.map((c) => c.code),
       }}
-    />
+      />
+      <PlanLimits
+        canManage={canManage}
+        limitKeys={Object.values(PLAN_LIMIT_KEYS)}
+        moduleKeys={[...PLATFORM_MODULES]}
+        plans={catalog.map((p) => ({
+          id: p.id,
+          key: p.key,
+          name: p.name,
+          trialDays: p.defaultTrialDays,
+          entitlements: p.entitlements.map((e) => ({ featureKey: e.featureKey, enabled: e.enabled, limitValue: e.limitValue?.toString() ?? null })),
+        }))}
+      />
+    </div>
   );
 }

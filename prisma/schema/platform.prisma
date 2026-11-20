@@ -1,0 +1,33 @@
+// ───────────────────────────── Platform Control Center ─────────────────────────────
+// Global platform switches and settings (src/server/core/platform-controls.ts) and worker heartbeats.
+// Written only by platform administrators (platform.controls.manage / platform.ai.manage), every change audited.
+
+/// One platform switch or setting. `key` is a control key (e.g. "maintenanceMode") or "org:<organizationId>" for
+/// per-organization restrictions. Values are validated by the control registry; unknown or invalid values fall back
+/// to safe defaults (everything enabled), so a bad row can never lock the platform.
+model PlatformSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  reason      String?
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("platform_settings")
+}
+
+/// Liveness of background processes: the worker upserts its row every minute.
+model PlatformHeartbeat {
+  /// "<kind>:<hostname>:<pid>"
+  id         String   @id
+  kind       String
+  hostname   String
+  pid        Int
+  startedAt  DateTime @map("started_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @map("last_seen_at") @db.Timestamptz(3)
+  /// Non-secret runtime state (paused queues, versions).
+  info       Json     @default("{}")
+
+  @@index([kind, lastSeenAt(sort: Desc)])
+  @@map("platform_heartbeats")
+}

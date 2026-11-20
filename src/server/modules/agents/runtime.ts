@@ -9,6 +9,7 @@ import type {
   MessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { env } from "@/server/core/env";
+import { agentModel } from "@/server/core/platform-controls";
 import type { RequestContext } from "@/server/core/context";
 import { isAppError } from "@/server/core/errors";
 import { requestTool, ToolDenied } from "@/server/modules/tools/gateway";
@@ -174,7 +175,7 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     let response: BetaMessage;
     try {
       response = await callModel({
-        model: env().AGENT_MODEL,
+        model: await agentModel(env().AGENT_MODEL),
         max_tokens: MAX_TOKENS,
         system,
         tools,

@@ -1,4 +1,5 @@
 import "server-only";
+import { isIntegrationEnabled } from "@/server/core/platform-controls";
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { decryptSecret, encryptSecret } from "@/server/core/crypto";
@@ -55,6 +56,8 @@ const asConfig = (v: Prisma.JsonValue): Record<string, unknown> => (v && typeof 
  */
 export async function getConnection(organizationId: string, companyId: string, providerKey: string): Promise<Connection | null> {
   if (!isUuid(organizationId) || !isUuid(companyId)) return null;
+  // A provider switched off platform-wide (Admin → Platform Controls) behaves as not connected.
+  if (!(await isIntegrationEnabled(providerKey))) return null;
   const row = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider: providerKey } });
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return null;
   const info = providerInfo(providerKey);

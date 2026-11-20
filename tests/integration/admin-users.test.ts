@@ -20,11 +20,11 @@ describe("platform user administration", () => {
     const founder = await makeUser({ name: "Founder Findme" });
     await createOrganization(founder.ctx, { name: "Findme Holdings" });
 
-    const users = await listPlatformUsers(admin.ctx, { q: "findme" });
+    const users = (await listPlatformUsers(admin.ctx, { q: "findme" })).data;
     expect(users).toEqual([expect.objectContaining({ id: founder.user.id, status: "ACTIVE", organizations: 1, platformRoles: [] })]);
     expect(users[0]).not.toHaveProperty("passwordHash");
-    expect((await listPlatformUsers(admin.ctx, { q: admin.user.email }))[0]!.platformRoles).toEqual(["SUPER_ADMIN"]);
-    expect(await listPlatformOrganizations(admin.ctx, { q: "findme" })).toEqual([expect.objectContaining({ name: "Findme Holdings", members: 1, companies: 0, subscription: null })]);
+    expect((await listPlatformUsers(admin.ctx, { q: admin.user.email })).data[0]!.platformRoles).toEqual(["SUPER_ADMIN"]);
+    expect((await listPlatformOrganizations(admin.ctx, { q: "findme" })).data).toEqual([expect.objectContaining({ name: "Findme Holdings", members: 1, companies: 0, subscription: null })]);
 
     await expectCode(listPlatformUsers(founder.ctx), "forbidden");
     await expectCode(listPlatformOrganizations(founder.ctx), "forbidden");
@@ -65,7 +65,7 @@ describe("platform user administration", () => {
 
     const platformAdmin = await makeUser();
     await grant(platformAdmin.user.id, "PLATFORM_ADMIN", "PLATFORM", PLATFORM_ID);
-    expect((await listPlatformUsers(platformAdmin.ctx)).length).toBeGreaterThan(0); // platform.users.read
+    expect((await listPlatformUsers(platformAdmin.ctx)).data.length).toBeGreaterThan(0); // platform.users.read
     await expectCode(setUserStatus(platformAdmin.ctx, target.user.id, { status: "SUSPENDED", reason: "no manage" }), "forbidden");
 
     const founder = await makeUser();

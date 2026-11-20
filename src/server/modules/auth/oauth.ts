@@ -115,7 +115,7 @@ export const oauthStatus = () => OAUTH_PROVIDERS.map((id) => ({ id, configured: 
 
 export class OAuthError extends Error {
   constructor(
-    readonly code: "not_configured" | "state_mismatch" | "provider_error" | "account_exists" | "email_unverified" | "already_linked" | "account_disabled" | "verify_email_first",
+    readonly code: "not_configured" | "state_mismatch" | "provider_error" | "account_exists" | "email_unverified" | "already_linked" | "account_disabled" | "verify_email_first" | "registrations_closed",
     message: string,
   ) {
     super(message);
@@ -233,6 +233,11 @@ export async function completeOAuth(ctx: RequestContext, state: StatePayload, co
         throw new OAuthError("account_exists", "email belongs to an existing account");
       }
       if (!email || !identity.emailVerified) throw new OAuthError("email_unverified", "provider email not verified");
+      // Platform controls (Admin → Platform Controls): registrations switch and sign-up domain allowlist.
+      const { assertRegistrationAllowed } = await import("@/server/core/platform-controls");
+      await assertRegistrationAllowed(email).catch(() => {
+        throw new OAuthError("registrations_closed", "new registrations are closed");
+      });
       const user = await tx.user.create({
         data: { email, name: identity.name?.slice(0, 120) || email.split("@")[0]!, passwordHash: null, emailVerifiedAt: new Date(), locale: state.locale },
       });
