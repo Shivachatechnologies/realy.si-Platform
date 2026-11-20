@@ -15,21 +15,21 @@
 
 /* ───────────────────────── User app — light ───────────────────────── */
 :root {
-  --background: oklch(0.985 0.003 275);
-  --foreground: oklch(0.2 0.016 275);
+  --background: #f4f6fa;
+  --foreground: #0b1220;
   --surface: oklch(1 0 0);
   --surface-2: oklch(0.973 0.004 275);
   --muted: oklch(0.955 0.006 275);
-  --muted-foreground: oklch(0.49 0.016 275);
+  --muted-foreground: #5a6478;
   --border: oklch(0.915 0.006 275);
   --border-strong: oklch(0.86 0.01 275);
   --input: oklch(0.875 0.008 275);
-  --ring: oklch(0.56 0.21 276);
-  --primary: oklch(0.52 0.225 276);
-  --primary-2: oklch(0.55 0.24 302);
+  --ring: #1764ff;
+  --primary: #1764ff;
+  --primary-2: #0b4fe6;
   --primary-foreground: oklch(0.99 0 0);
-  --accent: oklch(0.95 0.028 278);
-  --accent-foreground: oklch(0.4 0.19 276);
+  --accent: #e8f0ff;
+  --accent-foreground: #0b4fe6;
   --info: oklch(0.56 0.15 240);
   --success: oklch(0.56 0.14 158);
   --warning: oklch(0.66 0.15 70);
@@ -37,10 +37,10 @@
   --danger-foreground: oklch(0.99 0 0);
   --radius: 0.5625rem;
 
-  --aurora-1: oklch(0.72 0.17 276 / 0.22);
-  --aurora-2: oklch(0.74 0.17 305 / 0.16);
+  --aurora-1: oklch(0.7 0.17 263 / 0.22);
+  --aurora-2: oklch(0.74 0.12 245 / 0.16);
   --aurora-3: oklch(0.8 0.12 220 / 0.14);
-  --glow: oklch(0.6 0.22 276 / 0.35);
+  --glow: oklch(0.57 0.23 263 / 0.35);
   --grid-line: oklch(0.2 0.02 275 / 0.04);
 
   --elev-1: 0 1px 2px oklch(0.2 0.02 275 / 0.05), 0 0 0 1px oklch(0.2 0.02 275 / 0.02);
@@ -74,30 +74,30 @@
 /* ───────────────────────── User app — dark ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: oklch(0.145 0.009 275);
+    --background: #0b1220;
     --foreground: oklch(0.95 0.005 275);
-    --surface: oklch(0.178 0.01 275);
-    --surface-2: oklch(0.2 0.011 275);
-    --muted: oklch(0.225 0.012 275);
+    --surface: #111a2b;
+    --surface-2: #152036;
+    --muted: #19243b;
     --muted-foreground: oklch(0.71 0.014 275);
-    --border: oklch(0.265 0.012 275);
-    --border-strong: oklch(0.33 0.014 275);
-    --input: oklch(0.31 0.014 275);
-    --ring: oklch(0.7 0.18 278);
-    --primary: oklch(0.69 0.185 278);
-    --primary-2: oklch(0.7 0.2 305);
-    --primary-foreground: oklch(0.14 0.02 275);
-    --accent: oklch(0.27 0.06 278);
-    --accent-foreground: oklch(0.86 0.09 278);
+    --border: #223049;
+    --border-strong: #2d3d5c;
+    --input: #2a3854;
+    --ring: #4d8dff;
+    --primary: #4d8dff;
+    --primary-2: #2f78ff;
+    --primary-foreground: #0b1220;
+    --accent: oklch(0.28 0.07 263);
+    --accent-foreground: #a9c6ff;
     --info: oklch(0.72 0.13 235);
     --success: oklch(0.72 0.15 158);
     --warning: oklch(0.8 0.14 78);
     --danger: oklch(0.68 0.19 25);
     --danger-foreground: oklch(0.14 0 0);
-    --aurora-1: oklch(0.55 0.2 276 / 0.22);
-    --aurora-2: oklch(0.55 0.22 305 / 0.16);
+    --aurora-1: oklch(0.55 0.2 263 / 0.22);
+    --aurora-2: oklch(0.55 0.16 245 / 0.16);
     --aurora-3: oklch(0.6 0.14 220 / 0.12);
-    --glow: oklch(0.65 0.2 278 / 0.4);
+    --glow: oklch(0.62 0.2 263 / 0.4);
     --grid-line: oklch(1 0 0 / 0.03);
     --elev-1: 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.02);
     --elev-2: 0 1px 2px oklch(0 0 0 / 0.35), 0 6px 16px -4px oklch(0 0 0 / 0.4);
@@ -108,30 +108,30 @@
 }
 
 :root[data-theme="dark"] {
-  --background: oklch(0.145 0.009 275);
+  --background: #0b1220;
   --foreground: oklch(0.95 0.005 275);
-  --surface: oklch(0.178 0.01 275);
-  --surface-2: oklch(0.2 0.011 275);
-  --muted: oklch(0.225 0.012 275);
+  --surface: #111a2b;
+  --surface-2: #152036;
+  --muted: #19243b;
   --muted-foreground: oklch(0.71 0.014 275);
-  --border: oklch(0.265 0.012 275);
-  --border-strong: oklch(0.33 0.014 275);
-  --input: oklch(0.31 0.014 275);
-  --ring: oklch(0.7 0.18 278);
-  --primary: oklch(0.69 0.185 278);
-  --primary-2: oklch(0.7 0.2 305);
-  --primary-foreground: oklch(0.14 0.02 275);
-  --accent: oklch(0.27 0.06 278);
-  --accent-foreground: oklch(0.86 0.09 278);
+  --border: #223049;
+  --border-strong: #2d3d5c;
+  --input: #2a3854;
+  --ring: #4d8dff;
+  --primary: #4d8dff;
+  --primary-2: #2f78ff;
+  --primary-foreground: #0b1220;
+  --accent: oklch(0.28 0.07 263);
+  --accent-foreground: #a9c6ff;
   --info: oklch(0.72 0.13 235);
   --success: oklch(0.72 0.15 158);
   --warning: oklch(0.8 0.14 78);
   --danger: oklch(0.68 0.19 25);
   --danger-foreground: oklch(0.14 0 0);
-  --aurora-1: oklch(0.55 0.2 276 / 0.22);
-  --aurora-2: oklch(0.55 0.22 305 / 0.16);
+  --aurora-1: oklch(0.55 0.2 263 / 0.22);
+  --aurora-2: oklch(0.55 0.16 245 / 0.16);
   --aurora-3: oklch(0.6 0.14 220 / 0.12);
-  --glow: oklch(0.65 0.2 278 / 0.4);
+  --glow: oklch(0.62 0.2 263 / 0.4);
   --grid-line: oklch(1 0 0 / 0.03);
   --elev-1: 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.02);
   --elev-2: 0 1px 2px oklch(0 0 0 / 0.35), 0 6px 16px -4px oklch(0 0 0 / 0.4);
@@ -271,9 +271,9 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
-  --font-sans: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-locale, var(--font-inter)), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-display: var(--font-instrument), var(--font-locale, var(--font-geist-sans)), ui-serif, Georgia, serif;
+  --font-display: var(--font-sora), var(--font-locale, var(--font-inter)), ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 3px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 3px);
@@ -1200,5 +1200,14 @@
   [data-app-frame] button[aria-controls="ai-guide-panel"] {
     bottom: calc(4.75rem + env(safe-area-inset-bottom));
     inset-inline-end: 1rem;
+  }
+}
+
+/* Brand typography: Sora is the display voice — bold, tightly tracked (brand guidelines v1.0, §06).
+   In the base layer so an explicit font-weight utility still wins. */
+@layer base {
+  .font-display {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }

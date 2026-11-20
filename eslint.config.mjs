@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Templates for the user/admin split (scripts/split): they only compile after the transformation runs.
+    "scripts/split/templates/**",
   ]),
 ]);
 
