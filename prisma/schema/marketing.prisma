@@ -744,3 +744,36 @@ model MarketingFormSubmission {
   @@index([companyId, createdAt])
   @@map("marketing_form_submissions")
 }
+
+// ───────────────────────────── Brand ─────────────────────────────
+
+/// Brand kit, one per company. Injected into every marketing AI content task and used to style HTML emails.
+model MarketingBrandKit {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  brandName        String   @map("brand_name")
+  tagline          String?
+  /// Voice & tone guidance ("Confident, warm, plain English; no jargon").
+  voiceTone        String?  @map("voice_tone")
+  messagingPillars String[] @default([]) @map("messaging_pillars")
+  doWords          String[] @default([]) @map("do_words")
+  dontWords        String[] @default([]) @map("dont_words")
+  /// [{ name, description }]
+  personas         Json     @default("[]")
+  /// [{ name, hex }]; the first is the primary color.
+  colors           Json     @default("[]")
+  logoUrl          String?  @map("logo_url")
+  logoDarkUrl      String?  @map("logo_dark_url")
+  iconUrl          String?  @map("icon_url")
+  headingFont      String?  @map("heading_font")
+  bodyFont         String?  @map("body_font")
+  updatedById      String   @map("updated_by_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId])
+  @@map("marketing_brand_kits")
+}

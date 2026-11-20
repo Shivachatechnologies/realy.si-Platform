@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { NewCompanyDialog } from "@/components/company/new-company-dialog";
+import { CompanyTabs } from "@/components/objectives/tabs";
 import { getLocale, getT } from "@/i18n/server";
 import { displayName, formatDate, formatList, formatNumber } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
@@ -53,6 +54,7 @@ export default async function CompaniesPage() {
         </div>
         {canCreate && !atLimit ? <NewCompanyDialog countries={options.countries} currencies={options.currencies} organizationId={org.id} /> : null}
       </div>
+      {company ? <CompanyTabs locale={locale} active="profile" /> : null}
       {canCreate && atLimit ? (
         <Notice tone="warning">
           {t("enterprise.company.limitReached", {

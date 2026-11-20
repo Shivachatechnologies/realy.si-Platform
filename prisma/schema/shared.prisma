@@ -57,6 +57,8 @@ model Account {
   recurringInvoices   RecurringInvoice[]
   creditNotes         CreditNote[]
   supportTickets      SupportTicket[]      @relation("SupportTicketAccount")
+  financeBills        FinanceBill[]
+  crmProposals        CrmProposal[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, type])
@@ -103,6 +105,7 @@ model Contact {
   crmFollowUps            CrmFollowUp[]
   crmAttachments          CrmAttachment[]
   supportTickets          SupportTicket[]          @relation("SupportTicketRequester")
+  crmProposals            CrmProposal[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId])
@@ -125,17 +128,23 @@ model Department {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company             Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  parent              Department?          @relation("DepartmentTree", fields: [parentId, companyId], references: [id, companyId], onDelete: NoAction)
-  children            Department[]         @relation("DepartmentTree")
-  head                Employee?            @relation("DepartmentHead", fields: [headId, companyId], references: [id, companyId], onDelete: NoAction)
-  teams               Team[]
-  employees           Employee[]           @relation("EmployeeDepartment")
-  journalLines        JournalLine[]
-  financeTransactions FinanceTransaction[]
-  recurringExpenses   RecurringExpense[]
-  financeBudgets      FinanceBudget[]
-  hrJobs              HrJob[]              @relation("HrJobDepartment")
+  company              Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  parent               Department?           @relation("DepartmentTree", fields: [parentId, companyId], references: [id, companyId], onDelete: NoAction)
+  children             Department[]          @relation("DepartmentTree")
+  head                 Employee?             @relation("DepartmentHead", fields: [headId, companyId], references: [id, companyId], onDelete: NoAction)
+  teams                Team[]
+  employees            Employee[]            @relation("EmployeeDepartment")
+  journalLines         JournalLine[]
+  financeTransactions  FinanceTransaction[]
+  recurringExpenses    RecurringExpense[]
+  financeBudgets       FinanceBudget[]
+  hrJobs               HrJob[]               @relation("HrJobDepartment")
+  brainDocuments       BrainDocument[]       @relation("BrainDocumentDepartment")
+  companyMemories      CompanyMemory[]       @relation("CompanyMemoryDepartment")
+  financeBillLines     FinanceBillLine[]
+  financeApprovalRules FinanceApprovalRule[]
+  financeExpenseClaims FinanceExpenseClaim[]
+  objectives           Objective[]           @relation("ObjectiveDepartment")
 
   @@unique([id, companyId])
   @@unique([companyId, name])

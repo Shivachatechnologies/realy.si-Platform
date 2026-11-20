@@ -294,3 +294,58 @@ export function ApprovalDecision({ base, approvalId }: { base: string; approvalI
     </div>
   );
 }
+
+/** Dead-letter row: retry from the failed step, or dismiss it from the list. */
+export function DeadLetterActions({ base, runId }: { base: string; runId: string }) {
+  const t = useT();
+  const { busy, error, run } = useAction();
+  return (
+    <div className="grid content-start gap-1">
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" disabled={busy} onClick={() => void run(() => api(`${base}/workflow-runs/${runId}/retry`, { method: "POST", body: {} }))}>
+          <RotateCcw aria-hidden />
+          {t("workflows.runs.retry")}
+        </Button>
+        <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => void run(() => api(`${base}/workflow-runs/${runId}/dismiss`, { method: "POST", body: {} }))}>
+          <Archive aria-hidden />
+          {t("workflows.runs.dismiss")}
+        </Button>
+      </div>
+      <FormError error={error} />
+    </div>
+  );
+}
+
+/** Re-run a finished run from a chosen step (that step and every later step run again). */
+export function RerunFromStep({ base, runId, steps, defaultStep }: { base: string; runId: string; steps: { id: string; label: string }[]; defaultStep?: string }) {
+  const t = useT();
+  const [stepId, setStepId] = useState(defaultStep ?? steps[0]?.id ?? "");
+  const { busy, error, run } = useAction();
+  if (!steps.length) return null;
+  return (
+    <div className="grid gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <Select className="h-8 w-auto max-w-full" value={stepId} aria-label={t("workflows.runs.rerunFrom")} onChange={(e) => setStepId(e.target.value)}>
+          {steps.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </Select>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={busy || !stepId}
+          onClick={() => {
+            if (confirm(t("workflows.runs.rerunConfirm"))) void run(() => api(`${base}/workflow-runs/${runId}/rerun`, { method: "POST", body: { stepId } }));
+          }}
+        >
+          <Play aria-hidden />
+          {t("workflows.runs.rerunFrom")}
+        </Button>
+      </div>
+      <FormError error={error} />
+    </div>
+  );
+}

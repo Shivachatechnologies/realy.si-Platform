@@ -80,7 +80,7 @@ export async function audienceUserIds(client: Tx | Db, organizationId: string, c
 }
 
 /** Visibility filter for a non-manager: published, for everyone or for the viewer's department / team. */
-async function viewerAudienceWhere(organizationId: string, companyId: string, userId: string | null): Promise<Prisma.CommsAnnouncementWhereInput> {
+export async function viewerAudienceWhere(organizationId: string, companyId: string, userId: string | null): Promise<Prisma.CommsAnnouncementWhereInput> {
   const employees = userId
     ? await db().employee.findMany({ where: { organizationId, companyId, userId, archivedAt: null }, select: { departmentId: true, teamId: true } })
     : [];

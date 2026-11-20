@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TYPE_TONE } from "@/components/crm/accounts-list";
 import { SubjectActivity } from "@/components/crm/activity-cards";
+import { EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
 import { ActionButton, AiActions } from "@/components/crm/kit";
 import { MergeRecordButton } from "@/components/crm/merge-button";
 import { AccountForm } from "@/components/crm/record-forms";
@@ -156,8 +157,10 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
             )}
           </Card>
           <SubjectActivity subjectType="account" subjectId={a.id} owners={owners} active={active} defaultAssignee={a.ownerId} />
+          <EmailHistoryPanel subjectType="account" subjectId={a.id} />
         </div>
         <div className="grid min-w-0 content-start gap-4">
+          <SalesTasksPanel subjectType="account" subjectId={a.id} active={active} defaultAssignee={a.ownerId} />
           <SubjectTasks
             subjectType="account"
             subjectId={a.id}

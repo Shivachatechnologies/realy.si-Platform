@@ -21,6 +21,9 @@ export interface Connection {
   /** Non-secret settings: phoneNumberId (whatsapp), baseUrl/headerName/headerPrefix (custom_api), instanceUrl (salesforce), realmId (quickbooks), tenantId (xero), teamName (slack)... */
   config: Record<string, unknown>;
   status: ConnectionStatus;
+  /** Tenant of the connection (set by getConnection; used for the request log). */
+  organizationId?: string;
+  companyId?: string;
 }
 
 const REFRESH_WINDOW_MS = 2 * 60_000;
@@ -56,7 +59,7 @@ export async function getConnection(organizationId: string, companyId: string, p
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return null;
   const info = providerInfo(providerKey);
   const creds = decryptCredentials(companyId, providerKey, row.credentialsEnc);
-  const base = { id: row.id, provider: row.provider, config: asConfig(row.config), status: row.status as ConnectionStatus };
+  const base = { id: row.id, provider: row.provider, config: asConfig(row.config), status: row.status as ConnectionStatus, organizationId: row.organizationId, companyId: row.companyId };
   if (info?.authType !== "oauth2") return { ...base, accessToken: creds.apiKey ?? creds.accessToken ?? null };
 
   const expiring = row.tokenExpiresAt && row.tokenExpiresAt.getTime() - Date.now() < REFRESH_WINDOW_MS;

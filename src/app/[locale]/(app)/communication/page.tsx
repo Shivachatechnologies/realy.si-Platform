@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Composer } from "@/components/comms/client";
 import { PostCard } from "@/components/comms/feed";
-import { EmptyState, hrefWith, Pager } from "@/components/comms/bits";
+import { EmptyState, hrefWith, MEETING_TONE, Pager, SectionTabs } from "@/components/comms/bits";
+import { RsvpButtons } from "@/components/comms/meetings";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
 import { formatDate, formatDateTime } from "@/i18n/format";
@@ -16,6 +17,12 @@ import { listAnnouncements } from "@/server/modules/comms/announcements";
 import { listPeople } from "@/server/modules/comms/common";
 import { listPosts } from "@/server/modules/comms/feed";
 import { listMeetings } from "@/server/modules/comms/meetings";
+import { hubCounts, listConversations, listMentions, type MentionKind } from "@/server/modules/comms/hub";
+import { cn } from "@/lib/utils";
+
+const HUB_VIEWS = ["feed", "conversations", "mentions", "announcements", "meetings"] as const;
+type HubView = (typeof HUB_VIEWS)[number];
+const MENTION_KINDS: MentionKind[] = ["message", "post", "comment", "task_comment"];
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.communication.title") };
@@ -29,6 +36,22 @@ export default async function CommunicationFeedPage({ searchParams }: PageProps<
   const q = (typeof sp.q === "string" ? sp.q : "").slice(0, 200) || undefined;
   const cursor = typeof sp.cursor === "string" ? sp.cursor : undefined;
   const me = viewer.user.id;
+  const view: HubView = HUB_VIEWS.find((v) => v === sp.view) ?? "feed";
+  const path = `/${locale}/communication`;
+  const counts = await hubCounts(viewer.ctx, org.id, company.id);
+  const hubTabs = (
+    <SectionTabs
+      label={t("communication.hub.label")}
+      active={view}
+      tabs={HUB_VIEWS.map((v) => ({
+        key: v,
+        href: v === "feed" ? path : `${path}?view=${v}`,
+        label: t(`communication.hub.${v}`),
+        badge: v === "conversations" ? counts.conversations : v === "announcements" ? counts.announcements : v === "meetings" ? counts.meetings : undefined,
+      }))}
+    />
+  );
+  if (view !== "feed") return wrap(<div className="grid gap-4">{hubTabs}{await HubView({ view, p, sp })}</div>);
   const [posts, people, announcements, meetings, actionItems, unread] = await Promise.all([
     listPosts(viewer.ctx, org.id, company.id, { q, cursor }),
     listPeople(viewer.ctx, org.id, company.id),
@@ -42,6 +65,8 @@ export default async function CommunicationFeedPage({ searchParams }: PageProps<
   const peopleLite = people.map((u) => ({ id: u.id, name: u.name }));
 
   return wrap(
+    <div className="grid gap-4">
+    {hubTabs}
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="grid content-start gap-4">
         <Card>
@@ -133,6 +158,156 @@ export default async function CommunicationFeedPage({ searchParams }: PageProps<
           {t("communication.notificationsLink", { count: unread })}
         </Link>
       </div>
+    </div>
     </div>,
+  );
+}
+
+type Hub = Extract<Awaited<ReturnType<typeof areaPage>>, { gate: null }>;
+
+/** Non-feed hub views: conversations, mentions, announcements, meetings. */
+async function HubView({ view, p, sp }: { view: Exclude<HubView, "feed">; p: Hub; sp: Record<string, string | string[] | undefined> }) {
+  const { locale, t, viewer, org, company, tz, base } = p;
+  const me = viewer.user.id;
+  const path = `/${locale}/communication`;
+  const one = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : undefined);
+
+  if (view === "conversations") {
+    const q = one("q")?.slice(0, 200) || undefined;
+    const unreadOnly = one("unread") === "1";
+    const list = await listConversations(viewer.ctx, org.id, company.id, { q, unread: unreadOnly });
+    return (
+      <Card>
+        <CardHeader title={t("communication.hub.conversations")} description={t("communication.hub.conversationsHint", { count: list.unread })} actions={<span className="flex gap-2 text-xs"><Link className="hover:underline" href={`/${locale}/communication/channels`}>{t("communication.tabs.channels")}</Link><Link className="hover:underline" href={`/${locale}/communication/messages`}>{t("communication.tabs.messages")}</Link></span>} />
+        <form className="flex flex-wrap gap-2 border-b p-3" action={path}>
+          <input type="hidden" name="view" value="conversations" />
+          <Input className="min-w-0 flex-1" name="q" type="search" defaultValue={q ?? ""} maxLength={200} placeholder={t("communication.hub.searchConversations")} aria-label={t("communication.hub.searchConversations")} />
+          <label className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" name="unread" value="1" defaultChecked={unreadOnly} />
+            {t("communication.hub.unreadOnly")}
+          </label>
+          <Button type="submit" variant="secondary">
+            {t("communication.search")}
+          </Button>
+        </form>
+        {list.data.length === 0 ? (
+          <EmptyState>{q || unreadOnly ? t("common.noResults") : t("communication.hub.noConversations")}</EmptyState>
+        ) : (
+          <ul className="grid divide-y">
+            {list.data.map((c) => (
+              <li key={c.id}>
+                <Link href={`/${locale}/communication/${c.isDirect ? "messages" : "channels"}/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50">
+                  <span className={cn("min-w-0 flex-1 truncate text-sm", c.unread ? "font-semibold" : "")}>
+                    {c.isDirect ? c.name : `#${c.name}`}
+                    {c.archivedAt ? <span className="ms-1 text-xs text-muted-foreground">· {t("communication.archived")}</span> : null}
+                  </span>
+                  <span className="hidden text-xs text-muted-foreground sm:inline">{c.isDirect ? t("communication.hub.direct") : t("communication.channels.membersCount", { count: c.memberCount })}</span>
+                  <span className="text-xs text-muted-foreground">{c.lastMessageAt ? formatDateTime(c.lastMessageAt, locale, tz) : "—"}</span>
+                  {c.unread ? <Badge tone="accent">{c.unread}</Badge> : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    );
+  }
+
+  if (view === "mentions") {
+    const kind = MENTION_KINDS.find((k) => k === one("kind"));
+    const beforeRaw = one("before");
+    const before = beforeRaw ? new Date(beforeRaw) : undefined;
+    const list = await listMentions(viewer.ctx, org.id, company.id, { before: before && !Number.isNaN(before.getTime()) ? before : undefined, kind });
+    return (
+      <Card>
+        <CardHeader title={t("communication.hub.mentions")} description={t("communication.hub.mentionsHint")} />
+        <div className="flex flex-wrap gap-1 border-b px-4 py-2 text-sm">
+          {[undefined, ...MENTION_KINDS].filter((k) => k !== "task_comment" || list.includesTaskComments).map((k) => (
+            <Link key={k ?? "all"} href={hrefWith(path, { view: "mentions" }, { kind: k })} aria-current={kind === k ? "page" : undefined} className={cn("rounded-md px-2 py-1", kind === k ? "bg-muted font-medium" : "hover:bg-muted")}>
+              {t(`communication.hub.mentionKind.${k ?? "all"}`)}
+            </Link>
+          ))}
+        </div>
+        {list.data.length === 0 ? (
+          <EmptyState>{t("communication.hub.noMentions")}</EmptyState>
+        ) : (
+          <ul className="grid divide-y">
+            {list.data.map((m) => (
+              <li key={`${m.kind}-${m.id}`}>
+                <Link href={`/${locale}${m.href}`} className="grid gap-0.5 px-4 py-2.5 hover:bg-muted/50">
+                  <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="text-sm font-medium text-foreground">{m.authorName ?? "?"}</span>
+                    <Badge>{t(`communication.hub.mentionKind.${m.kind}`)}</Badge>
+                    {m.context ? <span className="truncate">{m.kind === "comment" ? t(`communication.hub.subject.${m.context}`) : m.context}</span> : null}
+                    <span className="ms-auto">{formatDateTime(m.createdAt, locale, tz)}</span>
+                  </span>
+                  <span className="line-clamp-2 text-sm">{m.excerpt}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Pager labels={{ prev: t("communication.newest"), next: t("communication.older") }} prevHref={beforeRaw ? hrefWith(path, sp, { before: undefined }) : null} nextHref={list.nextBefore ? hrefWith(path, sp, { before: list.nextBefore }) : null} />
+      </Card>
+    );
+  }
+
+  if (view === "announcements") {
+    const list = await listAnnouncements(viewer.ctx, org.id, company.id, { status: "PUBLISHED" });
+    return (
+      <Card>
+        <CardHeader title={t("communication.announcements.title")} actions={<Link className="text-xs hover:underline" href={`/${locale}/communication/announcements`}>{t("communication.viewAll")}</Link>} />
+        {list.data.length === 0 ? (
+          <EmptyState>{t("communication.announcements.none")}</EmptyState>
+        ) : (
+          <ul className="grid divide-y">
+            {list.data.map((a) => (
+              <li key={a.id}>
+                <Link href={`/${locale}/communication/announcements/${a.id}`} className="grid gap-0.5 px-4 py-2.5 hover:bg-muted/50">
+                  <span className="flex items-center gap-1.5 text-sm font-medium">
+                    {a.pinned ? <Pin className="size-3.5 shrink-0" aria-label={t("communication.announcements.pinned")} /> : null}
+                    <span className="truncate">{a.title}</span>
+                    {!a.read ? <Badge tone="accent">{t("communication.new")}</Badge> : null}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {a.authorName ?? "?"} · {a.publishedAt ? formatDate(a.publishedAt, locale, tz) : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    );
+  }
+
+  const meetings = await listMeetings(viewer.ctx, org.id, company.id, { scope: "upcoming" });
+  const mine = meetings.data.filter((m) => m.organizerId === me || m.attendees.some((a) => a.userId === me));
+  return (
+    <Card>
+      <CardHeader title={t("communication.meetings.upcoming")} actions={<Link className="text-xs hover:underline" href={`/${locale}/communication/meetings`}>{t("communication.viewAll")}</Link>} />
+      {mine.length === 0 ? (
+        <EmptyState>{t("communication.meetings.noUpcoming")}</EmptyState>
+      ) : (
+        <ul className="grid divide-y">
+          {mine.map((m) => (
+            <li key={m.id} className="grid gap-2 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div className="grid min-w-0 gap-0.5">
+                <Link href={`/${locale}/communication/meetings/${m.id}`} className="flex items-center gap-2 truncate text-sm font-medium hover:underline">
+                  {m.title}
+                  <Badge tone={MEETING_TONE[m.status]}>{t(`communication.meetings.statuses.${m.status}`)}</Badge>
+                  {m.recurrence ? <span className="text-xs font-normal text-muted-foreground">{t(`communication.meetings.recurrence.${m.recurrence}`)}</span> : null}
+                </Link>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateTime(m.startsAt, locale, tz)}
+                  {m.location ? ` · ${m.location}` : ""} · {m.organizerName ?? "?"}
+                </span>
+              </div>
+              {m.organizerId !== me && m.myRsvp ? <RsvpButtons base={base} meetingId={m.id} current={m.myRsvp === "PENDING" ? null : m.myRsvp} inSeries={false} /> : <Badge>{t("communication.meetings.organizer")}</Badge>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

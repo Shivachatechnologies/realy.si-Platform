@@ -3,15 +3,16 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { CommsMeetingStatus } from "@/generated/prisma/enums";
 import { db, transaction, type Db, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { forbidden, invalid, notFound } from "@/server/core/errors";
+import { conflict, forbidden, invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers } from "@/server/modules/notifications/service";
 import { createTask, getTask } from "@/server/modules/agents/service";
+import { sendPlainEmail } from "@/server/modules/email/service";
 import { can } from "@/server/modules/rbac/service";
 import type { ScopeChain } from "@/server/modules/rbac/scope";
-import { actorId, authorize, clip, instant, isUuid, membersWith, userNames, uuid } from "./common";
+import { actorId, authorize, clip, instant, isUuid, membersWith, plainMentions, requireUserId, userNames, uuid } from "./common";
 import { pushMeetingToCalendar } from "./calendar-sync";
 import { safeTimeZone, zonedParts, zonedTime } from "./time";
 
@@ -25,8 +26,17 @@ export const meetingInput = z
     startsAt: instant,
     endsAt: instant,
     attendeeIds: z.array(uuid).max(100).default([]),
+    /** Recurring series: WEEKLY / BIWEEKLY, `occurrences` meetings in total (incl. this one). */
+    recurrence: z.enum(["WEEKLY", "BIWEEKLY"]).nullable().optional(),
+    occurrences: z.number().int().min(2).max(26).default(6),
   })
   .refine((v) => new Date(v.endsAt) > new Date(v.startsAt), { path: ["endsAt"], message: "Must be after the start" });
+export const RSVP_RESPONSES = ["ACCEPTED", "TENTATIVE", "DECLINED"] as const;
+export const rsvpInput = z.object({ response: z.enum(RSVP_RESPONSES), scope: z.enum(["this", "series"]).default("this") });
+export const seriesScope = z.enum(["this", "following"]).default("this");
+export const followUpInput = z.object({ includeNotes: z.boolean().default(false), taskId: uuid.optional() });
+export const agendaTemplateInput = z.object({ name: z.string().trim().min(1).max(120), body: z.string().trim().min(1).max(10_000) });
+export const updateAgendaTemplateInput = agendaTemplateInput.partial();
 export const updateMeetingInput = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   agenda: z.string().trim().max(10_000).optional(),
@@ -37,6 +47,8 @@ export const updateMeetingInput = z.object({
   notes: z.string().max(50_000).optional(),
   decisions: z.array(z.string().trim().min(1).max(1000)).max(100).optional(),
   status: z.enum(["SCHEDULED", "CANCELLED"]).optional(),
+  /** For a recurring meeting: change only this occurrence, or this and the following scheduled ones. */
+  scope: seriesScope,
 });
 export const actionItemsInput = z.object({
   items: z
@@ -94,19 +106,24 @@ export async function listMeetings(ctx: RequestContext, organizationId: string, 
     orderBy: f.scope === "upcoming" ? [{ startsAt: "asc" }, { id: "asc" }] : [{ startsAt: "desc" }, { id: "desc" }],
     take: PAGE + 1,
     ...(f.cursor ? { cursor: { id: f.cursor }, skip: 1 } : {}),
-    include: { attendees: { select: { userId: true } } },
+    include: { attendees: { select: { userId: true, rsvp: true } } },
   });
   const page = rows.slice(0, PAGE);
   const names = await userNames(db(), page.flatMap((m) => [m.organizerId, ...m.attendees.map((a) => a.userId)]));
   return {
-    data: page.map((m) => ({ ...m, organizerName: names.get(m.organizerId) ?? null, attendeeNames: m.attendees.map((a) => names.get(a.userId) ?? "?") })),
+    data: page.map((m) => ({
+      ...m,
+      organizerName: names.get(m.organizerId) ?? null,
+      attendeeNames: m.attendees.map((a) => names.get(a.userId) ?? "?"),
+      myRsvp: m.attendees.find((a) => a.userId === me)?.rsvp ?? null,
+    })),
     nextCursor: rows.length > PAGE ? page[page.length - 1]!.id : null,
   };
 }
 
 async function loadMeeting(client: Tx | Db, organizationId: string, companyId: string, id: string) {
   if (!isUuid(id)) throw notFound("Meeting");
-  const m = await client.commsMeeting.findFirst({ where: { id, organizationId, companyId }, include: { attendees: { select: { userId: true } } } });
+  const m = await client.commsMeeting.findFirst({ where: { id, organizationId, companyId }, include: { attendees: { select: { userId: true, rsvp: true, respondedAt: true } } } });
   if (!m) throw notFound("Meeting");
   return m;
 }
@@ -134,9 +151,13 @@ export async function getMeeting(ctx: RequestContext, organizationId: string, co
   return {
     ...m,
     organizerName: names.get(m.organizerId) ?? null,
-    attendees: m.attendees.map((a) => ({ userId: a.userId, name: names.get(a.userId) ?? null })),
+    attendees: m.attendees.map((a) => ({ userId: a.userId, name: names.get(a.userId) ?? null, rsvp: a.rsvp, respondedAt: a.respondedAt })),
     actionItems: actionItems.map((a) => ({ ...a, assigneeName: a.assigneeId ? (names.get(a.assigneeId) ?? null) : null })),
     canEdit: participant || (await can(ctx, "communication.manage", chain)),
+    myRsvp: m.attendees.find((a) => a.userId === me)?.rsvp ?? null,
+    series: m.seriesId
+      ? await db().commsMeeting.findMany({ where: { companyId, seriesId: m.seriesId }, orderBy: { startsAt: "asc" }, select: { id: true, startsAt: true, status: true }, take: 60 })
+      : [],
   };
 }
 
@@ -151,31 +172,62 @@ function pushLater(organizationId: string, companyId: string, meetingId: string)
   void pushMeetingToCalendar(organizationId, companyId, meetingId).catch((err) => logger.warn({ err, meetingId }, "calendar push failed"));
 }
 
+const WEEK = 7 * 86_400_000;
+
 export async function createMeeting(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof meetingInput>) {
   const input = meetingInput.parse(raw);
-  const m = await transaction(async (tx) => {
+  const created = await transaction(async (tx) => {
     const chain = await authorize(ctx, organizationId, companyId, "communication.post", tx);
     const organizerId = actorId(ctx, organizationId);
     const attendees = (await validAttendees(tx, organizationId, chain, input.attendeeIds)).filter((u) => u !== organizerId);
-    const m = await tx.commsMeeting.create({
-      data: {
-        organizationId,
-        companyId,
-        title: input.title,
-        agenda: input.agenda || null,
-        location: input.location || null,
-        startsAt: new Date(input.startsAt),
-        endsAt: new Date(input.endsAt),
-        organizerId,
-        attendees: { create: [organizerId, ...attendees].map((userId) => ({ userId, companyId })) },
-      },
+    const start = new Date(input.startsAt);
+    const end = new Date(input.endsAt);
+    const count = input.recurrence ? input.occurrences : 1;
+    const step = input.recurrence === "BIWEEKLY" ? 2 * WEEK : WEEK;
+    const rows: { id: string; title: string; startsAt: Date }[] = [];
+    let seriesId: string | null = null;
+    for (let i = 0; i < count; i++) {
+      const m: { id: string; title: string; startsAt: Date } = await tx.commsMeeting.create({
+        data: {
+          organizationId,
+          companyId,
+          title: input.title,
+          agenda: input.agenda || null,
+          location: input.location || null,
+          startsAt: new Date(start.getTime() + i * step),
+          endsAt: new Date(end.getTime() + i * step),
+          organizerId,
+          recurrence: input.recurrence ?? null,
+          seriesId,
+          attendees: { create: [{ userId: organizerId, rsvp: "ACCEPTED" as const, respondedAt: new Date() }, ...attendees.map((userId) => ({ userId }))] },
+        },
+      });
+      if (input.recurrence && i === 0) {
+        seriesId = m.id;
+        await tx.commsMeeting.update({ where: { id: m.id }, data: { seriesId } });
+      }
+      rows.push(m);
+    }
+    const first = rows[0]!;
+    await writeAudit(tx, ctx, {
+      category: "TENANT",
+      organizationId,
+      action: "meeting.created",
+      resourceType: "meeting",
+      resourceId: first.id,
+      newValue: { title: first.title, startsAt: first.startsAt, attendees: attendees.length, recurrence: input.recurrence ?? null, occurrences: count },
     });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "meeting.created", resourceType: "meeting", resourceId: m.id, newValue: { title: m.title, startsAt: m.startsAt, attendees: attendees.length } });
-    await notifyUsers(tx, organizationId, attendees, "comms.meeting_invite", { companyId, title: m.title, href: `/communication/meetings/${m.id}` });
-    return m;
+    await notifyUsers(tx, organizationId, attendees, "comms.meeting_invite", { companyId, title: first.title, href: `/communication/meetings/${first.id}` });
+    return rows;
   });
-  pushLater(organizationId, companyId, m.id);
-  return m;
+  for (const m of created) pushLater(organizationId, companyId, m.id);
+  return created[0]!;
+}
+
+/** Scheduled occurrences after `m` in its series (for "this and following" edits). */
+async function followingOccurrences(tx: Tx, companyId: string, m: { id: string; seriesId: string | null; startsAt: Date }) {
+  if (!m.seriesId) return [];
+  return tx.commsMeeting.findMany({ where: { companyId, seriesId: m.seriesId, status: "SCHEDULED", startsAt: { gt: m.startsAt }, id: { not: m.id } }, select: { id: true, startsAt: true, endsAt: true } });
 }
 
 export async function updateMeeting(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof updateMeetingInput>) {
@@ -221,20 +273,176 @@ export async function updateMeeting(ctx: RequestContext, organizationId: string,
     if (input.status === "CANCELLED" && before.status !== "CANCELLED") {
       await notifyUsers(tx, organizationId, before.attendees.map((a) => a.userId).filter((u) => u !== ctx.actor.id), "comms.meeting_cancelled", { companyId, title: m.title, href: `/communication/meetings/${id}` });
     }
-    return m;
+    // "This and following": same changes on later scheduled occurrences (times shift by the same delta).
+    const others = input.scope === "following" ? await followingOccurrences(tx, companyId, before) : [];
+    const shiftStart = startsAt.getTime() - before.startsAt.getTime();
+    const shiftEnd = endsAt.getTime() - before.endsAt.getTime();
+    for (const o of others) {
+      await tx.commsMeeting.update({
+        where: { id: o.id },
+        data: {
+          ...(input.title !== undefined ? { title: input.title } : {}),
+          ...(input.agenda !== undefined ? { agenda: input.agenda || null } : {}),
+          ...(input.location !== undefined ? { location: input.location || null } : {}),
+          ...(input.status ? { status: input.status } : {}),
+          startsAt: new Date(o.startsAt.getTime() + shiftStart),
+          endsAt: new Date(o.endsAt.getTime() + shiftEnd),
+        },
+      });
+      if (input.attendeeIds) {
+        const keep = [before.organizerId, ...(await validAttendees(tx, organizationId, chain, input.attendeeIds))];
+        await tx.commsMeetingAttendee.deleteMany({ where: { meetingId: o.id, userId: { notIn: keep } } });
+        await tx.commsMeetingAttendee.createMany({ data: keep.map((userId) => ({ meetingId: o.id, companyId, userId })), skipDuplicates: true });
+      }
+    }
+    return { m, others: others.map((o) => o.id) };
   });
-  if (input.startsAt || input.endsAt || input.title || input.attendeeIds || input.location !== undefined) pushLater(organizationId, companyId, m.id);
-  return m;
+  const changed = input.startsAt || input.endsAt || input.title || input.attendeeIds || input.location !== undefined || input.status;
+  if (changed) for (const mid of [m.m.id, ...m.others]) pushLater(organizationId, companyId, mid);
+  return m.m;
 }
 
-export async function deleteMeeting(ctx: RequestContext, organizationId: string, companyId: string, id: string) {
+export async function deleteMeeting(ctx: RequestContext, organizationId: string, companyId: string, id: string, scope: z.input<typeof seriesScope> = "this") {
   return transaction(async (tx) => {
     const chain = await authorize(ctx, organizationId, companyId, "communication.post", tx);
     const m = await loadMeeting(tx, organizationId, companyId, id);
     if (m.organizerId !== ctx.actor.id && !(await can(ctx, "communication.manage", chain, tx))) throw forbidden("Only the organizer can delete this meeting", { permission: "communication.manage" });
-    await tx.commsComment.deleteMany({ where: { companyId, subjectType: "meeting", subjectId: id } });
-    await tx.commsMeeting.delete({ where: { id } });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "meeting.deleted", resourceType: "meeting", resourceId: id, oldValue: { title: m.title } });
+    const ids = [id, ...(seriesScope.parse(scope) === "following" ? (await followingOccurrences(tx, companyId, m)).map((o) => o.id) : [])];
+    await tx.commsComment.deleteMany({ where: { companyId, subjectType: "meeting", subjectId: { in: ids } } });
+    await tx.commsMeeting.deleteMany({ where: { id: { in: ids }, companyId } });
+    // Keep the series anchored on a remaining occurrence when the first one goes.
+    if (m.seriesId === id) {
+      const next = await tx.commsMeeting.findFirst({ where: { companyId, seriesId: id }, orderBy: { startsAt: "asc" }, select: { id: true } });
+      if (next) await tx.commsMeeting.updateMany({ where: { companyId, seriesId: id }, data: { seriesId: next.id } });
+    }
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "meeting.deleted", resourceType: "meeting", resourceId: id, oldValue: { title: m.title, occurrences: ids.length } });
+    return { ok: true, deleted: ids.length };
+  });
+}
+
+/** Attendee RSVP (this occurrence or the whole upcoming series); the organizer is notified. */
+export async function rsvpMeeting(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof rsvpInput>) {
+  const input = rsvpInput.parse(raw);
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "communication.read", tx);
+    const me = requireUserId(ctx);
+    const m = await loadMeeting(tx, organizationId, companyId, id);
+    if (!m.attendees.some((a) => a.userId === me)) throw forbidden("Only invited attendees can respond", { reason: "comms_not_attendee" });
+    if (m.status !== "SCHEDULED") throw invalid("This meeting is no longer scheduled", { reason: "comms_meeting_not_scheduled" });
+    const ids =
+      input.scope === "series" && m.seriesId
+        ? (await tx.commsMeeting.findMany({ where: { companyId, seriesId: m.seriesId, status: "SCHEDULED", startsAt: { gte: m.startsAt } }, select: { id: true } })).map((x) => x.id)
+        : [id];
+    const now = new Date();
+    await tx.commsMeetingAttendee.updateMany({ where: { meetingId: { in: ids }, userId: me }, data: { rsvp: input.response, respondedAt: now } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "meeting.rsvp", resourceType: "meeting", resourceId: id, newValue: { response: input.response, occurrences: ids.length } });
+    if (m.organizerId !== me) {
+      const name = (await userNames(tx, [me])).get(me) ?? "";
+      await notifyUsers(tx, organizationId, [m.organizerId], `comms.meeting_${input.response.toLowerCase()}`, { companyId, title: `${name} · ${m.title}`, href: `/communication/meetings/${id}` });
+    }
+    return { ok: true, updated: ids.length };
+  });
+}
+
+/**
+ * Email the meeting's follow-up (summary from the latest completed AI summary or the given task, decisions, action
+ * items, optionally notes) to every attendee through the platform mailer. Records per-status counts on the meeting:
+ * "sent" counts only messages a provider accepted.
+ */
+export async function sendMeetingFollowUp(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof followUpInput>) {
+  const input = followUpInput.parse(raw);
+  const chain = await authorize(ctx, organizationId, companyId, "communication.post");
+  const m = await getMeeting(ctx, organizationId, companyId, id);
+  await transaction((tx) => requireParticipant(tx, ctx, chain, { organizerId: m.organizerId, attendees: m.attendees }));
+  if (m.status !== "COMPLETED") throw invalid("Mark the meeting as held before sending the follow-up", { reason: "comms_meeting_not_completed" });
+  const summary = await db().agentTask.findFirst({
+    where: { organizationId, companyId, subjectType: "meeting", subjectId: m.id, status: "COMPLETED", output: { not: null }, ...(input.taskId ? { id: input.taskId } : {}) },
+    orderBy: { completedAt: "desc" },
+    select: { output: true },
+  });
+  if (input.taskId && !summary) throw notFound("Summary");
+  const company = await db().company.findFirstOrThrow({ where: { id: companyId, organizationId }, select: { name: true, timezone: true } });
+  const tz = safeTimeZone(company.timezone);
+  const when = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: tz }).format(m.startsAt);
+  const sections = [
+    `${m.title} — ${when} (${tz})`,
+    summary?.output ? summary.output.trim() : null,
+    !summary?.output && m.decisions.length ? `Decisions:\n${m.decisions.map((d) => `- ${d}`).join("\n")}` : null,
+    m.actionItems.length
+      ? `Action items:\n${m.actionItems.map((a) => `- ${a.status === "DONE" ? "[done] " : ""}${a.title}${a.assigneeName ? ` — ${a.assigneeName}` : ""}${a.dueDate ? ` (due ${a.dueDate.toISOString().slice(0, 10)})` : ""}`).join("\n")}`
+      : null,
+    input.includeNotes && m.notes ? `Notes:\n${plainMentions(m.notes)}` : null,
+  ].filter(Boolean);
+  if (sections.length < 2) throw invalid("There is nothing to send yet — add notes, decisions, action items or an AI summary", { reason: "comms_followup_empty" });
+  const recipients = await db().user.findMany({ where: { id: { in: [m.organizerId, ...m.attendees.map((a) => a.userId)] }, status: "ACTIVE" }, select: { id: true, email: true, locale: true } });
+  const counts = { sent: 0, failed: 0, notConfigured: 0, skipped: 0 };
+  const text = `${sections.join("\n\n")}\n\n—\n${company.name}`;
+  for (const r of recipients) {
+    if (!r.email) {
+      counts.skipped++;
+      continue;
+    }
+    const res = await sendPlainEmail({ to: r.email, subject: `Follow-up: ${m.title}`.slice(0, 250), text, template: "comms.meeting_followup", organizationId, userId: ctx.actor.id, locale: r.locale ?? "en-US" });
+    if (res.status === "SENT") counts.sent++;
+    else if (res.status === "NOT_CONFIGURED") counts.notConfigured++;
+    else counts.failed++;
+  }
+  await transaction(async (tx) => {
+    await tx.commsMeeting.update({ where: { id: m.id }, data: { followUpSentAt: new Date(), followUpResult: counts } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "meeting.follow_up_sent", resourceType: "meeting", resourceId: m.id, newValue: counts });
+  });
+  return counts;
+}
+
+// ── Agenda templates ──
+
+export async function listAgendaTemplates(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "communication.read");
+  return db().commsAgendaTemplate.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" }, take: 200 });
+}
+
+export async function createAgendaTemplate(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof agendaTemplateInput>) {
+  const input = agendaTemplateInput.parse(raw);
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "communication.post", tx);
+    if (await tx.commsAgendaTemplate.findFirst({ where: { companyId, name: { equals: input.name, mode: "insensitive" } }, select: { id: true } })) {
+      throw conflict("A template with this name exists", { reason: "comms_template_exists" });
+    }
+    const tpl = await tx.commsAgendaTemplate.create({ data: { organizationId, companyId, name: input.name, body: input.body, createdById: actorId(ctx, organizationId) } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "comms.agenda_template.created", resourceType: "comms_agenda_template", resourceId: tpl.id, newValue: { name: tpl.name } });
+    return tpl;
+  });
+}
+
+async function ownTemplate(tx: Tx, ctx: RequestContext, organizationId: string, companyId: string, templateId: string) {
+  const chain = await authorize(ctx, organizationId, companyId, "communication.post", tx);
+  if (!isUuid(templateId)) throw notFound("Template");
+  const tpl = await tx.commsAgendaTemplate.findFirst({ where: { id: templateId, organizationId, companyId } });
+  if (!tpl) throw notFound("Template");
+  if (tpl.createdById !== ctx.actor.id && !(await can(ctx, "communication.manage", chain, tx))) throw forbidden("Only the author can change this template", { permission: "communication.manage" });
+  return tpl;
+}
+
+export async function updateAgendaTemplate(ctx: RequestContext, organizationId: string, companyId: string, templateId: string, raw: z.input<typeof updateAgendaTemplateInput>) {
+  const input = updateAgendaTemplateInput.parse(raw);
+  return transaction(async (tx) => {
+    const tpl = await ownTemplate(tx, ctx, organizationId, companyId, templateId);
+    if (input.name && input.name.toLowerCase() !== tpl.name.toLowerCase()) {
+      if (await tx.commsAgendaTemplate.findFirst({ where: { companyId, name: { equals: input.name, mode: "insensitive" }, id: { not: tpl.id } }, select: { id: true } })) {
+        throw conflict("A template with this name exists", { reason: "comms_template_exists" });
+      }
+    }
+    const updated = await tx.commsAgendaTemplate.update({ where: { id: tpl.id }, data: input });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "comms.agenda_template.updated", resourceType: "comms_agenda_template", resourceId: tpl.id, newValue: { name: updated.name } });
+    return updated;
+  });
+}
+
+export async function deleteAgendaTemplate(ctx: RequestContext, organizationId: string, companyId: string, templateId: string) {
+  return transaction(async (tx) => {
+    const tpl = await ownTemplate(tx, ctx, organizationId, companyId, templateId);
+    await tx.commsAgendaTemplate.delete({ where: { id: tpl.id } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "comms.agenda_template.deleted", resourceType: "comms_agenda_template", resourceId: tpl.id, oldValue: { name: tpl.name } });
     return { ok: true };
   });
 }

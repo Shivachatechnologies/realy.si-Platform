@@ -7,6 +7,9 @@ import { contactName, listContacts } from "./contacts";
 import { closeDeal, createDeal, getDeal, listDeals, moveDealStage, parseDealFilters, pipelineBoard } from "./deals";
 import { parseSalesRange, salesForecast, salesSummary } from "./sales";
 import { addFollowUp } from "./service";
+import { transaction } from "@/server/core/db";
+import { authorize } from "./common";
+import { getProposal, insertProposal, listProposals, parseProposalFilters, proposalInput } from "./proposals";
 
 const money = (m: bigint, currency: string) => `${toMajor(m, currency) || "0"} ${currency}`;
 const uuidField = (description: string) => ({ type: "string", description });
@@ -294,6 +297,128 @@ export const CRM_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const d = await createDeal(ctx, organizationId, companyId, { ...input, ownerId: ctx.actor.id ?? undefined, source: input.source ?? "AI agent" });
       return { content: `Created deal "${d.name}".`, records: [`crm_deal:${d.id}`] };
+    },
+  }),
+
+  read_proposals: def({
+    name: "read_proposals",
+    version: 1,
+    description:
+      "Reads sales proposals. With proposalId: the full proposal (deal, contact, status, version, sections, line items with computed totals, valid-until, sends and decision). Without: a list, optionally filtered by dealId, status (DRAFT, SENT, VIEWED, ACCEPTED, DECLINED, EXPIRED) or q (search text).",
+    input: z
+      .object({
+        proposalId: z.string().uuid().optional(),
+        dealId: z.string().uuid().optional(),
+        status: z.enum(["DRAFT", "SENT", "VIEWED", "ACCEPTED", "DECLINED", "EXPIRED"]).optional(),
+        q: z.string().trim().max(200).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        proposalId: uuidField("Proposal id"),
+        dealId: uuidField("Deal id"),
+        status: { type: "string", enum: ["DRAFT", "SENT", "VIEWED", "ACCEPTED", "DECLINED", "EXPIRED"] },
+        q: { type: "string", description: "Search text" },
+      },
+      required: [],
+      additionalProperties: false,
+    },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read sales proposals",
+    async execute(input, { ctx, organizationId, companyId }) {
+      if (input.proposalId) {
+        const p = await getProposal(ctx, organizationId, companyId, input.proposalId);
+        const lines = [
+          `Proposal ${p.id} ${p.number}: ${p.title} [${p.status}, v${p.version}]${p.archivedAt ? " [ARCHIVED]" : ""}`,
+          `Deal: ${p.deal.name} (${p.deal.id}) · Account: ${p.account?.name ?? "none"} · Contact: ${p.contact ? `${contactName(p.contact)}${p.contact.email ? ` <${p.contact.email}>` : ""}` : "none"} · Owner: ${p.ownerName ?? "unassigned"}`,
+          `Valid until: ${isoDay(p.validUntil) ?? "not set"} · Sent: ${p.sentAt ? `${isoDay(p.sentAt)} to ${p.sentTo}` : "never"} · Viewed: ${p.viewCount} times${p.decidedAt ? ` · Decision ${isoDay(p.decidedAt)} by ${p.decisionName}${p.decisionNote ? `: ${p.decisionNote}` : ""}` : ""}`,
+          "",
+          "Line items:",
+          ...(p.lines.length
+            ? p.lines.map((l) => `- ${l.description}: ${l.quantityMilli / 1000} × ${money(l.unitPriceMinor, p.currency)}${l.discountBps ? ` −${l.discountBps / 100}%` : ""}${l.taxBps ? ` +${l.taxBps / 100}% tax` : ""} = ${money(l.totalMinor, p.currency)}`)
+            : ["- none"]),
+          `Subtotal ${money(p.subtotalMinor, p.currency)} · Discount ${money(p.discountMinor, p.currency)} · Tax ${money(p.taxMinor, p.currency)} · Total ${money(p.totalMinor, p.currency)}`,
+          "",
+          `## Introduction\n${p.intro || "(empty)"}`,
+          `## Scope\n${p.scope || "(empty)"}`,
+          `## Timeline\n${p.timeline || "(empty)"}`,
+          `## Terms\n${p.terms || "(empty)"}`,
+        ];
+        return { content: lines.join("\n"), count: 1, records: [`crm_proposal:${p.id}`] };
+      }
+      const f = parseProposalFilters({ deal: input.dealId, status: input.status, q: input.q });
+      const { rows, total } = await listProposals(ctx, organizationId, companyId, f, { take: 100 });
+      if (!rows.length) return { content: "No proposals match.", count: 0 };
+      const lines = rows.map((p) => `- ${p.id} ${p.number} ${p.title} [${p.status}, v${p.version}] deal ${p.deal.name} · ${money(p.totalMinor, p.currency)} · valid until ${isoDay(p.validUntil) ?? "not set"}`);
+      return { content: `${total} proposals${total > rows.length ? ` (showing ${rows.length})` : ""}:\n${lines.join("\n")}`, count: rows.length, records: rows.map((p) => `crm_proposal:${p.id}`) };
+    },
+  }),
+
+  create_proposal_draft: def({
+    name: "create_proposal_draft",
+    version: 1,
+    description:
+      "Propose creating a DRAFT sales proposal for a deal: title, the four sections (intro, scope, timeline, terms; plain paragraphs, '- ' lists, **bold**), optional line items (prices in major units of the deal currency; totals are computed by the system) and a valid-until date. It is created only after a person approves, and it is never sent to the customer by this tool.",
+    input: z
+      .object({
+        dealId: z.string().uuid(),
+        title: z.string().trim().min(1).max(200),
+        intro: z.string().max(20_000).optional(),
+        scope: z.string().max(20_000).optional(),
+        timeline: z.string().max(20_000).optional(),
+        terms: z.string().max(20_000).optional(),
+        validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        lines: z
+          .array(z.object({ description: z.string().trim().min(1).max(500), quantity: z.string().regex(/^\d{1,9}(\.\d{1,3})?$/), unitPrice: z.string().regex(/^\d{1,12}(\.\d{1,3})?$/), discount: z.string().optional(), tax: z.string().optional() }).strict())
+          .max(50)
+          .optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        dealId: uuidField("Deal id"),
+        title: { type: "string" },
+        intro: { type: "string" },
+        scope: { type: "string" },
+        timeline: { type: "string" },
+        terms: { type: "string" },
+        validUntil: { type: "string", description: "YYYY-MM-DD" },
+        lines: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              description: { type: "string" },
+              quantity: { type: "string", description: "e.g. 1 or 2.5" },
+              unitPrice: { type: "string", description: "Major units, e.g. 1200.00" },
+              discount: { type: "string", description: "Percent 0-100" },
+              tax: { type: "string", description: "Percent 0-100" },
+            },
+            required: ["description", "quantity", "unitPrice"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["dealId", "title"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ title }) => `Create proposal draft "${title}"`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const parsed = proposalInput.parse({ ...input, lines: input.lines ?? [] });
+      const p = await transaction(async (tx) => {
+        await authorize(ctx, organizationId, companyId, "sales.manage", tx);
+        return insertProposal(tx, ctx, organizationId, companyId, parsed);
+      });
+      return { content: `Created draft proposal ${p.number} "${p.title}" (total ${money(p.totalMinor, p.currency)}). It has not been sent.`, records: [`crm_proposal:${p.id}`] };
     },
   }),
 };

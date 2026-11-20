@@ -84,22 +84,41 @@ export async function sendEmail(args: {
 
 export const emailConfigured = () => emailProvider() !== null;
 
+/** Plain text → minimal HTML (paragraphs, line breaks), escaped. */
+export function textToHtml(text: string) {
+  return `<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">${text
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("")}</body></html>`;
+}
+
+export { escapeHtml };
+
 /**
- * Send a plain-text message written by a person (or approved AI draft) and record the outcome in `email_messages`.
- * Returns NOT_CONFIGURED when no provider is set up — callers must never report such a message as sent.
+ * Send a message written by a person (or approved AI draft) and record the outcome in `email_messages`.
+ * `text` is always sent as the plain-text alternative; `html` overrides the generated HTML part; `headers` adds MIME
+ * headers (e.g. List-Unsubscribe). Returns NOT_CONFIGURED when no provider is set up — callers must never report such
+ * a message as sent.
  */
-export async function sendPlainEmail(args: { to: string; subject: string; text: string; template: string; organizationId: string; userId?: string | null; locale?: string }): Promise<SendResult> {
+export async function sendPlainEmail(args: {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  headers?: Record<string, string>;
+  template: string;
+  organizationId: string;
+  userId?: string | null;
+  locale?: string;
+}): Promise<SendResult> {
   const configured = emailProvider();
   let status: EmailStatus = "NOT_CONFIGURED";
   let messageId: string | null = null;
   let error: string | null = null;
   if (configured) {
     try {
-      const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">${args.text
-        .split(/\n{2,}/)
-        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
-        .join("")}</body></html>`;
-      const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html });
+      const html = args.html ?? textToHtml(args.text);
+      const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html, headers: args.headers });
       status = "SENT";
       messageId = r.messageId;
     } catch (err) {
@@ -124,3 +143,6 @@ export async function sendPlainEmail(args: { to: string; subject: string; text: 
   });
   return { status, messageId };
 }
+
+/** Alias for HTML messages (same recording and truthfulness rules as sendPlainEmail). */
+export const sendHtmlEmail = (args: Parameters<typeof sendPlainEmail>[0] & { html: string }) => sendPlainEmail(args);

@@ -11,5 +11,5 @@ export const PATCH = route<P>(
 );
 export const DELETE = route<P>(
   { auth: "required", name: "DELETE /organizations/:orgId/companies/:companyId/comms/meetings/:meetingId", rateLimits: LIMITS.tenantWrite },
-  async ({ ctx }, { orgId, companyId, meetingId }) => deleteMeeting(ctx, orgId, companyId, meetingId),
+  async ({ req, ctx }, { orgId, companyId, meetingId }) => deleteMeeting(ctx, orgId, companyId, meetingId, req.nextUrl.searchParams.get("scope") === "following" ? "following" : "this"),
 );

@@ -137,3 +137,18 @@ export async function deleteEdge(ctx: RequestContext, organizationId: string, co
     return { ok: true };
   });
 }
+
+/** One entity with its relations (both directions) and the entities at their other ends. */
+export async function getEntity(ctx: RequestContext, organizationId: string, companyId: string, entityId: string) {
+  await authorize(ctx, organizationId, companyId, "graph.read");
+  if (!z.string().uuid().safeParse(entityId).success) throw notFound("Entity");
+  const entity = await db().graphEntity.findFirst({
+    where: { id: entityId, organizationId, companyId },
+    include: {
+      outgoing: { include: { to: { select: { id: true, kind: true, name: true } } }, orderBy: { createdAt: "asc" } },
+      incoming: { include: { from: { select: { id: true, kind: true, name: true } } }, orderBy: { createdAt: "asc" } },
+    },
+  });
+  if (!entity) throw notFound("Entity");
+  return entity;
+}

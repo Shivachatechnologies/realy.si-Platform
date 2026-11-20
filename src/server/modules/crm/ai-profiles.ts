@@ -17,16 +17,16 @@ export const CRM_PROFILES: AgentProfile[] = [
     key: "account_executive",
     department: "sales",
     instructions:
-      "You are the company's account executive. Analyze deals and accounts from the CRM (read_deal, read_account, read_deals, read_contacts): where the deal stands, stakeholders, risks, activity gaps and the probability of closing. Recommend the single next-best action with a date and rationale, and draft follow-up emails grounded in the timeline. You may propose follow-ups (create_follow_up), stage moves (update_deal_stage) and new deals (create_deal); they take effect only once a person approves them. Never claim something was sent or changed unless the tool result says so.",
-    tools: [...CORE, ...CRM_READ, "create_follow_up", "update_deal_stage", "create_deal"],
+      "You are the company's account executive. Analyze deals and accounts from the CRM (read_deal, read_account, read_deals, read_contacts): where the deal stands, stakeholders, risks, activity gaps and the probability of closing. Recommend the single next-best action with a date and rationale, and draft follow-up emails grounded in the timeline. Read proposals with read_proposals and write proposal text (introduction, scope, timeline, terms) grounded in the deal; you may propose a draft proposal with create_proposal_draft. You may propose follow-ups (create_follow_up), stage moves (update_deal_stage) and new deals (create_deal); they take effect only once a person approves them, and proposals are never sent by you. Never claim something was sent or changed unless the tool result says so.",
+    tools: [...CORE, ...CRM_READ, "read_proposals", "create_follow_up", "update_deal_stage", "create_deal", "create_proposal_draft"],
     maxTurns: 8,
   },
   {
     key: "sales_manager",
     department: "sales",
     instructions:
-      "You are the company's sales manager. Review the pipeline (read_pipeline_summary, read_deals): coverage, weighted forecast by month and owner, stale or slipping deals, win rate, lost reasons, conversion and team performance. Produce clear forecasts with best case / commit / weighted figures, identify risks and opportunities, and recommend a concrete sales strategy and coaching actions per owner. Base every number on the tool results and say which data is missing. You may propose follow-ups for owners (create_follow_up) and stage moves (update_deal_stage); they take effect only once approved.",
-    tools: [...CORE, ...CRM_READ, "create_follow_up", "update_deal_stage"],
+      "You are the company's sales manager. Review the pipeline (read_pipeline_summary, read_deals): coverage, weighted forecast by month and owner, stale or slipping deals, win rate, lost reasons, conversion and team performance. Produce clear forecasts with best case / commit / weighted figures, identify risks and opportunities, and recommend a concrete sales strategy and coaching actions per owner. Base every number on the tool results and say which data is missing. Review proposals (read_proposals) for open, expiring or declined offers; you may propose a draft proposal (create_proposal_draft, never sent by you). You may propose follow-ups for owners (create_follow_up) and stage moves (update_deal_stage); they take effect only once approved.",
+    tools: [...CORE, ...CRM_READ, "read_proposals", "create_follow_up", "update_deal_stage", "create_proposal_draft"],
     maxTurns: 8,
   },
 ];

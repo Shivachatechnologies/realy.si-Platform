@@ -193,6 +193,10 @@
     "communication": {
       "title": "Kommunikation",
       "description": "Ankündigungen, Diskussionen, Meetings, Kalender und Posteingang."
+    },
+    "builder": {
+      "title": "Unternehmens-Builder",
+      "description": "Aus einer Idee oder einem bestehenden Unternehmen mit KI ein vollständig eingerichtetes Unternehmen machen."
     }
   },
   "auth": {
@@ -536,7 +540,52 @@
       "support_attachment_empty": "Die Datei ist leer.",
       "support_attachment_too_large": "Anhänge dürfen höchstens 5 MB groß sein.",
       "support_ticket_closed": "Diese Anfrage ist geschlossen.",
-      "sso_required": "Ihre Organisation verlangt Single Sign-on. Nutzen Sie „Mit SSO anmelden“."
+      "sso_required": "Ihre Organisation verlangt Single Sign-on. Nutzen Sie „Mit SSO anmelden“.",
+      "brain_link_exists": "Dieses Dokument ist bereits mit diesem Datensatz verknüpft.",
+      "brain_source_managed": "Dieses Dokument wird von seinem Quellmodul verwaltet; heben Sie die Veröffentlichung dort auf oder archivieren Sie es, um es zu entfernen.",
+      "comms_discussion_private": "Diese Aufgabe wird in einem privaten Kanal besprochen, dem Sie nicht angehören.",
+      "comms_not_attendee": "Nur eingeladene Teilnehmende können antworten.",
+      "comms_meeting_not_scheduled": "Dieser Termin ist nicht mehr geplant.",
+      "comms_meeting_not_completed": "Markieren Sie das Meeting als abgehalten, bevor Sie das Follow-up senden.",
+      "comms_followup_empty": "Noch nichts zu senden – fügen Sie Notizen, Entscheidungen, Aufgaben oder eine KI-Zusammenfassung hinzu.",
+      "finance_approver_required": "Wählen Sie die freigebende Person.",
+      "finance_no_approvers": "Noch niemand kann freigeben: Vergeben Sie die Berechtigung finance.manage.",
+      "finance_vendor_required": "Wählen Sie einen Lieferanten.",
+      "finance_bill_duplicate": "Dieser Lieferant hat bereits eine Rechnung mit dieser Nummer.",
+      "finance_bill_not_draft": "Nur Rechnungsentwürfe können geändert oder eingereicht werden.",
+      "finance_bill_not_pending": "Die Rechnung ist bereits freigegeben oder storniert.",
+      "finance_bill_empty": "Die Rechnungssumme muss größer als null sein.",
+      "finance_bill_has_payments": "Entfernen Sie zuerst die Zahlungen der Rechnung.",
+      "finance_bill_not_open": "Zahlungen können nur für freigegebene, unbezahlte Rechnungen erfasst werden.",
+      "finance_claim_not_pending": "Über die Spesenabrechnung wurde bereits entschieden.",
+      "finance_claim_no_account": "Legen Sie ein Bank-, Kassen- oder Kartenkonto für die Erstattung an.",
+      "finance_not_approver": "Sie sind für diese Anfrage nicht freigabeberechtigt.",
+      "finance_approval_decided": "Über diese Anfrage wurde bereits entschieden.",
+      "crm_proposal_locked": "Angenommene oder abgelehnte Angebote können nicht geändert werden.",
+      "crm_proposal_archived": "Dieses Angebot ist archiviert.",
+      "crm_proposal_expired": "Dieses Angebot ist abgelaufen.",
+      "crm_proposal_no_lines": "Fügen Sie zuerst mindestens eine Position hinzu.",
+      "crm_proposal_no_email": "Der Kontakt hat keine E-Mail-Adresse.",
+      "crm_email_not_configured": "Der E-Mail-Versand ist nicht eingerichtet; es wurde nichts gesendet.",
+      "crm_email_failed": "Der E-Mail-Anbieter hat die Nachricht abgelehnt; es wurde nichts gesendet.",
+      "crm_proposal_decided": "Für dieses Angebot wurde bereits eine Entscheidung erfasst.",
+      "crm_proposal_no_account": "Verknüpfen Sie den Deal zuerst mit einer Firma.",
+      "crm_proposal_currency": "Kostenvoranschläge verwenden die Unternehmenswährung; dieses Angebot hat eine andere Währung.",
+      "crm_proposal_tax_rate": "Für den Steuersatz einer Position gibt es keinen passenden Steuersatz in Finanzen.",
+      "crm_proposal_estimate_exists": "Für dieses Angebot gibt es bereits einen Kostenvoranschlag.",
+      "crm_ai_draft_incomplete": "Der KI-Entwurf ist noch nicht fertig.",
+      "automation_workflow_step_unknown": "Dieser Schritt gehört nicht zur Workflow-Version des Laufs.",
+      "objectives_owner_ineligible": "Diese Person hat keinen Zugriff auf Ziele.",
+      "objectives_dates_order": "Das Zieldatum liegt vor dem Startdatum.",
+      "objectives_has_ai_tasks": "Es sind KI-Aufgaben damit verknüpft; markieren Sie es stattdessen als aufgegeben.",
+      "objectives_unknown_metric": "Diese Kennzahl existiert nicht.",
+      "objectives_metric_forbidden": "Sie haben keinen Zugriff auf diese Kennzahl.",
+      "objectives_target_direction": "Der Zielwert muss sich in der gewählten Richtung vom Ausgangswert entfernen.",
+      "objectives_plan_applied": "Der Plan dieses Unternehmensziels wurde bereits angewendet.",
+      "objectives_plan_running": "Es wird bereits ein Plan erstellt.",
+      "objectives_plan_partial": "Ein Teil dieses Plans wurde bereits angewendet; wenden Sie ihn zuerst vollständig an.",
+      "objectives_plan_keys": "Der Plan enthält doppelte Elemente.",
+      "objectives_goal_inactive": "Nur aktive Unternehmensziele können geplant werden."
     }
   },
   "onboarding": {
@@ -586,7 +635,10 @@
       "tasks": "Aktive Aufgaben",
       "workforce": "KI-Mitarbeiterprofile",
       "approvals": "Offene Freigaben",
-      "aiEmployees": "Aktive KI-Mitarbeiter"
+      "aiEmployees": "Aktive KI-Mitarbeiter",
+      "myTasks": "Meine offenen Aufgaben",
+      "aiRunning": "Laufende KI-Aufgaben",
+      "overdueInvoices": "Überfällige Rechnungen"
     },
     "systemHealth": "Systemzustand",
     "health": {
@@ -618,7 +670,32 @@
     "kpisLast30": "Letzte 30 Tage im Vergleich zu den 30 davor",
     "openAnalytics": "Analysen öffnen",
     "kpisForbidden": "Sie haben keinen Zugriff auf die Unternehmensanalysen.",
-    "kpisEmpty": "Noch keine Geschäftskennzahlen verfügbar. Sie erscheinen, sobald Ihre Teams Finanzen, CRM und die anderen Module nutzen."
+    "kpisEmpty": "Noch keine Geschäftskennzahlen verfügbar. Sie erscheinen, sobald Ihre Teams Finanzen, CRM und die anderen Module nutzen.",
+    "allGoals": "Alle Ziele",
+    "countersForbidden": "Sie haben noch keinen Zugriff auf diese Bereiche.",
+    "objectiveForbidden": "Sie benötigen die Berechtigung zur Verwaltung von Zielen, um Unternehmensziele festzulegen.",
+    "objectiveHint": "Eingabetaste drücken: Das Ziel wird gespeichert und die KI entwirft einen Plan (Ziele, Schlüsselergebnisse, Meilensteine, Projekte, Aufgaben), den Sie prüfen, bevor etwas angelegt wird.",
+    "objectiveNoAi": "Das Ziel wird gespeichert; KI-Planung ist nicht verfügbar, Sie können es selbst planen.",
+    "goals": {
+      "title": "Fortschritt der Ziele",
+      "open": "Strategie",
+      "forbidden": "Sie haben keinen Zugriff auf Unternehmensziele.",
+      "empty": "Noch keine aktiven Ziele. Geben Sie oben eines ein, um zu beginnen.",
+      "planPending": "Plan zu prüfen",
+      "atRisk": "{count, plural, one {# Schlüsselergebnis gefährdet} other {# Schlüsselergebnisse gefährdet}}",
+      "objectives": "{count, plural, one {# Ziel} other {# Ziele}}"
+    },
+    "today": {
+      "title": "Heute",
+      "forbidden": "Für Ihre Zugriffsrechte gibt es nichts anzuzeigen.",
+      "tasks": "Meine fälligen Aufgaben",
+      "noTasks": "Heute sind keine Aufgaben fällig.",
+      "meetings": "Besprechungen",
+      "noMeetings": "Heute keine Besprechungen.",
+      "followUps": "Fällige Nachfassaktionen",
+      "noFollowUps": "Keine Nachfassaktionen fällig.",
+      "overdue": "Überfällig"
+    }
   },
   "company": {
     "title": "Unternehmen",
@@ -978,7 +1055,13 @@
     },
     "description": "Beschreibung",
     "kindCount": "{count, plural, one {# Eintrag} other {# Einträge}}",
-    "emptyKind": "Noch nichts vorhanden."
+    "emptyKind": "Noch nichts vorhanden.",
+    "confirmDelete": "Diese Entität und alle ihre Beziehungen löschen?",
+    "details": "Details",
+    "open": "{name} öffnen",
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "since": "Im Graph seit {date}"
   },
   "brain": {
     "subtitle": "Dokumente von {company}, für die Suche indexiert. Jedes Ergebnis nennt die Textstelle, aus der es stammt.",
@@ -997,7 +1080,8 @@
       "type": "Typ",
       "passages": "Abschnitte",
       "status": "Status",
-      "added": "Hinzugefügt"
+      "added": "Hinzugefügt",
+      "source": "Quelle"
     },
     "status": {
       "PROCESSING": "In Bearbeitung",
@@ -1015,7 +1099,128 @@
     "paste": "Oder Text einfügen",
     "addSubmit": "Hinzufügen und indexieren",
     "indexing": "Wird indexiert…",
-    "tooLarge": "Die Datei ist zu groß (Text bis 1 MB, PDF bis 8 MB)."
+    "tooLarge": "Die Datei ist zu groß (Text bis 1 MB, PDF bis 8 MB).",
+    "allDocuments": "Alle Dokumente",
+    "cancel": "Abbrechen",
+    "department": "Abteilung",
+    "noDepartment": "Keine Abteilung (unternehmensweit)",
+    "tags": "Tags",
+    "tagsHint": "Durch Kommas getrennte Modul- oder Bereichs-Tags, z. B. vertrieb, onboarding.",
+    "noMatches": "Nichts entspricht diesen Filtern.",
+    "firstPage": "Erste Seite",
+    "nextPage": "Nächste Seite",
+    "indexedFrom": "Automatisch aus seinem Modul indexiert · Quelle aktualisiert am {date}",
+    "openSource": "Quelle öffnen",
+    "passages": "Abschnitte",
+    "recent": "Zuletzt hinzugefügt",
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "searchHint": "Durchsuchen Sie jeden Abschnitt der Unternehmensdokumente. Filtern Sie nach Abteilung oder Tag, um die Ergebnisse einzugrenzen.",
+    "sourcesTitle": "Wissensquellen",
+    "sourcesHint": "Veröffentlichte Support-Artikel, HR-Richtlinien, Betriebs-SOPs sowie Produkt-Releases und -Features werden automatisch indexiert und aktuell gehalten.",
+    "tabs": {
+      "search": "Suche",
+      "documents": "Dokumente",
+      "memory": "Unternehmensgedächtnis",
+      "ask": "Das Brain fragen"
+    },
+    "sources": {
+      "upload": "Hochgeladen",
+      "support_kb_article": "Support-Artikel",
+      "hr_policy": "HR-Richtlinie",
+      "ops_process": "Betriebs-SOP",
+      "product_release": "Produkt-Release",
+      "product_feature": "Produkt-Feature"
+    },
+    "filters": {
+      "all": "Alle",
+      "allDepartments": "Alle Abteilungen",
+      "allSources": "Alle Quellen",
+      "allTags": "Alle Tags",
+      "apply": "Anwenden",
+      "byTitle": "Titel A–Z",
+      "newest": "Neueste zuerst",
+      "oldest": "Älteste zuerst",
+      "sort": "Sortierung",
+      "titleSearch": "Titel oder Dateiname"
+    },
+    "links": {
+      "title": "Wissensbeziehungen",
+      "description": "Graph-Entitäten, CRM-Accounts und -Kontakte sowie Projekte, um die es in diesem Dokument geht.",
+      "empty": "Noch mit keinem Datensatz verknüpft.",
+      "add": "Verknüpfen",
+      "find": "Suchen",
+      "noMatches": "Kein passender Datensatz",
+      "record": "Datensatz",
+      "remove": "Verknüpfung entfernen",
+      "restricted": "Eingeschränkter Datensatz",
+      "type": "Typ",
+      "types": {
+        "graph_entity": "Graph-Entität",
+        "account": "Account",
+        "contact": "Kontakt",
+        "project": "Projekt"
+      }
+    },
+    "related": {
+      "title": "Verwandtes Wissen",
+      "description": "{count, plural, =0 {Keine verknüpften Dokumente} one {# verknüpftes Dokument} other {# verknüpfte Dokumente}}",
+      "empty": "Mit diesem Datensatz sind noch keine Dokumente verknüpft, und keines erwähnt ihn.",
+      "linked": "Verknüpfte Dokumente",
+      "mentions": "Erwähnt in",
+      "findDocument": "Dokument suchen",
+      "document": "Dokument"
+    },
+    "citedIn": {
+      "title": "Zitiert in",
+      "description": "{count, plural, =0 {Noch keine KI-Aufgabe hat dieses Dokument zitiert} one {Von # KI-Aufgabe zitiert} other {Von # KI-Aufgaben zitiert}}",
+      "empty": "KI-Ergebnisse, die Abschnitte dieses Dokuments zitieren, erscheinen hier."
+    },
+    "memory": {
+      "title": "Unternehmensgedächtnis",
+      "subtitle": "Dauerhafte Fakten über das Unternehmen, die jede KI-Aufgabe berücksichtigt.",
+      "promptNote": "Angeheftete Fakten werden den Anweisungen jeder KI-Aufgabe hinzugefügt; andere Fakten, wenn sie zu den Stichwörtern der Aufgabe passen. KI-Mitarbeitende können Fakten vorschlagen, die erst nach Freigabe gespeichert werden.",
+      "new": "Fakt hinzufügen",
+      "add": "Fakt hinzufügen",
+      "titleLabel": "Titel",
+      "fact": "Fakt",
+      "source": "Quelle",
+      "sourceHint": "Optional – z. B. ein Meeting, Dokument oder eine URL.",
+      "sourceIs": "Quelle: {source}",
+      "pinLabel": "Anheften (immer in KI-Aufgaben einbeziehen)",
+      "pinned": "Angeheftet",
+      "pinnedOnly": "Nur angeheftete",
+      "unpinnedOnly": "Nicht angeheftet",
+      "pin": "Anheften",
+      "unpin": "Lösen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "confirmDelete": "Diesen Fakt aus dem Unternehmensgedächtnis löschen?",
+      "search": "Fakten durchsuchen",
+      "count": "{count, plural, one {# Fakt} other {# Fakten}}",
+      "empty": "Noch keine Fakten. Fügen Sie Entscheidungen, Konventionen und Kennzahlen hinzu, die die KI immer kennen sollte.",
+      "companyWide": "Unternehmensweit",
+      "byAi": "Von KI vorgeschlagen, freigegeben",
+      "byHuman": "Von einer Person hinzugefügt"
+    },
+    "ask": {
+      "title": "Das Brain fragen",
+      "subtitle": "Stellen Sie eine Frage und erhalten Sie eine Antwort aus den Dokumenten und dem Gedächtnis des Unternehmens – mit Quellen.",
+      "hint": "Antworten stammen ausschließlich aus dem Company Brain und dem Unternehmensgedächtnis, mit Zitaten der verwendeten Abschnitte.",
+      "question": "Frage",
+      "placeholder": "z. B. Wie lautet unsere Erstattungsrichtlinie für Jahrespläne?",
+      "submit": "Fragen",
+      "sending": "Wird gefragt …",
+      "working": "Das Unternehmenswissen wird durchsucht …",
+      "answer": "Antwort",
+      "openTask": "Aufgabe öffnen",
+      "history": "Letzte Fragen",
+      "historyCount": "{count, plural, one {# Frage} other {# Fragen}}",
+      "empty": "Noch keine Fragen gestellt.",
+      "notConfigured": "Auf dieser Plattform ist keine KI konfiguriert, daher können Fragen noch nicht beantwortet werden.",
+      "noPermission": "Sie benötigen die Berechtigung, KI-Aufgaben auszuführen, um das Brain zu fragen.",
+      "tryAsking": "Kein Abschnitt passt – fragen Sie stattdessen das Brain"
+    }
   },
   "agentTasks": {
     "subtitle": "Geben Sie einem KI-Mitarbeiter eine Aufgabe. Er arbeitet mit den Dokumenten und dem Graphen von {company} und liefert ein Ergebnis mit Quellen zur Prüfung.",
@@ -1162,7 +1367,15 @@
       "search_kb_articles": "Hilfeartikel durchsuchen",
       "read_support_queue": "Support-Warteschlange lesen",
       "draft_ticket_reply": "Ticketantwort entwerfen",
-      "send_ticket_reply": "Ticketantwort senden"
+      "send_ticket_reply": "Ticketantwort senden",
+      "read_company_memory": "Unternehmensgedächtnis lesen",
+      "remember_company_fact": "Unternehmensfakt speichern",
+      "read_brand_kit": "Brand-Kit lesen",
+      "read_payables": "Verbindlichkeiten lesen",
+      "read_budget_status": "Budgetstatus lesen",
+      "create_bill_draft": "Entwurf einer Eingangsrechnung erstellen",
+      "read_proposals": "Angebote lesen",
+      "create_proposal_draft": "Angebotsentwurf erstellen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -1463,6 +1676,14 @@
     "support_lead": {
       "name": "Support-Teamleitung",
       "summary": "Zustand der Warteschlange, SLA-Risiken, Eskalationen und Lücken in der Wissensdatenbank."
+    },
+    "brain_answerer": {
+      "name": "Brain-Auskunft",
+      "summary": "Beantwortet Fragen aus Ihren Dokumenten und dem Unternehmensgedächtnis, mit Quellen."
+    },
+    "knowledge_manager": {
+      "name": "Wissensmanager",
+      "summary": "Hält das Company Brain nützlich: Zusammenfassungen, Lücken und Fakten für das Unternehmensgedächtnis."
     }
   },
   "projects": {
@@ -1525,6 +1746,164 @@
       "ACTIVE": "Aktiv",
       "ACHIEVED": "Erreicht",
       "ABANDONED": "Aufgegeben"
+    },
+    "tabs": {
+      "objectives": "Ziele",
+      "goals": "Unternehmensziele",
+      "strategy": "Strategie"
+    },
+    "allDepartments": "Alle Abteilungen",
+    "allGoals": "Alle Unternehmensziele",
+    "delete": "Ziel löschen",
+    "deleteConfirm": "Das Ziel „{title}“ mit seinen Meilensteinen und Schlüsselergebnissen löschen?",
+    "deleteMilestone": "Meilenstein löschen",
+    "deleteMilestoneConfirm": "Den Meilenstein „{title}“ löschen? Das verknüpfte Projekt bleibt erhalten.",
+    "department": "Abteilung",
+    "description": "Beschreibung",
+    "edit": "Ziel bearbeiten",
+    "editLabel": "Bearbeiten",
+    "filter": "Filtern",
+    "goal": "Unternehmensziel",
+    "milestones": "Meilensteine",
+    "moreDetails": "Weitere Details",
+    "noDepartment": "Keine Abteilung",
+    "noGoal": "Kein Unternehmensziel",
+    "noOwner": "Kein Verantwortlicher",
+    "overallProgress": "Fortschritt",
+    "ownedBy": "Verantwortlich: {name}",
+    "owner": "Verantwortlich",
+    "startDate": "Startdatum",
+    "sort": {
+      "label": "Sortieren",
+      "created": "Neueste",
+      "target": "Zieldatum",
+      "title": "Titel"
+    },
+    "goals": {
+      "heading": "Unternehmensziele",
+      "subtitle": "Die wenigen Ergebnisse, zu denen sich das Unternehmen in diesem Quartal oder Jahr verpflichtet. Jedes Unternehmensziel gliedert sich in Ziele, Schlüsselergebnisse, Meilensteine und Projekte.",
+      "count": "{count, plural, one {# Unternehmensziel} other {# Unternehmensziele}}",
+      "empty": "Noch keine Unternehmensziele.",
+      "title": "Unternehmensziel",
+      "titlePlaceholder": "z. B. 1 Million wiederkehrenden Jahresumsatz erreichen",
+      "horizon": "Zeithorizont",
+      "horizons": {
+        "QUARTER": "Quartal",
+        "YEAR": "Jahr"
+      },
+      "allHorizons": "Alle Zeithorizonte",
+      "targetHint": "Standardmäßig das Ende des Quartals oder Jahres.",
+      "ownerDefault": "Ich",
+      "planWithAi": "Plan mit KI entwerfen (Sie prüfen ihn, bevor etwas angelegt wird)",
+      "create": "Unternehmensziel hinzufügen",
+      "createAndPlan": "Hinzufügen und mit KI planen",
+      "edit": "Unternehmensziel bearbeiten",
+      "delete": "Unternehmensziel löschen",
+      "deleteConfirm": "Das Unternehmensziel „{title}“ löschen? Seine Ziele bleiben ohne Zuordnung erhalten.",
+      "manage": "Unternehmensziele verwalten"
+    },
+    "kr": {
+      "heading": "Schlüsselergebnisse",
+      "title": "Schlüsselergebnis",
+      "titlePlaceholder": "z. B. Monatlich wiederkehrender Umsatz erreicht 80.000",
+      "add": "Schlüsselergebnis hinzufügen",
+      "addHint": "Verknüpfen Sie eine Kennzahl aus Ihren Unternehmensdaten oder verfolgen Sie einen Wert, den Sie selbst aktualisieren.",
+      "edit": "Schlüsselergebnis bearbeiten",
+      "delete": "Schlüsselergebnis löschen",
+      "deleteConfirm": "Das Schlüsselergebnis „{title}“ löschen?",
+      "empty": "Noch keine Schlüsselergebnisse.",
+      "source": "Gemessen durch",
+      "sources": {
+        "METRIC": "Unternehmenskennzahl",
+        "MANUAL": "Manueller Wert"
+      },
+      "metric": "Kennzahl",
+      "chooseMetric": "Kennzahl wählen",
+      "unit": "Einheit",
+      "unitPlaceholder": "z. B. Kunden",
+      "unitHint": {
+        "money": "Beträge in Ihrer Unternehmenswährung (Haupteinheiten).",
+        "percent": "Prozent, 0–100.",
+        "count": "Eine Anzahl.",
+        "days": "Tage.",
+        "hours": "Stunden."
+      },
+      "direction": "Richtung",
+      "directions": {
+        "INCREASE": "Steigern auf",
+        "DECREASE": "Senken auf"
+      },
+      "baseline": "Ausgangswert",
+      "target": "Zielwert",
+      "current": "Aktuell",
+      "values": "Jetzt {current} · von {baseline} auf {target}",
+      "hidden": "Werte ausgeblendet: Sie haben keinen Zugriff auf diese Kennzahl.",
+      "status": {
+        "ACHIEVED": "Erreicht",
+        "ON_TRACK": "Im Plan",
+        "AT_RISK": "Gefährdet",
+        "OFF_TRACK": "Nicht im Plan",
+        "NO_DATA": "Keine Daten"
+      }
+    },
+    "plan": {
+      "heading": "KI-Plan",
+      "subtitle": "Der Vorschlag der KI für dieses Unternehmensziel. Bearbeiten oder abwählen Sie beliebige Punkte, wählen Sie Verantwortliche und wenden Sie ihn dann an: Datensätze entstehen erst beim Anwenden.",
+      "open": "Planen",
+      "review": "Plan prüfen",
+      "applied": "Plan angewendet",
+      "appliedOn": "Dieser Plan wurde am {date} angewendet.",
+      "viewObjectives": "Ziele anzeigen",
+      "viewTree": "Zielbaum anzeigen",
+      "none": "Für dieses Unternehmensziel wurde noch kein Plan erstellt.",
+      "generate": "Plan mit KI erstellen",
+      "regenerate": "Neuen Plan erstellen",
+      "guidance": "Hinweise für die KI (optional)",
+      "guidanceHint": "Einschränkungen, Budget, Prioritäten oder beteiligte Teams.",
+      "generating": "Die KI entwirft den Plan …",
+      "generatingHint": "Diese Seite aktualisiert sich automatisch, sobald der Plan fertig ist.",
+      "openTask": "KI-Aufgabe öffnen",
+      "startFailed": "Der Plan konnte nicht gestartet werden: {reason}",
+      "taskForbidden": "Sie benötigen Zugriff auf KI-Aufgaben, um den Plan dieses Unternehmensziels zu sehen.",
+      "aiNotConfigured": "KI-Planung ist nicht verfügbar: Es ist kein KI-Anbieter konfiguriert.",
+      "noRunPermission": "Sie benötigen die Berechtigung, KI-Aufgaben auszuführen, um mit KI zu planen.",
+      "invalid": "Der Plan konnte nicht verwendet werden",
+      "taskFailed": "Die KI-Aufgabe wurde nicht abgeschlossen: {reason}",
+      "parseErrors": {
+        "no_output": "Die KI hat keine Ausgabe geliefert.",
+        "no_json": "Die Antwort der KI enthält keinen JSON-Plan.",
+        "invalid_json": "Die Antwort der KI enthält fehlerhaftes JSON.",
+        "invalid_plan": "Der Plan der KI hat nicht die erforderliche Struktur."
+      },
+      "rawOutput": "Antwort der KI anzeigen",
+      "readOnly": "Nur Personen, die Ziele verwalten, können diesen Plan anwenden.",
+      "objectiveShape": "{krs} Schlüsselergebnisse, {milestones} Meilensteine",
+      "ready": "Plan bereit zur Prüfung",
+      "readyHint": "Es wurde noch nichts angelegt.",
+      "resumable": "{count, plural, one {# Element dieses Plans wurde bereits} other {# Elemente dieses Plans wurden bereits}} durch eine unterbrochene Anwendung angelegt. Erneutes Anwenden setzt ohne Duplikate fort.",
+      "noProjectsPermission": "Sie können keine Projekte anlegen; es werden nur Ziele, Schlüsselergebnisse und Meilensteine erstellt.",
+      "objectiveN": "Ziel {n}",
+      "suggested": "Vorschlag der KI: {value}",
+      "include": "Übernehmen",
+      "unassigned": "Nicht zugewiesen",
+      "ownerMe": "Ich",
+      "projectName": "Projektname",
+      "projectOwner": "Projektverantwortlicher",
+      "taskTitle": "Aufgabe",
+      "assignee": "Zuständig",
+      "priority": "Priorität",
+      "priorities": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "URGENT": "Dringend"
+      },
+      "metricConverted": "Die KI hat die Kennzahl {key} vorgeschlagen, die nicht verfügbar ist; sie wird manuell verfolgt.",
+      "krDirectionInvalid": "Der Zielwert muss beim Steigern über dem Ausgangswert und beim Senken darunter liegen.",
+      "summary": "Legt {objectives} Ziele, {keyResults} Schlüsselergebnisse, {milestones} Meilensteine, {projects} Projekte und {tasks} Aufgaben an.",
+      "apply": "Plan anwenden",
+      "applying": "Wird angewendet …",
+      "partial": "Vor dem Fehler angelegt: {objectives} Ziele, {milestones} Meilensteine, {projects} Projekte, {tasks} Aufgaben."
     }
   },
   "notifications": {
@@ -1537,7 +1916,8 @@
         "notification": "{title}",
         "task_assigned": "Ein Workflow hat Ihnen eine Aufgabe zugewiesen: {title}",
         "approval_requested": "Workflow-Freigabe erforderlich: {title}",
-        "run_failed": "Workflow-Ausführung fehlgeschlagen: {title}"
+        "run_failed": "Workflow-Ausführung fehlgeschlagen: {title}",
+        "approval_escalated": "Workflow-Freigabe an Sie eskaliert: {title}"
       },
       "marketplace": {
         "installed": "Aus dem Marketplace installiert: {title}",
@@ -1581,12 +1961,23 @@
         "follow_up_assigned": "Follow-up für Sie: {title}",
         "follow_ups_due": "Heute fällige Follow-ups: {title}",
         "follow_ups_overdue": "Fällige Follow-ups: {title}",
-        "deal_stale": "Deal stagniert: {title}"
+        "deal_stale": "Deal stagniert: {title}",
+        "proposal_viewed": "Angebot angesehen: {title}",
+        "proposal_accepted": "Angebot angenommen: {title}",
+        "proposal_declined": "Angebot abgelehnt: {title}",
+        "proposal_expired": "Angebot abgelaufen: {title}",
+        "sales_task_assigned": "Vertriebsaufgabe für Sie: {title}"
       },
       "finance": {
         "invoice_paid": "Rechnung bezahlt: {title}",
         "invoice_overdue": "Rechnung überfällig: {title}",
-        "recurring_invoice_generated": "Wiederkehrende Rechnung zur Prüfung bereit: {title}"
+        "recurring_invoice_generated": "Wiederkehrende Rechnung zur Prüfung bereit: {title}",
+        "approval_requested": "Freigabe angefragt: {title}",
+        "approval_approved": "Freigegeben: {title}",
+        "approval_rejected": "Abgelehnt: {title}",
+        "bill_overdue": "Eingangsrechnung überfällig: {title}",
+        "budget_warning": "Budget zu 80 % ausgeschöpft: {title}",
+        "budget_exceeded": "Budget überschritten: {title}"
       },
       "hr": {
         "candidate_applied": "Neue Bewerbung: {title}",
@@ -1611,7 +2002,11 @@
         "meeting_invite": "Meeting-Einladung: {title}",
         "meeting_cancelled": "Meeting abgesagt: {title}",
         "meeting_completed": "Meeting-Notizen bereit: {title}",
-        "action_item": "Neue Aufgabe: {title}"
+        "action_item": "Neue Aufgabe: {title}",
+        "task_discussion": "Aufgabendiskussion gestartet: {title}",
+        "meeting_accepted": "Zugesagt: {title}",
+        "meeting_tentative": "Vorläufig: {title}",
+        "meeting_declined": "Abgesagt: {title}"
       },
       "support": {
         "assigned": "Ticket Ihnen zugewiesen: {title}",
@@ -1763,7 +2158,8 @@
       "calendar": "Kalender",
       "dashboard": "Dashboard",
       "import": "Import & Export",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "proposals": "Angebote"
     },
     "accountTypes": {
       "PROSPECT": "Interessent",
@@ -1802,7 +2198,9 @@
       "winRate": "Abschlussquote",
       "avgDealSize": "Durchschnittliche Dealgröße",
       "salesCycle": "Verkaufszyklus (Tage)",
-      "conversionRate": "Lead-Konversionsrate"
+      "conversionRate": "Lead-Konversionsrate",
+      "proposalsSent": "Gesendete Angebote",
+      "proposalAcceptance": "Annahmequote der Angebote"
     },
     "accounts": {
       "add": "Firma hinzufügen",
@@ -2099,7 +2497,11 @@
       "strategy": "Strategie",
       "subtitle": "Pipelines, Quellen, benutzerdefinierte Felder, Segmente und Vertriebsautomatisierung.",
       "whenEntering": "Wenn ein Deal erreicht",
-      "workTaskTitle": "Aufgabentitel"
+      "workTaskTitle": "Aufgabentitel",
+      "intakeFollowUpDays": "Follow-up nach (Tagen)",
+      "intakeFollowUpHint": "Plant ein Follow-up für den zugewiesenen Verantwortlichen. Leer lassen für keins.",
+      "taskDueDays": "Aufgabe fällig in (Tagen)",
+      "createSalesTask": "Vertriebsaufgabe für den Verantwortlichen erstellen"
     },
     "sort": "Sortieren",
     "sortCreated": "Neueste",
@@ -2107,7 +2509,163 @@
     "sortUpdated": "Zuletzt aktualisiert",
     "tag": "Tag",
     "tagsPlaceholder": "z. B. enterprise, verlängerung",
-    "viewExistingRecord": "Vorhandenen Datensatz ansehen"
+    "viewExistingRecord": "Vorhandenen Datensatz ansehen",
+    "proposals": {
+      "needDeal": "Legen Sie zuerst einen offenen Deal an — jedes Angebot gehört zu einem Deal.",
+      "deal": "Deal",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "z. B. Angebot Website-Relaunch",
+      "create": "Angebot erstellen",
+      "revisionNotice": "Dieses Angebot wurde bereits versendet. Beim Speichern bleibt die versendete Fassung als Revision erhalten und eine neue Version entsteht, die erneut versendet werden muss.",
+      "validUntil": "Gültig bis",
+      "estimateOnAccept": "Bei Annahme einen Kostenvoranschlag in Finanzen erstellen",
+      "sections": {
+        "intro": "Einleitung",
+        "scope": "Leistungsumfang",
+        "timeline": "Zeitplan",
+        "terms": "Bedingungen"
+      },
+      "preview": "Vorschau",
+      "formatHint": "Formatierung: Leerzeile für neuen Absatz, \"- \" für Aufzählungen, \"## \" für Überschriften, **fett**.",
+      "lines": "Positionen",
+      "description": "Beschreibung",
+      "quantity": "Menge",
+      "unitPrice": "Einzelpreis ({currency})",
+      "discountPct": "Rabatt %",
+      "taxPct": "Steuer %",
+      "addLine": "Position hinzufügen",
+      "subtotal": "Zwischensumme",
+      "discount": "Rabatt",
+      "tax": "Steuer",
+      "total": "Gesamt",
+      "totalsHint": "Die Summen sind beim Bearbeiten eine Schätzung; der Server berechnet die endgültigen Beträge beim Speichern.",
+      "saved": "Gespeichert",
+      "emailNotConfigured": "Der E-Mail-Versand ist auf dieser Plattform nicht eingerichtet; das Senden schlägt fehl und nichts wird als gesendet erfasst. Sie können den Link aber selbst teilen.",
+      "sendTo": "Senden an",
+      "subject": "Betreff",
+      "message": "Nachricht",
+      "messageHint": "Optional. Der Freigabelink wird immer unter Ihrer Nachricht eingefügt.",
+      "send": "Angebot senden",
+      "sentTo": "Gesendet an {to}.",
+      "aiHint": "Erstellt eine KI-Aufgabe für den Account Executive; prüfen Sie das Ergebnis und übernehmen Sie es hier.",
+      "draftWithAi": "Mit KI entwerfen",
+      "useAiConfirm": "Abschnitte durch diesen KI-Entwurf ersetzen? Ein versendetes Angebot wird zu einer neuen Version.",
+      "useAiDraft": "KI-Entwurf übernehmen",
+      "subtitle": "Kalkulierte Angebote zu Deals, mit Versionen, Freigabelink und Online-Annahme.",
+      "matching": "Passende Angebote",
+      "viewedOpen": "Angesehen, Entscheidung offen",
+      "acceptedCount": "Angenommen",
+      "new": "Neues Angebot",
+      "newHint": "Wählen Sie einen offenen Deal; die Preise verwenden die Währung des Deals.",
+      "count": "{count, plural, one {# Angebot} other {# Angebote}}",
+      "searchPlaceholder": "Titel, Nummer, Deal oder Firma suchen",
+      "status": {
+        "DRAFT": "Entwurf",
+        "SENT": "Gesendet",
+        "VIEWED": "Angesehen",
+        "ACCEPTED": "Angenommen",
+        "DECLINED": "Abgelehnt",
+        "EXPIRED": "Abgelaufen"
+      },
+      "sorts": {
+        "created": "Neueste",
+        "updated": "Zuletzt geändert",
+        "total": "Höchste Summe",
+        "valid": "Bald ablaufend"
+      },
+      "noMatch": "Keine Angebote passen zu diesen Filtern.",
+      "empty": "Noch keine Angebote.",
+      "document": "Angebot",
+      "validUntilDate": "Gültig bis {date}",
+      "preparedFor": "Erstellt für",
+      "pricing": "Preise",
+      "price": "Preis",
+      "amount": "Betrag",
+      "versionN": "Version {version}",
+      "back": "Alle Angebote",
+      "printable": "Druckversion",
+      "acceptedNotice": "Angenommen von {name} am {date}.",
+      "declinedNotice": "Abgelehnt von {name} am {date}.",
+      "expiredNotice": "Dieses Angebot ist abgelaufen. Legen Sie ein neues Gültigkeitsdatum fest und senden Sie es erneut.",
+      "editor": "Editor",
+      "editorHint": "Abschnitte und Positionen; Beträge in {currency}.",
+      "previewHint": "So sieht der Kunde das Angebot über den Freigabelink.",
+      "sentAt": "Zuletzt gesendet",
+      "views": "Aufrufe",
+      "viewsValue": "{count, plural, one {# Aufruf} other {# Aufrufe}} · zuerst {date}",
+      "decision": "Entscheidung",
+      "decisionIp": "IP-Adresse",
+      "decisionNote": "Notiz des Kunden",
+      "shareLink": "Freigabelink",
+      "shareDraftHint": "Der Link funktioniert, sobald das Angebot versendet wurde.",
+      "shareHint": "Jeder mit diesem Link kann das Angebot ansehen und annehmen oder ablehnen.",
+      "viewEstimate": "Kostenvoranschlag ansehen",
+      "createEstimate": "Kostenvoranschlag erstellen",
+      "sendTitle": "Per E-Mail senden",
+      "sendHint": "Sendet den Freigabelink an den Kontakt. Als gesendet erfasst wird er nur, wenn der E-Mail-Anbieter ihn annimmt.",
+      "aiDescription": "KI-Entwürfe des Angebotstexts, mit diesem Angebot verknüpft.",
+      "sends": "E-Mail-Zustellungen",
+      "notSent": "Noch nicht gesendet.",
+      "revisions": "Revisionen",
+      "revisionsHint": "Frühere Versionen, gespeichert wenn ein versendetes Angebot geändert wurde.",
+      "noRevisions": "Keine früheren Versionen.",
+      "viewAll": "Alle ansehen",
+      "noneForDeal": "Noch keine Angebote zu diesem Deal."
+    },
+    "publicProposal": {
+      "title": "Angebot",
+      "from": "Angebot von {company}",
+      "acceptConfirm": "Dieses Angebot annehmen? Ihr Name, die Uhrzeit und Ihre IP-Adresse werden erfasst.",
+      "declineConfirm": "Dieses Angebot ablehnen?",
+      "yourName": "Ihr vollständiger Name",
+      "note": "Notiz (optional)",
+      "accept": "Angebot annehmen",
+      "decline": "Ablehnen",
+      "recordNote": "Ihre Entscheidung wird mit Ihrem Namen, der Uhrzeit und Ihrer IP-Adresse erfasst.",
+      "accepted": "Angenommen von {name} am {date}. Vielen Dank!",
+      "declined": "Abgelehnt von {name} am {date}.",
+      "expired": "Dieses Angebot ist abgelaufen. Bitte kontaktieren Sie uns für ein aktualisiertes Angebot.",
+      "decide": "Ihre Entscheidung",
+      "decideHint": "Nehmen Sie dieses Angebot an oder lehnen Sie es ab."
+    },
+    "salesTasks": {
+      "priorities": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "URGENT": "Dringend"
+      },
+      "title": "Aufgabe",
+      "titlePlaceholder": "z. B. Preisvergleich senden",
+      "assignee": "Zuständig",
+      "add": "Aufgabe hinzufügen",
+      "complete": "Erledigt",
+      "panel": "Aufgaben",
+      "openCount": "{count, plural, =0 {Keine offenen Aufgaben} one {# offene Aufgabe} other {# offene Aufgaben}}",
+      "due": "Fällig {date}",
+      "doneOn": "Erledigt {date}",
+      "open": "Aufgabe öffnen",
+      "none": "Noch keine Aufgaben.",
+      "new": "Neue Aufgabe"
+    },
+    "emails": {
+      "title": "E-Mails",
+      "empty": "Noch keine E-Mails.",
+      "inbound": "Empfangen",
+      "outbound": "Gesendet",
+      "sources": {
+        "crm": "CRM",
+        "proposal": "Angebot",
+        "marketing": "Marketing",
+        "inbox": "Posteingang"
+      },
+      "engagement": "{opens} Öffnungen, {clicks} Klicks",
+      "noSubject": "(kein Betreff)",
+      "loadMore": "Mehr laden ({shown} von {total})",
+      "matching": "Zugeordnet über {addresses}",
+      "noAddress": "Keine E-Mail-Adresse hinterlegt — nur protokollierte CRM-E-Mails werden angezeigt.",
+      "hiddenSources": "Nicht angezeigt (kein Zugriff): {sources}."
+    }
   },
   "plans": {
     "title": "KI-Zeitpläne",
@@ -2496,10 +3054,12 @@
     },
     "providers": {
       "google": {
-        "description": "Gmail, Google Kalender und Drive für E-Mail, Termine und Dateien."
+        "description": "Gmail, Google Kalender und Drive für E-Mail, Termine und Dateien.",
+        "sync": "Meetings werden in beide Richtungen mit Google Kalender synchronisiert (7 Tage zurück, 60 Tage voraus)."
       },
       "microsoft": {
-        "description": "Outlook-Mail, Kalender und Teams-Nachrichten."
+        "description": "Outlook-Mail, Kalender und Teams-Nachrichten.",
+        "sync": "Meetings werden in beide Richtungen mit dem Outlook-Kalender synchronisiert (7 Tage zurück, 60 Tage voraus), wenn Google Kalender nicht verbunden ist."
       },
       "slack": {
         "description": "Nachrichten aus Workflows und Warnungen in Slack-Kanäle posten."
@@ -2532,10 +3092,12 @@
         "description": "Inhalte in einem Instagram-Business-Konto veröffentlichen."
       },
       "quickbooks": {
-        "description": "QuickBooks Online-Buchhaltung verbinden."
+        "description": "QuickBooks Online-Buchhaltung verbinden.",
+        "sync": "Kunden werden zu CRM-Firmen und -Kontakten; Rechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert."
       },
       "xero": {
-        "description": "Xero-Buchhaltung verbinden (Buchungen und Kontakte)."
+        "description": "Xero-Buchhaltung verbinden (Buchungen und Kontakte).",
+        "sync": "Kundenkontakte werden zu CRM-Firmen und -Kontakten; Ausgangsrechnungen werden einmalig als Finanz-Entwürfe in Ihrer Basiswährung importiert."
       },
       "webhook": {
         "description": "Signierte HTTP-Callbacks von beliebigen Systemen empfangen und Workflows auslösen."
@@ -2684,6 +3246,28 @@
       "response": "Antwort",
       "nextAttempt": "nächster Versuch {date}",
       "redeliver": "Erneut senden"
+    },
+    "calendarOk": "Kalenderzugriff OK: {count, plural, one {# Kalender} other {# Kalender}} (Hauptkalender: {primary})",
+    "calendarFailed": "Kalenderprüfung fehlgeschlagen: {error}",
+    "logs": {
+      "title": "Anfrageprotokoll",
+      "cardHelp": "Jeder API-Aufruf über diese Verbindung, mit Status und Dauer.",
+      "open": "Protokoll öffnen",
+      "help": "API-Aufrufe über diese Verbindung und ihre Synchronisierungen.",
+      "requests": "API-Aufrufe",
+      "privacy": "Gespeichert werden 30 Tage lang nur Methode, Host und Pfad, Status, Dauer und kurze Zusammenfassungen – niemals Tokens, Header oder Inhalte.",
+      "outcome": "Ergebnis",
+      "allOutcomes": "Alle Aufrufe",
+      "ok": "Erfolgreich",
+      "errors": "Fehler",
+      "empty": "Noch keine API-Aufrufe protokolliert.",
+      "time": "Zeit",
+      "request": "Anfrage",
+      "status": "Status",
+      "duration": "Dauer",
+      "summary": "Antwort",
+      "noResponse": "keine Antwort",
+      "attempts": "{count, plural, one {# Versuch} other {# Versuche}}"
     }
   },
   "workflows": {
@@ -2785,28 +3369,29 @@
       "support": "Support",
       "hr": "Personal",
       "projects": "Projekte",
-      "operations": "Betrieb"
+      "operations": "Betrieb",
+      "strategy": "Strategie"
     },
     "templates": {
       "new_lead_follow_up": {
-        "name": "Neuer Lead → zuweisen + Folgeaufgabe",
-        "description": "Benachrichtigt den Vertrieb, wenn ein neuer Lead keinen Verantwortlichen hat, und erstellt eine Folgeaufgabe für morgen."
+        "name": "Neuer Lead → automatisch zuweisen + Nachfassen",
+        "description": "Weist mit Ihren CRM-Regeln oder per Rotation unter den Vertriebsleitern eine verantwortliche Person zu, legt eine Nachfass-Aufgabe für morgen an und informiert das Team."
       },
       "invoice_overdue_reminder": {
-        "name": "Rechnung überfällig → benachrichtigen + Erinnerungsaufgabe",
-        "description": "Informiert die Finanzabteilung über eine überfällige Rechnung und erstellt eine Aufgabe für eine Zahlungserinnerung."
+        "name": "Rechnung überfällig → Erinnerung + Slack",
+        "description": "Gibt der Firmenverantwortlichen eine Zahlungserinnerungs-Aufgabe, postet in #finance auf Slack (falls verbunden) und informiert Finanzen."
       },
       "ticket_created_notify": {
         "name": "Ticket erstellt → Support benachrichtigen",
         "description": "Dringende und hochpriorisierte Tickets gehen an Support-Leiter, alle anderen an das Support-Team."
       },
       "employee_onboarding": {
-        "name": "Neue Mitarbeitende → Onboarding-Aufgaben",
-        "description": "Erstellt Aufgaben für Zugänge, Buddy und 30-60-90-Plan sowie nach sieben Tagen ein Check-in."
+        "name": "Neuer Mitarbeiter → Onboarding + IT-Einrichtung",
+        "description": "Startet die HR-Onboarding-Checkliste, legt IT-Einrichtungsaufgaben und eine Paten-Aufgabe für die Führungskraft an, danach ein Gespräch nach der ersten Woche."
       },
       "deal_won_project": {
-        "name": "Deal gewonnen → Projekt anlegen",
-        "description": "Erstellt eine Kickoff-Aufgabe, lässt den KI-Operations-Assistenten einen Lieferplan entwerfen und informiert das Team."
+        "name": "Deal gewonnen → Kundenprojekt",
+        "description": "Legt ein Kunden-Onboarding-Projekt mit dem Namen der Firma an, mit der Deal-verantwortlichen Person als Projektleitung, fügt Onboarding-Aufgaben hinzu und bittet Finanzen um die Rechnung."
       },
       "weekly_pipeline_review": {
         "name": "Wöchentliche Pipeline-Prüfung",
@@ -2815,6 +3400,22 @@
       "form_submitted_lead": {
         "name": "Formular gesendet → neuer Lead",
         "description": "Macht aus Formulareinsendungen mit E-Mail CRM-Leads und benachrichtigt den Vertrieb."
+      },
+      "objective_decompose": {
+        "name": "Ziel angelegt → KI-Plan",
+        "description": "Der KI-CEO zerlegt ein neues Unternehmensziel in Meilensteine, Projekte und Aufgaben; die verantwortliche Person prüft den Plan."
+      },
+      "ticket_urgent_on_call": {
+        "name": "Dringendes Ticket → Bereitschaft zuweisen",
+        "description": "Weist dringende Tickets der nächsten Support-Leitung in der Rotation zu (falls noch nicht zugewiesen) und informiert sie und das Team."
+      },
+      "candidate_hired_onboarding": {
+        "name": "Bewerber eingestellt → Onboarding-Projekt",
+        "description": "Legt ein Onboarding-Projekt mit Vertrags-, Ausstattungs- und Erste-Woche-Aufgaben an, startet die HR-Checkliste und informiert HR."
+      },
+      "deal_approval_gate": {
+        "name": "Großer Deal → Freigabe",
+        "description": "Deals über 50.000 brauchen innerhalb von 48 Stunden die Freigabe einer Vertriebsleitung, bevor die verantwortliche Person weitermacht."
       }
     },
     "runs": {
@@ -2845,7 +3446,32 @@
       "waiting_approval": "Wartet auf Freigabe",
       "waiting_agent_task": "Wartet auf eine KI-Aufgabe",
       "resumesAt": "wird fortgesetzt {date}",
-      "aiTasks": "Von dieser Ausführung gestartete KI-Aufgaben"
+      "aiTasks": "Von dieser Ausführung gestartete KI-Aufgaben",
+      "views": {
+        "all": "Alle Läufe",
+        "dead": "Endgültig fehlgeschlagen"
+      },
+      "deadTitle": "Endgültig fehlgeschlagene Läufe",
+      "deadHelp": "Echte Läufe, die endgültig fehlgeschlagen sind. Wiederholen Sie sie ab dem fehlgeschlagenen Schritt, sobald die Ursache behoben ist, oder verwerfen Sie sie.",
+      "deadEmpty": "Keine endgültig fehlgeschlagenen Läufe.",
+      "failedAt": "fehlgeschlagen {date}",
+      "from": "Von",
+      "to": "Bis",
+      "kind": "Art",
+      "kinds": {
+        "all": "Echte und Testläufe",
+        "real": "Echte Läufe",
+        "test": "Testläufe"
+      },
+      "duration": "Dauer",
+      "stepCount": "{count, plural, one {# Schritt} other {# Schritte}}",
+      "deadBadge": "Endgültig fehlgeschlagen",
+      "dismiss": "Verwerfen",
+      "rerunFrom": "Ab Schritt erneut ausführen",
+      "rerunConfirm": "Der gewählte Schritt und alle folgenden laufen erneut, einschließlich ihrer Aktionen (Datensätze, Nachrichten). Fortfahren?",
+      "rerunHelp": "Führen Sie diesen Lauf ab einem beliebigen Schritt erneut aus; frühere Schritte behalten ihre Ergebnisse.",
+      "deadNotice": "Dieser Lauf ist endgültig fehlgeschlagen und steht auf der Fehlerliste. Die verantwortliche Person des Workflows wurde benachrichtigt.",
+      "deadSummary": "{count, plural, one {# Lauf ist endgültig fehlgeschlagen.} other {# Läufe sind endgültig fehlgeschlagen.}}"
     },
     "approvals": {
       "pending": "Warten auf Entscheidung",
@@ -2868,7 +3494,11 @@
         "APPROVED": "Freigegeben",
         "REJECTED": "Abgelehnt",
         "CANCELLED": "Abgebrochen"
-      }
+      },
+      "expires": "Entscheiden bis {date}",
+      "escalated": "Eskaliert",
+      "panelTitle": "{count, plural, one {# Workflow-Freigabe wartet auf Sie} other {# Workflow-Freigaben warten auf Sie}}",
+      "panelHelp": "Freigabeschritte automatisierter Workflows. Der Workflow läuft weiter, sobald Sie entscheiden."
     },
     "builder": {
       "trigger": "Wenn",
@@ -2936,7 +3566,20 @@
         "send_email": "E-Mail senden",
         "send_slack": "Slack-Nachricht senden",
         "http_webhook": "HTTP-Webhook (POST)",
-        "custom_api": "Eigene API aufrufen"
+        "custom_api": "Eigene API aufrufen",
+        "create_account": "Firma anlegen",
+        "assign_round_robin": "Automatisch zuweisen (Rotation)",
+        "load_record": "Datensatz nachschlagen",
+        "create_deal": "Deal anlegen",
+        "move_deal_stage": "Deal-Phase ändern",
+        "create_project": "Projekt aus Vorlage anlegen",
+        "add_project_members": "Projektmitglieder hinzufügen",
+        "start_onboarding": "Onboarding-Checkliste starten",
+        "create_invoice": "Rechnungsentwurf anlegen",
+        "create_meeting": "Meeting planen",
+        "ai_employee_task": "Aufgabe für einen KI-Mitarbeiter",
+        "decompose_goal": "Ziel mit KI zerlegen",
+        "send_teams": "In Microsoft Teams posten"
       },
       "match": "Erfüllt",
       "matchAll": "alle Bedingungen",
@@ -2983,7 +3626,9 @@
       "connectProvider": "Jetzt verbinden",
       "entities": {
         "lead": "Lead",
-        "work_task": "Aufgabe"
+        "work_task": "Aufgabe",
+        "deal": "Deal",
+        "ticket": "Support-Ticket"
       },
       "recordFields": {
         "stage": "Phase",
@@ -3002,7 +3647,8 @@
       "recipientOptions": {
         "owner": "Verantwortliche Person des Workflows",
         "users": "Bestimmte Personen",
-        "permission": "Alle mit einer Berechtigung"
+        "permission": "Alle mit einer Berechtigung",
+        "field": "Eine Person aus einer Variablen"
       },
       "priorities": {
         "LOW": "Niedrig",
@@ -3055,8 +3701,105 @@
         "text": "Nachricht",
         "url": "URL",
         "method": "Methode",
-        "path": "Pfad"
-      }
+        "path": "Pfad",
+        "type": "Typ",
+        "website": "Website",
+        "accountId": "Firmen-ID",
+        "contactId": "Kontakt-ID",
+        "pool": "Zuweisen aus",
+        "fallbackPermission": "Wenn keine Regel greift, rotieren unter allen mit",
+        "stageId": "Phase",
+        "amount": "Betrag",
+        "closeInDays": "Erwarteter Abschluss in (Tagen)",
+        "dealId": "Deal-ID",
+        "lostReason": "Verlustgrund",
+        "template": "Projektvorlage",
+        "startInDays": "Beginnt in (Tagen)",
+        "extraMemberIds": "Weitere Mitglieder (Benutzer-IDs aus Variablen)",
+        "memberIds": "Teammitglieder",
+        "projectId": "Projekt-ID",
+        "role": "Rolle",
+        "extraUserIds": "Weitere Personen (Benutzer-IDs aus Variablen)",
+        "employeeId": "Mitarbeiter-ID",
+        "checklist": "Checkliste",
+        "templateId": "Checklistenvorlage",
+        "quantity": "Menge",
+        "unitPrice": "Stückpreis",
+        "startsAt": "Beginnt um (Datum/Uhrzeit aus einer Variablen)",
+        "startInHours": "Sonst beginnt in (Stunden)",
+        "durationMinutes": "Dauer (Minuten)",
+        "extraAttendeeIds": "Weitere Teilnehmende (Benutzer-IDs aus Variablen)",
+        "attendeeIds": "Teilnehmende",
+        "location": "Ort",
+        "agenda": "Agenda",
+        "aiEmployeeId": "KI-Mitarbeiter",
+        "objectiveId": "Ziel-ID",
+        "guidance": "Hinweise für die KI",
+        "userField": "Person (Benutzer-ID aus einer Variablen)",
+        "approverMode": "Wer genehmigt",
+        "ownerField": "Verantwortliche Person des Datensatzes (Benutzer-ID aus einer Variablen)",
+        "timeoutAction": "Wenn niemand rechtzeitig entscheidet",
+        "timeoutHours": "Frist (Stunden)",
+        "escalateToIds": "Eskalieren an",
+        "ifNotConnected": "Schritt überspringen (statt Fehler), wenn der Anbieter nicht verbunden ist",
+        "teamId": "Team-ID",
+        "channelId": "Kanal-ID"
+      },
+      "actionGroups": {
+        "crm": "Vertrieb & CRM",
+        "work": "Projekte & Aufgaben",
+        "people": "Personal, Meetings & Finanzen",
+        "ai": "KI-Belegschaft",
+        "messaging": "Benachrichtigungen & Nachrichten",
+        "developer": "Entwickler"
+      },
+      "accountTypes": {
+        "PROSPECT": "Interessent",
+        "CUSTOMER": "Kunde",
+        "PARTNER": "Partner",
+        "VENDOR": "Lieferant",
+        "OTHER": "Sonstige"
+      },
+      "pools": {
+        "users": "Rotation ausgewählter Personen",
+        "permission": "Alle mit einer Berechtigung (Rotation)",
+        "crm_rules": "CRM-Zuweisungsregeln für Leads"
+      },
+      "rotationHint": "Jeder Lauf weist die nächste Person dieser Liste zu.",
+      "loadEntities": {
+        "account": "Firma",
+        "contact": "Kontakt",
+        "lead": "Lead",
+        "deal": "Deal",
+        "project": "Projekt",
+        "objective": "Ziel",
+        "employee": "Mitarbeiter",
+        "candidate": "Bewerber",
+        "ticket": "Support-Ticket",
+        "invoice": "Rechnung"
+      },
+      "loadHint": "Spätere Schritte können steps.{step}.name, steps.{step}.ownerId und die übrigen Felder des Datensatzes als Variablen nutzen.",
+      "defaultStage": "Erste Phase der Standard-Pipeline",
+      "blankProject": "Leeres Projekt",
+      "checklists": {
+        "ONBOARDING": "Onboarding",
+        "OFFBOARDING": "Offboarding"
+      },
+      "defaultTemplate": "Standardvorlage",
+      "invoiceHint": "Die Rechnung wird in Finanzen als Entwurf zur Prüfung angelegt, bevor sie versendet wird.",
+      "noAiEmployees": "Noch keine KI-Mitarbeiter. Stellen Sie zuerst einen unter Belegschaft ein.",
+      "decomposeHint": "Der KI-CEO zerlegt das Ziel in Meilensteine, Projekte und Aufgaben, die die verantwortliche Person prüft.",
+      "approverModes": {
+        "users": "Bestimmte Personen",
+        "permission": "Inhaber einer Berechtigung",
+        "record_owner": "Verantwortliche Person des Datensatzes"
+      },
+      "timeoutActions": {
+        "reject": "Automatisch ablehnen",
+        "escalate": "Einmal eskalieren, dann ablehnen"
+      },
+      "noTimeout": "Ohne Frist warten",
+      "teamsHint": "Team- und Kanal-ID finden Sie in Teams über „Link zum Kanal abrufen“. Nutzt die Microsoft-365-Verbindung."
     },
     "events": {
       "lead_created": "Neuer Lead",
@@ -3095,7 +3838,18 @@
       "integration_synced": "Integration synchronisiert",
       "agent_task_completed": "KI-Aufgabe erledigt",
       "agent_task_failed": "KI-Aufgabe fehlgeschlagen",
-      "milestone_completed": "Meilenstein erreicht"
+      "milestone_completed": "Meilenstein erreicht",
+      "objective_created": "Ziel angelegt"
+    },
+    "compare": {
+      "title": "Versionen vergleichen",
+      "help": "Zwei Definitionen nebeneinander. Entfernte Zeilen sind rot, hinzugefügte grün.",
+      "changes": "{count, plural, one {# geänderte Zeile} other {# geänderte Zeilen}}",
+      "identical": "Identisch",
+      "show": "Vergleichen",
+      "left": "Links",
+      "right": "Rechts",
+      "draft": "Aktueller Entwurf"
     }
   },
   "marketplace": {
@@ -4027,7 +4781,13 @@
       "spent": "Ausgegeben",
       "timeCost": "Zeitkosten",
       "title": "Budget",
-      "used": "Budget verbraucht"
+      "used": "Budget verbraucht",
+      "financeTitle": "Finanzbuchungen",
+      "financeOpen": "Projektkosten-Bericht öffnen",
+      "financeBills": "Lieferantenrechnungen",
+      "financeExpenses": "Ausgaben",
+      "financeTotal": "Gesamtkosten (Finanzen)",
+      "financePending": "Offene Erstattungen"
     },
     "calendar": {
       "more": "+{count} weitere",
@@ -4635,7 +5395,8 @@
       "email": "E-Mail",
       "audience": "Zielgruppen",
       "forms": "Formulare",
-      "automation": "Automatisierung"
+      "automation": "Automatisierung",
+      "brand": "Marke"
     },
     "common": {
       "allStatuses": "Alle Status",
@@ -4676,7 +5437,8 @@
       "conversionRate": "Konversionsrate",
       "emailsSent": "Gesendete E-Mails",
       "postsPublished": "Veröffentlichte Social-Posts",
-      "activeCampaigns": "Aktive Kampagnen"
+      "activeCampaigns": "Aktive Kampagnen",
+      "emailOpenRate": "E-Mail-Öffnungsrate"
     },
     "commandCenter": {
       "title": "Marketing-Kommandozentrale",
@@ -4756,7 +5518,40 @@
         "ACTIVE": "Starten / fortsetzen",
         "PAUSED": "Pausieren",
         "COMPLETED": "Abschließen"
-      }
+      },
+      "views": "Kampagnenansichten",
+      "view": {
+        "overview": "Überblick",
+        "leads": "Leads",
+        "pipeline": "Pipeline & gewonnener Umsatz"
+      },
+      "leadsHint": "CRM-Leads, deren Kampagnencode oder Quelle der Code dieser Kampagne ist (über Formulare und UTM-Links).",
+      "searchLeads": "Name, E-Mail oder Firma suchen",
+      "stage": "Phase",
+      "allStages": "Alle Phasen",
+      "noLeads": "Dieser Kampagne sind noch keine Leads zugeordnet.",
+      "leadName": "Lead",
+      "owner": "Verantwortlich",
+      "value": "Wert",
+      "created": "Erstellt",
+      "openPipeline": "Offene Pipeline",
+      "weightedPipeline": "Gewichtete Pipeline",
+      "wonRevenue": "Gewonnener Umsatz",
+      "lostRevenue": "Verloren",
+      "dealsN": "{count, plural, one {# Deal} other {# Deals}}",
+      "pipelineHint": "CRM-Deals mit diesem Kampagnencode oder aus ihren Leads konvertiert (nur lesend).",
+      "winRate": "Gewinnquote",
+      "dealStatus": {
+        "OPEN": "Offen",
+        "WON": "Gewonnen",
+        "LOST": "Verloren"
+      },
+      "allDeals": "Alle Deals",
+      "noDeals": "Dieser Kampagne sind keine CRM-Deals zugeordnet.",
+      "deal": "Deal",
+      "expectedClose": "Erwartet / abgeschlossen",
+      "openRate": "E-Mail-Öffnungsrate",
+      "clickRate": "E-Mail-Klickrate"
     },
     "channels": {
       "email": "E-Mail",
@@ -5343,6 +6138,46 @@
       "doneBody": "{email} erhält keine Marketing-E-Mails mehr von {company}.",
       "invalidTitle": "Link ungültig",
       "invalidBody": "Dieser Abmeldelink ist ungültig oder unvollständig. Verwenden Sie den Link aus der neuesten E-Mail."
+    },
+    "brand": {
+      "title": "Brand-Kit",
+      "subtitle": "Tonalität, Botschaften, Personas und visuelle Identität – genutzt von allen KI-Textern und in HTML-E-Mails.",
+      "kit": "Markenrichtlinien",
+      "updated": "Zuletzt aktualisiert {when}",
+      "empty": "Noch kein Brand-Kit. Legen Sie eines an, damit KI-Inhalte Ihrer Marke folgen.",
+      "emptyReadOnly": "Es wurde noch kein Brand-Kit eingerichtet.",
+      "brandName": "Markenname",
+      "tagline": "Slogan",
+      "voiceTone": "Tonalität",
+      "voiceToneHint": "Wie die Marke klingt, z. B. „Selbstbewusst und herzlich, klare Sprache, kein Jargon.“",
+      "pillars": "Kernbotschaften",
+      "pillarsHint": "Eine pro Zeile.",
+      "doWords": "Bevorzugte Wörter",
+      "dontWords": "Zu vermeidende Wörter",
+      "personas": "Zielgruppen-Personas",
+      "personaName": "Name der Persona",
+      "personaDescription": "Wer sie sind, was sie brauchen",
+      "addPersona": "Persona hinzufügen",
+      "colors": "Farben",
+      "colorsHint": "Die erste Farbe ist die Primärfarbe in E-Mails.",
+      "colorValue": "Farbe",
+      "colorName": "Name",
+      "primary": "Primär",
+      "addColor": "Farbe hinzufügen",
+      "logoUrl": "Logo-URL",
+      "logoHint": "Wird oben in Marketing-E-Mails angezeigt.",
+      "logoDarkUrl": "Logo-URL (dunkle Hintergründe)",
+      "iconUrl": "Icon-URL",
+      "headingFont": "Schrift für Überschriften",
+      "bodyFont": "Fließtext-Schrift",
+      "save": "Brand-Kit speichern",
+      "create": "Brand-Kit anlegen",
+      "saved": "Gespeichert",
+      "delete": "Brand-Kit löschen",
+      "confirmDelete": "Brand-Kit löschen? KI-Texter erhalten dann keine Markenrichtlinien mehr.",
+      "preview": "Vorschau",
+      "aiContext": "Was KI-Texter erhalten",
+      "aiContextHint": "Wird an jede KI-Content-Aufgabe angehängt (Entwürfe, Social Posts, SEO-Briefings, E-Mails, Kampagnenpläne)."
     }
   },
   "sales": {
@@ -5350,7 +6185,8 @@
       "overview": "Übersicht",
       "targets": "Ziele",
       "commissions": "Provisionen",
-      "reports": "Berichte"
+      "reports": "Berichte",
+      "team": "Team"
     },
     "subtitle": "Teamleistung, Prognose und Ziele aus Ihren aktuellen CRM-Daten.",
     "from": "Von",
@@ -5438,7 +6274,19 @@
       "qualified": "Qualifiziert",
       "subtitle": "Konversion, Umsatzzuordnung und Verlustgründe für beliebige Zeiträume, mit CSV-Export.",
       "truncated": "Die ersten 500 Deals werden angezeigt. Exportieren Sie CSV für alle.",
-      "won": "Gewonnen"
+      "won": "Gewonnen",
+      "funnelTitle": "Lead → Opportunity → gewonnen",
+      "funnelHint": "Im Zeitraum erstellte Leads, wie viele zu einer Opportunity (Deal) wurden und wie viele gewonnen wurden.",
+      "opportunities": "Opportunities",
+      "conversionByCampaign": "Konversion nach Kampagnencode",
+      "stageTitle": "Phasenkonversion · {pipeline}",
+      "stageHint": "{deals} Deals mit Phasenaktivität im Zeitraum · {won} gewonnen ({rate}).",
+      "reached": "Erreicht",
+      "nextStage": "Nächste",
+      "toNext": "Zur nächsten",
+      "avgDays": "Ø Tage in Phase",
+      "wonStage": "Gewonnen",
+      "noStageData": "Keine Phasenwechsel in diesem Zeitraum."
     },
     "targets": {
       "MONTH": "Monatlich",
@@ -5459,6 +6307,38 @@
       "subtitle": "Umsatz- und Deal-Ziele pro Person, mit Zielerreichung aus gewonnenen Deals.",
       "teamTotal": "Team: {won} von {target}",
       "thisMonth": "Ziele diesen Monat"
+    },
+    "myTasks": {
+      "title": "Meine Vertriebsaufgaben",
+      "summary": "{open} offen · {overdue} überfällig",
+      "none": "Ihnen sind keine Vertriebsaufgaben zugewiesen."
+    },
+    "team": {
+      "title": "Vertriebsteam",
+      "subtitle": "Mitglieder mit Vertriebszugriff: Auslastung, Kapazität, Ziele und Quotenerfüllung.",
+      "hint": "Kapazitätsgrenzen nutzen die Lead-Zuweisungsregeln: Nicht verfügbare Mitglieder und Mitglieder am Limit offener Leads werden übersprungen.",
+      "members": "Mitglieder",
+      "unavailable": "{count} nicht verfügbar",
+      "monthQuota": "Quote diesen Monat",
+      "monthWon": "Gewonnen diesen Monat",
+      "openDeals": "Offene Deals",
+      "openLeads": "Offene Leads",
+      "openTasks": "Offene Aufgaben",
+      "followUps": "Offene Follow-ups",
+      "pipeline": "Offene Pipeline {amount}",
+      "role": "Rolle",
+      "maxOpenDeals": "Max. offene Deals",
+      "maxOpenLeads": "Max. offene Leads",
+      "available": "Verfügbar",
+      "away": "Nicht verfügbar",
+      "atCapacity": "Ausgelastet",
+      "period": "Zeitraum",
+      "thisMonth": "Dieser Monat",
+      "thisQuarter": "Dieses Quartal",
+      "targetAmount": "Zielbetrag",
+      "setTarget": "Ziel festlegen",
+      "noTarget": "kein Ziel",
+      "empty": "In diesem Unternehmen hat noch niemand Vertriebszugriff."
     }
   },
   "finance": {
@@ -5477,7 +6357,11 @@
       "cashflow": "Cashflow",
       "accounting": "Buchhaltung",
       "reports": "Berichte",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "bills": "Eingangsrechnungen",
+      "payables": "Verbindlichkeiten",
+      "approvals": "Freigaben",
+      "claims": "Spesenabrechnungen"
     },
     "accounting": {
       "tabs": {
@@ -5497,7 +6381,10 @@
       "runwayMonths": "Runway (Monate)",
       "mrr": "MRR",
       "arr": "ARR",
-      "receivablesOverdue": "Überfällige Forderungen"
+      "receivablesOverdue": "Überfällige Forderungen",
+      "payablesOpen": "Verbindlichkeiten aus L+L",
+      "payablesOverdue": "Überfällige Verbindlichkeiten",
+      "budgetUtilization": "Budgetauslastung"
     },
     "range": {
       "from": "Von",
@@ -5548,7 +6435,8 @@
       "email": "E-Mail",
       "phone": "Telefon",
       "website": "Website",
-      "address": "Adresse"
+      "address": "Adresse",
+      "project": "Projekt"
     },
     "dashboard": {
       "getStarted": "Legen Sie Ihr erstes Bank-, Bar- oder Kartenkonto an, um Geldflüsse zu erfassen.",
@@ -5569,7 +6457,10 @@
       "insightsHint": "Der KI-CFO liest Ihre echten Zahlen über seine Tools und schreibt ein Briefing mit Empfehlungen.",
       "insights": "KI-CFO-Analyse anfordern",
       "insightsFocus": "Optionaler Schwerpunkt, z. B. Runway verlängern",
-      "insightsNoPermission": "Sie benötigen die Berechtigung zum Ausführen von KI-Aufgaben."
+      "insightsNoPermission": "Sie benötigen die Berechtigung zum Ausführen von KI-Aufgaben.",
+      "dueSoon": "In 30 Tagen fällig: {amount}",
+      "upcomingPayablesHint": "Freigegebene Rechnungen, die in den nächsten 30 Tagen fällig sind, und überfällige.",
+      "yourApprovals": "{count, plural, one {# wartet auf Sie} other {# warten auf Sie}}"
     },
     "anomalies": {
       "title": "Auffällige Ausgaben",
@@ -5601,7 +6492,8 @@
       "planHint": "Erwartete einmalige Aus- oder Einzahlungen, die die Prognose berücksichtigen soll.",
       "addPlanned": "Geplanten Posten hinzufügen",
       "plannedAmountHint": "Negativ für einen Abfluss, z. B. -2500",
-      "planEmpty": "Keine geplanten Posten."
+      "planEmpty": "Keine geplanten Posten.",
+      "billsDue": "Fällige Rechnungen"
     },
     "scenarios": {
       "title": "Szenarioplanung",
@@ -5659,7 +6551,9 @@
         "IMPORT": "Importiert",
         "RECURRING": "Wiederkehrend",
         "PAYMENT": "Rechnungszahlung",
-        "AI": "KI (genehmigt)"
+        "AI": "KI (genehmigt)",
+        "BILL_PAYMENT": "Rechnungszahlung",
+        "EXPENSE_CLAIM": "Spesenabrechnung"
       },
       "fromAccount": "Von Konto",
       "toAccount": "Auf Konto",
@@ -5925,7 +6819,24 @@
       "currentBudget": "Aktuelle Budgets",
       "currentActual": "Bisher ausgegeben",
       "overBudget": "Über Budget",
-      "confirmDelete": "Dieses Budget löschen?"
+      "confirmDelete": "Dieses Budget löschen?",
+      "hintAccrual": "Ist = Ausgaben plus freigegebene Eingangsrechnungen im Zeitraum, in der Kategorie und Kostenstelle des Budgets.",
+      "departmentsTitle": "Abteilungen · {period}",
+      "departmentsHint": "Budget vs. Ist je Kostenstelle. Budgetverantwortliche (Abteilungsleitungen) werden bei 80 % und 100 % benachrichtigt.",
+      "departmentsEmpty": "Keine Abteilungsbudgets oder Ausgaben in diesem Zeitraum.",
+      "periods": {
+        "month": "Monat",
+        "quarter": "Quartal"
+      },
+      "owner": "Verantwortlich",
+      "ownerIs": "Verantwortlich: {name}",
+      "expensesPart": "Ausgaben",
+      "billsPart": "Rechnungen",
+      "totalLine": "{actual} von {budget}",
+      "openAll": "Alle Transaktionen",
+      "noSpend": "Keine Ausgaben in diesem Zeitraum.",
+      "noBills": "Keine freigegebenen Rechnungen in diesem Zeitraum.",
+      "noDepartmentBudget": "Kein Budget deckt diesen Zeitraum ab."
     },
     "chart": {
       "add": "Konto hinzufügen",
@@ -5975,7 +6886,9 @@
         "CREDIT_NOTE": "Gutschrift",
         "TRANSACTION": "Buchung",
         "OPENING": "Anfangssaldo",
-        "REVERSAL": "Storno"
+        "REVERSAL": "Storno",
+        "BILL": "Eingangsrechnung",
+        "BILL_PAYMENT": "Rechnungszahlung"
       }
     },
     "ledger": {
@@ -6040,7 +6953,8 @@
         "cashflow": "Kapitalflussrechnung",
         "budget": "Budget vs. Ist",
         "revenue": "Umsatz",
-        "expenses": "Ausgaben"
+        "expenses": "Ausgaben",
+        "projects": "Projektkosten"
       },
       "period": "{from} – {to}",
       "asOf": "Stand {date}",
@@ -6092,6 +7006,169 @@
       "costCenterCode": "Nummer",
       "noCostCenters": "Noch keine Kostenstellen.",
       "totalSpend": "Gesamtausgaben"
+    },
+    "bills": {
+      "new": "Neue Eingangsrechnung",
+      "newHint": "Erfassen Sie eine Lieferantenrechnung. Die Freigabe bucht sie in die Verbindlichkeiten; Zahlungen gleichen sie aus.",
+      "edit": "Eingangsrechnung bearbeiten",
+      "editTitle": "Eingangsrechnung {number} bearbeiten",
+      "search": "Nummer, Lieferant oder Position suchen…",
+      "allVendors": "Alle Lieferanten",
+      "empty": "Noch keine Eingangsrechnungen.",
+      "number": "Rechnungsnummer",
+      "numberHint": "Die Rechnungsnummer des Lieferanten.",
+      "billDate": "Rechnungsdatum",
+      "newVendor": "Neuer Lieferant…",
+      "newVendorHint": "Lieferanten wählen oder neu eingeben.",
+      "attachment": "Rechnungsscan",
+      "attachmentReplaceHint": "Datei wählen, um den aktuellen Scan zu ersetzen (PDF oder Bild, bis 5 MB).",
+      "saveDraft": "Als Entwurf speichern",
+      "saveAndSubmit": "Speichern und einreichen",
+      "submitHint": "Beim Einreichen geht die Rechnung zur Freigabe, wenn eine Freigaberegel greift; andernfalls wird sie sofort freigegeben und gebucht.",
+      "submit": "Einreichen",
+      "confirmSubmit": "Diese Rechnung einreichen? Nach der Freigabe wird sie in die Verbindlichkeiten gebucht.",
+      "submitFailed": "Die Rechnung wurde als Entwurf gespeichert, konnte aber nicht eingereicht werden. Prüfen Sie die Angaben und reichen Sie sie erneut ein.",
+      "recordPayment": "Zahlung erfassen",
+      "payFrom": "Zahlen von",
+      "void": "Stornieren",
+      "confirmVoid": "Diese Rechnung stornieren? Ihre Buchung wird rückgängig gemacht.",
+      "confirmDelete": "Diesen Rechnungsentwurf löschen?",
+      "awaitingApproval": "Wartet auf Freigabe",
+      "overdue": "Überfällig",
+      "showOverdue": "Überfällige Rechnungen anzeigen",
+      "lines": "Positionen",
+      "dates": "Rechnungsdatum {issue} · fällig {due}",
+      "coding": "Kategorie · Kostenstelle · Projekt",
+      "paid": "Bezahlt",
+      "netAmount": "Nettobetrag",
+      "dueOn": "fällig {date}",
+      "viewBill": "Eingangsrechnung anzeigen",
+      "submittedAt": "Eingereicht {date}",
+      "approvedAt": "Freigegeben {date}",
+      "voidedAt": "Storniert {date}",
+      "statuses": {
+        "DRAFT": "Entwurf",
+        "AWAITING_APPROVAL": "Wartet auf Freigabe",
+        "APPROVED": "Freigegeben",
+        "PARTIALLY_PAID": "Teilweise bezahlt",
+        "PAID": "Bezahlt",
+        "VOID": "Storniert"
+      }
+    },
+    "payables": {
+      "total": "Verbindlichkeiten gesamt",
+      "byVendor": "Offen nach Lieferant",
+      "empty": "Keine offenen Verbindlichkeiten.",
+      "overdue": "Überfällig",
+      "agingTitle": "Altersstruktur der Verbindlichkeiten",
+      "agingHint": "Freigegebene, unbezahlte Rechnungen nach Tagen über Fälligkeit.",
+      "upcomingTitle": "Anstehende Zahlungen",
+      "upcomingHint": "In den nächsten 30 Tagen fällig: {amount}",
+      "noUpcoming": "In den nächsten 30 Tagen ist nichts fällig.",
+      "overdueTitle": "Überfällige Rechnungen",
+      "overdueHint": "Finanzverantwortliche werden einmalig benachrichtigt, wenn eine Rechnung überfällig wird.",
+      "noOverdue": "Keine Rechnung ist überfällig."
+    },
+    "approvals": {
+      "queue": "Freigabe-Warteschlange",
+      "waitingForYou": "Wartet auf Sie",
+      "rulesActive": "Aktive Regeln",
+      "scopes": {
+        "mine": "Von mir zu entscheiden",
+        "requested": "Von mir angefragt",
+        "all": "Alle Anfragen"
+      },
+      "statuses": {
+        "PENDING": "Ausstehend",
+        "APPROVED": "Freigegeben",
+        "REJECTED": "Abgelehnt",
+        "CANCELLED": "Abgebrochen"
+      },
+      "kinds": {
+        "ANY": "Rechnungen und Spesen",
+        "BILL": "Eingangsrechnung",
+        "EXPENSE": "Spesenabrechnung"
+      },
+      "modes": {
+        "FINANCE_MANAGERS": "Finanzverantwortliche",
+        "DEPARTMENT_HEAD": "Abteilungsleitung",
+        "USER": "Eine bestimmte Person"
+      },
+      "nothingPending": "Nichts wartet auf Ihre Freigabe.",
+      "decide": "Entscheiden",
+      "approve": "Freigeben",
+      "reject": "Ablehnen",
+      "note": "Notiz",
+      "notePlaceholder": "Notiz für die anfragende Person (optional)",
+      "rejectWithoutNote": "Ohne Notiz ablehnen?",
+      "requestedBy": "Angefragt von {name}",
+      "decidedBy": "Entschieden von {name} am {date}",
+      "byRule": "Regel: {name}",
+      "pendingTitle": "Wartet auf Freigabe",
+      "waitingFor": "Freigebende: {names}",
+      "notYourDecision": "Sie sind für diese Anfrage nicht freigabeberechtigt.",
+      "history": "Freigabeverlauf",
+      "noHistory": "Noch keine Freigaben.",
+      "rulesTitle": "Freigaberegeln",
+      "rulesHint": "Rechnungen und Spesen ab dem Betrag (optional für eine Kostenstelle oder Kategorie) benötigen eine Freigabe. Die spezifischste passende Regel bestimmt, wer freigibt. Spesenabrechnungen benötigen immer eine Freigabe.",
+      "newRule": "Neue Regel",
+      "noRules": "Keine Regeln: Rechnungen werden beim Einreichen freigegeben; Spesen gehen an die Finanzverantwortlichen.",
+      "appliesTo": "Gilt für",
+      "minAmount": "Ab Betrag",
+      "minAmountHint": "Rechnungssumme oder Spesenbetrag in der Firmenwährung.",
+      "approverMode": "Freigebende",
+      "approverUser": "Freigebende Person",
+      "approverUserHint": "Nur für „Eine bestimmte Person“.",
+      "active": "Aktiv",
+      "confirmDeleteRule": "Diese Freigaberegel löschen?"
+    },
+    "claims": {
+      "submitTitle": "Ausgabe einreichen",
+      "submitHint": "Etwas für die Firma bezahlt? Reichen Sie es mit Beleg ein; nach der Freigabe wird es erstattet und gebucht.",
+      "submit": "Ausgabe einreichen",
+      "submitShort": "Ausgabe einreichen →",
+      "merchant": "Händler",
+      "receipt": "Beleg",
+      "descriptionPlaceholder": "z. B. Zugticket zum Kunden-Workshop",
+      "mineTitle": "Meine Spesenabrechnungen",
+      "allTitle": "Alle Spesenabrechnungen",
+      "mine": "Meine",
+      "everyone": "Alle",
+      "empty": "Noch keine Spesenabrechnungen.",
+      "requester": "Eingereicht von",
+      "payFrom": "Erstatten von",
+      "firstAccount": "Zur Erstattung wird das erste Bank- oder Kassenkonto verwendet.",
+      "withdraw": "Zurückziehen",
+      "confirmWithdraw": "Diese Spesenabrechnung zurückziehen?",
+      "viewTransaction": "Gebuchte Transaktion anzeigen",
+      "statuses": {
+        "PENDING": "Ausstehend",
+        "APPROVED": "Freigegeben",
+        "REJECTED": "Abgelehnt"
+      },
+      "decided": {
+        "APPROVED": "Freigegeben und gebucht",
+        "REJECTED": "Abgelehnt"
+      }
+    },
+    "projects": {
+      "all": "Alle Projekte",
+      "expenses": "Ausgaben",
+      "bills": "Rechnungen",
+      "totalCost": "Gesamtkosten",
+      "income": "Einnahmen",
+      "empty": "In diesem Zeitraum sind keine Kosten einem Projekt zugeordnet.",
+      "viewBills": "Rechnungen",
+      "pendingClaims": "{amount} in offenen Spesen",
+      "taggedWith": "Projekt: {name}"
+    },
+    "ask": {
+      "title": "Den KI-CFO fragen",
+      "hint": "Stellen Sie eine Frage zu Ihren Zahlen; der KI-CFO antwortet auf Basis Ihrer Buchhaltung.",
+      "placeholder": "z. B. Können wir uns im nächsten Quartal zwei Neueinstellungen leisten?",
+      "submit": "Fragen",
+      "asking": "Wird gefragt…",
+      "thinking": "Die Antwort wird erarbeitet…"
     }
   },
   "hr": {
@@ -7233,7 +8310,50 @@
       "reviewItems": "Prüfen Sie die in der Zusammenfassung gefundenen Aufgaben und erstellen Sie sie dann.",
       "noItemsInSummary": "Die Zusammenfassung enthält keine Aufgabenliste.",
       "confirmCreate": "{count, plural, one {# Aufgabe erstellen} other {# Aufgaben erstellen}}",
-      "itemsCreated": "Aufgaben erstellt."
+      "itemsCreated": "Aufgaben erstellt.",
+      "repeat": "Wiederholen",
+      "repeatNone": "Keine Wiederholung",
+      "recurrence": {
+        "WEEKLY": "Wöchentlich",
+        "BIWEEKLY": "Alle 2 Wochen"
+      },
+      "occurrences": "Anzahl der Termine",
+      "occurrencesHint": "2–26, einschließlich dieses Termins.",
+      "applyTo": "Anwenden auf",
+      "scopeThis": "Nur dieser Termin",
+      "scopeFollowing": "Dieser und folgende Termine",
+      "scopeSeries": "Alle kommenden der Serie",
+      "agendaTemplate": "Agenda-Vorlage",
+      "replaceAgenda": "Aktuelle Agenda durch diese Vorlage ersetzen?",
+      "useTemplate": "Vorlage verwenden…",
+      "rsvpAction": {
+        "ACCEPTED": "Zusagen",
+        "TENTATIVE": "Vielleicht",
+        "DECLINED": "Absagen"
+      },
+      "rsvp": {
+        "PENDING": "Keine Antwort",
+        "ACCEPTED": "Zugesagt",
+        "TENTATIVE": "Vorläufig",
+        "DECLINED": "Abgesagt"
+      },
+      "yourRsvp": "Ihre Antwort",
+      "followUpTitle": "Follow-up-E-Mail",
+      "followUpDescription": "Sendet die Zusammenfassung (neueste KI-Zusammenfassung oder Entscheidungen), Aufgaben und optional die Notizen an alle Teilnehmenden.",
+      "followUpIncludeNotes": "Meeting-Notizen einschließen",
+      "followUpSend": "Follow-up senden",
+      "followUpResend": "Erneut senden",
+      "followUpSending": "Wird gesendet…",
+      "followUpNotConfigured": "E-Mail-Versand ist nicht eingerichtet – nichts wurde gesendet.",
+      "followUpResult": "Gesendet {sent} · fehlgeschlagen {failed} · nicht eingerichtet {notConfigured} · ohne E-Mail {skipped}",
+      "followUpLast": "Letzter Versuch {when}",
+      "templates": "Agenda-Vorlagen ({count})",
+      "noTemplates": "Noch keine Agenda-Vorlagen.",
+      "templateName": "Name der Vorlage",
+      "newTemplate": "Neue Vorlage",
+      "deleteThis": "Diesen Termin löschen",
+      "deleteFollowing": "Diesen und folgende löschen",
+      "series": "Serie"
     },
     "calendar": {
       "title": "Kalender",
@@ -7250,7 +8370,20 @@
       "syncNow": "Kalender synchronisieren",
       "notConnected": "Google Kalender / Outlook-Kalender ist nicht verbunden, daher werden Meetings nicht synchronisiert.",
       "legendMeetings": "Meetings",
-      "legendEvents": "Unternehmenstermine"
+      "legendEvents": "Unternehmenstermine",
+      "onLeave": "{name} – abwesend",
+      "you": "Sie",
+      "dealCloses": "Abschluss: {name}",
+      "layers": "Ebenen",
+      "layer": {
+        "meetings": "Meetings",
+        "events": "Firmenevents",
+        "leave": "Abwesenheiten",
+        "holidays": "Feiertage",
+        "crm": "CRM-Follow-ups & Abschlüsse"
+      },
+      "leaveAll": "Genehmigte Abwesenheiten aller werden angezeigt",
+      "leaveOwn": "Ihre eigenen genehmigten Abwesenheiten werden angezeigt"
     },
     "inbox": {
       "title": "Posteingang",
@@ -7375,6 +8508,45 @@
       "announcementsPublished": "Veröffentlichte Ankündigungen",
       "meetingsHeld": "Abgehaltene Meetings",
       "openActionItems": "Offene Aufgaben"
+    },
+    "tasks": {
+      "linkedTask": "Verknüpfte Aufgabe",
+      "openDiscussion": "Diskussion in #{channel}",
+      "privateDiscussion": "In einem privaten Kanal besprochen",
+      "discuss": "Im Kanal besprechen",
+      "discussHint": "Startet einen mit dieser Aufgabe verknüpften Thread. Erwähnen Sie Personen mit @, um sie zu benachrichtigen.",
+      "noChannels": "Es gibt noch keinen Kanal, in dem Sie posten können.",
+      "createChannel": "Kanal erstellen",
+      "channel": "Kanal",
+      "note": "Eröffnungsnachricht (optional)",
+      "start": "Diskussion starten"
+    },
+    "hub": {
+      "label": "Kommunikationszentrale",
+      "feed": "Feed",
+      "conversations": "Unterhaltungen",
+      "mentions": "Erwähnungen",
+      "announcements": "Ankündigungen",
+      "meetings": "Meetings",
+      "conversationsHint": "{count, plural, =0 {Alles gelesen} one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}",
+      "searchConversations": "Kanäle und Personen suchen",
+      "unreadOnly": "Nur ungelesene",
+      "noConversations": "Noch keine Unterhaltungen – treten Sie einem Kanal bei oder starten Sie eine Direktnachricht.",
+      "direct": "Direktnachricht",
+      "mentionsHint": "Nachrichten, Beiträge, Kommentare und Aufgabenkommentare, in denen Sie erwähnt werden.",
+      "mentionKind": {
+        "all": "Alle",
+        "message": "Nachrichten",
+        "post": "Beiträge",
+        "comment": "Kommentare",
+        "task_comment": "Aufgabenkommentare"
+      },
+      "noMentions": "Sie wurden noch nicht erwähnt.",
+      "subject": {
+        "post": "zu einem Beitrag",
+        "announcement": "zu einer Ankündigung",
+        "meeting": "zu einem Meeting"
+      }
     }
   },
   "support": {
@@ -7753,5 +8925,95 @@
       "viewTicket": "Anfrage ansehen",
       "browseHelp": "Hilfecenter durchsuchen"
     }
+  },
+  "strategy": {
+    "tabs": {
+      "profile": "Profil",
+      "strategy": "Strategie",
+      "operations": "Betrieb"
+    },
+    "title": "Strategie",
+    "subtitle": "Mission, Vision, Werte und strategische Säulen – und wie jedes Unternehmensziel in Ziele, Meilensteine, Projekte und Aufgaben zerfällt.",
+    "foundations": "Grundlagen",
+    "foundationsHint": "Wofür das Unternehmen existiert und wie es arbeitet.",
+    "mission": "Mission",
+    "missionHint": "Warum das Unternehmen existiert, in ein oder zwei Sätzen.",
+    "vision": "Vision",
+    "visionHint": "Wie die Welt aussieht, wenn Sie Erfolg haben.",
+    "values": "Werte",
+    "addValue": "Wert hinzufügen",
+    "valuePlaceholder": "z. B. Kunden zuerst",
+    "removeValue": "{value} entfernen",
+    "pillars": "Strategische Säulen",
+    "noPillars": "Noch keine strategischen Säulen.",
+    "pillar": "Strategische Säule",
+    "noPillar": "Keine Säule",
+    "pillarTitle": "Säule",
+    "pillarDescription": "Beschreibung",
+    "addPillar": "Säule hinzufügen",
+    "removePillar": "Säule entfernen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "saved": "Strategie gespeichert.",
+    "tree": "Zielbaum",
+    "treeHint": "Unternehmensziel → Ziele → Meilensteine → verknüpfte Projekte, mit Fortschritt.",
+    "taskCount": "{done}/{total} Aufgaben",
+    "operations": {
+      "title": "Unternehmensbetrieb",
+      "subtitle": "Alle Abteilungen auf einen Blick: Personal, Projekte, Budgetnutzung und der Stand ihrer Schlüsselergebnisse.",
+      "forbidden": "Sie benötigen Zugriff auf HR oder Ziele, um das Betriebs-Dashboard zu sehen.",
+      "partial": "Einige Spalten sind ausgeblendet, da Sie keinen Zugriff haben auf: {areas}.",
+      "areas": {
+        "hr": "HR",
+        "projects": "Projekte",
+        "finance": "Finanzen",
+        "objectives": "Ziele"
+      },
+      "tiles": {
+        "departments": "Abteilungen",
+        "headcount": "Mitarbeitende",
+        "unassigned": "Ohne Abteilung",
+        "openProjects": "Offene Projekte"
+      },
+      "departments": "Abteilungen",
+      "departmentsHint": "Budgets der aktuellen Periode in {currency}. Projekte zählen zur Abteilung ihres Verantwortlichen.",
+      "noDepartments": "Noch keine Abteilungen.",
+      "setupHr": "Abteilungen in HR einrichten",
+      "noBudget": "Kein Budget",
+      "atRisk": "({count} gefährdet)",
+      "columns": {
+        "department": "Abteilung",
+        "headcount": "Mitarbeitende",
+        "openProjects": "Offene Projekte",
+        "budget": "Budget genutzt",
+        "objectives": "Ziele",
+        "keyResults": "Schlüsselergebnisse"
+      }
+    }
+  },
+  "shell": {
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen",
+    "closeNavigation": "Navigation schließen",
+    "userMenu": "Kontomenü",
+    "signedInAs": "Angemeldet als",
+    "aiActivity": "KI-Aktivität",
+    "aiWorking": "{count, plural, one {# KI-Aufgabe läuft} other {# KI-Aufgaben laufen}}",
+    "aiQueued": "{count, plural, one {# in Warteschlange} other {# in Warteschlange}}",
+    "aiIdle": "KI im Leerlauf",
+    "controlName": "Realy Control"
+  },
+  "authHero": {
+    "eyebrow": "KI-Betriebssystem für Unternehmen",
+    "value1": "KI-Mitarbeitende planen, führen aus und berichten – jeder sensible Schritt wartet auf Ihre Freigabe.",
+    "value2": "Vertrieb, Finanzen, HR und Betrieb teilen einen lebendigen Unternehmensgraphen.",
+    "value3": "Von Haus aus Enterprise-tauglich: Rollen, Audit-Trail und Zwei-Faktor-Anmeldung.",
+    "adminEyebrow": "Plattformbetrieb",
+    "adminTitle": "Realy Control",
+    "adminPromise": "Der Kontrollraum für die gesamte Plattform.",
+    "adminValue1": "Nur für Plattform-Administratoren.",
+    "adminValue2": "Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
+    "adminValue3": "Administrative Änderungen erfordern eine aktuelle Zwei-Faktor-Bestätigung.",
+    "secureConnection": "Sichere Sitzung"
   }
 }

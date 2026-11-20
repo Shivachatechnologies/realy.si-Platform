@@ -213,6 +213,8 @@ export async function submitForm(formId: string, raw: z.input<typeof publicSubmi
     if (existing) {
       leadId = existing.id;
       ownerId = existing.ownerId;
+      // First-touch attribution: keep an existing campaign code, fill it when missing.
+      if (campaignCode) await tx.lead.updateMany({ where: { id: leadId, campaignCode: null }, data: { campaignCode } });
       await tx.leadActivity.create({
         data: { organizationId: form.organizationId, companyId: form.companyId, leadId, type: "NOTE", summary: `Submitted form "${form.name}"${notes ? `\n${notes}` : ""}`.slice(0, 5000), occurredAt: new Date(), createdById: form.createdById },
       });
@@ -229,6 +231,7 @@ export async function submitForm(formId: string, raw: z.input<typeof publicSubmi
           phoneNormalized: normalizePhone(phone),
           account,
           source,
+          campaignCode,
           notes: notes || null,
           currency: form.company.baseCurrency,
           score,

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SubjectActivity } from "@/components/crm/activity-cards";
 import { ActionButton, AiActions } from "@/components/crm/kit";
 import { DealForm, DealStageControls } from "@/components/crm/record-forms";
+import { DealProposalsPanel, EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
 import { CrmFrame, DEAL_STATUS_TONE, Facts, SubjectTasks, TagList, crmContext } from "@/components/crm/shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -124,8 +125,11 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
             </CardBody>
           </Card>
           <SubjectActivity subjectType="deal" subjectId={d.id} owners={owners} active={active} defaultAssignee={d.ownerId} />
+          <EmailHistoryPanel subjectType="deal" subjectId={d.id} />
         </div>
         <div className="grid min-w-0 content-start gap-4">
+          <DealProposalsPanel dealId={d.id} active={active} />
+          <SalesTasksPanel subjectType="deal" subjectId={d.id} active={active} defaultAssignee={d.ownerId} />
           <SubjectTasks
             subjectType="crm_deal"
             subjectId={d.id}

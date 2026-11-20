@@ -26,3 +26,24 @@ export async function requestCfoInsights(ctx: RequestContext, organizationId: st
 export async function listInsightTasks(ctx: RequestContext, organizationId: string, companyId: string) {
   return listSubjectTasks(ctx, organizationId, companyId, INSIGHTS_SUBJECT, companyId, 5);
 }
+
+/** "Ask the AI CFO": free-form questions answered by an ai_cfo task from the real books. */
+export const QUESTION_SUBJECT = "finance_question";
+
+export const askInput = z.object({ question: z.string().trim().min(3).max(2000) });
+
+export async function askCfo(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof askInput>) {
+  const input = askInput.parse(raw);
+  await authorize(ctx, organizationId, companyId, "finance.read");
+  const instructions = [
+    `A member of the team asks: "${input.question}"`,
+    "Answer from the company's real financial records only. Use read_financial_summary, read_cashflow_forecast, read_payables, read_budget_status, read_invoices, read_expenses or detect_expense_anomalies as the question needs, and quote the figures (with the currency) your answer rests on.",
+    "Be concise: a direct answer first, then the supporting numbers and, when useful, one to three recommendations. If the records can't answer the question, say what is missing. Do not create or change records unless the question explicitly asks for it.",
+  ].join("\n\n");
+  const title = `AI CFO: ${input.question.length > 80 ? `${input.question.slice(0, 77)}…` : input.question}`;
+  return createTask(ctx, organizationId, companyId, { profile: "ai_cfo", title, instructions, subject: { type: QUESTION_SUBJECT, id: companyId } });
+}
+
+export async function listQuestionTasks(ctx: RequestContext, organizationId: string, companyId: string) {
+  return listSubjectTasks(ctx, organizationId, companyId, QUESTION_SUBJECT, companyId, 5);
+}

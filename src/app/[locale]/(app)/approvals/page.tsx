@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ApprovalList } from "@/components/approvals/approval-list";
+import { WorkflowApprovalsPanel } from "@/components/automation/approvals-panel";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
@@ -34,11 +35,14 @@ export default async function ApprovalsPage() {
     );
   }
   const chain = await companyChain(db(), org.id, company.id);
+  // Workflow approval gates addressed to this viewer (named approvers may lack approvals.read).
+  const workflowApprovals = <WorkflowApprovalsPanel ctx={viewer.ctx} locale={locale} organizationId={org.id} companyId={company.id} timezone={company.timezone} />;
   const [canRead, canDecide] = await Promise.all([can(viewer.ctx, "approvals.read", chain), can(viewer.ctx, "approvals.decide", chain)]);
   if (!canRead) {
     return (
       <div className="mx-auto grid max-w-[1400px] gap-4">
         {header}
+        {workflowApprovals}
         <Notice tone="warning">{t("errors.forbidden")}</Notice>
       </div>
     );
@@ -52,6 +56,7 @@ export default async function ApprovalsPage() {
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
+      {workflowApprovals}
       <Card>
         <CardHeader title={t("approvals.pending")} description={t("approvals.count", { count: pending.length })} />
         {pending.length ? <ApprovalList approvals={pending} {...common} /> : <p className="p-4 text-muted-foreground">{t("approvals.nonePending")}</p>}

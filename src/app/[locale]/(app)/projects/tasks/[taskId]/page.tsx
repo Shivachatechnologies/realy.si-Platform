@@ -16,6 +16,8 @@ import { db } from "@/server/core/db";
 import { AppError } from "@/server/core/errors";
 import { listPeople } from "@/server/modules/work/shared";
 import { getWorkTask } from "@/server/modules/work/tasks";
+import { DiscussInChannel } from "@/components/comms/task-discussion";
+import { discussionChannels, getTaskDiscussion } from "@/server/modules/comms/discussions";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("work.task.detail") };
@@ -45,6 +47,12 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/projects
         })
       : [],
   ]);
+  // Communication link (optional: hidden when the viewer can't use Communication).
+  const [discussionState, discussChannels] = await Promise.all([
+    getTaskDiscussion(viewer.ctx, org.id, company.id, task.id).catch(() => undefined),
+    discussionChannels(viewer.ctx, org.id, company.id).catch(() => []),
+  ]);
+  const commsBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
   const day = (d: Date | null) => (d ? formatDate(d, locale, "UTC") : "—");
   const hours = (m: number) => t("work.hoursValue", { hours: Math.round((m / 60) * 10) / 10 });
@@ -280,7 +288,15 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/projects
       </div>
 
       <Card>
-        <CardHeader title={t("work.comment.title")} description={t("work.comment.count", { count: task.comments.length })} />
+        <CardHeader
+          title={t("work.comment.title")}
+          description={t("work.comment.count", { count: task.comments.length })}
+          actions={
+            discussionState ? (
+              <DiscussInChannel base={commsBase} locale={locale} taskId={task.id} discussion={discussionState.discussion} channels={discussChannels} canPost={discussionState.canPost} />
+            ) : null
+          }
+        />
         <CardBody className="grid gap-4">
           {task.comments.length ? (
             <ol className="grid gap-3 border-s ps-4">

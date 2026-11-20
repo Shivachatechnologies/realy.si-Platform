@@ -17,6 +17,8 @@ export interface TxnOptions {
   categories: (Option & { kind: "INCOME" | "EXPENSE" })[];
   counterparties: (Option & { type: string })[];
   costCenters: Option[];
+  /** Projects for project costing (optional). */
+  projects?: Option[];
 }
 
 export interface TxnValues {
@@ -28,6 +30,7 @@ export interface TxnValues {
   categoryId: string;
   accountId: string;
   departmentId: string;
+  projectId?: string;
   description: string;
   reference: string;
   notes: string;
@@ -44,8 +47,16 @@ export async function fileToBase64(file: File): Promise<string> {
 }
 
 async function upload(base: string, id: string, file: File) {
-  await api(`${base}/transactions/${id}/attachment`, { method: "PUT", body: { fileName: file.name, contentType: file.type || "application/octet-stream", dataBase64: await fileToBase64(file) } });
+  await uploadTo(`${base}/transactions/${id}/attachment`, file);
 }
+
+/** PUT a file (base64 JSON) to an attachment endpoint. */
+export async function uploadTo(href: string, file: File) {
+  await api(href, { method: "PUT", body: { fileName: file.name, contentType: file.type || "application/octet-stream", dataBase64: await fileToBase64(file) } });
+}
+
+export const ATTACHMENT_ACCEPT = ACCEPT;
+export const MAX_ATTACHMENT_BYTES = MAX_BYTES;
 
 /** Create or edit a transaction (income / expense / transfer) with an optional receipt attachment. */
 export function TransactionForm({ base, locale, options, initial, id, readOnlyMoney }: { base: string; locale: string; options: TxnOptions; initial?: Partial<TxnValues>; id?: string; readOnlyMoney?: boolean }) {
@@ -60,6 +71,7 @@ export function TransactionForm({ base, locale, options, initial, id, readOnlyMo
     categoryId: "",
     accountId: "",
     departmentId: "",
+    projectId: "",
     description: "",
     reference: "",
     notes: "",
@@ -89,6 +101,7 @@ export function TransactionForm({ base, locale, options, initial, id, readOnlyMo
         categoryId: v.type === "TRANSFER" ? null : v.categoryId || null,
         accountId,
         departmentId: v.departmentId || null,
+        projectId: v.type === "TRANSFER" ? null : v.projectId || null,
         reference: v.reference || null,
         notes: v.notes || null,
       };
@@ -182,6 +195,18 @@ export function TransactionForm({ base, locale, options, initial, id, readOnlyMo
           ))}
         </Select>
       </Field>
+      {options.projects?.length && v.type !== "TRANSFER" ? (
+        <Field label={t("finance.fields.project")} htmlFor="tx-project">
+          <Select id="tx-project" value={v.projectId ?? ""} onChange={set("projectId")}>
+            <option value="">{t("common.none")}</option>
+            {options.projects.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      ) : null}
       <Field label={t("finance.fields.description")} htmlFor="tx-desc" className="sm:col-span-2">
         <Input id="tx-desc" required maxLength={300} value={v.description} onChange={set("description")} />
       </Field>
@@ -211,11 +236,11 @@ export function TransactionForm({ base, locale, options, initial, id, readOnlyMo
 }
 
 /** Upload / replace / remove the receipt of a transaction. */
-export function AttachmentControl({ base, id, attachment, canManage }: { base: string; id: string; attachment: { fileName: string; sizeBytes: number } | null; canManage: boolean }) {
+export function AttachmentControl({ base, id, attachment, canManage, href: hrefProp, canDelete = true }: { base: string; id: string; attachment: { fileName: string; sizeBytes: number } | null; canManage: boolean; href?: string; canDelete?: boolean }) {
   const t = useT();
   const { busy, error, run } = useAction();
   const [tooLarge, setTooLarge] = useState(false);
-  const href = `${base}/transactions/${id}/attachment`;
+  const href = hrefProp ?? `${base}/transactions/${id}/attachment`;
   return (
     <div className="grid gap-2">
       {attachment ? (
@@ -225,7 +250,7 @@ export function AttachmentControl({ base, id, attachment, canManage }: { base: s
             {attachment.fileName}
           </a>
           <span className="text-xs text-muted-foreground">{Math.ceil(attachment.sizeBytes / 1024)} KB</span>
-          {canManage ? (
+          {canManage && canDelete ? (
             <Button size="sm" variant="ghost" disabled={busy} aria-label={t("finance.transactions.removeAttachment")} onClick={() => void run(() => api(href, { method: "DELETE" }))}>
               <Trash2 aria-hidden />
             </Button>
@@ -248,7 +273,7 @@ export function AttachmentControl({ base, id, attachment, canManage }: { base: s
               e.target.value = "";
               if (!f) return;
               setTooLarge(f.size > MAX_BYTES);
-              if (f.size <= MAX_BYTES) void run(() => upload(base, id, f));
+              if (f.size <= MAX_BYTES) void run(() => uploadTo(href, f));
             }}
           />
         </label>

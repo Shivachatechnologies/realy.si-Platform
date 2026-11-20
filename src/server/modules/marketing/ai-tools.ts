@@ -7,6 +7,7 @@ import { CONTENT_STATUSES, CONTENT_TYPES, createContent, listContent } from "./c
 import { createPost, listAccounts } from "./social";
 import { getProject, seoReport } from "./seo";
 import { authorize, CHANNELS } from "./common";
+import { brandContext, getBrandKit } from "./brand";
 
 const money = (m: bigint | null, currency: string) => (m == null ? "n/a" : `${(Number(m) / 100).toFixed(2)} ${currency}`);
 const pct = (v: number | null) => (v == null ? "n/a" : `${v.toFixed(1)}%`);
@@ -14,6 +15,29 @@ const companyCurrency = async (companyId: string) => (await db().company.findUni
 
 /** AI tools of the marketing module, registered in src/server/modules/tools/modules.ts. Use `def` from tools/define. */
 export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
+  read_brand_kit: def({
+    name: "read_brand_kit",
+    version: 1,
+    description: "Returns the company's brand kit: brand name, tagline, voice & tone, messaging pillars, preferred and banned words, audience personas, colors, logos and fonts. Read it before writing any marketing content.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 10_000,
+    summarize: () => "Read the brand kit",
+    async execute(_input, { ctx, organizationId, companyId }) {
+      const kit = await getBrandKit(ctx, organizationId, companyId);
+      if (!kit) return { content: "The company has no brand kit yet. Use a neutral, professional voice and the company's documents." };
+      const visual = [
+        kit.colors.length ? `Colors: ${kit.colors.map((c) => `${c.name} ${c.hex}`).join(", ")}` : null,
+        kit.headingFont || kit.bodyFont ? `Fonts: headings ${kit.headingFont ?? "n/a"}, body ${kit.bodyFont ?? "n/a"}` : null,
+        kit.logoUrl ? `Logo: ${kit.logoUrl}` : null,
+      ].filter(Boolean);
+      return { content: [brandContext(kit), ...visual].join("\n"), records: [`marketing_brand_kit:${kit.id}`] };
+    },
+  }),
+
   read_campaigns: def({
     name: "read_campaigns",
     version: 1,

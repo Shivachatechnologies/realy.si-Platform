@@ -6,8 +6,8 @@ import { EventChip, NewEventButton } from "@/components/comms/calendar";
 import { hrefWith } from "@/components/comms/bits";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
-import { formatDate, formatDateTime } from "@/i18n/format";
-import { calendarRange } from "@/server/modules/comms/calendar";
+import { formatDate, formatDateTime, formatMoney } from "@/i18n/format";
+import { CALENDAR_LAYERS, calendarRange, type CalendarLayer } from "@/server/modules/comms/calendar";
 import { connectionStatuses } from "@/server/modules/comms/connections-bridge";
 import { zonedParts, zonedTime } from "@/server/modules/comms/time";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,8 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
   const sp = await searchParams;
   const view = sp.view === "week" ? "week" : "month";
   const mine = sp.mine === "1";
+  const hidden = new Set((typeof sp.hide === "string" ? sp.hide : "").split(",").filter((x): x is CalendarLayer => (CALENDAR_LAYERS as readonly string[]).includes(x)));
+  const layers = CALENDAR_LAYERS.filter((l) => !hidden.has(l));
   const today = zonedParts(tz, new Date());
   const anchorRaw = typeof sp.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : ymd(today.year, today.month, today.day);
   const [ay, am, ad] = anchorRaw.split("-").map(Number) as [number, number, number];
@@ -42,15 +44,23 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
   const from = zonedTime(tz, ...(cells[0]!.key.split("-").map(Number) as [number, number, number]), 0, 0);
   const lastParts = cells[cells.length - 1]!.key.split("-").map(Number) as [number, number, number];
   const to = new Date(zonedTime(tz, ...lastParts, 0, 0).getTime() + DAY);
-  const [data, conns] = await Promise.all([calendarRange(viewer.ctx, org.id, company.id, from, to, { mine }), connectionStatuses(org.id, company.id)]);
-  const byDay = new Map<string, { kind: "meeting" | "event"; start: Date; node: React.ReactNode }[]>();
+  const [data, conns] = await Promise.all([calendarRange(viewer.ctx, org.id, company.id, from, to, { mine, layers }), connectionStatuses(org.id, company.id)]);
+  type Item = { kind: "meeting" | "event" | "leave" | "holiday" | "crm"; start: Date; node: React.ReactNode };
+  const byDay = new Map<string, Item[]>();
+  /** Date-only rows (@db.Date, UTC midnight): place by their calendar date, not by time zone. */
+  const addDays = (startDay: Date, endDay: Date, item: Item) => {
+    for (let d = startDay.getTime(), n = 0; d <= endDay.getTime() && n < 62; d += DAY, n++) {
+      const key = new Date(d).toISOString().slice(0, 10);
+      if (cells.some((c) => c.key === key)) byDay.set(key, [...(byDay.get(key) ?? []), item]);
+    }
+  };
   const bounds = cells.map((c) => {
     const [y, m, d] = c.key.split("-").map(Number) as [number, number, number];
     const start = zonedTime(tz, y, m, d, 0, 0);
     const next = zonedParts(tz, new Date(start.getTime() + 36 * 3_600_000));
     return { key: c.key, start, end: zonedTime(tz, next.year, next.month, next.day, 0, 0) };
   });
-  const add = (start: Date, end: Date, item: { kind: "meeting" | "event"; start: Date; node: React.ReactNode }) => {
+  const add = (start: Date, end: Date, item: Item) => {
     for (const b of bounds) {
       const overlaps = start < b.end && (end > b.start || (+end === +start && start >= b.start));
       if (overlaps) byDay.set(b.key, [...(byDay.get(b.key) ?? []), item]);
@@ -81,7 +91,61 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
       ),
     });
   }
+  for (const h of data.holidays) {
+    addDays(h.date, h.date, {
+      kind: "holiday",
+      start: h.date,
+      node: (
+        <span key={`h-${h.id}`} className="block truncate rounded-sm bg-success/15 px-1 text-[11px] leading-5" title={h.name}>
+          {h.name}
+        </span>
+      ),
+    });
+  }
+  for (const l of data.leave) {
+    addDays(l.startDate, l.endDate, {
+      kind: "leave",
+      start: l.startDate,
+      node: (
+        <span key={`l-${l.id}`} className="block truncate rounded-sm bg-accent/60 px-1 text-[11px] leading-5" title={`${l.name} · ${l.type}`} style={l.color ? { borderInlineStart: `3px solid ${l.color}` } : undefined}>
+          {t("communication.calendar.onLeave", { name: l.own ? t("communication.calendar.you") : l.name })}
+        </span>
+      ),
+    });
+  }
+  for (const f of data.followUps) {
+    add(f.dueAt, f.dueAt, {
+      kind: "crm",
+      start: f.dueAt,
+      node: (
+        <Link key={`f-${f.id}`} href={`/${locale}${f.href}`} className="block truncate rounded-sm bg-danger/10 px-1 text-[11px] leading-5 hover:bg-danger/20" title={f.note}>
+          {formatDate(f.dueAt, locale, tz, { timeStyle: "short" })} {f.label ? `${f.label}: ` : ""}
+          {f.note}
+        </Link>
+      ),
+    });
+  }
+  for (const d of data.deals) {
+    if (!d.expectedCloseDate) continue;
+    addDays(d.expectedCloseDate, d.expectedCloseDate, {
+      kind: "crm",
+      start: d.expectedCloseDate,
+      node: (
+        <Link key={`d-${d.id}`} href={`/${locale}/crm/deals/${d.id}`} className="block truncate rounded-sm bg-danger/10 px-1 text-[11px] leading-5 hover:bg-danger/20" title={formatMoney({ amountMinor: d.amountMinor, currency: d.currency }, locale)}>
+          {t("communication.calendar.dealCloses", { name: d.name })}
+        </Link>
+      ),
+    });
+  }
   const path = `/${locale}/communication/calendar`;
+  const toggleHref = (l: CalendarLayer) => {
+    const next = new Set(hidden);
+    if (next.has(l)) next.delete(l);
+    else next.add(l);
+    return hrefWith(path, sp, { hide: [...next].join(",") || undefined });
+  };
+  const LAYER_SWATCH: Record<CalendarLayer, string> = { meetings: "bg-primary/40", events: "bg-warning/40", leave: "bg-accent", holidays: "bg-success/40", crm: "bg-danger/30" };
+  const availableLayers = CALENDAR_LAYERS.filter((l) => l !== "crm" || data.layers.crm || hidden.has("crm"));
   const shift = (n: number) => {
     if (view === "week") {
       const pp = zonedParts(tz, new Date(zonedTime(tz, ay, am, ad, 12).getTime() + n * 7 * DAY));
@@ -163,13 +227,14 @@ export default async function CalendarPage({ searchParams }: PageProps<"/[locale
           })}
         </div>
       </div>
-      <div className="flex flex-wrap gap-4 px-4 py-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-2 rounded-sm bg-primary/40" /> {t("communication.calendar.legendMeetings")}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-2 rounded-sm bg-warning/40" /> {t("communication.calendar.legendEvents")}
-        </span>
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2 text-xs" role="group" aria-label={t("communication.calendar.layers")}>
+        <span className="text-muted-foreground">{t("communication.calendar.layers")}:</span>
+        {availableLayers.map((l) => (
+          <Link key={l} href={toggleHref(l)} aria-pressed={!hidden.has(l)} className={cn("flex items-center gap-1 rounded-md border px-2 py-1", hidden.has(l) ? "text-muted-foreground line-through opacity-70" : "hover:bg-muted")}>
+            <span className={cn("inline-block size-2 rounded-sm", LAYER_SWATCH[l])} aria-hidden /> {t(`communication.calendar.layer.${l}`)}
+          </Link>
+        ))}
+        {!hidden.has("leave") ? <span className="text-muted-foreground">· {t(data.layers.leaveScope === "all" ? "communication.calendar.leaveAll" : "communication.calendar.leaveOwn")}</span> : null}
       </div>
     </Card>,
   );

@@ -59,6 +59,7 @@ model Workflow {
   company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   versions WorkflowVersion[]
   runs     WorkflowRun[]
+  counters WorkflowCounter[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -111,6 +112,8 @@ model WorkflowRun {
   startedById    String?           @map("started_by_id") @db.Uuid
   startedAt      DateTime?         @map("started_at") @db.Timestamptz(3)
   finishedAt     DateTime?         @map("finished_at") @db.Timestamptz(3)
+  /// Set when the run failed permanently (dead-letter list); cleared by a retry or a dismissal.
+  deadLetteredAt DateTime?         @map("dead_lettered_at") @db.Timestamptz(3)
   createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -125,6 +128,7 @@ model WorkflowRun {
   @@index([organizationId, companyId, createdAt])
   @@index([status, nextRunAt])
   @@index([workflowId, createdAt])
+  @@index([organizationId, companyId, deadLetteredAt])
   @@map("workflow_runs")
 }
 
@@ -152,25 +156,55 @@ model WorkflowRunStep {
 
 /// A "request approval" step waiting for a person's decision on /workflows/approvals.
 model WorkflowApprovalRequest {
-  id             String                 @id @default(uuid(7)) @db.Uuid
-  organizationId String                 @map("organization_id") @db.Uuid
-  companyId      String                 @map("company_id") @db.Uuid
-  runId          String                 @map("run_id") @db.Uuid
-  stepId         String                 @map("step_id")
-  title          String
-  message        String?
-  /// Who may decide (empty: anyone with workflows.execute).
-  approverIds    String[]               @default([]) @map("approver_ids")
-  status         WorkflowApprovalStatus @default(PENDING)
-  decidedById    String?                @map("decided_by_id") @db.Uuid
-  decidedAt      DateTime?              @map("decided_at") @db.Timestamptz(3)
-  note           String?
-  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  id                 String                 @id @default(uuid(7)) @db.Uuid
+  organizationId     String                 @map("organization_id") @db.Uuid
+  companyId          String                 @map("company_id") @db.Uuid
+  runId              String                 @map("run_id") @db.Uuid
+  stepId             String                 @map("step_id")
+  title              String
+  message            String?
+  /// Who may decide (empty: anyone with workflows.execute). Resolved when the request is made.
+  approverIds        String[]               @default([]) @map("approver_ids")
+  /// How approvers were chosen: "users" | "permission" | "record_owner".
+  approverMode       String                 @default("users") @map("approver_mode")
+  /// Permission whose holders approve (approverMode "permission").
+  approverPermission String?                @map("approver_permission")
+  /// Decision deadline; past it the request is auto-rejected or escalated (timeoutAction).
+  expiresAt          DateTime?              @map("expires_at") @db.Timestamptz(3)
+  /// "reject" | "escalate" (null: no timeout).
+  timeoutAction      String?                @map("timeout_action")
+  timeoutHours       Int?                   @map("timeout_hours")
+  /// People added as approvers when the request escalates.
+  escalateToIds      String[]               @default([]) @map("escalate_to_ids")
+  escalatedAt        DateTime?              @map("escalated_at") @db.Timestamptz(3)
+  status             WorkflowApprovalStatus @default(PENDING)
+  decidedById        String?                @map("decided_by_id") @db.Uuid
+  decidedAt          DateTime?              @map("decided_at") @db.Timestamptz(3)
+  note               String?
+  createdAt          DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   run     WorkflowRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
 
   @@unique([runId, stepId])
   @@index([organizationId, companyId, status])
+  @@index([status, expiresAt])
   @@map("workflow_approval_requests")
+}
+
+/// Named counters of a workflow (round-robin assignment cursors).
+model WorkflowCounter {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  workflowId     String   @map("workflow_id") @db.Uuid
+  key            String
+  value          Int      @default(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([workflowId, key])
+  @@map("workflow_counters")
 }

@@ -10,8 +10,22 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, MAX_PDF_BYTES, mimeTypeFor } from "./extract";
 import { extractPdfText } from "./pdf";
 
+/** Source types of documents indexed from other modules (brain/sources.ts); "upload" = added in Company Brain. */
+export const SOURCE_TYPES = ["support_kb_article", "hr_policy", "ops_process", "product_release", "product_feature"] as const;
+export type BrainSourceType = (typeof SOURCE_TYPES)[number];
+
+/** Module/area tags: lowercase words, digits, "-" and "_" (at most 10 per document). */
+export const tagsInput = z
+  .array(z.string().trim().toLowerCase().max(40).regex(/^[\p{L}\p{N}][\p{L}\p{N} _-]*$/u))
+  .max(10)
+  .transform((tags) => [...new Set(tags.filter(Boolean))]);
+
+export const normalizeTags = (tags: string[]) => tagsInput.parse(tags.map((t) => t.trim().toLowerCase().replace(/[^\p{L}\p{N} _-]+/gu, " ").replace(/^[^\p{L}\p{N}]+/u, "").trim().slice(0, 40)).filter(Boolean).slice(0, 10));
+
 export const ingestDocumentInput = z.object({
   title: z.string().trim().max(200).optional(),
+  departmentId: z.string().uuid().nullish(),
+  tags: tagsInput.optional(),
   // Display only: the server derives the type from it and never uses it as a path.
   filename: z.string().trim().min(1).max(255).optional(),
   /** Text and Markdown: the file's text. */
@@ -27,6 +41,8 @@ export const ingestDocumentInput = z.object({
 export const searchInput = z.object({
   q: z.string().trim().max(200).default(""),
   limit: z.coerce.number().int().min(1).max(25).default(10),
+  departmentId: z.string().uuid().optional().catch(undefined),
+  tag: z.string().trim().toLowerCase().max(40).optional().catch(undefined),
 });
 
 /** Metadata returned for documents everywhere (never file paths; text only via passages). */
@@ -39,6 +55,12 @@ const documentFields = {
   sizeBytes: true,
   contentSha256: true,
   status: true,
+  departmentId: true,
+  department: { select: { id: true, name: true } },
+  tags: true,
+  sourceType: true,
+  sourceId: true,
+  sourceUpdatedAt: true,
   createdById: true,
   createdAt: true,
   updatedAt: true,
@@ -46,6 +68,43 @@ const documentFields = {
 } satisfies Prisma.BrainDocumentSelect;
 
 const isUuid = (v: string) => z.string().uuid().safeParse(v).success;
+
+export const updateDocumentInput = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  departmentId: z.string().uuid().nullable().optional(),
+  tags: tagsInput.optional(),
+});
+
+export const documentFilters = z.object({
+  q: z.string().trim().max(200).optional().catch(undefined),
+  departmentId: z.string().uuid().optional().catch(undefined),
+  tag: z.string().trim().toLowerCase().max(40).optional().catch(undefined),
+  source: z.enum(["upload", ...SOURCE_TYPES]).optional().catch(undefined),
+  sort: z.enum(["newest", "oldest", "title"]).default("newest").catch("newest"),
+});
+export type DocumentFilters = z.infer<typeof documentFilters>;
+
+/** The department must belong to the same company (and not be archived when newly assigned). */
+export async function requireDepartment(tx: Tx | ReturnType<typeof db>, organizationId: string, companyId: string, departmentId: string) {
+  const d = await tx.department.findFirst({ where: { id: departmentId, organizationId, companyId, archivedAt: null }, select: { id: true } });
+  if (!d) throw notFound("Department");
+}
+
+/** Active departments of a company, for filters and pickers. */
+export async function listDepartments(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "brain.read");
+  return db().department.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+}
+
+/** Distinct tags in use in a company's documents (for the tag filter). */
+export async function listTags(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "brain.read");
+  const rows = await db().$queryRaw<{ tag: string; n: bigint }[]>`
+    SELECT tag, COUNT(*) AS n FROM brain_documents, unnest(tags) AS tag
+     WHERE organization_id = ${organizationId}::uuid AND company_id = ${companyId}::uuid
+     GROUP BY tag ORDER BY n DESC, tag ASC LIMIT 100`;
+  return rows.map((r) => ({ tag: r.tag, count: Number(r.n) }));
+}
 
 async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "brain.read" | "brain.manage", tx?: Tx) {
   // Unknown, foreign or invisible companies resolve to not_found.
@@ -86,6 +145,7 @@ export async function ingestDocument(ctx: RequestContext, organizationId: string
   try {
     return await transaction(async (tx) => {
       await authorize(ctx, organizationId, companyId, "brain.manage", tx);
+      if (input.departmentId) await requireDepartment(tx, organizationId, companyId, input.departmentId);
       const doc = await tx.brainDocument.create({
         data: {
           organizationId,
@@ -96,6 +156,8 @@ export async function ingestDocument(ctx: RequestContext, organizationId: string
           sizeBytes,
           contentSha256: sha,
           status: "READY",
+          departmentId: input.departmentId ?? null,
+          tags: input.tags ?? [],
           createdById: ctx.actor.id ?? organizationId,
         },
       });
@@ -113,11 +175,40 @@ export async function ingestDocument(ctx: RequestContext, organizationId: string
   }
 }
 
-export async function listDocuments(ctx: RequestContext, organizationId: string, companyId: string, rawPage: Partial<PageInput> = {}) {
+export async function listDocuments(ctx: RequestContext, organizationId: string, companyId: string, rawPage: Partial<PageInput> & Record<string, unknown> = {}) {
   const page = pageInput.parse(rawPage);
+  const f = documentFilters.parse(rawPage);
   await authorize(ctx, organizationId, companyId, "brain.read");
-  const rows = await db().brainDocument.findMany({ where: { organizationId, companyId }, orderBy: { id: "desc" }, select: documentFields, ...prismaPage(page) });
+  const where: Prisma.BrainDocumentWhereInput = {
+    organizationId,
+    companyId,
+    ...(f.q ? { OR: [{ title: { contains: f.q, mode: "insensitive" } }, { filename: { contains: f.q, mode: "insensitive" } }] } : {}),
+    ...(f.departmentId ? { departmentId: f.departmentId } : {}),
+    ...(f.tag ? { tags: { has: f.tag } } : {}),
+    ...(f.source === "upload" ? { sourceType: null } : f.source ? { sourceType: f.source } : {}),
+  };
+  const orderBy: Prisma.BrainDocumentOrderByWithRelationInput[] = f.sort === "title" ? [{ title: "asc" }, { id: "asc" }] : [{ id: f.sort === "oldest" ? "asc" : "desc" }];
+  const rows = await db().brainDocument.findMany({ where, orderBy, select: documentFields, ...prismaPage(page) });
   return toPage(rows.map(({ _count, ...d }) => ({ ...d, passages: _count.chunks })), page);
+}
+
+/** Edit a document's title, department and tags. Documents indexed from another module keep their source's title. */
+export async function updateDocument(ctx: RequestContext, organizationId: string, companyId: string, documentId: string, raw: z.input<typeof updateDocumentInput>) {
+  const input = updateDocumentInput.parse(raw);
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "brain.manage", tx);
+    if (!isUuid(documentId)) throw notFound("Document");
+    const before = await tx.brainDocument.findFirst({ where: { id: documentId, organizationId, companyId }, select: documentFields });
+    if (!before) throw notFound("Document");
+    if (input.departmentId) await requireDepartment(tx, organizationId, companyId, input.departmentId);
+    const { _count, ...after } = await tx.brainDocument.update({
+      where: { id: documentId },
+      data: { title: before.sourceType ? undefined : input.title, departmentId: input.departmentId, tags: input.tags },
+      select: documentFields,
+    });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "brain.document.updated", resourceType: "brain_document", resourceId: documentId, oldValue: { ...before, _count: undefined }, newValue: after });
+    return { ...after, passages: _count.chunks };
+  });
 }
 
 /** A document with its passages, in order. Passage n (1-based) is the citation anchor. */
@@ -139,6 +230,7 @@ export async function deleteDocument(ctx: RequestContext, organizationId: string
     if (!isUuid(documentId)) throw notFound("Document");
     const doc = await tx.brainDocument.findFirst({ where: { id: documentId, organizationId, companyId }, select: documentFields });
     if (!doc) throw notFound("Document");
+    if (doc.sourceType) throw conflict("This document is indexed from another module; unpublish or archive it there to remove it", { reason: "brain_source_managed" });
     await tx.brainDocument.delete({ where: { id: documentId } });
     const { _count, ...meta } = doc;
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "brain.document.deleted", resourceType: "brain_document", resourceId: documentId, oldValue: { ...meta, passages: _count.chunks } });
@@ -171,7 +263,7 @@ function segments(headline: string): SnippetSegment[] {
  * OR). Every result is a stored passage with its source document — citations are never generated.
  */
 export async function searchDocuments(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof searchInput>) {
-  const { q, limit } = searchInput.parse(raw);
+  const { q, limit, departmentId, tag } = searchInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "brain.read");
   if (!q) return { query: q, results: [] };
   // All values are bound parameters; the GIN index is on to_tsvector('english', text).
@@ -187,6 +279,8 @@ export async function searchDocuments(ctx: RequestContext, organizationId: strin
      WHERE c.company_id = ${companyId}::uuid
        AND d.organization_id = ${organizationId}::uuid
        AND d.status = 'READY'
+       AND (${departmentId ?? null}::uuid IS NULL OR d.department_id = ${departmentId ?? null}::uuid)
+       AND (${tag ?? null}::text IS NULL OR ${tag ?? null}::text = ANY(d.tags))
        AND to_tsvector('english', c.text) @@ query
      ORDER BY rank DESC, c.document_id DESC, c.ordinal ASC
      LIMIT ${limit}`;

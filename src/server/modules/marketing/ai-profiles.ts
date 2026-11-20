@@ -1,8 +1,8 @@
 import type { AgentProfile } from "@/server/modules/agents/profile-types";
 
-const CORE = ["search_company_brain", "read_company_graph", "read_objectives"] as const;
+const CORE = ["search_company_brain", "read_company_graph", "read_objectives", "read_brand_kit"] as const;
 const READS = ["read_campaigns", "read_campaign", "read_content_library", "read_seo_project", "read_marketing_kpis"] as const;
-const GROUND = "Ground every claim about the product, customers and results in the company's documents and the marketing data your tools return; never invent customers, numbers, rankings or results, and say plainly when data is missing.";
+const GROUND = "Before writing any copy, call read_brand_kit and follow the brand's voice, pillars, personas and word lists. Ground every claim about the product, customers and results in the company's documents and the marketing data your tools return; never invent customers, numbers, rankings or results, and say plainly when data is missing.";
 
 /** AI employee role profiles of the marketing module (data only — no imports besides types). Registered in agents/profiles.ts. */
 export const MARKETING_PROFILES: AgentProfile[] = [

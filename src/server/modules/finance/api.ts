@@ -9,7 +9,14 @@ import * as B from "./billing";
 import * as L from "./ledger";
 import * as S from "./setup";
 import * as T from "./transactions";
-import { insightsInput, requestCfoInsights } from "./insights";
+import { askCfo, askInput, insightsInput, requestCfoInsights } from "./insights";
+import * as AP from "./payables";
+import * as AR from "./approval-rules";
+import * as AQ from "./approvals";
+import * as BU from "./budgets";
+import * as EC from "./expense-claims";
+import * as PC from "./project-costs";
+import { attachmentResponse } from "./doc-attachments";
 import { parseRange } from "./common";
 
 /**
@@ -145,6 +152,51 @@ add("POST", "credit-notes/:id/apply", async ({ req, ctx, o, c, p }) => B.applyCr
 add("POST", "credit-notes/:id/void", async ({ ctx, o, c, p }) => B.voidCreditNote(ctx, o, c, p.id!));
 add("GET", "receivables", async ({ ctx, o, c }) => B.receivablesAging(ctx, o, c));
 
+
+// Accounts payable: vendor bills, bill payments, aging.
+const attachmentBytes = { maxBodyBytes: Math.ceil((T.MAX_ATTACHMENT_BYTES * 4) / 3) + 16 * 1024 };
+add("GET", "bills", async ({ ctx, o, c, q }) => AP.listBills(ctx, o, c, AP.parseBillFilters(q)));
+add("POST", "bills", async ({ req, ctx, o, c }) => AP.createBill(ctx, o, c, await input(req, AP.billInput)), { maxBodyBytes: 256 * 1024 });
+add("GET", "bills/:id", async ({ ctx, o, c, p }) => AP.getBill(ctx, o, c, p.id!));
+add("PATCH", "bills/:id", async ({ req, ctx, o, c, p }) => AP.updateBill(ctx, o, c, p.id!, await input(req, AP.updateBillInput)), { maxBodyBytes: 256 * 1024 });
+add("DELETE", "bills/:id", async ({ ctx, o, c, p }) => AP.deleteBill(ctx, o, c, p.id!));
+add("POST", "bills/:id/submit", async ({ ctx, o, c, p }) => AP.submitBill(ctx, o, c, p.id!));
+add("POST", "bills/:id/void", async ({ ctx, o, c, p }) => AP.voidBill(ctx, o, c, p.id!));
+add("POST", "bills/:id/payments", async ({ req, ctx, o, c, p }) => AP.recordBillPayment(ctx, o, c, p.id!, await input(req, AP.billPaymentInput)));
+add("DELETE", "bill-payments/:id", async ({ ctx, o, c, p }) => AP.deleteBillPayment(ctx, o, c, p.id!));
+add("PUT", "bills/:id/attachment", async ({ req, ctx, o, c, p }) => AP.putBillAttachment(ctx, o, c, p.id!, await input(req, T.attachmentInput)), attachmentBytes);
+add("DELETE", "bills/:id/attachment", async ({ ctx, o, c, p }) => AP.deleteBillAttachment(ctx, o, c, p.id!));
+add("GET", "bills/:id/attachment", async ({ ctx, o, c, p }) => attachmentResponse(await AP.getBillAttachment(ctx, o, c, p.id!)));
+add("GET", "payables", async ({ ctx, o, c }) => AP.payablesAging(ctx, o, c));
+
+// Approval workflows and employee expense claims.
+add("GET", "approval-rules", async ({ ctx, o, c }) => ({ data: await AR.listApprovalRules(ctx, o, c) }));
+add("POST", "approval-rules", async ({ req, ctx, o, c }) => AR.createApprovalRule(ctx, o, c, await input(req, AR.approvalRuleInput)));
+add("PATCH", "approval-rules/:id", async ({ req, ctx, o, c, p }) => AR.updateApprovalRule(ctx, o, c, p.id!, await input(req, AR.updateApprovalRuleInput)));
+add("DELETE", "approval-rules/:id", async ({ ctx, o, c, p }) => AR.deleteApprovalRule(ctx, o, c, p.id!));
+add("GET", "approvals", async ({ ctx, o, c, q }) => AQ.listApprovalRequests(ctx, o, c, AQ.parseApprovalFilters(q)));
+add("POST", "approvals/:id/decision", async ({ req, ctx, o, c, p }) => AQ.decideApproval(ctx, o, c, p.id!, await input(req, AQ.decisionInput)));
+const claimSubmit = EC.expenseClaimInput.extend({ receipt: T.attachmentInput.optional() });
+add("GET", "expense-claims", async ({ ctx, o, c, q }) => EC.listExpenseClaims(ctx, o, c, EC.parseClaimFilters(q)));
+add(
+  "POST",
+  "expense-claims",
+  async ({ req, ctx, o, c }) => {
+    const { receipt, ...claim } = await input(req, claimSubmit);
+    return EC.submitExpenseClaim(ctx, o, c, claim, receipt);
+  },
+  attachmentBytes,
+);
+add("GET", "expense-claims/:id", async ({ ctx, o, c, p }) => EC.getExpenseClaim(ctx, o, c, p.id!));
+add("DELETE", "expense-claims/:id", async ({ ctx, o, c, p }) => EC.withdrawExpenseClaim(ctx, o, c, p.id!));
+add("PUT", "expense-claims/:id/receipt", async ({ req, ctx, o, c, p }) => EC.putClaimReceipt(ctx, o, c, p.id!, await input(req, T.attachmentInput)), attachmentBytes);
+add("GET", "expense-claims/:id/receipt", async ({ ctx, o, c, p }) => attachmentResponse(await EC.getClaimReceipt(ctx, o, c, p.id!)));
+
+// Department budgets and project costs.
+add("GET", "department-budgets", async ({ ctx, o, c, q }) => BU.departmentBudgets(ctx, o, c, BU.parseBudgetWindow(q)));
+add("GET", "department-budgets/:id", async ({ ctx, o, c, p, q }) => BU.departmentSpendDetail(ctx, o, c, p.id!, BU.parseBudgetWindow(q)));
+add("GET", "project-costs", async ({ ctx, o, c, q }) => PC.projectCostsReport(ctx, o, c, parseRange(q)));
+
 // Cash flow, scenarios, reports, AI.
 add("GET", "dashboard", async ({ ctx, o, c, q }) => A.financeDashboard(ctx, o, c, parseRange(q)));
 add("GET", "anomalies", async ({ ctx, o, c }) => ({ data: await A.detectExpenseAnomalies(ctx, o, c) }));
@@ -157,6 +209,7 @@ add("PATCH", "scenarios/:id", async ({ req, ctx, o, c, p }) => A.updateScenario(
 add("DELETE", "scenarios/:id", async ({ ctx, o, c, p }) => A.deleteScenario(ctx, o, c, p.id!));
 add("GET", "reports/:report", async ({ ctx, o, c, p, q }) => csv(await A.reportCsv(ctx, o, c, A.parseReport(p.report), parseRange(q)), `${A.parseReport(p.report)}.csv`));
 add("POST", "insights", async ({ req, ctx, o, c }) => requestCfoInsights(ctx, o, c, await input(req, insightsInput)));
+add("POST", "ask", async ({ req, ctx, o, c }) => askCfo(ctx, o, c, await input(req, askInput)));
 
 function match(method: string, path: string[]) {
   for (const e of entries) {

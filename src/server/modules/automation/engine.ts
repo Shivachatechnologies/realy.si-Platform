@@ -8,7 +8,7 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { definitionSchema, evaluateAll, render, type Definition, type EvalScope, type Schedule, type Step } from "./definition";
-import { errorMessage, executeAction, isPermanent, renderAction, type ActionEnv } from "./actions";
+import { AI_TASK_KINDS, errorMessage, executeAction, isPermanent, renderAction, type ActionEnv } from "./actions";
 
 /**
  * Workflow engine.
@@ -213,7 +213,8 @@ export async function processRun(runId: string): Promise<string | null> {
       await finish({ status: "QUEUED", nextRunAt: outcome.at, waitingFor: null, error: outcome.error });
       return "QUEUED";
     case "fail": {
-      await finish({ status: outcome.cancelled ? "CANCELLED" : "FAILED", finishedAt: new Date(), nextRunAt: null, waitingFor: null, error: outcome.error.slice(0, 1000) });
+      // A permanent failure of a real run goes to the dead-letter list until someone retries or dismisses it.
+      await finish({ status: outcome.cancelled ? "CANCELLED" : "FAILED", finishedAt: new Date(), nextRunAt: null, waitingFor: null, error: outcome.error.slice(0, 1000), deadLetteredAt: !outcome.cancelled && !run.isTest ? new Date() : null });
       if (!outcome.cancelled && !run.isTest) {
         await transaction((tx) => notifyUsers(tx, run.organizationId, [run.workflow.ownerId], "automation.run_failed", { title: run.workflow.name, href: `/workflows/runs/${run.id}`, companyId: run.companyId })).catch(() => undefined);
       }
@@ -347,7 +348,7 @@ async function resumeWaiting(s: WalkState, step: Step, stepType: string, output:
     await saveStep(s, step, { status: "FAILED", output: { ...output, approved: false, note: req.note ?? "" }, error: req.status === "REJECTED" ? "Rejected by approver" : "Approval cancelled", finished: true });
     return { kind: "fail", error: req.status === "REJECTED" ? `Step ${step.id}: rejected by approver${req.note ? ` (${req.note})` : ""}` : `Step ${step.id}: approval cancelled`, cancelled: true };
   }
-  if (typeof output.id === "string" && (step.action.kind === "assign_ai_employee" || step.action.kind === "generate_ai_content")) {
+  if (typeof output.id === "string" && AI_TASK_KINDS.includes(step.action.kind)) {
     const task = await db().agentTask.findFirst({ where: { id: output.id, companyId: s.companyId }, select: { status: true, output: true, errorMessage: true } });
     if (!task) return { kind: "fail", error: `Step ${step.id}: AI task not found` };
     if (task.status === "QUEUED" || task.status === "RUNNING") return { kind: "wait", waitingFor: "agent_task", until: new Date(Date.now() + AGENT_POLL_MS) };
@@ -365,6 +366,7 @@ async function resumeWaiting(s: WalkState, step: Step, stepType: string, output:
 
 /** Periodic job: process due queued/waiting runs and recover stale claims. */
 export async function processDueRuns(limit = 25): Promise<number> {
+  await expireApprovals().catch((err) => logger.error({ err: err instanceof Error ? err.message : err }, "workflow approval timeouts failed"));
   const now = new Date();
   const due = await db().workflowRun.findMany({
     where: {
@@ -379,6 +381,40 @@ export async function processDueRuns(limit = 25): Promise<number> {
   });
   let n = 0;
   for (const r of due) if (await processRun(r.id)) n++;
+  return n;
+}
+
+/**
+ * Approval timeouts: a PENDING request past its deadline is auto-rejected ("reject") or, once, escalated ("escalate"):
+ * the escalation approvers are added, notified and get a fresh deadline; a second timeout rejects it.
+ */
+export async function expireApprovals(limit = 50): Promise<number> {
+  const due = await db().workflowApprovalRequest.findMany({
+    where: { status: "PENDING", expiresAt: { lte: new Date() } },
+    take: limit,
+    select: { id: true, organizationId: true, companyId: true, runId: true, title: true, approverIds: true, timeoutAction: true, timeoutHours: true, escalateToIds: true, escalatedAt: true },
+  });
+  let n = 0;
+  for (const r of due) {
+    const escalate = r.timeoutAction === "escalate" && !r.escalatedAt && r.escalateToIds.length > 0;
+    if (escalate) {
+      const approverIds = [...new Set([...r.approverIds, ...r.escalateToIds])];
+      const { count } = await db().workflowApprovalRequest.updateMany({
+        where: { id: r.id, status: "PENDING", escalatedAt: null },
+        data: { approverIds, escalatedAt: new Date(), expiresAt: new Date(Date.now() + (r.timeoutHours ?? 24) * 3_600_000) },
+      });
+      if (count) {
+        n++;
+        await transaction((tx) => notifyUsers(tx, r.organizationId, r.escalateToIds, "automation.approval_escalated", { title: r.title, href: "/workflows/approvals", companyId: r.companyId })).catch(() => undefined);
+      }
+      continue;
+    }
+    const { count } = await db().workflowApprovalRequest.updateMany({ where: { id: r.id, status: "PENDING" }, data: { status: "REJECTED", decidedAt: new Date(), note: "Timed out: no decision before the deadline" } });
+    if (!count) continue;
+    n++;
+    await db().workflowRun.updateMany({ where: { id: r.runId, status: "WAITING" }, data: { status: "QUEUED", nextRunAt: new Date() } });
+    await processRun(r.runId);
+  }
   return n;
 }
 

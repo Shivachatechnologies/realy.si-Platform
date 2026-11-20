@@ -84,7 +84,11 @@ export async function EntityKindPage({ module, kinds }: { module: "people" | "pr
                     const rels = graph.edges.filter((x) => x.fromId === e.id || x.toId === e.id);
                     return (
                       <Tr key={e.id}>
-                        <Td className="font-medium">{e.name}</Td>
+                        <Td className="font-medium">
+                          <Link className="hover:underline" href={`/${locale}/graph/${e.id}`}>
+                            {e.name}
+                          </Link>
+                        </Td>
                         <Td className="max-w-md text-muted-foreground">{e.description ?? "—"}</Td>
                         <Td className="text-sm">
                           {rels.length === 0

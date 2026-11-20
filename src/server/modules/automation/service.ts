@@ -10,7 +10,7 @@ import { grantsAllow, loadGrants, requirePermission } from "@/server/modules/rba
 import { companyChain } from "@/server/modules/rbac/scope";
 import { createTask } from "@/server/modules/agents/service";
 import { currentSlot, createRun, processRun, type TriggerEventData } from "./engine";
-import { EMPTY_DEFINITION, triggerKeyOf, validateDefinition, type Definition } from "./definition";
+import { EMPTY_DEFINITION, flattenSteps, triggerKeyOf, validateDefinition, type Definition } from "./definition";
 import { templateByKey } from "./templates";
 
 type Perm = "workflows.read" | "workflows.manage" | "workflows.execute";
@@ -275,6 +275,11 @@ export async function testRun(ctx: RequestContext, organizationId: string, compa
 export interface RunFilters {
   status?: (typeof RUN_STATUSES)[number];
   workflowId?: string;
+  /** Inclusive day range (YYYY-MM-DD, UTC) on the run's creation time. */
+  from?: string;
+  to?: string;
+  /** Only real (non-test) runs, or only tests. */
+  kind?: "real" | "test";
   cursor?: string;
 }
 
@@ -286,10 +291,32 @@ export function parseRunFilters(raw: Record<string, string | string[] | undefine
   const status = one("status");
   const workflowId = one("workflow");
   const cursor = one("cursor");
+  const dayOf = (k: string) => {
+    const v = one(k);
+    return v && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v)) ? v : undefined;
+  };
+  const kind = one("kind");
   return {
     status: (RUN_STATUSES as readonly string[]).includes(status ?? "") ? (status as RunFilters["status"]) : undefined,
     workflowId: workflowId && isUuid(workflowId) ? workflowId : undefined,
+    from: dayOf("from"),
+    to: dayOf("to"),
+    kind: kind === "real" || kind === "test" ? kind : undefined,
     cursor: cursor && isUuid(cursor) ? cursor : undefined,
+  };
+}
+
+function runWhere(organizationId: string, companyId: string, f: RunFilters): Prisma.WorkflowRunWhereInput {
+  const created: Prisma.DateTimeFilter = {};
+  if (f.from) created.gte = new Date(`${f.from}T00:00:00Z`);
+  if (f.to) created.lt = new Date(new Date(`${f.to}T00:00:00Z`).getTime() + 86_400_000);
+  return {
+    organizationId,
+    companyId,
+    ...(f.status ? { status: f.status } : {}),
+    ...(f.workflowId ? { workflowId: f.workflowId } : {}),
+    ...(f.kind ? { isTest: f.kind === "test" } : {}),
+    ...(f.from || f.to ? { createdAt: created } : {}),
   };
 }
 
@@ -297,9 +324,25 @@ export async function listRuns(ctx: RequestContext, organizationId: string, comp
   await authorizeWorkflows(ctx, organizationId, companyId, "workflows.read");
   const page = pageInput.parse({ limit, cursor: f.cursor });
   const rows = await db().workflowRun.findMany({
-    where: { organizationId, companyId, ...(f.status ? { status: f.status } : {}), ...(f.workflowId ? { workflowId: f.workflowId } : {}) },
+    where: runWhere(organizationId, companyId, f),
     orderBy: { id: "desc" },
-    select: { id: true, status: true, triggerType: true, triggerEventId: true, depth: true, isTest: true, error: true, waitingFor: true, createdAt: true, finishedAt: true, workflow: { select: { id: true, name: true } }, version: { select: { version: true } } },
+    select: {
+      id: true,
+      status: true,
+      triggerType: true,
+      triggerEventId: true,
+      depth: true,
+      isTest: true,
+      error: true,
+      waitingFor: true,
+      createdAt: true,
+      startedAt: true,
+      finishedAt: true,
+      deadLetteredAt: true,
+      workflow: { select: { id: true, name: true } },
+      version: { select: { version: true } },
+      _count: { select: { steps: true } },
+    },
     ...prismaPage(page),
   });
   return toPage(rows, page);
@@ -329,13 +372,70 @@ export async function retryRun(ctx: RequestContext, organizationId: string, comp
     const run = await tx.workflowRun.findFirst({ where: { id: runId, organizationId, companyId }, select: { id: true, status: true, workflow: { select: { status: true } } } });
     if (!run) throw notFound("Run");
     if (run.workflow.status === "ARCHIVED") throw conflict("Archived workflows cannot run", { reason: "automation_workflow_archived" });
-    const { count } = await tx.workflowRun.updateMany({ where: { id: runId, status: { in: ["FAILED", "CANCELLED"] } }, data: { status: "QUEUED", nextRunAt: new Date(), finishedAt: null, error: null, claimToken: null } });
+    const { count } = await tx.workflowRun.updateMany({ where: { id: runId, status: { in: ["FAILED", "CANCELLED"] } }, data: { status: "QUEUED", nextRunAt: new Date(), finishedAt: null, error: null, claimToken: null, deadLetteredAt: null } });
     if (!count) throw conflict("Only failed or cancelled runs can be retried", { reason: "automation_workflow_run_not_retryable" });
     await tx.workflowRunStep.updateMany({ where: { runId, status: "FAILED" }, data: { attempts: 0 } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "workflow_run.retried", resourceType: "workflow_run", resourceId: runId, oldValue: { status: run.status } });
   });
   await processRun(runId);
   return { ok: true };
+}
+
+export const rerunInput = z.object({ stepId: z.string().regex(/^[a-z0-9_-]{1,40}$/) });
+
+/**
+ * Re-run a finished run from a chosen step: that step and every step after it (in definition order, branches included)
+ * are cleared and executed again; earlier steps keep their outputs. Actions of the re-run steps happen again.
+ */
+export async function rerunFromStep(ctx: RequestContext, organizationId: string, companyId: string, runId: string, raw: z.input<typeof rerunInput>) {
+  const { stepId } = rerunInput.parse(raw);
+  await transaction(async (tx) => {
+    await authorizeWorkflows(ctx, organizationId, companyId, "workflows.execute", tx);
+    if (!isUuid(runId)) throw notFound("Run");
+    const run = await tx.workflowRun.findFirst({ where: { id: runId, organizationId, companyId }, select: { id: true, status: true, definition: true, version: { select: { definition: true } }, workflow: { select: { status: true } } } });
+    if (!run) throw notFound("Run");
+    if (run.workflow.status === "ARCHIVED") throw conflict("Archived workflows cannot run", { reason: "automation_workflow_archived" });
+    if (!["FAILED", "CANCELLED", "SUCCEEDED"].includes(run.status)) throw conflict("Only finished runs can be re-run", { reason: "automation_workflow_run_not_retryable" });
+    const order = flattenSteps(draftOf(run.definition ?? run.version?.definition ?? null).steps).map((s) => s.id);
+    const at = order.indexOf(stepId);
+    if (at < 0) throw invalid("This step is not part of the run's workflow version", { reason: "automation_workflow_step_unknown" });
+    const ids = order.slice(at);
+    await tx.workflowRunStep.deleteMany({ where: { runId, stepId: { in: ids } } });
+    await tx.workflowApprovalRequest.deleteMany({ where: { runId, stepId: { in: ids }, status: { not: "PENDING" } } });
+    await tx.workflowRun.update({ where: { id: runId }, data: { status: "QUEUED", nextRunAt: new Date(), finishedAt: null, error: null, claimToken: null, waitingFor: null, deadLetteredAt: null } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "workflow_run.rerun", resourceType: "workflow_run", resourceId: runId, oldValue: { status: run.status }, newValue: { fromStep: stepId, steps: ids.length } });
+  });
+  await processRun(runId);
+  return { ok: true };
+}
+
+/** Dead-letter list: real runs that failed permanently and were neither retried nor dismissed. */
+export async function listDeadLetters(ctx: RequestContext, organizationId: string, companyId: string, f: { workflowId?: string; cursor?: string } = {}) {
+  await authorizeWorkflows(ctx, organizationId, companyId, "workflows.read");
+  const page = pageInput.parse({ limit: 50, cursor: f.cursor });
+  const rows = await db().workflowRun.findMany({
+    where: { organizationId, companyId, status: "FAILED", deadLetteredAt: { not: null }, ...(f.workflowId ? { workflowId: f.workflowId } : {}) },
+    orderBy: { id: "desc" },
+    select: { id: true, error: true, createdAt: true, deadLetteredAt: true, triggerType: true, workflow: { select: { id: true, name: true, ownerId: true } }, steps: { where: { status: "FAILED" }, select: { stepId: true, stepType: true, attempts: true }, take: 1 } },
+    ...prismaPage(page),
+  });
+  return toPage(rows, page);
+}
+
+export async function deadLetterCount(organizationId: string, companyId: string) {
+  return db().workflowRun.count({ where: { organizationId, companyId, status: "FAILED", deadLetteredAt: { not: null } } });
+}
+
+/** Remove a run from the dead-letter list without running it again (it stays FAILED in the history). */
+export async function dismissDeadLetter(ctx: RequestContext, organizationId: string, companyId: string, runId: string) {
+  return transaction(async (tx) => {
+    await authorizeWorkflows(ctx, organizationId, companyId, "workflows.execute", tx);
+    if (!isUuid(runId)) throw notFound("Run");
+    const { count } = await tx.workflowRun.updateMany({ where: { id: runId, organizationId, companyId, status: "FAILED", deadLetteredAt: { not: null } }, data: { deadLetteredAt: null } });
+    if (!count) throw notFound("Run");
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "workflow_run.dismissed", resourceType: "workflow_run", resourceId: runId });
+    return { ok: true };
+  });
 }
 
 export async function cancelRun(ctx: RequestContext, organizationId: string, companyId: string, runId: string) {
@@ -362,16 +462,38 @@ export async function listWorkflowApprovals(ctx: RequestContext, organizationId:
   });
 }
 
+/**
+ * Pending workflow approvals the viewer may decide: those naming them as an approver, plus (with workflows.execute)
+ * those open to anyone. Used by the main /approvals page; needs no workflows permission for named approvers.
+ */
+export async function listMyWorkflowApprovals(ctx: RequestContext, organizationId: string, companyId: string) {
+  const me = ctx.actor.id;
+  if (!me) return [];
+  const chain = await companyChain(db(), organizationId, companyId);
+  const canExecute = grantsAllow(await loadGrants(db(), "USER", me), "workflows.execute", chain);
+  return db().workflowApprovalRequest.findMany({
+    where: { organizationId, companyId, status: "PENDING", OR: [{ approverIds: { has: me } }, ...(canExecute ? [{ approverIds: { isEmpty: true } }] : [])] },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: { run: { select: { id: true, workflow: { select: { id: true, name: true } } } } },
+  });
+}
+
 export const decideInput = z.object({ decision: z.enum(["approve", "reject"]), note: z.string().trim().max(1000).optional() });
 
 export async function decideWorkflowApproval(ctx: RequestContext, organizationId: string, companyId: string, approvalId: string, raw: z.input<typeof decideInput>) {
   const input = decideInput.parse(raw);
   const runId = await transaction(async (tx) => {
-    await authorizeWorkflows(ctx, organizationId, companyId, "workflows.execute", tx);
     if (!isUuid(approvalId)) throw notFound("Approval");
     const req = await tx.workflowApprovalRequest.findFirst({ where: { id: approvalId, organizationId, companyId } });
     if (!req) throw notFound("Approval");
-    if (req.approverIds.length && !req.approverIds.includes(ctx.actor.id ?? "")) throw new AppError("forbidden", "You are not an approver of this request", { reason: "automation_workflow_not_approver" });
+    // Named approvers (chosen people, permission holders, the record owner) decide without needing workflow rights;
+    // requests without named approvers are decided by anyone with workflows.execute.
+    if (req.approverIds.length) {
+      if (!req.approverIds.includes(ctx.actor.id ?? "")) throw new AppError("forbidden", "You are not an approver of this request", { reason: "automation_workflow_not_approver" });
+      const member = await tx.membership.findFirst({ where: { organizationId, userId: ctx.actor.id!, status: "ACTIVE" }, select: { userId: true } });
+      if (!member) throw notFound("Approval");
+    } else await authorizeWorkflows(ctx, organizationId, companyId, "workflows.execute", tx);
     const { count } = await tx.workflowApprovalRequest.updateMany({
       where: { id: approvalId, status: "PENDING" },
       data: { status: input.decision === "approve" ? "APPROVED" : "REJECTED", decidedById: ctx.actor.id, decidedAt: new Date(), note: input.note || null },
@@ -383,6 +505,21 @@ export async function decideWorkflowApproval(ctx: RequestContext, organizationId
   });
   await processRun(runId);
   return { ok: true };
+}
+
+// ───────────────────────────── Versions ─────────────────────────────
+
+/** Two definitions of a workflow side by side: versions by number, or "draft". */
+export async function compareVersions(ctx: RequestContext, organizationId: string, companyId: string, workflowId: string, left: string, right: string) {
+  await authorizeWorkflows(ctx, organizationId, companyId, "workflows.read");
+  const wf = await findWorkflow(db(), organizationId, companyId, workflowId);
+  const versions = await db().workflowVersion.findMany({ where: { workflowId: wf.id }, orderBy: { version: "desc" }, select: { version: true, definition: true, createdAt: true, createdById: true } });
+  const pick = (key: string) => {
+    if (key === "draft") return { key, label: "draft", definition: draftOf(wf.draft), createdAt: wf.updatedAt };
+    const v = versions.find((x) => String(x.version) === key);
+    return v ? { key, label: `v${v.version}`, definition: draftOf(v.definition), createdAt: v.createdAt } : null;
+  };
+  return { workflow: { id: wf.id, name: wf.name, currentVersion: wf.currentVersion }, versions: versions.map((v) => ({ version: v.version, createdAt: v.createdAt })), left: pick(left), right: pick(right) };
 }
 
 // ───────────────────────────── AI drafting ─────────────────────────────
@@ -406,13 +543,14 @@ export async function requestAiDraft(ctx: RequestContext, organizationId: string
 export async function workflowOverview(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorizeWorkflows(ctx, organizationId, companyId, "workflows.read");
   const since = new Date(Date.now() - 30 * 86_400_000);
-  const [active, runs, failed, succeeded, pendingApprovals] = await Promise.all([
+  const [active, runs, failed, succeeded, pendingApprovals, deadLetters] = await Promise.all([
     db().workflow.count({ where: { organizationId, companyId, status: "ACTIVE" } }),
     db().workflowRun.count({ where: { organizationId, companyId, createdAt: { gte: since } } }),
     db().workflowRun.count({ where: { organizationId, companyId, createdAt: { gte: since }, status: "FAILED" } }),
     db().workflowRun.count({ where: { organizationId, companyId, createdAt: { gte: since }, status: "SUCCEEDED" } }),
     db().workflowApprovalRequest.count({ where: { organizationId, companyId, status: "PENDING" } }),
+    deadLetterCount(organizationId, companyId),
   ]);
   const finished = failed + succeeded;
-  return { active, runs, failed, successRate: finished ? Math.round((succeeded / finished) * 100) : null, pendingApprovals };
+  return { active, runs, failed, successRate: finished ? Math.round((succeeded / finished) * 100) : null, pendingApprovals, deadLetters };
 }

@@ -6,6 +6,7 @@ import type { ToolDefinition } from "./define";
  */
 export const MODULE_TOOLS = (): Promise<Record<string, ToolDefinition>[]> =>
   Promise.all([
+    import("@/server/modules/brain/ai-tools").then((m) => m.BRAIN_TOOLS),
     import("@/server/modules/marketing/ai-tools").then((m) => m.MARKETING_TOOLS),
     import("@/server/modules/finance/ai-tools").then((m) => m.FINANCE_TOOLS),
     import("@/server/modules/hr/ai-tools").then((m) => m.HR_TOOLS),

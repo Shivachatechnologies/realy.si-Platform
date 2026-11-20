@@ -185,6 +185,20 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
             </CardBody>
           </Card>
 
+          {conn || data.previous ? (
+            <Card>
+              <CardHeader
+                title={t("integrations.logs.title")}
+                description={t("integrations.logs.cardHelp")}
+                actions={
+                  <Link href={`/${locale}/integrations/${info.key}/logs`} className="text-sm text-primary hover:underline">
+                    {t("integrations.logs.open")}
+                  </Link>
+                }
+              />
+            </Card>
+          ) : null}
+
           {info.syncKinds?.length ? (
             <Card>
               <CardHeader title={t("integrations.syncHistory")} description={t(`integrations.providers.${info.key}.sync`)} />

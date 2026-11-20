@@ -9,6 +9,9 @@ import { isoDay } from "@/server/modules/crm/common";
 import { listPipelines } from "@/server/modules/crm/pipelines";
 import { parseSalesRange, salesForecast, salesSummary, targetAttainment, teamPerformance } from "@/server/modules/crm/sales";
 import { listOwners } from "@/server/modules/crm/service";
+import { mySalesTasks } from "@/server/modules/crm/tasks";
+import { SalesTaskControls } from "@/components/crm/sales-task-forms";
+import { Badge } from "@/components/ui/badge";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.sales.title") };
@@ -19,15 +22,17 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const c = await crmContext();
   const query = await searchParams;
   if (!c.company || !c.canRead) return <CrmFrame area="sales" active="overview">{null}</CrmFrame>;
-  const { t, locale, org, company, viewer } = c;
+  const { t, locale, org, company, viewer, base } = c;
+  const todayStart = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
   const range = parseSalesRange(query);
-  const [summary, team, forecast, targets, owners, pipelines] = await Promise.all([
+  const [summary, team, forecast, targets, owners, pipelines, myTasks] = await Promise.all([
     salesSummary(viewer.ctx, org.id, company.id, range),
     teamPerformance(viewer.ctx, org.id, company.id, range),
     salesForecast(viewer.ctx, org.id, company.id, { owner: range.owner, pipelineId: range.pipelineId }),
     targetAttainment(viewer.ctx, org.id, company.id, "MONTH"),
     listOwners(viewer.ctx, org.id, company.id),
     listPipelines(viewer.ctx, org.id, company.id),
+    mySalesTasks(viewer.ctx, org.id, company.id),
   ]);
   const cur = summary.currency;
   const money = (m: bigint) => formatMoney({ amountMinor: m, currency: cur }, locale);
@@ -185,6 +190,38 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </ul>
         ) : (
           <p className="p-4 text-sm text-muted-foreground">{t("sales.targets.none")}</p>
+        )}
+      </Card>
+
+      <Card id="my-tasks">
+        <CardHeader title={t("sales.myTasks.title")} description={t("sales.myTasks.summary", { open: myTasks.open.length, overdue: myTasks.overdue })} />
+        {myTasks.open.length || myTasks.done.length ? (
+          <ul className="grid divide-y text-sm">
+            {[...myTasks.open, ...myTasks.done].map((task) => {
+              const done = task.status === "DONE";
+              const overdue = !done && task.dueDate && task.dueDate < todayStart;
+              return (
+                <li key={task.id} className="grid gap-1 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  {c.canManage ? (
+                    <SalesTaskControls base={base} owners={owners} task={{ id: task.id, done, assigneeId: task.assignee?.id ?? null, dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null, title: task.title }} />
+                  ) : (
+                    <span className={done ? "text-muted-foreground line-through" : "font-medium"}>{task.title}</span>
+                  )}
+                  <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:justify-end">
+                    {task.href && task.subjectName ? (
+                      <Link href={`/${locale}${task.href}`} className="hover:underline">
+                        {task.subjectName}
+                      </Link>
+                    ) : null}
+                    {task.dueDate ? <span className={overdue ? "text-danger" : undefined}>{formatDate(task.dueDate, locale, "UTC")}</span> : null}
+                    <Badge>{t(`crm.salesTasks.priorities.${task.priority}`)}</Badge>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="p-4 text-sm text-muted-foreground">{t("sales.myTasks.none")}</p>
         )}
       </Card>
     </CrmFrame>

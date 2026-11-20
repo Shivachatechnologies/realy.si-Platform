@@ -19,6 +19,9 @@ import { db } from "@/server/core/db";
 import { listSubjectTasks } from "@/server/modules/agents/service";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { getWorkProject } from "@/server/modules/work/projects";
+import { financeProjectCosts } from "@/server/modules/finance/project-costs";
+import { can } from "@/server/modules/rbac/service";
+import { companyChain } from "@/server/modules/rbac/scope";
 import { listPeople, userNames } from "@/server/modules/work/shared";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,10 +40,13 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
-  const [people, aiTasks, timeEntries] = await Promise.all([
+  // Finance's real postings for this project (bills, expenses, claims) — only for viewers who may see finance.
+  const canSeeFinance = await can(viewer.ctx, "finance.read", await companyChain(db(), org.id, company.id));
+  const [people, aiTasks, timeEntries, financeCosts] = await Promise.all([
     listPeople(viewer.ctx, org.id, company.id),
     canRunAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "project", p.id) : [],
     db().workTimeEntry.findMany({ where: { projectId: p.id, companyId: company.id }, orderBy: { workDate: "desc" }, take: 20, include: { task: { select: { id: true, title: true } } } }),
+    canSeeFinance ? financeProjectCosts(org.id, company.id, p.id).catch(() => null) : null,
   ]);
   const names = await userNames(db(), timeEntries.map((e) => e.userId));
   const currency = p.currency ?? company.baseCurrency;
@@ -231,6 +237,25 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
                 ]}
               />
               {p.budget.usedPercent != null ? <Progress value={Math.min(100, p.budget.usedPercent)} tone={budgetTone} label={t("work.budget.used")} /> : null}
+              {financeCosts ? (
+                <div className="grid gap-2 rounded-md border bg-surface-2 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">{t("work.budget.financeTitle")}</span>
+                    <Link href={`/${locale}/finance/reports?report=projects`} className="text-xs text-muted-foreground hover:underline">
+                      {t("work.budget.financeOpen")}
+                    </Link>
+                  </div>
+                  <Facts
+                    cols={4}
+                    items={[
+                      [t("work.budget.financeBills"), formatMoney({ amountMinor: financeCosts.billsMinor, currency: financeCosts.currency }, locale)],
+                      [t("work.budget.financeExpenses"), formatMoney({ amountMinor: financeCosts.expensesMinor, currency: financeCosts.currency }, locale)],
+                      [t("work.budget.financeTotal"), formatMoney({ amountMinor: financeCosts.totalCostMinor, currency: financeCosts.currency }, locale)],
+                      [t("work.budget.financePending"), formatMoney({ amountMinor: financeCosts.pendingClaimsMinor, currency: financeCosts.currency }, locale)],
+                    ]}
+                  />
+                </div>
+              ) : null}
               {p.expenses.length ? (
                 <Table>
                   <THead>

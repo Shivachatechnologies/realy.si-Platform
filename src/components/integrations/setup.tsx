@@ -82,8 +82,12 @@ export function ConnectionActions({ base, provider, canSync, syncEnabled, syncIn
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const test = () =>
     run(
-      () => api<{ ok: boolean; account?: string | null; error?: string }>(`${base}/integrations/${provider}/test`, { method: "POST", body: {} }),
-      (r) => setResult(r.ok ? { ok: true, text: t("integrations.testOk", { account: r.account ?? "—" }) } : { ok: false, text: t("integrations.testFailed", { error: r.error ?? "" }) }),
+      () => api<{ ok: boolean; account?: string | null; error?: string; calendar?: { ok: boolean; calendars?: number; primary?: string | null; error?: string } }>(`${base}/integrations/${provider}/test`, { method: "POST", body: {} }),
+      (r) => {
+        if (!r.ok) return setResult({ ok: false, text: t("integrations.testFailed", { error: r.error ?? "" }) });
+        const cal = r.calendar ? (r.calendar.ok ? t("integrations.calendarOk", { count: r.calendar.calendars ?? 0, primary: r.calendar.primary ?? "—" }) : t("integrations.calendarFailed", { error: r.calendar.error ?? "" })) : null;
+        setResult({ ok: !r.calendar || r.calendar.ok, text: [t("integrations.testOk", { account: r.account ?? "—" }), cal].filter(Boolean).join(" · ") });
+      },
     );
   const sync = () =>
     run(

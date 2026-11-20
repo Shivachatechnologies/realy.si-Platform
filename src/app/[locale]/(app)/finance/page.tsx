@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
+import { AutoRefresh } from "@/components/agents/auto-refresh";
+import { AskCfoForm } from "@/components/finance/approval-forms";
 import { InsightsButton } from "@/components/finance/insights-button";
 import { financePage } from "@/components/finance/page-context";
 import { BarChart, Empty, Kpi, RangeForm, rangePresets, StatusBadge, TASK_TONE } from "@/components/finance/widgets";
@@ -11,7 +13,8 @@ import { formatDateTime } from "@/i18n/format";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { detectExpenseAnomalies, financeDashboard } from "@/server/modules/finance/analytics";
 import { parseRange } from "@/server/modules/finance/common";
-import { listInsightTasks } from "@/server/modules/finance/insights";
+import { listInsightTasks, listQuestionTasks } from "@/server/modules/finance/insights";
+import { pendingApprovalCount } from "@/server/modules/finance/approvals";
 import { listFinanceAccounts } from "@/server/modules/finance/setup";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,12 +26,15 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
   if (p.blocked) return p.blocked;
   const { t, locale, viewer, org, company, money, base } = p;
   const range = parseRange(await searchParams);
-  const [d, anomalies, accounts, tasks] = await Promise.all([
+  const [d, anomalies, accounts, tasks, questions, pendingApprovals] = await Promise.all([
     financeDashboard(viewer.ctx, org.id, company.id, range),
     detectExpenseAnomalies(viewer.ctx, org.id, company.id),
     listFinanceAccounts(viewer.ctx, org.id, company.id),
     p.canRunAgents ? listInsightTasks(viewer.ctx, org.id, company.id).catch(() => []) : Promise.resolve([]),
+    p.canRunAgents ? listQuestionTasks(viewer.ctx, org.id, company.id).catch(() => []) : Promise.resolve([]),
+    pendingApprovalCount(viewer.ctx, org.id, company.id),
   ]);
+  const answering = questions.some((q) => q.status === "QUEUED" || q.status === "RUNNING");
   const monthLabel = (k: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${k}-01T00:00:00Z`));
 
   return p.frame(
@@ -58,6 +64,9 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
         <Kpi label={t("finance.metrics.mrr")} value={money(d.mrr)} />
         <Kpi label={t("finance.metrics.arr")} value={money(d.arr)} />
         <Kpi label={t("finance.metrics.receivablesOverdue")} value={money(d.overdue)} tone={d.overdue > 0n ? "warning" : undefined} hint={t("finance.dashboard.openReceivables", { amount: money(d.receivables) })} />
+        <Kpi label={t("finance.metrics.payablesOpen")} value={<Link href={`/${locale}/finance/payables`} className="hover:underline">{money(d.payables)}</Link>} hint={t("finance.dashboard.dueSoon", { amount: money(d.upcomingPayablesTotal) })} />
+        <Kpi label={t("finance.metrics.payablesOverdue")} value={money(d.payablesOverdue)} tone={d.payablesOverdue > 0n ? "danger" : undefined} />
+        <Kpi label={t("finance.bills.awaitingApproval")} value={d.awaitingBills} hint={pendingApprovals ? <Link href={`/${locale}/finance/approvals`} className="hover:underline">{t("finance.dashboard.yourApprovals", { count: pendingApprovals })}</Link> : undefined} tone={pendingApprovals ? "warning" : undefined} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -116,6 +125,51 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
           </TBody>
         </Table>
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader title={t("finance.ask.title")} description={t("finance.ask.hint")} />
+          <CardBody className="grid gap-3">
+            <AutoRefresh active={answering} intervalMs={4000} />
+            {!aiConfigured() ? <Notice tone="warning">{t("agentTasks.notConfigured")}</Notice> : p.canRunAgents ? <AskCfoForm base={base} /> : <Notice>{t("finance.dashboard.insightsNoPermission")}</Notice>}
+            {questions.length ? (
+              <ul className="grid divide-y rounded-md border">
+                {questions.map((task) => (
+                  <li key={task.id} className="grid gap-1 p-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge tone={TASK_TONE[task.status]}>{t(`agentTasks.status.${task.status}`)}</StatusBadge>
+                      <Link href={`/${locale}/tasks/${task.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                        {task.title.replace(/^AI CFO: /, "")}
+                      </Link>
+                      <span className="text-xs text-muted-foreground">{formatDateTime(task.createdAt, locale, p.tz)}</span>
+                    </div>
+                    {task.output ? <p className="whitespace-pre-line text-muted-foreground">{task.output}</p> : task.status === "QUEUED" || task.status === "RUNNING" ? <p className="text-xs text-muted-foreground">{t("finance.ask.thinking")}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title={t("finance.payables.upcomingTitle")} description={t("finance.dashboard.upcomingPayablesHint")} actions={<Link href={`/${locale}/finance/payables`} className="text-xs hover:underline">{t("finance.tabs.payables")}</Link>} />
+          {d.upcomingPayables.length ? (
+            <ul className="grid divide-y text-sm">
+              {d.upcomingPayables.map((b) => (
+                <li key={b.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
+                  {b.overdue ? <StatusBadge tone="danger">{t("finance.bills.overdue")}</StatusBadge> : null}
+                  <Link href={`/${locale}/finance/bills/${b.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                    {b.vendor.name} · <span className="font-mono">{b.number}</span>
+                  </Link>
+                  <span className="text-xs text-muted-foreground">{p.day(b.dueDate)}</span>
+                  <span className="tabular-nums">{money(b.balanceMinor, b.currency)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Empty>{t("finance.payables.noUpcoming")}</Empty>
+          )}
+        </Card>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

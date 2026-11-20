@@ -127,9 +127,10 @@ model CommsChannel {
   createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  members  CommsChannelMember[]
-  messages CommsMessage[]
+  company         Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  members         CommsChannelMember[]
+  messages        CommsMessage[]
+  taskDiscussions CommsTaskDiscussion[]
 
   @@unique([id, companyId])
   @@unique([companyId, directKey])
@@ -160,6 +161,8 @@ model CommsMessage {
   authorId  String    @map("author_id") @db.Uuid
   body      String
   mentions  String[]  @default([])
+  /// WorkTask ids referenced by the message (shown as task chips); validated against the company.
+  taskIds   String[]  @default([]) @map("task_ids")
   editedAt  DateTime? @map("edited_at") @db.Timestamptz(3)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -172,32 +175,71 @@ model CommsMessage {
   @@map("comms_messages")
 }
 
+/// "Discuss in channel": a WorkTask's discussion thread (root message) in a channel. One per task.
+model CommsTaskDiscussion {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  channelId      String   @map("channel_id") @db.Uuid
+  /// Root message of the thread.
+  messageId      String   @map("message_id") @db.Uuid
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  channel CommsChannel @relation(fields: [channelId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([companyId, taskId])
+  @@index([channelId])
+  @@map("comms_task_discussions")
+}
+
 enum CommsMeetingStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
 }
 
+enum CommsMeetingRecurrence {
+  WEEKLY
+  BIWEEKLY
+}
+
+enum CommsRsvp {
+  PENDING
+  ACCEPTED
+  TENTATIVE
+  DECLINED
+}
+
 model CommsMeeting {
-  id               String             @id @default(uuid(7)) @db.Uuid
-  organizationId   String             @map("organization_id") @db.Uuid
-  companyId        String             @map("company_id") @db.Uuid
+  id               String                  @id @default(uuid(7)) @db.Uuid
+  organizationId   String                  @map("organization_id") @db.Uuid
+  companyId        String                  @map("company_id") @db.Uuid
   title            String
   agenda           String?
   location         String?
-  startsAt         DateTime           @map("starts_at") @db.Timestamptz(3)
-  endsAt           DateTime           @map("ends_at") @db.Timestamptz(3)
-  status           CommsMeetingStatus @default(SCHEDULED)
+  startsAt         DateTime                @map("starts_at") @db.Timestamptz(3)
+  endsAt           DateTime                @map("ends_at") @db.Timestamptz(3)
+  status           CommsMeetingStatus      @default(SCHEDULED)
   notes            String?
   /// One decision per entry.
-  decisions        String[]           @default([])
-  organizerId      String             @map("organizer_id") @db.Uuid
+  decisions        String[]                @default([])
+  organizerId      String                  @map("organizer_id") @db.Uuid
   /// Calendar sync: "google_calendar" / "outlook_calendar" and the provider's event id.
-  externalProvider String?            @map("external_provider")
-  externalId       String?            @map("external_id")
-  completedAt      DateTime?          @map("completed_at") @db.Timestamptz(3)
-  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  externalProvider String?                 @map("external_provider")
+  externalId       String?                 @map("external_id")
+  /// Recurring series: every occurrence carries the series id (the first occurrence's id) and the rule.
+  seriesId         String?                 @map("series_id") @db.Uuid
+  recurrence       CommsMeetingRecurrence?
+  /// Follow-up email of the summary to attendees: when it was attempted and the per-status counts
+  /// ({ sent, failed, notConfigured, skipped }) — "sent" counts only messages a provider accepted.
+  followUpSentAt   DateTime?               @map("follow_up_sent_at") @db.Timestamptz(3)
+  followUpResult   Json?                   @map("follow_up_result")
+  completedAt      DateTime?               @map("completed_at") @db.Timestamptz(3)
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company   Company                @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   attendees CommsMeetingAttendee[]
@@ -205,19 +247,39 @@ model CommsMeeting {
   @@unique([id, companyId])
   @@unique([companyId, externalProvider, externalId])
   @@index([organizationId, companyId, startsAt])
+  @@index([seriesId, startsAt])
   @@map("comms_meetings")
 }
 
 model CommsMeetingAttendee {
-  meetingId String @map("meeting_id") @db.Uuid
-  companyId String @map("company_id") @db.Uuid
-  userId    String @map("user_id") @db.Uuid
+  meetingId   String    @map("meeting_id") @db.Uuid
+  companyId   String    @map("company_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  rsvp        CommsRsvp @default(PENDING)
+  respondedAt DateTime? @map("responded_at") @db.Timestamptz(3)
 
   meeting CommsMeeting @relation(fields: [meetingId, companyId], references: [id, companyId], onDelete: Cascade)
 
   @@id([meetingId, userId])
   @@index([userId])
   @@map("comms_meeting_attendees")
+}
+
+/// Reusable meeting agenda (e.g. "Weekly 1:1", "Sprint retro").
+model CommsAgendaTemplate {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  body           String
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, name])
+  @@map("comms_agenda_templates")
 }
 
 /// Company calendar event (holidays, offsites, launches...).

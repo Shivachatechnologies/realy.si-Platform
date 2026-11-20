@@ -1,71 +1,252 @@
 @import "tailwindcss";
 
 /*
- * Realy design tokens. Graphite neutrals, one cool accent, semantic status colors.
- * Light and dark are both first-class; dark follows the OS unless data-theme is set.
+ * Realy design system.
+ *
+ * Two surfaces share one component library and differ only through tokens:
+ *   - the user app (default): deep graphite neutrals + an electric indigo → violet accent;
+ *   - the admin console ("Realy Control"): near-black slate + an amber "control room" accent with emerald live states.
+ *     Contract: any element with `data-surface="admin"` switches the whole document (portals included, via :root:has)
+ *     to the admin palette.
+ * Light and dark are both first-class; dark follows the OS unless `data-theme` is set on <html>.
  * Layout uses logical properties only (RTL is first-class — see docs/globalization.md §4).
+ * Motion is CSS-only (transform/opacity) and is switched off under prefers-reduced-motion.
  */
+
+/* ───────────────────────── User app — light ───────────────────────── */
 :root {
-  --background: oklch(0.985 0.002 260);
-  --foreground: oklch(0.21 0.01 265);
+  --background: oklch(0.985 0.003 275);
+  --foreground: oklch(0.2 0.016 275);
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.97 0.003 260);
-  --muted: oklch(0.955 0.004 260);
-  --muted-foreground: oklch(0.5 0.012 262);
-  --border: oklch(0.91 0.005 260);
-  --input: oklch(0.88 0.006 260);
-  --ring: oklch(0.58 0.16 264);
-  --primary: oklch(0.52 0.18 264);
+  --surface-2: oklch(0.973 0.004 275);
+  --muted: oklch(0.955 0.006 275);
+  --muted-foreground: oklch(0.49 0.016 275);
+  --border: oklch(0.915 0.006 275);
+  --border-strong: oklch(0.86 0.01 275);
+  --input: oklch(0.875 0.008 275);
+  --ring: oklch(0.56 0.21 276);
+  --primary: oklch(0.52 0.225 276);
+  --primary-2: oklch(0.55 0.24 302);
   --primary-foreground: oklch(0.99 0 0);
-  --accent: oklch(0.94 0.03 264);
-  --accent-foreground: oklch(0.35 0.14 264);
-  --success: oklch(0.6 0.14 155);
-  --warning: oklch(0.72 0.15 75);
-  --danger: oklch(0.58 0.2 25);
+  --accent: oklch(0.95 0.028 278);
+  --accent-foreground: oklch(0.4 0.19 276);
+  --info: oklch(0.56 0.15 240);
+  --success: oklch(0.56 0.14 158);
+  --warning: oklch(0.66 0.15 70);
+  --danger: oklch(0.56 0.21 25);
   --danger-foreground: oklch(0.99 0 0);
-  --radius: 0.5rem;
+  --radius: 0.5625rem;
+
+  --aurora-1: oklch(0.72 0.17 276 / 0.22);
+  --aurora-2: oklch(0.74 0.17 305 / 0.16);
+  --aurora-3: oklch(0.8 0.12 220 / 0.14);
+  --glow: oklch(0.6 0.22 276 / 0.35);
+  --grid-line: oklch(0.2 0.02 275 / 0.04);
+
+  --elev-1: 0 1px 2px oklch(0.2 0.02 275 / 0.05), 0 0 0 1px oklch(0.2 0.02 275 / 0.02);
+  --elev-2: 0 1px 2px oklch(0.2 0.02 275 / 0.05), 0 4px 12px -2px oklch(0.2 0.02 275 / 0.07);
+  --elev-3: 0 2px 4px oklch(0.2 0.02 275 / 0.05), 0 12px 28px -6px oklch(0.2 0.02 275 / 0.12);
+  --elev-4: 0 4px 8px oklch(0.2 0.02 275 / 0.06), 0 24px 56px -12px oklch(0.2 0.02 275 / 0.22);
+  --highlight: inset 0 1px 0 oklch(1 0 0 / 0.6);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --stagger-step: 55ms;
 }
 
+/* Derived tokens: re-declared on every token scope so they resolve against that scope's palette. */
+:root,
+[data-surface],
+.control-room,
+.auth-shell {
+  --glass: color-mix(in oklch, var(--surface) 74%, transparent);
+  --glass-strong: color-mix(in oklch, var(--surface) 88%, transparent);
+  --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  --gradient-border: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--primary) 70%, transparent),
+    color-mix(in oklch, var(--primary-2) 45%, transparent) 45%,
+    var(--border) 100%
+  );
+}
+
+/* ───────────────────────── User app — dark ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: oklch(0.155 0.006 265);
-    --foreground: oklch(0.94 0.004 260);
-    --surface: oklch(0.19 0.007 265);
-    --surface-2: oklch(0.215 0.008 265);
-    --muted: oklch(0.235 0.008 265);
-    --muted-foreground: oklch(0.68 0.012 262);
-    --border: oklch(0.28 0.008 265);
-    --input: oklch(0.32 0.01 265);
-    --ring: oklch(0.68 0.15 264);
-    --primary: oklch(0.66 0.16 264);
-    --primary-foreground: oklch(0.15 0.01 265);
-    --accent: oklch(0.27 0.05 264);
-    --accent-foreground: oklch(0.86 0.08 264);
-    --success: oklch(0.7 0.14 155);
-    --warning: oklch(0.8 0.14 80);
-    --danger: oklch(0.66 0.19 25);
-    --danger-foreground: oklch(0.15 0 0);
+    --background: oklch(0.145 0.009 275);
+    --foreground: oklch(0.95 0.005 275);
+    --surface: oklch(0.178 0.01 275);
+    --surface-2: oklch(0.2 0.011 275);
+    --muted: oklch(0.225 0.012 275);
+    --muted-foreground: oklch(0.71 0.014 275);
+    --border: oklch(0.265 0.012 275);
+    --border-strong: oklch(0.33 0.014 275);
+    --input: oklch(0.31 0.014 275);
+    --ring: oklch(0.7 0.18 278);
+    --primary: oklch(0.69 0.185 278);
+    --primary-2: oklch(0.7 0.2 305);
+    --primary-foreground: oklch(0.14 0.02 275);
+    --accent: oklch(0.27 0.06 278);
+    --accent-foreground: oklch(0.86 0.09 278);
+    --info: oklch(0.72 0.13 235);
+    --success: oklch(0.72 0.15 158);
+    --warning: oklch(0.8 0.14 78);
+    --danger: oklch(0.68 0.19 25);
+    --danger-foreground: oklch(0.14 0 0);
+    --aurora-1: oklch(0.55 0.2 276 / 0.22);
+    --aurora-2: oklch(0.55 0.22 305 / 0.16);
+    --aurora-3: oklch(0.6 0.14 220 / 0.12);
+    --glow: oklch(0.65 0.2 278 / 0.4);
+    --grid-line: oklch(1 0 0 / 0.03);
+    --elev-1: 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.02);
+    --elev-2: 0 1px 2px oklch(0 0 0 / 0.35), 0 6px 16px -4px oklch(0 0 0 / 0.4);
+    --elev-3: 0 2px 4px oklch(0 0 0 / 0.35), 0 16px 32px -8px oklch(0 0 0 / 0.55);
+    --elev-4: 0 4px 8px oklch(0 0 0 / 0.4), 0 28px 64px -12px oklch(0 0 0 / 0.7);
+    --highlight: inset 0 1px 0 oklch(1 0 0 / 0.05);
   }
 }
 
 :root[data-theme="dark"] {
-  --background: oklch(0.155 0.006 265);
-  --foreground: oklch(0.94 0.004 260);
-  --surface: oklch(0.19 0.007 265);
-  --surface-2: oklch(0.215 0.008 265);
-  --muted: oklch(0.235 0.008 265);
-  --muted-foreground: oklch(0.68 0.012 262);
-  --border: oklch(0.28 0.008 265);
-  --input: oklch(0.32 0.01 265);
-  --ring: oklch(0.68 0.15 264);
-  --primary: oklch(0.66 0.16 264);
-  --primary-foreground: oklch(0.15 0.01 265);
-  --accent: oklch(0.27 0.05 264);
-  --accent-foreground: oklch(0.86 0.08 264);
-  --success: oklch(0.7 0.14 155);
-  --warning: oklch(0.8 0.14 80);
-  --danger: oklch(0.66 0.19 25);
-  --danger-foreground: oklch(0.15 0 0);
+  --background: oklch(0.145 0.009 275);
+  --foreground: oklch(0.95 0.005 275);
+  --surface: oklch(0.178 0.01 275);
+  --surface-2: oklch(0.2 0.011 275);
+  --muted: oklch(0.225 0.012 275);
+  --muted-foreground: oklch(0.71 0.014 275);
+  --border: oklch(0.265 0.012 275);
+  --border-strong: oklch(0.33 0.014 275);
+  --input: oklch(0.31 0.014 275);
+  --ring: oklch(0.7 0.18 278);
+  --primary: oklch(0.69 0.185 278);
+  --primary-2: oklch(0.7 0.2 305);
+  --primary-foreground: oklch(0.14 0.02 275);
+  --accent: oklch(0.27 0.06 278);
+  --accent-foreground: oklch(0.86 0.09 278);
+  --info: oklch(0.72 0.13 235);
+  --success: oklch(0.72 0.15 158);
+  --warning: oklch(0.8 0.14 78);
+  --danger: oklch(0.68 0.19 25);
+  --danger-foreground: oklch(0.14 0 0);
+  --aurora-1: oklch(0.55 0.2 276 / 0.22);
+  --aurora-2: oklch(0.55 0.22 305 / 0.16);
+  --aurora-3: oklch(0.6 0.14 220 / 0.12);
+  --glow: oklch(0.65 0.2 278 / 0.4);
+  --grid-line: oklch(1 0 0 / 0.03);
+  --elev-1: 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.02);
+  --elev-2: 0 1px 2px oklch(0 0 0 / 0.35), 0 6px 16px -4px oklch(0 0 0 / 0.4);
+  --elev-3: 0 2px 4px oklch(0 0 0 / 0.35), 0 16px 32px -8px oklch(0 0 0 / 0.55);
+  --elev-4: 0 4px 8px oklch(0 0 0 / 0.4), 0 28px 64px -12px oklch(0 0 0 / 0.7);
+  --highlight: inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+/* ───────────────────── Admin console ("Realy Control") — light ───────────────────── */
+:root:has([data-surface="admin"]),
+[data-surface="admin"] {
+  --background: oklch(0.972 0.004 250);
+  --foreground: oklch(0.19 0.015 250);
+  --surface: oklch(0.995 0.002 250);
+  --surface-2: oklch(0.962 0.005 250);
+  --muted: oklch(0.94 0.006 250);
+  --muted-foreground: oklch(0.47 0.016 250);
+  --border: oklch(0.895 0.008 250);
+  --border-strong: oklch(0.83 0.012 250);
+  --input: oklch(0.86 0.01 250);
+  --ring: oklch(0.6 0.15 62);
+  --primary: oklch(0.53 0.135 58);
+  --primary-2: oklch(0.6 0.13 160);
+  --primary-foreground: oklch(0.99 0.005 80);
+  --accent: oklch(0.95 0.04 80);
+  --accent-foreground: oklch(0.42 0.11 58);
+  --info: oklch(0.54 0.12 235);
+  --success: oklch(0.54 0.13 160);
+  --warning: oklch(0.62 0.15 62);
+  --danger: oklch(0.55 0.2 25);
+  --danger-foreground: oklch(0.99 0 0);
+  --aurora-1: oklch(0.8 0.13 75 / 0.14);
+  --aurora-2: oklch(0.78 0.12 160 / 0.1);
+  --aurora-3: oklch(0.8 0.05 250 / 0.12);
+  --glow: oklch(0.7 0.15 70 / 0.35);
+  --grid-line: oklch(0.2 0.02 250 / 0.045);
+}
+
+/* ───────────────────── Admin console — dark (near-black control room) ───────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has([data-surface="admin"]),
+  :root:not([data-theme="light"]) [data-surface="admin"] {
+    --background: oklch(0.125 0.008 250);
+    --foreground: oklch(0.94 0.006 250);
+    --surface: oklch(0.16 0.009 250);
+    --surface-2: oklch(0.183 0.01 250);
+    --muted: oklch(0.21 0.011 250);
+    --muted-foreground: oklch(0.7 0.014 250);
+    --border: oklch(0.255 0.012 250);
+    --border-strong: oklch(0.32 0.014 250);
+    --input: oklch(0.3 0.014 250);
+    --ring: oklch(0.8 0.15 75);
+    --primary: oklch(0.8 0.155 75);
+    --primary-2: oklch(0.76 0.15 160);
+    --primary-foreground: oklch(0.17 0.03 65);
+    --accent: oklch(0.25 0.045 75);
+    --accent-foreground: oklch(0.86 0.12 80);
+    --info: oklch(0.72 0.12 235);
+    --success: oklch(0.75 0.16 160);
+    --warning: oklch(0.82 0.15 80);
+    --danger: oklch(0.68 0.19 25);
+    --danger-foreground: oklch(0.14 0 0);
+    --aurora-1: oklch(0.6 0.14 70 / 0.12);
+    --aurora-2: oklch(0.55 0.13 160 / 0.1);
+    --aurora-3: oklch(0.45 0.05 250 / 0.14);
+    --glow: oklch(0.8 0.15 75 / 0.3);
+    --grid-line: oklch(1 0 0 / 0.035);
+  }
+}
+
+:root[data-theme="dark"]:has([data-surface="admin"]),
+:root[data-theme="dark"] [data-surface="admin"],
+.control-room,
+.auth-shell:has([data-surface="admin"]) {
+  --background: oklch(0.125 0.008 250);
+  --foreground: oklch(0.94 0.006 250);
+  --surface: oklch(0.16 0.009 250);
+  --surface-2: oklch(0.183 0.01 250);
+  --muted: oklch(0.21 0.011 250);
+  --muted-foreground: oklch(0.7 0.014 250);
+  --border: oklch(0.255 0.012 250);
+  --border-strong: oklch(0.32 0.014 250);
+  --input: oklch(0.3 0.014 250);
+  --ring: oklch(0.8 0.15 75);
+  --primary: oklch(0.8 0.155 75);
+  --primary-2: oklch(0.76 0.15 160);
+  --primary-foreground: oklch(0.17 0.03 65);
+  --accent: oklch(0.25 0.045 75);
+  --accent-foreground: oklch(0.86 0.12 80);
+  --info: oklch(0.72 0.12 235);
+  --success: oklch(0.75 0.16 160);
+  --warning: oklch(0.82 0.15 80);
+  --danger: oklch(0.68 0.19 25);
+  --danger-foreground: oklch(0.14 0 0);
+  --aurora-1: oklch(0.6 0.14 70 / 0.12);
+  --aurora-2: oklch(0.55 0.13 160 / 0.1);
+  --aurora-3: oklch(0.45 0.05 250 / 0.14);
+  --glow: oklch(0.8 0.15 75 / 0.3);
+  --grid-line: oklch(1 0 0 / 0.035);
+}
+
+/* Forced-dark control room (admin login, admin hero panels). */
+.control-room,
+.auth-shell:has([data-surface="admin"]) {
+  color-scheme: dark;
+  color: var(--foreground);
+}
+
+/* The admin wrapper paints its own canvas: a faint control-room grid. */
+[data-surface="admin"] {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--foreground);
 }
 
 @theme inline {
@@ -76,21 +257,212 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-info: var(--info);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
   --font-sans: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --radius-sm: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 3px);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 4px);
+  --radius-lg: calc(var(--radius) + 3px);
+  --radius-xl: calc(var(--radius) + 7px);
+  --shadow-elev-1: var(--elev-1);
+  --shadow-elev-2: var(--elev-2);
+  --shadow-elev-3: var(--elev-3);
+  --shadow-elev-4: var(--elev-4);
+  --shadow-glow: 0 0 0 1px color-mix(in oklch, var(--primary) 30%, transparent), 0 8px 28px -6px var(--glow);
+}
+
+/* Typography scale (tight headings) and motion presets: `text-display`, `animate-fade-up`, … */
+@theme {
+  --text-display: 2rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.028em;
+  --text-display--font-weight: 650;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.022em;
+  --text-title--font-weight: 600;
+  --text-heading: 1rem;
+  --text-heading--line-height: 1.35;
+  --text-heading--letter-spacing: -0.012em;
+  --text-heading--font-weight: 600;
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1;
+  --text-eyebrow--letter-spacing: 0.08em;
+  --text-eyebrow--font-weight: 600;
+
+  --animate-fade-up: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-fade-in: fade-in 0.4s ease-out backwards;
+  --animate-scale-in: scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-dialog-in: dialog-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-dialog-out: dialog-out 0.14s ease-in forwards;
+  --animate-overlay-in: fade-in 0.2s ease-out;
+  --animate-overlay-out: fade-out 0.14s ease-in forwards;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-spin-slow: spin 14s linear infinite;
+  --animate-live: live-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+  @keyframes dialog-out {
+    to {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
+    }
+  }
+  @keyframes live-ring {
+    0% {
+      scale: 1;
+      opacity: 0.6;
+    }
+    80%,
+    100% {
+      scale: 2.6;
+      opacity: 0;
+    }
+  }
+}
+
+/* Keyframes used by the classes below. */
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.12);
+  }
+}
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-7%, 5%, 0) scale(0.94);
+  }
+}
+@keyframes aurora-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(3%, -6%, 0) scale(1.15);
+    opacity: 1;
+  }
+}
+@keyframes progress-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@keyframes progress-indeterminate {
+  from {
+    transform: translateX(-110%) scaleX(0.4);
+  }
+  to {
+    transform: translateX(260%) scaleX(0.4);
+  }
+}
+@keyframes progress-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes ripple {
+  from {
+    opacity: 0.22;
+    transform: scale(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+@keyframes core-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes orbit-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes pulse-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 @layer base {
@@ -100,11 +472,28 @@
   html {
     color-scheme: light dark;
   }
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
   body {
     background: var(--background);
     color: var(--foreground);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.011em;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 26%, transparent);
   }
   :focus-visible {
     outline: 2px solid var(--ring);
@@ -115,11 +504,307 @@
   }
 }
 
+/* ───────────────────────── Surface utilities ───────────────────────── */
+
+/* Frosted surface for topbar, sidebar, dialogs and floating panels. */
+@utility glass {
+  background-color: var(--glass);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+}
+@utility glass-strong {
+  background-color: var(--glass-strong);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+}
+
+/* 1px gradient border via background clipping (survives overflow-hidden). Override the fill with --gradient-fill. */
+@utility border-gradient {
+  border-color: transparent;
+  background:
+    var(--gradient-fill, linear-gradient(var(--surface), var(--surface))) padding-box,
+    var(--gradient-border) border-box;
+}
+
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+/* Gradient text for wordmarks and hero lines. */
+@utility text-gradient {
+  background-image: linear-gradient(
+    120deg,
+    var(--foreground) 10%,
+    color-mix(in oklch, var(--primary) 85%, var(--foreground)) 55%,
+    var(--primary-2) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Inner top highlight + hairline elevation for raised surfaces. */
+@utility highlight {
+  box-shadow: var(--highlight), var(--elev-1);
+}
+
+/* ───────────────────────── Motion utilities ───────────────────────── */
+
+/* Card hover lift (transform + shadow only). */
+@utility hover-lift {
+  transition:
+    transform 0.25s var(--ease-out-expo),
+    box-shadow 0.25s var(--ease-out-expo),
+    border-color 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elev-3);
+    border-color: var(--border-strong);
+  }
+}
+
+/* Entrance with a per-item delay: set `--i` on the element. */
+@utility reveal {
+  animation: fade-up 0.55s var(--ease-out-expo) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+
+/* Shimmering placeholder. */
+@utility shimmer {
+  background-color: var(--muted);
+  background-image: linear-gradient(100deg, transparent 20%, color-mix(in oklch, var(--surface) 70%, transparent) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Press feedback + a centre-out ripple on :active (no JS). */
+@utility press {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  &:active:not(:disabled) {
+    transform: scale(0.975);
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+    z-index: -1;
+  }
+  &:active:not(:disabled)::after {
+    animation: ripple 0.5s ease-out;
+  }
+}
+
+@layer components {
+/* Staggered entrance of direct children: `--i` per child (set by <Reveal>), nth-child fallback otherwise. */
+.stagger > * {
+  animation: fade-up 0.55s var(--ease-out-expo) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+.stagger > :nth-child(2) { --i: 1; }
+.stagger > :nth-child(3) { --i: 2; }
+.stagger > :nth-child(4) { --i: 3; }
+.stagger > :nth-child(5) { --i: 4; }
+.stagger > :nth-child(6) { --i: 5; }
+.stagger > :nth-child(7) { --i: 6; }
+.stagger > :nth-child(8) { --i: 7; }
+.stagger > :nth-child(9) { --i: 8; }
+.stagger > :nth-child(10) { --i: 9; }
+.stagger > :nth-child(n + 11) { --i: 10; }
+
+/* The animated aurora behind the app canvas: three soft radial fields drifting slowly (transform/opacity only). */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.aurora > span {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 9999px;
+  will-change: transform;
+}
+.aurora > span:nth-child(1) {
+  inset-block-start: -38vmax;
+  inset-inline-start: -10vmax;
+  background: radial-gradient(closest-side, var(--aurora-1), transparent);
+  animation: aurora-a 38s ease-in-out infinite;
+}
+.aurora > span:nth-child(2) {
+  inset-block-start: -34vmax;
+  inset-inline-end: -25vmax;
+  background: radial-gradient(closest-side, var(--aurora-2), transparent);
+  animation: aurora-b 46s ease-in-out infinite;
+}
+.aurora > span:nth-child(3) {
+  inset-block-end: -48vmax;
+  inset-inline-start: 20vmax;
+  background: radial-gradient(closest-side, var(--aurora-3), transparent);
+  animation: aurora-c 54s ease-in-out infinite;
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 55% at 50% 0%, #000 0%, transparent 75%);
+}
+
+/* Pulsing live dot: `<span class="live-dot text-success" data-pulse="true" />`. */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: currentColor;
+}
+.live-dot[data-pulse="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: live-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Progress fill with a travelling sheen. */
+.progress-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.progress-sheen::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 40%;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.35), transparent);
+  animation: progress-sheen 2.4s ease-in-out infinite;
+}
+.progress-indeterminate {
+  animation: progress-indeterminate 1.4s ease-in-out infinite;
+  transform-origin: left;
+}
+[dir="rtl"] .progress-sheen::after,
+[dir="rtl"] .progress-indeterminate {
+  animation-direction: reverse;
+}
+[dir="rtl"] .progress-indeterminate {
+  transform-origin: right;
+}
+
+/* AI core / orbit decorative SVG parts. */
+.core-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: core-breathe 4.5s ease-in-out infinite;
+}
+.orbit-spin,
+.orbit-spin-reverse,
+.orbit-spin-fast {
+  transform-box: view-box;
+  transform-origin: center;
+}
+.orbit-spin {
+  animation: orbit 28s linear infinite;
+}
+.orbit-spin-reverse {
+  animation: orbit-reverse 40s linear infinite;
+}
+.orbit-spin-fast {
+  animation: orbit 14s linear infinite;
+}
+
+/* Equalizer bars used by <SystemPulse>. */
+.pulse-bar {
+  transform-origin: bottom;
+  animation: pulse-bar 1.1s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.18s);
+}
+.pulse-bar[data-idle="true"] {
+  animation: none;
+  transform: scaleY(0.35);
+}
+
+/* Blinking caret for <TypingText>. */
+.typing-caret {
+  display: inline-block;
+  inline-size: 1.5px;
+  block-size: 1em;
+  margin-inline-start: 2px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: caret 1s steps(1) infinite;
+}
+
+/* Sidebar active indicator (positioned by JS, animated by CSS). */
+.nav-indicator {
+  transition:
+    transform 0.35s var(--ease-out-expo),
+    height 0.35s var(--ease-out-expo),
+    opacity 0.2s ease;
+}
+
+/* ───────────────────────── Auth screens ───────────────────────── */
+/* The (auth) layout renders both hero variants; the admin login page opts into "Realy Control" with data-surface="admin". */
+.auth-variant-user {
+  display: contents;
+}
+.auth-variant-admin {
+  display: none;
+}
+.auth-shell:has([data-surface="admin"]) .auth-variant-user {
+  display: none;
+}
+.auth-shell:has([data-surface="admin"]) .auth-variant-admin {
+  display: contents;
+}
+}
+
+/* ───────────────────────── Reduced motion ───────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .aurora > span,
+  .orbit-spin,
+  .orbit-spin-reverse,
+  .orbit-spin-fast,
+  .core-breathe,
+  .pulse-bar,
+  .typing-caret,
+  .progress-indeterminate {
+    animation: none !important;
+  }
+  .live-dot::after,
+  .progress-sheen::after {
+    display: none;
+  }
+  .hover-lift:hover {
+    transform: none;
   }
 }

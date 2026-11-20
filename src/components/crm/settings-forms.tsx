@@ -303,10 +303,10 @@ export function AssignmentRulesEditor({
   base: string;
   owners: Owner[];
   sources: string[];
-  rules: { id: string; name: string; strategy: string; ownerIds: string[]; matchSource: string | null; matchTerritory: string | null; active: boolean; assignedCount: number }[];
+  rules: { id: string; name: string; strategy: string; ownerIds: string[]; matchSource: string | null; matchTerritory: string | null; active: boolean; assignedCount: number; followUpDays?: number | null }[];
 }) {
   const t = useT();
-  const empty = { name: "", strategy: "ROUND_ROBIN", matchSource: "", matchTerritory: "", ownerIds: [] as string[] };
+  const empty = { name: "", strategy: "ROUND_ROBIN", matchSource: "", matchTerritory: "", ownerIds: [] as string[], followUpDays: "1", followUpNote: "" };
   const [f, setF] = useState(empty);
   const { busy, error, create } = useCreate(base, "assignment-rules");
   const nameOf = (id: string) => owners.find((o) => o.id === id)?.name ?? "—";
@@ -323,6 +323,7 @@ export function AssignmentRulesEditor({
                 {[r.matchSource ? `${t("crm.source")}: ${r.matchSource}` : null, r.matchTerritory ? `${t("crm.fields.territory")}: ${r.matchTerritory}` : null].filter(Boolean).join(" · ") || t("crm.settings.matchAll")}
               </span>
               <span className="min-w-0 flex-1 truncate text-xs">→ {r.ownerIds.map(nameOf).join(", ")}</span>
+              {r.followUpDays != null ? <span className="text-xs text-muted-foreground">{t("crm.settings.doFollowUp", { days: r.followUpDays })}</span> : null}
               <span className="text-xs text-muted-foreground">{t("crm.settings.assigned", { count: r.assignedCount })}</span>
               <ActionButton url={`${base}/crm/settings/assignment-rules/${r.id}`} method="PATCH" body={{ active: !r.active }} variant="secondary" label={r.active ? t("crm.settings.disable") : t("crm.settings.enable")} />
               <ActionButton url={`${base}/crm/settings/assignment-rules/${r.id}`} method="DELETE" size="icon" icon="trash" label={t("crm.delete")} confirm={t("crm.deleteConfirm")} />
@@ -336,7 +337,10 @@ export function AssignmentRulesEditor({
         className="grid gap-2 sm:grid-cols-4 sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
-          void create({ ...f, matchSource: f.matchSource || undefined, matchTerritory: f.matchTerritory || undefined, position: rules.length }, () => setF(empty));
+          void create(
+            { ...f, matchSource: f.matchSource || undefined, matchTerritory: f.matchTerritory || undefined, followUpDays: f.followUpDays === "" ? null : Number(f.followUpDays), followUpNote: f.followUpNote || undefined, position: rules.length },
+            () => setF(empty),
+          );
         }}
       >
         <Field label={t("crm.settings.ruleName")} htmlFor="ar-name">
@@ -361,6 +365,14 @@ export function AssignmentRulesEditor({
         <Field label={t("crm.settings.matchTerritory")} htmlFor="ar-territory" hint={t("crm.settings.matchAnyHint")}>
           <Input id="ar-territory" value={f.matchTerritory} maxLength={100} onChange={(e) => setF((p) => ({ ...p, matchTerritory: e.target.value }))} />
         </Field>
+        <Field label={t("crm.settings.intakeFollowUpDays")} htmlFor="ar-fu-days" hint={t("crm.settings.intakeFollowUpHint")}>
+          <Input id="ar-fu-days" type="number" min={0} max={365} value={f.followUpDays} onChange={(e) => setF((p) => ({ ...p, followUpDays: e.target.value }))} />
+        </Field>
+        <div className="sm:col-span-3">
+          <Field label={t("crm.followUpNote")} htmlFor="ar-fu-note">
+            <Input id="ar-fu-note" value={f.followUpNote} maxLength={1000} disabled={f.followUpDays === ""} onChange={(e) => setF((p) => ({ ...p, followUpNote: e.target.value }))} />
+          </Field>
+        </div>
         <fieldset className="grid gap-1 sm:col-span-4">
           <legend className="text-sm font-medium">{t("crm.settings.ruleOwners")}</legend>
           <div className="flex flex-wrap gap-3">
@@ -399,7 +411,7 @@ export function StageRulesEditor({
   rules: { id: string; name: string; stageLabel: string; createFollowUp: boolean; followUpDays: number; createWorkTask: boolean; notifyOwner: boolean; active: boolean }[];
 }) {
   const t = useT();
-  const empty = { stageId: stages[0]?.id ?? "", name: "", createFollowUp: true, followUpDays: "2", followUpNote: "", createWorkTask: false, workTaskTitle: "", notifyOwner: true };
+  const empty = { stageId: stages[0]?.id ?? "", name: "", createFollowUp: true, followUpDays: "2", followUpNote: "", createWorkTask: false, workTaskTitle: "", workTaskDueDays: "1", workTaskPriority: "MEDIUM", notifyOwner: true };
   const [f, setF] = useState(empty);
   const { busy, error, create } = useCreate(base, "stage-rules");
   return (
@@ -425,7 +437,10 @@ export function StageRulesEditor({
         className="grid gap-2 sm:grid-cols-3 sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
-          void create({ ...f, followUpDays: Number(f.followUpDays) || 0, followUpNote: f.followUpNote || undefined, workTaskTitle: f.workTaskTitle || undefined }, () => setF(empty));
+          void create(
+            { ...f, followUpDays: Number(f.followUpDays) || 0, followUpNote: f.followUpNote || undefined, workTaskTitle: f.workTaskTitle || undefined, workTaskDueDays: Number(f.workTaskDueDays) || 0 },
+            () => setF(empty),
+          );
         }}
       >
         <Field label={t("crm.settings.whenEntering")} htmlFor="sr-stage">
@@ -456,13 +471,25 @@ export function StageRulesEditor({
         </Field>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" className="size-4 accent-primary" checked={f.createWorkTask} onChange={(e) => setF((p) => ({ ...p, createWorkTask: e.target.checked }))} />
-          {t("crm.settings.createWorkTask")}
+          {t("crm.settings.createSalesTask")}
         </label>
         <div className="sm:col-span-2">
           <Field label={t("crm.settings.workTaskTitle")} htmlFor="sr-task">
             <Input id="sr-task" disabled={!f.createWorkTask} value={f.workTaskTitle} maxLength={200} onChange={(e) => setF((p) => ({ ...p, workTaskTitle: e.target.value }))} />
           </Field>
         </div>
+        <Field label={t("crm.settings.taskDueDays")} htmlFor="sr-task-due">
+          <Input id="sr-task-due" type="number" min={0} max={365} disabled={!f.createWorkTask} value={f.workTaskDueDays} onChange={(e) => setF((p) => ({ ...p, workTaskDueDays: e.target.value }))} />
+        </Field>
+        <Field label={t("crm.priority")} htmlFor="sr-task-priority">
+          <Select id="sr-task-priority" disabled={!f.createWorkTask} value={f.workTaskPriority} onChange={(e) => setF((p) => ({ ...p, workTaskPriority: e.target.value }))}>
+            {["LOW", "MEDIUM", "HIGH", "URGENT"].map((p) => (
+              <option key={p} value={p}>
+                {t(`crm.salesTasks.priorities.${p}`)}
+              </option>
+            ))}
+          </Select>
+        </Field>
         <div className="sm:col-span-3">
           <Button type="submit" variant="secondary" disabled={busy || !f.name.trim() || !f.stageId}>
             <Plus aria-hidden />

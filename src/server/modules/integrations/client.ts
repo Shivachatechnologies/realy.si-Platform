@@ -1,4 +1,6 @@
 import "server-only";
+import { db } from "@/server/core/db";
+import { logger } from "@/server/core/logger";
 import { consume } from "@/server/core/rate-limit";
 import type { Connection } from "./connections";
 import { authHeaders, ProviderError } from "./providers";
@@ -49,7 +51,98 @@ async function throttle(connectionId: string) {
   throw new ProviderError("rate limit for this connection exceeded; try again shortly", 429);
 }
 
+/** Host + path with long opaque segments masked (paths can carry ids or tokens); the query string is dropped. */
+export function safeUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname
+      .split("/")
+      .map((seg) => (seg.length >= 32 && /^[A-Za-z0-9_\-.~%=]+$/.test(seg) ? "…" : seg))
+      .join("/");
+    return `${u.host}${path}`.slice(0, 300);
+  } catch {
+    return "invalid-url";
+  }
+}
+
+function requestSummary(req: ProviderRequest) {
+  if (req.json !== undefined) {
+    const keys = req.json && typeof req.json === "object" && !Array.isArray(req.json) ? Object.keys(req.json as object) : null;
+    return keys ? `JSON body · fields: ${keys.slice(0, 8).join(", ")}${keys.length > 8 ? "…" : ""}` : "JSON body";
+  }
+  if (req.form) return `form body · fields: ${Object.keys(req.form).slice(0, 8).join(", ")}`;
+  return "no body";
+}
+
+/** Provider error code/message from a JSON error body (never the body itself). */
+function errorCode(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const d = data as Record<string, unknown>;
+  const e = d.error ?? d.errors ?? d.Fault ?? d.message;
+  if (typeof e === "string") return e.slice(0, 80);
+  if (e && typeof e === "object") {
+    const o = (Array.isArray(e) ? e[0] : e) as Record<string, unknown> | undefined;
+    const code = o?.code ?? o?.type ?? o?.Message ?? o?.message;
+    if (typeof code === "string" || typeof code === "number") return String(code).slice(0, 80);
+  }
+  return null;
+}
+
+interface LogEntry {
+  method: string;
+  url: string;
+  status: number | null;
+  durationMs: number;
+  attempts: number;
+  requestSummary: string;
+  responseSummary: string | null;
+  error: string | null;
+}
+
+/** Record a provider call in the connection's request log (best effort; never throws, never stores secrets or bodies). */
+export async function logProviderCall(conn: Pick<Connection, "id" | "provider"> & { organizationId?: string; companyId?: string }, entry: LogEntry): Promise<void> {
+  try {
+    let scope = conn.organizationId && conn.companyId ? { organizationId: conn.organizationId, companyId: conn.companyId } : null;
+    if (!scope) scope = await db().integrationConnection.findUnique({ where: { id: conn.id }, select: { organizationId: true, companyId: true } });
+    if (!scope) return;
+    await db().integrationRequestLog.create({
+      data: {
+        ...scope,
+        connectionId: conn.id,
+        provider: conn.provider,
+        method: entry.method,
+        url: entry.url,
+        status: entry.status,
+        durationMs: Math.max(0, Math.round(entry.durationMs)),
+        attempts: entry.attempts,
+        requestSummary: entry.requestSummary.slice(0, 300),
+        responseSummary: entry.responseSummary?.slice(0, 300) ?? null,
+        error: entry.error?.slice(0, 300) ?? null,
+      },
+    });
+  } catch (err) {
+    logger.warn({ provider: conn.provider, err: err instanceof Error ? err.message : "log failed" }, "integration request log failed");
+  }
+}
+
 export async function providerFetch<T = unknown>(conn: Connection, url: string, req: ProviderRequest = {}): Promise<ProviderResponse<T>> {
+  const started = Date.now();
+  const method = req.method ?? (req.json !== undefined || req.form ? "POST" : "GET");
+  let attempts = 0;
+  const log = (status: number | null, responseSummary: string | null, error: string | null) =>
+    logProviderCall(conn, { method, url: safeUrl(url), status, durationMs: Date.now() - started, attempts, requestSummary: requestSummary(req), responseSummary, error });
+  try {
+    const res = await providerFetchInner<T>(conn, url, req, () => attempts++);
+    const type = res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
+    await log(res.status, `${res.status} · ${type} · ${res.text.length} chars${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
+    return res;
+  } catch (err) {
+    await log(err instanceof ProviderError ? err.status : null, null, err instanceof Error ? err.message : "request failed");
+    throw err;
+  }
+}
+
+async function providerFetchInner<T>(conn: Connection, url: string, req: ProviderRequest, onAttempt: () => void): Promise<ProviderResponse<T>> {
   if (!conn.accessToken && !req.noAuth) throw new ProviderError("connection has no usable credentials", 401);
   const retries = req.retries ?? 3;
   const headers: Record<string, string> = { accept: "application/json", "user-agent": "Realy", ...(req.headers ?? {}) };
@@ -64,6 +157,7 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
   }
   let lastError: unknown = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    onAttempt();
     await throttle(conn.id);
     try {
       const res = await fetch(url, { method: req.method ?? (body ? "POST" : "GET"), headers, body, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000), redirect: "follow" });

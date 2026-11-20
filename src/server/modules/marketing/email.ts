@@ -9,7 +9,8 @@ import { emailConfigured, sendPlainEmail } from "@/server/modules/email/service"
 import { notifyUsers } from "@/server/modules/notifications/service";
 import { actorId, authorize, enumParam, instant, isUuid, PAGE_SIZE, pageParam, param, renderMergeTags, requireOwned, toInstant, uuid } from "./common";
 import { segmentRecipients } from "./segments";
-import { sendMarketingEmail } from "./mailer";
+import { renderMarketingHtml, sendMarketingEmail } from "./mailer";
+import { loadBrandKit } from "./brand";
 
 export const EMAIL_CAMPAIGN_STATUSES = ["DRAFT", "SCHEDULED", "SENDING", "SENT", "FAILED", "CANCELLED"] as const;
 export const MERGE_TAGS = ["firstName", "lastName", "email", "company", "sender"] as const;
@@ -253,7 +254,11 @@ async function sendTest(ctx: RequestContext, organizationId: string, companyId: 
   const user = ctx.actor.id ? await db().user.findUnique({ where: { id: ctx.actor.id }, select: { email: true, name: true, locale: true } }) : null;
   if (!user) throw new AppError("unauthenticated", "Sign in required");
   const vars = { firstName: user.name.split(" ")[0] ?? "", lastName: "", email: user.email, company: "", sender: c.company.name };
-  const r = await sendPlainEmail({ to: user.email, subject: `[TEST] ${renderMergeTags(c.subject, vars)}`, text: renderMergeTags(c.body, vars), template: "marketing_test", organizationId, userId: ctx.actor.id, locale: user.locale ?? "en-US" });
+  const body = renderMergeTags(c.body, vars);
+  const locale = user.locale ?? "en-US";
+  // Same HTML layout as real sends, without tracking pixel / click redirects / unsubscribe token.
+  const html = renderMarketingHtml({ body, sendId: null, locale, footer: c.company.name, unsubLabel: "", unsubscribeLink: "#", brand: await loadBrandKit(db(), companyId) });
+  const r = await sendPlainEmail({ to: user.email, subject: `[TEST] ${renderMergeTags(c.subject, vars)}`, text: body, html, template: "marketing_test", organizationId, userId: ctx.actor.id, locale });
   return { status: r.status };
 }
 

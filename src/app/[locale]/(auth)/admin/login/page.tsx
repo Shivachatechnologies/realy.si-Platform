@@ -16,17 +16,20 @@ export default async function AdminLoginPage() {
   const t = await getT(locale);
   const session = await getSession();
   if (session && !session.mfaPending && (await platformGrants(session.userId)).length > 0) redirect(`/${locale}/admin`);
+  // data-surface="admin" switches the (auth) shell to the dark "Realy Control" look (see globals.css).
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-1">
-        <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          <ShieldCheck className="size-4" aria-hidden />
-          {t("admin.title")}
-        </span>
-        <h1 className="text-xl font-semibold tracking-tight">{t("admin.signInTitle")}</h1>
-        <p className="text-muted-foreground">{t("admin.signInSubtitle")}</p>
+    <div data-surface="admin" className="control-room contents">
+      <div className="grid gap-6">
+        <div className="grid gap-2">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-medium tracking-[0.08em] text-primary uppercase">
+            <ShieldCheck className="size-3.5" aria-hidden />
+            {t("admin.title")}
+          </span>
+          <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("admin.signInTitle")}</h1>
+          <p className="text-muted-foreground">{t("admin.signInSubtitle")}</p>
+        </div>
+        <SignInForm variant="admin" />
       </div>
-      <SignInForm variant="admin" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { createTask, getTask } from "@/server/modules/agents/service";
 import { authorize, isUuid } from "./common";
 import { applyAiToContent, CONTENT_TYPES, createContent } from "./content";
 import { addKeywords } from "./seo";
+import { brandContextFor } from "./brand";
 
 /** AI work attached to marketing records (agent tasks with a subject). Outputs are applied only from completed tasks. */
 export const AI_KINDS = ["content_draft", "content_meta", "seo_keywords", "seo_brief", "seo_report", "campaign_plan", "campaign_analysis"] as const;
@@ -87,6 +88,8 @@ export async function requestAi(ctx: RequestContext, organizationId: string, com
       instructions = `Use read_campaign to load this campaign's real performance (spend, leads, won deals, content, posts, emails), then analyze it: what worked, what did not, ROI and CAC, and concrete recommendations. Use only numbers returned by the tools.\n\n${context}${extra(input.note)}`;
     }
   }
+  const brand = await brandContextFor(companyId);
+  if (brand) instructions = `${instructions}\n\n${brand}`;
   return createTask(ctx, organizationId, companyId, { profile: profile as never, title, instructions, subject: { type: subjectType, id: subjectId } });
 }
 

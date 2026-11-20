@@ -7,6 +7,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AiRequest } from "@/components/marketing/ai-panel";
 import { AiTaskList } from "@/components/marketing/ai-tasks";
 import { CampaignForm, SpendForm, UtmBuilder } from "@/components/marketing/campaign-forms";
+import { CAMPAIGN_VIEWS, CampaignLeadsView, CampaignPipelineView, CampaignViewTabs, type CampaignView } from "@/components/marketing/campaign-crm";
 import { Kpi, MarketingShell, Meter, StatusBadge, loadMarketing } from "@/components/marketing/shell";
 import { ActionButton } from "@/components/marketing/ui";
 import { majorUnits } from "@/components/marketing/format";
@@ -14,7 +15,8 @@ import { getT } from "@/i18n/server";
 import { formatDate, formatMoney, formatNumber } from "@/i18n/format";
 import { AppError } from "@/server/core/errors";
 import { listSubjectTasks } from "@/server/modules/agents/service";
-import { campaignAnalytics } from "@/server/modules/marketing/analytics";
+import { campaignAnalytics, campaignLeads, campaignPipeline, LEAD_STAGES } from "@/server/modules/marketing/analytics";
+import { enumParam, pageParam, param } from "@/server/modules/marketing/common";
 import { CAMPAIGN_TRANSITIONS, getCampaign } from "@/server/modules/marketing/campaigns";
 import { listSegments } from "@/server/modules/marketing/segments";
 
@@ -22,8 +24,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.campaigns") };
 }
 
-export default async function CampaignPage({ params }: PageProps<"/[locale]/marketing/campaigns/[campaignId]">) {
+export default async function CampaignPage({ params, searchParams }: PageProps<"/[locale]/marketing/campaigns/[campaignId]">) {
   const { campaignId } = await params;
+  const sp = await searchParams;
+  const view: CampaignView = enumParam(sp, "view", CAMPAIGN_VIEWS) ?? "overview";
   const m = await loadMarketing();
   const { locale, t } = m;
   const back = { href: `/${locale}/marketing/campaigns`, label: t("marketing.campaigns.title") };
@@ -38,6 +42,13 @@ export default async function CampaignPage({ params }: PageProps<"/[locale]/mark
     canManage ? listSegments(viewer.ctx, org.id, company.id) : Promise.resolve([]),
     canRunAgents || m.canRead ? listSubjectTasks(viewer.ctx, org.id, company.id, "marketing_campaign", c.id).catch(() => []) : Promise.resolve([]),
   ]);
+  const leadFilters = { q: param(sp, "q"), stage: enumParam(sp, "stage", LEAD_STAGES), page: pageParam(sp) };
+  const dealFilters = { status: enumParam(sp, "status", ["OPEN", "WON", "LOST"] as const), page: pageParam(sp) };
+  const [leadsView, pipelineView] = await Promise.all([
+    view === "leads" ? campaignLeads(viewer.ctx, org.id, company.id, c.id, leadFilters) : null,
+    view === "pipeline" ? campaignPipeline(viewer.ctx, org.id, company.id, c.id, dealFilters) : null,
+  ]);
+  const pagePath = `/${locale}/marketing/campaigns/${c.id}`;
   const money = (v: bigint | null) => (v == null ? "—" : formatMoney({ amountMinor: v, currency: c.currency }, locale));
   const pct = (v: number | null) => (v == null ? "—" : `${formatNumber(Math.round(v * 10) / 10, locale)}%`);
   const path = `${base}/campaigns/${c.id}`;
@@ -79,6 +90,11 @@ export default async function CampaignPage({ params }: PageProps<"/[locale]/mark
         <Kpi label={t("marketing.metrics.campaignRoi")} value={pct(a.roi)} tone={a.roi == null ? undefined : a.roi >= 0 ? "success" : "danger"} />
       </div>
 
+      <CampaignViewTabs path={pagePath} active={view} t={t} />
+      {leadsView ? <CampaignLeadsView data={leadsView} path={pagePath} locale={locale} tz={tz} t={t} f={leadFilters} /> : null}
+      {pipelineView ? <CampaignPipelineView data={pipelineView} path={pagePath} locale={locale} t={t} f={dealFilters} /> : null}
+      {view === "overview" ? (
+      <>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader title={t("marketing.campaigns.analytics")} description={t("marketing.campaigns.analyticsHint", { code: c.code })} />
@@ -108,7 +124,7 @@ export default async function CampaignPage({ params }: PageProps<"/[locale]/mark
                 ))}
               </div>
             </div>
-            <dl className="grid gap-2 text-sm sm:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-xs text-muted-foreground">{t("marketing.campaigns.formSubmissions")}</dt>
                 <dd className="tabular-nums">{a.submissions}</dd>
@@ -116,6 +132,18 @@ export default async function CampaignPage({ params }: PageProps<"/[locale]/mark
               <div>
                 <dt className="text-xs text-muted-foreground">{t("marketing.metrics.emailsSent")}</dt>
                 <dd className="tabular-nums">{a.emails.SENT ?? 0}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("marketing.campaigns.openRate")}</dt>
+                <dd className="tabular-nums">
+                  {pct(a.openRate)} <span className="text-xs text-muted-foreground">({a.emailOpened})</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("marketing.campaigns.clickRate")}</dt>
+                <dd className="tabular-nums">
+                  {pct(a.clickRate)} <span className="text-xs text-muted-foreground">({a.emailClicked})</span>
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">{t("marketing.metrics.postsPublished")}</dt>
@@ -214,7 +242,10 @@ export default async function CampaignPage({ params }: PageProps<"/[locale]/mark
         </div>
       </Card>
 
-      {canManage && !archived ? (
+      </>
+      ) : null}
+
+      {view === "overview" && canManage && !archived ? (
         <Card>
           <details>
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("marketing.campaigns.edit")}</summary>

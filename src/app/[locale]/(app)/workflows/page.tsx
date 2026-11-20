@@ -4,6 +4,7 @@ import { RUN_TONE, WORKFLOW_TONE, workflowsPage } from "@/components/automation/
 import { eventLabelKey } from "@/components/automation/labels";
 import { Stat } from "@/components/automation/page-frame";
 import { NewWorkflowForm } from "@/components/automation/workflow-forms";
+import { Notice } from "@/components/ui/notice";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -39,6 +40,14 @@ export default async function WorkflowsPage({ searchParams }: PageProps<"/[local
   };
   return p.render(
     <>
+      {overview.deadLetters ? (
+        <Notice tone="danger">
+          {t("workflows.runs.deadSummary", { count: overview.deadLetters })}{" "}
+          <Link href={`/${locale}/workflows/runs?view=dead`} className="font-medium underline">
+            {t("workflows.runs.views.dead")}
+          </Link>
+        </Notice>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label={t("workflows.metrics.activeWorkflows")} value={overview.active} />
         <Stat label={t("workflows.metrics.runs")} value={overview.runs} hint={t("workflows.last30Days")} />

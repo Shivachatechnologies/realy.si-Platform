@@ -6,7 +6,7 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { FormError } from "@/components/form-error";
 import { useI18n, useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
@@ -21,7 +21,10 @@ async function toBase64(file: File): Promise<string> {
 }
 
 /** Add a document by file (.txt / .md as text, .pdf as bytes) or pasted text. The server validates and extracts it. */
-export function AddDocumentForm({ organizationId, companyId }: { organizationId: string; companyId: string }) {
+/** "a, b c" → ["a", "b c"] (the server normalizes and validates). */
+export const parseTags = (raw: string) => raw.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean).slice(0, 10);
+
+export function AddDocumentForm({ organizationId, companyId, departments = [] }: { organizationId: string; companyId: string; departments?: { id: string; name: string }[] }) {
   const t = useT();
   const { locale } = useI18n();
   const router = useRouter();
@@ -29,6 +32,8 @@ export function AddDocumentForm({ organizationId, companyId }: { organizationId:
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [hasFile, setHasFile] = useState(false);
+  const [departmentId, setDepartmentId] = useState("");
+  const [tags, setTags] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -46,6 +51,8 @@ export function AddDocumentForm({ organizationId, companyId }: { organizationId:
       const doc = await api<{ id: string }>(`/api/v1/organizations/${organizationId}/companies/${companyId}/brain/documents`, {
         body: {
           title: title.trim() || undefined,
+          departmentId: departmentId || undefined,
+          tags: parseTags(tags),
           ...(file ? { filename: file.name, ...(isPdf ? { contentBase64: await toBase64(file) } : { content: await file.text() }) } : { content: text }),
         },
       });
@@ -67,6 +74,21 @@ export function AddDocumentForm({ organizationId, companyId }: { organizationId:
             </Field>
             <Field label={t("brain.titleLabel")} htmlFor="brain-title" hint={t("brain.titleHint")}>
               <Input id="brain-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} />
+            </Field>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label={t("brain.department")} htmlFor="brain-department">
+              <Select id="brain-department" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+                <option value="">{t("brain.noDepartment")}</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t("brain.tags")} htmlFor="brain-tags" hint={t("brain.tagsHint")}>
+              <Input id="brain-tags" value={tags} maxLength={400} onChange={(e) => setTags(e.target.value)} />
             </Field>
           </div>
           {hasFile ? null : (

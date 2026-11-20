@@ -78,6 +78,7 @@ export default async function CashFlowPage({ searchParams }: PageProps<"/[locale
               <Th className="text-end">{t("finance.cashflow.receivables")}</Th>
               <Th className="text-end">{t("finance.cashflow.recurringIncome")}</Th>
               <Th className="text-end">{t("finance.cashflow.trendIncome")}</Th>
+              <Th className="text-end">{t("finance.cashflow.billsDue")}</Th>
               <Th className="text-end">{t("finance.cashflow.recurringExpenses")}</Th>
               <Th className="text-end">{t("finance.cashflow.trendExpenses")}</Th>
               <Th className="text-end">{t("finance.cashflow.planned")}</Th>
@@ -92,6 +93,7 @@ export default async function CashFlowPage({ searchParams }: PageProps<"/[locale
                 <Td className="text-end tabular-nums">{money(m.receivables)}</Td>
                 <Td className="text-end tabular-nums">{money(m.recurringIncome)}</Td>
                 <Td className="text-end tabular-nums">{money(m.trendIncome)}</Td>
+                <Td className="text-end tabular-nums">−{money(m.payables)}</Td>
                 <Td className="text-end tabular-nums">−{money(m.recurringExpenses)}</Td>
                 <Td className="text-end tabular-nums">−{money(m.trendExpenses)}</Td>
                 <Td className="text-end tabular-nums">{money(m.planned)}</Td>

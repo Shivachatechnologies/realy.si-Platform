@@ -193,6 +193,10 @@
     "communication": {
       "title": "沟通",
       "description": "公告、讨论、会议、日历和收件箱。"
+    },
+    "builder": {
+      "title": "公司构建器",
+      "description": "借助 AI 将想法或现有业务打造成完整配置的公司。"
     }
   },
   "auth": {
@@ -536,7 +540,52 @@
       "support_attachment_empty": "文件为空。",
       "support_attachment_too_large": "附件最大为 5 MB。",
       "support_ticket_closed": "此请求已关闭。",
-      "sso_required": "您的组织要求使用单点登录，请选择“使用 SSO 登录”。"
+      "sso_required": "您的组织要求使用单点登录，请选择“使用 SSO 登录”。",
+      "brain_link_exists": "此文档已关联到该记录。",
+      "brain_source_managed": "此文档由其来源模块管理；请在该模块中取消发布或归档以将其移除。",
+      "comms_discussion_private": "此任务在您未加入的私有频道中讨论。",
+      "comms_not_attendee": "只有受邀参会者可以回复。",
+      "comms_meeting_not_scheduled": "此会议已不在计划中。",
+      "comms_meeting_not_completed": "发送跟进邮件前请先将会议标记为已召开。",
+      "comms_followup_empty": "暂无可发送内容——请添加笔记、决定、行动项或 AI 摘要。",
+      "finance_approver_required": "请选择审批人。",
+      "finance_no_approvers": "目前无人可以审批：请为某人授予 finance.manage 权限。",
+      "finance_vendor_required": "请选择供应商。",
+      "finance_bill_duplicate": "该供应商已有相同编号的账单。",
+      "finance_bill_not_draft": "只有草稿账单可以修改或提交。",
+      "finance_bill_not_pending": "该账单已批准或已作废。",
+      "finance_bill_empty": "账单总额必须大于零。",
+      "finance_bill_has_payments": "请先删除该账单的付款。",
+      "finance_bill_not_open": "只能为已批准且未付清的账单登记付款。",
+      "finance_claim_not_pending": "该费用报销已经审批。",
+      "finance_claim_no_account": "请添加用于报销的银行、现金或信用卡账户。",
+      "finance_not_approver": "您不是此申请的审批人。",
+      "finance_approval_decided": "该申请已经审批。",
+      "crm_proposal_locked": "已接受或已拒绝的方案无法修改。",
+      "crm_proposal_archived": "此方案已归档。",
+      "crm_proposal_expired": "此方案已过期。",
+      "crm_proposal_no_lines": "请先至少添加一项明细。",
+      "crm_proposal_no_email": "该联系人没有邮箱地址。",
+      "crm_email_not_configured": "未配置邮件发送；未发送任何内容。",
+      "crm_email_failed": "邮件服务商拒绝了该消息；未发送任何内容。",
+      "crm_proposal_decided": "此方案已记录了决定。",
+      "crm_proposal_no_account": "请先将商机关联到客户。",
+      "crm_proposal_currency": "财务报价单使用公司币种；此方案使用其他币种。",
+      "crm_proposal_tax_rate": "某明细的税率没有匹配的财务税率。",
+      "crm_proposal_estimate_exists": "此方案已有报价单。",
+      "crm_ai_draft_incomplete": "AI 草稿尚未完成。",
+      "automation_workflow_step_unknown": "此步骤不属于该运行的工作流版本。",
+      "objectives_owner_ineligible": "此人无权访问目标。",
+      "objectives_dates_order": "目标日期早于开始日期。",
+      "objectives_has_ai_tasks": "已有 AI 任务与之关联；请改为标记为已放弃。",
+      "objectives_unknown_metric": "该指标不存在。",
+      "objectives_metric_forbidden": "您无权访问该指标。",
+      "objectives_target_direction": "目标值必须沿所选方向偏离基线。",
+      "objectives_plan_applied": "该公司目标的计划已应用。",
+      "objectives_plan_running": "已有计划正在生成。",
+      "objectives_plan_partial": "此计划已部分应用；请先完成应用。",
+      "objectives_plan_keys": "计划中包含重复项。",
+      "objectives_goal_inactive": "只能为进行中的公司目标制定计划。"
     }
   },
   "onboarding": {
@@ -586,7 +635,10 @@
       "tasks": "进行中的任务",
       "workforce": "AI 员工角色",
       "approvals": "待审批",
-      "aiEmployees": "在岗 AI 员工"
+      "aiEmployees": "在岗 AI 员工",
+      "myTasks": "我的未完成任务",
+      "aiRunning": "运行中的 AI 任务",
+      "overdueInvoices": "逾期发票"
     },
     "systemHealth": "系统健康",
     "health": {
@@ -618,7 +670,32 @@
     "kpisLast30": "近 30 天对比前 30 天",
     "openAnalytics": "打开分析",
     "kpisForbidden": "您无权查看公司分析。",
-    "kpisEmpty": "暂无业务指标。团队开始使用财务、CRM 等模块后即会显示。"
+    "kpisEmpty": "暂无业务指标。团队开始使用财务、CRM 等模块后即会显示。",
+    "allGoals": "全部目标",
+    "countersForbidden": "您暂时无权访问这些领域。",
+    "objectiveForbidden": "您需要管理目标的权限才能设定公司目标。",
+    "objectiveHint": "按回车：目标将被保存，AI 会起草一份计划（目标、关键结果、里程碑、项目、任务），在创建任何内容前由您审阅。",
+    "objectiveNoAi": "目标将被保存；AI 规划不可用，您可以自行规划。",
+    "goals": {
+      "title": "目标进展",
+      "open": "战略",
+      "forbidden": "您无权访问公司目标。",
+      "empty": "还没有进行中的目标。在上方输入一个开始吧。",
+      "planPending": "待审阅计划",
+      "atRisk": "{count, plural, one {# 个关键结果有风险} other {# 个关键结果有风险}}",
+      "objectives": "{count, plural, one {# 个目标} other {# 个目标}}"
+    },
+    "today": {
+      "title": "今天",
+      "forbidden": "按您的权限没有可显示的内容。",
+      "tasks": "我到期的任务",
+      "noTasks": "今天没有到期的任务。",
+      "meetings": "会议",
+      "noMeetings": "今天没有会议。",
+      "followUps": "到期的跟进",
+      "noFollowUps": "没有到期的跟进。",
+      "overdue": "已逾期"
+    }
   },
   "company": {
     "title": "公司",
@@ -978,7 +1055,13 @@
     },
     "description": "描述",
     "kindCount": "{count, plural, other {# 条}}",
-    "emptyKind": "暂无内容。"
+    "emptyKind": "暂无内容。",
+    "confirmDelete": "删除此实体及其所有关系？",
+    "details": "详情",
+    "open": "打开 {name}",
+    "save": "保存",
+    "saved": "已保存",
+    "since": "自 {date} 起在图谱中"
   },
   "brain": {
     "subtitle": "{company} 的文档，已建立搜索索引。每条结果都注明其来源段落。",
@@ -997,7 +1080,8 @@
       "type": "类型",
       "passages": "段落",
       "status": "状态",
-      "added": "添加时间"
+      "added": "添加时间",
+      "source": "来源"
     },
     "status": {
       "PROCESSING": "处理中",
@@ -1015,7 +1099,128 @@
     "paste": "或粘贴文本",
     "addSubmit": "添加并索引",
     "indexing": "正在索引…",
-    "tooLarge": "文件过大（文本最大 1 MB，PDF 最大 8 MB）。"
+    "tooLarge": "文件过大（文本最大 1 MB，PDF 最大 8 MB）。",
+    "allDocuments": "全部文档",
+    "cancel": "取消",
+    "department": "部门",
+    "noDepartment": "无部门（全公司）",
+    "tags": "标签",
+    "tagsHint": "以逗号分隔的模块或领域标签，例如 销售, 入职。",
+    "noMatches": "没有符合这些筛选条件的内容。",
+    "firstPage": "第一页",
+    "nextPage": "下一页",
+    "indexedFrom": "已从所属模块自动索引 · 来源更新于 {date}",
+    "openSource": "打开来源",
+    "passages": "段落",
+    "recent": "最近添加",
+    "save": "保存",
+    "saved": "已保存",
+    "searchHint": "搜索公司文档的每个段落。按部门或标签筛选以缩小结果范围。",
+    "sourcesTitle": "知识来源",
+    "sourcesHint": "已发布的支持文章、人事制度、运营 SOP 以及产品发布和功能会自动索引并保持最新。",
+    "tabs": {
+      "search": "搜索",
+      "documents": "文档",
+      "memory": "公司记忆",
+      "ask": "询问大脑"
+    },
+    "sources": {
+      "upload": "已上传",
+      "support_kb_article": "支持文章",
+      "hr_policy": "人事制度",
+      "ops_process": "运营 SOP",
+      "product_release": "产品发布",
+      "product_feature": "产品功能"
+    },
+    "filters": {
+      "all": "全部",
+      "allDepartments": "全部部门",
+      "allSources": "全部来源",
+      "allTags": "全部标签",
+      "apply": "应用",
+      "byTitle": "标题 A–Z",
+      "newest": "最新优先",
+      "oldest": "最早优先",
+      "sort": "排序",
+      "titleSearch": "标题或文件名"
+    },
+    "links": {
+      "title": "知识关联",
+      "description": "本文档涉及的图谱实体、CRM 客户与联系人以及项目。",
+      "empty": "尚未关联任何记录。",
+      "add": "关联",
+      "find": "查找",
+      "noMatches": "没有匹配的记录",
+      "record": "记录",
+      "remove": "移除关联",
+      "restricted": "受限记录",
+      "type": "类型",
+      "types": {
+        "graph_entity": "图谱实体",
+        "account": "客户",
+        "contact": "联系人",
+        "project": "项目"
+      }
+    },
+    "related": {
+      "title": "相关知识",
+      "description": "{count, plural, =0 {没有关联的文档} other {# 个关联文档}}",
+      "empty": "尚无文档关联到此记录，也没有文档提及它。",
+      "linked": "关联的文档",
+      "mentions": "提及于",
+      "findDocument": "查找文档",
+      "document": "文档"
+    },
+    "citedIn": {
+      "title": "引用于",
+      "description": "{count, plural, =0 {尚无 AI 任务引用此文档} other {被 # 个 AI 任务引用}}",
+      "empty": "引用本文档段落的 AI 成果将显示在这里。"
+    },
+    "memory": {
+      "title": "公司记忆",
+      "subtitle": "关于公司的持久事实，每个 AI 任务都会考虑。",
+      "promptNote": "置顶的事实会加入每个 AI 任务的指令；其他事实在与任务关键词匹配时加入。AI 员工可以提议事实，只有经过批准才会保存。",
+      "new": "添加事实",
+      "add": "添加事实",
+      "titleLabel": "标题",
+      "fact": "事实",
+      "source": "来源",
+      "sourceHint": "可选——例如某次会议、文档或网址。",
+      "sourceIs": "来源：{source}",
+      "pinLabel": "置顶（始终包含在 AI 任务中）",
+      "pinned": "已置顶",
+      "pinnedOnly": "仅置顶",
+      "unpinnedOnly": "未置顶",
+      "pin": "置顶",
+      "unpin": "取消置顶",
+      "edit": "编辑",
+      "delete": "删除",
+      "confirmDelete": "要从公司记忆中删除此事实吗？",
+      "search": "搜索事实",
+      "count": "{count, plural, other {# 条事实}}",
+      "empty": "暂无事实。请添加 AI 应始终了解的决策、惯例和关键数字。",
+      "companyWide": "全公司",
+      "byAi": "由 AI 提议并已批准",
+      "byHuman": "由人员添加"
+    },
+    "ask": {
+      "title": "询问大脑",
+      "subtitle": "提出问题，从公司的文档和记忆中获得附带来源的答案。",
+      "hint": "答案仅来自公司大脑和公司记忆，并引用所用的段落。",
+      "question": "问题",
+      "placeholder": "例如：我们年度套餐的退款政策是什么？",
+      "submit": "提问",
+      "sending": "正在提问…",
+      "working": "正在搜索公司知识…",
+      "answer": "答案",
+      "openTask": "打开任务",
+      "history": "最近的问题",
+      "historyCount": "{count, plural, other {# 个问题}}",
+      "empty": "尚未提出任何问题。",
+      "notConfigured": "此平台未配置 AI，因此暂时无法回答问题。",
+      "noPermission": "您需要运行 AI 任务的权限才能询问大脑。",
+      "tryAsking": "没有匹配的段落——改为询问大脑"
+    }
   },
   "agentTasks": {
     "subtitle": "给 AI 员工分配任务。它基于 {company} 的文档和图谱工作，并交付带引用来源的成果供你审阅。",
@@ -1162,7 +1367,15 @@
       "search_kb_articles": "搜索帮助文章",
       "read_support_queue": "读取客服队列",
       "draft_ticket_reply": "起草工单回复",
-      "send_ticket_reply": "发送工单回复"
+      "send_ticket_reply": "发送工单回复",
+      "read_company_memory": "读取公司记忆",
+      "remember_company_fact": "保存公司事实",
+      "read_brand_kit": "读取品牌套件",
+      "read_payables": "读取应付账款",
+      "read_budget_status": "读取预算状态",
+      "create_bill_draft": "创建供应商账单草稿",
+      "read_proposals": "读取方案",
+      "create_proposal_draft": "创建方案草稿"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -1463,6 +1676,14 @@
     "support_lead": {
       "name": "客服主管",
       "summary": "队列健康、SLA 风险、升级和知识库缺口。"
+    },
+    "brain_answerer": {
+      "name": "大脑问答员",
+      "summary": "根据您的文档和公司记忆回答问题，并附来源。"
+    },
+    "knowledge_manager": {
+      "name": "知识经理",
+      "summary": "让公司大脑保持有用：摘要、缺口以及公司记忆中的事实。"
     }
   },
   "projects": {
@@ -1525,6 +1746,164 @@
       "ACTIVE": "进行中",
       "ACHIEVED": "已达成",
       "ABANDONED": "已放弃"
+    },
+    "tabs": {
+      "objectives": "目标",
+      "goals": "公司目标",
+      "strategy": "战略"
+    },
+    "allDepartments": "全部部门",
+    "allGoals": "全部公司目标",
+    "delete": "删除目标",
+    "deleteConfirm": "删除目标“{title}”及其里程碑和关键结果？",
+    "deleteMilestone": "删除里程碑",
+    "deleteMilestoneConfirm": "删除里程碑“{title}”？关联的项目将保留。",
+    "department": "部门",
+    "description": "描述",
+    "edit": "编辑目标",
+    "editLabel": "编辑",
+    "filter": "筛选",
+    "goal": "公司目标",
+    "milestones": "里程碑",
+    "moreDetails": "更多详情",
+    "noDepartment": "无部门",
+    "noGoal": "无公司目标",
+    "noOwner": "无负责人",
+    "overallProgress": "进度",
+    "ownedBy": "负责人：{name}",
+    "owner": "负责人",
+    "startDate": "开始日期",
+    "sort": {
+      "label": "排序",
+      "created": "最新",
+      "target": "目标日期",
+      "title": "标题"
+    },
+    "goals": {
+      "heading": "公司目标",
+      "subtitle": "公司本季度或本年度承诺达成的少数成果。每个公司目标分解为目标、关键结果、里程碑和项目。",
+      "count": "{count, plural, one {# 个公司目标} other {# 个公司目标}}",
+      "empty": "还没有公司目标。",
+      "title": "公司目标",
+      "titlePlaceholder": "例如：年度经常性收入达到 100 万",
+      "horizon": "周期",
+      "horizons": {
+        "QUARTER": "季度",
+        "YEAR": "年度"
+      },
+      "allHorizons": "全部周期",
+      "targetHint": "默认为本季度或本年度末。",
+      "ownerDefault": "我",
+      "planWithAi": "用 AI 起草计划（创建任何内容前由您审阅）",
+      "create": "添加公司目标",
+      "createAndPlan": "添加并用 AI 规划",
+      "edit": "编辑公司目标",
+      "delete": "删除公司目标",
+      "deleteConfirm": "删除公司目标“{title}”？其下的目标将保留，但不再关联。",
+      "manage": "管理公司目标"
+    },
+    "kr": {
+      "heading": "关键结果",
+      "title": "关键结果",
+      "titlePlaceholder": "例如：月度经常性收入达到 80,000",
+      "add": "添加关键结果",
+      "addHint": "关联公司数据中的指标，或跟踪您自己更新的数值。",
+      "edit": "编辑关键结果",
+      "delete": "删除关键结果",
+      "deleteConfirm": "删除关键结果“{title}”？",
+      "empty": "还没有关键结果。",
+      "source": "衡量方式",
+      "sources": {
+        "METRIC": "公司指标",
+        "MANUAL": "手动数值"
+      },
+      "metric": "指标",
+      "chooseMetric": "选择指标",
+      "unit": "单位",
+      "unitPlaceholder": "例如：客户",
+      "unitHint": {
+        "money": "以公司货币计的金额（主单位）。",
+        "percent": "百分比，0–100。",
+        "count": "数量。",
+        "days": "天。",
+        "hours": "小时。"
+      },
+      "direction": "方向",
+      "directions": {
+        "INCREASE": "提升至",
+        "DECREASE": "降低至"
+      },
+      "baseline": "基线",
+      "target": "目标值",
+      "current": "当前",
+      "values": "当前 {current} · 从 {baseline} 到 {target}",
+      "hidden": "数值已隐藏：您无权访问该指标。",
+      "status": {
+        "ACHIEVED": "已达成",
+        "ON_TRACK": "进展正常",
+        "AT_RISK": "有风险",
+        "OFF_TRACK": "偏离轨道",
+        "NO_DATA": "无数据"
+      }
+    },
+    "plan": {
+      "heading": "AI 计划",
+      "subtitle": "AI 为该公司目标提出的方案。可编辑或取消勾选任何内容、选择负责人，然后应用：只有应用时才会创建记录。",
+      "open": "规划",
+      "review": "审阅计划",
+      "applied": "计划已应用",
+      "appliedOn": "该计划已于 {date} 应用。",
+      "viewObjectives": "查看目标",
+      "viewTree": "查看目标树",
+      "none": "该公司目标尚未生成计划。",
+      "generate": "用 AI 生成计划",
+      "regenerate": "生成新计划",
+      "guidance": "给 AI 的说明（可选）",
+      "guidanceHint": "约束、预算、优先级或需参与的团队。",
+      "generating": "AI 正在起草计划…",
+      "generatingHint": "计划就绪后此页面会自动更新。",
+      "openTask": "打开 AI 任务",
+      "startFailed": "无法启动计划：{reason}",
+      "taskForbidden": "您需要 AI 任务的访问权限才能查看该公司目标的计划。",
+      "aiNotConfigured": "AI 规划不可用：未配置 AI 服务提供方。",
+      "noRunPermission": "您需要运行 AI 任务的权限才能使用 AI 规划。",
+      "invalid": "无法使用该计划",
+      "taskFailed": "AI 任务未完成：{reason}",
+      "parseErrors": {
+        "no_output": "AI 没有返回任何输出。",
+        "no_json": "AI 的回答中没有 JSON 计划。",
+        "invalid_json": "AI 的回答包含格式错误的 JSON。",
+        "invalid_plan": "AI 的计划不符合所需结构。"
+      },
+      "rawOutput": "显示 AI 的回答",
+      "readOnly": "只有管理目标的人员才能应用此计划。",
+      "objectiveShape": "{krs} 个关键结果，{milestones} 个里程碑",
+      "ready": "计划已可审阅",
+      "readyHint": "尚未创建任何内容。",
+      "resumable": "此计划中已有 {count, plural, one {# 项} other {# 项}}在一次中断的应用中创建。再次应用将继续执行，不会重复。",
+      "noProjectsPermission": "您无法创建项目，因此只会创建目标、关键结果和里程碑。",
+      "objectiveN": "目标 {n}",
+      "suggested": "AI 建议：{value}",
+      "include": "包含",
+      "unassigned": "未分配",
+      "ownerMe": "我",
+      "projectName": "项目名称",
+      "projectOwner": "项目负责人",
+      "taskTitle": "任务",
+      "assignee": "执行人",
+      "priority": "优先级",
+      "priorities": {
+        "LOW": "低",
+        "MEDIUM": "中",
+        "HIGH": "高",
+        "URGENT": "紧急"
+      },
+      "metricConverted": "AI 建议的指标 {key} 不可用；将改为手动跟踪。",
+      "krDirectionInvalid": "提升时目标值须高于基线，降低时须低于基线。",
+      "summary": "将创建 {objectives} 个目标、{keyResults} 个关键结果、{milestones} 个里程碑、{projects} 个项目和 {tasks} 个任务。",
+      "apply": "应用计划",
+      "applying": "正在应用…",
+      "partial": "出错前已创建：{objectives} 个目标、{milestones} 个里程碑、{projects} 个项目、{tasks} 个任务。"
     }
   },
   "notifications": {
@@ -1537,7 +1916,8 @@
         "notification": "{title}",
         "task_assigned": "工作流为您分配了任务：{title}",
         "approval_requested": "需要审批工作流：{title}",
-        "run_failed": "工作流运行失败：{title}"
+        "run_failed": "工作流运行失败：{title}",
+        "approval_escalated": "工作流审批已升级给您：{title}"
       },
       "marketplace": {
         "installed": "已从应用市场安装：{title}",
@@ -1581,12 +1961,23 @@
         "follow_up_assigned": "您的跟进：{title}",
         "follow_ups_due": "今日到期的跟进：{title}",
         "follow_ups_overdue": "到期的跟进：{title}",
-        "deal_stale": "商机已停滞：{title}"
+        "deal_stale": "商机已停滞：{title}",
+        "proposal_viewed": "方案已被查看：{title}",
+        "proposal_accepted": "方案已被接受：{title}",
+        "proposal_declined": "方案已被拒绝：{title}",
+        "proposal_expired": "方案已过期：{title}",
+        "sales_task_assigned": "分配给您的销售任务：{title}"
       },
       "finance": {
         "invoice_paid": "发票已付款：{title}",
         "invoice_overdue": "发票已逾期：{title}",
-        "recurring_invoice_generated": "周期发票待审核：{title}"
+        "recurring_invoice_generated": "周期发票待审核：{title}",
+        "approval_requested": "审批申请：{title}",
+        "approval_approved": "已批准：{title}",
+        "approval_rejected": "已驳回：{title}",
+        "bill_overdue": "账单逾期：{title}",
+        "budget_warning": "预算已使用 80%：{title}",
+        "budget_exceeded": "预算超支：{title}"
       },
       "hr": {
         "candidate_applied": "新申请：{title}",
@@ -1611,7 +2002,11 @@
         "meeting_invite": "会议邀请：{title}",
         "meeting_cancelled": "会议已取消：{title}",
         "meeting_completed": "会议纪要已就绪：{title}",
-        "action_item": "新行动项：{title}"
+        "action_item": "新行动项：{title}",
+        "task_discussion": "任务讨论已开始：{title}",
+        "meeting_accepted": "已接受：{title}",
+        "meeting_tentative": "待定：{title}",
+        "meeting_declined": "已拒绝：{title}"
       },
       "support": {
         "assigned": "分配给你的工单：{title}",
@@ -1763,7 +2158,8 @@
       "calendar": "日历",
       "dashboard": "仪表板",
       "import": "导入与导出",
-      "settings": "设置"
+      "settings": "设置",
+      "proposals": "报价方案"
     },
     "accountTypes": {
       "PROSPECT": "潜在客户",
@@ -1802,7 +2198,9 @@
       "winRate": "赢单率",
       "avgDealSize": "平均商机金额",
       "salesCycle": "销售周期（天）",
-      "conversionRate": "线索转化率"
+      "conversionRate": "线索转化率",
+      "proposalsSent": "已发送方案",
+      "proposalAcceptance": "方案接受率"
     },
     "accounts": {
       "add": "添加客户公司",
@@ -2099,7 +2497,11 @@
       "strategy": "策略",
       "subtitle": "管道、来源、自定义字段、细分和销售自动化。",
       "whenEntering": "当商机进入",
-      "workTaskTitle": "任务标题"
+      "workTaskTitle": "任务标题",
+      "intakeFollowUpDays": "跟进间隔（天）",
+      "intakeFollowUpHint": "为分配的负责人安排跟进。留空则不安排。",
+      "taskDueDays": "任务截止（天）",
+      "createSalesTask": "为负责人创建销售任务"
     },
     "sort": "排序",
     "sortCreated": "最新",
@@ -2107,7 +2509,163 @@
     "sortUpdated": "最近更新",
     "tag": "标签",
     "tagsPlaceholder": "例如 enterprise, renewal",
-    "viewExistingRecord": "查看已有记录"
+    "viewExistingRecord": "查看已有记录",
+    "proposals": {
+      "needDeal": "请先创建一个进行中的商机——每份方案都属于一个商机。",
+      "deal": "商机",
+      "titleLabel": "标题",
+      "titlePlaceholder": "例如：网站改版方案",
+      "create": "创建方案",
+      "revisionNotice": "此方案已发送。保存更改时，已发送版本会作为修订保留，并生成需要重新发送的新版本。",
+      "validUntil": "有效期至",
+      "estimateOnAccept": "接受后创建财务报价单",
+      "sections": {
+        "intro": "简介",
+        "scope": "工作范围",
+        "timeline": "时间安排",
+        "terms": "条款"
+      },
+      "preview": "预览",
+      "formatHint": "格式：空行开始新段落，\"- \" 表示列表，\"## \" 表示标题，**加粗**。",
+      "lines": "明细项",
+      "description": "描述",
+      "quantity": "数量",
+      "unitPrice": "单价（{currency}）",
+      "discountPct": "折扣 %",
+      "taxPct": "税率 %",
+      "addLine": "添加明细",
+      "subtotal": "小计",
+      "discount": "折扣",
+      "tax": "税额",
+      "total": "合计",
+      "totalsHint": "编辑时的合计为估算值；保存时由服务器计算最终金额。",
+      "saved": "已保存",
+      "emailNotConfigured": "此平台未配置邮件发送，因此发送会失败且不会记录为已发送。您仍可自行分享链接。",
+      "sendTo": "收件人",
+      "subject": "主题",
+      "message": "消息",
+      "messageHint": "可选。分享链接始终附在您的消息下方。",
+      "send": "发送方案",
+      "sentTo": "已发送至 {to}。",
+      "aiHint": "为客户经理创建一个 AI 任务；审阅结果后在此使用。",
+      "draftWithAi": "AI 起草",
+      "useAiConfirm": "用此 AI 草稿替换各部分内容？已发送的方案将成为新版本。",
+      "useAiDraft": "使用 AI 草稿",
+      "subtitle": "面向商机的定价方案，支持版本、分享链接和在线接受。",
+      "matching": "匹配的方案",
+      "viewedOpen": "已查看，待决定",
+      "acceptedCount": "已接受",
+      "new": "新建方案",
+      "newHint": "选择一个进行中的商机；价格使用该商机的币种。",
+      "count": "{count, plural, other {# 份方案}}",
+      "searchPlaceholder": "搜索标题、编号、商机或客户",
+      "status": {
+        "DRAFT": "草稿",
+        "SENT": "已发送",
+        "VIEWED": "已查看",
+        "ACCEPTED": "已接受",
+        "DECLINED": "已拒绝",
+        "EXPIRED": "已过期"
+      },
+      "sorts": {
+        "created": "最新",
+        "updated": "最近更新",
+        "total": "金额最高",
+        "valid": "即将过期"
+      },
+      "noMatch": "没有符合筛选条件的方案。",
+      "empty": "暂无方案。",
+      "document": "报价方案",
+      "validUntilDate": "有效期至 {date}",
+      "preparedFor": "致",
+      "pricing": "价格",
+      "price": "价格",
+      "amount": "金额",
+      "versionN": "第 {version} 版",
+      "back": "全部方案",
+      "printable": "打印版",
+      "acceptedNotice": "{name} 于 {date} 接受。",
+      "declinedNotice": "{name} 于 {date} 拒绝。",
+      "expiredNotice": "此方案已过期。请设置新的有效期并重新发送。",
+      "editor": "编辑器",
+      "editorHint": "各部分内容和明细项；金额单位为 {currency}。",
+      "previewHint": "客户通过分享链接看到的内容。",
+      "sentAt": "最近发送",
+      "views": "查看次数",
+      "viewsValue": "{count, plural, other {# 次查看}} · 首次 {date}",
+      "decision": "决定",
+      "decisionIp": "IP 地址",
+      "decisionNote": "客户备注",
+      "shareLink": "分享链接",
+      "shareDraftHint": "方案发送后链接才会生效。",
+      "shareHint": "任何持有此链接的人都可以查看方案并接受或拒绝。",
+      "viewEstimate": "查看财务报价单",
+      "createEstimate": "创建财务报价单",
+      "sendTitle": "通过邮件发送",
+      "sendHint": "将分享链接发送给联系人。只有在邮件服务商接受后才记录为已发送。",
+      "aiDescription": "与此方案关联的 AI 方案文本草稿。",
+      "sends": "邮件投递记录",
+      "notSent": "尚未发送。",
+      "revisions": "修订",
+      "revisionsHint": "修改已发送方案时保留的早期版本。",
+      "noRevisions": "没有早期版本。",
+      "viewAll": "查看全部",
+      "noneForDeal": "此商机暂无方案。"
+    },
+    "publicProposal": {
+      "title": "报价方案",
+      "from": "来自 {company} 的方案",
+      "acceptConfirm": "接受此方案？将记录您的姓名、时间和 IP 地址。",
+      "declineConfirm": "拒绝此方案？",
+      "yourName": "您的全名",
+      "note": "备注（可选）",
+      "accept": "接受方案",
+      "decline": "拒绝",
+      "recordNote": "您的决定将与您的姓名、时间和 IP 地址一起记录。",
+      "accepted": "{name} 于 {date} 接受。谢谢！",
+      "declined": "{name} 于 {date} 拒绝。",
+      "expired": "此方案已过期。请联系我们获取更新的报价。",
+      "decide": "您的决定",
+      "decideHint": "接受或拒绝此方案。"
+    },
+    "salesTasks": {
+      "priorities": {
+        "LOW": "低",
+        "MEDIUM": "中",
+        "HIGH": "高",
+        "URGENT": "紧急"
+      },
+      "title": "任务",
+      "titlePlaceholder": "例如：发送价格对比",
+      "assignee": "负责人",
+      "add": "添加任务",
+      "complete": "已完成",
+      "panel": "任务",
+      "openCount": "{count, plural, =0 {没有未完成任务} other {# 项未完成任务}}",
+      "due": "截止 {date}",
+      "doneOn": "完成于 {date}",
+      "open": "打开任务",
+      "none": "暂无任务。",
+      "new": "新建任务"
+    },
+    "emails": {
+      "title": "邮件",
+      "empty": "暂无邮件。",
+      "inbound": "收到",
+      "outbound": "已发送",
+      "sources": {
+        "crm": "CRM",
+        "proposal": "方案",
+        "marketing": "营销",
+        "inbox": "收件箱"
+      },
+      "engagement": "{opens} 次打开，{clicks} 次点击",
+      "noSubject": "（无主题）",
+      "loadMore": "加载更多（{shown}/{total}）",
+      "matching": "按 {addresses} 匹配",
+      "noAddress": "未记录邮箱地址——仅显示已记录的 CRM 邮件。",
+      "hiddenSources": "未显示（无权限）：{sources}。"
+    }
   },
   "plans": {
     "title": "AI 计划任务",
@@ -2496,10 +3054,12 @@
     },
     "providers": {
       "google": {
-        "description": "Gmail、Google 日历和云端硬盘，用于邮件、会议和文件。"
+        "description": "Gmail、Google 日历和云端硬盘，用于邮件、会议和文件。",
+        "sync": "会议与 Google 日历双向同步（向前 7 天，向后 60 天）。"
       },
       "microsoft": {
-        "description": "Outlook 邮件、日历和 Teams 消息。"
+        "description": "Outlook 邮件、日历和 Teams 消息。",
+        "sync": "未连接 Google 日历时，会议与 Outlook 日历双向同步（向前 7 天，向后 60 天）。"
       },
       "slack": {
         "description": "从工作流和提醒向 Slack 频道发送消息。"
@@ -2532,10 +3092,12 @@
         "description": "向 Instagram 企业账号发布内容。"
       },
       "quickbooks": {
-        "description": "连接 QuickBooks Online 会计。"
+        "description": "连接 QuickBooks Online 会计。",
+        "sync": "客户成为 CRM 客户公司和联系人；发票以您的本位币作为财务草稿导入一次。"
       },
       "xero": {
-        "description": "连接 Xero 会计（交易与联系人）。"
+        "description": "连接 Xero 会计（交易与联系人）。",
+        "sync": "客户联系人成为 CRM 客户公司和联系人；销售发票以您的本位币作为财务草稿导入一次。"
       },
       "webhook": {
         "description": "接收来自任意系统的签名 HTTP 回调并触发工作流。"
@@ -2684,6 +3246,28 @@
       "response": "响应",
       "nextAttempt": "下次尝试 {date}",
       "redeliver": "重新投递"
+    },
+    "calendarOk": "日历访问正常：{count, plural, other {# 个日历}}（主日历：{primary}）",
+    "calendarFailed": "日历检查失败：{error}",
+    "logs": {
+      "title": "请求日志",
+      "cardHelp": "通过此连接发出的每个 API 调用，含状态和耗时。",
+      "open": "打开日志",
+      "help": "通过此连接发出的 API 调用及其同步运行。",
+      "requests": "API 调用",
+      "privacy": "仅保留 30 天的请求方法、主机和路径、状态、耗时及简短摘要——绝不保存令牌、请求头或正文。",
+      "outcome": "结果",
+      "allOutcomes": "全部调用",
+      "ok": "成功",
+      "errors": "错误",
+      "empty": "尚无 API 调用记录。",
+      "time": "时间",
+      "request": "请求",
+      "status": "状态",
+      "duration": "耗时",
+      "summary": "响应",
+      "noResponse": "无响应",
+      "attempts": "{count, plural, other {# 次尝试}}"
     }
   },
   "workflows": {
@@ -2785,28 +3369,29 @@
       "support": "客服",
       "hr": "人事",
       "projects": "项目",
-      "operations": "运营"
+      "operations": "运营",
+      "strategy": "战略"
     },
     "templates": {
       "new_lead_follow_up": {
-        "name": "新线索 → 分配 + 跟进任务",
-        "description": "新线索无负责人时提醒销售团队，并创建明天到期的跟进任务。"
+        "name": "新线索 → 自动分配 + 跟进",
+        "description": "按 CRM 规则或在销售经理中轮流分配负责人，创建明天到期的跟进任务并通知团队。"
       },
       "invoice_overdue_reminder": {
-        "name": "发票逾期 → 通知 + 提醒任务",
-        "description": "告知财务发票逾期，并创建今天发送付款提醒的任务。"
+        "name": "发票逾期 → 提醒 + Slack",
+        "description": "为客户负责人创建催款任务，在 Slack 的 #finance 发帖（已连接时），并通知财务。"
       },
       "ticket_created_notify": {
         "name": "工单创建 → 通知客服",
         "description": "紧急和高优先级工单发送给客服主管，其余发送给客服团队。"
       },
       "employee_onboarding": {
-        "name": "员工入职 → 入职任务",
-        "description": "创建账号、入职伙伴和 30-60-90 计划任务，并在七天后安排首周沟通。"
+        "name": "员工入职 → 入职清单 + IT 设置",
+        "description": "启动 HR 入职清单，创建 IT 设置任务和给经理的导师任务，并在第一周后安排回访。"
       },
       "deal_won_project": {
-        "name": "赢单 → 创建项目",
-        "description": "创建启动任务，请 AI 运营助理起草交付计划，并通知团队庆祝。"
+        "name": "赢单 → 客户项目",
+        "description": "以客户公司名称创建客户入职项目，由交易负责人担任项目负责人，添加入职任务并请财务开具发票。"
       },
       "weekly_pipeline_review": {
         "name": "每周销售管道复盘",
@@ -2815,6 +3400,22 @@
       "form_submitted_lead": {
         "name": "表单提交 → 新线索",
         "description": "将带邮箱的表单提交转为 CRM 线索并通知销售。"
+      },
+      "objective_decompose": {
+        "name": "创建目标 → AI 计划",
+        "description": "AI CEO 将新的公司目标分解为里程碑、项目和任务，并请负责人审核计划。"
+      },
+      "ticket_urgent_on_call": {
+        "name": "紧急工单 → 值班分配",
+        "description": "将紧急工单分配给轮值中的下一位支持经理（若尚未分配），并通知其本人和团队。"
+      },
+      "candidate_hired_onboarding": {
+        "name": "候选人录用 → 入职项目",
+        "description": "创建包含合同、设备和第一周任务的入职项目，启动 HR 清单并通知 HR。"
+      },
+      "deal_approval_gate": {
+        "name": "大额交易 → 审批关卡",
+        "description": "超过 50,000 的交易需在 48 小时内获得销售经理审批，之后才通知负责人继续。"
       }
     },
     "runs": {
@@ -2845,7 +3446,32 @@
       "waiting_approval": "等待审批",
       "waiting_agent_task": "等待 AI 任务",
       "resumesAt": "{date} 继续",
-      "aiTasks": "本次运行启动的 AI 任务"
+      "aiTasks": "本次运行启动的 AI 任务",
+      "views": {
+        "all": "全部运行",
+        "dead": "永久失败"
+      },
+      "deadTitle": "永久失败的运行",
+      "deadHelp": "已永久失败的真实运行。原因修复后可从失败步骤重试，或将其移除。",
+      "deadEmpty": "没有永久失败的运行。",
+      "failedAt": "失败于 {date}",
+      "from": "从",
+      "to": "至",
+      "kind": "类型",
+      "kinds": {
+        "all": "真实与测试运行",
+        "real": "真实运行",
+        "test": "测试运行"
+      },
+      "duration": "耗时",
+      "stepCount": "{count, plural, other {# 个步骤}}",
+      "deadBadge": "永久失败",
+      "dismiss": "移除",
+      "rerunFrom": "从步骤重新运行",
+      "rerunConfirm": "所选步骤及其后所有步骤将再次运行，包括它们的操作（记录、消息）。是否继续？",
+      "rerunHelp": "可从任意步骤重新运行；之前的步骤保留其结果。",
+      "deadNotice": "此运行已永久失败并在失败列表中。已通知工作流负责人。",
+      "deadSummary": "{count, plural, other {# 次运行已永久失败。}}"
     },
     "approvals": {
       "pending": "待决定",
@@ -2868,7 +3494,11 @@
         "APPROVED": "已批准",
         "REJECTED": "已拒绝",
         "CANCELLED": "已取消"
-      }
+      },
+      "expires": "请在 {date} 前决定",
+      "escalated": "已升级",
+      "panelTitle": "{count, plural, other {# 个工作流审批等待您处理}}",
+      "panelHelp": "自动化工作流中的审批步骤。您做出决定后工作流将继续。"
     },
     "builder": {
       "trigger": "触发条件",
@@ -2936,7 +3566,20 @@
         "send_email": "发送邮件",
         "send_slack": "发送 Slack 消息",
         "http_webhook": "HTTP Webhook（POST）",
-        "custom_api": "调用自定义 API"
+        "custom_api": "调用自定义 API",
+        "create_account": "创建客户公司",
+        "assign_round_robin": "自动分配（轮流）",
+        "load_record": "查找记录",
+        "create_deal": "创建交易",
+        "move_deal_stage": "变更交易阶段",
+        "create_project": "从模板创建项目",
+        "add_project_members": "添加项目成员",
+        "start_onboarding": "启动入职清单",
+        "create_invoice": "创建发票草稿",
+        "create_meeting": "安排会议",
+        "ai_employee_task": "交给 AI 员工的任务",
+        "decompose_goal": "用 AI 分解目标",
+        "send_teams": "发布到 Microsoft Teams"
       },
       "match": "匹配",
       "matchAll": "全部条件",
@@ -2983,7 +3626,9 @@
       "connectProvider": "去连接",
       "entities": {
         "lead": "线索",
-        "work_task": "任务"
+        "work_task": "任务",
+        "deal": "交易",
+        "ticket": "支持工单"
       },
       "recordFields": {
         "stage": "阶段",
@@ -3002,7 +3647,8 @@
       "recipientOptions": {
         "owner": "工作流负责人",
         "users": "指定人员",
-        "permission": "拥有某权限的所有人"
+        "permission": "拥有某权限的所有人",
+        "field": "来自变量的人员"
       },
       "priorities": {
         "LOW": "低",
@@ -3055,8 +3701,105 @@
         "text": "消息",
         "url": "URL",
         "method": "方法",
-        "path": "路径"
-      }
+        "path": "路径",
+        "type": "类型",
+        "website": "网站",
+        "accountId": "客户公司 ID",
+        "contactId": "联系人 ID",
+        "pool": "分配来源",
+        "fallbackPermission": "若无规则匹配，在拥有以下权限的人中轮流",
+        "stageId": "阶段",
+        "amount": "金额",
+        "closeInDays": "预计成交（天后）",
+        "dealId": "交易 ID",
+        "lostReason": "丢单原因",
+        "template": "项目模板",
+        "startInDays": "开始于（天后）",
+        "extraMemberIds": "更多成员（来自变量的用户 ID）",
+        "memberIds": "团队成员",
+        "projectId": "项目 ID",
+        "role": "角色",
+        "extraUserIds": "更多人员（来自变量的用户 ID）",
+        "employeeId": "员工 ID",
+        "checklist": "清单",
+        "templateId": "清单模板",
+        "quantity": "数量",
+        "unitPrice": "单价",
+        "startsAt": "开始时间（来自变量的日期时间）",
+        "startInHours": "否则开始于（小时后）",
+        "durationMinutes": "时长（分钟）",
+        "extraAttendeeIds": "更多参会人（来自变量的用户 ID）",
+        "attendeeIds": "参会人",
+        "location": "地点",
+        "agenda": "议程",
+        "aiEmployeeId": "AI 员工",
+        "objectiveId": "目标 ID",
+        "guidance": "给 AI 的指引",
+        "userField": "人员（来自变量的用户 ID）",
+        "approverMode": "审批人",
+        "ownerField": "记录负责人（来自变量的用户 ID）",
+        "timeoutAction": "若无人按时决定",
+        "timeoutHours": "超时（小时）",
+        "escalateToIds": "升级给",
+        "ifNotConnected": "提供方未连接时跳过此步骤（而不是失败）",
+        "teamId": "团队 ID",
+        "channelId": "频道 ID"
+      },
+      "actionGroups": {
+        "crm": "销售与 CRM",
+        "work": "项目与任务",
+        "people": "人员、会议与财务",
+        "ai": "AI 员工",
+        "messaging": "通知与消息",
+        "developer": "开发者"
+      },
+      "accountTypes": {
+        "PROSPECT": "潜在客户",
+        "CUSTOMER": "客户",
+        "PARTNER": "合作伙伴",
+        "VENDOR": "供应商",
+        "OTHER": "其他"
+      },
+      "pools": {
+        "users": "在指定人员中轮流",
+        "permission": "拥有某权限的所有人（轮流）",
+        "crm_rules": "CRM 线索分配规则"
+      },
+      "rotationHint": "每次运行分配给列表中的下一位。",
+      "loadEntities": {
+        "account": "客户公司",
+        "contact": "联系人",
+        "lead": "线索",
+        "deal": "交易",
+        "project": "项目",
+        "objective": "目标",
+        "employee": "员工",
+        "candidate": "候选人",
+        "ticket": "支持工单",
+        "invoice": "发票"
+      },
+      "loadHint": "后续步骤可将 steps.{step}.name、steps.{step}.ownerId 及记录的其他字段作为变量使用。",
+      "defaultStage": "默认销售管道的第一阶段",
+      "blankProject": "空白项目",
+      "checklists": {
+        "ONBOARDING": "入职",
+        "OFFBOARDING": "离职"
+      },
+      "defaultTemplate": "默认模板",
+      "invoiceHint": "发票会在财务中以草稿形式创建，发送前可先审核。",
+      "noAiEmployees": "还没有 AI 员工。请先在 AI 员工中雇用一位。",
+      "decomposeHint": "AI CEO 将目标分解为里程碑、项目和任务，供负责人审核。",
+      "approverModes": {
+        "users": "指定人员",
+        "permission": "拥有某权限的人",
+        "record_owner": "记录负责人"
+      },
+      "timeoutActions": {
+        "reject": "自动拒绝",
+        "escalate": "升级一次，然后拒绝"
+      },
+      "noTimeout": "无期限等待",
+      "teamsHint": "在 Teams 中通过“获取频道链接”找到团队和频道 ID。使用 Microsoft 365 连接。"
     },
     "events": {
       "lead_created": "新线索",
@@ -3095,7 +3838,18 @@
       "integration_synced": "集成已同步",
       "agent_task_completed": "AI 任务已完成",
       "agent_task_failed": "AI 任务失败",
-      "milestone_completed": "里程碑已完成"
+      "milestone_completed": "里程碑已完成",
+      "objective_created": "目标已创建"
+    },
+    "compare": {
+      "title": "比较版本",
+      "help": "并排显示两个定义。删除的行为红色，新增的行为绿色。",
+      "changes": "{count, plural, other {# 行有变化}}",
+      "identical": "完全相同",
+      "show": "比较",
+      "left": "左侧",
+      "right": "右侧",
+      "draft": "当前草稿"
     }
   },
   "marketplace": {
@@ -4027,7 +4781,13 @@
       "spent": "已花费",
       "timeCost": "工时成本",
       "title": "预算",
-      "used": "预算使用"
+      "used": "预算使用",
+      "financeTitle": "财务记账",
+      "financeOpen": "打开项目成本报表",
+      "financeBills": "供应商账单",
+      "financeExpenses": "费用",
+      "financeTotal": "总成本（财务）",
+      "financePending": "待审批报销"
     },
     "calendar": {
       "more": "另有 {count} 项",
@@ -4635,7 +5395,8 @@
       "email": "邮件",
       "audience": "受众",
       "forms": "表单",
-      "automation": "自动化"
+      "automation": "自动化",
+      "brand": "品牌"
     },
     "common": {
       "allStatuses": "全部状态",
@@ -4676,7 +5437,8 @@
       "conversionRate": "转化率",
       "emailsSent": "已发送邮件",
       "postsPublished": "已发布社交帖子",
-      "activeCampaigns": "进行中的活动"
+      "activeCampaigns": "进行中的活动",
+      "emailOpenRate": "邮件打开率"
     },
     "commandCenter": {
       "title": "营销指挥中心",
@@ -4756,7 +5518,40 @@
         "ACTIVE": "启动 / 恢复",
         "PAUSED": "暂停",
         "COMPLETED": "完成"
-      }
+      },
+      "views": "活动视图",
+      "view": {
+        "overview": "概览",
+        "leads": "线索",
+        "pipeline": "管道与成交收入"
+      },
+      "leadsHint": "活动代码或来源为本活动代码的 CRM 线索（由表单和 UTM 链接设置）。",
+      "searchLeads": "搜索姓名、邮箱或公司",
+      "stage": "阶段",
+      "allStages": "所有阶段",
+      "noLeads": "尚无归属于此活动的线索。",
+      "leadName": "线索",
+      "owner": "负责人",
+      "value": "价值",
+      "created": "创建时间",
+      "openPipeline": "未结管道",
+      "weightedPipeline": "加权管道",
+      "wonRevenue": "成交收入",
+      "lostRevenue": "丢单",
+      "dealsN": "{count, plural, one {# 笔交易} other {# 笔交易}}",
+      "pipelineHint": "带有此活动代码或由其线索转化的 CRM 交易（只读）。",
+      "winRate": "赢单率",
+      "dealStatus": {
+        "OPEN": "进行中",
+        "WON": "赢单",
+        "LOST": "丢单"
+      },
+      "allDeals": "全部交易",
+      "noDeals": "没有归属于此活动的 CRM 交易。",
+      "deal": "交易",
+      "expectedClose": "预计 / 关闭",
+      "openRate": "邮件打开率",
+      "clickRate": "邮件点击率"
     },
     "channels": {
       "email": "邮件",
@@ -5343,6 +6138,46 @@
       "doneBody": "{email} 将不再收到 {company} 的营销邮件。",
       "invalidTitle": "链接无效",
       "invalidBody": "此退订链接无效或不完整，请使用最新邮件中的链接。"
+    },
+    "brand": {
+      "title": "品牌套件",
+      "subtitle": "语气、信息、用户画像和视觉识别——供所有 AI 写手和 HTML 邮件使用。",
+      "kit": "品牌规范",
+      "updated": "最后更新于 {when}",
+      "empty": "尚无品牌套件。创建一个，让 AI 内容遵循您的品牌。",
+      "emptyReadOnly": "尚未设置品牌套件。",
+      "brandName": "品牌名称",
+      "tagline": "标语",
+      "voiceTone": "语气与语调",
+      "voiceToneHint": "品牌的说话方式，例如“自信温暖、语言平实、不用行话”。",
+      "pillars": "核心信息支柱",
+      "pillarsHint": "每行一条。",
+      "doWords": "推荐用词",
+      "dontWords": "避免用词",
+      "personas": "受众画像",
+      "personaName": "画像名称",
+      "personaDescription": "他们是谁，需要什么",
+      "addPersona": "添加画像",
+      "colors": "颜色",
+      "colorsHint": "第一个颜色是邮件中使用的主色。",
+      "colorValue": "颜色",
+      "colorName": "名称",
+      "primary": "主色",
+      "addColor": "添加颜色",
+      "logoUrl": "Logo 网址",
+      "logoHint": "显示在营销邮件顶部。",
+      "logoDarkUrl": "Logo 网址（深色背景）",
+      "iconUrl": "图标网址",
+      "headingFont": "标题字体",
+      "bodyFont": "正文字体",
+      "save": "保存品牌套件",
+      "create": "创建品牌套件",
+      "saved": "已保存",
+      "delete": "删除品牌套件",
+      "confirmDelete": "删除品牌套件？AI 写手将不再获得品牌规范。",
+      "preview": "预览",
+      "aiContext": "AI 写手收到的内容",
+      "aiContextHint": "附加到每个 AI 内容任务（草稿、社交帖子、SEO 简报、邮件、活动计划）。"
     }
   },
   "sales": {
@@ -5350,7 +6185,8 @@
       "overview": "概览",
       "targets": "目标",
       "commissions": "佣金",
-      "reports": "报表"
+      "reports": "报表",
+      "team": "团队"
     },
     "subtitle": "基于实时 CRM 数据的团队业绩、预测和目标。",
     "from": "从",
@@ -5438,7 +6274,19 @@
       "qualified": "已合格",
       "subtitle": "任意日期范围的转化、归因和输单原因，支持导出 CSV。",
       "truncated": "仅显示前 500 个商机。导出 CSV 获取全部。",
-      "won": "赢单"
+      "won": "赢单",
+      "funnelTitle": "线索 → 商机 → 赢单",
+      "funnelHint": "期间内创建的线索，其中多少转化为商机，多少赢单。",
+      "opportunities": "商机",
+      "conversionByCampaign": "按活动代码的转化",
+      "stageTitle": "阶段转化 · {pipeline}",
+      "stageHint": "期间内有阶段变动的 {deals} 个商机 · {won} 个赢单（{rate}）。",
+      "reached": "到达",
+      "nextStage": "下一阶段",
+      "toNext": "转入下一阶段",
+      "avgDays": "阶段平均天数",
+      "wonStage": "赢单",
+      "noStageData": "此期间没有阶段变动。"
     },
     "targets": {
       "MONTH": "按月",
@@ -5459,6 +6307,38 @@
       "subtitle": "每人的收入和商机目标，按赢单计算完成率。",
       "teamTotal": "团队：{won} / {target}",
       "thisMonth": "本月目标"
+    },
+    "myTasks": {
+      "title": "我的销售任务",
+      "summary": "{open} 项未完成 · {overdue} 项逾期",
+      "none": "没有分配给您的销售任务。"
+    },
+    "team": {
+      "title": "销售团队",
+      "subtitle": "拥有销售权限的成员：工作量、容量、目标与配额达成。",
+      "hint": "线索分配规则会使用容量限制：不可用的成员和已达未结线索上限的成员会被跳过。",
+      "members": "成员",
+      "unavailable": "{count} 人不可用",
+      "monthQuota": "本月配额",
+      "monthWon": "本月赢单",
+      "openDeals": "进行中商机",
+      "openLeads": "未结线索",
+      "openTasks": "未完成任务",
+      "followUps": "未完成跟进",
+      "pipeline": "进行中管道 {amount}",
+      "role": "角色",
+      "maxOpenDeals": "进行中商机上限",
+      "maxOpenLeads": "未结线索上限",
+      "available": "可用",
+      "away": "不可用",
+      "atCapacity": "已满负荷",
+      "period": "周期",
+      "thisMonth": "本月",
+      "thisQuarter": "本季度",
+      "targetAmount": "目标金额",
+      "setTarget": "设置目标",
+      "noTarget": "无目标",
+      "empty": "该公司尚无人拥有销售权限。"
     }
   },
   "finance": {
@@ -5477,7 +6357,11 @@
       "cashflow": "现金流",
       "accounting": "会计",
       "reports": "报表",
-      "settings": "设置"
+      "settings": "设置",
+      "bills": "供应商账单",
+      "payables": "应付账款",
+      "approvals": "审批",
+      "claims": "费用报销"
     },
     "accounting": {
       "tabs": {
@@ -5497,7 +6381,10 @@
       "runwayMonths": "资金跑道（月）",
       "mrr": "MRR",
       "arr": "ARR",
-      "receivablesOverdue": "逾期应收"
+      "receivablesOverdue": "逾期应收",
+      "payablesOpen": "应付账款",
+      "payablesOverdue": "逾期应付",
+      "budgetUtilization": "预算使用率"
     },
     "range": {
       "from": "从",
@@ -5548,7 +6435,8 @@
       "email": "电子邮件",
       "phone": "电话",
       "website": "网站",
-      "address": "地址"
+      "address": "地址",
+      "project": "项目"
     },
     "dashboard": {
       "getStarted": "添加第一个银行、现金或信用卡账户，开始记录资金。",
@@ -5569,7 +6457,10 @@
       "insightsHint": "AI CFO 通过工具读取您的真实数据，撰写包含建议的简报。",
       "insights": "获取 AI CFO 洞察",
       "insightsFocus": "可选重点，例如如何延长资金跑道",
-      "insightsNoPermission": "您需要运行 AI 任务的权限才能请求洞察。"
+      "insightsNoPermission": "您需要运行 AI 任务的权限才能请求洞察。",
+      "dueSoon": "30 天内到期：{amount}",
+      "upcomingPayablesHint": "未来 30 天到期及已逾期的已批准账单。",
+      "yourApprovals": "{count, plural, other {# 项待您审批}}"
     },
     "anomalies": {
       "title": "支出异常",
@@ -5601,7 +6492,8 @@
       "planHint": "预测中需包含的预期一次性付款或收款。",
       "addPlanned": "添加计划项目",
       "plannedAmountHint": "流出请填负数，例如 -2500",
-      "planEmpty": "暂无计划项目。"
+      "planEmpty": "暂无计划项目。",
+      "billsDue": "到期账单"
     },
     "scenarios": {
       "title": "情景规划",
@@ -5659,7 +6551,9 @@
         "IMPORT": "导入",
         "RECURRING": "周期",
         "PAYMENT": "发票付款",
-        "AI": "AI（已批准）"
+        "AI": "AI（已批准）",
+        "BILL_PAYMENT": "账单付款",
+        "EXPENSE_CLAIM": "费用报销"
       },
       "fromAccount": "转出账户",
       "toAccount": "转入账户",
@@ -5925,7 +6819,24 @@
       "currentBudget": "当前预算",
       "currentActual": "目前已花费",
       "overBudget": "超预算",
-      "confirmDelete": "删除此预算？"
+      "confirmDelete": "删除此预算？",
+      "hintAccrual": "实际 = 预算期间、类别和成本中心内的费用交易加上已批准的供应商账单。",
+      "departmentsTitle": "部门 · {period}",
+      "departmentsHint": "各成本中心的预算与实际对比。预算负责人（部门负责人）会在使用 80% 和 100% 时收到通知。",
+      "departmentsEmpty": "此期间没有部门预算或支出。",
+      "periods": {
+        "month": "月",
+        "quarter": "季度"
+      },
+      "owner": "负责人",
+      "ownerIs": "负责人：{name}",
+      "expensesPart": "费用",
+      "billsPart": "账单",
+      "totalLine": "{actual} / {budget}",
+      "openAll": "全部交易",
+      "noSpend": "此期间没有费用。",
+      "noBills": "此期间没有已批准的账单。",
+      "noDepartmentBudget": "没有覆盖此期间的预算。"
     },
     "chart": {
       "add": "添加科目",
@@ -5975,7 +6886,9 @@
         "CREDIT_NOTE": "贷项通知单",
         "TRANSACTION": "交易",
         "OPENING": "期初余额",
-        "REVERSAL": "冲销"
+        "REVERSAL": "冲销",
+        "BILL": "供应商账单",
+        "BILL_PAYMENT": "账单付款"
       }
     },
     "ledger": {
@@ -6040,7 +6953,8 @@
         "cashflow": "现金流量表",
         "budget": "预算与实际",
         "revenue": "收入",
-        "expenses": "支出"
+        "expenses": "支出",
+        "projects": "项目成本"
       },
       "period": "{from} – {to}",
       "asOf": "截至 {date}",
@@ -6092,6 +7006,169 @@
       "costCenterCode": "代码",
       "noCostCenters": "暂无成本中心。",
       "totalSpend": "总支出"
+    },
+    "bills": {
+      "new": "新建账单",
+      "newHint": "登记供应商账单。审批后计入应付账款；付款后核销。",
+      "edit": "编辑账单",
+      "editTitle": "编辑账单 {number}",
+      "search": "搜索编号、供应商或明细…",
+      "allVendors": "所有供应商",
+      "empty": "暂无账单。",
+      "number": "账单编号",
+      "numberHint": "供应商的发票编号。",
+      "billDate": "账单日期",
+      "newVendor": "新供应商…",
+      "newVendorHint": "选择供应商或输入新供应商。",
+      "attachment": "账单扫描件",
+      "attachmentReplaceHint": "选择文件以替换当前扫描件（PDF 或图片，最大 5 MB）。",
+      "saveDraft": "保存草稿",
+      "saveAndSubmit": "保存并提交",
+      "submitHint": "提交后，如适用审批规则则送审；否则立即批准并入账。",
+      "submit": "提交",
+      "confirmSubmit": "提交此账单？批准后将计入应付账款。",
+      "submitFailed": "账单已保存为草稿，但提交失败。请检查信息后重新提交。",
+      "recordPayment": "登记付款",
+      "payFrom": "付款账户",
+      "void": "作废",
+      "confirmVoid": "作废此账单？其凭证将被冲销。",
+      "confirmDelete": "删除此账单草稿？",
+      "awaitingApproval": "待审批",
+      "overdue": "已逾期",
+      "showOverdue": "显示逾期账单",
+      "lines": "明细行",
+      "dates": "账单日期 {issue} · 到期 {due}",
+      "coding": "类别 · 成本中心 · 项目",
+      "paid": "已付",
+      "netAmount": "净额",
+      "dueOn": "{date} 到期",
+      "viewBill": "查看账单",
+      "submittedAt": "提交于 {date}",
+      "approvedAt": "批准于 {date}",
+      "voidedAt": "作废于 {date}",
+      "statuses": {
+        "DRAFT": "草稿",
+        "AWAITING_APPROVAL": "待审批",
+        "APPROVED": "已批准",
+        "PARTIALLY_PAID": "部分付款",
+        "PAID": "已付清",
+        "VOID": "已作废"
+      }
+    },
+    "payables": {
+      "total": "应付总额",
+      "byVendor": "按供应商应付",
+      "empty": "没有未结应付款。",
+      "overdue": "逾期",
+      "agingTitle": "应付账款账龄",
+      "agingHint": "已批准未付款的账单，按逾期天数分组。",
+      "upcomingTitle": "即将到期的应付款",
+      "upcomingHint": "未来 30 天到期：{amount}",
+      "noUpcoming": "未来 30 天没有到期款项。",
+      "overdueTitle": "逾期账单",
+      "overdueHint": "账单逾期时会通知财务经理一次。",
+      "noOverdue": "没有逾期账单。"
+    },
+    "approvals": {
+      "queue": "审批队列",
+      "waitingForYou": "待您处理",
+      "rulesActive": "生效规则",
+      "scopes": {
+        "mine": "待我审批",
+        "requested": "我发起的",
+        "all": "全部申请"
+      },
+      "statuses": {
+        "PENDING": "待审批",
+        "APPROVED": "已批准",
+        "REJECTED": "已驳回",
+        "CANCELLED": "已取消"
+      },
+      "kinds": {
+        "ANY": "账单和费用",
+        "BILL": "账单",
+        "EXPENSE": "费用报销"
+      },
+      "modes": {
+        "FINANCE_MANAGERS": "财务经理",
+        "DEPARTMENT_HEAD": "部门负责人",
+        "USER": "指定人员"
+      },
+      "nothingPending": "没有等待您审批的事项。",
+      "decide": "审批",
+      "approve": "批准",
+      "reject": "驳回",
+      "note": "备注",
+      "notePlaceholder": "给申请人的备注（可选）",
+      "rejectWithoutNote": "不填写备注直接驳回？",
+      "requestedBy": "申请人：{name}",
+      "decidedBy": "{name} 于 {date} 审批",
+      "byRule": "规则：{name}",
+      "pendingTitle": "等待审批",
+      "waitingFor": "审批人：{names}",
+      "notYourDecision": "您不是此申请的审批人。",
+      "history": "审批记录",
+      "noHistory": "暂无审批记录。",
+      "rulesTitle": "审批规则",
+      "rulesHint": "金额达到或超过设定值的账单和费用报销（可限定成本中心或类别）需要审批。由最具体的匹配规则决定审批人。费用报销始终需要审批。",
+      "newRule": "新建规则",
+      "noRules": "没有规则：账单提交即批准；费用报销交由财务经理审批。",
+      "appliesTo": "适用于",
+      "minAmount": "起始金额",
+      "minAmountHint": "账单总额或报销金额，以公司币种计。",
+      "approverMode": "审批人",
+      "approverUser": "审批人（个人）",
+      "approverUserHint": "仅用于“指定人员”。",
+      "active": "启用",
+      "confirmDeleteRule": "删除此审批规则？"
+    },
+    "claims": {
+      "submitTitle": "提交费用",
+      "submitHint": "为公司垫付了费用？连同收据一起提交；批准后报销并入账。",
+      "submit": "提交费用",
+      "submitShort": "提交费用 →",
+      "merchant": "商户",
+      "receipt": "收据",
+      "descriptionPlaceholder": "例如：前往客户研讨会的火车票",
+      "mineTitle": "我的费用报销",
+      "allTitle": "全部费用报销",
+      "mine": "我的",
+      "everyone": "所有人",
+      "empty": "暂无费用报销。",
+      "requester": "提交人",
+      "payFrom": "报销账户",
+      "firstAccount": "将使用第一个银行或现金账户进行报销。",
+      "withdraw": "撤回",
+      "confirmWithdraw": "撤回此费用报销？",
+      "viewTransaction": "查看已入账交易",
+      "statuses": {
+        "PENDING": "待审批",
+        "APPROVED": "已批准",
+        "REJECTED": "已驳回"
+      },
+      "decided": {
+        "APPROVED": "已批准并入账",
+        "REJECTED": "已驳回"
+      }
+    },
+    "projects": {
+      "all": "所有项目",
+      "expenses": "费用",
+      "bills": "账单",
+      "totalCost": "总成本",
+      "income": "收入",
+      "empty": "此期间没有标记到项目的成本。",
+      "viewBills": "账单",
+      "pendingClaims": "待审批报销 {amount}",
+      "taggedWith": "项目：{name}"
+    },
+    "ask": {
+      "title": "询问 AI CFO",
+      "hint": "就您的数据提出问题；AI CFO 将根据您的账簿作答。",
+      "placeholder": "例如：下个季度我们能负担两名新员工吗？",
+      "submit": "提问",
+      "asking": "正在提问…",
+      "thinking": "正在准备答案…"
     }
   },
   "hr": {
@@ -7233,7 +8310,50 @@
       "reviewItems": "检查摘要中找到的行动项，然后创建。",
       "noItemsInSummary": "摘要中没有行动项列表。",
       "confirmCreate": "{count, plural, other {创建 # 个行动项}}",
-      "itemsCreated": "行动项已创建。"
+      "itemsCreated": "行动项已创建。",
+      "repeat": "重复",
+      "repeatNone": "不重复",
+      "recurrence": {
+        "WEEKLY": "每周",
+        "BIWEEKLY": "每两周"
+      },
+      "occurrences": "会议次数",
+      "occurrencesHint": "2–26 次，包括本次。",
+      "applyTo": "应用于",
+      "scopeThis": "仅本次会议",
+      "scopeFollowing": "本次及后续会议",
+      "scopeSeries": "系列中所有后续会议",
+      "agendaTemplate": "议程模板",
+      "replaceAgenda": "用此模板替换当前议程？",
+      "useTemplate": "使用模板…",
+      "rsvpAction": {
+        "ACCEPTED": "接受",
+        "TENTATIVE": "待定",
+        "DECLINED": "拒绝"
+      },
+      "rsvp": {
+        "PENDING": "未回复",
+        "ACCEPTED": "已接受",
+        "TENTATIVE": "待定",
+        "DECLINED": "已拒绝"
+      },
+      "yourRsvp": "您的回复",
+      "followUpTitle": "跟进邮件",
+      "followUpDescription": "将摘要（最新 AI 摘要或决定）、行动项以及可选的笔记通过邮件发送给所有参会者。",
+      "followUpIncludeNotes": "包含会议笔记",
+      "followUpSend": "发送跟进邮件",
+      "followUpResend": "再次发送",
+      "followUpSending": "发送中…",
+      "followUpNotConfigured": "未配置邮件发送——未发送任何邮件。",
+      "followUpResult": "已发送 {sent} · 失败 {failed} · 未配置 {notConfigured} · 无邮箱 {skipped}",
+      "followUpLast": "最近一次尝试 {when}",
+      "templates": "议程模板（{count}）",
+      "noTemplates": "暂无议程模板。",
+      "templateName": "模板名称",
+      "newTemplate": "新建模板",
+      "deleteThis": "删除本次会议",
+      "deleteFollowing": "删除本次及后续",
+      "series": "系列"
     },
     "calendar": {
       "title": "日历",
@@ -7250,7 +8370,20 @@
       "syncNow": "同步日历",
       "notConnected": "未连接 Google 日历 / Outlook 日历，会议不会同步。",
       "legendMeetings": "会议",
-      "legendEvents": "公司活动"
+      "legendEvents": "公司活动",
+      "onLeave": "{name} — 休假",
+      "you": "您",
+      "dealCloses": "成交：{name}",
+      "layers": "图层",
+      "layer": {
+        "meetings": "会议",
+        "events": "公司活动",
+        "leave": "休假",
+        "holidays": "节假日",
+        "crm": "CRM 跟进与成交"
+      },
+      "leaveAll": "显示所有人已批准的休假",
+      "leaveOwn": "显示您本人已批准的休假"
     },
     "inbox": {
       "title": "收件箱",
@@ -7375,6 +8508,45 @@
       "announcementsPublished": "已发布公告",
       "meetingsHeld": "已召开会议",
       "openActionItems": "未完成行动项"
+    },
+    "tasks": {
+      "linkedTask": "关联任务",
+      "openDiscussion": "#{channel} 中的讨论",
+      "privateDiscussion": "在私有频道中讨论",
+      "discuss": "在频道中讨论",
+      "discussHint": "开启与此任务关联的话题。用 @ 提及他人以通知他们。",
+      "noChannels": "暂无您可发帖的频道。",
+      "createChannel": "创建频道",
+      "channel": "频道",
+      "note": "开场消息（可选）",
+      "start": "开始讨论"
+    },
+    "hub": {
+      "label": "沟通中心",
+      "feed": "动态",
+      "conversations": "会话",
+      "mentions": "提及",
+      "announcements": "公告",
+      "meetings": "会议",
+      "conversationsHint": "{count, plural, =0 {全部已读} one {# 条未读消息} other {# 条未读消息}}",
+      "searchConversations": "搜索频道和联系人",
+      "unreadOnly": "仅未读",
+      "noConversations": "暂无会话——加入频道或发起私信。",
+      "direct": "私信",
+      "mentionsHint": "提及您的消息、帖子、评论和任务评论。",
+      "mentionKind": {
+        "all": "全部",
+        "message": "消息",
+        "post": "帖子",
+        "comment": "评论",
+        "task_comment": "任务评论"
+      },
+      "noMentions": "还没有人提及您。",
+      "subject": {
+        "post": "在帖子中",
+        "announcement": "在公告中",
+        "meeting": "在会议中"
+      }
     }
   },
   "support": {
@@ -7753,5 +8925,95 @@
       "viewTicket": "查看您的请求",
       "browseHelp": "浏览帮助中心"
     }
+  },
+  "strategy": {
+    "tabs": {
+      "profile": "概况",
+      "strategy": "战略",
+      "operations": "运营"
+    },
+    "title": "战略",
+    "subtitle": "使命、愿景、价值观和战略支柱，以及每个公司目标如何分解为目标、里程碑、项目和任务。",
+    "foundations": "基础",
+    "foundationsHint": "公司为何存在以及如何运作。",
+    "mission": "使命",
+    "missionHint": "用一两句话说明公司为何存在。",
+    "vision": "愿景",
+    "visionHint": "当您成功时，世界会是什么样子。",
+    "values": "价值观",
+    "addValue": "添加价值观",
+    "valuePlaceholder": "例如：客户至上",
+    "removeValue": "移除 {value}",
+    "pillars": "战略支柱",
+    "noPillars": "还没有战略支柱。",
+    "pillar": "战略支柱",
+    "noPillar": "无支柱",
+    "pillarTitle": "支柱",
+    "pillarDescription": "描述",
+    "addPillar": "添加支柱",
+    "removePillar": "移除支柱",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "saved": "战略已保存。",
+    "tree": "目标树",
+    "treeHint": "公司目标 → 目标 → 里程碑 → 关联项目，含进度。",
+    "taskCount": "{done}/{total} 个任务",
+    "operations": {
+      "title": "公司运营",
+      "subtitle": "一览所有部门：人员、项目、预算使用情况及其关键结果的进展。",
+      "forbidden": "您需要人力资源或目标的访问权限才能查看运营看板。",
+      "partial": "部分列已隐藏，因为您无权访问：{areas}。",
+      "areas": {
+        "hr": "人力资源",
+        "projects": "项目",
+        "finance": "财务",
+        "objectives": "目标"
+      },
+      "tiles": {
+        "departments": "部门",
+        "headcount": "人数",
+        "unassigned": "未分配部门",
+        "openProjects": "进行中的项目"
+      },
+      "departments": "部门",
+      "departmentsHint": "本期预算，以 {currency} 计。项目按其负责人的部门统计。",
+      "noDepartments": "还没有部门。",
+      "setupHr": "在人力资源中设置部门",
+      "noBudget": "无预算",
+      "atRisk": "（{count} 个有风险）",
+      "columns": {
+        "department": "部门",
+        "headcount": "人数",
+        "openProjects": "进行中的项目",
+        "budget": "预算使用",
+        "objectives": "目标",
+        "keyResults": "关键结果"
+      }
+    }
+  },
+  "shell": {
+    "collapseSidebar": "收起侧边栏",
+    "expandSidebar": "展开侧边栏",
+    "closeNavigation": "关闭导航",
+    "userMenu": "账户菜单",
+    "signedInAs": "当前登录",
+    "aiActivity": "AI 活动",
+    "aiWorking": "{count, plural, other {# 个 AI 任务运行中}}",
+    "aiQueued": "{count, plural, other {# 个排队中}}",
+    "aiIdle": "AI 空闲",
+    "controlName": "Realy Control"
+  },
+  "authHero": {
+    "eyebrow": "面向企业的 AI 操作系统",
+    "value1": "AI 员工负责规划、执行和汇报——每个敏感步骤都等待您的批准。",
+    "value2": "销售、财务、人力和运营共享同一张实时企业图谱。",
+    "value3": "默认即企业级：角色权限、审计日志和双因素登录。",
+    "adminEyebrow": "平台运营",
+    "adminTitle": "Realy Control",
+    "adminPromise": "整个平台的控制中心。",
+    "adminValue1": "仅限平台管理员。",
+    "adminValue2": "每项变更都经过权限校验、范围限定并记录审计。",
+    "adminValue3": "管理性变更需要近期完成双因素验证。",
+    "secureConnection": "安全会话"
   }
 }

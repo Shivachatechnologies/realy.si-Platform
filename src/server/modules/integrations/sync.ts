@@ -10,6 +10,7 @@ import { getConnection, markConnectionError, recordSync, type Connection } from 
 import { providerJson } from "./client";
 import { ProviderError } from "./providers";
 import { authorizeIntegrations } from "./service";
+import { ACCOUNTING_SYNCERS } from "./accounting-sync";
 
 /**
  * Sync engine: pulls data from connected providers into Realy. Each run records an IntegrationSyncRun with counts and
@@ -248,6 +249,7 @@ const SYNCERS: Record<string, (ctx: RequestContext, conn: ConnRow, api: Connecti
   "stripe.payments": syncStripePayments,
   "hubspot.contacts": syncHubspotContacts,
   "salesforce.contacts": syncSalesforceContacts,
+  ...ACCOUNTING_SYNCERS,
 };
 
 /** Run every sync kind of one connection; records one IntegrationSyncRun per kind and emits integration.synced. */
@@ -271,6 +273,8 @@ export async function runConnectionSync(connectionId: string, trigger: "manual" 
       if (!syncer) throw new ProviderError(`unknown sync kind ${kind}`);
       const nextCursor = await syncer(ctx, conn, api, counts);
       await db().integrationConnection.update({ where: { id: conn.id }, data: { syncCursor: nextCursor as Prisma.InputJsonValue } });
+      // Later kinds of this run build on the cursor just saved.
+      conn.syncCursor = nextCursor as Prisma.JsonValue;
       if (counts.errors.length) status = "PARTIAL";
     } catch (err) {
       status = "FAILED";

@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { AddDocumentForm } from "@/components/brain/add-document-form";
+import { BrainTabs } from "@/components/brain/brain-tabs";
+import { DocumentTable } from "@/components/brain/document-table";
+import { FilterBar } from "@/components/brain/filter-bar";
 import { Snippet } from "@/components/brain/snippet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
+import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
-import { formatDate } from "@/i18n/format";
 import { db } from "@/server/core/db";
-import { listDocuments, searchDocuments } from "@/server/modules/brain/service";
+import { listDepartments, listDocuments, listTags, searchDocuments, SOURCE_TYPES } from "@/server/modules/brain/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -20,11 +20,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.brain.title") };
 }
 
+const str = (v: string | string[] | undefined, max = 200) => (typeof v === "string" ? v.slice(0, max) : undefined);
+
 export default async function BrainPage({ searchParams }: PageProps<"/[locale]/brain">) {
   const locale = await getLocale();
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
-  const q = typeof (await searchParams).q === "string" ? ((await searchParams).q as string).slice(0, 200) : "";
+  const sp = await searchParams;
+  const q = str(sp.q) ?? "";
+  const departmentId = str(sp.departmentId, 36) || undefined;
+  const tag = str(sp.tag, 40) || undefined;
 
   const header = (
     <div className="grid gap-1">
@@ -42,25 +47,33 @@ export default async function BrainPage({ searchParams }: PageProps<"/[locale]/b
       </div>
     );
   }
+  const chain = await companyChain(db(), org.id, company.id);
+  const [canRead, canManage] = await Promise.all([can(viewer.ctx, "brain.read", chain), can(viewer.ctx, "brain.manage", chain)]);
+  if (!canRead) {
+    return (
+      <div className="mx-auto grid max-w-[1400px] gap-4">
+        {header}
+        <Notice tone="warning">{t("errors.forbidden")}</Notice>
+      </div>
+    );
+  }
 
-  const [documents, search, canManage] = await Promise.all([
-    listDocuments(viewer.ctx, org.id, company.id, { limit: 100 }),
-    searchDocuments(viewer.ctx, org.id, company.id, { q }),
-    can(viewer.ctx, "brain.manage", await companyChain(db(), org.id, company.id)),
+  const [recent, search, departments, tags, bySource] = await Promise.all([
+    listDocuments(viewer.ctx, org.id, company.id, { limit: 10 }),
+    searchDocuments(viewer.ctx, org.id, company.id, { q, departmentId, tag, limit: 25 }),
+    listDepartments(viewer.ctx, org.id, company.id),
+    listTags(viewer.ctx, org.id, company.id),
+    db().brainDocument.groupBy({ by: ["sourceType"], where: { organizationId: org.id, companyId: company.id }, _count: { _all: true } }),
   ]);
+  const counts = new Map(bySource.map((r) => [r.sourceType ?? "upload", r._count._all]));
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
+      <BrainTabs locale={locale} active="search" />
       <Card>
         <CardBody className="grid gap-4">
-          <form role="search" className="flex gap-2" action={`/${locale}/brain`}>
-            <Input name="q" type="search" defaultValue={q} maxLength={200} aria-label={t("brain.searchLabel")} placeholder={t("brain.searchPlaceholder")} />
-            <Button type="submit">
-              <Search aria-hidden />
-              {t("brain.search")}
-            </Button>
-          </form>
+          <FilterBar action={`/${locale}/brain`} t={t} values={{ q, departmentId, tag }} departments={departments} tags={tags} show={{}} qLabel={t("brain.searchLabel")} />
           {q ? (
             <section aria-label={t("brain.results")} className="grid gap-3">
               <p className="text-sm text-muted-foreground">{t("brain.resultCount", { count: search.results.length, query: q })}</p>
@@ -75,49 +88,58 @@ export default async function BrainPage({ searchParams }: PageProps<"/[locale]/b
                   </p>
                 </article>
               ))}
+              {search.results.length === 0 ? (
+                <p className="text-sm">
+                  <Link className="text-primary hover:underline" href={`/${locale}/brain/ask`}>
+                    {t("brain.ask.tryAsking")}
+                  </Link>
+                </p>
+              ) : null}
             </section>
-          ) : null}
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("brain.searchHint")}</p>
+          )}
         </CardBody>
       </Card>
 
-      {canManage ? <AddDocumentForm organizationId={org.id} companyId={company.id} /> : null}
+      <section className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6" aria-label={t("brain.sourcesTitle")}>
+        {(["upload", ...SOURCE_TYPES] as const).map((s) => (
+          <Link key={s} href={`/${locale}/documents?source=${s}`} className="grid gap-0.5 rounded-lg border bg-surface p-3 hover:bg-muted">
+            <span className="text-xs text-muted-foreground">{t(`brain.sources.${s}`)}</span>
+            <span className="tabular text-lg font-semibold">{counts.get(s) ?? 0}</span>
+          </Link>
+        ))}
+      </section>
+      <p className="text-xs text-muted-foreground">{t("brain.sourcesHint")}</p>
+
+      {canManage ? <AddDocumentForm organizationId={org.id} companyId={company.id} departments={departments} /> : null}
 
       <Card>
-        <CardHeader title={t("brain.documents")} description={t("brain.documentCount", { count: documents.data.length })} />
-        {documents.data.length === 0 ? (
+        <CardHeader
+          title={t("brain.recent")}
+          actions={
+            <Button asChild size="sm" variant="secondary">
+              <Link href={`/${locale}/documents`}>{t("brain.allDocuments")}</Link>
+            </Button>
+          }
+        />
+        {recent.data.length === 0 ? (
           <p className="p-4 text-muted-foreground">{t("brain.empty")}</p>
         ) : (
-          <Table>
-            <THead>
-              <Tr>
-                <Th>{t("brain.columns.title")}</Th>
-                <Th>{t("brain.columns.type")}</Th>
-                <Th>{t("brain.columns.passages")}</Th>
-                <Th>{t("brain.columns.status")}</Th>
-                <Th>{t("brain.columns.added")}</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {documents.data.map((d) => (
-                <Tr key={d.id}>
-                  <Td className="font-medium">
-                    <Link className="hover:underline" href={`/${locale}/brain/${d.id}`}>
-                      {d.title}
-                    </Link>
-                    {d.filename ? <div className="text-xs font-normal text-muted-foreground">{d.filename}</div> : null}
-                  </Td>
-                  <Td className="font-mono text-xs">{d.mimeType}</Td>
-                  <Td className="tabular">{d.passages}</Td>
-                  <Td>
-                    <Badge tone={d.status === "READY" ? "success" : d.status === "FAILED" ? "danger" : "warning"}>{t(`brain.status.${d.status}`)}</Badge>
-                  </Td>
-                  <Td className="whitespace-nowrap text-muted-foreground">{formatDate(d.createdAt, locale, viewer.user.timezone)}</Td>
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
+          <DocumentTable rows={recent.data} t={t} locale={locale} timeZone={viewer.user.timezone} />
         )}
       </Card>
+      {tags.length ? (
+        <div className="flex flex-wrap gap-1.5" aria-label={t("brain.tags")}>
+          {tags.slice(0, 30).map((x) => (
+            <Link key={x.tag} href={`/${locale}/documents?tag=${encodeURIComponent(x.tag)}`}>
+              <Badge>
+                #{x.tag} · {x.count}
+              </Badge>
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

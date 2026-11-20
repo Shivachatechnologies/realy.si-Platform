@@ -8,7 +8,7 @@ import { DOMAIN_EVENTS } from "@/server/modules/events/catalog";
  * {{steps.<stepId>.<field>}} (outputs of earlier steps, e.g. the id of a created record).
  */
 
-export const TRIGGER_EVENTS = [...DOMAIN_EVENTS.filter((t) => t !== "schedule.tick" && t !== "webhook.received"), "milestone.completed"] as const;
+export const TRIGGER_EVENTS = [...DOMAIN_EVENTS.filter((t) => t !== "schedule.tick" && t !== "webhook.received"), "objective.created", "milestone.completed"] as const;
 export type TriggerEvent = (typeof TRIGGER_EVENTS)[number];
 
 export const CONDITION_OPS = ["eq", "neq", "contains", "gt", "lt", "exists", "not_exists"] as const;
@@ -19,28 +19,58 @@ export const RECORD_FIELDS = {
   lead: ["stage", "ownerId", "notes", "value", "probability", "expectedCloseDate"],
   work_task: ["status", "priority", "assigneeId", "title", "description", "dueDate"],
 } as const;
+export const ASSIGN_ENTITIES = ["lead", "work_task", "deal", "ticket"] as const;
+export const LOAD_ENTITIES = ["account", "contact", "lead", "deal", "project", "objective", "employee", "candidate", "ticket", "invoice"] as const;
+export const ACCOUNT_TYPE_VALUES = ["PROSPECT", "CUSTOMER", "PARTNER", "VENDOR", "OTHER"] as const;
+export const APPROVER_MODES = ["users", "permission", "record_owner"] as const;
 export const ACTION_KINDS = [
   "create_lead",
   "create_contact",
+  "create_account",
   "create_task",
   "update_lead",
   "update_record",
   "assign_user",
+  "assign_round_robin",
+  "load_record",
+  "create_deal",
+  "move_deal_stage",
+  "create_project",
+  "add_project_members",
+  "start_onboarding",
+  "create_invoice",
+  "create_meeting",
   "assign_ai_employee",
+  "ai_employee_task",
+  "decompose_goal",
+  "generate_ai_content",
   "notify",
   "request_approval",
-  "generate_ai_content",
   "send_email",
   "send_slack",
+  "send_teams",
   "http_webhook",
   "custom_api",
 ] as const;
+/** Action groups for the builder's action picker. */
+export const ACTION_GROUPS: Record<"crm" | "work" | "people" | "ai" | "messaging" | "developer", readonly ActionKind[]> = {
+  crm: ["create_lead", "create_contact", "create_account", "update_lead", "create_deal", "move_deal_stage", "assign_round_robin"],
+  work: ["create_task", "create_project", "add_project_members", "update_record", "assign_user", "load_record"],
+  people: ["start_onboarding", "create_meeting", "create_invoice"],
+  ai: ["assign_ai_employee", "ai_employee_task", "decompose_goal", "generate_ai_content"],
+  messaging: ["notify", "request_approval", "send_email", "send_slack", "send_teams"],
+  developer: ["http_webhook", "custom_api"],
+};
 export type ActionKind = (typeof ACTION_KINDS)[number];
 export const STEP_TYPES = ["condition", "branch", "action", "delay", "set_variable"] as const;
 
 const tpl = (max = 2000) => z.string().max(max);
 const req = (max = 2000) => z.string().trim().min(1).max(max);
 const uuid = z.string().uuid();
+const uuids = (max = 50) => z.array(uuid).max(max).default([]);
+const days = (max = 365) => z.number().int().min(0).max(max).optional();
+const permissionKey = z.string().regex(/^[a-z_]+\.[a-z_]+$/);
+const ifNotConnected = z.enum(["fail", "skip"]).default("fail");
 
 export const conditionSchema = z.object({
   field: z.string().regex(/^(event|vars|steps)(\.[A-Za-z0-9_-]{1,64}){1,4}$/, "Use event.data.field, vars.name or steps.<id>.field"),
@@ -51,31 +81,113 @@ export type Condition = z.infer<typeof conditionSchema>;
 
 export const actionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("create_lead"), name: req(), email: tpl().optional(), phone: tpl().optional(), source: tpl().optional(), notes: tpl().optional(), ownerId: tpl().optional() }),
-  z.object({ kind: z.literal("create_contact"), firstName: req(), lastName: tpl().optional(), email: tpl().optional(), phone: tpl().optional(), title: tpl().optional() }),
+  z.object({ kind: z.literal("create_contact"), firstName: req(), lastName: tpl().optional(), email: tpl().optional(), phone: tpl().optional(), title: tpl().optional(), accountId: tpl().optional(), ownerId: tpl().optional() }),
+  z.object({ kind: z.literal("create_account"), name: req(), type: z.enum(ACCOUNT_TYPE_VALUES).default("PROSPECT"), email: tpl().optional(), phone: tpl().optional(), website: tpl().optional(), source: tpl().optional(), ownerId: tpl().optional() }),
   z.object({
     kind: z.literal("create_task"),
     title: req(),
     description: tpl(5000).optional(),
     assigneeId: tpl().optional(),
+    projectId: tpl().optional(),
     priority: z.enum(WORK_PRIORITIES).default("MEDIUM"),
-    dueInDays: z.number().int().min(0).max(365).optional(),
+    dueInDays: days(),
   }),
   z.object({ kind: z.literal("update_lead"), leadId: req(), stage: z.enum(LEAD_STAGE_VALUES).optional(), ownerId: tpl().optional() }),
   z.object({ kind: z.literal("update_record"), entity: z.enum(["lead", "work_task"]), recordId: req(), field: z.string().max(40), value: tpl(5000) }),
-  z.object({ kind: z.literal("assign_user"), entity: z.enum(["lead", "work_task"]), recordId: req(), userId: req() }),
+  z.object({ kind: z.literal("assign_user"), entity: z.enum(ASSIGN_ENTITIES), recordId: req(), userId: req() }),
+  z.object({
+    kind: z.literal("assign_round_robin"),
+    entity: z.enum(ASSIGN_ENTITIES),
+    recordId: req(),
+    /** users: rotate through `userIds`; permission: rotate through holders of `permission`; crm_rules: the CRM's lead assignment rules. */
+    pool: z.enum(["users", "permission", "crm_rules"]).default("users"),
+    userIds: uuids(),
+    permission: permissionKey.optional(),
+    /** Used when the CRM rules pick nobody. */
+    fallbackPermission: permissionKey.optional(),
+  }),
+  z.object({ kind: z.literal("load_record"), entity: z.enum(LOAD_ENTITIES), recordId: req() }),
+  z.object({
+    kind: z.literal("create_deal"),
+    name: req(200),
+    accountId: tpl().optional(),
+    contactId: tpl().optional(),
+    ownerId: tpl().optional(),
+    stageId: tpl().optional(),
+    /** Major units ("12000.50"). */
+    amount: tpl(40).optional(),
+    closeInDays: days(730),
+    source: tpl().optional(),
+    description: tpl(5000).optional(),
+  }),
+  z.object({ kind: z.literal("move_deal_stage"), dealId: req(), stageId: req(), lostReason: tpl(300).optional() }),
+  z.object({
+    kind: z.literal("create_project"),
+    name: req(120),
+    description: tpl(5000).optional(),
+    /** Built-in project template key or a saved template id ("" = blank project). */
+    template: tpl(60).optional(),
+    ownerId: tpl().optional(),
+    memberIds: uuids(100),
+    /** Comma-separated user ids from variables, e.g. "{{event.data.ownerId}},{{steps.account.ownerId}}". */
+    extraMemberIds: tpl().optional(),
+    startInDays: days(),
+    dueInDays: days(730),
+  }),
+  z.object({ kind: z.literal("add_project_members"), projectId: req(), userIds: uuids(100), extraUserIds: tpl().optional(), role: tpl(80).optional() }),
+  z.object({ kind: z.literal("start_onboarding"), employeeId: req(), checklist: z.enum(["ONBOARDING", "OFFBOARDING"]).default("ONBOARDING"), templateId: tpl().optional() }),
+  z.object({
+    kind: z.literal("create_invoice"),
+    accountId: req(),
+    description: req(500),
+    quantity: tpl(20).default("1"),
+    /** Major units. */
+    unitPrice: req(40),
+    dueInDays: days(),
+    notes: tpl(5000).optional(),
+  }),
+  z.object({
+    kind: z.literal("create_meeting"),
+    title: req(200),
+    agenda: tpl(10000).optional(),
+    location: tpl(300).optional(),
+    /** ISO date-time from a variable; when empty the meeting starts `startInHours` from now. */
+    startsAt: tpl(60).optional(),
+    startInHours: z.number().int().min(0).max(2160).default(24),
+    durationMinutes: z.number().int().min(5).max(1440).default(30),
+    attendeeIds: uuids(100),
+    extraAttendeeIds: tpl().optional(),
+  }),
   z.object({ kind: z.literal("assign_ai_employee"), profile: z.string().regex(/^[a-z0-9_]{2,60}$/), title: req(200), instructions: req(8000), wait: z.boolean().default(false) }),
+  z.object({ kind: z.literal("ai_employee_task"), aiEmployeeId: req(100), title: req(200), instructions: req(8000), wait: z.boolean().default(true) }),
+  z.object({ kind: z.literal("decompose_goal"), objectiveId: req(), guidance: tpl(4000).optional(), wait: z.boolean().default(true) }),
   z.object({
     kind: z.literal("notify"),
-    recipients: z.enum(["owner", "users", "permission"]).default("owner"),
-    userIds: z.array(uuid).max(50).default([]),
-    permission: z.string().regex(/^[a-z_]+\.[a-z_]+$/).optional(),
+    recipients: z.enum(["owner", "users", "permission", "field"]).default("owner"),
+    userIds: uuids(),
+    permission: permissionKey.optional(),
+    /** A user id (or comma-separated ids) from a variable (recipients "field"). */
+    userField: tpl().optional(),
     title: req(300),
     href: z.string().regex(/^\/[^\s]{0,300}$/).optional().or(z.literal("")),
   }),
-  z.object({ kind: z.literal("request_approval"), title: req(300), message: tpl(2000).optional(), approverIds: z.array(uuid).max(20).default([]) }),
+  z.object({
+    kind: z.literal("request_approval"),
+    title: req(300),
+    message: tpl(2000).optional(),
+    approverMode: z.enum(APPROVER_MODES).default("users"),
+    approverIds: z.array(uuid).max(20).default([]),
+    permission: permissionKey.optional(),
+    /** The record owner's user id from a variable (approverMode "record_owner"), e.g. {{event.data.ownerId}}. */
+    ownerField: tpl().optional(),
+    timeoutHours: z.number().int().min(1).max(720).optional(),
+    timeoutAction: z.enum(["reject", "escalate"]).optional(),
+    escalateToIds: z.array(uuid).max(20).default([]),
+  }),
   z.object({ kind: z.literal("generate_ai_content"), profile: z.string().regex(/^[a-z0-9_]{2,60}$/), title: req(200), instructions: req(8000), wait: z.boolean().default(true) }),
   z.object({ kind: z.literal("send_email"), to: req(500), subject: req(300), body: req(10000) }),
-  z.object({ kind: z.literal("send_slack"), channel: req(100), text: req(4000) }),
+  z.object({ kind: z.literal("send_slack"), channel: req(100), text: req(4000), ifNotConnected }),
+  z.object({ kind: z.literal("send_teams"), teamId: req(200), channelId: req(200), text: req(4000), ifNotConnected }),
   z.object({ kind: z.literal("http_webhook"), url: z.string().trim().url().max(2000), body: tpl(10000).optional() }),
   z.object({ kind: z.literal("custom_api"), method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("POST"), path: z.string().regex(/^\/[^\s]{0,500}$/), body: tpl(10000).optional() }),
 ]);
@@ -161,8 +273,27 @@ export function validateDefinition(raw: unknown): { ok: true; definition: Defini
     }
     if (s.type === "action" && s.action.kind === "notify" && s.action.recipients === "users" && !s.action.userIds.length) issues.push({ path: `steps.${s.id}.action.userIds`, message: "Choose at least one person" });
     if (s.type === "action" && s.action.kind === "notify" && s.action.recipients === "permission" && !s.action.permission) issues.push({ path: `steps.${s.id}.action.permission`, message: "Choose a permission" });
+    if (s.type === "action" && s.action.kind === "notify" && s.action.recipients === "field" && !s.action.userField?.trim()) issues.push({ path: `steps.${s.id}.action.userField`, message: "Set the variable holding the person" });
+    if (s.type === "action") issues.push(...actionIssues(s.id, s.action));
   }
   return issues.length ? { ok: false, issues } : { ok: true, definition: def };
+}
+
+function actionIssues(id: string, a: Action): DefinitionIssue[] {
+  const out: DefinitionIssue[] = [];
+  const at = (f: string, message: string) => out.push({ path: `steps.${id}.action.${f}`, message });
+  if (a.kind === "assign_round_robin") {
+    if (a.pool === "users" && !a.userIds.length) at("userIds", "Choose at least one person to rotate through");
+    if (a.pool === "permission" && !a.permission) at("permission", "Choose a permission");
+    if (a.pool === "crm_rules" && a.entity !== "lead") at("pool", "CRM assignment rules only apply to leads");
+  }
+  if (a.kind === "request_approval") {
+    if (a.approverMode === "permission" && !a.permission) at("permission", "Choose the permission whose holders approve");
+    if (a.approverMode === "record_owner" && !a.ownerField?.trim()) at("ownerField", "Set the variable holding the record owner");
+    if (a.timeoutAction && !a.timeoutHours) at("timeoutHours", "Set the timeout in hours");
+    if (a.timeoutAction === "escalate" && !a.escalateToIds.length) at("escalateToIds", "Choose who the request escalates to");
+  }
+  return out;
 }
 
 // ───────────────────────────── Evaluation (templating + conditions) ─────────────────────────────
@@ -245,8 +376,14 @@ export function variableSuggestions(def: Definition): string[] {
   for (const s of flattenSteps(def.steps)) {
     if (s.type === "set_variable") out.push(`vars.${s.name}`);
     if (s.type === "action") {
-      if (["create_lead", "create_contact", "create_task", "assign_ai_employee", "generate_ai_content"].includes(s.action.kind)) out.push(`steps.${s.id}.id`);
-      if (s.action.kind === "generate_ai_content" || s.action.kind === "assign_ai_employee") out.push(`steps.${s.id}.output`);
+      const k = s.action.kind;
+      if (!["notify", "send_email", "send_slack", "send_teams", "http_webhook", "custom_api", "request_approval"].includes(k)) out.push(`steps.${s.id}.id`);
+      if (["generate_ai_content", "assign_ai_employee", "ai_employee_task", "decompose_goal"].includes(k)) out.push(`steps.${s.id}.output`);
+      if (k === "load_record") out.push(`steps.${s.id}.name`, `steps.${s.id}.ownerId`, `steps.${s.id}.email`, `steps.${s.id}.accountId`);
+      if (k === "assign_round_robin") out.push(`steps.${s.id}.userId`);
+      if (k === "create_project" || k === "create_account" || k === "create_deal") out.push(`steps.${s.id}.name`);
+      if (k === "create_invoice") out.push(`steps.${s.id}.number`);
+      if (k === "start_onboarding") out.push(`steps.${s.id}.tasks`);
       if (s.action.kind === "request_approval") out.push(`steps.${s.id}.note`);
       if (s.action.kind === "http_webhook" || s.action.kind === "custom_api") out.push(`steps.${s.id}.status`, `steps.${s.id}.body`);
     }
