@@ -1,6 +1,9 @@
 import { db, transaction } from "@/server/core/db";
 import { userContext, type RequestContext } from "@/server/core/context";
-import { conflict, isAppError } from "@/server/core/errors";
+import { conflict, isAppError, notFound } from "@/server/core/errors";
+import { z } from "zod";
+import { requirePermission } from "@/server/modules/rbac/service";
+import { companyChain } from "@/server/modules/rbac/scope";
 import { logger } from "@/server/core/logger";
 import type { OutboxEvent } from "@/server/modules/events/relay";
 import { writeAudit } from "@/server/modules/audit/service";
@@ -42,6 +45,23 @@ export async function canDelegate(organizationId: string, companyId: string, fro
 /** The person at the top: the employee's human manager, else whoever manages AI employees in the company. */
 async function founderIds(organizationId: string, companyId: string, e: HierarchyEmployee): Promise<string[]> {
   if (e.managerUserId) return [e.managerUserId];
+  return usersWithPermission(db(), organizationId, companyId, "agents.manage");
+}
+
+/**
+ * The person at the top of an employee's reporting chain: walks AI managers up to the root and returns the member it
+ * reports to; without one, whoever manages AI employees in the company (agents.manage).
+ */
+export async function chainFounderIds(organizationId: string, companyId: string, employeeId: string): Promise<string[]> {
+  let cursor: string | null = employeeId;
+  let top: { managerUserId: string | null } | null = null;
+  for (let i = 0; cursor && i < 50; i++) {
+    const e: { managerEmployeeId: string | null; managerUserId: string | null } | null = await db().aiEmployee.findFirst({ where: { id: cursor, organizationId, companyId }, select: { managerEmployeeId: true, managerUserId: true } });
+    if (!e) break;
+    top = e;
+    cursor = e.managerEmployeeId;
+  }
+  if (top?.managerUserId) return [top.managerUserId];
   return usersWithPermission(db(), organizationId, companyId, "agents.manage");
 }
 
@@ -106,7 +126,8 @@ export async function escalate(ctx: RequestContext, organizationId: string, comp
     }
   }
   await transaction(async (tx) => {
-    await notifyUsers(tx, organizationId, await founderIds(organizationId, companyId, me), "workforce.escalation", { companyId, title: `${me.name}: ${input.title}`.slice(0, 200), href: `/workforce/${me.id}#reports` });
+    await notifyUsers(tx, organizationId, await chainFounderIds(organizationId, companyId, me.id), "workforce.escalation", { companyId, title: `${me.name}: ${input.title}`.slice(0, 200), href: "/workforce/escalations" });
+    await tx.aiEmployeeReport.update({ where: { id: report.id }, data: { founderNotifiedAt: new Date() } });
   });
   return { id: report.id, to: to.kind === "ai" ? `${to.name} (unavailable — the founder was notified)` : to.name, taskId: null, notified: true };
 }
@@ -144,6 +165,171 @@ export async function handleTaskFailed(event: OutboxEvent): Promise<void> {
       },
     });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "ai_employee.escalated", resourceType: "ai_employee_report", resourceId: r.id, newValue: { companyId, aiEmployeeId: me.id, taskId: task.id, automatic: true } });
-    if (!to.id) await notifyUsers(tx, organizationId, await founderIds(organizationId, companyId, me), "workforce.escalation", { companyId, title: `${me.name}: ${task.title}`.slice(0, 200), href: `/tasks/${task.id}` });
+    if (!to.id) {
+      await notifyUsers(tx, organizationId, await founderIds(organizationId, companyId, me), "workforce.escalation", { companyId, title: `${me.name}: ${task.title}`.slice(0, 200), href: `/tasks/${task.id}` });
+      await tx.aiEmployeeReport.update({ where: { id: r.id }, data: { founderNotifiedAt: new Date() } });
+    }
+  });
+}
+
+// ───────────── Roll-ups, escalation ladder, resolution ─────────────
+
+/** First meaningful part of a deliverable for a roll-up (Markdown kept; REMEMBER lines are already stripped). */
+const excerpt = (text: string | null | undefined, max = 1200) => {
+  const t = (text ?? "").trim();
+  return t.length > max ? `${t.slice(0, max).trimEnd()}…` : t;
+};
+
+/**
+ * agent.task.completed / agent.task.failed:
+ *  1. a delegated task's outcome is filed as a ROLLUP report with the delegating AI employee (its manager);
+ *  2. when the last sub-task of a delegating task finishes, a deterministic team roll-up (every sub-task's outcome) is
+ *     filed one level up — with the delegator's own manager, or the founder (notified) at the top of the chart;
+ *  3. a manager's escalation task that completes resolves the escalation; one that fails goes to the founder.
+ * No AI is called here: roll-ups are built from the stored task rows only. Every step is deduped.
+ */
+export async function handleTaskFinished(event: OutboxEvent): Promise<void> {
+  if ((event.type !== "agent.task.completed" && event.type !== "agent.task.failed") || !event.organizationId || !event.companyId) return;
+  const { organizationId, companyId } = event;
+  const task = await db().agentTask.findFirst({
+    where: { id: event.aggregateId, organizationId, companyId },
+    select: { id: true, title: true, status: true, output: true, errorMessage: true, errorCode: true, createdById: true, parentTaskId: true, subjectType: true, subjectId: true, aiEmployee: { select: empSelect } },
+  });
+  if (!task) return;
+  const ctx = userContext(task.createdById, { requestId: `rollup_${task.id}` });
+
+  // 3. Escalation tasks: completion resolves the escalation; failure climbs to the founder.
+  if (task.subjectType === "ai_employee_report" && task.subjectId) {
+    const report = await db().aiEmployeeReport.findFirst({ where: { id: task.subjectId, organizationId, companyId, kind: "ESCALATION" }, select: { id: true, aiEmployeeId: true, title: true, resolvedAt: true, founderNotifiedAt: true } });
+    if (report && !report.resolvedAt) {
+      if (task.status === "COMPLETED") {
+        await transaction(async (tx) => {
+          await tx.aiEmployeeReport.updateMany({ where: { id: report.id, resolvedAt: null }, data: { resolvedAt: new Date() } });
+          await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "ai_employee.escalation_resolved", resourceType: "ai_employee_report", resourceId: report.id, newValue: { companyId, byTaskId: task.id, automatic: true } });
+        });
+      } else if (task.status === "FAILED" && !report.founderNotifiedAt) {
+        const founders = await chainFounderIds(organizationId, companyId, report.aiEmployeeId);
+        await transaction(async (tx) => {
+          const { count } = await tx.aiEmployeeReport.updateMany({ where: { id: report.id, founderNotifiedAt: null }, data: { founderNotifiedAt: new Date() } });
+          if (count) await notifyUsers(tx, organizationId, founders, "workforce.escalation", { companyId, title: `Unresolved: ${report.title}`.slice(0, 200), href: "/workforce/escalations" });
+        });
+      }
+    }
+  }
+
+  if (!task.parentTaskId || !task.aiEmployee) return;
+  const parent = await db().agentTask.findFirst({ where: { id: task.parentTaskId, organizationId, companyId }, select: { id: true, title: true, createdById: true, aiEmployee: { select: empSelect } } });
+  const manager = parent?.aiEmployee;
+  if (!parent || !manager) return;
+
+  // 1. This sub-task's outcome, filed with the delegating manager.
+  if (!(await db().aiEmployeeReport.count({ where: { companyId, taskId: task.id, kind: "ROLLUP" } }))) {
+    const ok = task.status === "COMPLETED";
+    await transaction(async (tx) => {
+      const r = await tx.aiEmployeeReport.create({
+        data: {
+          organizationId,
+          companyId,
+          aiEmployeeId: task.aiEmployee!.id,
+          managerEmployeeId: manager.id,
+          kind: "ROLLUP",
+          title: `${ok ? "Done" : "Failed"}: ${task.title}`.slice(0, 200),
+          body: ok ? excerpt(task.output) || "Completed without a written deliverable." : `The delegated task failed: ${task.errorMessage ?? task.errorCode ?? "unknown error"}`,
+          taskId: task.id,
+        },
+      });
+      await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "ai_employee.rollup_filed", resourceType: "ai_employee_report", resourceId: r.id, newValue: { companyId, aiEmployeeId: task.aiEmployee!.id, managerEmployeeId: manager.id, taskId: task.id } });
+    });
+  }
+
+  // 2. Team roll-up once every sub-task of the delegating task has finished.
+  const siblings = await db().agentTask.findMany({ where: { organizationId, companyId, parentTaskId: parent.id }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, status: true, output: true, errorMessage: true, aiEmployee: { select: { name: true } } }, take: 50 });
+  if (siblings.some((s) => s.status === "QUEUED" || s.status === "RUNNING")) return;
+  if (await db().aiDelegation.count({ where: { companyId, parentTaskId: parent.id, status: "PROPOSED" } })) return;
+  if (await db().aiEmployeeReport.count({ where: { companyId, taskId: parent.id, kind: "ROLLUP" } })) return;
+  const done = siblings.filter((s) => s.status === "COMPLETED").length;
+  const body = [
+    `${done} of ${siblings.length} delegated task(s) completed for "${parent.title}".`,
+    ...siblings.map((s) => {
+      const who = s.aiEmployee?.name ?? "AI";
+      if (s.status === "COMPLETED") return `\n### ✓ ${s.title} — ${who}\n${excerpt(s.output, 600)}`;
+      return `\n### ✗ ${s.title} — ${who} (${s.status.toLowerCase()})\n${s.errorMessage ?? ""}`;
+    }),
+  ].join("\n");
+  const to = await managerName(organizationId, companyId, manager);
+  const founders = to.id ? [] : await chainFounderIds(organizationId, companyId, manager.id);
+  await transaction(async (tx) => {
+    const r = await tx.aiEmployeeReport.create({
+      data: {
+        organizationId,
+        companyId,
+        aiEmployeeId: manager.id,
+        managerEmployeeId: to.id,
+        managerUserId: to.id ? null : manager.managerUserId,
+        kind: "ROLLUP",
+        title: `Team results: ${parent.title}`.slice(0, 200),
+        body: body.slice(0, 20_000),
+        taskId: parent.id,
+        founderNotifiedAt: to.id ? null : new Date(),
+      },
+    });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "ai_employee.rollup_filed", resourceType: "ai_employee_report", resourceId: r.id, newValue: { companyId, aiEmployeeId: manager.id, managerEmployeeId: to.id, taskId: parent.id, subTasks: siblings.length, completed: done } });
+    if (!to.id) await notifyUsers(tx, organizationId, founders, "workforce.rollup", { companyId, title: `${manager.name}: ${done}/${siblings.length} — ${parent.title}`.slice(0, 200), href: "/workforce/escalations#rollups" });
+  });
+}
+
+/** An AI manager has this long to resolve an escalation before the founder is notified. */
+export const ESCALATION_SLA_MS = 24 * 60 * 60_000;
+
+/**
+ * Escalation ladder (worker, periodic): escalations filed with an AI manager that are still unresolved after
+ * ESCALATION_SLA_MS — and whose escalation task did not complete — are raised to the founder (notified once).
+ */
+export async function escalateStaleToFounder(now = new Date()): Promise<number> {
+  const stale = await db().aiEmployeeReport.findMany({
+    where: { kind: "ESCALATION", resolvedAt: null, founderNotifiedAt: null, managerEmployeeId: { not: null }, createdAt: { lt: new Date(now.getTime() - ESCALATION_SLA_MS) } },
+    select: { id: true, organizationId: true, companyId: true, aiEmployeeId: true, title: true, escalationTaskId: true, aiEmployee: { select: { name: true } } },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+  });
+  let n = 0;
+  for (const r of stale) {
+    if (r.escalationTaskId) {
+      const t = await db().agentTask.findFirst({ where: { id: r.escalationTaskId, companyId: r.companyId }, select: { status: true } });
+      if (t?.status === "COMPLETED") {
+        await db().aiEmployeeReport.updateMany({ where: { id: r.id, resolvedAt: null }, data: { resolvedAt: now } });
+        continue;
+      }
+    }
+    try {
+      const founders = await chainFounderIds(r.organizationId, r.companyId, r.aiEmployeeId);
+      await transaction(async (tx) => {
+        const { count } = await tx.aiEmployeeReport.updateMany({ where: { id: r.id, founderNotifiedAt: null, resolvedAt: null }, data: { founderNotifiedAt: now } });
+        if (count) {
+          await notifyUsers(tx, r.organizationId, founders, "workforce.escalation", { companyId: r.companyId, title: `Unresolved for 24h — ${r.aiEmployee.name}: ${r.title}`.slice(0, 200), href: "/workforce/escalations" });
+          n++;
+        }
+      });
+    } catch (err) {
+      logger.warn({ reportId: r.id, err: err instanceof Error ? err.message : String(err) }, "escalation ladder step failed");
+    }
+  }
+  return n;
+}
+
+export const resolveReportInput = z.object({ note: z.string().trim().max(1000).optional() });
+
+/** A person closes an escalation (agents.manage). */
+export async function resolveReport(ctx: RequestContext, organizationId: string, companyId: string, reportId: string, raw: z.input<typeof resolveReportInput>) {
+  const input = resolveReportInput.parse(raw);
+  if (!z.string().uuid().safeParse(reportId).success) throw notFound("Report");
+  return transaction(async (tx) => {
+    await requirePermission(ctx, "agents.manage", await companyChain(tx, organizationId, companyId), tx);
+    const r = await tx.aiEmployeeReport.findFirst({ where: { id: reportId, organizationId, companyId, kind: "ESCALATION" }, select: { id: true, resolvedAt: true } });
+    if (!r) throw notFound("Report");
+    if (r.resolvedAt) throw conflict("This escalation is already resolved", { reason: "workforce_escalation_resolved" });
+    await tx.aiEmployeeReport.update({ where: { id: r.id }, data: { resolvedAt: new Date(), resolvedById: ctx.actor.id ?? null } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "ai_employee.escalation_resolved", resourceType: "ai_employee_report", resourceId: r.id, newValue: { companyId, note: input.note ?? null } });
+    return { id: r.id, resolved: true };
   });
 }

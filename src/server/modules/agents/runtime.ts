@@ -21,6 +21,8 @@ import type { AgentProfile } from "./profiles";
 
 /** A failure with a stable code and a message safe to show the user. `retryable` failures may be retried by the queue. */
 export class TaskError extends Error {
+  /** Tokens the run had already spent when it failed (so failed work still counts against budgets and cost). */
+  usage?: { model: string; inputTokens: number; outputTokens: number };
   constructor(
     readonly code: string,
     message: string,
@@ -96,6 +98,11 @@ export interface RunInput {
   employee?: { name: string; instructions: string | null; skills: string[]; autonomyGuidance: string; memory: string[] } | null;
   /** Model override; by default the AI employee's configured model (if still allowed), else AGENT_MODEL. */
   model?: string;
+  /**
+   * Tokens this run may spend (the AI employee's / department's remaining monthly allowance). Checked before every
+   * model call: once reached, the run stops with `employee_over_budget` instead of overspending further.
+   */
+  tokenCeiling?: number | null;
 }
 
 /** The model for a run: explicit, else the task's AI employee's configured model (only allowed ids), else the default. */
@@ -187,59 +194,68 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     return r.content;
   }
 
-  for (let turn = 0; turn < profile.maxTurns; turn++) {
-    if (await input.isCancelled()) throw new TaskError("cancelled", "The task was cancelled");
-    if (Date.now() > deadline) throw new TaskError("timeout", "The task took longer than the 5-minute limit");
-
-    let response: BetaMessage;
-    try {
-      response = await callModel({
-        model,
-        max_tokens: MAX_TOKENS,
-        system,
-        tools,
-        messages,
-        output_config: { effort: "medium" },
-        // Route policy declines to the default fallback model instead of failing the task.
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
-      });
-    } catch (err) {
-      throw providerError(err);
-    }
-    inputTokens += response.usage.input_tokens;
-    outputTokens += response.usage.output_tokens;
-
-    if (response.stop_reason === "refusal") throw new TaskError("refused", "The AI declined this task");
-    if (response.stop_reason === "max_tokens") throw new TaskError("output_too_long", "The deliverable exceeded the output limit; narrow the task");
-    messages.push({ role: "assistant", content: response.content as BetaContentBlockParam[] });
-
-    if (response.stop_reason === "pause_turn") continue;
-    if (response.stop_reason === "tool_use") {
-      const results: BetaToolResultBlockParam[] = [];
-      for (const block of response.content) {
-        if (block.type !== "tool_use") continue;
-        try {
-          results.push({ type: "tool_result", tool_use_id: block.id, content: await runTool(block.name, block.input) });
-        } catch (err) {
-          const message = toolErrorMessage(err);
-          toolCalls.push({ tool: block.name, input: {}, results: 0, error: message });
-          results.push({ type: "tool_result", tool_use_id: block.id, content: message, is_error: true });
-        }
+  try {
+    for (let turn = 0; turn < profile.maxTurns; turn++) {
+      if (await input.isCancelled()) throw new TaskError("cancelled", "The task was cancelled");
+      if (Date.now() > deadline) throw new TaskError("timeout", "The task took longer than the 5-minute limit");
+      if (input.tokenCeiling != null && inputTokens + outputTokens >= input.tokenCeiling) {
+        throw new TaskError("employee_over_budget", "The AI budget was reached during this task; raise the budget or retry next month");
       }
-      messages.push({ role: "user", content: results });
-      continue;
-    }
 
-    const output = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as { text: string }).text)
-      .join("")
-      .trim();
-    if (!output) throw new TaskError("empty_output", "The AI returned no deliverable");
-    return { output, citations: citationsIn(output, sources), toolCalls, model: response.model, inputTokens, outputTokens };
+      let response: BetaMessage;
+      try {
+        response = await callModel({
+          model,
+          max_tokens: MAX_TOKENS,
+          system,
+          tools,
+          messages,
+          output_config: { effort: "medium" },
+          // Route policy declines to the default fallback model instead of failing the task.
+          betas: ["server-side-fallback-2026-07-01"],
+          fallbacks: "default",
+        });
+      } catch (err) {
+        throw providerError(err);
+      }
+      inputTokens += response.usage.input_tokens;
+      outputTokens += response.usage.output_tokens;
+
+      if (response.stop_reason === "refusal") throw new TaskError("refused", "The AI declined this task");
+      if (response.stop_reason === "max_tokens") throw new TaskError("output_too_long", "The deliverable exceeded the output limit; narrow the task");
+      messages.push({ role: "assistant", content: response.content as BetaContentBlockParam[] });
+
+      if (response.stop_reason === "pause_turn") continue;
+      if (response.stop_reason === "tool_use") {
+        const results: BetaToolResultBlockParam[] = [];
+        for (const block of response.content) {
+          if (block.type !== "tool_use") continue;
+          try {
+            results.push({ type: "tool_result", tool_use_id: block.id, content: await runTool(block.name, block.input) });
+          } catch (err) {
+            const message = toolErrorMessage(err);
+            toolCalls.push({ tool: block.name, input: {}, results: 0, error: message });
+            results.push({ type: "tool_result", tool_use_id: block.id, content: message, is_error: true });
+          }
+        }
+        messages.push({ role: "user", content: results });
+        continue;
+      }
+
+      const output = response.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as { text: string }).text)
+        .join("")
+        .trim();
+      if (!output) throw new TaskError("empty_output", "The AI returned no deliverable");
+      return { output, citations: citationsIn(output, sources), toolCalls, model: response.model, inputTokens, outputTokens };
+    }
+    throw new TaskError("turn_limit", `The task needed more than ${profile.maxTurns} steps; split it into smaller tasks`);
+  } catch (err) {
+    // Keep what was spent so a failed run still counts against budgets and cost (never hidden).
+    if (err instanceof TaskError && !err.usage && inputTokens + outputTokens > 0) err.usage = { model, inputTokens, outputTokens };
+    throw err;
   }
-  throw new TaskError("turn_limit", `The task needed more than ${profile.maxTurns} steps; split it into smaller tasks`);
 }
 
 /** Citations the output actually uses, in order of first use, restricted to passages this task retrieved. */

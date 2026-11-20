@@ -2,9 +2,13 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AdminHeader, Empty, FilterBar, NextPage, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
+import { CircleDollarSign, Layers, ReceiptText, SearchX } from "lucide-react";
+import { CardBody } from "@/components/ui/card";
+import { CountUp } from "@/components/motion/count-up";
+import { AdminHeader, EmptyState, FilterBar, NextPage, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
+import { BarList, StackedBar } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
-import { formatDate, formatMoney, formatNumber } from "@/i18n/format";
+import { formatDate, formatMoney } from "@/i18n/format";
 import { SUBSCRIPTION_STATUSES, subscriptionOverview } from "@/server/modules/admin/billing";
 import { requireViewer } from "@/server/session";
 
@@ -21,26 +25,49 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
   if (!r.ok) return r.node;
   const o = r.value;
   const base = `/${locale}/admin/subscriptions`;
-  const n = (v: number) => formatNumber(v, locale);
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.subscriptions")} description={t("admin.subscriptions.subtitle")} />
+      <AdminHeader icon={<ReceiptText />} title={t("admin.nav.subscriptions")} description={t("admin.subscriptions.subtitle")} why={t("admin.subscriptions.why")} />
       <StatGrid>
-        <StatTile label={t("admin.overview.mrr")} value={o.mrr.length ? o.mrr.map((m) => formatMoney({ amountMinor: m.amountMinor, currency: m.currency }, locale)).join(" · ") : "—"} hint={o.mrr.length ? undefined : t("admin.overview.noMrr")} />
-        {(["ACTIVE", "TRIALING", "PAST_DUE", "CANCELED"] as const).map((s) => (
-          <StatTile key={s} label={t(`admin.subscriptions.status.${s}`)} value={n(o.byStatus[s] ?? 0)} href={`${base}?status=${s}`} tone={s === "PAST_DUE" && o.byStatus[s] ? "warning" : undefined} />
+        <StatTile
+          icon={<CircleDollarSign />}
+          label={t("admin.overview.mrr")}
+          value={o.mrr[0] ? <CountUp money={{ amountMinor: o.mrr[0].amountMinor.toString(), currency: o.mrr[0].currency }} /> : "—"}
+          hint={o.mrr.length > 1 ? o.mrr.slice(1).map((m) => formatMoney({ amountMinor: m.amountMinor, currency: m.currency }, locale)).join(" · ") : o.mrr.length ? t("admin.subscriptions.mrrHint") : t("admin.overview.noMrr")}
+          tone={o.mrr.length ? "success" : undefined}
+        />
+        {(["ACTIVE", "TRIALING", "PAST_DUE"] as const).map((s) => (
+          <StatTile key={s} label={t(`admin.subscriptions.status.${s}`)} value={<CountUp value={o.byStatus[s] ?? 0} />} href={`${base}?status=${s}`} tone={s === "PAST_DUE" && o.byStatus[s] ? "warning" : undefined} />
         ))}
       </StatGrid>
-      <Card>
-        <CardHeader title={t("admin.subscriptions.byPlan")} />
-        <div className="flex flex-wrap gap-2 p-3">
-          {o.byPlan.map((p) => (
-            <Link key={p.id} href={`${base}?plan=${p.key}`} className="rounded-md border px-2 py-1 text-xs hover:bg-muted">
-              {p.name} <span className="tabular font-medium">{n(p.live)}</span>
-            </Link>
-          ))}
-        </div>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader icon={<Layers />} title={t("admin.subscriptions.distribution")} description={t("admin.subscriptions.distributionHint")} />
+          <CardBody>
+            <StackedBar
+              label={t("admin.subscriptions.distribution")}
+              segments={(["ACTIVE", "TRIALING", "PAST_DUE", "UNPAID", "CANCELED"] as const).map((s) => ({
+                key: s,
+                label: t(`admin.subscriptions.status.${s}`),
+                value: o.byStatus[s] ?? 0,
+                tone: s === "ACTIVE" ? "success" : s === "TRIALING" ? "info" : s === "PAST_DUE" ? "warning" : s === "UNPAID" ? "danger" : "muted",
+                href: `${base}?status=${s}`,
+              }))}
+            />
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader icon={<ReceiptText />} title={t("admin.subscriptions.byPlan")} />
+          <CardBody>
+            <BarList
+              label={t("admin.subscriptions.byPlan")}
+              tone="success"
+              items={o.byPlan.map((p) => ({ key: p.id, label: p.name, value: p.live, href: `${base}?plan=${p.key}` }))}
+              empty={<p className="text-xs text-muted-foreground">{t("admin.overview.noMrr")}</p>}
+            />
+          </CardBody>
+        </Card>
+      </div>
       <Card>
         <FilterBar
           action={base}
@@ -55,7 +82,7 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
           ]}
         />
         {o.page.data.length === 0 ? (
-          <Empty>{t("common.noResults")}</Empty>
+          <EmptyState icon={<SearchX />} title={t("common.noResults")} body={t("admin.subscriptions.emptyHint")} />
         ) : (
           <Table>
             <THead>

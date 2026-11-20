@@ -116,8 +116,54 @@ export function resourceHref(resourceType: string, resourceId: string | null): s
     company: "/company",
     membership: "/settings/members",
     invitation: "/settings/members",
+    invoice: `/finance/invoices/${id}`,
+    finance_bill: `/finance/bills/${id}`,
+    estimate: `/finance/estimates/${id}`,
+    ticket: `/support/tickets/${id}`,
+    kb_article: `/support/knowledge/${id}`,
+    marketing_campaign: `/marketing/campaigns/${id}`,
+    employee: `/hr/employees/${id}`,
+    hr_candidate: `/hr/recruiting/candidates/${id}`,
+    hr_job: `/hr/recruiting/jobs/${id}`,
+    crm_deal: `/crm/deals/${id}`,
+    account: `/crm/accounts/${id}`,
+    contact: `/crm/contacts/${id}`,
+    work_project: `/projects/${id}`,
+    work_task: `/projects/tasks/${id}`,
+    workflow: `/workflows/${id}`,
+    workflow_run: "/workflows/runs",
+    workflow_approval: "/approvals",
+    ops_process: `/operations/processes/${id}`,
+    ops_checklist: `/operations/checklists/${id}`,
+    ops_incident: `/operations/incidents/${id}`,
+    ops_asset: "/operations/assets",
   };
   const href = map[resourceType];
   if (!href) return null;
   return href.endsWith("/") ? null : href;
+}
+
+/** Number of logged actions per day (UTC) over the last `days` days, oldest first — for the timeline's activity bars. */
+export async function activityByDay(ctx: RequestContext, organizationId: string, days = 14, companyId?: string) {
+  const access = await activityAccess(ctx, organizationId);
+  const since = new Date(Date.now() - (Date.now() % 86_400_000) - (days - 1) * 86_400_000);
+  const rows = await db().auditLog.findMany({
+    where: {
+      organizationId,
+      createdAt: { gte: since },
+      ...(access.all ? {} : { actorId: access.userId }),
+      ...(companyId ? { OR: [{ newValue: { path: ["companyId"], equals: companyId } }, { oldValue: { path: ["companyId"], equals: companyId } }] } : {}),
+    },
+    select: { createdAt: true },
+    take: 20_000,
+  });
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    const k = r.createdAt.toISOString().slice(0, 10);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  return Array.from({ length: days }, (_, i) => {
+    const day = new Date(since.getTime() + i * 86_400_000).toISOString().slice(0, 10);
+    return { day, count: counts.get(day) ?? 0 };
+  });
 }

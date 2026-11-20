@@ -721,7 +721,12 @@
       "assets_scope_required": "请选择作品对应的记录。",
       "assets_upload_too_large": "图片超过 8 MB。",
       "assets_upload_type": "该文件不是有效的 PNG、JPEG 或 WebP 图片。",
-      "assets_storage_failed": "无法保存或读取作品，请检查存储连接。"
+      "assets_storage_failed": "无法保存或读取作品，请检查存储连接。",
+      "workforce_department_over_budget": "该部门本月的 AI 预算已用完。",
+      "workforce_delegation_decided": "此委派已经处理过了。",
+      "workforce_delegation_limit": "此任务的委派子任务已达上限。",
+      "workforce_delegation_parent_missing": "此委派所属的任务已不存在。",
+      "workforce_escalation_resolved": "此升级问题已解决。"
     }
   },
   "onboarding": {
@@ -1054,7 +1059,9 @@
       "dataRegion": "数据区域",
       "timezone": "时区",
       "enableBilling": "启用账单",
-      "disableBilling": "停用账单"
+      "disableBilling": "停用账单",
+      "subtitle": "地区和国家：货币、语言、税费以及可用计费的地区。",
+      "why": "仅在已配置税费和支付的国家开启计费。"
     },
     "flags": {
       "default": "默认",
@@ -1067,7 +1074,10 @@
       "remove": "移除",
       "turnOn": "开启",
       "turnOff": "关闭",
-      "subtitle": "带定向规则的功能开关。"
+      "subtitle": "带定向规则的功能开关。",
+      "why": "在全面推出之前，先为部分组织或国家开启功能。",
+      "emptyTitle": "还没有功能开关",
+      "emptyBody": "功能开关在代码中定义并初始化后会显示在这里。"
     },
     "audit": {
       "time": "时间",
@@ -1091,7 +1101,8 @@
       "scopes": {
         "platform": "平台与安全",
         "all": "全部（含租户）"
-      }
+      },
+      "why": "每一项管理操作的执行者、时间和原因。筛选后可导出 CSV 以满足合规要求。"
     },
     "system": {
       "title": "外部服务",
@@ -1135,7 +1146,11 @@
         "sync": "同步",
         "workflow": "工作流",
         "webhook": "Webhook"
-      }
+      },
+      "why": "当出现缓慢或故障时，从这里开始：实时检查、作业队列、后台进程和最新错误。",
+      "queuesHint": "每个后台队列中等待、运行和失败的作业。",
+      "noHeartbeatHint": "启动后台进程（pnpm worker）。它每分钟会在这里上报一次。",
+      "noErrorsHint": "过去 7 天没有失败的作业、AI 任务、同步、工作流或 Webhook。"
     },
     "users": {
       "count": "{count, plural, other {# 个用户}}（最新优先，最多 100 个）",
@@ -1204,8 +1219,33 @@
         "lastSeen": "最后活跃",
         "revoked": "已结束",
         "active": "活跃",
-        "securityLog": "安全与管理事件"
-      }
+        "securityLog": "安全与管理事件",
+        "account": "账户",
+        "signIns30": "登录次数（30 天）",
+        "lastLoginAgo": "上次登录 {time}",
+        "sessionsNow": "已登录设备",
+        "registeredOn": "注册于 {date}",
+        "aiCost30": "每日 AI 预估成本",
+        "platformRolesHint": "可访问此管理控制台的角色。",
+        "noPlatformRolesHint": "此人没有管理权限。仅向负责运营平台的人员授予角色。",
+        "noMembershipsHint": "此人尚未加入任何组织。",
+        "usageChart": "30 天使用情况",
+        "usageChartHint": "此人每日的登录次数及发起的 AI 任务。",
+        "seriesSignIns": "登录",
+        "seriesTasks": "AI 任务",
+        "seriesCost": "AI 成本",
+        "sessionsHint": "最新的在前。绿点表示当前已登录的设备。",
+        "expired": "已过期",
+        "lastSeenAgo": "最后活跃 {time}",
+        "byAdmin": "管理员"
+      },
+      "why": "查找平台上的任何人，检查其安全状态，并在几秒内提供帮助。",
+      "emptyTitle": "还没有用户",
+      "emptyBody": "用户创建账户后会立即显示在这里。",
+      "orgCount": "{count, plural, other {# 个组织}}",
+      "selfNote": "这是您自己的账户。请在个人资料设置中修改。",
+      "adminNote": "无法在此停用或删除平台管理员。请先移除其平台角色。",
+      "openProfile": "打开完整资料"
     },
     "organizations": {
       "hint": "平台上的所有组织。租户数据仍受租户权限保护。",
@@ -1253,7 +1293,23 @@
         "members": "成员",
         "deleted": "已删除",
         "recentTasks": "最近的 AI 任务",
-        "activity": "活动日志"
+        "activity": "活动日志",
+        "atAGlance": "概览",
+        "subtitle": "{slug} · 创建于 {date}",
+        "inModules": "{count, plural, other {使用 # 个模块}}",
+        "cost30": "每日 AI 预估成本",
+        "usageChart": "30 天活动",
+        "usageChartHint": "每日 AI 任务、失败次数和 API 请求。",
+        "seriesTasks": "AI 任务",
+        "seriesFailed": "失败",
+        "seriesApi": "API 请求",
+        "seriesCost": "AI 成本",
+        "ofLimit": "{used} / {limit}",
+        "ofUnlimited": "{used} · 无上限",
+        "noMembers": "没有成员",
+        "noCompanies": "还没有公司",
+        "noCompaniesHint": "该组织尚未创建公司。",
+        "noTasksHint": "该组织尚未向 AI 员工布置任何任务。"
       },
       "counts": {
         "leads": "线索",
@@ -1279,7 +1335,15 @@
         "installs": "安装",
         "documents": "文档",
         "objectives": "目标"
-      }
+      },
+      "why": "了解谁在使用平台、使用哪种套餐，并在组织需要帮助或必须停止时介入。",
+      "emptyTitle": "还没有组织",
+      "emptyBody": "有人完成入门流程后，组织会立即显示在这里。",
+      "createdOn": "创建于 {date}",
+      "viewTasks": "AI 任务",
+      "viewAudit": "审计日志",
+      "gateNote": "打开组织详情会显示其数据。系统会要求您填写原因，并记录到审计日志中。",
+      "openDetails": "打开详情"
     },
     "signInTitle": "管理控制台登录",
     "signInSubtitle": "仅限平台管理员。请使用平台管理员账号登录。",
@@ -1296,7 +1360,14 @@
         "7d": "最近 7 天",
         "30d": "最近 30 天",
         "90d": "最近 90 天"
-      }
+      },
+      "actions": "操作",
+      "all": "全部",
+      "breadcrumb": "导航路径",
+      "clearFilters": "清除筛选",
+      "quickActions": "快捷操作",
+      "readOnly": "您可以查看，但不能更改。",
+      "tryOtherFilters": "请换一个搜索词或移除一个筛选条件。"
     },
     "search": {
       "placeholder": "搜索用户、公司、任务、设置…",
@@ -1307,7 +1378,19 @@
       "organizations": "组织",
       "companies": "公司",
       "controls": "开关与设置",
-      "connections": "{count} 个连接"
+      "connections": "{count} 个连接",
+      "palettePlaceholder": "搜索用户、组织、AI 任务、开关…",
+      "paletteHint": "输入以搜索。使用方向键移动，按 Enter 打开。",
+      "groups": {
+        "nav": "前往",
+        "more": "更多"
+      },
+      "seeAll": "查看“{q}”的全部结果",
+      "keyMove": "移动",
+      "keyOpen": "打开",
+      "scopeNote": "仅显示您有权查看的内容",
+      "tip": "可按名称、邮箱、标识、任务标题或 ID、开关名称或服务商搜索。",
+      "noResultsHint": "请检查拼写，或按邮箱、ID 或标识搜索。"
     },
     "emergency": {
       "title": "紧急状态已激活：",
@@ -1339,7 +1422,52 @@
       "healthy": "正常",
       "degraded": "降级",
       "recentActivity": "最近的管理员活动",
-      "viewAll": "查看全部"
+      "viewAll": "查看全部",
+      "controlRoom": "控制室",
+      "controlRoomHint": "平台上此刻发生的一切，尽在一处。每个卡片都可打开对应版块。",
+      "why": "先于客户发现问题：健康状况、增长、AI 工作与管理员操作实时更新。",
+      "openControls": "平台控制",
+      "openSystem": "打开系统与监控",
+      "checksOk": "项检查正常",
+      "statusAllGood": "所有核心系统运行正常",
+      "statusAllGoodHint": "数据库和 Redis 均有响应。灰色项是尚未配置的可选服务。",
+      "statusDegraded": "有核心系统宕机",
+      "statusDegradedHint": "数据库或 Redis 无响应。打开系统与监控查看受影响的范围。",
+      "check": {
+        "ok": "运行中",
+        "down": "宕机",
+        "off": "未配置"
+      },
+      "fleetTitle": "AI 团队",
+      "fleetHint": "所有公司的 AI 员工及其当前工作。",
+      "workingNow": "{count, plural, other {当前有 # 个任务在运行}}",
+      "queuedCount": "{count, plural, other {# 个等待中}}",
+      "failed24h": "{count, plural, other {# 个失败（24 小时）}}",
+      "completed24h": "{count, plural, other {# 个已完成（24 小时）}}",
+      "fleetLegend": "{active} 个活跃（绿色）· {paused} 个暂停（灰色）· 闪烁 = 正在工作",
+      "fleetPer": "{count, plural, other {1 格 = # 名 AI 员工}}",
+      "busiestRoles": "当前最繁忙的 AI 角色",
+      "roleLoad": "{running} 运行中 · {queued} 等待中",
+      "noActiveTasks": "当前没有正在运行或等待的 AI 任务。",
+      "registrations": "新注册",
+      "aiTasks30": "AI 任务（30 天）",
+      "liveSubscriptions": "{count, plural, other {# 个有效订阅}}",
+      "sparkRegistrations": "过去 30 天每日新注册",
+      "sparkSignIns": "过去 30 天每日登录用户",
+      "sparkOrganizations": "过去 30 天每日新组织",
+      "sparkSubscriptions": "过去 30 天每日新订阅",
+      "sparkTasks": "过去 30 天每日创建的 AI 任务",
+      "sparkCost": "过去 30 天每日 AI 预估成本",
+      "activityChart": "平台活动",
+      "activityChartHint": "过去 30 天的每日数据。使用方向键或悬停查看某一天。",
+      "seriesSignIns": "登录用户",
+      "seriesRegistrations": "新注册",
+      "seriesTasksFailed": "失败的 AI 任务",
+      "waiting": "等待中",
+      "queuesTitle": "作业队列",
+      "queueSub": "{active} 运行中 · {failed} 失败",
+      "offline": "离线",
+      "activityEmptyHint": "管理员所做的更改（开关、停用、角色）会连同原因显示在这里。"
     },
     "health": {
       "database": "数据库",
@@ -1371,7 +1499,10 @@
       "groups": {
         "emergency": "维护与只读",
         "kill": "紧急开关",
-        "modules": "模块与集成"
+        "modules": "模块与集成",
+        "emergencyHint": "用于故障和事件：对客户关闭平台，管理员可继续工作。",
+        "killHint": "立即在所有地方停止某一类活动。出现异常时使用。",
+        "modulesHint": "为所有组织关闭整个产品模块或集成服务商。"
       },
       "changed": "已更改",
       "critical": "关键",
@@ -1400,7 +1531,23 @@
         "start": "启动紧急封锁",
         "startHint": "用户将被登出并看到维护页面；AI 与后台工作停止。管理员保留访问权限。",
         "end": "结束封锁",
-        "endHint": "恢复封锁前的开关值。"
+        "endHint": "恢复封锁前的开关值。",
+        "activeBadge": "已启用",
+        "readyBadge": "就绪",
+        "effectsTitle": "锁定会做什么",
+        "recoveryTitle": "恢复步骤",
+        "effects": {
+          "maintenance": "开启维护模式：客户看到维护页面，API 返回 503。",
+          "ai": "关闭 AI 团队：任何地方都无法启动 AI 任务。",
+          "jobs": "暂停所有后台作业：事件在队列中等待。",
+          "sessions": "让所有非平台管理员的用户退出登录。"
+        },
+        "steps": {
+          "investigate": "查明发生了什么：查看安全事件和审计日志。",
+          "fix": "修复根因：轮换泄露的密钥、撤销访问、修补问题。",
+          "end": "在下方结束锁定。各开关将恢复到之前的值。",
+          "inform": "通知客户：所有人都需要重新登录。"
+        }
       },
       "keys": {
         "lockdown": {
@@ -1499,6 +1646,66 @@
           "label": "维护提示",
           "hint": "维护页面及 503 响应中的可选文字。"
         }
+      },
+      "why": "这些开关会同时作用于整个平台。每次更改都需要填写原因，并写入审计日志。",
+      "summary": "{changed, plural, =0 {全部 {total} 个开关均处于正常运行} other {{total} 个开关中有 # 个已更改}}",
+      "stateNormal": "正常运行",
+      "stateChanged": "已偏离正常状态",
+      "ifYouFlip": "如果切换：",
+      "lockedByLockdown": "被紧急锁定保持",
+      "readOnly": "只读",
+      "historyHint": "每个开关的最近一次更改：谁、何时、为何。",
+      "noChangesHint": "尚未进行任何更改——一切按安全默认值运行。",
+      "footerNote": "开关会在几秒内对所有服务器生效。后台进程在每个作业前都会检查。",
+      "cards": {
+        "maintenanceMode": {
+          "normal": "平台已开放。客户可以正常登录和工作。",
+          "changed": "平台已对客户关闭。客户看到维护页面；管理员继续工作。",
+          "flip": "在您关闭之前，所有客户页面都会显示维护页面，所有客户 API 返回 503。",
+          "restore": "客户可以立即重新使用平台。"
+        },
+        "readOnlyMode": {
+          "normal": "客户可以查看和更改自己的数据。",
+          "changed": "客户可以查看数据，但任何更改都不会保存。",
+          "flip": "所有公司通过平台进行的任何更改都会被拒绝。读取仍可正常进行。",
+          "restore": "客户可以重新保存更改。"
+        },
+        "aiWorkforceEnabled": {
+          "normal": "AI 员工可以为每家公司工作。",
+          "changed": "AI 团队已关闭。任何地方都无法创建或运行 AI 任务。",
+          "flip": "关闭后将停止所有公司的全部 AI 工作。运行中的任务会停止，也无法启动新任务。",
+          "restore": "AI 员工可以重新工作。各公司需要自行启动新任务。"
+        },
+        "aiExecutionPaused": {
+          "normal": "AI 任务一创建，后台进程就会立即处理。",
+          "changed": "AI 任务已暂停。新任务在队列中等待，不会丢失。",
+          "flip": "AI 任务会继续排队，但在您恢复之前不会运行。适合短暂暂停。",
+          "restore": "等待中的 AI 任务将按顺序重新运行。"
+        },
+        "registrationsEnabled": {
+          "normal": "新用户可以创建账户。",
+          "changed": "注册已关闭。新访客会看到“注册已关闭”。",
+          "flip": "在您重新开启之前，任何新用户都无法注册。现有用户不受影响。",
+          "restore": "新用户可以重新注册。"
+        },
+        "companyCreationEnabled": {
+          "normal": "组织可以添加新公司。",
+          "changed": "任何组织都无法创建新公司。",
+          "flip": "所有组织都将无法创建新公司。现有公司继续正常运行。",
+          "restore": "组织可以重新创建公司。"
+        },
+        "automationsEnabled": {
+          "normal": "工作流按计划和触发器运行。",
+          "changed": "自动化已关闭。计划、触发器和运行都会被跳过。",
+          "flip": "所有公司的工作流自动化都会停止。被跳过的运行之后不会补跑。",
+          "restore": "工作流将从下一次计划或触发开始重新运行。"
+        },
+        "backgroundJobsPaused": {
+          "normal": "后台作业和事件处理器正常运行。",
+          "changed": "所有后台作业已暂停。事件会继续排队。",
+          "flip": "所有后台作业都会停止（邮件、同步、模块作业）。事件会等待，恢复后再处理。",
+          "restore": "后台作业恢复运行，并处理等待中的事件。"
+        }
       }
     },
     "ai": {
@@ -1554,7 +1761,22 @@
       "byOrg": "按组织",
       "byModel": "按模型",
       "byDay": "按日期",
-      "noUsage": "此期间没有 AI 用量。"
+      "noUsage": "此期间没有 AI 用量。",
+      "why": "在一处确保 AI 团队安全且成本可控：为所有公司设置开关、预算、模型和角色。",
+      "usageChart": "30 天 AI 工作量",
+      "usageChartHint": "每日启动和失败的任务，以及预估成本。",
+      "seriesTasks": "任务",
+      "seriesFailed": "失败",
+      "seriesCost": "预估成本",
+      "seriesTokens": "Token",
+      "costByModel": "按模型统计成本",
+      "last30": "过去 30 天",
+      "policyHint": "每位 AI 员工在各公司自身设置之外都需遵守的规则。",
+      "tasksWhy": "按 ID 或标题查找任务，查看失败原因，并取消或重试。",
+      "noTasksHint": "没有匹配的任务。请尝试其他状态或清除搜索。",
+      "usageWhy": "在账单到来之前了解 AI 的成本和使用者。",
+      "noUsageHint": "AI 员工开始工作后，这里会显示用量。",
+      "byDayHint": "按各模型的标价估算。"
     },
     "plans": {
       "subtitle": "套餐、市场价格、权益与用量配额。",
@@ -1586,7 +1808,8 @@
         "agents": {
           "max": "AI 员工数"
         }
-      }
+      },
+      "why": "套餐、各市场价格以及每个套餐包含的内容。价格变更会生成新版本，并保留历史记录。"
     },
     "subscriptions": {
       "subtitle": "所有组织的订阅状态。MRR 仅来自真实订阅项目。",
@@ -1608,7 +1831,12 @@
         "CANCELED": "已取消",
         "UNPAID": "未付款",
         "PAUSED": "已暂停"
-      }
+      },
+      "why": "来自真实订阅记录的经常性收入和订阅健康状况——没有估算。",
+      "distribution": "按状态统计订阅",
+      "distributionHint": "选择一个状态以筛选列表。",
+      "mrrHint": "来自有效订阅的月度经常性收入",
+      "emptyHint": "没有符合这些筛选条件的订阅。"
     },
     "integrations": {
       "subtitle": "所有组织的提供商连接、API 密钥与 Webhook 投递。从不显示凭据。",
@@ -1640,7 +1868,11 @@
       "noFailures": "没有失败的投递。",
       "event": "事件",
       "endpoint": "端点",
-      "attempts": "{count} 次尝试"
+      "attempts": "{count} 次尝试",
+      "why": "查看各公司连接了哪些服务商、哪些连接失败，以及谁在使用 API。",
+      "providersHint": "所有组织中每个服务商的连接情况。",
+      "noConnectionsHint": "各公司在其集成页面中连接服务商。",
+      "noFailuresHint": "最近所有 Webhook 投递均已成功。"
     },
     "security": {
       "subtitle": "安全事件、平台管理员及其会话。",
@@ -1650,13 +1882,21 @@
       "noSessions": "没有活跃的管理员会话。",
       "verified": "已验证",
       "notVerified": "未验证",
-      "events": "安全事件（30 天）"
+      "events": "安全事件（30 天）",
+      "why": "监控登录、角色变更和其他敏感事件，并确保每位管理员都启用了 MFA。",
+      "mfaCoverage": "MFA 覆盖率",
+      "mfaCoverageHint": "启用双因素登录的管理员，以及经其验证的管理会话。",
+      "quietHint": "过去 30 天没有安全事件。",
+      "important": "重要"
     },
     "settings": {
       "subtitle": "全平台设置。更改会被审计。",
       "general": "常规",
       "registration": "注册",
-      "anyDomain": "任意邮箱域名"
+      "anyDomain": "任意邮箱域名",
+      "why": "客户可见的平台基本信息，以及允许谁注册。",
+      "generalHint": "名称、支持联系方式和默认语言。",
+      "registrationHint": "将注册限制为公司邮箱域名。"
     },
     "unavailable": {
       "title": "不可用",
@@ -1672,6 +1912,12 @@
       "switchOrg": "切换组织",
       "home": "返回首页",
       "retry": "重试"
+    },
+    "live": {
+      "on": "实时",
+      "paused": "已暂停",
+      "pause": "暂停实时更新",
+      "resume": "恢复实时更新"
     }
   },
   "email": {
@@ -2092,7 +2338,9 @@
       "usage": "用量与成本",
       "plans": "计划任务",
       "tasks": "AI 任务",
-      "org": "组织架构"
+      "org": "组织架构",
+      "performance": "绩效与预算",
+      "escalations": "升级事项"
     },
     "filters": {
       "search": "搜索",
@@ -2125,19 +2373,19 @@
       },
       "RECOMMEND": {
         "name": "提出建议",
-        "hint": "分析并提出建议；可将调研委派给同事。"
+        "hint": "进行分析并给出建议供人执行。从不把工作交给他人。"
       },
       "PREPARE": {
         "name": "准备",
-        "hint": "起草内容并提交内部变更供审批，不执行外部操作。"
+        "hint": "准备草稿并提出内部变更供批准；委派也需提交批准。不执行外部操作。"
       },
       "EXECUTE_WITH_APPROVAL": {
         "name": "经审批后执行",
-        "hint": "可提议其工具允许的任何操作；每项更改都需人工审批。"
+        "hint": "可提出其工具允许的任何操作；每项变更和每次委派都需等待人工批准。"
       },
       "AUTONOMOUS_LOW_RISK": {
         "name": "自主（低风险）",
-        "hint": "无需询问即可端到端完成工作；数据变更仍需审批。"
+        "hint": "端到端完成工作，并在限制内直接委派给下属；数据变更仍需经过审批。"
       }
     },
     "form": {
@@ -2317,7 +2565,33 @@
       "founder": "创始人",
       "founderRole": "创始人 · 组织架构顶端",
       "open": "组织架构",
-      "hint": "在每个 AI 员工的档案中修改汇报关系。经理向下属委派任务；问题沿此架构向上升级。"
+      "hint": "在每个 AI 员工的档案中修改汇报关系。经理向下属委派任务；问题沿此架构向上升级。",
+      "strip": {
+        "what": "你的 AI 公司里谁向谁汇报：你在最上层，然后是 AI CEO、部门经理和他们的专员。",
+        "why": "经理把工作交给下属，结果汇总回经理；问题沿着这张组织图向上传递，直到有人能做决定。",
+        "can": "悬停某位员工可查看其完整汇报链，按部门筛选，并打开任何人修改其职责、目标或预算。",
+        "next": "打开没有经理的 AI 员工并为其指定经理，或查看未处理的升级事项。"
+      },
+      "summary": {
+        "team": "AI 团队",
+        "levels": "{executives} 位高管 · {managers} 位经理 · {specialists} 位专员",
+        "success": "成功率 · 最近 {days} 天",
+        "finished": "{completed} 个完成 · {failed} 个失败",
+        "cost": "预估 AI 成本 · 最近 {days} 天",
+        "escalations": "未处理的升级事项"
+      },
+      "node": {
+        "working": "正在处理",
+        "idle": "空闲",
+        "success": "成功率",
+        "noTasks": "尚无已完成的任务",
+        "budget": "最近 30 天的预估成本；进度条显示本月预算使用情况",
+        "overBudget": "预算已用完",
+        "escalations": "未处理的升级事项",
+        "allDepartments": "全部部门",
+        "filter": "按部门筛选",
+        "queued": "排队中的任务"
+      }
     },
     "history": {
       "title": "绩效历史",
@@ -2331,7 +2605,8 @@
       "empty": "尚无汇报或升级。",
       "kinds": {
         "STATUS": "状态汇报",
-        "ESCALATION": "升级"
+        "ESCALATION": "升级",
+        "ROLLUP": "汇总"
       },
       "to": "给 {name}",
       "from": "来自 {name}",
@@ -2450,6 +2725,119 @@
       "title": "技能使用情况",
       "hint": "近期已完成任务中各工具的使用次数。",
       "empty": "尚无工具使用记录——首批任务完成后显示。"
+    },
+    "autonomyModes": {
+      "suggest": "仅建议",
+      "supervised": "受监督",
+      "autonomous": "自主"
+    },
+    "escalations": {
+      "title": "升级事项与汇总",
+      "subtitle": "你的 AI 团队需要你处理的事：沿组织图上升的阻碍、等待批准的委派，以及团队成果。",
+      "ladder": {
+        "employee": "AI 员工",
+        "aria": "升级路径"
+      },
+      "resolved": "已解决",
+      "strip": {
+        "what": "当 AI 员工受阻或任务失败时，会升级给其 AI 经理；如果经理未能解决，就会交给你。",
+        "why": "不会隐瞒任何事：每次失败都会上报，AI 经理 {hours} 小时内未解决的事项会送达创始人。",
+        "can": "解决升级事项，批准或拒绝受监督经理提出的委派，并阅读他们汇总的团队成果。",
+        "nextProposals": "{count, plural, other {# 个委派}}正在等待你的决定。",
+        "nextFounder": "{count, plural, other {# 个升级事项}}已到达你这里——请解决或重新分配。",
+        "nextNone": "目前没有需要你处理的事项。"
+      },
+      "openTitle": "未处理的升级事项（{count}）",
+      "openHint": "每一项都显示其在升级阶梯上的位置：AI 员工、其 AI 经理，然后是你。",
+      "noneOpen": "没有未处理的升级事项。你的 AI 团队运转顺畅。",
+      "founderNotified": "已通知创始人 {when}",
+      "resolve": "标记为已解决",
+      "recentlyResolved": "最近解决"
+    },
+    "delegations": {
+      "title": "待批准的委派（{count}）",
+      "hint": "受监督的 AI 经理会为下属提出子任务。在你批准之前不会开始；批准后工作以你的权限运行。",
+      "empty": "没有待处理的委派。",
+      "instructions": "说明",
+      "parentTask": "提出委派的任务",
+      "approve": "批准并开始",
+      "reject": "拒绝",
+      "recent": "最近的决定",
+      "status": {
+        "PROPOSED": "等待中",
+        "CREATED": "已开始",
+        "REJECTED": "已拒绝",
+        "FAILED": "失败"
+      },
+      "childTask": "子任务",
+      "modeNone": "仅建议：从不把工作交给他人。",
+      "modePropose": "委派：为下属提出子任务；每项在开始前都需有人批准。",
+      "modeDirect": "委派：在深度、数量和预算限制内直接为下属启动子任务。",
+      "employeeTitle": "委派",
+      "employeeHint": "该 AI 员工分派或接收的工作。"
+    },
+    "rollups": {
+      "title": "团队成果",
+      "hint": "完成的委派工作会自动汇总给经理；整批完成后，摘要会再上报一级（在最高层即交给你）。",
+      "empty": "尚无汇总。委派任务完成后会显示在这里。",
+      "read": "阅读成果"
+    },
+    "performance": {
+      "title": "绩效与预算",
+      "subtitle": "每位 AI 员工和每个部门的表现——来自真实任务记录——以及他们可以花费多少 AI 预算。",
+      "strip": {
+        "what": "根据实际运行的任务衡量你的 AI 团队的成功率、周转时间、运行时间和成本。",
+        "why": "看清谁在交付、成本多少，并在支出让你意外之前加以控制。",
+        "can": "比较员工和部门，并为每个部门设置月度预算（员工预算在其档案中设置）。",
+        "nextReview": "检查成功率较低或预算接近上限的员工。",
+        "nextBudget": "为最繁忙的部门设置月度预算。"
+      },
+      "window": "时间段",
+      "days": "{days} 天",
+      "successRate": "成功率",
+      "turnaround": "周转时间",
+      "turnaroundHint": "从分配到出结果的中位时间",
+      "runTime": "平均运行时间",
+      "cost": "预估成本",
+      "perTask": "每个完成任务 {cost}",
+      "costPerTask": "单任务成本",
+      "delegated": "委派的子任务",
+      "escalations": "升级事项",
+      "openNow": "当前 {count} 个未处理",
+      "departments": "部门",
+      "employeesCount": "{count, plural, other {# 位 AI 员工}}",
+      "successShort": "成功",
+      "turnaroundShort": "周转",
+      "costShort": "{days} 天成本",
+      "employees": "AI 员工",
+      "employeesHint": "最近 {days} 天，产出最多者优先。",
+      "finishedCount": "{count} 个结束 · {failed} 个失败",
+      "runTimeShort": "运行 {time}",
+      "footnote": "成本根据令牌数量和美元标价估算；失败的运行也计算在内。预算在每个自然月（UTC）重置。"
+    },
+    "budgets": {
+      "costBudget": "月度成本预算（美元）",
+      "costBudgetHint": "每个自然月的预估支出。用完后任务会被拒绝，运行中的任务达到上限时会停止。留空表示不限制。",
+      "usdPerMonth": "每月美元",
+      "tokensPerMonth": "每月令牌",
+      "save": "保存预算",
+      "remove": "取消限制",
+      "saved": "已保存",
+      "hint": "部门预算覆盖该部门所有 AI 员工的合计用量，叠加在每位员工自身预算和平台限制之上。",
+      "exhausted": "预算已用完",
+      "limited": "已设预算",
+      "unlimited": "不限制",
+      "thisMonth": "本月",
+      "spentNoLimit": "{cost} · {tokens} 令牌，不限制",
+      "costOf": "{used} / {budget}",
+      "tokensOf": "{used} / {budget} 令牌",
+      "edit": "修改预算",
+      "set": "设置预算",
+      "employeeExhausted": "自身预算已用完",
+      "departmentExhausted": "部门预算已用完",
+      "departmentExhaustedNotice": "{department}部门本月的 AI 预算已用完，在提高预算或本月结束前，新任务将被拒绝。",
+      "departmentLine": "{department}部门",
+      "runCap": "在达到预算前，下一个任务最多约可使用 {tokens} 令牌。"
     }
   },
   "profiles": {
@@ -15239,6 +15627,818 @@
       "empty": "素材库为空——生成第一件作品吧。",
       "use": "使用",
       "generateNew": "生成新作品"
+    }
+  },
+  "cockpit": {
+    "back": "返回",
+    "draft": {
+      "saving": "正在保存…",
+      "saved": "已保存 — 可以稍后继续",
+      "error": "保存失败 — 你的回答仍保留在此页面",
+      "resumed": "我们保留了你上次的回答。",
+      "startOver": "重新开始"
+    }
+  },
+  "missionControl": {
+    "eyebrow": "任务控制中心",
+    "intro": {
+      "what": "你的 AI 员工正在做、等待做或已完成的每项工作 — 实时显示。",
+      "why": "你能看到 AI 在做什么、发现了什么、花了多少钱，以及哪些事需要你同意。",
+      "can": "给 AI 员工分配工作，逐步跟进，重试或停止，并查看结果。",
+      "next": "给 AI 员工分配工作",
+      "nextHire": "雇佣你的第一位 AI 员工"
+    },
+    "stats": {
+      "working": "正在工作",
+      "workingHint": "{queued} 个在排队",
+      "doneToday": "今日完成",
+      "total": "{count, plural, other {累计 # 项工作}}",
+      "failedToday": "今日停止",
+      "failedHint": "打开查看原因并重试",
+      "tokensToday": "今日 AI 用量",
+      "weekCost": "过去 7 天的 AI 预估费用：{cost}"
+    },
+    "composer": {
+      "title": "给 AI 员工分配工作",
+      "subtitle": "三个简单步骤。AI 想做的任何有风险的事都会先等待你的批准。",
+      "steps": {
+        "who": "谁",
+        "what": "做什么",
+        "send": "检查并发送"
+      },
+      "whoQ": "谁来做这项工作？",
+      "whoHint": "选择一位 AI 员工。他们使用你公司的数据，且只在自己的职责范围内工作。",
+      "department": "部门",
+      "noEmployees": "你还没有雇佣 AI 员工 — 仍可在下方选择一个角色，或",
+      "orRole": "或不雇佣，直接使用一个角色",
+      "orRoleHint": "角色是一组 AI 技能（例如“AI 财务总监”）。已雇佣的员工更了解你的公司。",
+      "pickRole": "选择角色…",
+      "whatQ": "{name} 应该做什么？",
+      "whatHint": "从一个想法开始，或自己写。像给新同事交代工作一样说明。",
+      "ideas": "{department} 的想法",
+      "jobTitle": "一句话描述工作",
+      "jobTitleHint": "例如：“在德国找 10 个新的潜在客户”",
+      "brief": "工作说明",
+      "briefHint": "你想要什么、为什么，以及好结果是什么样。说明任何限制（预算、语气、截止时间）。",
+      "sendQ": "准备发送了吗？",
+      "safety": "AI 只能读取你有权读取的内容。发送邮件、添加记录或花钱会先出现在“审批”中。",
+      "advanced": "高级",
+      "send": "发送工作"
+    },
+    "departments": {
+      "executive": "管理层",
+      "sales": "销售",
+      "marketing": "市场",
+      "finance": "财务",
+      "hr": "人事",
+      "support": "客服",
+      "operations": "运营",
+      "research": "研究",
+      "engineering": "工程",
+      "product": "产品",
+      "general": "通用"
+    },
+    "templates": {
+      "weekly_brief": {
+        "title": "撰写我的每周公司简报",
+        "body": "查看我们的目标、关键数据和近期动态。写一页简报：哪些进展顺利、哪些存在风险，以及我本周应做的 3 个决定。"
+      },
+      "priorities": {
+        "title": "建议本月最重要的优先事项",
+        "body": "根据我们的目标和当前数据，建议本月最重要的 3 个优先事项，说明各自为何重要以及第一步做什么。"
+      },
+      "prospects": {
+        "title": "寻找 10 个新的潜在客户",
+        "body": "根据现有客户和销售管道，用三行描述我们的理想客户。然后推荐 10 个匹配的潜在客户作为新线索，每个附一行说明为何合适。添加线索需等待我的批准。"
+      },
+      "pipeline_review": {
+        "title": "审查我的销售管道",
+        "body": "查看所有进行中的交易。告诉我哪些可能成交、哪些停滞及原因，以及每个停滞交易的下一步。"
+      },
+      "campaign_idea": {
+        "title": "策划一次营销活动",
+        "body": "为下个月提出一个活动方案：目标、受众、渠道、预算范围和 3 个信息创意。创建为活动草稿供我批准。"
+      },
+      "content_plan": {
+        "title": "规划 4 周的内容",
+        "body": "建议一份符合受众和目标的 4 周内容计划（每周一篇帖子或文章），每篇附标题和两行摘要。"
+      },
+      "cash_check": {
+        "title": "检查现金和可支撑时间",
+        "body": "总结我们的现金状况、收入和支出，以及还能支撑几个月。用简单的话指出任何异常。"
+      },
+      "overdue_invoices": {
+        "title": "催收逾期发票",
+        "body": "按客户和金额列出逾期发票，并为最重要的几张起草简短友好的提醒。"
+      },
+      "job_post": {
+        "title": "撰写招聘启事",
+        "body": "为下面描述的职位写一份清晰、友好的招聘启事，包括职责、要求和我们提供的条件。创建为草稿供我批准。职位："
+      },
+      "team_health": {
+        "title": "我的团队状况如何？",
+        "body": "总结员工人数、谁在休假、空缺职位以及团队中需要关注的事项，并给出 3 条建议。"
+      },
+      "queue_triage": {
+        "title": "整理我的客服队列",
+        "body": "查看未解决的客服工单。按主题和紧急程度分组，并为最紧急的 3 个起草回复（仅草稿，供我审阅）。"
+      },
+      "faq_gaps": {
+        "title": "找出缺失的帮助文章",
+        "body": "查看近期客户问题和我们的知识库。列出我们最常回答但还没有帮助文章的 5 个问题。"
+      },
+      "process_draft": {
+        "title": "写下我们的一个日常流程",
+        "body": "为下面描述的日常工作写一个简单的分步流程（5–10 步），让团队中任何人都能照做。日常工作："
+      },
+      "project_status": {
+        "title": "我们项目的状态",
+        "body": "总结每个进行中的项目：进度、风险和延误情况。为每个落后的项目建议一项行动。"
+      },
+      "competitors": {
+        "title": "研究我们的竞争对手",
+        "body": "根据我们对市场和公司的了解，描述我们的 5 个主要竞争对手、我们如何比较，以及我们能在哪里取胜。"
+      },
+      "kpi_review": {
+        "title": "解读我们的关键数据",
+        "body": "用简单的话解读本月最重要的数据：发生了什么变化、可能的原因，以及需要关注什么。"
+      },
+      "research_topic": {
+        "title": "研究一个问题",
+        "body": "利用公司文档和知识研究下面的问题，并给我一个附带来源的简短回答。问题："
+      },
+      "summarize_docs": {
+        "title": "总结我们关于某主题的文档",
+        "body": "找出我们的文档对下面主题的说法，用 5 个要点总结并注明来源。主题："
+      }
+    },
+    "help": {
+      "title": "不确定该问什么？",
+      "hint": "让你的 AI CEO 推荐本周对 AI 团队最有用的工作。"
+    },
+    "view": {
+      "label": "视图",
+      "lanes": "看板",
+      "list": "列表"
+    },
+    "moreFilters": "搜索和更多筛选",
+    "columns": {
+      "tokens": "AI 用量"
+    },
+    "empty": {
+      "title": "还没有 AI 工作",
+      "body": "给 AI 员工分配第一项工作 — 一个研究问题、一份每周简报或一份潜在客户名单。工作进行时，你会看到它在看板上移动。",
+      "schedule": "或设置定期 AI 工作"
+    },
+    "lanes": {
+      "label": "按状态分类的 AI 工作",
+      "caption": "{count, plural, other {看板上有 # 项工作}} — 实时更新",
+      "queued": "等待中",
+      "queuedHint": "排队等待 AI 处理",
+      "queuedEmpty": "没有等待中的工作",
+      "running": "进行中",
+      "runningHint": "AI 正在处理",
+      "runningEmpty": "目前没有进行中的工作",
+      "done": "已完成",
+      "doneHint": "等待你查看",
+      "doneEmpty": "还没有完成的工作",
+      "failed": "已停止",
+      "failedHint": "失败或已取消 — 打开以重试",
+      "failedEmpty": "没有停止的工作",
+      "more": "还有 {count} 项",
+      "older": "显示更早的工作"
+    },
+    "timeline": {
+      "title": "AI 做了什么",
+      "hint": "根据任务的真实记录，按顺序列出每一步。",
+      "created": "由 {who} 分配",
+      "byTask": "另一项 AI 工作（“{title}”）",
+      "started": "AI 已开始处理",
+      "toolFailed": "此步骤失败：{error}",
+      "askedApproval": "执行前请求了你的批准",
+      "results": "{count, plural, =0 {未找到结果} other {# 条结果}}",
+      "working": "仍在处理…",
+      "waiting": "等待 AI 处理",
+      "done": "已完成",
+      "failed": "因错误停止",
+      "cancelled": "已取消"
+    },
+    "detail": {
+      "profileLink": "打开员工资料",
+      "waitingApproval": "{count, plural, other {有 # 项操作}}等待你的批准。",
+      "reviewNow": "立即查看",
+      "steps": "执行步骤",
+      "stepsHint": "查询和操作",
+      "tokens": "AI 用量",
+      "tokensHint": "读取 {input} · 写入 {output}",
+      "cost": "预估费用",
+      "duration": "耗时",
+      "seconds": "{s} 秒",
+      "minutes": "{m} 分 {s} 秒",
+      "hours": "{h} 小时 {m} 分",
+      "sourcesHint": "AI 引用的文档 — 点击核对。",
+      "networkHint": "在 AI 员工之间转交的工作。",
+      "networkLabel": "此工作的委派关系图",
+      "nextTitle": "下一步？",
+      "nextBody": "对结果满意吗？分配一项后续工作，或把它设为定期计划自动执行。",
+      "followUp": "分配后续工作",
+      "repeat": "按计划重复"
+    }
+  },
+  "decisionInbox": {
+    "eyebrow": "决策收件箱",
+    "subtitle": "你的 AI 员工想做、但需要你先同意的事情。",
+    "intro": {
+      "whatPre": "每张卡片都是一个",
+      "approvalWord": "审批请求",
+      "whatPost": "：在执行前准确展示 AI 员工想做什么。",
+      "approvalExplain": "你的 AI 员工可以自行读取信息，但任何修改数据、联系他人或花钱的操作都会在这里暂停，直到有人同意。",
+      "whatsThis": "这是什么？",
+      "why": "没有你，任何有风险的事都不会发生。批准后操作会立即以你的身份执行。",
+      "can": "查看预览，批准或拒绝（可附备注），一次性批准所有低风险请求，并查看过往决定。",
+      "next": "{count, plural, other {查看 # 个请求}}",
+      "nextEmpty": "给 AI 员工分配工作"
+    },
+    "stats": {
+      "waiting": "等待你处理",
+      "careful": "需要特别注意",
+      "carefulHint": "高风险或严重风险",
+      "expiring": "24 小时内过期",
+      "expiringHint": "过期的请求会被丢弃",
+      "doneWeek": "本周已完成"
+    },
+    "pendingHint": "最先过期的排在前面。",
+    "askedBy": "由 {who} 请求",
+    "fromTask": "来自“{title}”",
+    "aLead": "一个线索",
+    "to": "收件人",
+    "subject": "主题",
+    "total": "合计",
+    "approve": "批准",
+    "reject": "拒绝",
+    "running": "正在执行…",
+    "addNote": "添加备注",
+    "note": "备注",
+    "notePlaceholder": "可选 — 批准或拒绝的原因（会保留在历史记录中）",
+    "mfaHint": "执行此操作前需要近期完成两步验证。",
+    "cannotDecide": "你可以查看此请求，但需要有审批权限的人来决定。",
+    "founderOnly": "只有组织所有者可以批准此项。",
+    "expired": "已过期",
+    "expiresIn": "{left}后过期",
+    "leftDays": "{d} 天 {h} 小时",
+    "leftHours": "{h} 小时 {m} 分",
+    "leftMinutes": "{m} 分钟",
+    "expiredNote": "没有人及时决定，因此什么也没发生。",
+    "decidedBy": "由 {who} 决定 · {when}",
+    "someone": "某人",
+    "showMore": "显示更多",
+    "riskExplain": {
+      "LOW": "低风险：Realy.si 内的小改动，容易撤销。公司外部的人看不到。",
+      "MEDIUM": "中等风险：会修改公司的记录。请检查细节 — 之后可以编辑或撤销。",
+      "HIGH": "高风险：会接触公司外部的人或花钱，执行后无法收回。",
+      "CRITICAL": "严重：影响持久的重大操作。批准前请阅读每个细节。"
+    },
+    "outcome": {
+      "PENDING": "等待中",
+      "APPROVED": "已批准",
+      "EXECUTED": "已完成",
+      "REJECTED": "已拒绝",
+      "EXPIRED": "已过期",
+      "FAILED": "失败"
+    },
+    "bulk": {
+      "label": "批准所有低风险请求（{count}）",
+      "confirm": "{count, plural, other {批准 # 个低风险请求？}}每个都会立即执行。",
+      "note": "批量批准（低风险）",
+      "progress": "已完成 {done}/{total}",
+      "failed": "{count, plural, other {# 个无法执行}}"
+    },
+    "empty": {
+      "title": "没有等待你决定的事项",
+      "body": "当 AI 员工想发送邮件、添加记录或花钱时，会先在这里显示清晰的预览。",
+      "autonomy": "查看你的 AI 团队可以自主做什么"
+    },
+    "help": {
+      "title": "需要第二意见？",
+      "hint": "你的 AI CEO 会审查等待中的请求，并用简单的话建议批准或拒绝。决定权在你。",
+      "label": "帮我决定"
+    },
+    "actions": {
+      "send_lead_email": "将这封邮件发送给 {to}",
+      "send_email_reply": "在邮件会话中发送此回复",
+      "send_ticket_reply": "将此回复发送给客户",
+      "draft_ticket_reply": "在客服工单上保存此回复草稿",
+      "send_influencer_outreach": "发邮件邀请一位网红合作",
+      "create_lead": "将 {name} 添加为新线索",
+      "create_follow_up": "添加一个 {date} 到期的跟进提醒",
+      "create_work_task": "创建任务“{title}”",
+      "create_project": "创建项目“{name}”",
+      "create_milestone": "添加里程碑“{title}”",
+      "assign_task": "把任务分配给团队成员",
+      "unassign_task": "取消任务的负责人",
+      "update_task_status": "更改任务状态",
+      "deal_won": "将交易标记为赢单",
+      "deal_lost": "将交易标记为丢单",
+      "deal_stage": "将交易移到另一个阶段",
+      "create_invoice_draft": "为 {customer} 准备一张合计 {total} 的发票草稿",
+      "record_expense": "记录一笔 {amount} 的支出",
+      "set_ad_budget": "广告活动每天最多花费 {amount}",
+      "launch_ad_campaign": "在广告平台上创建此广告活动（初始为暂停状态）",
+      "set_ad_campaign_status": "开启或关闭广告活动",
+      "create_campaign": "创建活动草稿“{name}”",
+      "schedule_social_post": "于 {when} 在 {count, plural, other {# 个社交账号}}上发布此帖子",
+      "reply_to_comment": "公开回复一条评论",
+      "create_content_draft": "将草稿“{title}”添加到内容库",
+      "create_job_posting": "创建招聘启事草稿“{title}”",
+      "score_candidate": "为求职者打分",
+      "remember_company_fact": "记住关于你公司的这条信息"
+    },
+    "fields": {
+      "email": "邮箱",
+      "account": "公司",
+      "source": "来源",
+      "notes": "备注",
+      "note": "备注",
+      "priority": "优先级",
+      "dueDate": "截止日期",
+      "startDate": "开始",
+      "endDate": "结束",
+      "description": "描述",
+      "quantity": "数量",
+      "unitPrice": "单价",
+      "customerEmail": "客户邮箱",
+      "issueDate": "开具日期",
+      "date": "日期",
+      "vendorName": "供应商",
+      "categoryName": "类别",
+      "accountName": "账户",
+      "reference": "参考号",
+      "objective": "目标",
+      "channels": "渠道",
+      "targetLeads": "目标线索数",
+      "location": "地点",
+      "employmentType": "雇佣类型",
+      "remote": "远程",
+      "status": "状态",
+      "lostReason": "丢单原因",
+      "estimatePoints": "估算",
+      "costCenterName": "成本中心"
+    }
+  },
+  "timeline": {
+    "eyebrow": "公司时间线",
+    "intro": {
+      "what": "公司里发生的一切的日记 — 来自员工、AI 员工和已连接的应用。",
+      "why": "你始终知道谁在何时做了什么，并可直接跳转到记录。",
+      "can": "按领域和时间筛选，打开任意记录，并让 AI 总结今天的情况。",
+      "next": "查看今天发生了什么"
+    },
+    "today": "今天",
+    "yesterday": "昨天",
+    "when": "时间",
+    "anyTime": "任何时间",
+    "ranges": {
+      "today": "今天",
+      "week": "过去 7 天",
+      "month": "过去 30 天"
+    },
+    "allAreas": "所有领域",
+    "advanced": "更多筛选",
+    "bars": {
+      "title": "过去 14 天的活动",
+      "hint": "{count, plural, other {记录了 # 项操作}}"
+    },
+    "digest": {
+      "title": "今天发生了什么？",
+      "hint": "{count, plural, =0 {今天还没有记录。} other {今天记录了 # 项 — AI 会把它们整理成简短总结。}}",
+      "button": "总结今天"
+    },
+    "empty": {
+      "title": "还没有任何动态",
+      "body": "一旦你或 AI 员工添加线索、发送发票或完成任务，就会以时间线的形式显示在这里。"
+    },
+    "modules": {
+      "crm": "销售与客户管理",
+      "finance": "财务",
+      "hr": "人事",
+      "marketing": "市场",
+      "support": "客服",
+      "work": "项目与运营",
+      "agent": "AI 工作",
+      "approval": "审批",
+      "workflow": "自动化",
+      "brain": "公司知识",
+      "company": "公司"
+    },
+    "events": {
+      "lead_created": "添加了一个线索",
+      "lead_updated": "更新了一个线索",
+      "lead_assigned": "分配了一个线索",
+      "deal_created": "创建了一个交易",
+      "deal_stage_changed": "将交易移到了新阶段",
+      "deal_won": "赢得了一笔交易",
+      "deal_lost": "丢失了一笔交易",
+      "customer_created": "添加了一位客户",
+      "contact_created": "添加了一位联系人",
+      "invoice_created": "创建了一张发票",
+      "invoice_sent": "发送了一张发票",
+      "invoice_paid": "收到了一张发票的付款",
+      "invoice_overdue": "有一张发票逾期",
+      "expense_created": "记录了一笔支出",
+      "payment_received": "收到了一笔付款",
+      "task_created": "创建了一个任务",
+      "task_completed": "完成了一个任务",
+      "project_created": "启动了一个项目",
+      "employee_joined": "迎来了一位新员工",
+      "employee_left": "记录了一位员工离职",
+      "candidate_applied": "收到了一份求职申请",
+      "candidate_hired": "录用了一位候选人",
+      "leave_requested": "申请了休假",
+      "form_submitted": "收到了一份表单提交",
+      "campaign_launched": "启动了一项活动",
+      "content_published": "发布了内容",
+      "ticket_created": "创建了一个客服工单",
+      "ticket_updated": "更新了一个客服工单",
+      "ticket_resolved": "解决了一个客服工单",
+      "meeting_completed": "结束了一次会议",
+      "announcement_published": "发布了一则公告",
+      "webhook_received": "收到了已连接应用的数据",
+      "schedule_tick": "运行了一次定时检查",
+      "integration_synced": "同步了一个已连接应用",
+      "agent_task_completed": "完成了一项 AI 工作",
+      "agent_task_failed": "的一项 AI 工作失败了",
+      "approval_requested": "请求了一项审批",
+      "approval_resolved": "处理了一项审批",
+      "objective_created": "设定了一个新目标",
+      "member_joined": "加入了团队",
+      "company_created": "创建了公司"
+    }
+  },
+  "aiPlans": {
+    "eyebrow": "定期 AI 工作",
+    "intro": {
+      "what": "你的 AI 团队的每周节奏：按计划重复的工作，以及在某事发生时开始的工作。",
+      "why": "重要的例行工作 — 简报、跟进、检查 — 无需你记着也会按时完成。",
+      "can": "一眼查看整周安排，用简单的话添加计划，暂停、编辑或删除计划，并查看过往运行记录。",
+      "next": "添加计划"
+    },
+    "stats": {
+      "active": "启用的计划",
+      "paused": "{count, plural, =0 {没有暂停的} other {# 个已暂停}}",
+      "perWeek": "每周运行次数",
+      "perWeekHint": "来自定时计划",
+      "triggers": "事件触发",
+      "triggersHint": "某事发生时开始",
+      "runs": "最近运行",
+      "runsHint": "下方显示最近 30 次"
+    },
+    "calendar": {
+      "title": "本周",
+      "hourly": "每小时第 {minute} 分",
+      "events": "当某事发生时",
+      "eventsEmpty": "还没有事件触发。例如：有新线索时，对其进行研究。",
+      "nothing": "空闲"
+    },
+    "empty": {
+      "title": "还没有定期 AI 工作",
+      "body": "计划让你的 AI 团队主动工作 — 例如由 AI 财务总监每周一检查现金，或研究每个新线索。"
+    },
+    "composer": {
+      "title": "添加计划",
+      "subtitle": "告诉我们谁、何时、做什么 — 保存前我们会用一句话复述给你。",
+      "steps": {
+        "who": "谁",
+        "when": "何时",
+        "what": "做什么",
+        "check": "确认"
+      },
+      "whoQ": "由哪位 AI 员工来做？",
+      "whenQ": "什么时候进行？",
+      "when": {
+        "WEEKLY": "每周一次",
+        "WEEKLYHint": "适合回顾和报告（推荐）",
+        "DAILY": "每天",
+        "DAILYHint": "适合简报和快速检查",
+        "HOURLY": "每小时",
+        "HOURLYHint": "仅用于变化很快的事情",
+        "EVENT": "当某事发生时",
+        "EVENTHint": "例如新线索、已付款发票或新工单"
+      },
+      "whatQ": "{name} 每次应该做什么？",
+      "whatHint": "选择一个想法或写下你自己的指示。",
+      "advanced": "高级",
+      "checkQ": "这样对吗？",
+      "safety": "每次运行都会创建一项普通 AI 工作。有风险的操作仍需在“审批”中等待。",
+      "save": "保存计划",
+      "created": "“{name}”已安排。你会在日历中看到它。"
+    },
+    "sentence": {
+      "daily": "每天 {time}",
+      "weekly": "每{day} {time}",
+      "hourly": "每小时第 {minute} 分",
+      "event": "每当有人{event}时",
+      "full": "{when}，{name}（{role}）将执行“{job}”。"
+    },
+    "help": {
+      "title": "需要灵感？",
+      "hint": "你的 AI CEO 会建议符合你目标和团队的每周节奏。"
+    },
+    "ideas": {
+      "weekly_review": {
+        "name": "每周公司回顾",
+        "body": "回顾上周的数据、目标和动态。写一份简短简报：成绩、风险和本周的 3 个决定。"
+      },
+      "morning_brief": {
+        "name": "晨间简报",
+        "body": "用 5 个要点总结自昨天以来发生的事，以及今天需要关注的事项。"
+      },
+      "cash_monday": {
+        "name": "周一现金检查",
+        "body": "总结我们的现金、本周预计收入、即将到期的账单和可支撑时间。标出任何异常。"
+      },
+      "overdue_chase": {
+        "name": "逾期发票跟进",
+        "body": "列出逾期发票，并为金额最大的几张起草友好提醒（供我批准）。"
+      },
+      "pipeline_monday": {
+        "name": "销售管道回顾",
+        "body": "回顾进行中的交易：哪些可能成交、哪些停滞，以及每个停滞交易的下一步。"
+      },
+      "new_lead_research": {
+        "name": "研究新线索",
+        "body": "研究最新的线索：他们是谁、是否符合我们的理想客户，以及建议的第一条消息。"
+      },
+      "content_week": {
+        "name": "规划本周内容",
+        "body": "建议本周符合我们目标的帖子和文章，附标题和简短摘要。"
+      },
+      "campaign_check": {
+        "name": "活动检查",
+        "body": "回顾进行中的活动：目前的结果、有效的做法，以及每个活动的一项改进。"
+      },
+      "people_pulse": {
+        "name": "团队脉搏",
+        "body": "总结谁不在、新加入的成员、空缺职位以及团队中需要关注的事项。"
+      },
+      "support_digest": {
+        "name": "客服摘要",
+        "body": "总结新的和未解决的工单、反复出现的问题以及等待最久的客户。"
+      },
+      "ticket_triage": {
+        "name": "工单分类",
+        "body": "按紧急程度整理未解决的工单，并为最紧急的起草回复（仅草稿）。"
+      },
+      "ops_week": {
+        "name": "每周运营检查",
+        "body": "回顾项目进度、逾期任务和未解决的风险，并建议优先解决什么。"
+      },
+      "kpi_week": {
+        "name": "每周数据",
+        "body": "解释本周关键数据的变化以及背后可能的原因。"
+      }
+    }
+  },
+  "opsHub": {
+    "eyebrow": "运营中心",
+    "advanced": "高级",
+    "recommended": "推荐",
+    "quickAdd": "快速添加（全部字段）",
+    "whatsThis": "这是什么？",
+    "stats": {
+      "checklists": "{count, plural, other {# 个检查清单}}",
+      "sev12": "{count, plural, =0 {无严重事件} other {# 个严重}}"
+    },
+    "intro": {
+      "overview": {
+        "what": "公司日常如何运转：书面流程、定期检查、设备资产，以及出现的问题。",
+        "why": "书面流程让工作可重复，质量不再取决于当天谁在岗。",
+        "can": "写下流程、安排检查清单、登记资产并处理事件。",
+        "nextDone": "查看本周的检查清单"
+      },
+      "processes": {
+        "what": "流程是你的分步例行工作 — “我们这里就是这样做的”。",
+        "why": "任何人都能照做，新人学得更快，每次修改都会保存为一个版本。",
+        "can": "从现成示例创建流程，编辑步骤，并查看历史版本。"
+      },
+      "checklists": {
+        "what": "检查清单是按计划（每天、每周、每月）检查的简短事项列表。",
+        "why": "小而定期的检查能防止大问题，并且你能看到它们确实完成了。",
+        "can": "从示例创建检查清单，分配负责人，每次到期时逐项勾选。"
+      },
+      "assets": {
+        "what": "你的资产登记：电脑、手机、机器、许可证 — 你拥有什么，以及在谁手里。",
+        "why": "你清楚拥有什么、花了多少钱，以及哪些需要维护或更换。",
+        "can": "添加资产、分配给人员、跟踪状态和价值，并归档旧资产。"
+      },
+      "incidents": {
+        "what": "事件是出了问题的事情 — 服务中断、失误或伤害客户的投诉。",
+        "why": "记录下来就能有负责人、得到修复，并避免再次发生。",
+        "can": "记录事件，设定严重程度，从未解决推进到已解决，并写下经验教训。"
+      },
+      "vendors": {
+        "what": "你的供应商和服务商，与其他公司一起保存在客户管理中。",
+        "why": "一个地方集中管理你的采购对象、联系人和详细信息。",
+        "can": "搜索供应商并打开其完整记录。",
+        "next": "添加供应商"
+      }
+    },
+    "journey": {
+      "title": "从这里开始：搭建运营体系",
+      "hint": "四项基础。每项一旦存在就会自动打勾。",
+      "progress": "已完成 {done}/{total}",
+      "done": "已完成 — 打开查看",
+      "steps": {
+        "process": {
+          "title": "写下你的第一个流程",
+          "hint": "选择一个例行工作，如客户入门 — 我们会建议步骤。"
+        },
+        "checklist": {
+          "title": "安排你的第一个检查清单",
+          "hint": "设置一个每周检查只需两分钟。"
+        },
+        "assets": {
+          "title": "登记你的设备",
+          "hint": "从电脑和手机开始。"
+        },
+        "incidents": {
+          "title": "了解如何记录事件",
+          "hint": "出现问题时记录下来，以便彻底解决。"
+        }
+      }
+    },
+    "help": {
+      "title": "让 AI 推荐你的例行工作",
+      "hint": "你的 AI 运营助手会为像你这样的公司推荐流程和检查清单。"
+    },
+    "incidents": {
+      "boardTitle": "事件看板",
+      "boardHint": "未解决的事件（最严重的在前），以及过去两周已解决的事件。",
+      "legend": "严重级别",
+      "noOwner": "暂无负责人",
+      "columnEmpty": "暂无",
+      "severityWord": "每个级别有多严重？",
+      "severityExplain": "SEV1：客户完全无法使用你的服务 — 放下一切处理。SEV2：很大一部分出现故障。SEV3：有些麻烦，但有替代办法。SEV4：小问题，方便时修复。"
+    },
+    "severityExplain": {
+      "SEV1": "全部停摆",
+      "SEV2": "影响很大",
+      "SEV3": "有替代办法",
+      "SEV4": "轻微"
+    },
+    "assets": {
+      "title": "资产一览",
+      "hint": "{count, plural, other {# 项资产}}，{categories, plural, other {# 个类别}}",
+      "byStatus": "按状态",
+      "byCategory": "最大的类别",
+      "uncategorised": "未分类",
+      "assigned": "已分配给某人",
+      "assignedHint": "每件资产都应有负责人。"
+    },
+    "empty": {
+      "processes": {
+        "title": "还没有书面流程",
+        "body": "从团队经常重复的一项例行工作开始。在上方选择示例并调整步骤 — 只需两分钟。"
+      },
+      "checklists": {
+        "title": "还没有检查清单",
+        "body": "一个简短的每周检查（门窗、备份、用品）是很好的开始。使用上方的引导设置。"
+      },
+      "assets": {
+        "title": "尚未登记资产",
+        "body": "添加电脑、手机和设备，随时知道谁拿着什么。使用上方的“添加资产”。"
+      },
+      "incidents": {
+        "title": "没有事件 — 好消息",
+        "body": "出现问题时在这里记录，让它有负责人并得到解决。使用上方的“记录事件”。"
+      },
+      "vendors": {
+        "title": "还没有供应商",
+        "body": "供应商是客户管理中标记为供应商的公司。添加一个，它就会出现在这里。"
+      }
+    },
+    "process": {
+      "title": "分步设置流程",
+      "subtitle": "选择例行工作、写下步骤、指定负责人。",
+      "steps": {
+        "what": "例行工作",
+        "how": "步骤",
+        "who": "负责人"
+      },
+      "whatQ": "你想写下哪项例行工作？",
+      "whatHint": "选择示例以从建议的步骤开始，或从空白开始。",
+      "titlePlaceholder": "例如：新客户入门",
+      "categoryHint": "例如销售、财务或人事等分组。",
+      "howQ": "有哪些步骤？",
+      "howHint": "每行一步，按顺序。简短清晰 — 细节可以稍后补充。",
+      "stepsPlaceholder": "发送欢迎邮件\n安排启动会议\n…",
+      "preview": "预览",
+      "whoQ": "谁负责保持此流程最新？",
+      "ownerHint": "负责人解答问题，并在情况变化时更新步骤。",
+      "summary": "包含 {count, plural, other {# 个步骤}}的“{title}”将保存为版本 1。",
+      "create": "创建流程"
+    },
+    "processTemplates": {
+      "customer_onboarding": {
+        "title": "新客户入门",
+        "hint": "从签约到满意的第一个月",
+        "category": "客户",
+        "steps": "发送包含后续步骤的欢迎邮件\n在客户管理中创建客户并指定负责人\n安排启动会议\n开通账号和权限\n分享一份简短的入门指南\n第一周后回访\n第一个月后征求反馈"
+      },
+      "month_close": {
+        "title": "月末结账",
+        "hint": "每月账目准确",
+        "category": "财务",
+        "steps": "发送本月所有发票\n记录所有支出和收据\n核对银行流水\n催收逾期发票\n查看损益表\n与团队分享简短总结"
+      },
+      "refund": {
+        "title": "处理退款申请",
+        "hint": "公平、快速、一致",
+        "category": "客服",
+        "steps": "感谢客户并确认已收到申请\n核对订单和退款政策\n做出决定并清楚说明\n办理退款或开具贷记单\n记录原因\n跟进确认已到账"
+      },
+      "new_hire": {
+        "title": "欢迎新员工",
+        "hint": "精彩的第一周",
+        "category": "人事",
+        "steps": "准备合同和文件\n订购电脑和开通账号\n指定一位伙伴\n规划第一周\n介绍给团队\n设定前 90 天的目标"
+      },
+      "publish_content": {
+        "title": "发布博客文章",
+        "hint": "从想法到发布",
+        "category": "市场",
+        "steps": "确定主题和目标\n撰写初稿\n审阅和编辑\n添加图片和链接\n发布\n在社交媒体和电子报中分享"
+      },
+      "custom": {
+        "title": "其他",
+        "hint": "从空白页开始"
+      }
+    },
+    "checklist": {
+      "title": "分步设置检查清单",
+      "subtitle": "检查什么、具体事项，以及频率。",
+      "steps": {
+        "what": "检查什么",
+        "items": "事项",
+        "when": "频率"
+      },
+      "whatQ": "需要定期检查什么？",
+      "whatHint": "选择示例或从空白开始。",
+      "itemsQ": "清单上有什么？",
+      "itemsHint": "每行一项。完成后逐项勾选。",
+      "whenQ": "多久一次，由谁来做？",
+      "whoHint": "到期时会提醒他们。",
+      "firstHint": "留空则从今天开始。",
+      "summary": "“{title}”，{count, plural, other {# 个事项}}，{schedule}。",
+      "create": "创建检查清单"
+    },
+    "checklistTemplates": {
+      "opening": {
+        "title": "开门与关门",
+        "hint": "每天，适用于店铺和办公室",
+        "items": "开关灯和设备\n锁好门窗\n清点收银\n工作区整洁\n设置警报"
+      },
+      "weekly_office": {
+        "title": "每周办公室检查",
+        "hint": "每周五五分钟",
+        "items": "补充用品\n打印机和 Wi-Fi 正常\n清洁厨房\n处理信件和快递\n准备下周访客"
+      },
+      "month_end": {
+        "title": "月末财务",
+        "hint": "每月财务整理",
+        "items": "所有发票已发送\n收据已上传\n银行已对账\n逾期发票已催收\n工资已核对"
+      },
+      "security": {
+        "title": "安全检查",
+        "hint": "每月 IT 安全",
+        "items": "删除离职人员账号\n测试备份\n更新软件\n所有人开启两步登录\n更换共享密码"
+      },
+      "website": {
+        "title": "网站健康",
+        "hint": "每周检查你的网站",
+        "items": "网站加载迅速\n联系表单可用\n没有失效链接\n价格和营业时间正确\n博客或新闻已更新"
+      },
+      "custom": {
+        "title": "其他",
+        "hint": "从空白清单开始"
+      }
+    }
+  },
+  "inbox": {
+    "eyebrow": "你的收件箱",
+    "intro": {
+      "what": "来自公司各个部门、发给你的更新。",
+      "why": "需要你处理的事项排在最前，重要的事不会遗漏。",
+      "can": "打开条目直接跳转，标记为已读，并按领域筛选。",
+      "next": "处理第一项",
+      "nextDone": "查看公司时间线"
+    },
+    "needsAction": "需要你",
+    "actionTitle": "需要你处理",
+    "actionHint": "{count, plural, other {有 # 项等待你处理}} — 审批、分配和逾期事项。",
+    "dayCount": "{count, plural, other {# 条更新}}",
+    "empty": {
+      "title": "全部处理完毕",
+      "body": "当有事需要你 — 审批、分配给你的任务、逾期发票 — 都会显示在这里。"
     }
   }
 }

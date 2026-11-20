@@ -1,4 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/card";
+import { Globe2, Settings, UserPlus } from "lucide-react";
 import { AdminHeader, guard } from "@/components/admin/kit";
 import { ControlValueEditor } from "@/components/admin/control-editors";
 import { getLocale, getT } from "@/i18n/server";
@@ -18,9 +19,9 @@ export default async function AdminSettingsPage() {
   const canManage = await canPlatform(viewer.ctx, "platform.controls.manage");
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.settings")} description={t("admin.settings.subtitle")} />
+      <AdminHeader icon={<Settings />} title={t("admin.nav.settings")} description={t("admin.settings.subtitle")} why={t("admin.settings.why")} />
       <Card>
-        <CardHeader title={t("admin.settings.general")} />
+        <CardHeader icon={<Globe2 />} title={t("admin.settings.general")} description={t("admin.settings.generalHint")} />
         <div className="divide-y">
           <ControlValueEditor controlKey="platformName" kind="text" value={c.platformName} canManage={canManage} label={t("admin.controls.keys.platformName.label")} description={t("admin.controls.keys.platformName.hint")} />
           <ControlValueEditor controlKey="supportEmail" kind="text" value={c.supportEmail} canManage={canManage} label={t("admin.controls.keys.supportEmail.label")} description={t("admin.controls.keys.supportEmail.hint")} />
@@ -37,7 +38,7 @@ export default async function AdminSettingsPage() {
         </div>
       </Card>
       <Card>
-        <CardHeader title={t("admin.settings.registration")} />
+        <CardHeader icon={<UserPlus />} title={t("admin.settings.registration")} description={t("admin.settings.registrationHint")} />
         <div className="divide-y">
           <ControlValueEditor controlKey="signupDomainAllowlist" kind="lines" value={c.signupDomainAllowlist} canManage={canManage} label={t("admin.controls.keys.signupDomainAllowlist.label")} description={t("admin.controls.keys.signupDomainAllowlist.hint")} display={c.signupDomainAllowlist.length ? c.signupDomainAllowlist.join(", ") : t("admin.settings.anyDomain")} />
         </div>

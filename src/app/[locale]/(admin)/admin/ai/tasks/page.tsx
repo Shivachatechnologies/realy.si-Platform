@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { ActionButton } from "@/components/admin/action-dialog";
-import { AdminHeader, Empty, FilterBar, NextPage, guard, sp } from "@/components/admin/kit";
+import { ListChecks, OctagonAlert, SearchX } from "lucide-react";
+import { AdminHeader, EmptyState, FilterBar, NextPage, QuickFilters, guard, sp } from "@/components/admin/kit";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime, formatNumber } from "@/i18n/format";
 import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
@@ -27,20 +28,34 @@ export default async function AdminAiTasksPage({ searchParams }: PageProps<"/[lo
   const tz = viewer.user.timezone;
   return (
     <div className="grid gap-4">
-      <AdminHeader title={t("admin.nav.aiTasks")} description={t("admin.ai.tasksSubtitle")} />
+      <AdminHeader icon={<ListChecks />} title={t("admin.nav.aiTasks")} description={t("admin.ai.tasksSubtitle")} why={t("admin.ai.tasksWhy")} />
       {failures.length ? (
-        <Card>
-          <CardHeader title={t("admin.ai.failures")} description={t("admin.ai.failuresHint")} />
+        <Card className="border-danger/30">
+          <CardHeader icon={<OctagonAlert />} title={t("admin.ai.failures")} description={t("admin.ai.failuresHint")} />
           <div className="flex flex-wrap gap-2 p-3">
             {failures.map((f) => (
-              <Link key={f.errorCode} href={`${base}?status=FAILED&errorCode=${f.errorCode}`} className="rounded-md border px-2 py-1 text-xs hover:bg-muted">
-                <span className="font-mono">{f.errorCode}</span> <span className="tabular text-danger">{formatNumber(f.count, locale)}</span>
+              <Link
+                key={f.errorCode}
+                href={`${base}?status=FAILED&errorCode=${f.errorCode}`}
+                aria-current={params.errorCode === f.errorCode ? "true" : undefined}
+                className="inline-flex items-center gap-2 rounded-full border border-danger/30 bg-danger/6 px-3 py-1 text-xs transition-colors hover:bg-danger/12 focus-visible:outline-2 aria-[current]:border-danger"
+              >
+                <span className="font-mono">{f.errorCode}</span>
+                <span className="font-semibold tabular-nums text-danger">{formatNumber(f.count, locale)}</span>
               </Link>
             ))}
           </div>
         </Card>
       ) : null}
       <Card>
+        <QuickFilters
+          base={base}
+          name="status"
+          value={params.status}
+          params={params}
+          label={t("admin.ai.columns.status")}
+          options={[{ value: "", label: t("admin.common.all") }, ...(["RUNNING", "QUEUED", "FAILED", "COMPLETED"] as const).map((s) => ({ value: s, label: t(`admin.ai.status.${s}`) }))]}
+        />
         <FilterBar
           action={base}
           q={params.q}
@@ -54,7 +69,7 @@ export default async function AdminAiTasksPage({ searchParams }: PageProps<"/[lo
           extra={params.org ? <input type="hidden" name="org" value={params.org} /> : null}
         />
         {tasks.data.length === 0 ? (
-          <Empty>{t("admin.ai.noTasks")}</Empty>
+          <EmptyState icon={<SearchX />} title={t("admin.ai.noTasks")} body={t("admin.ai.noTasksHint")} />
         ) : (
           <Table>
             <THead>
@@ -83,7 +98,7 @@ export default async function AdminAiTasksPage({ searchParams }: PageProps<"/[lo
                     <div className="text-muted-foreground">{task.company.name}</div>
                   </Td>
                   <Td>
-                    <Badge tone={task.status === "FAILED" ? "danger" : task.status === "COMPLETED" ? "success" : task.status === "CANCELLED" ? "neutral" : "accent"}>{t(`admin.ai.status.${task.status}`)}</Badge>
+                    <Badge pulse={task.status === "RUNNING"} tone={task.status === "FAILED" ? "danger" : task.status === "COMPLETED" ? "success" : task.status === "CANCELLED" ? "neutral" : "accent"}>{t(`admin.ai.status.${task.status}`)}</Badge>
                     {task.errorCode ? (
                       <div className="max-w-56 truncate font-mono text-[11px] text-danger" title={task.errorMessage ?? undefined}>
                         {task.errorCode}

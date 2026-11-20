@@ -55,6 +55,8 @@ const employeeFields = {
   runsAsUserId: z.string().uuid().nullable().optional(),
   autonomy: z.enum(AUTONOMY_LEVELS).optional(),
   monthlyTokenBudget: z.number().int().min(1000).max(1_000_000_000).nullable().optional(),
+  /** Monthly estimated-cost allowance in USD cents. */
+  monthlyCostBudgetCents: z.number().int().min(1).max(100_000_000).nullable().optional(),
   managerEmployeeId: z.string().uuid().nullable().optional(),
   managerUserId: z.string().uuid().nullable().optional(),
   level: z.enum(ORG_LEVELS).optional(),
@@ -129,6 +131,7 @@ const employeeSelect = {
   status: true,
   autonomy: true,
   monthlyTokenBudget: true,
+  monthlyCostBudgetCents: true,
   managerEmployeeId: true,
   managerUserId: true,
   manager: { select: { id: true, name: true, initials: true } },
@@ -201,6 +204,7 @@ export async function createEmployee(ctx: RequestContext, organizationId: string
         runsAsUserId: input.runsAsUserId ?? null,
         autonomy: input.autonomy ?? "EXECUTE_WITH_APPROVAL",
         monthlyTokenBudget: input.monthlyTokenBudget ?? null,
+        monthlyCostBudgetCents: input.monthlyCostBudgetCents == null ? null : BigInt(input.monthlyCostBudgetCents),
         managerEmployeeId: input.managerEmployeeId ?? null,
         // Without an AI manager the employee reports to a person: the given one, else whoever hires it.
         managerUserId: input.managerEmployeeId ? null : (input.managerUserId ?? (ctx.actor.type === "USER" ? ctx.actor.id : null) ?? null),
@@ -245,6 +249,7 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
         ...(input.runsAsUserId !== undefined ? { runsAsUserId: input.runsAsUserId } : {}),
         ...(input.autonomy !== undefined ? { autonomy: input.autonomy } : {}),
         ...(input.monthlyTokenBudget !== undefined ? { monthlyTokenBudget: input.monthlyTokenBudget } : {}),
+        ...(input.monthlyCostBudgetCents !== undefined ? { monthlyCostBudgetCents: input.monthlyCostBudgetCents === null ? null : BigInt(input.monthlyCostBudgetCents) } : {}),
         ...(input.managerEmployeeId !== undefined ? { managerEmployeeId: input.managerEmployeeId, ...(input.managerEmployeeId ? { managerUserId: null } : {}) } : {}),
         ...(input.managerUserId !== undefined ? { managerUserId: input.managerUserId, ...(input.managerUserId ? { managerEmployeeId: null } : {}) } : {}),
         ...(input.level !== undefined ? { level: input.level } : {}),
@@ -263,8 +268,8 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
       action: "ai_employee.updated",
       resourceType: "ai_employee",
       resourceId: e.id,
-      oldValue: { autonomy: before.autonomy, runsAsUserId: before.runsAsUserId, monthlyTokenBudget: before.monthlyTokenBudget, allowedTools: before.allowedTools, managerEmployeeId: before.managerEmployeeId, managerUserId: before.managerUserId, level: before.level, model: before.model },
-      newValue: { companyId, name: e.name, autonomy: e.autonomy, runsAsUserId: e.runsAsUserId, monthlyTokenBudget: e.monthlyTokenBudget, allowedTools: e.allowedTools, managerEmployeeId: e.managerEmployeeId, managerUserId: e.managerUserId, level: e.level, model: e.model },
+      oldValue: { autonomy: before.autonomy, runsAsUserId: before.runsAsUserId, monthlyTokenBudget: before.monthlyTokenBudget, monthlyCostBudgetCents: before.monthlyCostBudgetCents === null ? null : Number(before.monthlyCostBudgetCents), allowedTools: before.allowedTools, managerEmployeeId: before.managerEmployeeId, managerUserId: before.managerUserId, level: before.level, model: before.model },
+      newValue: { companyId, name: e.name, autonomy: e.autonomy, runsAsUserId: e.runsAsUserId, monthlyTokenBudget: e.monthlyTokenBudget, monthlyCostBudgetCents: e.monthlyCostBudgetCents === null ? null : Number(e.monthlyCostBudgetCents), allowedTools: e.allowedTools, managerEmployeeId: e.managerEmployeeId, managerUserId: e.managerUserId, level: e.level, model: e.model },
     });
     return e;
   });
@@ -556,6 +561,7 @@ export function setupSteps(e: {
   setupCompletedAt: Date | null;
   runsAsUserId: string | null;
   monthlyTokenBudget: number | null;
+  monthlyCostBudgetCents?: bigint | null;
   allowedTools: string[];
 }) {
   return [
@@ -563,7 +569,7 @@ export function setupSteps(e: {
     { key: "configure", done: !!(e.jobTitle || e.jobDescription || e.instructions) },
     { key: "role", done: !!(e.managerEmployeeId || e.managerUserId) && e.responsibilities.length > 0 },
     { key: "goals", done: e.goals.length > 0 || kpisOf(e.kpis).length > 0 },
-    { key: "permissions", done: !!e.setupCompletedAt || !!e.runsAsUserId || e.monthlyTokenBudget !== null || e.allowedTools.length > 0 },
+    { key: "permissions", done: !!e.setupCompletedAt || !!e.runsAsUserId || e.monthlyTokenBudget !== null || (e.monthlyCostBudgetCents ?? null) !== null || e.allowedTools.length > 0 },
     { key: "activate", done: e.status === "ACTIVE" },
   ] as const;
 }

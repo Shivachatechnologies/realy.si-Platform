@@ -721,7 +721,12 @@
       "assets_scope_required": "Choose which record the artwork is for.",
       "assets_upload_too_large": "The image is larger than 8 MB.",
       "assets_upload_type": "The file is not a valid PNG, JPEG or WebP image.",
-      "assets_storage_failed": "The artwork could not be stored or read. Check your storage connection."
+      "assets_storage_failed": "The artwork could not be stored or read. Check your storage connection.",
+      "workforce_department_over_budget": "This department has used its AI budget for this month.",
+      "workforce_delegation_decided": "This delegation has already been decided.",
+      "workforce_delegation_limit": "This task has reached its limit of delegated sub-tasks.",
+      "workforce_delegation_parent_missing": "The task this delegation belongs to no longer exists.",
+      "workforce_escalation_resolved": "This escalation has already been resolved."
     }
   },
   "onboarding": {
@@ -1054,7 +1059,9 @@
       "dataRegion": "Data region",
       "timezone": "Timezone",
       "enableBilling": "Enable billing",
-      "disableBilling": "Disable billing"
+      "disableBilling": "Disable billing",
+      "subtitle": "Regions and countries: currencies, languages, taxes and where billing is available.",
+      "why": "Turn billing on only for countries where tax and payments are set up."
     },
     "flags": {
       "default": "Default",
@@ -1067,7 +1074,10 @@
       "remove": "Remove",
       "turnOn": "Turn on",
       "turnOff": "Turn off",
-      "subtitle": "Feature flags with targeting rules."
+      "subtitle": "Feature flags with targeting rules.",
+      "why": "Turn features on for some organizations or countries before everyone gets them.",
+      "emptyTitle": "No feature flags yet",
+      "emptyBody": "Feature flags appear here once they are defined in code and seeded."
     },
     "audit": {
       "time": "Time",
@@ -1091,7 +1101,8 @@
       "scopes": {
         "platform": "Platform & security",
         "all": "Everything (incl. tenants)"
-      }
+      },
+      "why": "Every administrative action with who, when and why. Filter, then export as CSV for compliance."
     },
     "system": {
       "title": "External services",
@@ -1135,7 +1146,11 @@
         "sync": "Sync",
         "workflow": "Workflow",
         "webhook": "Webhook"
-      }
+      },
+      "why": "If something is slow or broken, start here: live checks, job queues, workers and the latest errors.",
+      "queuesHint": "Jobs waiting, running and failed in each background queue.",
+      "noHeartbeatHint": "Start the worker process (pnpm worker). It reports here every minute.",
+      "noErrorsHint": "No failed job, AI task, sync, workflow or webhook in the last 7 days."
     },
     "users": {
       "count": "{count, plural, one {# user} other {# users}} (newest first, up to 100)",
@@ -1204,8 +1219,33 @@
         "lastSeen": "Last seen",
         "revoked": "Ended",
         "active": "Active",
-        "securityLog": "Security & admin events"
-      }
+        "securityLog": "Security & admin events",
+        "account": "Account",
+        "signIns30": "Sign-ins (30 days)",
+        "lastLoginAgo": "Last sign-in {time}",
+        "sessionsNow": "Signed-in devices",
+        "registeredOn": "Registered {date}",
+        "aiCost30": "Estimated AI cost per day",
+        "platformRolesHint": "Roles that give access to this admin console.",
+        "noPlatformRolesHint": "This person has no admin access. Grant a role only to people who run the platform.",
+        "noMembershipsHint": "This person does not belong to any organization yet.",
+        "usageChart": "Usage over 30 days",
+        "usageChartHint": "Sign-ins and AI tasks this person started, per day.",
+        "seriesSignIns": "Sign-ins",
+        "seriesTasks": "AI tasks",
+        "seriesCost": "AI cost",
+        "sessionsHint": "Most recent first. Green dots are devices that are signed in right now.",
+        "expired": "Expired",
+        "lastSeenAgo": "Last seen {time}",
+        "byAdmin": "Administrator"
+      },
+      "why": "Find any person on the platform, check their security state and help them in seconds.",
+      "emptyTitle": "No users yet",
+      "emptyBody": "People appear here as soon as they create an account.",
+      "orgCount": "{count, plural, one {# org} other {# orgs}}",
+      "selfNote": "This is your own account. Use your profile settings to change it.",
+      "adminNote": "Platform administrators cannot be suspended or deleted here. Remove their platform role first.",
+      "openProfile": "Open full profile"
     },
     "organizations": {
       "hint": "Every organization on the platform. Tenant data stays behind tenant permissions.",
@@ -1253,7 +1293,23 @@
         "members": "Members",
         "deleted": "Deleted",
         "recentTasks": "Recent AI tasks",
-        "activity": "Activity log"
+        "activity": "Activity log",
+        "atAGlance": "At a glance",
+        "subtitle": "{slug} · created {date}",
+        "inModules": "{count, plural, one {Uses # module} other {Uses # modules}}",
+        "cost30": "Estimated AI cost per day",
+        "usageChart": "Activity over 30 days",
+        "usageChartHint": "AI tasks, failures and API requests per day.",
+        "seriesTasks": "AI tasks",
+        "seriesFailed": "Failed",
+        "seriesApi": "API requests",
+        "seriesCost": "AI cost",
+        "ofLimit": "{used} of {limit}",
+        "ofUnlimited": "{used} · no limit",
+        "noMembers": "No members",
+        "noCompanies": "No companies yet",
+        "noCompaniesHint": "The organization has not created a company.",
+        "noTasksHint": "This organization has not asked its AI employees for anything yet."
       },
       "counts": {
         "leads": "Leads",
@@ -1279,7 +1335,15 @@
         "installs": "Installs",
         "documents": "Documents",
         "objectives": "Objectives"
-      }
+      },
+      "why": "See who uses the platform, on which plan, and step in when an organization needs help or must be stopped.",
+      "emptyTitle": "No organizations yet",
+      "emptyBody": "Organizations appear here as soon as someone finishes onboarding.",
+      "createdOn": "Created {date}",
+      "viewTasks": "AI tasks",
+      "viewAudit": "Audit log",
+      "gateNote": "Opening an organization's details shows its data. You will be asked for a reason, which is recorded in the audit log.",
+      "openDetails": "Open details"
     },
     "signInTitle": "Admin console sign-in",
     "signInSubtitle": "Platform administrators only. Use your platform admin account.",
@@ -1296,7 +1360,14 @@
         "7d": "Last 7 days",
         "30d": "Last 30 days",
         "90d": "Last 90 days"
-      }
+      },
+      "actions": "Actions",
+      "all": "All",
+      "breadcrumb": "Breadcrumb",
+      "clearFilters": "Clear filters",
+      "quickActions": "Quick actions",
+      "readOnly": "You can view this but not change it.",
+      "tryOtherFilters": "Try a different search or remove a filter."
     },
     "search": {
       "placeholder": "Search users, companies, tasks, settings…",
@@ -1307,7 +1378,19 @@
       "organizations": "Organizations",
       "companies": "Companies",
       "controls": "Switches & settings",
-      "connections": "{count} connections"
+      "connections": "{count} connections",
+      "palettePlaceholder": "Search users, organizations, AI tasks, switches…",
+      "paletteHint": "Type to search. Use the arrow keys to move and Enter to open.",
+      "groups": {
+        "nav": "Go to",
+        "more": "More"
+      },
+      "seeAll": "See all results for “{q}”",
+      "keyMove": "move",
+      "keyOpen": "open",
+      "scopeNote": "Only what you may see is shown",
+      "tip": "Search by name, email, slug, task title or id, switch name or provider.",
+      "noResultsHint": "Check the spelling or search by email, id or slug."
     },
     "emergency": {
       "title": "Emergency state active:",
@@ -1339,7 +1422,52 @@
       "healthy": "Healthy",
       "degraded": "Degraded",
       "recentActivity": "Recent admin activity",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "controlRoom": "Control room",
+      "controlRoomHint": "Everything happening on the platform right now, in one place. Every tile opens its section.",
+      "why": "Spot problems before customers do: health, growth, AI work and admin actions update live.",
+      "openControls": "Platform controls",
+      "openSystem": "Open system & monitoring",
+      "checksOk": "checks OK",
+      "statusAllGood": "All core systems are running",
+      "statusAllGoodHint": "Database and Redis respond. Grey items are optional services that are not set up yet.",
+      "statusDegraded": "A core system is down",
+      "statusDegradedHint": "The database or Redis does not respond. Open System & monitoring to see what is affected.",
+      "check": {
+        "ok": "Running",
+        "down": "Down",
+        "off": "Not set up"
+      },
+      "fleetTitle": "AI fleet",
+      "fleetHint": "AI employees across all companies and the work they are doing now.",
+      "workingNow": "{count, plural, one {# task running now} other {# tasks running now}}",
+      "queuedCount": "{count, plural, one {# waiting} other {# waiting}}",
+      "failed24h": "{count, plural, one {# failed (24 h)} other {# failed (24 h)}}",
+      "completed24h": "{count, plural, one {# completed (24 h)} other {# completed (24 h)}}",
+      "fleetLegend": "{active} active (green) · {paused} paused (grey) · pulsing = working now",
+      "fleetPer": "{count, plural, one {1 square = 1 AI employee} other {1 square = # AI employees}}",
+      "busiestRoles": "Busiest AI roles right now",
+      "roleLoad": "{running} running · {queued} waiting",
+      "noActiveTasks": "No AI task is running or waiting right now.",
+      "registrations": "New registrations",
+      "aiTasks30": "AI tasks (30 days)",
+      "liveSubscriptions": "{count, plural, one {# live subscription} other {# live subscriptions}}",
+      "sparkRegistrations": "New registrations per day, last 30 days",
+      "sparkSignIns": "Users signing in per day, last 30 days",
+      "sparkOrganizations": "New organizations per day, last 30 days",
+      "sparkSubscriptions": "New subscriptions per day, last 30 days",
+      "sparkTasks": "AI tasks created per day, last 30 days",
+      "sparkCost": "Estimated AI cost per day, last 30 days",
+      "activityChart": "Platform activity",
+      "activityChartHint": "Per day over the last 30 days. Use the arrow keys or hover to see a day.",
+      "seriesSignIns": "Users signing in",
+      "seriesRegistrations": "New registrations",
+      "seriesTasksFailed": "Failed AI tasks",
+      "waiting": "Waiting",
+      "queuesTitle": "Job queues",
+      "queueSub": "{active} active · {failed} failed",
+      "offline": "Offline",
+      "activityEmptyHint": "Changes made by administrators (switches, suspensions, roles) appear here with their reason."
     },
     "health": {
       "database": "Database",
@@ -1371,7 +1499,10 @@
       "groups": {
         "emergency": "Maintenance & read-only",
         "kill": "Kill switches",
-        "modules": "Modules & integrations"
+        "modules": "Modules & integrations",
+        "emergencyHint": "For outages and incidents: close the platform for customers while administrators keep working.",
+        "killHint": "Stop one kind of activity everywhere, instantly. Use them when something misbehaves.",
+        "modulesHint": "Close whole product areas or integration providers for every organization."
       },
       "changed": "Changed",
       "critical": "Critical",
@@ -1400,7 +1531,23 @@
         "start": "Start emergency lockdown",
         "startHint": "Users are signed out and see the maintenance page; AI and background work stop. Administrators keep access.",
         "end": "End lockdown",
-        "endHint": "Restores the switch values from before the lockdown."
+        "endHint": "Restores the switch values from before the lockdown.",
+        "activeBadge": "Active",
+        "readyBadge": "Ready",
+        "effectsTitle": "What lockdown does",
+        "recoveryTitle": "Recovery steps",
+        "effects": {
+          "maintenance": "Turns on maintenance mode: customers see the maintenance page, APIs answer 503.",
+          "ai": "Turns the AI workforce off: no AI task can start anywhere.",
+          "jobs": "Pauses all background jobs: events wait in the queue.",
+          "sessions": "Signs out every user who is not a platform administrator."
+        },
+        "steps": {
+          "investigate": "Find out what happened: check security events and the audit log.",
+          "fix": "Fix the cause: rotate leaked keys, revoke access, patch the problem.",
+          "end": "End the lockdown below. The switches return exactly to their previous values.",
+          "inform": "Tell your customers: everyone has to sign in again."
+        }
       },
       "keys": {
         "lockdown": {
@@ -1499,6 +1646,66 @@
           "label": "Maintenance message",
           "hint": "Optional text on the maintenance page and in 503 responses."
         }
+      },
+      "why": "These switches act on the whole platform at once. Every change needs a reason and is written to the audit log.",
+      "summary": "{changed, plural, =0 {All {total} switches are in normal operation} one {# of {total} switches changed} other {# of {total} switches changed}}",
+      "stateNormal": "Normal operation",
+      "stateChanged": "Changed from normal",
+      "ifYouFlip": "If you flip it:",
+      "lockedByLockdown": "Held by emergency lockdown",
+      "readOnly": "Read only",
+      "historyHint": "The latest change of every switch: who, when and why.",
+      "noChangesHint": "Nothing has been changed yet — everything runs on the safe defaults.",
+      "footerNote": "Switches take effect within seconds on every server. The worker checks them before each job.",
+      "cards": {
+        "maintenanceMode": {
+          "normal": "The platform is open. Customers can sign in and work normally.",
+          "changed": "The platform is closed for customers. They see the maintenance page; administrators keep working.",
+          "flip": "Every customer page shows the maintenance page and all customer APIs answer 503 until you turn it off.",
+          "restore": "Customers can use the platform again right away."
+        },
+        "readOnlyMode": {
+          "normal": "Customers can read and change their data.",
+          "changed": "Customers can look at their data but no change is saved.",
+          "flip": "Every change made through the platform is refused for every company. Reading still works.",
+          "restore": "Customers can save changes again."
+        },
+        "aiWorkforceEnabled": {
+          "normal": "AI employees are allowed to work for every company.",
+          "changed": "The AI workforce is off. No AI task can be created or run anywhere.",
+          "flip": "Turning this off stops all AI work for every company. Running tasks stop and no new task can start.",
+          "restore": "AI employees can work again. Companies need to start new tasks themselves."
+        },
+        "aiExecutionPaused": {
+          "normal": "The worker picks up AI tasks as soon as they are created.",
+          "changed": "AI tasks are paused. New tasks wait in the queue and nothing is lost.",
+          "flip": "AI tasks keep queuing but none is run until you resume. Good for a short pause.",
+          "restore": "Waiting AI tasks start running again in order."
+        },
+        "registrationsEnabled": {
+          "normal": "New people can create an account.",
+          "changed": "Sign-up is closed. New visitors see “registrations closed”.",
+          "flip": "Nobody new can sign up until you turn it back on. Existing users are not affected.",
+          "restore": "New people can sign up again."
+        },
+        "companyCreationEnabled": {
+          "normal": "Organizations can add new companies.",
+          "changed": "No organization can create a new company.",
+          "flip": "Every organization is blocked from creating new companies. Existing companies keep working.",
+          "restore": "Organizations can create companies again."
+        },
+        "automationsEnabled": {
+          "normal": "Workflows run on their schedules and triggers.",
+          "changed": "Automations are off. Schedules, triggers and runs are skipped.",
+          "flip": "All workflow automations stop for every company. Skipped runs are not made up later.",
+          "restore": "Workflows run again from their next schedule or trigger."
+        },
+        "backgroundJobsPaused": {
+          "normal": "Background jobs and event handlers run normally.",
+          "changed": "All background jobs are paused. Events keep queuing.",
+          "flip": "Every background job stops (emails, syncs, module jobs). Events wait and run when you resume.",
+          "restore": "Background jobs resume and work through the waiting events."
+        }
       }
     },
     "ai": {
@@ -1554,7 +1761,22 @@
       "byOrg": "By organization",
       "byModel": "By model",
       "byDay": "By day",
-      "noUsage": "No AI usage in this period."
+      "noUsage": "No AI usage in this period.",
+      "why": "One place to keep the AI workforce safe and affordable: switches, budgets, models and roles for every company.",
+      "usageChart": "AI work over 30 days",
+      "usageChartHint": "Tasks started and failed per day, and the estimated cost.",
+      "seriesTasks": "Tasks",
+      "seriesFailed": "Failed",
+      "seriesCost": "Estimated cost",
+      "seriesTokens": "Tokens",
+      "costByModel": "Cost by model",
+      "last30": "Last 30 days",
+      "policyHint": "Rules every AI employee follows, on top of each company's own settings.",
+      "tasksWhy": "Find a task by id or title, see why it failed and cancel or retry it.",
+      "noTasksHint": "No task matches. Try another status or clear the search.",
+      "usageWhy": "Know what AI costs and who uses it, before the bill arrives.",
+      "noUsageHint": "Usage appears once AI employees start working.",
+      "byDayHint": "Estimated with list prices per model."
     },
     "plans": {
       "subtitle": "Plans, market prices, entitlements and usage quotas.",
@@ -1586,7 +1808,8 @@
         "agents": {
           "max": "AI employees"
         }
-      }
+      },
+      "why": "Plans, prices per market and what each plan includes. Price changes create a new version; history is kept."
     },
     "subscriptions": {
       "subtitle": "Subscription status across all organizations. MRR comes only from real subscription items.",
@@ -1608,7 +1831,12 @@
         "CANCELED": "Canceled",
         "UNPAID": "Unpaid",
         "PAUSED": "Paused"
-      }
+      },
+      "why": "Recurring revenue and subscription health from real subscription records — no estimates.",
+      "distribution": "Subscriptions by status",
+      "distributionHint": "Select a status to filter the list.",
+      "mrrHint": "Monthly recurring revenue from active subscriptions",
+      "emptyHint": "No subscription matches these filters."
     },
     "integrations": {
       "subtitle": "Provider connections, API keys and webhook deliveries across organizations. Credentials are never shown.",
@@ -1640,7 +1868,11 @@
       "noFailures": "No failed deliveries.",
       "event": "Event",
       "endpoint": "Endpoint",
-      "attempts": "{count} attempts"
+      "attempts": "{count} attempts",
+      "why": "See which providers companies connect, which connections fail and who uses the API.",
+      "providersHint": "Connections per provider across all organizations.",
+      "noConnectionsHint": "Companies connect providers from their Integrations page.",
+      "noFailuresHint": "Every webhook delivery succeeded recently."
     },
     "security": {
       "subtitle": "Security events, platform administrators and their sessions.",
@@ -1650,13 +1882,21 @@
       "noSessions": "No active admin sessions.",
       "verified": "Verified",
       "notVerified": "Not verified",
-      "events": "Security events (30 days)"
+      "events": "Security events (30 days)",
+      "why": "Watch sign-ins, role changes and other sensitive events, and make sure every administrator uses MFA.",
+      "mfaCoverage": "MFA coverage",
+      "mfaCoverageHint": "Administrators with two-factor sign-in, and admin sessions verified with it.",
+      "quietHint": "No security event in the last 30 days.",
+      "important": "Important"
     },
     "settings": {
       "subtitle": "Platform-wide settings. Changes are audited.",
       "general": "General",
       "registration": "Registration",
-      "anyDomain": "Any email domain"
+      "anyDomain": "Any email domain",
+      "why": "Basic platform information customers see, and who is allowed to sign up.",
+      "generalHint": "Name, support contact and default language.",
+      "registrationHint": "Limit sign-up to company email domains."
     },
     "unavailable": {
       "title": "Unavailable",
@@ -1672,6 +1912,12 @@
       "switchOrg": "Switch organization",
       "home": "Go to home",
       "retry": "Try again"
+    },
+    "live": {
+      "on": "Live",
+      "paused": "Paused",
+      "pause": "Pause live updates",
+      "resume": "Resume live updates"
     }
   },
   "email": {
@@ -2092,7 +2338,9 @@
       "usage": "Usage & cost",
       "plans": "Schedules",
       "tasks": "AI tasks",
-      "org": "Org chart"
+      "org": "Org chart",
+      "performance": "Performance & budgets",
+      "escalations": "Escalations"
     },
     "filters": {
       "search": "Search",
@@ -2125,19 +2373,19 @@
       },
       "RECOMMEND": {
         "name": "Recommend",
-        "hint": "Analyses and recommends; may delegate research to colleagues."
+        "hint": "Analyses and recommends for a person to act on. Never hands work to others."
       },
       "PREPARE": {
         "name": "Prepare",
-        "hint": "Prepares drafts and proposes internal changes for approval. No external actions."
+        "hint": "Prepares drafts and proposes internal changes for approval; delegations are proposed for approval too. No external actions."
       },
       "EXECUTE_WITH_APPROVAL": {
         "name": "Execute with approval",
-        "hint": "May propose any action its tools allow; each change waits for a person's approval."
+        "hint": "May propose any action its tools allow; each change and each delegation waits for a person's approval."
       },
       "AUTONOMOUS_LOW_RISK": {
         "name": "Autonomous (low risk)",
-        "hint": "Works end to end without asking; changes to data still go through approvals."
+        "hint": "Works end to end and delegates to its reports directly (within limits); changes to data still go through approvals."
       }
     },
     "form": {
@@ -2317,7 +2565,33 @@
       "founder": "Founder",
       "founderRole": "Founder · top of the org chart",
       "open": "Org chart",
-      "hint": "Change who reports to whom in each AI employee's profile. Managers delegate to their reports; escalations go up this chart."
+      "hint": "Change who reports to whom in each AI employee's profile. Managers delegate to their reports; escalations go up this chart.",
+      "strip": {
+        "what": "Who reports to whom in your AI company: you at the top, the AI CEO, department managers and their specialists.",
+        "why": "Managers hand work to their reports and results roll up to them; problems climb this chart until someone can decide.",
+        "can": "Hover an employee to see its whole chain, filter by department, and open anyone to change their role, goals or budget.",
+        "next": "Open an employee without a manager and give them one, or check open escalations."
+      },
+      "summary": {
+        "team": "AI team",
+        "levels": "{executives} executive · {managers} managers · {specialists} specialists",
+        "success": "Success rate · last {days} days",
+        "finished": "{completed} completed · {failed} failed",
+        "cost": "Estimated AI cost · last {days} days",
+        "escalations": "Open escalations"
+      },
+      "node": {
+        "working": "Working on",
+        "idle": "Idle",
+        "success": "Success rate",
+        "noTasks": "No finished tasks yet",
+        "budget": "Estimated cost, last 30 days; the bar shows this month's budget use",
+        "overBudget": "Budget used up",
+        "escalations": "Open escalations",
+        "allDepartments": "All departments",
+        "filter": "Filter by department",
+        "queued": "Queued tasks"
+      }
     },
     "history": {
       "title": "Performance history",
@@ -2331,7 +2605,8 @@
       "empty": "No reports or escalations yet.",
       "kinds": {
         "STATUS": "Status report",
-        "ESCALATION": "Escalation"
+        "ESCALATION": "Escalation",
+        "ROLLUP": "Roll-up"
       },
       "to": "to {name}",
       "from": "from {name}",
@@ -2450,6 +2725,119 @@
       "title": "Skills in use",
       "hint": "How often each tool was used in recent finished tasks.",
       "empty": "No tool usage yet — it appears after the first finished tasks."
+    },
+    "autonomyModes": {
+      "suggest": "Suggest only",
+      "supervised": "Supervised",
+      "autonomous": "Autonomous"
+    },
+    "escalations": {
+      "title": "Escalations & roll-ups",
+      "subtitle": "What your AI team needs from you: blockers that climbed the org chart, delegations waiting for approval, and team results.",
+      "ladder": {
+        "employee": "AI employee",
+        "aria": "Escalation path"
+      },
+      "resolved": "Resolved",
+      "strip": {
+        "what": "When an AI employee is blocked or a task fails, it escalates to its AI manager; if that does not resolve it, it comes to you.",
+        "why": "Nothing is hidden: every failure is reported, and anything an AI manager leaves unresolved for {hours} hours reaches the founder.",
+        "can": "Resolve escalations, approve or reject delegations that supervised managers proposed, and read the team results they rolled up.",
+        "nextProposals": "{count, plural, one {# delegation is} other {# delegations are}} waiting for your decision.",
+        "nextFounder": "{count, plural, one {# escalation has} other {# escalations have}} reached you — resolve or reassign.",
+        "nextNone": "Nothing needs you right now."
+      },
+      "openTitle": "Open escalations ({count})",
+      "openHint": "Each one shows where it is on the ladder: the AI employee, its AI manager, then you.",
+      "noneOpen": "No open escalations. Your AI team is unblocked.",
+      "founderNotified": "Founder notified {when}",
+      "resolve": "Mark resolved",
+      "recentlyResolved": "Recently resolved"
+    },
+    "delegations": {
+      "title": "Delegations to approve ({count})",
+      "hint": "Supervised AI managers propose sub-tasks for their reports. Nothing starts until you approve; the work then runs with your permissions.",
+      "empty": "No delegations waiting.",
+      "instructions": "Instructions",
+      "parentTask": "Proposing task",
+      "approve": "Approve & start",
+      "reject": "Reject",
+      "recent": "Recent decisions",
+      "status": {
+        "PROPOSED": "Waiting",
+        "CREATED": "Started",
+        "REJECTED": "Rejected",
+        "FAILED": "Failed"
+      },
+      "childTask": "Sub-task",
+      "modeNone": "Suggest-only: never hands work to others.",
+      "modePropose": "Delegation: proposes sub-tasks for its reports; a person approves each before it starts.",
+      "modeDirect": "Delegation: starts sub-tasks for its reports directly, within depth, fan-out and budget limits.",
+      "employeeTitle": "Delegations",
+      "employeeHint": "Work this AI employee handed out or received."
+    },
+    "rollups": {
+      "title": "Team results",
+      "hint": "Finished delegated work rolls up to the manager automatically; when a whole batch is done, a summary goes one level up (to you at the top).",
+      "empty": "No roll-ups yet. They appear when delegated tasks finish.",
+      "read": "Read the results"
+    },
+    "performance": {
+      "title": "Performance & budgets",
+      "subtitle": "How each AI employee and department performs — from real task records — and how much AI budget they may spend.",
+      "strip": {
+        "what": "Success rate, turnaround, run time and cost of your AI team, measured from the tasks they actually ran.",
+        "why": "See who delivers, what it costs, and stop spending before it surprises you.",
+        "can": "Compare employees and departments, and set monthly budgets per department (per employee in its profile).",
+        "nextReview": "Review anyone with a low success rate or a budget close to its limit.",
+        "nextBudget": "Set a monthly budget for your busiest department."
+      },
+      "window": "Period",
+      "days": "{days} days",
+      "successRate": "Success rate",
+      "turnaround": "Turnaround",
+      "turnaroundHint": "Median time from assignment to result",
+      "runTime": "Average run time",
+      "cost": "Estimated cost",
+      "perTask": "{cost} per completed task",
+      "costPerTask": "Cost per task",
+      "delegated": "Sub-tasks delegated",
+      "escalations": "Escalations",
+      "openNow": "{count} open now",
+      "departments": "Departments",
+      "employeesCount": "{count, plural, one {# AI employee} other {# AI employees}}",
+      "successShort": "success",
+      "turnaroundShort": "turnaround",
+      "costShort": "{days}-day cost",
+      "employees": "AI employees",
+      "employeesHint": "Last {days} days, most productive first.",
+      "finishedCount": "{count} finished · {failed} failed",
+      "runTimeShort": "run {time}",
+      "footnote": "Costs are estimates from token counts and list prices in US dollars; failed runs count too. Budgets reset each calendar month (UTC)."
+    },
+    "budgets": {
+      "costBudget": "Monthly cost budget (USD)",
+      "costBudgetHint": "Estimated spend per calendar month. Tasks are refused once it is used up, and a running task stops when it reaches it. Leave empty for no limit.",
+      "usdPerMonth": "USD per month",
+      "tokensPerMonth": "Tokens per month",
+      "save": "Save budget",
+      "remove": "Remove limit",
+      "saved": "Saved",
+      "hint": "A department budget covers all its AI employees together, on top of each employee's own budget and the platform's limits.",
+      "exhausted": "Budget used up",
+      "limited": "Budget set",
+      "unlimited": "No limit",
+      "thisMonth": "This month",
+      "spentNoLimit": "{cost} · {tokens} tokens, no limit",
+      "costOf": "{used} of {budget}",
+      "tokensOf": "{used} of {budget} tokens",
+      "edit": "Change budget",
+      "set": "Set a budget",
+      "employeeExhausted": "Own budget used up",
+      "departmentExhausted": "Department budget used up",
+      "departmentExhaustedNotice": "The {department} department has used this month's AI budget, so new tasks are refused until it is raised or the month ends.",
+      "departmentLine": "{department} department",
+      "runCap": "The next task may spend at most about {tokens} tokens before a budget is reached."
     }
   },
   "profiles": {
@@ -15239,6 +15627,818 @@
       "empty": "Your library is empty — generate the first artwork.",
       "use": "Use",
       "generateNew": "Generate new"
+    }
+  },
+  "cockpit": {
+    "back": "Back",
+    "draft": {
+      "saving": "Saving…",
+      "saved": "Saved — you can leave and continue later",
+      "error": "Couldn't save — your answers are kept on this page",
+      "resumed": "We kept your answers from last time.",
+      "startOver": "Start over"
+    }
+  },
+  "missionControl": {
+    "eyebrow": "Mission control",
+    "intro": {
+      "what": "Every job your AI employees are doing, waiting to do, or have finished — live.",
+      "why": "You see what the AI is working on, what it found, what it costs, and what needs your OK.",
+      "can": "Give a job to an AI employee, follow it step by step, retry or stop it, and review the result.",
+      "next": "Give an AI employee a job",
+      "nextHire": "Hire your first AI employee"
+    },
+    "stats": {
+      "working": "Working now",
+      "workingHint": "{queued} waiting in line",
+      "doneToday": "Finished today",
+      "total": "{count, plural, one {# job so far} other {# jobs so far}}",
+      "failedToday": "Stopped today",
+      "failedHint": "Open to see why and retry",
+      "tokensToday": "AI used today",
+      "weekCost": "Estimated AI cost over the last 7 days: {cost}"
+    },
+    "composer": {
+      "title": "Give an AI employee a job",
+      "subtitle": "Three short steps. Anything risky the AI wants to do will wait for your approval.",
+      "steps": {
+        "who": "Who",
+        "what": "What",
+        "send": "Check & send"
+      },
+      "whoQ": "Who should do this job?",
+      "whoHint": "Pick one of your AI employees. They work with your company's data and only within their role.",
+      "department": "Department",
+      "noEmployees": "You haven't hired an AI employee yet — you can still pick a role below, or",
+      "orRole": "Or use a role without hiring",
+      "orRoleHint": "A role is an AI skill set (for example \"AI CFO\"). Hired employees remember your company better.",
+      "pickRole": "Choose a role…",
+      "whatQ": "What should {name} do?",
+      "whatHint": "Start from an idea or write your own. Brief it like you would brief a new colleague.",
+      "ideas": "Ideas for {department}",
+      "jobTitle": "Job in one line",
+      "jobTitleHint": "Example: \"Find 10 new prospects in Germany\"",
+      "brief": "The brief",
+      "briefHint": "What you want, why, and what a good result looks like. Mention any limits (budget, tone, deadline).",
+      "sendQ": "Ready to send?",
+      "safety": "The AI only reads what you can read. Sending emails, adding records or spending money will appear in Approvals first.",
+      "advanced": "Advanced",
+      "send": "Send the job"
+    },
+    "departments": {
+      "executive": "Leadership",
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "hr": "People",
+      "support": "Support",
+      "operations": "Operations",
+      "research": "Research",
+      "engineering": "Engineering",
+      "product": "Product",
+      "general": "General"
+    },
+    "templates": {
+      "weekly_brief": {
+        "title": "Write my weekly company briefing",
+        "body": "Look at our objectives, key numbers and recent activity. Write a one-page briefing: what went well, what is at risk, and the 3 decisions I should make this week."
+      },
+      "priorities": {
+        "title": "Suggest this month's top priorities",
+        "body": "Based on our goals and current numbers, suggest the 3 most important priorities for this month, why each matters, and the first step for each."
+      },
+      "prospects": {
+        "title": "Find 10 new prospects",
+        "body": "Describe our ideal customer in three lines based on our current customers and pipeline. Then propose 10 matching prospects as new leads, each with one line on why they fit. Adding leads waits for my approval."
+      },
+      "pipeline_review": {
+        "title": "Review my sales pipeline",
+        "body": "Go through the open deals. Tell me which are likely to close, which are stuck and why, and the next action for each stuck deal."
+      },
+      "campaign_idea": {
+        "title": "Plan a marketing campaign",
+        "body": "Propose one campaign for next month: goal, audience, channels, budget range and 3 message ideas. Create it as a draft campaign for my approval."
+      },
+      "content_plan": {
+        "title": "Plan 4 weeks of content",
+        "body": "Suggest a 4-week content plan (one post or article per week) that fits our audience and goals, with a title and a two-line summary for each."
+      },
+      "cash_check": {
+        "title": "Check our cash and runway",
+        "body": "Summarise our cash position, money coming in and going out, and how many months of runway we have. Point out anything unusual in plain words."
+      },
+      "overdue_invoices": {
+        "title": "Chase overdue invoices",
+        "body": "List overdue invoices by customer and amount, and draft a short, friendly reminder for the most important ones."
+      },
+      "job_post": {
+        "title": "Write a job post",
+        "body": "Write a clear, welcoming job post for the role I describe below, with responsibilities, requirements and what we offer. Create it as a draft for my approval. Role:"
+      },
+      "team_health": {
+        "title": "How is my team doing?",
+        "body": "Summarise headcount, who is away, open roles and anything that needs attention in the team, with 3 suggestions."
+      },
+      "queue_triage": {
+        "title": "Sort my support queue",
+        "body": "Go through open support tickets. Group them by topic and urgency, and draft replies for the 3 most urgent ones (drafts only, for my review)."
+      },
+      "faq_gaps": {
+        "title": "Find missing help articles",
+        "body": "Look at recent customer questions and our knowledge base. List the 5 questions we answer most that have no help article yet."
+      },
+      "process_draft": {
+        "title": "Write down one of our routines",
+        "body": "Write a simple step-by-step process (5-10 steps) for the routine I describe below, so anyone on the team can follow it. Routine:"
+      },
+      "project_status": {
+        "title": "Status of our projects",
+        "body": "Summarise every active project: progress, risks and what is late. Suggest one action per project that is behind."
+      },
+      "competitors": {
+        "title": "Research our competitors",
+        "body": "Using what we know about our market and company, describe our 5 main competitors, how we compare, and where we can win."
+      },
+      "kpi_review": {
+        "title": "Explain our key numbers",
+        "body": "Explain our most important numbers this month in plain words: what changed, why it might have changed, and what to watch."
+      },
+      "research_topic": {
+        "title": "Research a question",
+        "body": "Research the question below using our company documents and knowledge, and give me a short answer with sources. Question:"
+      },
+      "summarize_docs": {
+        "title": "Summarise our documents on a topic",
+        "body": "Find what our documents say about the topic below and summarise it in 5 bullet points with sources. Topic:"
+      }
+    },
+    "help": {
+      "title": "Not sure what to ask?",
+      "hint": "Let your AI CEO suggest the most useful jobs for your AI team this week."
+    },
+    "view": {
+      "label": "View",
+      "lanes": "Board",
+      "list": "List"
+    },
+    "moreFilters": "Search & more filters",
+    "columns": {
+      "tokens": "AI used"
+    },
+    "empty": {
+      "title": "No AI jobs yet",
+      "body": "Give your first job to an AI employee — a research question, a weekly briefing or a list of prospects. You'll see it move across the board as it works.",
+      "schedule": "Or set up recurring AI work"
+    },
+    "lanes": {
+      "label": "AI jobs by status",
+      "caption": "{count, plural, one {# job on the board} other {# jobs on the board}} — updates live",
+      "queued": "Waiting",
+      "queuedHint": "In line for an AI worker",
+      "queuedEmpty": "Nothing waiting",
+      "running": "Working",
+      "runningHint": "The AI is on it right now",
+      "runningEmpty": "Nobody is working right now",
+      "done": "Done",
+      "doneHint": "Ready for you to review",
+      "doneEmpty": "No finished jobs yet",
+      "failed": "Stopped",
+      "failedHint": "Failed or cancelled — open to retry",
+      "failedEmpty": "Nothing stopped",
+      "more": "+{count} more",
+      "older": "Show older jobs"
+    },
+    "timeline": {
+      "title": "What the AI did",
+      "hint": "Every step, in order, from the task's real record.",
+      "created": "Job given by {who}",
+      "byTask": "another AI job (“{title}”)",
+      "started": "An AI worker picked it up",
+      "toolFailed": "This step failed: {error}",
+      "askedApproval": "Asked for your approval before doing this",
+      "results": "{count, plural, =0 {nothing found} one {# result} other {# results}}",
+      "working": "Still working…",
+      "waiting": "Waiting for an AI worker",
+      "done": "Finished",
+      "failed": "Stopped with an error",
+      "cancelled": "Cancelled"
+    },
+    "detail": {
+      "profileLink": "Open employee profile",
+      "waitingApproval": "{count, plural, one {# action waits} other {# actions wait}} for your approval.",
+      "reviewNow": "Review now",
+      "steps": "Steps taken",
+      "stepsHint": "Look-ups and actions",
+      "tokens": "AI used",
+      "tokensHint": "{input} read · {output} written",
+      "cost": "Estimated cost",
+      "duration": "Time taken",
+      "seconds": "{s} s",
+      "minutes": "{m} min {s} s",
+      "hours": "{h} h {m} min",
+      "sourcesHint": "Documents the AI quoted — click to check them.",
+      "networkHint": "Jobs handed from one AI employee to another.",
+      "networkLabel": "Delegation map of this job",
+      "nextTitle": "What next?",
+      "nextBody": "Happy with the result? Give a follow-up job, or make this a recurring plan so it happens automatically.",
+      "followUp": "Give a follow-up job",
+      "repeat": "Repeat it on a schedule"
+    }
+  },
+  "decisionInbox": {
+    "eyebrow": "Decision inbox",
+    "subtitle": "Things your AI employees want to do that need your OK first.",
+    "intro": {
+      "whatPre": "Each card is an",
+      "approvalWord": "approval request",
+      "whatPost": ": exactly what an AI employee wants to do, shown before it happens.",
+      "approvalExplain": "Your AI employees can read on their own, but anything that changes data, contacts people or spends money is paused here until a person says yes.",
+      "whatsThis": "What's this?",
+      "why": "Nothing risky happens without you. Approving runs the action right away, as you.",
+      "can": "Read the preview, approve or reject (with a note), approve all low-risk items at once, and see past decisions.",
+      "next": "Review {count, plural, one {# request} other {# requests}}",
+      "nextEmpty": "Give an AI employee a job"
+    },
+    "stats": {
+      "waiting": "Waiting for you",
+      "careful": "Need extra care",
+      "carefulHint": "High or critical risk",
+      "expiring": "Expire within 24 h",
+      "expiringHint": "Expired requests are dropped",
+      "doneWeek": "Done this week"
+    },
+    "pendingHint": "Soonest to expire first.",
+    "askedBy": "Asked by {who}",
+    "fromTask": "for “{title}”",
+    "aLead": "a lead",
+    "to": "To",
+    "subject": "Subject",
+    "total": "Total",
+    "approve": "Approve",
+    "reject": "Reject",
+    "running": "Doing it…",
+    "addNote": "Add a note",
+    "note": "Note",
+    "notePlaceholder": "Optional — why you approve or reject (kept in the history)",
+    "mfaHint": "This one needs a recent two-step verification before it can run.",
+    "cannotDecide": "You can see this request, but someone with approval rights must decide.",
+    "founderOnly": "Only an organization owner can approve this.",
+    "expired": "Expired",
+    "expiresIn": "Expires in {left}",
+    "leftDays": "{d} d {h} h",
+    "leftHours": "{h} h {m} min",
+    "leftMinutes": "{m} min",
+    "expiredNote": "Nobody decided in time, so nothing happened.",
+    "decidedBy": "Decided by {who} · {when}",
+    "someone": "someone",
+    "showMore": "Show more",
+    "riskExplain": {
+      "LOW": "Low risk: a small, easy-to-undo change inside Realy.si. Nobody outside the company sees it.",
+      "MEDIUM": "Medium risk: changes your company's records. Check the details — you can edit or undo it afterwards.",
+      "HIGH": "High risk: reaches people outside the company or spends money, and can't be taken back once done.",
+      "CRITICAL": "Critical: a major action with lasting effects. Read every detail before approving."
+    },
+    "outcome": {
+      "PENDING": "Waiting",
+      "APPROVED": "Approved",
+      "EXECUTED": "Done",
+      "REJECTED": "Rejected",
+      "EXPIRED": "Expired",
+      "FAILED": "Failed"
+    },
+    "bulk": {
+      "label": "Approve all low-risk ({count})",
+      "confirm": "Approve {count, plural, one {# low-risk request} other {# low-risk requests}}? Each one runs right away.",
+      "note": "Approved in bulk (low risk)",
+      "progress": "{done} of {total} done",
+      "failed": "{count, plural, one {# could not run} other {# could not run}}"
+    },
+    "empty": {
+      "title": "Nothing waits for your decision",
+      "body": "When an AI employee wants to send an email, add a record or spend money, it will appear here with a clear preview first.",
+      "autonomy": "See what your AI team may do alone"
+    },
+    "help": {
+      "title": "Want a second opinion?",
+      "hint": "Your AI CEO reviews the waiting requests and recommends approve or reject, in plain words. It won't decide for you.",
+      "label": "Help me decide"
+    },
+    "actions": {
+      "send_lead_email": "Send this email to {to}",
+      "send_email_reply": "Send this reply in an email conversation",
+      "send_ticket_reply": "Send this reply to a customer",
+      "draft_ticket_reply": "Save this draft reply on a support ticket",
+      "send_influencer_outreach": "Email an influencer to propose working together",
+      "create_lead": "Add {name} as a new lead",
+      "create_follow_up": "Add a follow-up reminder due {date}",
+      "create_work_task": "Create the task “{title}”",
+      "create_project": "Create the project “{name}”",
+      "create_milestone": "Add the milestone “{title}”",
+      "assign_task": "Give a task to a team member",
+      "unassign_task": "Remove the person working on a task",
+      "update_task_status": "Change a task's status",
+      "deal_won": "Mark a deal as won",
+      "deal_lost": "Mark a deal as lost",
+      "deal_stage": "Move a deal to another stage",
+      "create_invoice_draft": "Prepare a draft invoice for {customer} totalling {total}",
+      "record_expense": "Record an expense of {amount}",
+      "set_ad_budget": "Spend up to {amount} per day on an ad campaign",
+      "launch_ad_campaign": "Create this ad campaign at the ad platform (it starts paused)",
+      "set_ad_campaign_status": "Turn an ad campaign on or off",
+      "create_campaign": "Create the draft campaign “{name}”",
+      "schedule_social_post": "Publish this post on {count, plural, one {# social account} other {# social accounts}} on {when}",
+      "reply_to_comment": "Reply publicly to a comment",
+      "create_content_draft": "Add the draft “{title}” to your content library",
+      "create_job_posting": "Create a draft job post “{title}”",
+      "score_candidate": "Score a job candidate",
+      "remember_company_fact": "Remember this fact about your company"
+    },
+    "fields": {
+      "email": "Email",
+      "account": "Company",
+      "source": "Source",
+      "notes": "Notes",
+      "note": "Note",
+      "priority": "Priority",
+      "dueDate": "Due",
+      "startDate": "Start",
+      "endDate": "End",
+      "description": "Description",
+      "quantity": "Qty",
+      "unitPrice": "Unit price",
+      "customerEmail": "Customer email",
+      "issueDate": "Issue date",
+      "date": "Date",
+      "vendorName": "Supplier",
+      "categoryName": "Category",
+      "accountName": "Account",
+      "reference": "Reference",
+      "objective": "Goal",
+      "channels": "Channels",
+      "targetLeads": "Target leads",
+      "location": "Location",
+      "employmentType": "Employment type",
+      "remote": "Remote",
+      "status": "Status",
+      "lostReason": "Reason lost",
+      "estimatePoints": "Estimate",
+      "costCenterName": "Cost centre"
+    }
+  },
+  "timeline": {
+    "eyebrow": "Company timeline",
+    "intro": {
+      "what": "A diary of everything that happened in your company — by people, AI employees and connected apps.",
+      "why": "You always know who did what and when, and can jump straight to the record.",
+      "can": "Filter by area and time, open any record, and ask the AI for a summary of today.",
+      "next": "See what happened today"
+    },
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "when": "When",
+    "anyTime": "Any time",
+    "ranges": {
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "Last 30 days"
+    },
+    "allAreas": "All areas",
+    "advanced": "More filters",
+    "bars": {
+      "title": "Activity over the last 14 days",
+      "hint": "{count, plural, one {# action} other {# actions}} recorded"
+    },
+    "digest": {
+      "title": "What happened today?",
+      "hint": "{count, plural, =0 {Nothing logged yet today.} one {# thing logged today — the AI turns it into a short summary.} other {# things logged today — the AI turns them into a short summary.}}",
+      "button": "Summarise today"
+    },
+    "empty": {
+      "title": "Nothing has happened yet",
+      "body": "As soon as you or your AI employees add leads, send invoices or finish tasks, it shows up here as a timeline."
+    },
+    "modules": {
+      "crm": "Sales & CRM",
+      "finance": "Finance",
+      "hr": "People",
+      "marketing": "Marketing",
+      "support": "Support",
+      "work": "Projects & operations",
+      "agent": "AI work",
+      "approval": "Approvals",
+      "workflow": "Automations",
+      "brain": "Company brain",
+      "company": "Company"
+    },
+    "events": {
+      "lead_created": "added a lead",
+      "lead_updated": "updated a lead",
+      "lead_assigned": "assigned a lead",
+      "deal_created": "created a deal",
+      "deal_stage_changed": "moved a deal to a new stage",
+      "deal_won": "won a deal",
+      "deal_lost": "lost a deal",
+      "customer_created": "added a customer",
+      "contact_created": "added a contact",
+      "invoice_created": "created an invoice",
+      "invoice_sent": "sent an invoice",
+      "invoice_paid": "got an invoice paid",
+      "invoice_overdue": "has an overdue invoice",
+      "expense_created": "recorded an expense",
+      "payment_received": "received a payment",
+      "task_created": "created a task",
+      "task_completed": "completed a task",
+      "project_created": "started a project",
+      "employee_joined": "welcomed a new employee",
+      "employee_left": "recorded an employee leaving",
+      "candidate_applied": "received a job application",
+      "candidate_hired": "hired a candidate",
+      "leave_requested": "requested time off",
+      "form_submitted": "received a form submission",
+      "campaign_launched": "launched a campaign",
+      "content_published": "published content",
+      "ticket_created": "opened a support ticket",
+      "ticket_updated": "updated a support ticket",
+      "ticket_resolved": "resolved a support ticket",
+      "meeting_completed": "finished a meeting",
+      "announcement_published": "published an announcement",
+      "webhook_received": "received data from a connected app",
+      "schedule_tick": "ran a scheduled check",
+      "integration_synced": "synced a connected app",
+      "agent_task_completed": "finished an AI job",
+      "agent_task_failed": "had an AI job fail",
+      "approval_requested": "asked for an approval",
+      "approval_resolved": "decided an approval",
+      "objective_created": "set a new objective",
+      "member_joined": "joined the team",
+      "company_created": "created the company"
+    }
+  },
+  "aiPlans": {
+    "eyebrow": "Recurring AI work",
+    "intro": {
+      "what": "Your AI team's weekly rhythm: jobs that repeat on a schedule, and jobs that start when something happens.",
+      "why": "Important routines — briefings, follow-ups, checks — happen on time without you remembering them.",
+      "can": "See the week at a glance, add a plan in plain words, pause, edit or delete plans, and check past runs.",
+      "next": "Add a plan"
+    },
+    "stats": {
+      "active": "Active plans",
+      "paused": "{count, plural, =0 {none paused} one {# paused} other {# paused}}",
+      "perWeek": "Runs per week",
+      "perWeekHint": "From scheduled plans",
+      "triggers": "Event triggers",
+      "triggersHint": "Start when something happens",
+      "runs": "Recent runs",
+      "runsHint": "Last 30 shown below"
+    },
+    "calendar": {
+      "title": "This week",
+      "hourly": "Every hour at :{minute}",
+      "events": "When something happens",
+      "eventsEmpty": "No event triggers yet. Example: when a new lead arrives, research it.",
+      "nothing": "Free"
+    },
+    "empty": {
+      "title": "No recurring AI work yet",
+      "body": "Plans make your AI team proactive — for example a Monday cash check by your AI CFO, or research on every new lead."
+    },
+    "composer": {
+      "title": "Add a plan",
+      "subtitle": "Tell us who, when and what — we'll read it back as one sentence before saving.",
+      "steps": {
+        "who": "Who",
+        "when": "When",
+        "what": "What",
+        "check": "Check"
+      },
+      "whoQ": "Which AI employee should do it?",
+      "whenQ": "When should it happen?",
+      "when": {
+        "WEEKLY": "Once a week",
+        "WEEKLYHint": "Good for reviews and reports (recommended)",
+        "DAILY": "Every day",
+        "DAILYHint": "Good for briefings and quick checks",
+        "HOURLY": "Every hour",
+        "HOURLYHint": "Only for things that change fast",
+        "EVENT": "When something happens",
+        "EVENTHint": "For example a new lead, a paid invoice or a new ticket"
+      },
+      "whatQ": "What should {name} do each time?",
+      "whatHint": "Pick an idea or write your own instructions.",
+      "advanced": "Advanced",
+      "checkQ": "Does this sound right?",
+      "safety": "Each run creates a normal AI job. Anything risky still waits in Approvals.",
+      "save": "Save the plan",
+      "created": "“{name}” is scheduled. You'll see it in the calendar."
+    },
+    "sentence": {
+      "daily": "Every day at {time}",
+      "weekly": "Every {day} at {time}",
+      "hourly": "Every hour at :{minute}",
+      "event": "Whenever someone {event}",
+      "full": "{when}, {name} ({role}) will do “{job}”."
+    },
+    "help": {
+      "title": "Need ideas?",
+      "hint": "Your AI CEO suggests a weekly rhythm that fits your goals and team."
+    },
+    "ideas": {
+      "weekly_review": {
+        "name": "Weekly company review",
+        "body": "Review last week's numbers, objectives and activity. Write a short briefing: wins, risks and the 3 decisions for this week."
+      },
+      "morning_brief": {
+        "name": "Morning briefing",
+        "body": "Summarise what happened since yesterday and what needs attention today, in 5 bullet points."
+      },
+      "cash_monday": {
+        "name": "Monday cash check",
+        "body": "Summarise our cash, money expected this week, upcoming bills and runway. Flag anything unusual."
+      },
+      "overdue_chase": {
+        "name": "Overdue invoice follow-up",
+        "body": "List overdue invoices and draft friendly reminders for the biggest ones (for my approval)."
+      },
+      "pipeline_monday": {
+        "name": "Pipeline review",
+        "body": "Review open deals: what is likely to close, what is stuck, and the next step for each stuck deal."
+      },
+      "new_lead_research": {
+        "name": "Research new leads",
+        "body": "Research the newest leads: who they are, whether they fit our ideal customer, and a suggested first message."
+      },
+      "content_week": {
+        "name": "Plan this week's content",
+        "body": "Suggest this week's posts and articles that fit our goals, with titles and short summaries."
+      },
+      "campaign_check": {
+        "name": "Campaign check-up",
+        "body": "Review running campaigns: results so far, what works, and one improvement each."
+      },
+      "people_pulse": {
+        "name": "Team pulse",
+        "body": "Summarise who is away, new joiners, open roles and anything in the team that needs attention."
+      },
+      "support_digest": {
+        "name": "Support digest",
+        "body": "Summarise new and open tickets, recurring problems and customers waiting longest."
+      },
+      "ticket_triage": {
+        "name": "Ticket triage",
+        "body": "Sort open tickets by urgency and draft replies for the most urgent ones (drafts only)."
+      },
+      "ops_week": {
+        "name": "Weekly operations check",
+        "body": "Review project progress, overdue tasks and open risks, and suggest what to fix first."
+      },
+      "kpi_week": {
+        "name": "Weekly numbers",
+        "body": "Explain how our key numbers moved this week and what might be behind the changes."
+      }
+    }
+  },
+  "opsHub": {
+    "eyebrow": "Operations hub",
+    "advanced": "Advanced",
+    "recommended": "recommended",
+    "quickAdd": "Quick add (all fields)",
+    "whatsThis": "What's this?",
+    "stats": {
+      "checklists": "{count, plural, one {# checklist} other {# checklists}}",
+      "sev12": "{count, plural, =0 {none serious} one {# serious} other {# serious}}"
+    },
+    "intro": {
+      "overview": {
+        "what": "How your company runs day to day: written routines, recurring checks, equipment and things that went wrong.",
+        "why": "Written routines make work repeatable, so quality doesn't depend on who is in that day.",
+        "can": "Write down processes, schedule checklists, register assets and handle incidents.",
+        "nextDone": "Check this week's checklists"
+      },
+      "processes": {
+        "what": "Processes are your step-by-step routines — \"how we do things here\".",
+        "why": "Anyone can follow them, new people learn faster, and every change is kept as a version.",
+        "can": "Set up a process from a ready-made example, edit its steps, and see past versions."
+      },
+      "checklists": {
+        "what": "Checklists are short lists of things to check, on a schedule (daily, weekly, monthly).",
+        "why": "Small recurring checks prevent big problems, and you can see they were really done.",
+        "can": "Create a checklist from an example, assign it, and tick items off each time it comes up."
+      },
+      "assets": {
+        "what": "Your asset register: laptops, phones, machines, licences — what you own and who has it.",
+        "why": "You know what you have, what it cost, and what needs maintenance or replacing.",
+        "can": "Add assets, assign them to people, track status and value, and archive old ones."
+      },
+      "incidents": {
+        "what": "Incidents are things that went wrong — an outage, a mistake, a complaint that hurt customers.",
+        "why": "Logging them means they get an owner, get fixed, and don't happen again.",
+        "can": "Log an incident, set how serious it is, move it from open to resolved, and write what you learned."
+      },
+      "vendors": {
+        "what": "Your suppliers and service providers, kept with your other companies in the CRM.",
+        "why": "One place for who you buy from, their contacts and details.",
+        "can": "Search suppliers and open their full record.",
+        "next": "Add a supplier"
+      }
+    },
+    "journey": {
+      "title": "Start here: set up operations",
+      "hint": "Four foundations. Each one ticks itself off when it exists.",
+      "progress": "{done} of {total} done",
+      "done": "Done — open to review",
+      "steps": {
+        "process": {
+          "title": "Write down your first process",
+          "hint": "Pick a routine like customer onboarding — we suggest the steps."
+        },
+        "checklist": {
+          "title": "Schedule your first checklist",
+          "hint": "A weekly check takes two minutes to set up."
+        },
+        "assets": {
+          "title": "Register your equipment",
+          "hint": "Start with laptops and phones."
+        },
+        "incidents": {
+          "title": "Know how to log an incident",
+          "hint": "When something goes wrong, log it so it gets fixed for good."
+        }
+      }
+    },
+    "help": {
+      "title": "Let AI suggest your routines",
+      "hint": "Your AI operations assistant proposes processes and checklists for a company like yours."
+    },
+    "incidents": {
+      "boardTitle": "Incident board",
+      "boardHint": "Open incidents, worst first, and what was resolved in the last two weeks.",
+      "legend": "Severity levels",
+      "noOwner": "No owner yet",
+      "columnEmpty": "Nothing here",
+      "severityWord": "How serious is each level?",
+      "severityExplain": "SEV1: customers can't use your service at all — drop everything. SEV2: a big part is broken. SEV3: something is annoying but there's a workaround. SEV4: small issue, fix when convenient."
+    },
+    "severityExplain": {
+      "SEV1": "everything stops",
+      "SEV2": "big impact",
+      "SEV3": "workaround exists",
+      "SEV4": "minor"
+    },
+    "assets": {
+      "title": "Your assets at a glance",
+      "hint": "{count, plural, one {# asset} other {# assets}} in {categories, plural, one {# category} other {# categories}}",
+      "byStatus": "By status",
+      "byCategory": "Biggest categories",
+      "uncategorised": "No category",
+      "assigned": "Assigned to someone",
+      "assignedHint": "Everything should have a person responsible."
+    },
+    "empty": {
+      "processes": {
+        "title": "No processes written down yet",
+        "body": "Start with one routine your team repeats often. Pick an example above and adjust the steps — it takes two minutes."
+      },
+      "checklists": {
+        "title": "No checklists yet",
+        "body": "A short weekly check (doors, backups, supplies) is a great first one. Use the guided setup above."
+      },
+      "assets": {
+        "title": "No assets registered",
+        "body": "Add your laptops, phones and equipment so you always know who has what. Use \"Add asset\" above."
+      },
+      "incidents": {
+        "title": "No incidents — good news",
+        "body": "When something goes wrong, log it here so it gets an owner and a fix. Use \"Log incident\" above."
+      },
+      "vendors": {
+        "title": "No suppliers yet",
+        "body": "Suppliers are companies in your CRM marked as vendor. Add one and it appears here."
+      }
+    },
+    "process": {
+      "title": "Set up a process step by step",
+      "subtitle": "Pick a routine, write the steps, choose an owner.",
+      "steps": {
+        "what": "Routine",
+        "how": "Steps",
+        "who": "Owner"
+      },
+      "whatQ": "Which routine do you want to write down?",
+      "whatHint": "Choose an example to start with suggested steps, or start blank.",
+      "titlePlaceholder": "e.g. Onboard a new customer",
+      "categoryHint": "A group such as Sales, Finance or People.",
+      "howQ": "What are the steps?",
+      "howHint": "One step per line, in order. Short and clear — you can add details later.",
+      "stepsPlaceholder": "Send a welcome email\nSchedule a kick-off call\n…",
+      "preview": "Preview",
+      "whoQ": "Who keeps this process up to date?",
+      "ownerHint": "The owner answers questions and updates the steps when things change.",
+      "summary": "“{title}” with {count, plural, one {# step} other {# steps}} will be saved as version 1.",
+      "create": "Create the process"
+    },
+    "processTemplates": {
+      "customer_onboarding": {
+        "title": "Onboard a new customer",
+        "hint": "From signed deal to happy first month",
+        "category": "Customers",
+        "steps": "Send a welcome email with next steps\nCreate the customer in the CRM and assign an owner\nSchedule a kick-off call\nSet up their account and access\nShare a short getting-started guide\nCheck in after the first week\nAsk for feedback after the first month"
+      },
+      "month_close": {
+        "title": "Close the month",
+        "hint": "Get the books right every month",
+        "category": "Finance",
+        "steps": "Send all invoices for the month\nRecord all expenses and receipts\nMatch bank transactions\nChase overdue invoices\nReview profit and loss\nShare a short summary with the team"
+      },
+      "refund": {
+        "title": "Handle a refund request",
+        "hint": "Fair, fast and consistent",
+        "category": "Support",
+        "steps": "Thank the customer and confirm we received the request\nCheck the order and our refund policy\nDecide and explain the decision clearly\nIssue the refund or credit note\nRecord the reason\nFollow up to make sure it arrived"
+      },
+      "new_hire": {
+        "title": "Welcome a new employee",
+        "hint": "A great first week",
+        "category": "People",
+        "steps": "Prepare contract and paperwork\nOrder laptop and accounts\nAssign a buddy\nPlan the first week\nIntroduce them to the team\nSet goals for the first 90 days"
+      },
+      "publish_content": {
+        "title": "Publish a blog post",
+        "hint": "From idea to published",
+        "category": "Marketing",
+        "steps": "Agree the topic and goal\nWrite the first draft\nReview and edit\nAdd images and links\nPublish\nShare on social media and in the newsletter"
+      },
+      "custom": {
+        "title": "Something else",
+        "hint": "Start with a blank page"
+      }
+    },
+    "checklist": {
+      "title": "Set up a checklist step by step",
+      "subtitle": "What to check, the items, and how often.",
+      "steps": {
+        "what": "What",
+        "items": "Items",
+        "when": "How often"
+      },
+      "whatQ": "What should be checked regularly?",
+      "whatHint": "Choose an example or start blank.",
+      "itemsQ": "What's on the list?",
+      "itemsHint": "One item per line. Each one is ticked off when it's done.",
+      "whenQ": "How often, and who does it?",
+      "whoHint": "They get reminded when it's due.",
+      "firstHint": "Leave empty to start today.",
+      "summary": "“{title}” with {count, plural, one {# item} other {# items}}, {schedule}.",
+      "create": "Create the checklist"
+    },
+    "checklistTemplates": {
+      "opening": {
+        "title": "Opening & closing",
+        "hint": "Daily, for shops and offices",
+        "items": "Lights and equipment on/off\nDoors and windows locked\nTills or cash counted\nWork areas clean\nAlarm set"
+      },
+      "weekly_office": {
+        "title": "Weekly office check",
+        "hint": "Five minutes every Friday",
+        "items": "Supplies restocked\nPrinter and Wi-Fi working\nKitchen cleaned\nPost and deliveries handled\nNext week's visitors prepared"
+      },
+      "month_end": {
+        "title": "Month-end finance",
+        "hint": "Monthly money housekeeping",
+        "items": "All invoices sent\nReceipts uploaded\nBank reconciled\nOverdue invoices chased\nPayroll checked"
+      },
+      "security": {
+        "title": "Security review",
+        "hint": "Monthly IT safety",
+        "items": "Leavers' accounts removed\nBackups tested\nSoftware updated\nTwo-step login on for everyone\nShared passwords changed"
+      },
+      "website": {
+        "title": "Website health",
+        "hint": "Weekly check of your site",
+        "items": "Site loads quickly\nContact form works\nNo broken links\nPrices and opening hours correct\nBlog or news updated"
+      },
+      "custom": {
+        "title": "Something else",
+        "hint": "Start with a blank list"
+      }
+    }
+  },
+  "inbox": {
+    "eyebrow": "Your inbox",
+    "intro": {
+      "what": "Updates meant for you from every part of the company.",
+      "why": "Things that need you come first, so nothing important gets lost.",
+      "can": "Open an item to go straight to it, mark items read, and filter by area.",
+      "next": "Handle the first item",
+      "nextDone": "See the company timeline"
+    },
+    "needsAction": "Needs you",
+    "actionTitle": "Needs your action",
+    "actionHint": "{count, plural, one {# item waits for you} other {# items wait for you}} — approvals, assignments and overdue things.",
+    "dayCount": "{count, plural, one {# update} other {# updates}}",
+    "empty": {
+      "title": "You're all caught up",
+      "body": "When something needs you — an approval, a task assigned to you, an overdue invoice — it will show up here."
     }
   }
 }

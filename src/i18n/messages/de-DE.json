@@ -721,7 +721,12 @@
       "assets_scope_required": "Wählen Sie, für welchen Datensatz das Artwork ist.",
       "assets_upload_too_large": "Das Bild ist größer als 8 MB.",
       "assets_upload_type": "Die Datei ist kein gültiges PNG-, JPEG- oder WebP-Bild.",
-      "assets_storage_failed": "Das Artwork konnte nicht gespeichert oder gelesen werden. Prüfen Sie Ihre Speicherverbindung."
+      "assets_storage_failed": "Das Artwork konnte nicht gespeichert oder gelesen werden. Prüfen Sie Ihre Speicherverbindung.",
+      "workforce_department_over_budget": "Diese Abteilung hat ihr KI-Budget für diesen Monat aufgebraucht.",
+      "workforce_delegation_decided": "Über diese Delegation wurde bereits entschieden.",
+      "workforce_delegation_limit": "Diese Aufgabe hat die Grenze für delegierte Teilaufgaben erreicht.",
+      "workforce_delegation_parent_missing": "Die Aufgabe, zu der diese Delegation gehört, existiert nicht mehr.",
+      "workforce_escalation_resolved": "Diese Eskalation wurde bereits gelöst."
     }
   },
   "onboarding": {
@@ -1054,7 +1059,9 @@
       "dataRegion": "Datenregion",
       "timezone": "Zeitzone",
       "enableBilling": "Abrechnung aktivieren",
-      "disableBilling": "Abrechnung deaktivieren"
+      "disableBilling": "Abrechnung deaktivieren",
+      "subtitle": "Regionen und Länder: Währungen, Sprachen, Steuern und wo Abrechnung verfügbar ist.",
+      "why": "Schalten Sie die Abrechnung nur für Länder ein, in denen Steuern und Zahlungen eingerichtet sind."
     },
     "flags": {
       "default": "Standard",
@@ -1067,7 +1074,10 @@
       "remove": "Entfernen",
       "turnOn": "Einschalten",
       "turnOff": "Ausschalten",
-      "subtitle": "Feature-Flags mit Zielregeln."
+      "subtitle": "Feature-Flags mit Zielregeln.",
+      "why": "Funktionen für einige Organisationen oder Länder einschalten, bevor alle sie bekommen.",
+      "emptyTitle": "Noch keine Feature-Flags",
+      "emptyBody": "Feature-Flags erscheinen hier, sobald sie im Code definiert und angelegt sind."
     },
     "audit": {
       "time": "Zeit",
@@ -1091,7 +1101,8 @@
       "scopes": {
         "platform": "Plattform & Sicherheit",
         "all": "Alles (inkl. Mandanten)"
-      }
+      },
+      "why": "Jede administrative Aktion mit wer, wann und warum. Filtern und für die Compliance als CSV exportieren."
     },
     "system": {
       "title": "Externe Dienste",
@@ -1135,7 +1146,11 @@
         "sync": "Sync",
         "workflow": "Workflow",
         "webhook": "Webhook"
-      }
+      },
+      "why": "Wenn etwas langsam oder defekt ist, beginnen Sie hier: Live-Prüfungen, Job-Warteschlangen, Worker und die neuesten Fehler.",
+      "queuesHint": "Wartende, laufende und fehlgeschlagene Jobs in jeder Hintergrund-Warteschlange.",
+      "noHeartbeatHint": "Starten Sie den Worker-Prozess (pnpm worker). Er meldet sich hier jede Minute.",
+      "noErrorsHint": "Kein fehlgeschlagener Job, keine KI-Aufgabe, Synchronisierung, kein Workflow oder Webhook in den letzten 7 Tagen."
     },
     "users": {
       "count": "{count, plural, one {# Benutzer} other {# Benutzer}} (neueste zuerst, bis zu 100)",
@@ -1204,8 +1219,33 @@
         "lastSeen": "Zuletzt gesehen",
         "revoked": "Beendet",
         "active": "Aktiv",
-        "securityLog": "Sicherheits- & Admin-Ereignisse"
-      }
+        "securityLog": "Sicherheits- & Admin-Ereignisse",
+        "account": "Konto",
+        "signIns30": "Anmeldungen (30 Tage)",
+        "lastLoginAgo": "Letzte Anmeldung {time}",
+        "sessionsNow": "Angemeldete Geräte",
+        "registeredOn": "Registriert am {date}",
+        "aiCost30": "Geschätzte KI-Kosten pro Tag",
+        "platformRolesHint": "Rollen, die Zugriff auf diese Admin-Konsole geben.",
+        "noPlatformRolesHint": "Diese Person hat keinen Admin-Zugriff. Vergeben Sie Rollen nur an Personen, die die Plattform betreiben.",
+        "noMembershipsHint": "Diese Person gehört noch zu keiner Organisation.",
+        "usageChart": "Nutzung über 30 Tage",
+        "usageChartHint": "Anmeldungen und von dieser Person gestartete KI-Aufgaben pro Tag.",
+        "seriesSignIns": "Anmeldungen",
+        "seriesTasks": "KI-Aufgaben",
+        "seriesCost": "KI-Kosten",
+        "sessionsHint": "Neueste zuerst. Grüne Punkte sind Geräte, die gerade angemeldet sind.",
+        "expired": "Abgelaufen",
+        "lastSeenAgo": "Zuletzt gesehen {time}",
+        "byAdmin": "Administrator"
+      },
+      "why": "Jede Person auf der Plattform finden, ihren Sicherheitsstatus prüfen und in Sekunden helfen.",
+      "emptyTitle": "Noch keine Nutzer",
+      "emptyBody": "Personen erscheinen hier, sobald sie ein Konto erstellen.",
+      "orgCount": "{count, plural, one {# Org.} other {# Org.}}",
+      "selfNote": "Das ist Ihr eigenes Konto. Ändern Sie es in Ihren Profileinstellungen.",
+      "adminNote": "Plattform-Administratoren können hier nicht gesperrt oder gelöscht werden. Entfernen Sie zuerst ihre Plattformrolle.",
+      "openProfile": "Vollständiges Profil öffnen"
     },
     "organizations": {
       "hint": "Alle Organisationen der Plattform. Mandantendaten bleiben hinter Mandantenberechtigungen.",
@@ -1253,7 +1293,23 @@
         "members": "Mitglieder",
         "deleted": "Gelöscht",
         "recentTasks": "Letzte KI-Aufgaben",
-        "activity": "Aktivitätsprotokoll"
+        "activity": "Aktivitätsprotokoll",
+        "atAGlance": "Auf einen Blick",
+        "subtitle": "{slug} · erstellt am {date}",
+        "inModules": "{count, plural, one {Nutzt # Modul} other {Nutzt # Module}}",
+        "cost30": "Geschätzte KI-Kosten pro Tag",
+        "usageChart": "Aktivität über 30 Tage",
+        "usageChartHint": "KI-Aufgaben, Fehler und API-Anfragen pro Tag.",
+        "seriesTasks": "KI-Aufgaben",
+        "seriesFailed": "Fehlgeschlagen",
+        "seriesApi": "API-Anfragen",
+        "seriesCost": "KI-Kosten",
+        "ofLimit": "{used} von {limit}",
+        "ofUnlimited": "{used} · ohne Limit",
+        "noMembers": "Keine Mitglieder",
+        "noCompanies": "Noch keine Unternehmen",
+        "noCompaniesHint": "Die Organisation hat noch kein Unternehmen erstellt.",
+        "noTasksHint": "Diese Organisation hat ihren KI-Mitarbeitern noch keine Aufgabe gegeben."
       },
       "counts": {
         "leads": "Leads",
@@ -1279,7 +1335,15 @@
         "installs": "Installationen",
         "documents": "Dokumente",
         "objectives": "Ziele"
-      }
+      },
+      "why": "Sehen, wer die Plattform mit welchem Tarif nutzt, und eingreifen, wenn eine Organisation Hilfe braucht oder gestoppt werden muss.",
+      "emptyTitle": "Noch keine Organisationen",
+      "emptyBody": "Organisationen erscheinen hier, sobald jemand das Onboarding abschließt.",
+      "createdOn": "Erstellt am {date}",
+      "viewTasks": "KI-Aufgaben",
+      "viewAudit": "Audit-Log",
+      "gateNote": "Die Details einer Organisation zeigen deren Daten. Sie werden nach einer Begründung gefragt, die im Audit-Log gespeichert wird.",
+      "openDetails": "Details öffnen"
     },
     "signInTitle": "Anmeldung Admin-Konsole",
     "signInSubtitle": "Nur für Plattform-Administratoren. Melden Sie sich mit Ihrem Admin-Konto an.",
@@ -1296,7 +1360,14 @@
         "7d": "Letzte 7 Tage",
         "30d": "Letzte 30 Tage",
         "90d": "Letzte 90 Tage"
-      }
+      },
+      "actions": "Aktionen",
+      "all": "Alle",
+      "breadcrumb": "Navigationspfad",
+      "clearFilters": "Filter zurücksetzen",
+      "quickActions": "Schnellaktionen",
+      "readOnly": "Sie können dies ansehen, aber nicht ändern.",
+      "tryOtherFilters": "Versuchen Sie eine andere Suche oder entfernen Sie einen Filter."
     },
     "search": {
       "placeholder": "Benutzer, Unternehmen, Aufgaben, Einstellungen suchen…",
@@ -1307,7 +1378,19 @@
       "organizations": "Organisationen",
       "companies": "Unternehmen",
       "controls": "Schalter & Einstellungen",
-      "connections": "{count} Verbindungen"
+      "connections": "{count} Verbindungen",
+      "palettePlaceholder": "Nutzer, Organisationen, KI-Aufgaben, Schalter suchen…",
+      "paletteHint": "Tippen Sie, um zu suchen. Mit den Pfeiltasten bewegen, mit Enter öffnen.",
+      "groups": {
+        "nav": "Gehe zu",
+        "more": "Mehr"
+      },
+      "seeAll": "Alle Ergebnisse für „{q}“ anzeigen",
+      "keyMove": "bewegen",
+      "keyOpen": "öffnen",
+      "scopeNote": "Es wird nur angezeigt, was Sie sehen dürfen",
+      "tip": "Suchen Sie nach Name, E-Mail, Slug, Aufgabentitel oder ID, Schaltername oder Anbieter.",
+      "noResultsHint": "Prüfen Sie die Schreibweise oder suchen Sie nach E-Mail, ID oder Slug."
     },
     "emergency": {
       "title": "Notfallzustand aktiv:",
@@ -1339,7 +1422,52 @@
       "healthy": "Gesund",
       "degraded": "Beeinträchtigt",
       "recentActivity": "Letzte Admin-Aktivität",
-      "viewAll": "Alle anzeigen"
+      "viewAll": "Alle anzeigen",
+      "controlRoom": "Leitstand",
+      "controlRoomHint": "Alles, was gerade auf der Plattform passiert, an einem Ort. Jede Kachel öffnet ihren Bereich.",
+      "why": "Probleme erkennen, bevor Kunden sie bemerken: Zustand, Wachstum, KI-Arbeit und Admin-Aktionen aktualisieren sich live.",
+      "openControls": "Plattformsteuerung",
+      "openSystem": "System & Monitoring öffnen",
+      "checksOk": "Prüfungen OK",
+      "statusAllGood": "Alle Kernsysteme laufen",
+      "statusAllGoodHint": "Datenbank und Redis antworten. Graue Einträge sind optionale Dienste, die noch nicht eingerichtet sind.",
+      "statusDegraded": "Ein Kernsystem ist ausgefallen",
+      "statusDegradedHint": "Die Datenbank oder Redis antwortet nicht. Öffnen Sie System & Monitoring, um die Auswirkungen zu sehen.",
+      "check": {
+        "ok": "Läuft",
+        "down": "Ausgefallen",
+        "off": "Nicht eingerichtet"
+      },
+      "fleetTitle": "KI-Flotte",
+      "fleetHint": "KI-Mitarbeiter aller Unternehmen und ihre aktuelle Arbeit.",
+      "workingNow": "{count, plural, one {# Aufgabe läuft gerade} other {# Aufgaben laufen gerade}}",
+      "queuedCount": "{count, plural, one {# wartet} other {# warten}}",
+      "failed24h": "{count, plural, one {# fehlgeschlagen (24 h)} other {# fehlgeschlagen (24 h)}}",
+      "completed24h": "{count, plural, one {# abgeschlossen (24 h)} other {# abgeschlossen (24 h)}}",
+      "fleetLegend": "{active} aktiv (grün) · {paused} pausiert (grau) · pulsierend = arbeitet gerade",
+      "fleetPer": "{count, plural, one {1 Feld = 1 KI-Mitarbeiter} other {1 Feld = # KI-Mitarbeiter}}",
+      "busiestRoles": "Gerade am stärksten ausgelastete KI-Rollen",
+      "roleLoad": "{running} laufen · {queued} warten",
+      "noActiveTasks": "Gerade läuft oder wartet keine KI-Aufgabe.",
+      "registrations": "Neue Registrierungen",
+      "aiTasks30": "KI-Aufgaben (30 Tage)",
+      "liveSubscriptions": "{count, plural, one {# aktives Abonnement} other {# aktive Abonnements}}",
+      "sparkRegistrations": "Neue Registrierungen pro Tag, letzte 30 Tage",
+      "sparkSignIns": "Anmeldende Nutzer pro Tag, letzte 30 Tage",
+      "sparkOrganizations": "Neue Organisationen pro Tag, letzte 30 Tage",
+      "sparkSubscriptions": "Neue Abonnements pro Tag, letzte 30 Tage",
+      "sparkTasks": "Erstellte KI-Aufgaben pro Tag, letzte 30 Tage",
+      "sparkCost": "Geschätzte KI-Kosten pro Tag, letzte 30 Tage",
+      "activityChart": "Plattformaktivität",
+      "activityChartHint": "Pro Tag in den letzten 30 Tagen. Mit den Pfeiltasten oder der Maus einen Tag ansehen.",
+      "seriesSignIns": "Anmeldende Nutzer",
+      "seriesRegistrations": "Neue Registrierungen",
+      "seriesTasksFailed": "Fehlgeschlagene KI-Aufgaben",
+      "waiting": "Wartet",
+      "queuesTitle": "Job-Warteschlangen",
+      "queueSub": "{active} aktiv · {failed} fehlgeschlagen",
+      "offline": "Offline",
+      "activityEmptyHint": "Änderungen von Administratoren (Schalter, Sperrungen, Rollen) erscheinen hier mit ihrer Begründung."
     },
     "health": {
       "database": "Datenbank",
@@ -1371,7 +1499,10 @@
       "groups": {
         "emergency": "Wartung & Nur-Lesen",
         "kill": "Notschalter",
-        "modules": "Module & Integrationen"
+        "modules": "Module & Integrationen",
+        "emergencyHint": "Für Ausfälle und Vorfälle: Plattform für Kunden schließen, während Administratoren weiterarbeiten.",
+        "killHint": "Eine Art von Aktivität überall sofort stoppen. Verwenden Sie sie, wenn etwas schiefläuft.",
+        "modulesHint": "Ganze Produktbereiche oder Integrationsanbieter für alle Organisationen schließen."
       },
       "changed": "Geändert",
       "critical": "Kritisch",
@@ -1400,7 +1531,23 @@
         "start": "Notfall-Sperre starten",
         "startHint": "Benutzer werden abgemeldet und sehen die Wartungsseite; KI und Hintergrundarbeit stoppen. Administratoren behalten Zugriff.",
         "end": "Sperre beenden",
-        "endHint": "Stellt die Schalterwerte von vor der Sperre wieder her."
+        "endHint": "Stellt die Schalterwerte von vor der Sperre wieder her.",
+        "activeBadge": "Aktiv",
+        "readyBadge": "Bereit",
+        "effectsTitle": "Was die Sperre bewirkt",
+        "recoveryTitle": "Schritte zur Wiederherstellung",
+        "effects": {
+          "maintenance": "Schaltet den Wartungsmodus ein: Kunden sehen die Wartungsseite, APIs antworten mit 503.",
+          "ai": "Schaltet die KI-Belegschaft ab: Nirgends kann eine KI-Aufgabe starten.",
+          "jobs": "Pausiert alle Hintergrundjobs: Ereignisse warten in der Warteschlange.",
+          "sessions": "Meldet alle Nutzer ab, die keine Plattform-Administratoren sind."
+        },
+        "steps": {
+          "investigate": "Klären, was passiert ist: Sicherheitsereignisse und Audit-Log prüfen.",
+          "fix": "Ursache beheben: geleakte Schlüssel austauschen, Zugriffe entziehen, Problem beheben.",
+          "end": "Sperre unten beenden. Die Schalter kehren genau zu ihren vorherigen Werten zurück.",
+          "inform": "Kunden informieren: Alle müssen sich neu anmelden."
+        }
       },
       "keys": {
         "lockdown": {
@@ -1499,6 +1646,66 @@
           "label": "Wartungshinweis",
           "hint": "Optionaler Text auf der Wartungsseite und in 503-Antworten."
         }
+      },
+      "why": "Diese Schalter wirken sofort auf die gesamte Plattform. Jede Änderung braucht eine Begründung und wird im Audit-Log gespeichert.",
+      "summary": "{changed, plural, =0 {Alle {total} Schalter im Normalbetrieb} one {# von {total} Schaltern geändert} other {# von {total} Schaltern geändert}}",
+      "stateNormal": "Normalbetrieb",
+      "stateChanged": "Vom Normalbetrieb abweichend",
+      "ifYouFlip": "Wenn Sie umschalten:",
+      "lockedByLockdown": "Durch Notfallsperre festgelegt",
+      "readOnly": "Nur lesen",
+      "historyHint": "Die letzte Änderung jedes Schalters: wer, wann und warum.",
+      "noChangesHint": "Noch nichts geändert – alles läuft mit den sicheren Standardwerten.",
+      "footerNote": "Schalter wirken innerhalb von Sekunden auf allen Servern. Der Worker prüft sie vor jedem Job.",
+      "cards": {
+        "maintenanceMode": {
+          "normal": "Die Plattform ist geöffnet. Kunden können sich anmelden und normal arbeiten.",
+          "changed": "Die Plattform ist für Kunden geschlossen. Sie sehen die Wartungsseite; Administratoren arbeiten weiter.",
+          "flip": "Jede Kundenseite zeigt die Wartungsseite und alle Kunden-APIs antworten mit 503, bis Sie ihn ausschalten.",
+          "restore": "Kunden können die Plattform sofort wieder nutzen."
+        },
+        "readOnlyMode": {
+          "normal": "Kunden können ihre Daten lesen und ändern.",
+          "changed": "Kunden können ihre Daten ansehen, aber keine Änderung wird gespeichert.",
+          "flip": "Jede Änderung über die Plattform wird für alle Unternehmen abgelehnt. Lesen funktioniert weiterhin.",
+          "restore": "Kunden können wieder Änderungen speichern."
+        },
+        "aiWorkforceEnabled": {
+          "normal": "KI-Mitarbeiter dürfen für alle Unternehmen arbeiten.",
+          "changed": "Die KI-Belegschaft ist aus. Nirgends kann eine KI-Aufgabe erstellt oder ausgeführt werden.",
+          "flip": "Das Ausschalten stoppt sämtliche KI-Arbeit für alle Unternehmen. Laufende Aufgaben stoppen, keine neue kann starten.",
+          "restore": "KI-Mitarbeiter können wieder arbeiten. Unternehmen müssen neue Aufgaben selbst starten."
+        },
+        "aiExecutionPaused": {
+          "normal": "Der Worker übernimmt KI-Aufgaben, sobald sie erstellt werden.",
+          "changed": "KI-Aufgaben sind pausiert. Neue Aufgaben warten in der Warteschlange, nichts geht verloren.",
+          "flip": "KI-Aufgaben werden weiter eingereiht, aber keine läuft, bis Sie fortsetzen. Gut für eine kurze Pause.",
+          "restore": "Wartende KI-Aufgaben starten wieder der Reihe nach."
+        },
+        "registrationsEnabled": {
+          "normal": "Neue Personen können ein Konto erstellen.",
+          "changed": "Die Registrierung ist geschlossen. Neue Besucher sehen „Registrierung geschlossen“.",
+          "flip": "Niemand Neues kann sich registrieren, bis Sie sie wieder einschalten. Bestehende Nutzer sind nicht betroffen.",
+          "restore": "Neue Personen können sich wieder registrieren."
+        },
+        "companyCreationEnabled": {
+          "normal": "Organisationen können neue Unternehmen hinzufügen.",
+          "changed": "Keine Organisation kann ein neues Unternehmen erstellen.",
+          "flip": "Alle Organisationen können keine neuen Unternehmen mehr erstellen. Bestehende Unternehmen arbeiten weiter.",
+          "restore": "Organisationen können wieder Unternehmen erstellen."
+        },
+        "automationsEnabled": {
+          "normal": "Workflows laufen nach ihren Zeitplänen und Auslösern.",
+          "changed": "Automatisierungen sind aus. Zeitpläne, Auslöser und Läufe werden übersprungen.",
+          "flip": "Alle Workflow-Automatisierungen stoppen für alle Unternehmen. Übersprungene Läufe werden nicht nachgeholt.",
+          "restore": "Workflows laufen ab ihrem nächsten Zeitplan oder Auslöser wieder."
+        },
+        "backgroundJobsPaused": {
+          "normal": "Hintergrundjobs und Ereignis-Handler laufen normal.",
+          "changed": "Alle Hintergrundjobs sind pausiert. Ereignisse werden weiter eingereiht.",
+          "flip": "Jeder Hintergrundjob stoppt (E-Mails, Synchronisierungen, Modul-Jobs). Ereignisse warten und laufen nach dem Fortsetzen.",
+          "restore": "Hintergrundjobs laufen weiter und arbeiten die wartenden Ereignisse ab."
+        }
       }
     },
     "ai": {
@@ -1554,7 +1761,22 @@
       "byOrg": "Nach Organisation",
       "byModel": "Nach Modell",
       "byDay": "Nach Tag",
-      "noUsage": "Keine KI-Nutzung in diesem Zeitraum."
+      "noUsage": "Keine KI-Nutzung in diesem Zeitraum.",
+      "why": "Ein Ort, um die KI-Belegschaft sicher und bezahlbar zu halten: Schalter, Budgets, Modelle und Rollen für alle Unternehmen.",
+      "usageChart": "KI-Arbeit über 30 Tage",
+      "usageChartHint": "Gestartete und fehlgeschlagene Aufgaben pro Tag sowie die geschätzten Kosten.",
+      "seriesTasks": "Aufgaben",
+      "seriesFailed": "Fehlgeschlagen",
+      "seriesCost": "Geschätzte Kosten",
+      "seriesTokens": "Tokens",
+      "costByModel": "Kosten nach Modell",
+      "last30": "Letzte 30 Tage",
+      "policyHint": "Regeln, die jeder KI-Mitarbeiter zusätzlich zu den Einstellungen des jeweiligen Unternehmens befolgt.",
+      "tasksWhy": "Eine Aufgabe per ID oder Titel finden, den Fehlergrund sehen und sie abbrechen oder wiederholen.",
+      "noTasksHint": "Keine Aufgabe passt. Versuchen Sie einen anderen Status oder leeren Sie die Suche.",
+      "usageWhy": "Wissen, was KI kostet und wer sie nutzt – bevor die Rechnung kommt.",
+      "noUsageHint": "Die Nutzung erscheint, sobald KI-Mitarbeiter arbeiten.",
+      "byDayHint": "Geschätzt mit Listenpreisen pro Modell."
     },
     "plans": {
       "subtitle": "Pläne, Marktpreise, Berechtigungen und Nutzungskontingente.",
@@ -1586,7 +1808,8 @@
         "agents": {
           "max": "KI-Mitarbeiter"
         }
-      }
+      },
+      "why": "Tarife, Preise pro Markt und was jeder Tarif enthält. Preisänderungen erzeugen eine neue Version; der Verlauf bleibt erhalten."
     },
     "subscriptions": {
       "subtitle": "Abonnementstatus aller Organisationen. MRR stammt nur aus echten Abonnementposten.",
@@ -1608,7 +1831,12 @@
         "CANCELED": "Gekündigt",
         "UNPAID": "Unbezahlt",
         "PAUSED": "Pausiert"
-      }
+      },
+      "why": "Wiederkehrender Umsatz und Zustand der Abonnements aus echten Abonnementdaten – keine Schätzungen.",
+      "distribution": "Abonnements nach Status",
+      "distributionHint": "Wählen Sie einen Status, um die Liste zu filtern.",
+      "mrrHint": "Monatlich wiederkehrender Umsatz aus aktiven Abonnements",
+      "emptyHint": "Kein Abonnement passt zu diesen Filtern."
     },
     "integrations": {
       "subtitle": "Anbieterverbindungen, API-Schlüssel und Webhook-Zustellungen aller Organisationen. Zugangsdaten werden nie angezeigt.",
@@ -1640,7 +1868,11 @@
       "noFailures": "Keine fehlgeschlagenen Zustellungen.",
       "event": "Ereignis",
       "endpoint": "Endpunkt",
-      "attempts": "{count} Versuche"
+      "attempts": "{count} Versuche",
+      "why": "Sehen, welche Anbieter Unternehmen verbinden, welche Verbindungen fehlschlagen und wer die API nutzt.",
+      "providersHint": "Verbindungen pro Anbieter über alle Organisationen.",
+      "noConnectionsHint": "Unternehmen verbinden Anbieter auf ihrer Integrationsseite.",
+      "noFailuresHint": "Alle Webhook-Zustellungen waren zuletzt erfolgreich."
     },
     "security": {
       "subtitle": "Sicherheitsereignisse, Plattformadministratoren und ihre Sitzungen.",
@@ -1650,13 +1882,21 @@
       "noSessions": "Keine aktiven Admin-Sitzungen.",
       "verified": "Verifiziert",
       "notVerified": "Nicht verifiziert",
-      "events": "Sicherheitsereignisse (30 Tage)"
+      "events": "Sicherheitsereignisse (30 Tage)",
+      "why": "Anmeldungen, Rollenänderungen und andere sensible Ereignisse beobachten und sicherstellen, dass jeder Administrator MFA nutzt.",
+      "mfaCoverage": "MFA-Abdeckung",
+      "mfaCoverageHint": "Administratoren mit Zwei-Faktor-Anmeldung und damit bestätigte Admin-Sitzungen.",
+      "quietHint": "Kein Sicherheitsereignis in den letzten 30 Tagen.",
+      "important": "Wichtig"
     },
     "settings": {
       "subtitle": "Plattformweite Einstellungen. Änderungen werden protokolliert.",
       "general": "Allgemein",
       "registration": "Registrierung",
-      "anyDomain": "Jede E-Mail-Domain"
+      "anyDomain": "Jede E-Mail-Domain",
+      "why": "Grundlegende Plattforminformationen, die Kunden sehen, und wer sich registrieren darf.",
+      "generalHint": "Name, Support-Kontakt und Standardsprache.",
+      "registrationHint": "Registrierung auf Firmen-E-Mail-Domains beschränken."
     },
     "unavailable": {
       "title": "Nicht verfügbar",
@@ -1672,6 +1912,12 @@
       "switchOrg": "Organisation wechseln",
       "home": "Zur Startseite",
       "retry": "Erneut versuchen"
+    },
+    "live": {
+      "on": "Live",
+      "paused": "Pausiert",
+      "pause": "Live-Aktualisierung pausieren",
+      "resume": "Live-Aktualisierung fortsetzen"
     }
   },
   "email": {
@@ -2092,7 +2338,9 @@
       "usage": "Nutzung & Kosten",
       "plans": "Zeitpläne",
       "tasks": "KI-Aufgaben",
-      "org": "Organigramm"
+      "org": "Organigramm",
+      "performance": "Leistung & Budgets",
+      "escalations": "Eskalationen"
     },
     "filters": {
       "search": "Suche",
@@ -2125,19 +2373,19 @@
       },
       "RECOMMEND": {
         "name": "Empfehlen",
-        "hint": "Analysiert und empfiehlt; darf Recherche an Kollegen delegieren."
+        "hint": "Analysiert und empfiehlt, damit eine Person handelt. Gibt nie Arbeit an andere weiter."
       },
       "PREPARE": {
         "name": "Vorbereiten",
-        "hint": "Erstellt Entwürfe und schlägt interne Änderungen zur Freigabe vor. Keine externen Aktionen."
+        "hint": "Bereitet Entwürfe vor und schlägt interne Änderungen zur Freigabe vor; auch Delegationen werden zur Freigabe vorgeschlagen. Keine externen Aktionen."
       },
       "EXECUTE_WITH_APPROVAL": {
         "name": "Ausführen mit Freigabe",
-        "hint": "Darf jede von seinen Tools erlaubte Aktion vorschlagen; jede Änderung wartet auf Freigabe."
+        "hint": "Darf jede Aktion vorschlagen, die seine Werkzeuge erlauben; jede Änderung und jede Delegation wartet auf die Freigabe einer Person."
       },
       "AUTONOMOUS_LOW_RISK": {
         "name": "Autonom (geringes Risiko)",
-        "hint": "Arbeitet durchgehend ohne Rückfragen; Datenänderungen laufen weiterhin über Freigaben."
+        "hint": "Arbeitet durchgehend selbstständig und delegiert direkt an seine Mitarbeitenden (innerhalb der Grenzen); Datenänderungen laufen weiterhin über Freigaben."
       }
     },
     "form": {
@@ -2317,7 +2565,33 @@
       "founder": "Gründer",
       "founderRole": "Gründer · Spitze des Organigramms",
       "open": "Organigramm",
-      "hint": "Wer wem berichtet, ändern Sie im Profil des jeweiligen KI-Mitarbeiters. Manager delegieren an ihre Berichtenden; Eskalationen laufen dieses Organigramm hinauf."
+      "hint": "Wer wem berichtet, ändern Sie im Profil des jeweiligen KI-Mitarbeiters. Manager delegieren an ihre Berichtenden; Eskalationen laufen dieses Organigramm hinauf.",
+      "strip": {
+        "what": "Wer in deinem KI-Unternehmen an wen berichtet: du ganz oben, der KI-CEO, Abteilungsleiter und ihre Spezialisten.",
+        "why": "Manager geben Arbeit an ihre Mitarbeitenden weiter und Ergebnisse fließen zu ihnen zurück; Probleme steigen im Organigramm auf, bis jemand entscheiden kann.",
+        "can": "Fahre über einen Mitarbeitenden, um seine ganze Kette zu sehen, filtere nach Abteilung und öffne jeden, um Rolle, Ziele oder Budget zu ändern.",
+        "next": "Öffne einen KI-Mitarbeitenden ohne Manager und weise einen zu, oder prüfe offene Eskalationen."
+      },
+      "summary": {
+        "team": "KI-Team",
+        "levels": "{executives} Führungskraft · {managers} Manager · {specialists} Spezialisten",
+        "success": "Erfolgsquote · letzte {days} Tage",
+        "finished": "{completed} abgeschlossen · {failed} fehlgeschlagen",
+        "cost": "Geschätzte KI-Kosten · letzte {days} Tage",
+        "escalations": "Offene Eskalationen"
+      },
+      "node": {
+        "working": "Arbeitet an",
+        "idle": "Frei",
+        "success": "Erfolgsquote",
+        "noTasks": "Noch keine abgeschlossenen Aufgaben",
+        "budget": "Geschätzte Kosten der letzten 30 Tage; der Balken zeigt die Budgetnutzung dieses Monats",
+        "overBudget": "Budget aufgebraucht",
+        "escalations": "Offene Eskalationen",
+        "allDepartments": "Alle Abteilungen",
+        "filter": "Nach Abteilung filtern",
+        "queued": "Aufgaben in der Warteschlange"
+      }
     },
     "history": {
       "title": "Leistungsverlauf",
@@ -2331,7 +2605,8 @@
       "empty": "Noch keine Berichte oder Eskalationen.",
       "kinds": {
         "STATUS": "Statusbericht",
-        "ESCALATION": "Eskalation"
+        "ESCALATION": "Eskalation",
+        "ROLLUP": "Zusammenfassung"
       },
       "to": "an {name}",
       "from": "von {name}",
@@ -2450,6 +2725,119 @@
       "title": "Genutzte Fähigkeiten",
       "hint": "Wie oft jedes Werkzeug in den letzten abgeschlossenen Aufgaben genutzt wurde.",
       "empty": "Noch keine Werkzeugnutzung – sie erscheint nach den ersten abgeschlossenen Aufgaben."
+    },
+    "autonomyModes": {
+      "suggest": "Nur Vorschläge",
+      "supervised": "Beaufsichtigt",
+      "autonomous": "Autonom"
+    },
+    "escalations": {
+      "title": "Eskalationen & Zusammenfassungen",
+      "subtitle": "Was dein KI-Team von dir braucht: Blockaden, die im Organigramm aufgestiegen sind, Delegationen zur Freigabe und Teamergebnisse.",
+      "ladder": {
+        "employee": "KI-Mitarbeitende",
+        "aria": "Eskalationsweg"
+      },
+      "resolved": "Gelöst",
+      "strip": {
+        "what": "Ist ein KI-Mitarbeitender blockiert oder schlägt eine Aufgabe fehl, eskaliert er an seinen KI-Manager; löst dieser es nicht, landet es bei dir.",
+        "why": "Nichts wird versteckt: Jeder Fehler wird gemeldet, und was ein KI-Manager {hours} Stunden lang ungelöst lässt, erreicht den Gründer.",
+        "can": "Eskalationen lösen, von beaufsichtigten Managern vorgeschlagene Delegationen freigeben oder ablehnen und ihre Teamergebnisse lesen.",
+        "nextProposals": "{count, plural, one {# Delegation wartet} other {# Delegationen warten}} auf deine Entscheidung.",
+        "nextFounder": "{count, plural, one {# Eskalation hat} other {# Eskalationen haben}} dich erreicht – lösen oder neu zuweisen.",
+        "nextNone": "Gerade braucht dich niemand."
+      },
+      "openTitle": "Offene Eskalationen ({count})",
+      "openHint": "Jede zeigt, wo sie auf der Leiter steht: der KI-Mitarbeitende, sein KI-Manager, dann du.",
+      "noneOpen": "Keine offenen Eskalationen. Dein KI-Team ist nicht blockiert.",
+      "founderNotified": "Gründer benachrichtigt {when}",
+      "resolve": "Als gelöst markieren",
+      "recentlyResolved": "Kürzlich gelöst"
+    },
+    "delegations": {
+      "title": "Delegationen zur Freigabe ({count})",
+      "hint": "Beaufsichtigte KI-Manager schlagen Teilaufgaben für ihre Mitarbeitenden vor. Nichts startet ohne deine Freigabe; die Arbeit läuft dann mit deinen Berechtigungen.",
+      "empty": "Keine wartenden Delegationen.",
+      "instructions": "Anweisungen",
+      "parentTask": "Vorschlagende Aufgabe",
+      "approve": "Freigeben & starten",
+      "reject": "Ablehnen",
+      "recent": "Letzte Entscheidungen",
+      "status": {
+        "PROPOSED": "Wartet",
+        "CREATED": "Gestartet",
+        "REJECTED": "Abgelehnt",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "childTask": "Teilaufgabe",
+      "modeNone": "Nur Vorschläge: gibt nie Arbeit an andere weiter.",
+      "modePropose": "Delegation: schlägt Teilaufgaben für seine Mitarbeitenden vor; jede wird vor dem Start von einer Person freigegeben.",
+      "modeDirect": "Delegation: startet Teilaufgaben für seine Mitarbeitenden direkt, innerhalb der Grenzen für Tiefe, Anzahl und Budget.",
+      "employeeTitle": "Delegationen",
+      "employeeHint": "Arbeit, die dieser KI-Mitarbeitende vergeben oder erhalten hat."
+    },
+    "rollups": {
+      "title": "Teamergebnisse",
+      "hint": "Abgeschlossene delegierte Arbeit fließt automatisch an den Manager zurück; ist ein ganzer Block fertig, geht eine Zusammenfassung eine Ebene höher (ganz oben an dich).",
+      "empty": "Noch keine Zusammenfassungen. Sie erscheinen, wenn delegierte Aufgaben fertig sind.",
+      "read": "Ergebnisse lesen"
+    },
+    "performance": {
+      "title": "Leistung & Budgets",
+      "subtitle": "Wie jeder KI-Mitarbeitende und jede Abteilung abschneidet – aus echten Aufgabendaten – und wie viel KI-Budget sie ausgeben dürfen.",
+      "strip": {
+        "what": "Erfolgsquote, Durchlaufzeit, Laufzeit und Kosten deines KI-Teams, gemessen an den tatsächlich ausgeführten Aufgaben.",
+        "why": "Sieh, wer liefert, was es kostet, und stoppe Ausgaben, bevor sie dich überraschen.",
+        "can": "Mitarbeitende und Abteilungen vergleichen und Monatsbudgets pro Abteilung festlegen (pro Mitarbeitendem im Profil).",
+        "nextReview": "Prüfe alle mit niedriger Erfolgsquote oder einem Budget nahe am Limit.",
+        "nextBudget": "Lege ein Monatsbudget für deine aktivste Abteilung fest."
+      },
+      "window": "Zeitraum",
+      "days": "{days} Tage",
+      "successRate": "Erfolgsquote",
+      "turnaround": "Durchlaufzeit",
+      "turnaroundHint": "Median von der Zuweisung bis zum Ergebnis",
+      "runTime": "Durchschnittliche Laufzeit",
+      "cost": "Geschätzte Kosten",
+      "perTask": "{cost} pro abgeschlossener Aufgabe",
+      "costPerTask": "Kosten pro Aufgabe",
+      "delegated": "Delegierte Teilaufgaben",
+      "escalations": "Eskalationen",
+      "openNow": "{count} jetzt offen",
+      "departments": "Abteilungen",
+      "employeesCount": "{count, plural, one {# KI-Mitarbeitender} other {# KI-Mitarbeitende}}",
+      "successShort": "Erfolg",
+      "turnaroundShort": "Durchlauf",
+      "costShort": "Kosten {days} Tage",
+      "employees": "KI-Mitarbeitende",
+      "employeesHint": "Letzte {days} Tage, produktivste zuerst.",
+      "finishedCount": "{count} beendet · {failed} fehlgeschlagen",
+      "runTimeShort": "Laufzeit {time}",
+      "footnote": "Kosten sind Schätzungen aus Tokenzahlen und Listenpreisen in US-Dollar; fehlgeschlagene Läufe zählen mit. Budgets werden jeden Kalendermonat (UTC) zurückgesetzt."
+    },
+    "budgets": {
+      "costBudget": "Monatliches Kostenbudget (USD)",
+      "costBudgetHint": "Geschätzte Ausgaben pro Kalendermonat. Ist es aufgebraucht, werden Aufgaben abgelehnt, und eine laufende Aufgabe stoppt beim Erreichen. Leer lassen für kein Limit.",
+      "usdPerMonth": "USD pro Monat",
+      "tokensPerMonth": "Tokens pro Monat",
+      "save": "Budget speichern",
+      "remove": "Limit entfernen",
+      "saved": "Gespeichert",
+      "hint": "Ein Abteilungsbudget gilt für alle KI-Mitarbeitenden zusammen, zusätzlich zum eigenen Budget jedes Mitarbeitenden und den Plattformlimits.",
+      "exhausted": "Budget aufgebraucht",
+      "limited": "Budget festgelegt",
+      "unlimited": "Kein Limit",
+      "thisMonth": "Dieser Monat",
+      "spentNoLimit": "{cost} · {tokens} Tokens, kein Limit",
+      "costOf": "{used} von {budget}",
+      "tokensOf": "{used} von {budget} Tokens",
+      "edit": "Budget ändern",
+      "set": "Budget festlegen",
+      "employeeExhausted": "Eigenes Budget aufgebraucht",
+      "departmentExhausted": "Abteilungsbudget aufgebraucht",
+      "departmentExhaustedNotice": "Die Abteilung {department} hat das KI-Budget dieses Monats aufgebraucht; neue Aufgaben werden abgelehnt, bis es erhöht wird oder der Monat endet.",
+      "departmentLine": "Abteilung {department}",
+      "runCap": "Die nächste Aufgabe darf höchstens etwa {tokens} Tokens verbrauchen, bevor ein Budget erreicht ist."
     }
   },
   "profiles": {
@@ -15239,6 +15627,818 @@
       "empty": "Ihre Bibliothek ist leer – erzeugen Sie das erste Artwork.",
       "use": "Verwenden",
       "generateNew": "Neu erzeugen"
+    }
+  },
+  "cockpit": {
+    "back": "Zurück",
+    "draft": {
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert – du kannst später weitermachen",
+      "error": "Speichern fehlgeschlagen – deine Antworten bleiben auf dieser Seite",
+      "resumed": "Wir haben deine Antworten vom letzten Mal aufbewahrt.",
+      "startOver": "Neu beginnen"
+    }
+  },
+  "missionControl": {
+    "eyebrow": "Einsatzzentrale",
+    "intro": {
+      "what": "Alle Aufgaben deiner KI-Mitarbeitenden – laufend, wartend oder erledigt – live.",
+      "why": "Du siehst, woran die KI arbeitet, was sie gefunden hat, was es kostet und was deine Zustimmung braucht.",
+      "can": "Gib einer KI-Mitarbeiterin eine Aufgabe, verfolge sie Schritt für Schritt, wiederhole oder stoppe sie und prüfe das Ergebnis.",
+      "next": "KI-Mitarbeitenden eine Aufgabe geben",
+      "nextHire": "Erste KI-Mitarbeitende einstellen"
+    },
+    "stats": {
+      "working": "Arbeitet gerade",
+      "workingHint": "{queued} in der Warteschlange",
+      "doneToday": "Heute erledigt",
+      "total": "{count, plural, one {# Aufgabe bisher} other {# Aufgaben bisher}}",
+      "failedToday": "Heute gestoppt",
+      "failedHint": "Öffnen, um den Grund zu sehen und neu zu starten",
+      "tokensToday": "KI-Nutzung heute",
+      "weekCost": "Geschätzte KI-Kosten der letzten 7 Tage: {cost}"
+    },
+    "composer": {
+      "title": "KI-Mitarbeitenden eine Aufgabe geben",
+      "subtitle": "Drei kurze Schritte. Alles Riskante, was die KI tun will, wartet auf deine Freigabe.",
+      "steps": {
+        "who": "Wer",
+        "what": "Was",
+        "send": "Prüfen & senden"
+      },
+      "whoQ": "Wer soll diese Aufgabe erledigen?",
+      "whoHint": "Wähle eine deiner KI-Mitarbeitenden. Sie arbeiten mit den Daten deines Unternehmens und nur innerhalb ihrer Rolle.",
+      "department": "Abteilung",
+      "noEmployees": "Du hast noch keine KI-Mitarbeitenden eingestellt – du kannst unten trotzdem eine Rolle wählen, oder",
+      "orRole": "Oder eine Rolle ohne Einstellung nutzen",
+      "orRoleHint": "Eine Rolle ist ein KI-Fähigkeitsprofil (z. B. „KI-CFO“). Eingestellte Mitarbeitende kennen dein Unternehmen besser.",
+      "pickRole": "Rolle wählen…",
+      "whatQ": "Was soll {name} tun?",
+      "whatHint": "Starte mit einer Idee oder schreibe selbst. Briefe so, wie du eine neue Kollegin briefen würdest.",
+      "ideas": "Ideen für {department}",
+      "jobTitle": "Aufgabe in einer Zeile",
+      "jobTitleHint": "Beispiel: „Finde 10 neue Interessenten in Deutschland“",
+      "brief": "Das Briefing",
+      "briefHint": "Was du willst, warum, und wie ein gutes Ergebnis aussieht. Nenne Grenzen (Budget, Ton, Frist).",
+      "sendQ": "Bereit zum Senden?",
+      "safety": "Die KI liest nur, was du lesen darfst. E-Mails senden, Datensätze anlegen oder Geld ausgeben erscheint zuerst unter Freigaben.",
+      "advanced": "Erweitert",
+      "send": "Aufgabe senden"
+    },
+    "departments": {
+      "executive": "Geschäftsführung",
+      "sales": "Vertrieb",
+      "marketing": "Marketing",
+      "finance": "Finanzen",
+      "hr": "Personal",
+      "support": "Support",
+      "operations": "Betrieb",
+      "research": "Recherche",
+      "engineering": "Technik",
+      "product": "Produkt",
+      "general": "Allgemein"
+    },
+    "templates": {
+      "weekly_brief": {
+        "title": "Mein wöchentliches Firmen-Briefing schreiben",
+        "body": "Sieh dir unsere Ziele, Kennzahlen und letzten Aktivitäten an. Schreibe ein einseitiges Briefing: was gut lief, was gefährdet ist und die 3 Entscheidungen, die ich diese Woche treffen sollte."
+      },
+      "priorities": {
+        "title": "Die wichtigsten Prioritäten des Monats vorschlagen",
+        "body": "Schlage auf Basis unserer Ziele und aktuellen Zahlen die 3 wichtigsten Prioritäten für diesen Monat vor – warum jede zählt und den ersten Schritt dafür."
+      },
+      "prospects": {
+        "title": "10 neue Interessenten finden",
+        "body": "Beschreibe unseren idealen Kunden in drei Zeilen anhand unserer Kunden und Pipeline. Schlage dann 10 passende Interessenten als neue Leads vor, jeweils mit einer Zeile, warum sie passen. Das Anlegen der Leads wartet auf meine Freigabe."
+      },
+      "pipeline_review": {
+        "title": "Meine Vertriebspipeline prüfen",
+        "body": "Geh die offenen Deals durch. Sag mir, welche wahrscheinlich abschließen, welche feststecken und warum, und den nächsten Schritt für jeden festgefahrenen Deal."
+      },
+      "campaign_idea": {
+        "title": "Eine Marketingkampagne planen",
+        "body": "Schlage eine Kampagne für nächsten Monat vor: Ziel, Zielgruppe, Kanäle, Budgetrahmen und 3 Botschaftsideen. Lege sie als Kampagnenentwurf zur Freigabe an."
+      },
+      "content_plan": {
+        "title": "4 Wochen Inhalte planen",
+        "body": "Schlage einen 4-Wochen-Inhaltsplan vor (ein Beitrag oder Artikel pro Woche), passend zu Zielgruppe und Zielen, jeweils mit Titel und zweizeiliger Zusammenfassung."
+      },
+      "cash_check": {
+        "title": "Liquidität und Reichweite prüfen",
+        "body": "Fasse unseren Kassenstand, Zu- und Abflüsse zusammen und wie viele Monate Reichweite wir haben. Weise in einfachen Worten auf Ungewöhnliches hin."
+      },
+      "overdue_invoices": {
+        "title": "Überfällige Rechnungen nachverfolgen",
+        "body": "Liste überfällige Rechnungen nach Kunde und Betrag auf und entwirf eine kurze, freundliche Erinnerung für die wichtigsten."
+      },
+      "job_post": {
+        "title": "Eine Stellenanzeige schreiben",
+        "body": "Schreibe eine klare, einladende Stellenanzeige für die unten beschriebene Rolle mit Aufgaben, Anforderungen und unserem Angebot. Lege sie als Entwurf zur Freigabe an. Rolle:"
+      },
+      "team_health": {
+        "title": "Wie geht es meinem Team?",
+        "body": "Fasse Mitarbeiterzahl, Abwesenheiten, offene Stellen und alles zusammen, was im Team Aufmerksamkeit braucht – mit 3 Vorschlägen."
+      },
+      "queue_triage": {
+        "title": "Meine Support-Warteschlange sortieren",
+        "body": "Geh die offenen Support-Tickets durch. Gruppiere sie nach Thema und Dringlichkeit und entwirf Antworten auf die 3 dringendsten (nur Entwürfe, zur Prüfung)."
+      },
+      "faq_gaps": {
+        "title": "Fehlende Hilfeartikel finden",
+        "body": "Sieh dir aktuelle Kundenfragen und unsere Wissensdatenbank an. Liste die 5 häufigsten Fragen auf, zu denen es noch keinen Hilfeartikel gibt."
+      },
+      "process_draft": {
+        "title": "Eine unserer Routinen aufschreiben",
+        "body": "Schreibe einen einfachen Schritt-für-Schritt-Prozess (5–10 Schritte) für die unten beschriebene Routine, damit jede Person im Team ihm folgen kann. Routine:"
+      },
+      "project_status": {
+        "title": "Stand unserer Projekte",
+        "body": "Fasse jedes aktive Projekt zusammen: Fortschritt, Risiken und Verzug. Schlage pro verspätetem Projekt eine Maßnahme vor."
+      },
+      "competitors": {
+        "title": "Unsere Wettbewerber recherchieren",
+        "body": "Beschreibe anhand unseres Wissens über Markt und Unternehmen unsere 5 wichtigsten Wettbewerber, wie wir im Vergleich dastehen und wo wir gewinnen können."
+      },
+      "kpi_review": {
+        "title": "Unsere Kennzahlen erklären",
+        "body": "Erkläre unsere wichtigsten Zahlen dieses Monats in einfachen Worten: was sich geändert hat, warum, und worauf wir achten sollten."
+      },
+      "research_topic": {
+        "title": "Eine Frage recherchieren",
+        "body": "Recherchiere die unten stehende Frage in unseren Firmendokumenten und unserem Wissen und gib mir eine kurze Antwort mit Quellen. Frage:"
+      },
+      "summarize_docs": {
+        "title": "Unsere Dokumente zu einem Thema zusammenfassen",
+        "body": "Finde, was unsere Dokumente zum unten genannten Thema sagen, und fasse es in 5 Stichpunkten mit Quellen zusammen. Thema:"
+      }
+    },
+    "help": {
+      "title": "Unsicher, was du fragen sollst?",
+      "hint": "Lass deinen KI-CEO die nützlichsten Aufgaben für dein KI-Team diese Woche vorschlagen."
+    },
+    "view": {
+      "label": "Ansicht",
+      "lanes": "Board",
+      "list": "Liste"
+    },
+    "moreFilters": "Suche & weitere Filter",
+    "columns": {
+      "tokens": "KI-Nutzung"
+    },
+    "empty": {
+      "title": "Noch keine KI-Aufgaben",
+      "body": "Gib einer KI-Mitarbeiterin die erste Aufgabe – eine Recherchefrage, ein Wochenbriefing oder eine Interessentenliste. Du siehst, wie sie über das Board wandert.",
+      "schedule": "Oder wiederkehrende KI-Arbeit einrichten"
+    },
+    "lanes": {
+      "label": "KI-Aufgaben nach Status",
+      "caption": "{count, plural, one {# Aufgabe auf dem Board} other {# Aufgaben auf dem Board}} – live aktualisiert",
+      "queued": "Wartet",
+      "queuedHint": "In der Schlange für eine KI-Instanz",
+      "queuedEmpty": "Nichts wartet",
+      "running": "In Arbeit",
+      "runningHint": "Die KI arbeitet gerade daran",
+      "runningEmpty": "Gerade arbeitet niemand",
+      "done": "Erledigt",
+      "doneHint": "Bereit zur Prüfung",
+      "doneEmpty": "Noch nichts erledigt",
+      "failed": "Gestoppt",
+      "failedHint": "Fehlgeschlagen oder abgebrochen – öffnen zum Wiederholen",
+      "failedEmpty": "Nichts gestoppt",
+      "more": "+{count} weitere",
+      "older": "Ältere Aufgaben anzeigen"
+    },
+    "timeline": {
+      "title": "Was die KI getan hat",
+      "hint": "Jeder Schritt der Reihe nach, aus dem echten Protokoll der Aufgabe.",
+      "created": "Aufgabe vergeben von {who}",
+      "byTask": "einer anderen KI-Aufgabe („{title}“)",
+      "started": "Eine KI-Instanz hat sie übernommen",
+      "toolFailed": "Dieser Schritt ist fehlgeschlagen: {error}",
+      "askedApproval": "Hat vorher um deine Freigabe gebeten",
+      "results": "{count, plural, =0 {nichts gefunden} one {# Ergebnis} other {# Ergebnisse}}",
+      "working": "Arbeitet noch…",
+      "waiting": "Wartet auf eine KI-Instanz",
+      "done": "Fertig",
+      "failed": "Mit Fehler gestoppt",
+      "cancelled": "Abgebrochen"
+    },
+    "detail": {
+      "profileLink": "Profil öffnen",
+      "waitingApproval": "{count, plural, one {# Aktion wartet} other {# Aktionen warten}} auf deine Freigabe.",
+      "reviewNow": "Jetzt prüfen",
+      "steps": "Schritte",
+      "stepsHint": "Abfragen und Aktionen",
+      "tokens": "KI-Nutzung",
+      "tokensHint": "{input} gelesen · {output} geschrieben",
+      "cost": "Geschätzte Kosten",
+      "duration": "Dauer",
+      "seconds": "{s} s",
+      "minutes": "{m} min {s} s",
+      "hours": "{h} h {m} min",
+      "sourcesHint": "Dokumente, die die KI zitiert hat – klicken zum Prüfen.",
+      "networkHint": "Aufgaben, die von einer KI-Mitarbeiterin an eine andere übergeben wurden.",
+      "networkLabel": "Delegationskarte dieser Aufgabe",
+      "nextTitle": "Wie geht es weiter?",
+      "nextBody": "Zufrieden? Gib eine Folgeaufgabe oder mache daraus einen wiederkehrenden Plan.",
+      "followUp": "Folgeaufgabe geben",
+      "repeat": "Regelmäßig wiederholen"
+    }
+  },
+  "decisionInbox": {
+    "eyebrow": "Entscheidungs-Posteingang",
+    "subtitle": "Was deine KI-Mitarbeitenden tun möchten und vorher deine Zustimmung braucht.",
+    "intro": {
+      "whatPre": "Jede Karte ist eine",
+      "approvalWord": "Freigabeanfrage",
+      "whatPost": ": genau das, was eine KI-Mitarbeiterin tun will – angezeigt, bevor es passiert.",
+      "approvalExplain": "Deine KI-Mitarbeitenden dürfen selbstständig lesen, aber alles, was Daten ändert, Menschen kontaktiert oder Geld ausgibt, pausiert hier, bis ein Mensch zustimmt.",
+      "whatsThis": "Was ist das?",
+      "why": "Nichts Riskantes passiert ohne dich. Eine Freigabe führt die Aktion sofort in deinem Namen aus.",
+      "can": "Vorschau lesen, freigeben oder ablehnen (mit Notiz), alle risikoarmen Anfragen auf einmal freigeben und frühere Entscheidungen ansehen.",
+      "next": "{count, plural, one {# Anfrage prüfen} other {# Anfragen prüfen}}",
+      "nextEmpty": "KI-Mitarbeitenden eine Aufgabe geben"
+    },
+    "stats": {
+      "waiting": "Warten auf dich",
+      "careful": "Brauchen besondere Sorgfalt",
+      "carefulHint": "Hohes oder kritisches Risiko",
+      "expiring": "Laufen in 24 h ab",
+      "expiringHint": "Abgelaufene Anfragen verfallen",
+      "doneWeek": "Diese Woche erledigt"
+    },
+    "pendingHint": "Die zuerst ablaufenden zuerst.",
+    "askedBy": "Angefragt von {who}",
+    "fromTask": "für „{title}“",
+    "aLead": "einen Lead",
+    "to": "An",
+    "subject": "Betreff",
+    "total": "Gesamt",
+    "approve": "Freigeben",
+    "reject": "Ablehnen",
+    "running": "Wird ausgeführt…",
+    "addNote": "Notiz hinzufügen",
+    "note": "Notiz",
+    "notePlaceholder": "Optional – warum du freigibst oder ablehnst (bleibt im Verlauf)",
+    "mfaHint": "Hierfür ist eine aktuelle Zwei-Faktor-Bestätigung nötig.",
+    "cannotDecide": "Du kannst diese Anfrage sehen, aber jemand mit Freigaberechten muss entscheiden.",
+    "founderOnly": "Nur eine Organisationsinhaberin kann das freigeben.",
+    "expired": "Abgelaufen",
+    "expiresIn": "Läuft ab in {left}",
+    "leftDays": "{d} T {h} h",
+    "leftHours": "{h} h {m} min",
+    "leftMinutes": "{m} min",
+    "expiredNote": "Niemand hat rechtzeitig entschieden, daher ist nichts passiert.",
+    "decidedBy": "Entschieden von {who} · {when}",
+    "someone": "jemandem",
+    "showMore": "Mehr anzeigen",
+    "riskExplain": {
+      "LOW": "Geringes Risiko: eine kleine, leicht rückgängig zu machende Änderung in Realy.si. Niemand außerhalb des Unternehmens sieht sie.",
+      "MEDIUM": "Mittleres Risiko: ändert die Daten deines Unternehmens. Prüfe die Details – du kannst es später bearbeiten oder rückgängig machen.",
+      "HIGH": "Hohes Risiko: erreicht Menschen außerhalb des Unternehmens oder kostet Geld und lässt sich danach nicht zurücknehmen.",
+      "CRITICAL": "Kritisch: eine große Aktion mit dauerhaften Folgen. Lies jedes Detail vor der Freigabe."
+    },
+    "outcome": {
+      "PENDING": "Wartet",
+      "APPROVED": "Freigegeben",
+      "EXECUTED": "Erledigt",
+      "REJECTED": "Abgelehnt",
+      "EXPIRED": "Abgelaufen",
+      "FAILED": "Fehlgeschlagen"
+    },
+    "bulk": {
+      "label": "Alle risikoarmen freigeben ({count})",
+      "confirm": "{count, plural, one {# risikoarme Anfrage} other {# risikoarme Anfragen}} freigeben? Jede wird sofort ausgeführt.",
+      "note": "Gesammelt freigegeben (geringes Risiko)",
+      "progress": "{done} von {total} erledigt",
+      "failed": "{count, plural, one {# konnte nicht ausgeführt werden} other {# konnten nicht ausgeführt werden}}"
+    },
+    "empty": {
+      "title": "Nichts wartet auf deine Entscheidung",
+      "body": "Wenn eine KI-Mitarbeiterin eine E-Mail senden, einen Datensatz anlegen oder Geld ausgeben will, erscheint das hier zuerst mit klarer Vorschau.",
+      "autonomy": "Sehen, was dein KI-Team allein darf"
+    },
+    "help": {
+      "title": "Eine zweite Meinung?",
+      "hint": "Dein KI-CEO prüft die wartenden Anfragen und empfiehlt in einfachen Worten Freigabe oder Ablehnung. Entscheiden musst du.",
+      "label": "Hilf mir entscheiden"
+    },
+    "actions": {
+      "send_lead_email": "Diese E-Mail an {to} senden",
+      "send_email_reply": "Diese Antwort in einem E-Mail-Verlauf senden",
+      "send_ticket_reply": "Diese Antwort an einen Kunden senden",
+      "draft_ticket_reply": "Diesen Antwortentwurf an einem Support-Ticket speichern",
+      "send_influencer_outreach": "Einer Influencerin eine Zusammenarbeit per E-Mail vorschlagen",
+      "create_lead": "{name} als neuen Lead hinzufügen",
+      "create_follow_up": "Eine Nachfass-Erinnerung fällig am {date} hinzufügen",
+      "create_work_task": "Die Aufgabe „{title}“ anlegen",
+      "create_project": "Das Projekt „{name}“ anlegen",
+      "create_milestone": "Den Meilenstein „{title}“ hinzufügen",
+      "assign_task": "Eine Aufgabe einer Person zuweisen",
+      "unassign_task": "Die zuständige Person von einer Aufgabe entfernen",
+      "update_task_status": "Den Status einer Aufgabe ändern",
+      "deal_won": "Einen Deal als gewonnen markieren",
+      "deal_lost": "Einen Deal als verloren markieren",
+      "deal_stage": "Einen Deal in eine andere Phase verschieben",
+      "create_invoice_draft": "Einen Rechnungsentwurf für {customer} über {total} erstellen",
+      "record_expense": "Eine Ausgabe von {amount} erfassen",
+      "set_ad_budget": "Bis zu {amount} pro Tag für eine Werbekampagne ausgeben",
+      "launch_ad_campaign": "Diese Werbekampagne bei der Werbeplattform anlegen (startet pausiert)",
+      "set_ad_campaign_status": "Eine Werbekampagne ein- oder ausschalten",
+      "create_campaign": "Den Kampagnenentwurf „{name}“ anlegen",
+      "schedule_social_post": "Diesen Beitrag auf {count, plural, one {# Social-Media-Konto} other {# Social-Media-Konten}} am {when} veröffentlichen",
+      "reply_to_comment": "Öffentlich auf einen Kommentar antworten",
+      "create_content_draft": "Den Entwurf „{title}“ zur Inhaltsbibliothek hinzufügen",
+      "create_job_posting": "Einen Stellenanzeigen-Entwurf „{title}“ anlegen",
+      "score_candidate": "Eine Bewerbung bewerten",
+      "remember_company_fact": "Diese Information über dein Unternehmen merken"
+    },
+    "fields": {
+      "email": "E-Mail",
+      "account": "Unternehmen",
+      "source": "Quelle",
+      "notes": "Notizen",
+      "note": "Notiz",
+      "priority": "Priorität",
+      "dueDate": "Fällig",
+      "startDate": "Beginn",
+      "endDate": "Ende",
+      "description": "Beschreibung",
+      "quantity": "Menge",
+      "unitPrice": "Einzelpreis",
+      "customerEmail": "Kunden-E-Mail",
+      "issueDate": "Rechnungsdatum",
+      "date": "Datum",
+      "vendorName": "Lieferant",
+      "categoryName": "Kategorie",
+      "accountName": "Konto",
+      "reference": "Referenz",
+      "objective": "Ziel",
+      "channels": "Kanäle",
+      "targetLeads": "Ziel-Leads",
+      "location": "Ort",
+      "employmentType": "Anstellungsart",
+      "remote": "Remote",
+      "status": "Status",
+      "lostReason": "Verlustgrund",
+      "estimatePoints": "Schätzung",
+      "costCenterName": "Kostenstelle"
+    }
+  },
+  "timeline": {
+    "eyebrow": "Firmen-Zeitleiste",
+    "intro": {
+      "what": "Ein Tagebuch von allem, was in deinem Unternehmen passiert ist – durch Menschen, KI-Mitarbeitende und verbundene Apps.",
+      "why": "Du weißt immer, wer was wann getan hat, und springst direkt zum Datensatz.",
+      "can": "Nach Bereich und Zeit filtern, jeden Datensatz öffnen und die KI um eine Zusammenfassung des Tages bitten.",
+      "next": "Sehen, was heute passiert ist"
+    },
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "when": "Wann",
+    "anyTime": "Jederzeit",
+    "ranges": {
+      "today": "Heute",
+      "week": "Letzte 7 Tage",
+      "month": "Letzte 30 Tage"
+    },
+    "allAreas": "Alle Bereiche",
+    "advanced": "Weitere Filter",
+    "bars": {
+      "title": "Aktivität der letzten 14 Tage",
+      "hint": "{count, plural, one {# Aktion} other {# Aktionen}} erfasst"
+    },
+    "digest": {
+      "title": "Was ist heute passiert?",
+      "hint": "{count, plural, =0 {Heute noch nichts erfasst.} one {# Eintrag heute – die KI macht daraus eine kurze Zusammenfassung.} other {# Einträge heute – die KI macht daraus eine kurze Zusammenfassung.}}",
+      "button": "Heute zusammenfassen"
+    },
+    "empty": {
+      "title": "Noch ist nichts passiert",
+      "body": "Sobald du oder deine KI-Mitarbeitenden Leads anlegen, Rechnungen senden oder Aufgaben erledigen, erscheint es hier als Zeitleiste."
+    },
+    "modules": {
+      "crm": "Vertrieb & CRM",
+      "finance": "Finanzen",
+      "hr": "Personal",
+      "marketing": "Marketing",
+      "support": "Support",
+      "work": "Projekte & Betrieb",
+      "agent": "KI-Arbeit",
+      "approval": "Freigaben",
+      "workflow": "Automatisierungen",
+      "brain": "Firmenwissen",
+      "company": "Unternehmen"
+    },
+    "events": {
+      "lead_created": "hat einen Lead angelegt",
+      "lead_updated": "hat einen Lead aktualisiert",
+      "lead_assigned": "hat einen Lead zugewiesen",
+      "deal_created": "hat einen Deal angelegt",
+      "deal_stage_changed": "hat einen Deal in eine neue Phase verschoben",
+      "deal_won": "hat einen Deal gewonnen",
+      "deal_lost": "hat einen Deal verloren",
+      "customer_created": "hat einen Kunden angelegt",
+      "contact_created": "hat einen Kontakt angelegt",
+      "invoice_created": "hat eine Rechnung erstellt",
+      "invoice_sent": "hat eine Rechnung gesendet",
+      "invoice_paid": "hat eine bezahlte Rechnung erhalten",
+      "invoice_overdue": "hat eine überfällige Rechnung",
+      "expense_created": "hat eine Ausgabe erfasst",
+      "payment_received": "hat eine Zahlung erhalten",
+      "task_created": "hat eine Aufgabe angelegt",
+      "task_completed": "hat eine Aufgabe erledigt",
+      "project_created": "hat ein Projekt gestartet",
+      "employee_joined": "hat einen neuen Mitarbeitenden begrüßt",
+      "employee_left": "hat einen Austritt erfasst",
+      "candidate_applied": "hat eine Bewerbung erhalten",
+      "candidate_hired": "hat eine Person eingestellt",
+      "leave_requested": "hat Urlaub beantragt",
+      "form_submitted": "hat eine Formulareinsendung erhalten",
+      "campaign_launched": "hat eine Kampagne gestartet",
+      "content_published": "hat Inhalte veröffentlicht",
+      "ticket_created": "hat ein Support-Ticket eröffnet",
+      "ticket_updated": "hat ein Support-Ticket aktualisiert",
+      "ticket_resolved": "hat ein Support-Ticket gelöst",
+      "meeting_completed": "hat ein Meeting abgeschlossen",
+      "announcement_published": "hat eine Ankündigung veröffentlicht",
+      "webhook_received": "hat Daten von einer verbundenen App erhalten",
+      "schedule_tick": "hat eine geplante Prüfung ausgeführt",
+      "integration_synced": "hat eine verbundene App synchronisiert",
+      "agent_task_completed": "hat eine KI-Aufgabe abgeschlossen",
+      "agent_task_failed": "hatte eine fehlgeschlagene KI-Aufgabe",
+      "approval_requested": "hat um eine Freigabe gebeten",
+      "approval_resolved": "hat über eine Freigabe entschieden",
+      "objective_created": "hat ein neues Ziel gesetzt",
+      "member_joined": "ist dem Team beigetreten",
+      "company_created": "hat das Unternehmen angelegt"
+    }
+  },
+  "aiPlans": {
+    "eyebrow": "Wiederkehrende KI-Arbeit",
+    "intro": {
+      "what": "Der Wochenrhythmus deines KI-Teams: Aufgaben nach Zeitplan und Aufgaben, die starten, wenn etwas passiert.",
+      "why": "Wichtige Routinen – Briefings, Nachfassen, Prüfungen – passieren pünktlich, ohne dass du daran denken musst.",
+      "can": "Die Woche auf einen Blick sehen, einen Plan in einfachen Worten anlegen, Pläne pausieren, bearbeiten oder löschen und frühere Läufe prüfen.",
+      "next": "Plan hinzufügen"
+    },
+    "stats": {
+      "active": "Aktive Pläne",
+      "paused": "{count, plural, =0 {keiner pausiert} one {# pausiert} other {# pausiert}}",
+      "perWeek": "Läufe pro Woche",
+      "perWeekHint": "Aus geplanten Plänen",
+      "triggers": "Ereignis-Auslöser",
+      "triggersHint": "Starten, wenn etwas passiert",
+      "runs": "Letzte Läufe",
+      "runsHint": "Die letzten 30 siehst du unten"
+    },
+    "calendar": {
+      "title": "Diese Woche",
+      "hourly": "Stündlich um :{minute}",
+      "events": "Wenn etwas passiert",
+      "eventsEmpty": "Noch keine Ereignis-Auslöser. Beispiel: Wenn ein neuer Lead kommt, recherchiere ihn.",
+      "nothing": "Frei"
+    },
+    "empty": {
+      "title": "Noch keine wiederkehrende KI-Arbeit",
+      "body": "Pläne machen dein KI-Team proaktiv – z. B. ein Liquiditätscheck am Montag durch deinen KI-CFO oder eine Recherche zu jedem neuen Lead."
+    },
+    "composer": {
+      "title": "Plan hinzufügen",
+      "subtitle": "Sag uns wer, wann und was – wir lesen es dir vor dem Speichern als einen Satz vor.",
+      "steps": {
+        "who": "Wer",
+        "when": "Wann",
+        "what": "Was",
+        "check": "Prüfen"
+      },
+      "whoQ": "Welche KI-Mitarbeiterin soll es tun?",
+      "whenQ": "Wann soll es passieren?",
+      "when": {
+        "WEEKLY": "Einmal pro Woche",
+        "WEEKLYHint": "Gut für Reviews und Berichte (empfohlen)",
+        "DAILY": "Jeden Tag",
+        "DAILYHint": "Gut für Briefings und kurze Prüfungen",
+        "HOURLY": "Jede Stunde",
+        "HOURLYHint": "Nur für Dinge, die sich schnell ändern",
+        "EVENT": "Wenn etwas passiert",
+        "EVENTHint": "Zum Beispiel ein neuer Lead, eine bezahlte Rechnung oder ein neues Ticket"
+      },
+      "whatQ": "Was soll {name} jedes Mal tun?",
+      "whatHint": "Wähle eine Idee oder schreibe eigene Anweisungen.",
+      "advanced": "Erweitert",
+      "checkQ": "Klingt das richtig?",
+      "safety": "Jeder Lauf erzeugt eine normale KI-Aufgabe. Riskantes wartet weiterhin unter Freigaben.",
+      "save": "Plan speichern",
+      "created": "„{name}“ ist geplant. Du siehst ihn im Kalender."
+    },
+    "sentence": {
+      "daily": "Jeden Tag um {time}",
+      "weekly": "Jeden {day} um {time}",
+      "hourly": "Stündlich um :{minute}",
+      "event": "Immer wenn jemand {event}",
+      "full": "{when} erledigt {name} ({role}) „{job}“."
+    },
+    "help": {
+      "title": "Brauchst du Ideen?",
+      "hint": "Dein KI-CEO schlägt einen Wochenrhythmus vor, der zu deinen Zielen und deinem Team passt."
+    },
+    "ideas": {
+      "weekly_review": {
+        "name": "Wöchentlicher Firmenrückblick",
+        "body": "Prüfe Zahlen, Ziele und Aktivitäten der letzten Woche. Schreibe ein kurzes Briefing: Erfolge, Risiken und die 3 Entscheidungen für diese Woche."
+      },
+      "morning_brief": {
+        "name": "Morgen-Briefing",
+        "body": "Fasse in 5 Stichpunkten zusammen, was seit gestern passiert ist und was heute Aufmerksamkeit braucht."
+      },
+      "cash_monday": {
+        "name": "Liquiditätscheck am Montag",
+        "body": "Fasse Kassenstand, erwartete Einnahmen dieser Woche, anstehende Rechnungen und Reichweite zusammen. Markiere Ungewöhnliches."
+      },
+      "overdue_chase": {
+        "name": "Überfällige Rechnungen nachfassen",
+        "body": "Liste überfällige Rechnungen auf und entwirf freundliche Erinnerungen für die größten (zur Freigabe)."
+      },
+      "pipeline_monday": {
+        "name": "Pipeline-Review",
+        "body": "Prüfe offene Deals: was wahrscheinlich abschließt, was feststeckt, und den nächsten Schritt für jeden festgefahrenen Deal."
+      },
+      "new_lead_research": {
+        "name": "Neue Leads recherchieren",
+        "body": "Recherchiere die neuesten Leads: wer sie sind, ob sie zu unserem idealen Kunden passen, und eine vorgeschlagene erste Nachricht."
+      },
+      "content_week": {
+        "name": "Inhalte dieser Woche planen",
+        "body": "Schlage Beiträge und Artikel für diese Woche vor, die zu unseren Zielen passen, mit Titeln und kurzen Zusammenfassungen."
+      },
+      "campaign_check": {
+        "name": "Kampagnen-Check",
+        "body": "Prüfe laufende Kampagnen: bisherige Ergebnisse, was funktioniert, und je eine Verbesserung."
+      },
+      "people_pulse": {
+        "name": "Team-Puls",
+        "body": "Fasse zusammen, wer abwesend ist, wer neu ist, welche Stellen offen sind und was im Team Aufmerksamkeit braucht."
+      },
+      "support_digest": {
+        "name": "Support-Überblick",
+        "body": "Fasse neue und offene Tickets, wiederkehrende Probleme und am längsten wartende Kunden zusammen."
+      },
+      "ticket_triage": {
+        "name": "Ticket-Triage",
+        "body": "Sortiere offene Tickets nach Dringlichkeit und entwirf Antworten auf die dringendsten (nur Entwürfe)."
+      },
+      "ops_week": {
+        "name": "Wöchentlicher Betriebscheck",
+        "body": "Prüfe Projektfortschritt, überfällige Aufgaben und offene Risiken und schlage vor, was zuerst zu beheben ist."
+      },
+      "kpi_week": {
+        "name": "Wöchentliche Zahlen",
+        "body": "Erkläre, wie sich unsere Kennzahlen diese Woche bewegt haben und was dahinterstecken könnte."
+      }
+    }
+  },
+  "opsHub": {
+    "eyebrow": "Betriebszentrale",
+    "advanced": "Erweitert",
+    "recommended": "empfohlen",
+    "quickAdd": "Schnell hinzufügen (alle Felder)",
+    "whatsThis": "Was ist das?",
+    "stats": {
+      "checklists": "{count, plural, one {# Checkliste} other {# Checklisten}}",
+      "sev12": "{count, plural, =0 {keine schweren} one {# schwer} other {# schwer}}"
+    },
+    "intro": {
+      "overview": {
+        "what": "Wie dein Unternehmen im Alltag läuft: aufgeschriebene Routinen, wiederkehrende Prüfungen, Ausstattung und Störungen.",
+        "why": "Aufgeschriebene Routinen machen Arbeit wiederholbar – die Qualität hängt nicht davon ab, wer gerade da ist.",
+        "can": "Prozesse aufschreiben, Checklisten planen, Inventar erfassen und Störungen bearbeiten.",
+        "nextDone": "Checklisten dieser Woche prüfen"
+      },
+      "processes": {
+        "what": "Prozesse sind deine Schritt-für-Schritt-Routinen – „so machen wir das hier“.",
+        "why": "Alle können ihnen folgen, Neue lernen schneller, und jede Änderung wird als Version gespeichert.",
+        "can": "Einen Prozess aus einem fertigen Beispiel anlegen, Schritte bearbeiten und frühere Versionen ansehen."
+      },
+      "checklists": {
+        "what": "Checklisten sind kurze Listen von Dingen, die regelmäßig geprüft werden (täglich, wöchentlich, monatlich).",
+        "why": "Kleine regelmäßige Prüfungen verhindern große Probleme, und du siehst, dass sie wirklich erledigt wurden.",
+        "can": "Eine Checkliste aus einem Beispiel anlegen, zuweisen und bei jeder Fälligkeit abhaken."
+      },
+      "assets": {
+        "what": "Dein Inventar: Laptops, Telefone, Maschinen, Lizenzen – was dir gehört und wer es hat.",
+        "why": "Du weißt, was du hast, was es gekostet hat und was gewartet oder ersetzt werden muss.",
+        "can": "Inventar hinzufügen, Personen zuweisen, Status und Wert verfolgen und Altes archivieren."
+      },
+      "incidents": {
+        "what": "Störungen sind Dinge, die schiefgingen – ein Ausfall, ein Fehler, eine Beschwerde, die Kunden geschadet hat.",
+        "why": "Wer sie erfasst, gibt ihnen eine verantwortliche Person, behebt sie und verhindert Wiederholungen.",
+        "can": "Eine Störung erfassen, den Schweregrad festlegen, sie von offen bis gelöst verfolgen und Erkenntnisse festhalten."
+      },
+      "vendors": {
+        "what": "Deine Lieferanten und Dienstleister, zusammen mit deinen anderen Firmen im CRM.",
+        "why": "Ein Ort für alle, bei denen du einkaufst, mit Kontakten und Details.",
+        "can": "Lieferanten suchen und ihren vollständigen Datensatz öffnen.",
+        "next": "Lieferanten hinzufügen"
+      }
+    },
+    "journey": {
+      "title": "Hier starten: Betrieb einrichten",
+      "hint": "Vier Grundlagen. Jede hakt sich selbst ab, sobald sie existiert.",
+      "progress": "{done} von {total} erledigt",
+      "done": "Erledigt – öffnen zum Prüfen",
+      "steps": {
+        "process": {
+          "title": "Den ersten Prozess aufschreiben",
+          "hint": "Wähle eine Routine wie das Kunden-Onboarding – wir schlagen die Schritte vor."
+        },
+        "checklist": {
+          "title": "Die erste Checkliste planen",
+          "hint": "Eine wöchentliche Prüfung ist in zwei Minuten eingerichtet."
+        },
+        "assets": {
+          "title": "Deine Ausstattung erfassen",
+          "hint": "Fang mit Laptops und Telefonen an."
+        },
+        "incidents": {
+          "title": "Wissen, wie man eine Störung erfasst",
+          "hint": "Wenn etwas schiefgeht, erfasse es, damit es dauerhaft behoben wird."
+        }
+      }
+    },
+    "help": {
+      "title": "Lass die KI deine Routinen vorschlagen",
+      "hint": "Deine KI-Betriebsassistenz schlägt Prozesse und Checklisten für ein Unternehmen wie deines vor."
+    },
+    "incidents": {
+      "boardTitle": "Störungs-Board",
+      "boardHint": "Offene Störungen, die schlimmsten zuerst, und was in den letzten zwei Wochen gelöst wurde.",
+      "legend": "Schweregrade",
+      "noOwner": "Noch niemand zuständig",
+      "columnEmpty": "Nichts hier",
+      "severityWord": "Wie schwer ist jede Stufe?",
+      "severityExplain": "SEV1: Kunden können deinen Dienst gar nicht nutzen – alles stehen und liegen lassen. SEV2: Ein großer Teil ist kaputt. SEV3: Etwas ist lästig, aber es gibt einen Umweg. SEV4: Kleinigkeit, bei Gelegenheit beheben."
+    },
+    "severityExplain": {
+      "SEV1": "alles steht",
+      "SEV2": "große Auswirkung",
+      "SEV3": "Umweg vorhanden",
+      "SEV4": "gering"
+    },
+    "assets": {
+      "title": "Dein Inventar auf einen Blick",
+      "hint": "{count, plural, one {# Gegenstand} other {# Gegenstände}} in {categories, plural, one {# Kategorie} other {# Kategorien}}",
+      "byStatus": "Nach Status",
+      "byCategory": "Größte Kategorien",
+      "uncategorised": "Ohne Kategorie",
+      "assigned": "Jemandem zugewiesen",
+      "assignedHint": "Für alles sollte eine Person verantwortlich sein."
+    },
+    "empty": {
+      "processes": {
+        "title": "Noch keine Prozesse aufgeschrieben",
+        "body": "Fang mit einer Routine an, die dein Team oft wiederholt. Wähle oben ein Beispiel und passe die Schritte an – das dauert zwei Minuten."
+      },
+      "checklists": {
+        "title": "Noch keine Checklisten",
+        "body": "Eine kurze Wochenprüfung (Türen, Backups, Vorräte) ist ein guter Anfang. Nutze die geführte Einrichtung oben."
+      },
+      "assets": {
+        "title": "Noch kein Inventar erfasst",
+        "body": "Füge Laptops, Telefone und Geräte hinzu, damit du immer weißt, wer was hat. Nutze oben „Inventar hinzufügen“."
+      },
+      "incidents": {
+        "title": "Keine Störungen – gute Nachricht",
+        "body": "Wenn etwas schiefgeht, erfasse es hier, damit es eine verantwortliche Person und eine Lösung bekommt. Nutze oben „Störung erfassen“."
+      },
+      "vendors": {
+        "title": "Noch keine Lieferanten",
+        "body": "Lieferanten sind Firmen in deinem CRM, die als Lieferant markiert sind. Lege eine an und sie erscheint hier."
+      }
+    },
+    "process": {
+      "title": "Einen Prozess Schritt für Schritt einrichten",
+      "subtitle": "Routine wählen, Schritte schreiben, verantwortliche Person festlegen.",
+      "steps": {
+        "what": "Routine",
+        "how": "Schritte",
+        "who": "Verantwortlich"
+      },
+      "whatQ": "Welche Routine möchtest du aufschreiben?",
+      "whatHint": "Wähle ein Beispiel mit vorgeschlagenen Schritten oder beginne leer.",
+      "titlePlaceholder": "z. B. Neukunden-Onboarding",
+      "categoryHint": "Eine Gruppe wie Vertrieb, Finanzen oder Personal.",
+      "howQ": "Was sind die Schritte?",
+      "howHint": "Ein Schritt pro Zeile, in Reihenfolge. Kurz und klar – Details kannst du später ergänzen.",
+      "stepsPlaceholder": "Willkommens-E-Mail senden\nKick-off-Termin vereinbaren\n…",
+      "preview": "Vorschau",
+      "whoQ": "Wer hält diesen Prozess aktuell?",
+      "ownerHint": "Die verantwortliche Person beantwortet Fragen und aktualisiert die Schritte, wenn sich etwas ändert.",
+      "summary": "„{title}“ mit {count, plural, one {# Schritt} other {# Schritten}} wird als Version 1 gespeichert.",
+      "create": "Prozess anlegen"
+    },
+    "processTemplates": {
+      "customer_onboarding": {
+        "title": "Neukunden-Onboarding",
+        "hint": "Vom unterschriebenen Deal zum zufriedenen ersten Monat",
+        "category": "Kunden",
+        "steps": "Willkommens-E-Mail mit nächsten Schritten senden\nKunden im CRM anlegen und eine verantwortliche Person zuweisen\nKick-off-Termin vereinbaren\nKonto und Zugänge einrichten\nKurze Einstiegsanleitung teilen\nNach der ersten Woche nachfragen\nNach dem ersten Monat um Feedback bitten"
+      },
+      "month_close": {
+        "title": "Monatsabschluss",
+        "hint": "Jeden Monat saubere Bücher",
+        "category": "Finanzen",
+        "steps": "Alle Rechnungen des Monats senden\nAlle Ausgaben und Belege erfassen\nBankbuchungen abgleichen\nÜberfällige Rechnungen nachfassen\nGewinn- und Verlustrechnung prüfen\nKurze Zusammenfassung mit dem Team teilen"
+      },
+      "refund": {
+        "title": "Erstattungsanfrage bearbeiten",
+        "hint": "Fair, schnell und einheitlich",
+        "category": "Support",
+        "steps": "Dem Kunden danken und den Eingang bestätigen\nBestellung und Erstattungsrichtlinie prüfen\nEntscheiden und die Entscheidung klar erklären\nErstattung oder Gutschrift ausstellen\nGrund festhalten\nNachfassen, ob sie angekommen ist"
+      },
+      "new_hire": {
+        "title": "Neue Mitarbeitende begrüßen",
+        "hint": "Eine großartige erste Woche",
+        "category": "Personal",
+        "steps": "Vertrag und Unterlagen vorbereiten\nLaptop und Zugänge bestellen\nEine Patin oder einen Paten zuweisen\nDie erste Woche planen\nDem Team vorstellen\nZiele für die ersten 90 Tage festlegen"
+      },
+      "publish_content": {
+        "title": "Einen Blogartikel veröffentlichen",
+        "hint": "Von der Idee zur Veröffentlichung",
+        "category": "Marketing",
+        "steps": "Thema und Ziel abstimmen\nErsten Entwurf schreiben\nPrüfen und überarbeiten\nBilder und Links ergänzen\nVeröffentlichen\nIn sozialen Medien und im Newsletter teilen"
+      },
+      "custom": {
+        "title": "Etwas anderes",
+        "hint": "Mit einer leeren Seite beginnen"
+      }
+    },
+    "checklist": {
+      "title": "Eine Checkliste Schritt für Schritt einrichten",
+      "subtitle": "Was geprüft wird, die Punkte und wie oft.",
+      "steps": {
+        "what": "Was",
+        "items": "Punkte",
+        "when": "Wie oft"
+      },
+      "whatQ": "Was soll regelmäßig geprüft werden?",
+      "whatHint": "Wähle ein Beispiel oder beginne leer.",
+      "itemsQ": "Was steht auf der Liste?",
+      "itemsHint": "Ein Punkt pro Zeile. Jeder wird abgehakt, wenn er erledigt ist.",
+      "whenQ": "Wie oft, und wer macht es?",
+      "whoHint": "Die Person wird erinnert, wenn es fällig ist.",
+      "firstHint": "Leer lassen, um heute zu starten.",
+      "summary": "„{title}“ mit {count, plural, one {# Punkt} other {# Punkten}}, {schedule}.",
+      "create": "Checkliste anlegen"
+    },
+    "checklistTemplates": {
+      "opening": {
+        "title": "Öffnen & Schließen",
+        "hint": "Täglich, für Läden und Büros",
+        "items": "Licht und Geräte ein/aus\nTüren und Fenster verschlossen\nKassen gezählt\nArbeitsbereiche sauber\nAlarm aktiviert"
+      },
+      "weekly_office": {
+        "title": "Wöchentlicher Bürocheck",
+        "hint": "Fünf Minuten jeden Freitag",
+        "items": "Vorräte aufgefüllt\nDrucker und WLAN funktionieren\nKüche gereinigt\nPost und Lieferungen erledigt\nBesuche der nächsten Woche vorbereitet"
+      },
+      "month_end": {
+        "title": "Monatsende Finanzen",
+        "hint": "Monatliche Finanzpflege",
+        "items": "Alle Rechnungen gesendet\nBelege hochgeladen\nBank abgeglichen\nÜberfällige Rechnungen nachgefasst\nLohnabrechnung geprüft"
+      },
+      "security": {
+        "title": "Sicherheitsprüfung",
+        "hint": "Monatliche IT-Sicherheit",
+        "items": "Konten Ausgeschiedener entfernt\nBackups getestet\nSoftware aktualisiert\nZwei-Faktor-Anmeldung für alle aktiv\nGeteilte Passwörter geändert"
+      },
+      "website": {
+        "title": "Website-Gesundheit",
+        "hint": "Wöchentlicher Check deiner Seite",
+        "items": "Seite lädt schnell\nKontaktformular funktioniert\nKeine defekten Links\nPreise und Öffnungszeiten korrekt\nBlog oder News aktualisiert"
+      },
+      "custom": {
+        "title": "Etwas anderes",
+        "hint": "Mit einer leeren Liste beginnen"
+      }
+    }
+  },
+  "inbox": {
+    "eyebrow": "Dein Posteingang",
+    "intro": {
+      "what": "Neuigkeiten für dich aus allen Bereichen des Unternehmens.",
+      "why": "Was dich braucht, kommt zuerst – so geht nichts Wichtiges verloren.",
+      "can": "Einen Eintrag öffnen, um direkt dorthin zu springen, als gelesen markieren und nach Bereich filtern.",
+      "next": "Ersten Eintrag erledigen",
+      "nextDone": "Firmen-Zeitleiste ansehen"
+    },
+    "needsAction": "Braucht dich",
+    "actionTitle": "Braucht deine Aktion",
+    "actionHint": "{count, plural, one {# Eintrag wartet auf dich} other {# Einträge warten auf dich}} – Freigaben, Zuweisungen und Überfälliges.",
+    "dayCount": "{count, plural, one {# Neuigkeit} other {# Neuigkeiten}}",
+    "empty": {
+      "title": "Du bist auf dem neuesten Stand",
+      "body": "Wenn etwas dich braucht – eine Freigabe, eine dir zugewiesene Aufgabe, eine überfällige Rechnung – erscheint es hier."
     }
   }
 }
