@@ -37,6 +37,43 @@ export async function notifyApprovers(tx: Prisma.TransactionClient, organization
   return userIds.length;
 }
 
+/**
+ * Generic in-app notification for business modules. Rendered as t(`notifications.kinds.${type}`, { title }) linking to
+ * `href` (a path after /{locale}). Add the `notifications.kinds.<type>` key in every locale.
+ */
+export interface NotificationPayload {
+  companyId?: string;
+  /** Short label of the record (lead name, invoice number...). */
+  title: string;
+  /** In-app path after the locale, e.g. "/finance/invoices/<id>". */
+  href: string;
+}
+
+export async function notifyUsers(tx: Prisma.TransactionClient, organizationId: string, userIds: (string | null | undefined)[], type: string, payload: NotificationPayload) {
+  const ids = [...new Set(userIds.filter((u): u is string => !!u))];
+  if (!ids.length) return 0;
+  await tx.notification.createMany({ data: ids.map((userId) => ({ organizationId, userId, type, payload: payload as unknown as Prisma.InputJsonValue })) });
+  return ids.length;
+}
+
+/** Users holding `permission` at the organization or at the company (for "notify whoever handles X"). */
+export async function usersWithPermission(tx: Prisma.TransactionClient, organizationId: string, companyId: string, permission: string) {
+  const assignments = await tx.roleAssignment.findMany({
+    where: {
+      organizationId,
+      principalType: "USER",
+      OR: [
+        { scopeType: "ORGANIZATION", scopeId: organizationId },
+        { scopeType: "COMPANY", scopeId: companyId },
+      ],
+      AND: [{ OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }],
+      role: { permissions: { some: { permission: { key: permission } } } },
+    },
+    select: { principalId: true },
+  });
+  return [...new Set(assignments.map((a) => a.principalId))];
+}
+
 function requireUser(ctx: RequestContext): string {
   if (ctx.actor.type !== "USER" || !ctx.actor.id) throw new AppError("unauthenticated", "Sign in required");
   return ctx.actor.id;

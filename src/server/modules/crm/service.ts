@@ -5,14 +5,19 @@ import { db, transaction, type Db, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
-import { grantsAllow, loadGrants, requirePermission } from "@/server/modules/rbac/service";
-import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
+import { requirePermission } from "@/server/modules/rbac/service";
+import { companyChain } from "@/server/modules/rbac/scope";
+import { emitDomainEvent } from "@/server/modules/events/emit";
+import { notifyUsers } from "@/server/modules/notifications/service";
 import { normalizeEmail, normalizePhone, scoreLead } from "./scoring";
 import { effectiveProbability, isOpenStage, weightedMinor } from "./pipeline";
+import { cleanTags, eligibleOwnerIds, requireOwner, tagsInput } from "./common";
+import { pickAutoOwner } from "./automation";
+import { validateCustomFields } from "./custom-fields";
 
 export const LEAD_STAGES = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"] as const;
 export const LEAD_TEMPERATURES = ["HOT", "WARM", "NURTURE"] as const;
-export const ACTIVITY_TYPES = ["CALL", "EMAIL", "MEETING", "NOTE"] as const;
+export const ACTIVITY_TYPES = ["CALL", "EMAIL", "MEETING", "NOTE", "TASK"] as const;
 export const FOLLOW_UP_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
 
 const uuid = z.string().uuid();
@@ -33,6 +38,10 @@ export const createLeadInput = z.object({
   ownerId: uuid.optional().or(blankToUndefined),
   probability: z.number().int().min(0).max(100).optional(),
   expectedCloseDate: day.optional().or(blankToUndefined),
+  territory: z.string().trim().max(100).optional(),
+  campaignCode: z.string().trim().max(100).optional(),
+  tags: tagsInput.optional(),
+  customFields: z.record(z.string(), z.unknown()).optional(),
   /** Create even if a lead with the same email or phone exists. */
   allowDuplicate: z.boolean().default(false),
 });
@@ -47,6 +56,21 @@ export const updateLeadInput = z.object({
   /** null falls back to the stage default. */
   probability: z.number().int().min(0).max(100).nullable().optional(),
   expectedCloseDate: day.or(z.literal("")).nullable().optional(),
+  name: z.string().trim().min(1).max(200).optional(),
+  email: z.string().trim().email().max(254).or(z.literal("")).nullable().optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  account: z.string().trim().max(200).nullable().optional(),
+  source: z.string().trim().max(100).nullable().optional(),
+  territory: z.string().trim().max(100).nullable().optional(),
+  campaignCode: z.string().trim().max(100).nullable().optional(),
+  tags: tagsInput.optional(),
+  customFields: z.record(z.string(), z.unknown()).optional(),
+  /** BANT qualification. */
+  budget: z.string().trim().max(500).nullable().optional(),
+  authority: z.string().trim().max(500).nullable().optional(),
+  need: z.string().trim().max(1000).nullable().optional(),
+  timeline: z.string().trim().max(500).nullable().optional(),
+  qualified: z.boolean().optional(),
 });
 export const followUpInput = z.object({
   dueAt: z.string().datetime({ offset: true }).or(day),
@@ -73,6 +97,10 @@ export interface LeadFilters {
   owner?: string;
   stage?: LeadStage;
   temperature?: LeadScoreLabel;
+  tag?: string;
+  source?: string;
+  qualified?: "yes" | "no";
+  converted?: "yes" | "no";
 }
 
 export function parseLeadFilters(raw: Record<string, string | string[] | undefined>): LeadFilters {
@@ -89,6 +117,10 @@ export function parseLeadFilters(raw: Record<string, string | string[] | undefin
     owner: owner === "me" || owner === "unassigned" || (owner && isUuid(owner)) ? owner : undefined,
     stage: (LEAD_STAGES as readonly string[]).includes(stage ?? "") ? (stage as LeadStage) : undefined,
     temperature: (LEAD_TEMPERATURES as readonly string[]).includes(temperature ?? "") ? (temperature as LeadScoreLabel) : undefined,
+    tag: one("tag")?.slice(0, 40).toLowerCase(),
+    source: one("source")?.slice(0, 100),
+    qualified: one("qualified") === "yes" || one("qualified") === "no" ? (one("qualified") as "yes" | "no") : undefined,
+    converted: one("converted") === "yes" || one("converted") === "no" ? (one("converted") as "yes" | "no") : undefined,
   };
 }
 
@@ -105,22 +137,6 @@ const toInstant = (value: string) => {
   if (Number.isNaN(d.getTime())) throw invalid("Invalid date");
   return d;
 };
-
-/** Users who can own leads at this company: active members holding sales.read there. */
-async function eligibleOwnerIds(client: Tx | Db, organizationId: string, chain: ScopeChain, candidates?: string[]) {
-  const members = await client.membership.findMany({
-    where: { organizationId, status: "ACTIVE", ...(candidates ? { userId: { in: candidates } } : {}), user: { status: "ACTIVE" } },
-    select: { userId: true },
-  });
-  const ok: string[] = [];
-  for (const m of members) if (grantsAllow(await loadGrants(client, "USER", m.userId), "sales.read", chain)) ok.push(m.userId);
-  return ok;
-}
-
-async function requireOwner(tx: Tx, organizationId: string, chain: ScopeChain, ownerId: string) {
-  const [ok] = await eligibleOwnerIds(tx, organizationId, chain, [ownerId]);
-  if (!ok) throw invalid("This person can't own leads in this company", { reason: "lead_owner_ineligible" });
-}
 
 /** People a lead can be assigned to (id + name), for owner pickers and filters. */
 export async function listOwners(ctx: RequestContext, organizationId: string, companyId: string) {
@@ -148,6 +164,10 @@ function filterWhere(ctx: RequestContext, f: LeadFilters): Prisma.LeadWhereInput
   const where: Prisma.LeadWhereInput = {};
   if (f.stage) where.stage = f.stage;
   if (f.temperature) where.scoreLabel = f.temperature;
+  if (f.tag) where.tags = { has: f.tag };
+  if (f.source) where.source = { equals: f.source, mode: "insensitive" };
+  if (f.qualified) where.qualified = f.qualified === "yes";
+  if (f.converted) where.convertedAt = f.converted === "yes" ? { not: null } : null;
   if (f.owner === "me") where.ownerId = ctx.actor.id ?? "00000000-0000-0000-0000-000000000000";
   else if (f.owner === "unassigned") where.ownerId = null;
   else if (f.owner) where.ownerId = f.owner;
@@ -158,12 +178,12 @@ function filterWhere(ctx: RequestContext, f: LeadFilters): Prisma.LeadWhereInput
   return where;
 }
 
-export async function listLeads(ctx: RequestContext, organizationId: string, companyId: string, filters: LeadFilters = {}) {
+export async function listLeads(ctx: RequestContext, organizationId: string, companyId: string, filters: LeadFilters = {}, opts: { take?: number } = {}) {
   await authorize(ctx, organizationId, companyId, "sales.read");
   return db().lead.findMany({
     where: { organizationId, companyId, archivedAt: null, ...filterWhere(ctx, filters) },
     orderBy: [{ score: "desc" }, { createdAt: "desc" }],
-    take: 500,
+    take: opts.take ?? 500,
     include: {
       owner: { select: { id: true, name: true } },
       followUps: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
@@ -181,6 +201,8 @@ export async function getLead(ctx: RequestContext, organizationId: string, compa
       followUps: { orderBy: [{ completedAt: { sort: "asc", nulls: "first" } }, { dueAt: "asc" }] },
       activities: { orderBy: { occurredAt: "desc" }, take: 200 },
       agentTasks: { orderBy: { createdAt: "desc" }, take: 10, select: { id: true, title: true, status: true, createdAt: true } },
+      contacts: { select: { id: true, firstName: true, lastName: true, accountId: true } },
+      crmDeals: { select: { id: true, name: true, status: true } },
     },
   });
   if (!lead) throw notFound("Lead");
@@ -197,12 +219,28 @@ export async function getLead(ctx: RequestContext, organizationId: string, compa
   };
 }
 
+const leadEventData = (l: { name: string; email: string | null; stage: LeadStage; score: number; scoreLabel: LeadScoreLabel; source: string | null; ownerId: string | null; valueMinor: bigint | null; currency: string; account: string | null; qualified: boolean }) => ({
+  name: l.name,
+  email: l.email,
+  account: l.account,
+  stage: l.stage,
+  score: l.score,
+  temperature: l.scoreLabel,
+  source: l.source,
+  ownerId: l.ownerId,
+  valueMinor: l.valueMinor,
+  currency: l.currency,
+  qualified: l.qualified,
+});
+
 /** Create a lead, scored; refuses a likely duplicate (same email or phone) unless `allowDuplicate` is set. */
 export async function createLead(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createLeadInput>) {
   const input = createLeadInput.parse(raw);
   return transaction(async (tx) => {
     const chain = await authorize(ctx, organizationId, companyId, "sales.manage", tx);
     if (input.ownerId) await requireOwner(tx, organizationId, chain, input.ownerId);
+    const auto = input.ownerId ? null : await pickAutoOwner(tx, organizationId, companyId, chain, { source: input.source || null, territory: input.territory || null });
+    const ownerId = input.ownerId ?? auto?.ownerId ?? null;
     const company = await tx.company.findFirstOrThrow({ where: { id: companyId, organizationId }, select: { baseCurrency: true } });
     const emailNormalized = normalizeEmail(input.email);
     const phoneNormalized = normalizePhone(input.phone);
@@ -228,7 +266,11 @@ export async function createLead(ctx: RequestContext, organizationId: string, co
         currency: company.baseCurrency,
         probability: input.probability ?? null,
         expectedCloseDate: toDay(input.expectedCloseDate),
-        ownerId: input.ownerId ?? null,
+        ownerId,
+        territory: input.territory || null,
+        campaignCode: input.campaignCode || null,
+        tags: cleanTags(input.tags),
+        customFields: await validateCustomFields(tx, companyId, "LEAD", input.customFields),
         score,
         scoreLabel: label,
         createdById: ctx.actor.id ?? organizationId,
@@ -240,8 +282,14 @@ export async function createLead(ctx: RequestContext, organizationId: string, co
       action: "lead.created",
       resourceType: "lead",
       resourceId: lead.id,
-      newValue: { name: lead.name, stage: lead.stage, score, ownerId: lead.ownerId },
+      newValue: { name: lead.name, stage: lead.stage, score, ownerId: lead.ownerId, ...(auto ? { assignmentRule: auto.ruleId } : {}) },
     });
+    const data = leadEventData(lead);
+    await emitDomainEvent(tx, ctx, "lead.created", { organizationId, companyId, entityType: "lead", entityId: lead.id, data });
+    if (lead.ownerId) {
+      await emitDomainEvent(tx, ctx, "lead.assigned", { organizationId, companyId, entityType: "lead", entityId: lead.id, data: { ...data, previousOwnerId: null, rule: auto?.ruleName ?? null } });
+      if (lead.ownerId !== ctx.actor.id) await notifyUsers(tx, organizationId, [lead.ownerId], "crm.lead_assigned", { companyId, title: lead.name, href: `/crm/${lead.id}` });
+    }
     return lead;
   });
 }
@@ -258,7 +306,11 @@ export async function updateLead(ctx: RequestContext, organizationId: string, co
     const stage = input.stage ?? before.stage;
     const notes = input.notes ?? before.notes;
     const valueMinor = input.value === undefined ? before.valueMinor : toMinor(input.value);
-    const { score, label } = scoreLead({ ...before, notes, stage, valueMinor });
+    const email = input.email === undefined ? before.email : input.email || null;
+    const phone = input.phone === undefined ? before.phone : input.phone || null;
+    const account = input.account === undefined ? before.account : input.account || null;
+    const { score, label } = scoreLead({ ...before, email, phone, account, notes, stage, valueMinor });
+    const nul = (v: string | null | undefined) => (v === undefined ? undefined : v || null);
     const lead = await tx.lead.update({
       where: { id: leadId },
       data: {
@@ -267,6 +319,22 @@ export async function updateLead(ctx: RequestContext, organizationId: string, co
         valueMinor,
         score,
         scoreLabel: label,
+        name: input.name,
+        email,
+        emailNormalized: normalizeEmail(email),
+        phone,
+        phoneNormalized: normalizePhone(phone),
+        account,
+        source: nul(input.source),
+        territory: nul(input.territory),
+        campaignCode: nul(input.campaignCode),
+        budget: nul(input.budget),
+        authority: nul(input.authority),
+        need: nul(input.need),
+        timeline: nul(input.timeline),
+        ...(input.qualified !== undefined ? { qualified: input.qualified, qualifiedAt: input.qualified ? (before.qualifiedAt ?? new Date()) : null } : {}),
+        tags: input.tags ? cleanTags(input.tags) : undefined,
+        customFields: input.customFields ? await validateCustomFields(tx, companyId, "LEAD", input.customFields, before.customFields, { partial: true }) : undefined,
         ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
         ...(input.probability !== undefined ? { probability: input.probability } : {}),
         ...(input.expectedCloseDate !== undefined ? { expectedCloseDate: toDay(input.expectedCloseDate) } : {}),
@@ -282,8 +350,14 @@ export async function updateLead(ctx: RequestContext, organizationId: string, co
       resourceType: "lead",
       resourceId: leadId,
       oldValue: { stage: before.stage, score: before.score, ownerId: before.ownerId, probability: before.probability },
-      newValue: { stage, score, ownerId: lead.ownerId, probability: lead.probability },
+      newValue: { stage, score, ownerId: lead.ownerId, probability: lead.probability, qualified: lead.qualified },
     });
+    const data = leadEventData(lead);
+    if (input.ownerId !== undefined && input.ownerId !== before.ownerId) {
+      await emitDomainEvent(tx, ctx, "lead.assigned", { organizationId, companyId, entityType: "lead", entityId: lead.id, data: { ...data, previousOwnerId: before.ownerId } });
+      if (lead.ownerId && lead.ownerId !== ctx.actor.id) await notifyUsers(tx, organizationId, [lead.ownerId], "crm.lead_assigned", { companyId, title: lead.name, href: `/crm/${lead.id}` });
+    }
+    await emitDomainEvent(tx, ctx, "lead.updated", { organizationId, companyId, entityType: "lead", entityId: lead.id, data: { ...data, previousStage: before.stage } });
     return lead;
   });
 }
@@ -305,6 +379,12 @@ export async function bulkUpdateLeads(ctx: RequestContext, organizationId: strin
     } else if (input.action === "assign") {
       if (input.ownerId) await requireOwner(tx, organizationId, chain, input.ownerId);
       await tx.lead.updateMany({ where: { id: { in: ids } }, data: { ownerId: input.ownerId } });
+      for (const l of leads.filter((l) => l.ownerId !== input.ownerId)) {
+        await emitDomainEvent(tx, ctx, "lead.assigned", { organizationId, companyId, entityType: "lead", entityId: l.id, data: { ...leadEventData({ ...l, ownerId: input.ownerId }), previousOwnerId: l.ownerId } });
+      }
+      if (input.ownerId && input.ownerId !== ctx.actor.id) {
+        await notifyUsers(tx, organizationId, [input.ownerId], "crm.bulk_assigned", { companyId, title: String(ids.length), href: `/crm?owner=${input.ownerId}` });
+      }
     } else {
       await tx.lead.updateMany({ where: { id: { in: ids } }, data: { archivedAt: new Date() } });
     }

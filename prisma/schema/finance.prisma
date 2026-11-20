@@ -1,0 +1,742 @@
+// Finance OS (src/server/modules/finance). All amounts are integer minor units of the company's base currency.
+// Customers and vendors are shared Account rows (type CUSTOMER / VENDOR); cost centers are Departments.
+
+enum FinanceAccountType {
+  BANK
+  CASH
+  CARD
+  OTHER
+}
+
+enum FinanceTxnType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum FinanceTxnSource {
+  MANUAL
+  IMPORT
+  RECURRING
+  PAYMENT
+  AI
+}
+
+enum FinanceCategoryKind {
+  INCOME
+  EXPENSE
+}
+
+enum FinanceFrequency {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum LedgerAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+}
+
+enum JournalSource {
+  MANUAL
+  INVOICE
+  PAYMENT
+  CREDIT_NOTE
+  TRANSACTION
+  OPENING
+  REVERSAL
+}
+
+enum FinancialPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  CONVERTED
+}
+
+enum CreditNoteStatus {
+  OPEN
+  APPLIED
+  VOID
+}
+
+enum InvoicePaymentMethod {
+  BANK_TRANSFER
+  CARD
+  CASH
+  CHECK
+  OTHER
+}
+
+enum FinanceEmailKind {
+  INVOICE
+  REMINDER
+  ESTIMATE
+}
+
+enum FinanceEmailStatus {
+  SENT
+  FAILED
+  NOT_CONFIGURED
+}
+
+enum FinanceSequenceKind {
+  INVOICE
+  ESTIMATE
+  CREDIT_NOTE
+  JOURNAL
+}
+
+/// Per-company finance preferences (document prefixes, default payment terms).
+model FinanceSettings {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  companyId        String   @unique @map("company_id") @db.Uuid
+  invoicePrefix    String   @default("INV-") @map("invoice_prefix")
+  estimatePrefix   String   @default("EST-") @map("estimate_prefix")
+  creditNotePrefix String   @default("CN-") @map("credit_note_prefix")
+  defaultDueDays   Int      @default(30) @map("default_due_days")
+  /// Printed on invoices (payment instructions, bank details).
+  invoiceFooter    String?  @map("invoice_footer")
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("finance_settings")
+}
+
+/// Gap-free document numbering per company and kind.
+model FinanceSequence {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  kind           FinanceSequenceKind
+  next           Int                 @default(1)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, kind])
+  @@map("finance_sequences")
+}
+
+/// Chart of accounts (seeded lazily per company with a standard chart).
+model LedgerAccount {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  code           String
+  name           String
+  type           LedgerAccountType
+  /// Stable key of seeded accounts used by automatic postings (ar, ap, tax, revenue, expense, bank...).
+  systemKey      String?           @map("system_key")
+  description    String?
+  archivedAt     DateTime?         @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company         Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lines           JournalLine[]
+  financeAccounts FinanceAccount[]
+  categories      FinanceCategory[]
+  taxRates        FinanceTaxRate[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, code])
+  @@unique([companyId, systemKey])
+  @@index([organizationId, companyId, type])
+  @@map("ledger_accounts")
+}
+
+model JournalEntry {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  number         Int
+  date           DateTime      @db.Date
+  memo           String?
+  status         JournalStatus @default(DRAFT)
+  source         JournalSource @default(MANUAL)
+  /// The record that produced an automatic posting (invoice, payment, transaction...).
+  sourceId       String?       @map("source_id") @db.Uuid
+  reversesId     String?       @map("reverses_id") @db.Uuid
+  postedAt       DateTime?     @map("posted_at") @db.Timestamptz(3)
+  createdById    String        @map("created_by_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lines   JournalLine[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, number])
+  @@index([organizationId, companyId, date])
+  @@index([companyId, source, sourceId])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id              String  @id @default(uuid(7)) @db.Uuid
+  organizationId  String  @map("organization_id") @db.Uuid
+  companyId       String  @map("company_id") @db.Uuid
+  entryId         String  @map("entry_id") @db.Uuid
+  ledgerAccountId String  @map("ledger_account_id") @db.Uuid
+  debitMinor      BigInt  @default(0) @map("debit_minor")
+  creditMinor     BigInt  @default(0) @map("credit_minor")
+  description     String?
+  departmentId    String? @map("department_id") @db.Uuid
+  position        Int     @default(0)
+
+  company       Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  entry         JournalEntry  @relation(fields: [entryId, companyId], references: [id, companyId], onDelete: Cascade)
+  ledgerAccount LedgerAccount @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  department    Department?   @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([entryId])
+  @@index([ledgerAccountId])
+  @@map("journal_lines")
+}
+
+/// Accounting periods; postings dated inside a CLOSED period are rejected.
+model FinancialPeriod {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  name           String
+  startDate      DateTime              @map("start_date") @db.Date
+  endDate        DateTime              @map("end_date") @db.Date
+  status         FinancialPeriodStatus @default(OPEN)
+  closedAt       DateTime?             @map("closed_at") @db.Timestamptz(3)
+  closedById     String?               @map("closed_by_id") @db.Uuid
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, startDate])
+  @@map("financial_periods")
+}
+
+model FinanceTaxRate {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  name            String
+  /// Basis points (20% = 2000).
+  rateBps         Int       @map("rate_bps")
+  /// Prices already include the tax.
+  inclusive       Boolean   @default(false)
+  ledgerAccountId String?   @map("ledger_account_id") @db.Uuid
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company       Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount LedgerAccount? @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  lines         BillingLine[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("finance_tax_rates")
+}
+
+/// A bank, cash or card account money moves through.
+model FinanceAccount {
+  id                  String             @id @default(uuid(7)) @db.Uuid
+  organizationId      String             @map("organization_id") @db.Uuid
+  companyId           String             @map("company_id") @db.Uuid
+  name                String
+  type                FinanceAccountType @default(BANK)
+  institution         String?
+  /// Last digits of the account / card number (never the full number).
+  numberLast4         String?            @map("number_last4")
+  openingBalanceMinor BigInt             @default(0) @map("opening_balance_minor")
+  openingDate         DateTime           @map("opening_date") @db.Date
+  currency            String             @db.Char(3)
+  ledgerAccountId     String             @map("ledger_account_id") @db.Uuid
+  archivedAt          DateTime?          @map("archived_at") @db.Timestamptz(3)
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company           Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount     LedgerAccount        @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions      FinanceTransaction[] @relation("TxnAccount")
+  transfersIn       FinanceTransaction[] @relation("TxnToAccount")
+  recurringExpenses RecurringExpense[]
+  reconciliations   Reconciliation[]
+  payments          InvoicePayment[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("finance_accounts")
+}
+
+model FinanceCategory {
+  id              String              @id @default(uuid(7)) @db.Uuid
+  organizationId  String              @map("organization_id") @db.Uuid
+  companyId       String              @map("company_id") @db.Uuid
+  name            String
+  kind            FinanceCategoryKind
+  ledgerAccountId String?             @map("ledger_account_id") @db.Uuid
+  archivedAt      DateTime?           @map("archived_at") @db.Timestamptz(3)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company           Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount     LedgerAccount?       @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions      FinanceTransaction[]
+  recurringExpenses RecurringExpense[]
+  budgets           FinanceBudget[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, kind, name])
+  @@map("finance_categories")
+}
+
+model FinanceTransaction {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  organizationId   String           @map("organization_id") @db.Uuid
+  companyId        String           @map("company_id") @db.Uuid
+  type             FinanceTxnType
+  date             DateTime         @db.Date
+  /// Always positive; the type gives the direction.
+  amountMinor      BigInt           @map("amount_minor")
+  currency         String           @db.Char(3)
+  financeAccountId String           @map("finance_account_id") @db.Uuid
+  /// Destination of a TRANSFER.
+  toAccountId      String?          @map("to_account_id") @db.Uuid
+  categoryId       String?          @map("category_id") @db.Uuid
+  /// Vendor (expense) or customer (income).
+  accountId        String?          @map("account_id") @db.Uuid
+  /// Cost center.
+  departmentId     String?          @map("department_id") @db.Uuid
+  description      String
+  reference        String?
+  notes            String?
+  source           FinanceTxnSource @default(MANUAL)
+  recurringId      String?          @map("recurring_id") @db.Uuid
+  paymentId        String?          @unique @map("payment_id") @db.Uuid
+  journalEntryId   String?          @map("journal_entry_id") @db.Uuid
+  reconciliationId String?          @map("reconciliation_id") @db.Uuid
+  reconciledAt     DateTime?        @map("reconciled_at") @db.Timestamptz(3)
+  createdById      String           @map("created_by_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company        Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  financeAccount FinanceAccount        @relation("TxnAccount", fields: [financeAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  toAccount      FinanceAccount?       @relation("TxnToAccount", fields: [toAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  category       FinanceCategory?      @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  account        Account?              @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  department     Department?           @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  recurring      RecurringExpense?     @relation(fields: [recurringId, companyId], references: [id, companyId], onDelete: NoAction)
+  reconciliation Reconciliation?       @relation(fields: [reconciliationId, companyId], references: [id, companyId], onDelete: NoAction)
+  attachment     FinanceTxnAttachment?
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, date])
+  @@index([companyId, type, date])
+  @@index([financeAccountId, date])
+  @@index([companyId, categoryId])
+  @@map("finance_transactions")
+}
+
+/// Receipt / invoice scan for a transaction (≤ 5 MB), kept apart so lists never load the bytes.
+model FinanceTxnAttachment {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  transactionId  String   @unique @map("transaction_id") @db.Uuid
+  fileName       String   @map("file_name")
+  contentType    String   @map("content_type")
+  sizeBytes      Int      @map("size_bytes")
+  data           Bytes
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company     Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  transaction FinanceTransaction @relation(fields: [transactionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([transactionId, companyId])
+  @@map("finance_txn_attachments")
+}
+
+model RecurringExpense {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  organizationId   String           @map("organization_id") @db.Uuid
+  companyId        String           @map("company_id") @db.Uuid
+  name             String
+  amountMinor      BigInt           @map("amount_minor")
+  currency         String           @db.Char(3)
+  financeAccountId String           @map("finance_account_id") @db.Uuid
+  categoryId       String?          @map("category_id") @db.Uuid
+  accountId        String?          @map("account_id") @db.Uuid
+  departmentId     String?          @map("department_id") @db.Uuid
+  frequency        FinanceFrequency @default(MONTHLY)
+  nextRunDate      DateTime         @map("next_run_date") @db.Date
+  endDate          DateTime?        @map("end_date") @db.Date
+  active           Boolean          @default(true)
+  lastRunAt        DateTime?        @map("last_run_at") @db.Timestamptz(3)
+  createdById      String           @map("created_by_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company        Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  financeAccount FinanceAccount       @relation(fields: [financeAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  category       FinanceCategory?     @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  account        Account?             @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  department     Department?          @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions   FinanceTransaction[]
+
+  @@unique([id, companyId])
+  @@index([active, nextRunDate])
+  @@map("recurring_expenses")
+}
+
+/// Spending limit for a category and/or cost center over a period.
+model FinanceBudget {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  categoryId     String?  @map("category_id") @db.Uuid
+  departmentId   String?  @map("department_id") @db.Uuid
+  periodStart    DateTime @map("period_start") @db.Date
+  periodEnd      DateTime @map("period_end") @db.Date
+  amountMinor    BigInt   @map("amount_minor")
+  currency       String   @db.Char(3)
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  category   FinanceCategory? @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  department Department?      @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([companyId, periodStart])
+  @@map("finance_budgets")
+}
+
+model Reconciliation {
+  id                 String               @id @default(uuid(7)) @db.Uuid
+  organizationId     String               @map("organization_id") @db.Uuid
+  companyId          String               @map("company_id") @db.Uuid
+  financeAccountId   String               @map("finance_account_id") @db.Uuid
+  statementDate      DateTime             @map("statement_date") @db.Date
+  endingBalanceMinor BigInt               @map("ending_balance_minor")
+  status             ReconciliationStatus @default(IN_PROGRESS)
+  completedAt        DateTime?            @map("completed_at") @db.Timestamptz(3)
+  createdById        String               @map("created_by_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company        Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  financeAccount FinanceAccount       @relation(fields: [financeAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions   FinanceTransaction[]
+
+  @@unique([id, companyId])
+  @@index([financeAccountId, status])
+  @@map("reconciliations")
+}
+
+model Invoice {
+  id                 String        @id @default(uuid(7)) @db.Uuid
+  organizationId     String        @map("organization_id") @db.Uuid
+  companyId          String        @map("company_id") @db.Uuid
+  number             String
+  accountId          String        @map("account_id") @db.Uuid
+  status             InvoiceStatus @default(DRAFT)
+  issueDate          DateTime      @map("issue_date") @db.Date
+  dueDate            DateTime      @map("due_date") @db.Date
+  currency           String        @db.Char(3)
+  /// Invoice-wide discount in basis points, applied to every line before tax.
+  discountBps        Int           @default(0) @map("discount_bps")
+  subtotalMinor      BigInt        @default(0) @map("subtotal_minor")
+  discountMinor      BigInt        @default(0) @map("discount_minor")
+  taxMinor           BigInt        @default(0) @map("tax_minor")
+  totalMinor         BigInt        @default(0) @map("total_minor")
+  paidMinor          BigInt        @default(0) @map("paid_minor")
+  creditedMinor      BigInt        @default(0) @map("credited_minor")
+  notes              String?
+  terms              String?
+  /// Unguessable token for the public view link (/i/<token>).
+  publicToken        String?       @unique @map("public_token")
+  estimateId         String?       @map("estimate_id") @db.Uuid
+  recurringInvoiceId String?       @map("recurring_invoice_id") @db.Uuid
+  issuedAt           DateTime?     @map("issued_at") @db.Timestamptz(3)
+  sentAt             DateTime?     @map("sent_at") @db.Timestamptz(3)
+  lastReminderAt     DateTime?     @map("last_reminder_at") @db.Timestamptz(3)
+  paidAt             DateTime?     @map("paid_at") @db.Timestamptz(3)
+  voidedAt           DateTime?     @map("voided_at") @db.Timestamptz(3)
+  createdById        String        @map("created_by_id") @db.Uuid
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company          Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account          Account                 @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  recurringInvoice RecurringInvoice?       @relation(fields: [recurringInvoiceId, companyId], references: [id, companyId], onDelete: NoAction)
+  lines            BillingLine[]
+  payments         InvoicePayment[]
+  credits          CreditNoteApplication[]
+  emails           FinanceEmailLog[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, number])
+  @@index([organizationId, companyId, status])
+  @@index([companyId, dueDate])
+  @@index([accountId])
+  @@map("invoices")
+}
+
+model Estimate {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  number         String
+  accountId      String         @map("account_id") @db.Uuid
+  status         EstimateStatus @default(DRAFT)
+  issueDate      DateTime       @map("issue_date") @db.Date
+  expiryDate     DateTime?      @map("expiry_date") @db.Date
+  currency       String         @db.Char(3)
+  discountBps    Int            @default(0) @map("discount_bps")
+  subtotalMinor  BigInt         @default(0) @map("subtotal_minor")
+  discountMinor  BigInt         @default(0) @map("discount_minor")
+  taxMinor       BigInt         @default(0) @map("tax_minor")
+  totalMinor     BigInt         @default(0) @map("total_minor")
+  notes          String?
+  terms          String?
+  invoiceId      String?        @map("invoice_id") @db.Uuid
+  sentAt         DateTime?      @map("sent_at") @db.Timestamptz(3)
+  createdById    String         @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account Account           @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  lines   BillingLine[]
+  emails  FinanceEmailLog[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, number])
+  @@index([organizationId, companyId, status])
+  @@map("estimates")
+}
+
+/// A line item of an invoice or an estimate; totals are computed server-side.
+model BillingLine {
+  id             String  @id @default(uuid(7)) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  companyId      String  @map("company_id") @db.Uuid
+  invoiceId      String? @map("invoice_id") @db.Uuid
+  estimateId     String? @map("estimate_id") @db.Uuid
+  position       Int     @default(0)
+  description    String
+  /// Quantity × 1000 (three decimals).
+  quantityMilli  Int     @map("quantity_milli")
+  unitPriceMinor BigInt  @map("unit_price_minor")
+  discountBps    Int     @default(0) @map("discount_bps")
+  taxRateId      String? @map("tax_rate_id") @db.Uuid
+  /// Snapshot of the tax rate at the time of the line.
+  taxBps         Int     @default(0) @map("tax_bps")
+  taxInclusive   Boolean @default(false) @map("tax_inclusive")
+  /// Net of discounts, excluding tax.
+  netMinor       BigInt  @map("net_minor")
+  taxMinor       BigInt  @map("tax_minor")
+  totalMinor     BigInt  @map("total_minor")
+
+  company  Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  invoice  Invoice?        @relation(fields: [invoiceId, companyId], references: [id, companyId], onDelete: Cascade)
+  estimate Estimate?       @relation(fields: [estimateId, companyId], references: [id, companyId], onDelete: Cascade)
+  taxRate  FinanceTaxRate? @relation(fields: [taxRateId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([invoiceId])
+  @@index([estimateId])
+  @@map("billing_lines")
+}
+
+/// Template that the periodic job turns into draft invoices.
+model RecurringInvoice {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  name           String
+  accountId      String           @map("account_id") @db.Uuid
+  frequency      FinanceFrequency @default(MONTHLY)
+  nextIssueDate  DateTime         @map("next_issue_date") @db.Date
+  endDate        DateTime?        @map("end_date") @db.Date
+  dueDays        Int              @default(30) @map("due_days")
+  discountBps    Int              @default(0) @map("discount_bps")
+  /// [{ description, quantity, unitPrice (major units string), discountBps, taxRateId }]
+  lines          Json             @default("[]")
+  notes          String?
+  currency       String           @db.Char(3)
+  /// Net (ex-tax) amount per occurrence, kept for MRR and forecasts.
+  netMinor       BigInt           @default(0) @map("net_minor")
+  active         Boolean          @default(true)
+  lastIssuedAt   DateTime?        @map("last_issued_at") @db.Timestamptz(3)
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account  Account   @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  invoices Invoice[]
+
+  @@unique([id, companyId])
+  @@index([active, nextIssueDate])
+  @@map("recurring_invoices")
+}
+
+model InvoicePayment {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  companyId        String               @map("company_id") @db.Uuid
+  invoiceId        String               @map("invoice_id") @db.Uuid
+  date             DateTime             @db.Date
+  amountMinor      BigInt               @map("amount_minor")
+  method           InvoicePaymentMethod @default(BANK_TRANSFER)
+  reference        String?
+  financeAccountId String               @map("finance_account_id") @db.Uuid
+  journalEntryId   String?              @map("journal_entry_id") @db.Uuid
+  createdById      String               @map("created_by_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company        Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  invoice        Invoice        @relation(fields: [invoiceId, companyId], references: [id, companyId], onDelete: Cascade)
+  financeAccount FinanceAccount @relation(fields: [financeAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([invoiceId])
+  @@index([companyId, date])
+  @@map("invoice_payments")
+}
+
+model CreditNote {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  number         String
+  accountId      String           @map("account_id") @db.Uuid
+  issueDate      DateTime         @map("issue_date") @db.Date
+  amountMinor    BigInt           @map("amount_minor")
+  appliedMinor   BigInt           @default(0) @map("applied_minor")
+  currency       String           @db.Char(3)
+  reason         String
+  status         CreditNoteStatus @default(OPEN)
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account      Account                 @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  applications CreditNoteApplication[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, number])
+  @@map("credit_notes")
+}
+
+model CreditNoteApplication {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  creditNoteId   String   @map("credit_note_id") @db.Uuid
+  invoiceId      String   @map("invoice_id") @db.Uuid
+  amountMinor    BigInt   @map("amount_minor")
+  journalEntryId String?  @map("journal_entry_id") @db.Uuid
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company    Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  creditNote CreditNote @relation(fields: [creditNoteId, companyId], references: [id, companyId], onDelete: Cascade)
+  invoice    Invoice    @relation(fields: [invoiceId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("credit_note_applications")
+}
+
+/// Every invoice / reminder / estimate email attempt with its truthful outcome.
+model FinanceEmailLog {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  invoiceId      String?            @map("invoice_id") @db.Uuid
+  estimateId     String?            @map("estimate_id") @db.Uuid
+  kind           FinanceEmailKind
+  toEmail        String             @map("to_email")
+  status         FinanceEmailStatus
+  sentById       String?            @map("sent_by_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  invoice  Invoice?  @relation(fields: [invoiceId, companyId], references: [id, companyId], onDelete: Cascade)
+  estimate Estimate? @relation(fields: [estimateId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([estimateId])
+  @@map("finance_email_logs")
+}
+
+/// Planned one-off cash movement (expected expense or income) for cash-flow forecasting.
+model CashPlanItem {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  date           DateTime @db.Date
+  /// Positive = inflow, negative = outflow.
+  amountMinor    BigInt   @map("amount_minor")
+  notes          String?
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, date])
+  @@map("cash_plan_items")
+}
+
+/// What-if cash projection: monthly revenue growth, expense change and one-off items.
+model CashScenario {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  name             String
+  /// Monthly revenue growth in basis points (5% = 500; may be negative).
+  revenueGrowthBps Int      @default(0) @map("revenue_growth_bps")
+  /// Change of monthly expenses vs the baseline in basis points (may be negative).
+  expenseChangeBps Int      @default(0) @map("expense_change_bps")
+  /// [{ month: "YYYY-MM", amountMinor: string (signed), label }]
+  oneOffs          Json     @default("[]") @map("one_offs")
+  months           Int      @default(12)
+  createdById      String   @map("created_by_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, name])
+  @@map("cash_scenarios")
+}

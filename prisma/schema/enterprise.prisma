@@ -1,0 +1,166 @@
+// ───────────────────────────── Enterprise OS / Company OS ─────────────────────────────
+// Company profile details, organization-level security, limits, branding, SSO, API-key scopes and data requests.
+// Permissions: organizations.read/manage, companies.read/manage, developer.read/manage, audit.read, billing.*.
+
+enum EnterpriseSsoProtocol {
+  OIDC
+  SAML
+}
+
+enum EnterpriseDataRequestType {
+  EXPORT
+  DELETION
+}
+
+enum EnterpriseDataRequestStatus {
+  PENDING
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+/// Company OS profile fields that complement core `companies` (one row per company).
+model EnterpriseCompanyProfile {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  companyId            String    @unique @map("company_id") @db.Uuid
+  industry             String?
+  website              String?
+  logoUrl              String?   @map("logo_url")
+  description          String?
+  /// 1 = January … 12 = December.
+  fiscalYearStartMonth Int       @default(1) @map("fiscal_year_start_month")
+  /// { line1, line2, city, region, postalCode, countryCode }
+  address              Json      @default("{}")
+  currencyConfirmedAt  DateTime? @map("currency_confirmed_at") @db.Timestamptz(3)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("enterprise_company_profiles")
+}
+
+/// Organization-wide policy: usage limits, security controls, retention and SSO enforcement.
+model EnterpriseOrgSettings {
+  id                      String   @id @default(uuid(7)) @db.Uuid
+  organizationId          String   @unique @map("organization_id") @db.Uuid
+  maxMembers              Int?     @map("max_members")
+  maxCompanies            Int?     @map("max_companies")
+  maxWorkspacesPerCompany Int?     @map("max_workspaces_per_company")
+  maxAiTokensPerDay       Int?     @map("max_ai_tokens_per_day")
+  maxApiKeys              Int?     @map("max_api_keys")
+  requireMfa              Boolean  @default(false) @map("require_mfa")
+  /// Sessions older than this many minutes are refused inside the organization (null = platform default).
+  sessionTimeoutMinutes   Int?     @map("session_timeout_minutes")
+  /// IPv4/IPv6 addresses or IPv4 CIDR ranges; empty = any address.
+  ipAllowlist             String[] @default([]) @map("ip_allowlist")
+  enforceSso              Boolean  @default(false) @map("enforce_sso")
+  auditRetentionDays      Int?     @map("audit_retention_days")
+  dataRetentionDays       Int?     @map("data_retention_days")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("enterprise_org_settings")
+}
+
+/// White-label configuration.
+model EnterpriseBranding {
+  id                     String    @id @default(uuid(7)) @db.Uuid
+  organizationId         String    @unique @map("organization_id") @db.Uuid
+  productName            String?   @map("product_name")
+  logoUrl                String?   @map("logo_url")
+  /// "#rrggbb"
+  primaryColor           String?   @map("primary_color")
+  customDomain           String?   @unique @map("custom_domain")
+  customDomainToken      String?   @map("custom_domain_token")
+  customDomainVerifiedAt DateTime? @map("custom_domain_verified_at") @db.Timestamptz(3)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("enterprise_brandings")
+}
+
+model EnterpriseSsoConnection {
+  id                    String                @id @default(uuid(7)) @db.Uuid
+  organizationId        String                @map("organization_id") @db.Uuid
+  protocol              EnterpriseSsoProtocol
+  name                  String
+  enabled               Boolean               @default(false)
+  // OIDC
+  issuer                String?
+  clientId              String?               @map("client_id")
+  clientSecretEncrypted String?               @map("client_secret_encrypted")
+  // SAML (stored; sign-in requires a SAML library)
+  samlMetadataXml       String?               @map("saml_metadata_xml")
+  samlEntityId          String?               @map("saml_entity_id")
+  samlSsoUrl            String?               @map("saml_sso_url")
+  createdById           String                @map("created_by_id") @db.Uuid
+  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("enterprise_sso_connections")
+}
+
+/// Email domains an organization proved it controls (DNS TXT `realy-verification=<token>`).
+model EnterpriseSsoDomain {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  domain            String
+  verificationToken String    @map("verification_token")
+  verifiedAt        DateTime? @map("verified_at") @db.Timestamptz(3)
+  lastCheckedAt     DateTime? @map("last_checked_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, domain])
+  @@index([domain])
+  @@map("enterprise_sso_domains")
+}
+
+/// Scopes and metadata of a core `api_keys` row (scopes are a subset of the creator's permissions).
+model EnterpriseApiKeyMeta {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  apiKeyId       String   @unique @map("api_key_id") @db.Uuid
+  roleId         String   @map("role_id") @db.Uuid
+  scopes         String[]
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("enterprise_api_key_meta")
+}
+
+/// Company data export / deletion requests (deletion is soft and needs companies.delete).
+model EnterpriseDataRequest {
+  id             String                      @id @default(uuid(7)) @db.Uuid
+  organizationId String                      @map("organization_id") @db.Uuid
+  companyId      String                      @map("company_id") @db.Uuid
+  type           EnterpriseDataRequestType
+  status         EnterpriseDataRequestStatus @default(PENDING)
+  reason         String?
+  requestedById  String                      @map("requested_by_id") @db.Uuid
+  confirmedById  String?                     @map("confirmed_by_id") @db.Uuid
+  scheduledFor   DateTime?                   @map("scheduled_for") @db.Timestamptz(3)
+  completedAt    DateTime?                   @map("completed_at") @db.Timestamptz(3)
+  cancelledAt    DateTime?                   @map("cancelled_at") @db.Timestamptz(3)
+  createdAt      DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, createdAt])
+  @@index([status, scheduledFor])
+  @@map("enterprise_data_requests")
+}

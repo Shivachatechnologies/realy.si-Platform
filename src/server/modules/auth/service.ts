@@ -2,7 +2,9 @@ import { z } from "zod";
 import { db, transaction } from "@/server/core/db";
 import { decryptSecret, encryptSecret, randomToken, sha256 } from "@/server/core/crypto";
 import { AppError, conflict, invalid } from "@/server/core/errors";
-import type { RequestContext } from "@/server/core/context";
+import { systemContext, type RequestContext } from "@/server/core/context";
+import type { Tx } from "@/server/core/db";
+import { assignRole, systemRoleId } from "@/server/modules/rbac/service";
 import { writeAudit } from "@/server/modules/audit/service";
 import { securityEvent } from "@/server/core/telemetry";
 import { emitEvent } from "@/server/modules/events/emit";
@@ -52,7 +54,7 @@ export async function signUp(ctx: RequestContext, raw: z.input<typeof signUpInpu
   const passwordHash = await hashPassword(input.password);
   return transaction(async (tx) => {
     const exists = await tx.user.findUnique({ where: { email: input.email }, select: { id: true } });
-    if (exists) throw conflict("An account with this email already exists");
+    if (exists) throw conflict("An account with this email already exists", { reason: "email_taken" });
     const user = await tx.user.create({
       data: {
         email: input.email,
@@ -75,9 +77,33 @@ export async function signUp(ctx: RequestContext, raw: z.input<typeof signUpInpu
       aggregateType: "user",
       aggregateId: user.id,
     });
+    await maybeBootstrapPlatformAdmin(tx, ctx, user.id, user.email);
     const { token, session } = await createSession(tx, user.id, { mfaPending: false, ip: ctx.ip, userAgent: ctx.userAgent });
     return { token, session, mfaRequired: false };
   });
+}
+
+/**
+ * First-run access (docs/rbac.md): while the platform has no SUPER_ADMIN, the bootstrap account becomes one.
+ * - REALY_BOOTSTRAP_ADMIN_EMAIL set: only an account registering with exactly that email qualifies.
+ * - Unset: only the very first account registered on an empty database qualifies.
+ * Once any SUPER_ADMIN exists this never fires again, so later sign-ups are ordinary users (they become owners only
+ * of the organizations they create). Serialized with an advisory lock so two concurrent sign-ups cannot both qualify.
+ */
+async function maybeBootstrapPlatformAdmin(tx: Tx, ctx: RequestContext, userId: string, email: string) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('realy:bootstrap-admin'))`;
+  const superAdmin = await tx.roleAssignment.findFirst({ where: { scopeType: "PLATFORM", role: { key: "SUPER_ADMIN", organizationId: null } }, select: { id: true } });
+  if (superAdmin) return;
+  const designated = process.env.REALY_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
+  const eligible = designated ? designated === email.toLowerCase() : (await tx.user.count()) === 1;
+  if (!eligible) return;
+  const roleId = await systemRoleId(tx, "SUPER_ADMIN").catch(() => {
+    throw new AppError("not_configured", "Reference data is missing. Run `prisma db seed` against this database.", { reason: "database_not_seeded" });
+  });
+  const sys = { ...systemContext(ctx.requestId), ip: ctx.ip, userAgent: "bootstrap:first-admin" };
+  await assignRole(sys, null, { principalType: "USER", principalId: userId, roleId, scopeType: "PLATFORM", scopeId: "*" }, tx);
+  await writeAudit(tx, sys, { category: "SECURITY", action: "platform.bootstrap_admin", resourceType: "user", resourceId: userId, newValue: { email, mode: designated ? "designated_email" : "first_user" } });
+  securityEvent("platform.bootstrap_admin", { mode: designated ? "designated_email" : "first_user" });
 }
 
 export async function signIn(ctx: RequestContext, raw: z.input<typeof signInInput>): Promise<AuthResult> {
@@ -99,6 +125,10 @@ export async function signIn(ctx: RequestContext, raw: z.input<typeof signInInpu
     securityEvent("auth.sign_in_failed", { known_user: !!user });
     throw new AppError("unauthenticated", "Invalid email or password");
   }
+  // Organizations that enforce SSO (Settings → SSO) refuse password sign-in for their verified domains.
+  // Checked only after the password verified, so it reveals nothing about unknown accounts.
+  const { ssoEnforcedFor } = await import("@/server/modules/enterprise/sso");
+  if (await ssoEnforcedFor(user.email)) throw new AppError("forbidden", "Your organization requires single sign-on", { reason: "sso_required" });
   return transaction(async (tx) => {
     const actorCtx: RequestContext = { ...ctx, actor: { type: "USER", id: user.id } };
     const { token, session } = await createSession(tx, user.id, {

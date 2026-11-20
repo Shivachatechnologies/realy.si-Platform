@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
-import { EntityKindPage } from "@/components/graph/entity-kind-page";
-import { getT } from "@/i18n/server";
+import { redirect } from "next/navigation";
+import { getLocale } from "@/i18n/server";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT())("modules.people.title") };
-}
-
-export default function Page() {
-  return <EntityKindPage module="people" kinds={["PERSON","TEAM"]} />;
+/** People now live in HR & People (employee directory). */
+export default async function PeoplePage() {
+  redirect(`/${await getLocale()}/hr/employees`);
 }

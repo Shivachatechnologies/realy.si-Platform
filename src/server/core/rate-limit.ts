@@ -1,9 +1,20 @@
 import { Redis } from "ioredis";
+import { db } from "./db";
 import { env } from "./env";
 import { logger } from "./logger";
 import { securityEvent } from "./telemetry";
 
 let client: Redis | null = null;
+
+/**
+ * Redis is optional in production: without REDIS_URL (or while it is down) limits are kept in Postgres instead.
+ * Outside production the default local Redis is assumed, as before.
+ */
+export const redisConfigured = () => !!process.env.REDIS_URL?.trim() || process.env.NODE_ENV !== "production";
+
+// Circuit breaker: after a Redis failure, skip it for a while instead of paying the timeout on every request.
+let redisDownUntil = 0;
+const REDIS_RETRY_MS = 30_000;
 
 export function redis(): Redis {
   if (!client) {
@@ -72,14 +83,40 @@ function evaluate(rule: RateLimitRule, cur: number, prev: number, now: number, d
   };
 }
 
+/** Same sliding-window counter in Postgres (one row per key). Shared by all instances, so it is a real limit. */
+async function dbIncr(cur: string, prev: string, ttlMs: number): Promise<[number, number]> {
+  const expires = new Date(Date.now() + ttlMs);
+  const rows = await db().$queryRaw<{ count: number }[]>`
+    INSERT INTO rate_limit_counters (key, count, expires_at) VALUES (${cur}, 1, ${expires})
+    ON CONFLICT (key) DO UPDATE SET
+      count = CASE WHEN rate_limit_counters.expires_at <= now() THEN 1 ELSE rate_limit_counters.count + 1 END,
+      expires_at = CASE WHEN rate_limit_counters.expires_at <= now() THEN EXCLUDED.expires_at ELSE rate_limit_counters.expires_at END
+    RETURNING count`;
+  const prevRows = await db().$queryRaw<{ count: number }[]>`SELECT count FROM rate_limit_counters WHERE key = ${prev} AND expires_at > now()`;
+  // Opportunistic cleanup (~1% of calls).
+  if (Math.random() < 0.01) await db().$executeRaw`DELETE FROM rate_limit_counters WHERE expires_at <= now()`.catch(() => undefined);
+  return [Number(rows[0]?.count ?? 1), Number(prevRows[0]?.count ?? 0)];
+}
+
 /** Count one hit for `subject` against `rule`. `subject` must not contain secrets (hash emails etc.). */
 export async function consume(rule: RateLimitRule, subject: string, now = Date.now()): Promise<RateLimitResult> {
   const window = Math.floor(now / rule.windowMs);
   const cur = `rl:${rule.name}:${subject}:${window}`;
   const prev = `rl:${rule.name}:${subject}:${window - 1}`;
+  const useRedis = redisConfigured() && now >= redisDownUntil;
+  if (useRedis) {
+    try {
+      const [c, p] = (await redis().eval(SCRIPT, 2, cur, prev, String(rule.windowMs * 2))) as [number, number];
+      return evaluate(rule, Number(c), Number(p), now, false);
+    } catch (err) {
+      redisDownUntil = now + REDIS_RETRY_MS;
+      logger.warn({ err: (err as Error).message, rule: rule.name }, "redis rate limiter unavailable; using database counters");
+    }
+  }
   try {
-    const [c, p] = (await redis().eval(SCRIPT, 2, cur, prev, String(rule.windowMs * 2))) as [number, number];
-    return evaluate(rule, Number(c), Number(p), now, false);
+    const [c, p] = await dbIncr(cur, prev, rule.windowMs * 2);
+    // Degraded only when Redis was expected; Postgres is the normal store when REDIS_URL is unset.
+    return evaluate(rule, c, p, now, redisConfigured());
   } catch (err) {
     const production = env().NODE_ENV === "production";
     if (production && rule.sensitive) {

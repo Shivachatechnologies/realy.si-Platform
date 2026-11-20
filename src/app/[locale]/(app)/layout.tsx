@@ -9,23 +9,41 @@ import { getLocale } from "@/i18n/server";
 import { getWorkspaceContext, requireViewer } from "@/server/session";
 import { listCompanies } from "@/server/modules/companies/service";
 import { platformGrants } from "@/server/workspace";
+import { BrandingStyle } from "@/components/enterprise/branding-style";
+
+/** On the user surface the admin console lives on its own subdomain; link to it only when ADMIN_URL is configured. */
+const adminReachable = () =>
+  process.env.APP_SURFACE !== "user" || !!process.env.ADMIN_URL;
 
 async function Topbar() {
   const locale = await getLocale();
   const viewer = await requireViewer(locale);
-  const { orgs, org, preferredCompanyId } = await getWorkspaceContext(viewer.user.id);
-  const companies = org ? (await listCompanies(viewer.ctx, org.id, { limit: 200 })).data : [];
-  const company = companies.find((c) => c.id === preferredCompanyId) ?? companies[0] ?? null;
-  const isAdmin = (await platformGrants(viewer.user.id)).length > 0;
+  const { orgs, org, preferredCompanyId } = await getWorkspaceContext(
+    viewer.user.id,
+  );
+  const companies = org
+    ? (await listCompanies(viewer.ctx, org.id, { limit: 200 })).data
+    : [];
+  const company =
+    companies.find((c) => c.id === preferredCompanyId) ?? companies[0] ?? null;
+  const isAdmin =
+    (await platformGrants(viewer.user.id)).length > 0 && adminReachable();
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
       {org ? (
-        <ContextSwitcher orgs={orgs} orgId={org.id} companies={companies.map((c) => ({ id: c.id, name: c.name }))} companyId={company?.id ?? null} />
+        <ContextSwitcher
+          orgs={orgs}
+          orgId={org.id}
+          companies={companies.map((c) => ({ id: c.id, name: c.name }))}
+          companyId={company?.id ?? null}
+        />
       ) : null}
       <div className="ms-auto flex shrink-0 items-center justify-end gap-2">
         <CommandPalette showAdmin={isAdmin} />
         <LanguageSwitcher signedIn className="hidden sm:inline-flex" />
-        <span className="hidden max-w-40 truncate text-xs text-muted-foreground md:inline">{viewer.user.name}</span>
+        <span className="hidden max-w-40 truncate text-xs text-muted-foreground md:inline">
+          {viewer.user.name}
+        </span>
         <SignOutButton />
       </div>
     </div>
@@ -36,7 +54,15 @@ async function AdminLink() {
   const locale = await getLocale();
   const viewer = await requireViewer(locale);
   const grants = await platformGrants(viewer.user.id);
-  return grants.length > 0 ? <AdminNavLink /> : null;
+  return grants.length > 0 && adminReachable() ? <AdminNavLink /> : null;
+}
+
+/** White-label theme of the active organization (Settings → Branding). */
+async function OrgBranding() {
+  const locale = await getLocale();
+  const viewer = await requireViewer(locale);
+  const { org } = await getWorkspaceContext(viewer.user.id);
+  return <BrandingStyle organizationId={org?.id} />;
 }
 
 function PageFallback() {
@@ -55,19 +81,24 @@ function PageFallback() {
 
 export default function AppLayout({ children }: LayoutProps<"/[locale]">) {
   return (
-    <AppFrame
-      topbar={
-        <Suspense fallback={<Skeleton className="h-8 w-64" />}>
-          <Topbar />
-        </Suspense>
-      }
-      adminSlot={
-        <Suspense fallback={null}>
-          <AdminLink />
-        </Suspense>
-      }
-    >
-      <Suspense fallback={<PageFallback />}>{children}</Suspense>
-    </AppFrame>
+    <>
+      <Suspense fallback={null}>
+        <OrgBranding />
+      </Suspense>
+      <AppFrame
+        topbar={
+          <Suspense fallback={<Skeleton className="h-8 w-64" />}>
+            <Topbar />
+          </Suspense>
+        }
+        adminSlot={
+          <Suspense fallback={null}>
+            <AdminLink />
+          </Suspense>
+        }
+      >
+        <Suspense fallback={<PageFallback />}>{children}</Suspense>
+      </AppFrame>
+    </>
   );
 }

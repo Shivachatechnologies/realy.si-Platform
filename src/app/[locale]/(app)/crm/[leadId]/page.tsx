@@ -13,6 +13,10 @@ import {
   NewFollowUpForm,
 } from "@/components/crm/lead-forms";
 import { SCORE_TONE } from "@/components/crm/score";
+import { AttachmentList } from "@/components/crm/activity-cards";
+import { ConvertLeadForm, LeadDetailsForm, QualificationForm } from "@/components/crm/lead-extras";
+import { CrmTabs } from "@/components/crm/crm-tabs";
+import { TagList } from "@/components/crm/shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -22,6 +26,11 @@ import { db } from "@/server/core/db";
 import { AppError } from "@/server/core/errors";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { getLead, listOwners } from "@/server/modules/crm/service";
+import { accountOptions } from "@/server/modules/crm/accounts";
+import { toMajor } from "@/server/modules/crm/common";
+import { sourceNames } from "@/server/modules/crm/config";
+import { customDisplay, listFieldDefs } from "@/server/modules/crm/custom-fields";
+import { listPipelines } from "@/server/modules/crm/pipelines";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -31,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const PRIORITY_TONE = { HIGH: "danger", MEDIUM: "warning", LOW: "neutral" } as const;
-const ACTIVITY_ICON = { CALL: "☎", EMAIL: "✉", MEETING: "◷", NOTE: "✎" } as const;
+const ACTIVITY_ICON = { CALL: "☎", EMAIL: "✉", MEETING: "◷", NOTE: "✎", TASK: "☐" } as const;
 const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
 
 export default async function LeadPage({ params }: { params: Promise<{ leadId: string }> }) {
@@ -51,7 +60,14 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
-  const owners = canManage ? await listOwners(viewer.ctx, org.id, company.id) : [];
+  const [owners, fields, sources, accounts, pipelines] = await Promise.all([
+    canManage ? listOwners(viewer.ctx, org.id, company.id) : Promise.resolve([]),
+    listFieldDefs(viewer.ctx, org.id, company.id, "LEAD"),
+    canManage ? sourceNames(viewer.ctx, org.id, company.id) : Promise.resolve([]),
+    canManage && !lead.convertedAt ? accountOptions(viewer.ctx, org.id, company.id) : Promise.resolve([]),
+    canManage && !lead.convertedAt ? listPipelines(viewer.ctx, org.id, company.id) : Promise.resolve([]),
+  ]);
+  const custom = (lead.customFields ?? {}) as Record<string, string | number | null>;
   const base = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const tz = company.timezone ?? "UTC";
   const active = !lead.archivedAt;
@@ -62,6 +78,9 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
     [t("crm.phone"), lead.phone],
     [t("crm.account"), lead.account],
     [t("crm.source"), lead.source],
+    [t("crm.fields.territory"), lead.territory],
+    [t("crm.fields.campaignCode"), lead.campaignCode],
+    ...customDisplay(fields, lead.customFields).map((f) => [f.label, f.value] as [string, string]),
     [t("crm.lastContacted"), lead.lastContactedAt ? formatDateTime(lead.lastContactedAt, locale, tz) : null],
     [t("crm.created"), formatDate(lead.createdAt, locale, tz)],
   ];
@@ -77,6 +96,7 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
 
   return (
     <div className="mx-auto grid max-w-[1000px] gap-4">
+      <CrmTabs locale={locale} active="leads" />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/${locale}/crm`} className="text-sm text-muted-foreground hover:underline">
           ← {t("crm.back")}
@@ -94,11 +114,28 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
           )}
         </Notice>
       ) : null}
+      {lead.convertedAt ? (
+        <Notice tone="success">
+          {t("crm.convert.convertedOn", { date: formatDate(lead.convertedAt, locale, tz) })}{" "}
+          {lead.contacts.map((ct) => (
+            <Link key={ct.id} href={`/${locale}/crm/contacts/${ct.id}`} className="me-2 underline">
+              {[ct.firstName, ct.lastName].filter(Boolean).join(" ")}
+            </Link>
+          ))}
+          {lead.crmDeals.map((d) => (
+            <Link key={d.id} href={`/${locale}/crm/deals/${d.id}`} className="me-2 underline">
+              {d.name}
+            </Link>
+          ))}
+        </Notice>
+      ) : null}
       <Card>
         <CardHeader
           title={
             <span className="flex flex-wrap items-center gap-2">
               {lead.name}
+              {lead.qualified ? <Badge tone="success">{t("crm.bant.qualifiedBadge")}</Badge> : null}
+              <TagList tags={lead.tags} />
               <Badge tone={SCORE_TONE[lead.scoreLabel]} title={t("crm.scoreHint")}>
                 {t(`crm.scoreLabels.${lead.scoreLabel}`)} · {lead.score}
               </Badge>
@@ -121,8 +158,65 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
           ) : lead.notes ? (
             <p className="whitespace-pre-wrap text-sm">{lead.notes}</p>
           ) : null}
+          {canManage && active ? (
+            <details>
+              <summary className="cursor-pointer text-sm font-medium">{t("crm.edit")}</summary>
+              <LeadDetailsForm
+                base={base}
+                leadId={lead.id}
+                sources={sources}
+                fields={fields}
+                initial={{
+                  name: lead.name,
+                  email: lead.email ?? "",
+                  phone: lead.phone ?? "",
+                  account: lead.account ?? "",
+                  source: lead.source ?? "",
+                  territory: lead.territory ?? "",
+                  campaignCode: lead.campaignCode ?? "",
+                  tags: lead.tags,
+                  customFields: Object.fromEntries(Object.entries(custom).map(([k, v]) => [k, v == null ? "" : String(v)])),
+                }}
+              />
+            </details>
+          ) : null}
         </CardBody>
       </Card>
+
+      <Card>
+        <CardHeader title={t("crm.bant.title")} description={t("crm.bant.description")} />
+        <CardBody>
+          {canManage && active ? (
+            <QualificationForm base={base} leadId={lead.id} initial={{ budget: lead.budget ?? "", authority: lead.authority ?? "", need: lead.need ?? "", timeline: lead.timeline ?? "", qualified: lead.qualified }} />
+          ) : (
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              {(["budget", "authority", "need", "timeline"] as const).map((k) => (
+                <div key={k} className="grid gap-0.5">
+                  <dt className="text-xs text-muted-foreground">{t(`crm.bant.${k}`)}</dt>
+                  <dd>{lead[k] ?? "—"}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </CardBody>
+      </Card>
+
+      {canManage && active && !lead.convertedAt ? (
+        <Card>
+          <CardHeader title={t("crm.convert.title")} description={t("crm.convert.description")} />
+          <CardBody>
+            <ConvertLeadForm
+              base={base}
+              locale={locale}
+              leadId={lead.id}
+              owners={owners}
+              accounts={accounts}
+              pipelines={pipelines.map((p) => ({ id: p.id, name: p.name, stages: p.stages.map((s) => ({ id: s.id, name: s.name, type: s.type })) }))}
+              defaults={{ accountName: lead.account ?? lead.name, dealName: lead.account ?? lead.name, amount: toMajor(lead.valueMinor, lead.currency), ownerId: lead.ownerId ?? "" }}
+            />
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title={t("crm.deal")} />
@@ -224,6 +318,8 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
           )}
         </CardBody>
       </Card>
+
+      <AttachmentList subjectType="lead" subjectId={lead.id} active={active} />
 
       {lead.duplicates.length ? (
         <Card>

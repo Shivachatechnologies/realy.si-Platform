@@ -60,7 +60,7 @@ export default async function CrmDashboardPage() {
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
       {header}
-      <CrmTabs locale={locale} active="dashboard" labels={{ leads: t("crm.leads"), dashboard: t("crm.dashboard") }} />
+      <CrmTabs locale={locale} active="dashboard" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stat(t("crm.newLeads"), formatNumber(d.newLeads.last7, locale), t("crm.newLeadsHint", { count: d.newLeads.last30 }))}
         {stat(t("crm.pipelineValue"), money(d.pipeline.openValueMinor), t("crm.count", { count: d.pipeline.openCount }))}

@@ -1,7 +1,5 @@
 import { z } from "zod";
 import { db } from "@/server/core/db";
-import type { RequestContext } from "@/server/core/context";
-import type { ToolAutonomy, ToolRisk } from "@/generated/prisma/enums";
 import { searchDocuments } from "@/server/modules/brain/service";
 import { createEntity, getGraph } from "@/server/modules/graph/service";
 import { createProject, listWorkspaces } from "@/server/modules/companies/service";
@@ -10,7 +8,8 @@ import { addActivity, createLead, getLead, listLeads } from "@/server/modules/cr
 import { sendPlainEmail } from "@/server/modules/email/service";
 import { AppError } from "@/server/core/errors";
 import { ENTITY_KINDS } from "@/server/modules/graph/relations";
-import type { ToolName } from "@/server/modules/agents/profiles";
+import { def, type ToolDefinition } from "./define";
+import { MODULE_TOOLS } from "./modules";
 
 /**
  * Tool registry (docs/tool-system.md §1): the only way agents act. Every tool here is internal and scoped to the
@@ -18,54 +17,13 @@ import type { ToolName } from "@/server/modules/agents/profiles";
  * schema, the principal's permissions and the autonomy policy before `execute` runs.
  */
 
-export interface Citable {
-  passageId: string;
-  documentId: string;
-  title: string;
-  passage: number;
-}
-
-export interface ToolExecutionContext {
-  /** The principal the tool acts for: the task's requester, or — for an approved action — the approver. */
-  ctx: RequestContext;
-  organizationId: string;
-  companyId: string;
-  /** Registers a retrieved passage as citable and returns its reference (e.g. "S1"). */
-  cite?: (source: Citable) => string;
-}
-
-export interface ToolOutput {
-  /** Text returned to the model. */
-  content: string;
-  /** Records read or changed, as "type:id" (audit trail). */
-  records?: string[];
-  /** Number of items returned (reads) for the task trace. */
-  count?: number;
-}
-
-export interface ToolDefinition<I = unknown> {
-  name: ToolName;
-  version: number;
-  description: string;
-  input: z.ZodType<I>;
-  /** JSON Schema sent to the model (strict: only type/properties/required/enum/description/additionalProperties). */
-  modelSchema: Record<string, unknown>;
-  permissions: string[];
-  risk: ToolRisk;
-  autonomy: ToolAutonomy;
-  timeoutMs: number;
-  /** One line describing the effect, shown on approval requests. */
-  summarize(input: I): string;
-  execute(input: I, x: ToolExecutionContext): Promise<ToolOutput>;
-}
-
-const def = <I>(t: ToolDefinition<I>) => t as unknown as ToolDefinition;
+export type { Citable, ToolDefinition, ToolExecutionContext, ToolOutput } from "./define";
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const SEARCH_LIMIT = 8;
 const GRAPH_ENTITY_LIMIT = 300;
 
-export const TOOLS: Record<ToolName, ToolDefinition> = {
+export const TOOLS: Record<string, ToolDefinition> = {
   search_company_brain: def({
     name: "search_company_brain",
     version: 1,
@@ -348,4 +306,13 @@ export const TOOLS: Record<ToolName, ToolDefinition> = {
   }),
 };
 
-export const getTool = (name: string): ToolDefinition | undefined => (Object.hasOwn(TOOLS, name) ? TOOLS[name as ToolName] : undefined);
+let all: Record<string, ToolDefinition> | null = null;
+/** Core tools plus every business module's tools (./modules.ts), resolved on first use to keep imports acyclic at load. */
+export function allTools(): Record<string, ToolDefinition> {
+  if (!all) {
+    all = { ...TOOLS };
+    for (const group of MODULE_TOOLS()) for (const [k, t] of Object.entries(group)) all[k] = t;
+  }
+  return all;
+}
+export const getTool = (name: string): ToolDefinition | undefined => (Object.hasOwn(allTools(), name) ? allTools()[name] : undefined);

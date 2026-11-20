@@ -1,0 +1,335 @@
+// Cross-module business entities (docs/module-development.md). Each has one owning module that builds its services
+// and UI; other modules reference these rows and may create them through the owner's services.
+//   Account, Contact            → CRM module      (customers, prospects, partners, vendors; people at them)
+//   Department, Team, Employee  → HR module       (organization structure)
+//   WorkTask                    → Work module     (human tasks: projects, action items, onboarding, follow-ups)
+
+enum AccountType {
+  PROSPECT
+  CUSTOMER
+  PARTNER
+  VENDOR
+  OTHER
+}
+
+/// A company the business deals with. Customers in CRM, finance (invoices), support (tickets) and marketing.
+model Account {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  companyId      String      @map("company_id") @db.Uuid
+  name           String
+  type           AccountType @default(PROSPECT)
+  domain         String?
+  website        String?
+  industry       String?
+  email          String?
+  phone          String?
+  /// Free-form postal/billing address.
+  address        String?
+  countryCode    String?     @map("country_code") @db.Char(2)
+  /// Preferred billing currency; defaults to the company's base currency.
+  currency       String?     @db.Char(3)
+  source         String?
+  notes          String?
+  ownerId        String?     @map("owner_id") @db.Uuid
+  tags           String[]    @default([])
+  customFields   Json        @default("{}") @map("custom_fields")
+  /// Sales territory (region/country).
+  territory      String?
+  /// Set when merged into another account (this one is archived).
+  mergedIntoId   String?     @map("merged_into_id") @db.Uuid
+  archivedAt     DateTime?   @map("archived_at") @db.Timestamptz(3)
+  createdById    String      @map("created_by_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company             Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  owner               User?                @relation("AccountOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contacts            Contact[]
+  crmDeals            CrmDeal[]
+  crmActivities       CrmActivity[]
+  crmFollowUps        CrmFollowUp[]
+  crmAttachments      CrmAttachment[]
+  financeTransactions FinanceTransaction[]
+  recurringExpenses   RecurringExpense[]
+  invoices            Invoice[]
+  estimates           Estimate[]
+  recurringInvoices   RecurringInvoice[]
+  creditNotes         CreditNote[]
+  supportTickets      SupportTicket[]      @relation("SupportTicketAccount")
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, type])
+  @@index([companyId, name])
+  @@map("accounts")
+}
+
+/// A person the business deals with (optionally at an Account). CRM contacts, email-marketing audience, support requesters.
+model Contact {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  companyId        String    @map("company_id") @db.Uuid
+  accountId        String?   @map("account_id") @db.Uuid
+  /// The lead this contact was converted from, if any.
+  leadId           String?   @map("lead_id") @db.Uuid
+  firstName        String    @map("first_name")
+  lastName         String?   @map("last_name")
+  email            String?
+  emailNormalized  String?   @map("email_normalized")
+  phone            String?
+  /// Last 10 digits of the phone, for duplicate detection.
+  phoneNormalized  String?   @map("phone_normalized")
+  title            String?
+  ownerId          String?   @map("owner_id") @db.Uuid
+  /// Explicit opt-in to marketing email; unsubscribing sets unsubscribedAt and clears consent.
+  marketingConsent Boolean   @default(false) @map("marketing_consent")
+  unsubscribedAt   DateTime? @map("unsubscribed_at") @db.Timestamptz(3)
+  tags             String[]  @default([])
+  customFields     Json      @default("{}") @map("custom_fields")
+  /// Set when merged into another contact (this one is archived).
+  mergedIntoId     String?   @map("merged_into_id") @db.Uuid
+  archivedAt       DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById      String    @map("created_by_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company                 Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account                 Account?                 @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  lead                    Lead?                    @relation(fields: [leadId, companyId], references: [id, companyId], onDelete: NoAction)
+  owner                   User?                    @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  marketingSegmentMembers MarketingSegmentMember[]
+  crmDeals                CrmDeal[]
+  crmActivities           CrmActivity[]
+  crmFollowUps            CrmFollowUp[]
+  crmAttachments          CrmAttachment[]
+  supportTickets          SupportTicket[]          @relation("SupportTicketRequester")
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId])
+  @@index([companyId, emailNormalized])
+  @@index([accountId])
+  @@map("contacts")
+}
+
+model Department {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  parentId       String?   @map("parent_id") @db.Uuid
+  /// Employee who heads the department.
+  headId         String?   @map("head_id") @db.Uuid
+  costCenterCode String?   @map("cost_center_code")
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company             Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  parent              Department?          @relation("DepartmentTree", fields: [parentId, companyId], references: [id, companyId], onDelete: NoAction)
+  children            Department[]         @relation("DepartmentTree")
+  head                Employee?            @relation("DepartmentHead", fields: [headId, companyId], references: [id, companyId], onDelete: NoAction)
+  teams               Team[]
+  employees           Employee[]           @relation("EmployeeDepartment")
+  journalLines        JournalLine[]
+  financeTransactions FinanceTransaction[]
+  recurringExpenses   RecurringExpense[]
+  financeBudgets      FinanceBudget[]
+  hrJobs              HrJob[]              @relation("HrJobDepartment")
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("departments")
+}
+
+model Team {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  departmentId   String?   @map("department_id") @db.Uuid
+  name           String
+  description    String?
+  leadId         String?   @map("lead_id") @db.Uuid
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  lead       Employee?   @relation("TeamLead", fields: [leadId, companyId], references: [id, companyId], onDelete: NoAction)
+  members    Employee[]  @relation("EmployeeTeam")
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("teams")
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACTOR
+  INTERN
+}
+
+enum EmployeeStatus {
+  ONBOARDING
+  ACTIVE
+  ON_LEAVE
+  OFFBOARDING
+  TERMINATED
+}
+
+/// A person employed by the company (optionally linked to a platform user account).
+model Employee {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  userId         String?        @map("user_id") @db.Uuid
+  firstName      String         @map("first_name")
+  lastName       String?        @map("last_name")
+  email          String?
+  phone          String?
+  /// Designation / job title.
+  title          String?
+  departmentId   String?        @map("department_id") @db.Uuid
+  teamId         String?        @map("team_id") @db.Uuid
+  managerId      String?        @map("manager_id") @db.Uuid
+  employmentType EmploymentType @default(FULL_TIME) @map("employment_type")
+  status         EmployeeStatus @default(ACTIVE)
+  startDate      DateTime?      @map("start_date") @db.Date
+  endDate        DateTime?      @map("end_date") @db.Date
+  location       String?
+  timezone       String?
+  skills         String[]       @default([])
+  /// HR employee number, unique per company when set.
+  employeeNumber String?        @map("employee_number")
+  designationId  String?        @map("designation_id") @db.Uuid
+  workScheduleId String?        @map("work_schedule_id") @db.Uuid
+  /// Personal details (visible to HR managers and the employee only).
+  personalEmail  String?        @map("personal_email")
+  dateOfBirth    DateTime?      @map("date_of_birth") @db.Date
+  address        String?
+  emergencyName  String?        @map("emergency_name")
+  emergencyPhone String?        @map("emergency_phone")
+  bio            String?
+  customFields   Json           @default("{}") @map("custom_fields")
+  archivedAt     DateTime?      @map("archived_at") @db.Timestamptz(3)
+  createdById    String         @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user       User?        @relation("EmployeeUser", fields: [userId], references: [id], onDelete: SetNull)
+  department Department?  @relation("EmployeeDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  team       Team?        @relation("EmployeeTeam", fields: [teamId, companyId], references: [id, companyId], onDelete: NoAction)
+  manager    Employee?    @relation("ReportingLine", fields: [managerId, companyId], references: [id, companyId], onDelete: NoAction)
+  reports    Employee[]   @relation("ReportingLine")
+  headOf     Department[] @relation("DepartmentHead")
+  leadOf     Team[]       @relation("TeamLead")
+
+  designation      HrDesignation?      @relation("EmployeeDesignation", fields: [designationId, companyId], references: [id, companyId], onDelete: NoAction)
+  workSchedule     HrWorkSchedule?     @relation("EmployeeWorkSchedule", fields: [workScheduleId, companyId], references: [id, companyId], onDelete: NoAction)
+  hrEvents         HrEmployeeEvent[]
+  hrDocuments      HrDocument[]
+  hiringManagerOf  HrJob[]             @relation("HrJobHiringManager")
+  hiredFrom        HrCandidate[]       @relation("HrCandidateEmployee")
+  checklists       HrChecklist[]
+  assetAssignments HrAssetAssignment[]
+  kpis             HrKpi[]
+  goals            HrGoal[]
+  reviews          HrReview[]          @relation("HrReviewEmployee")
+  reviewsGiven     HrReview[]          @relation("HrReviewReviewer")
+  feedback         HrFeedback[]
+  developmentPlans HrDevelopmentPlan[]
+  attendance       HrAttendance[]
+  leaveAllowances  HrLeaveAllowance[]
+  leaveRequests    HrLeaveRequest[]
+  policyAcks       HrPolicyAck[]
+  employeeRequests HrEmployeeRequest[]
+  compensations    HrCompensation[]
+  payslips         HrPayslip[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, employeeNumber])
+  @@index([organizationId, companyId, status])
+  @@index([userId])
+  @@index([companyId, managerId])
+  @@map("employees")
+}
+
+enum WorkTaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum WorkPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+/// A task for people (not AI): project work, meeting action items, onboarding steps, ticket follow-ups, workflow actions.
+model WorkTask {
+  id                  String          @id @default(uuid(7)) @db.Uuid
+  organizationId      String          @map("organization_id") @db.Uuid
+  companyId           String          @map("company_id") @db.Uuid
+  projectId           String?         @map("project_id") @db.Uuid
+  parentId            String?         @map("parent_id") @db.Uuid
+  title               String
+  description         String?
+  status              WorkTaskStatus  @default(TODO)
+  priority            WorkPriority    @default(MEDIUM)
+  assigneeId          String?         @map("assignee_id") @db.Uuid
+  startDate           DateTime?       @map("start_date") @db.Date
+  dueDate             DateTime?       @map("due_date") @db.Date
+  completedAt         DateTime?       @map("completed_at") @db.Timestamptz(3)
+  /// Ordering within a board column.
+  position            Float           @default(0)
+  estimatePoints      Int?            @map("estimate_points")
+  labels              String[]        @default([])
+  /// Where the task came from, e.g. ("meeting", id), ("ticket", id), ("onboarding", id), ("workflow_run", id).
+  sourceType          String?         @map("source_type")
+  sourceId            String?         @map("source_id") @db.Uuid
+  /// Agile sprint, project milestone and product feature the task belongs to (work module).
+  sprintId            String?         @map("sprint_id") @db.Uuid
+  milestoneId         String?         @map("milestone_id") @db.Uuid
+  featureId           String?         @map("feature_id") @db.Uuid
+  /// Recurrence rule: a new occurrence is created by the work job when this one is due or completed.
+  recurrence          WorkRecurrence?
+  recurrenceInterval  Int             @default(1) @map("recurrence_interval")
+  recurrenceUntil     DateTime?       @map("recurrence_until") @db.Date
+  /// Set once the next occurrence was created (makes the job idempotent).
+  recurrenceSpawnedAt DateTime?       @map("recurrence_spawned_at") @db.Timestamptz(3)
+  archivedAt          DateTime?       @map("archived_at") @db.Timestamptz(3)
+  createdById         String          @map("created_by_id") @db.Uuid
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company     Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project     Project?             @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+  parent      WorkTask?            @relation("Subtasks", fields: [parentId, companyId], references: [id, companyId], onDelete: Cascade)
+  subtasks    WorkTask[]           @relation("Subtasks")
+  assignee    User?                @relation("WorkTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  sprint      Sprint?              @relation(fields: [sprintId, companyId], references: [id, companyId], onDelete: NoAction)
+  milestone   ProjectMilestone?    @relation(fields: [milestoneId, companyId], references: [id, companyId], onDelete: NoAction)
+  feature     ProductFeature?      @relation(fields: [featureId, companyId], references: [id, companyId], onDelete: NoAction)
+  dependsOn   WorkTaskDependency[] @relation("TaskDependsOn")
+  blocks      WorkTaskDependency[] @relation("TaskBlocks")
+  comments    WorkTaskComment[]
+  attachments WorkTaskAttachment[]
+  timeEntries WorkTimeEntry[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([projectId, status, position])
+  @@index([assigneeId, status])
+  @@index([companyId, sourceType, sourceId])
+  @@index([sprintId])
+  @@index([companyId, dueDate])
+  @@map("work_tasks")
+}

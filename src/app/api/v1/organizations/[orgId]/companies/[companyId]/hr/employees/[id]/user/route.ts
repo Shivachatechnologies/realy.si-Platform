@@ -1,0 +1,7 @@
+import { LIMITS } from "@/server/core/limits";
+import { body, route } from "@/server/core/http";
+import { linkEmployeeUser, linkUserInput } from "@/server/modules/hr/employees";
+
+type P = { orgId: string; companyId: string; id: string };
+
+export const POST = route<P>({ auth: "required", name: "POST /organizations/:orgId/companies/:companyId/hr/employees/:id/user", rateLimits: LIMITS.tenantWrite, idempotent: true }, async ({ req, ctx }, { orgId, companyId, id }) => linkEmployeeUser(ctx, orgId, companyId, id, await body(req, linkUserInput)));

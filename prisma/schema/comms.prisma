@@ -1,0 +1,363 @@
+// Communication OS (src/server/modules/comms). User ids are plain uuids (resolved through the users table) so this
+// module adds no back-relations to User.
+
+enum CommsAudience {
+  ALL
+  DEPARTMENT
+  TEAM
+}
+
+enum CommsAnnouncementStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+/// A company announcement, visible to its audience once published.
+model CommsAnnouncement {
+  id             String                  @id @default(uuid(7)) @db.Uuid
+  organizationId String                  @map("organization_id") @db.Uuid
+  companyId      String                  @map("company_id") @db.Uuid
+  title          String
+  body           String
+  audience       CommsAudience           @default(ALL)
+  /// Department or team id when audience is DEPARTMENT / TEAM.
+  audienceId     String?                 @map("audience_id") @db.Uuid
+  pinned         Boolean                 @default(false)
+  status         CommsAnnouncementStatus @default(DRAFT)
+  publishAt      DateTime?               @map("publish_at") @db.Timestamptz(3)
+  publishedAt    DateTime?               @map("published_at") @db.Timestamptz(3)
+  authorId       String                  @map("author_id") @db.Uuid
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  reads   CommsAnnouncementRead[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status, publishedAt])
+  @@map("comms_announcements")
+}
+
+/// Read receipt: one row per reader.
+model CommsAnnouncementRead {
+  announcementId String   @map("announcement_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  readAt         DateTime @default(now()) @map("read_at") @db.Timestamptz(3)
+
+  announcement CommsAnnouncement @relation(fields: [announcementId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@id([announcementId, userId])
+  @@map("comms_announcement_reads")
+}
+
+/// Internal feed post.
+model CommsPost {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  authorId       String    @map("author_id") @db.Uuid
+  body           String
+  mentions       String[]  @default([])
+  editedAt       DateTime? @map("edited_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  reactions CommsReaction[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@map("comms_posts")
+}
+
+model CommsReaction {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  post CommsPost @relation(fields: [postId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([postId, userId, emoji])
+  @@map("comms_reactions")
+}
+
+/// Generic comment thread on any record ("post", "announcement", "meeting", ...), with @mentions.
+model CommsComment {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  subjectType    String    @map("subject_type")
+  subjectId      String    @map("subject_id") @db.Uuid
+  authorId       String    @map("author_id") @db.Uuid
+  body           String
+  mentions       String[]  @default([])
+  editedAt       DateTime? @map("edited_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, subjectType, subjectId, createdAt])
+  @@map("comms_comments")
+}
+
+enum CommsChannelVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+/// Team discussion channel, or a direct-message conversation (isDirect).
+model CommsChannel {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  companyId      String                 @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  visibility     CommsChannelVisibility @default(PUBLIC)
+  isDirect       Boolean                @default(false) @map("is_direct")
+  /// Sorted participant ids joined with ":" for direct conversations (one conversation per pair).
+  directKey      String?                @map("direct_key")
+  createdById    String                 @map("created_by_id") @db.Uuid
+  lastMessageAt  DateTime?              @map("last_message_at") @db.Timestamptz(3)
+  archivedAt     DateTime?              @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  members  CommsChannelMember[]
+  messages CommsMessage[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, directKey])
+  @@index([organizationId, companyId, isDirect])
+  @@map("comms_channels")
+}
+
+model CommsChannelMember {
+  channelId  String    @map("channel_id") @db.Uuid
+  companyId  String    @map("company_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  lastReadAt DateTime? @map("last_read_at") @db.Timestamptz(3)
+  joinedAt   DateTime  @default(now()) @map("joined_at") @db.Timestamptz(3)
+
+  channel CommsChannel @relation(fields: [channelId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@index([userId])
+  @@map("comms_channel_members")
+}
+
+/// Channel / direct message. parentId makes it a threaded reply.
+model CommsMessage {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  companyId String    @map("company_id") @db.Uuid
+  channelId String    @map("channel_id") @db.Uuid
+  parentId  String?   @map("parent_id") @db.Uuid
+  authorId  String    @map("author_id") @db.Uuid
+  body      String
+  mentions  String[]  @default([])
+  editedAt  DateTime? @map("edited_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  channel CommsChannel   @relation(fields: [channelId, companyId], references: [id, companyId], onDelete: Cascade)
+  parent  CommsMessage?  @relation("CommsThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies CommsMessage[] @relation("CommsThread")
+
+  @@index([channelId, parentId, createdAt])
+  @@map("comms_messages")
+}
+
+enum CommsMeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model CommsMeeting {
+  id               String             @id @default(uuid(7)) @db.Uuid
+  organizationId   String             @map("organization_id") @db.Uuid
+  companyId        String             @map("company_id") @db.Uuid
+  title            String
+  agenda           String?
+  location         String?
+  startsAt         DateTime           @map("starts_at") @db.Timestamptz(3)
+  endsAt           DateTime           @map("ends_at") @db.Timestamptz(3)
+  status           CommsMeetingStatus @default(SCHEDULED)
+  notes            String?
+  /// One decision per entry.
+  decisions        String[]           @default([])
+  organizerId      String             @map("organizer_id") @db.Uuid
+  /// Calendar sync: "google_calendar" / "outlook_calendar" and the provider's event id.
+  externalProvider String?            @map("external_provider")
+  externalId       String?            @map("external_id")
+  completedAt      DateTime?          @map("completed_at") @db.Timestamptz(3)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company                @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  attendees CommsMeetingAttendee[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, externalProvider, externalId])
+  @@index([organizationId, companyId, startsAt])
+  @@map("comms_meetings")
+}
+
+model CommsMeetingAttendee {
+  meetingId String @map("meeting_id") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+
+  meeting CommsMeeting @relation(fields: [meetingId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@id([meetingId, userId])
+  @@index([userId])
+  @@map("comms_meeting_attendees")
+}
+
+/// Company calendar event (holidays, offsites, launches...).
+model CommsCalendarEvent {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  location       String?
+  startsAt       DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime @map("ends_at") @db.Timestamptz(3)
+  allDay         Boolean  @default(false) @map("all_day")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, startsAt])
+  @@map("comms_calendar_events")
+}
+
+/// A mailbox synced through a provider connection of the Integrations module ("gmail" / "outlook").
+model CommsEmailAccount {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  provider       String
+  address        String
+  addedById      String    @map("added_by_id") @db.Uuid
+  lastSyncedAt   DateTime? @map("last_synced_at") @db.Timestamptz(3)
+  syncError      String?   @map("sync_error")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  threads CommsEmailThread[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, provider, address])
+  @@map("comms_email_accounts")
+}
+
+model CommsEmailThread {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  /// Null for messages sent without a mailbox connection (core email fallback).
+  accountId        String?  @map("account_id") @db.Uuid
+  providerThreadId String?  @map("provider_thread_id")
+  subject          String
+  snippet          String?
+  participants     String[] @default([])
+  /// Linked CRM contact (shared Contact row).
+  contactId        String?  @map("contact_id") @db.Uuid
+  unread           Boolean  @default(true)
+  lastMessageAt    DateTime @default(now()) @map("last_message_at") @db.Timestamptz(3)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  account  CommsEmailAccount?  @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: Cascade)
+  messages CommsEmailMessage[]
+
+  @@unique([id, companyId])
+  @@unique([accountId, providerThreadId])
+  @@index([organizationId, companyId, lastMessageAt])
+  @@map("comms_email_threads")
+}
+
+enum CommsEmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CommsEmailStatus {
+  RECEIVED
+  SENT
+  FAILED
+  NOT_CONFIGURED
+}
+
+model CommsEmailMessage {
+  id                String              @id @default(uuid(7)) @db.Uuid
+  companyId         String              @map("company_id") @db.Uuid
+  threadId          String              @map("thread_id") @db.Uuid
+  providerMessageId String?             @map("provider_message_id")
+  direction         CommsEmailDirection
+  status            CommsEmailStatus
+  fromAddress       String              @map("from_address")
+  toAddresses       String[]            @default([]) @map("to_addresses")
+  ccAddresses       String[]            @default([]) @map("cc_addresses")
+  subject           String
+  bodyText          String              @map("body_text")
+  /// [{ name, contentType, size }] — metadata only; content stays at the provider.
+  attachments       Json                @default("[]")
+  error             String?
+  sentById          String?             @map("sent_by_id") @db.Uuid
+  sentAt            DateTime            @default(now()) @map("sent_at") @db.Timestamptz(3)
+
+  thread CommsEmailThread @relation(fields: [threadId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([threadId, providerMessageId])
+  @@index([threadId, sentAt])
+  @@map("comms_email_messages")
+}
+
+model CommsEmailTemplate {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  subject        String
+  body           String
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, name])
+  @@map("comms_email_templates")
+}
+
+/// Log of posts to external chat (Slack / Microsoft Teams): what was attempted and what the provider said.
+model CommsChatPost {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  provider       String
+  subjectType    String   @map("subject_type")
+  subjectId      String   @map("subject_id") @db.Uuid
+  /// SENT, FAILED or NOT_CONNECTED.
+  status         String
+  externalId     String?  @map("external_id")
+  error          String?
+  createdById    String?  @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, subjectType, subjectId])
+  @@map("comms_chat_posts")
+}

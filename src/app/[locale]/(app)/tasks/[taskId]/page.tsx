@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
-import { formatDateTime, formatNumber } from "@/i18n/format";
+import { formatDateTime, formatMoney, formatNumber } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { isAppError } from "@/server/core/errors";
 import { aiConfigured, type Citation, type ToolCallRecord } from "@/server/modules/agents/runtime";
-import { getTask } from "@/server/modules/agents/service";
+import { getTask, listChildTasks } from "@/server/modules/agents/service";
+import { costMicros, microsToCents } from "@/server/modules/workforce/pricing";
 import { listApprovals } from "@/server/modules/approvals/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
@@ -40,6 +41,11 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
     can(viewer.ctx, "approvals.read", chain),
     can(viewer.ctx, "approvals.decide", chain),
   ]);
+  const [employee, parent, children] = await Promise.all([
+    task.aiEmployeeId ? db().aiEmployee.findFirst({ where: { id: task.aiEmployeeId, companyId: company.id }, select: { id: true, name: true } }) : null,
+    task.parentTaskId ? db().agentTask.findFirst({ where: { id: task.parentTaskId, companyId: company.id }, select: { id: true, title: true } }) : null,
+    listChildTasks(viewer.ctx, org.id, company.id, task.id),
+  ]);
   const approvals = canReadApprovals ? (await listApprovals(viewer.ctx, org.id, company.id)).filter((a) => a.taskId === task.id) : [];
   const active = task.status === "QUEUED" || task.status === "RUNNING";
   const citations = task.citations as unknown as Citation[];
@@ -64,7 +70,18 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
           }
           description={
             <span className="flex flex-wrap gap-x-3 gap-y-1">
-              <span>{t(`profiles.${task.profile}.name`)}</span>
+              {employee ? (
+                <Link className="hover:underline" href={`/${locale}/workforce/${employee.id}`}>
+                  {employee.name} · {t(`profiles.${task.profile}.name`)}
+                </Link>
+              ) : (
+                <span>{t(`profiles.${task.profile}.name`)}</span>
+              )}
+              {parent ? (
+                <Link className="hover:underline" href={`/${locale}/tasks/${parent.id}`}>
+                  {t("agentTasks.delegatedBy", { title: parent.title })}
+                </Link>
+              ) : null}
               <span>{formatDateTime(task.createdAt, locale, tz)}</span>
               {task.attempts > 1 ? <span>{t("agentTasks.attempts", { count: task.attempts })}</span> : null}
             </span>
@@ -98,6 +115,8 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
             {task.model ? (
               <p className="text-xs text-muted-foreground">
                 {t("agentTasks.usage", { model: task.model, input: formatNumber(task.inputTokens ?? 0, locale), output: formatNumber(task.outputTokens ?? 0, locale) })}
+                {" · "}
+                {t("agentTasks.estimatedCost", { cost: formatMoney({ amountMinor: microsToCents(costMicros(task.model, task.inputTokens ?? 0, task.outputTokens ?? 0)), currency: "USD" }, locale) })}
               </p>
             ) : null}
           </CardBody>
@@ -123,6 +142,22 @@ export default async function TaskPage({ params }: PageProps<"/[locale]/tasks/[t
               </ol>
             )}
           </CardBody>
+        </Card>
+      ) : null}
+
+      {children.length ? (
+        <Card>
+          <CardHeader title={t("agentTasks.delegated")} description={t("agentTasks.count", { count: children.length })} />
+          <ul className="divide-y">
+            {children.map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-2 px-4 py-2 text-sm">
+                <Link className="min-w-0 truncate hover:underline" href={`/${locale}/tasks/${c.id}`}>
+                  {c.title}
+                </Link>
+                <TaskStatusBadge status={c.status} label={t(`agentTasks.status.${c.status}`)} />
+              </li>
+            ))}
+          </ul>
         </Card>
       ) : null}
 

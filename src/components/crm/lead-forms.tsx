@@ -12,7 +12,15 @@ import { useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
 
 export const STAGES = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"] as const;
-const ACTIVITY_TYPES = ["CALL", "EMAIL", "MEETING", "NOTE"] as const;
+const ACTIVITY_TYPES = ["CALL", "EMAIL", "MEETING", "NOTE", "TASK"] as const;
+
+interface FieldDef {
+  key: string;
+  label: string;
+  type: "TEXT" | "NUMBER" | "DATE" | "SELECT";
+  options: string[];
+  required: boolean;
+}
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
 
 export interface Owner {
@@ -56,16 +64,29 @@ export function OwnerSelect({ id, owners, value, onChange, allowEmpty = true, cl
   );
 }
 
-export function NewLeadForm({ base, locale, owners, viewerId }: { base: string; locale: string; owners: Owner[]; viewerId: string }) {
+export function NewLeadForm({ base, locale, owners, viewerId, sources = [], fields = [] }: { base: string; locale: string; owners: Owner[]; viewerId: string; sources?: string[]; fields?: FieldDef[] }) {
   const t = useT();
-  const empty = { name: "", email: "", phone: "", account: "", source: "", value: "", notes: "", expectedCloseDate: "", probability: "", ownerId: owners.some((o) => o.id === viewerId) ? viewerId : "" };
+  const empty = { name: "", email: "", phone: "", account: "", source: "", value: "", notes: "", expectedCloseDate: "", probability: "", territory: "", tags: "", ownerId: owners.some((o) => o.id === viewerId) ? viewerId : "" };
   const [f, setF] = useState(empty);
+  const [custom, setCustom] = useState<Record<string, string>>({});
   const { busy, error, run } = useAction();
   const set = (k: keyof typeof empty) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
   const create = (allowDuplicate: boolean) =>
     run(
-      () => api(`${base}/leads`, { body: { ...f, probability: f.probability === "" ? undefined : Number(f.probability), allowDuplicate } }),
-      () => setF(empty),
+      () =>
+        api(`${base}/leads`, {
+          body: {
+            ...f,
+            tags: f.tags
+              .split(",")
+              .map((x) => x.trim())
+              .filter(Boolean),
+            customFields: custom,
+            probability: f.probability === "" ? undefined : Number(f.probability),
+            allowDuplicate,
+          },
+        }),
+      () => (setF(empty), setCustom({})),
     );
   const dupIds = isDuplicate(error) ? (((error as ApiError).details?.leadIds as string[] | undefined) ?? []) : [];
   return (
@@ -89,7 +110,12 @@ export function NewLeadForm({ base, locale, owners, viewerId }: { base: string; 
         <Input id="lead-account" value={f.account} maxLength={200} onChange={set("account")} />
       </Field>
       <Field label={t("crm.source")} htmlFor="lead-source">
-        <Input id="lead-source" value={f.source} maxLength={100} placeholder={t("crm.sourcePlaceholder")} onChange={set("source")} />
+        <Input id="lead-source" value={f.source} maxLength={100} list="lead-source-list" placeholder={t("crm.sourcePlaceholder")} onChange={set("source")} />
+        <datalist id="lead-source-list">
+          {sources.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
       </Field>
       <Field label={t("crm.owner")} htmlFor="lead-owner">
         <OwnerSelect id="lead-owner" owners={owners} value={f.ownerId} onChange={(v) => setF((p) => ({ ...p, ownerId: v }))} />
@@ -103,6 +129,36 @@ export function NewLeadForm({ base, locale, owners, viewerId }: { base: string; 
       <Field label={t("crm.expectedClose")} htmlFor="lead-close">
         <Input id="lead-close" type="date" value={f.expectedCloseDate} onChange={set("expectedCloseDate")} />
       </Field>
+      <Field label={t("crm.fields.territory")} htmlFor="lead-territory">
+        <Input id="lead-territory" value={f.territory} maxLength={100} onChange={set("territory")} />
+      </Field>
+      <Field label={t("crm.fields.tags")} htmlFor="lead-tags">
+        <Input id="lead-tags" value={f.tags} maxLength={600} placeholder={t("crm.tagsPlaceholder")} onChange={set("tags")} />
+      </Field>
+      {fields.map((d) => (
+        <Field key={d.key} label={d.required ? `${d.label} *` : d.label} htmlFor={`lead-cf-${d.key}`}>
+          {d.type === "SELECT" ? (
+            <Select id={`lead-cf-${d.key}`} value={custom[d.key] ?? ""} required={d.required} onChange={(e) => setCustom((c) => ({ ...c, [d.key]: e.target.value }))}>
+              <option value="">{t("common.none")}</option>
+              {d.options.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <Input
+              id={`lead-cf-${d.key}`}
+              type={d.type === "NUMBER" ? "number" : d.type === "DATE" ? "date" : "text"}
+              step="any"
+              value={custom[d.key] ?? ""}
+              required={d.required}
+              maxLength={1000}
+              onChange={(e) => setCustom((c) => ({ ...c, [d.key]: e.target.value }))}
+            />
+          )}
+        </Field>
+      ))}
       <div className="sm:col-span-3">
         <Field label={t("crm.notes")} htmlFor="lead-notes">
           <Textarea id="lead-notes" rows={2} value={f.notes} maxLength={5000} onChange={set("notes")} />

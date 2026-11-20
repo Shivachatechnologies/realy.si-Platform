@@ -16,6 +16,10 @@ import { dueFollowUps, LEAD_STAGES, LEAD_TEMPERATURES, listLeads, listOwners, pa
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
+import { Download, Upload } from "lucide-react";
+import { SaveSegment } from "@/components/crm/kit";
+import { listSegments, sourceNames } from "@/server/modules/crm/config";
+import { listFieldDefs } from "@/server/modules/crm/custom-fields";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.crm.title") };
@@ -54,8 +58,18 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
     );
   }
   const filters = parseLeadFilters(await searchParams);
-  const filtered = !!(filters.q || filters.owner || filters.stage || filters.temperature);
-  const [leads, due, owners] = await Promise.all([listLeads(viewer.ctx, org.id, company.id, filters), dueFollowUps(viewer.ctx, org.id, company.id), listOwners(viewer.ctx, org.id, company.id)]);
+  const filtered = !!(filters.q || filters.owner || filters.stage || filters.temperature || filters.tag || filters.source || filters.qualified || filters.converted);
+  const [leads, due, owners, sources, fields, segments] = await Promise.all([
+    listLeads(viewer.ctx, org.id, company.id, filters),
+    dueFollowUps(viewer.ctx, org.id, company.id),
+    listOwners(viewer.ctx, org.id, company.id),
+    sourceNames(viewer.ctx, org.id, company.id),
+    listFieldDefs(viewer.ctx, org.id, company.id, "LEAD"),
+    listSegments(viewer.ctx, org.id, company.id, "LEAD"),
+  ]);
+  const activeFilters: Record<string, string> = {};
+  for (const [k, v] of Object.entries(filters)) if (typeof v === "string" && v) activeFilters[k] = v;
+  const qs = new URLSearchParams(activeFilters).toString();
   const base = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const tz = company.timezone ?? "UTC";
   const money = (m: bigint, currency: string) => formatMoney({ amountMinor: m, currency }, locale);
@@ -80,8 +94,36 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
-      {header}
-      <CrmTabs locale={locale} active="leads" labels={{ leads: t("crm.leads"), dashboard: t("crm.dashboard") }} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {header}
+        <div className="flex flex-wrap gap-2">
+          {canManage ? (
+            <Button asChild size="sm" variant="secondary">
+              <Link href={`/${locale}/crm/import`}>
+                <Upload aria-hidden />
+                {t("crm.importCsv")}
+              </Link>
+            </Button>
+          ) : null}
+          <Button asChild size="sm" variant="secondary">
+            <a href={`${base}/crm/export/leads${qs ? `?${qs}` : ""}`}>
+              <Download aria-hidden />
+              {t("crm.exportCsv")}
+            </a>
+          </Button>
+        </div>
+      </div>
+      <CrmTabs locale={locale} active="leads" />
+      {segments.length ? (
+        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label={t("crm.segments.title")}>
+          <span className="text-xs text-muted-foreground">{t("crm.segments.title")}:</span>
+          {segments.map((s) => (
+            <Link key={s.id} href={`/${locale}/crm?${new URLSearchParams(s.filters as Record<string, string>)}`} className="rounded-full border px-2 py-0.5 text-xs hover:bg-muted">
+              {s.name}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">{t("crm.openLeads")}</p>
@@ -123,8 +165,8 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
       ) : null}
 
       <Card>
-        <CardHeader title={t("crm.leads")} description={t("crm.count", { count: leads.length })} />
-        <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_11rem_10rem_9rem_auto]" action={`/${locale}/crm`}>
+        <CardHeader title={t("crm.leads")} description={t("crm.count", { count: leads.length })} actions={<SaveSegment base={base} entity="LEAD" filters={activeFilters} />} />
+        <form className="grid gap-2 border-b p-3 sm:grid-cols-4 lg:grid-cols-[minmax(0,1fr)_10rem_9rem_8rem_9rem_7rem_8rem_8rem_auto]" action={`/${locale}/crm`}>
           <Input name="q" type="search" defaultValue={filters.q ?? ""} maxLength={200} aria-label={t("crm.search")} placeholder={t("crm.searchPlaceholder")} />
           <Select name="owner" defaultValue={filters.owner ?? ""} aria-label={t("crm.owner")}>
             <option value="">{t("crm.allOwners")}</option>
@@ -152,6 +194,25 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
               </option>
             ))}
           </Select>
+          <Select name="source" defaultValue={filters.source ?? ""} aria-label={t("crm.source")}>
+            <option value="">{t("crm.allSources")}</option>
+            {sources.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </Select>
+          <Input name="tag" defaultValue={filters.tag ?? ""} maxLength={40} aria-label={t("crm.tag")} placeholder={t("crm.tag")} />
+          <Select name="qualified" defaultValue={filters.qualified ?? ""} aria-label={t("crm.bant.qualified")}>
+            <option value="">{t("crm.bant.any")}</option>
+            <option value="yes">{t("crm.bant.qualifiedBadge")}</option>
+            <option value="no">{t("crm.bant.notQualified")}</option>
+          </Select>
+          <Select name="converted" defaultValue={filters.converted ?? ""} aria-label={t("crm.convert.filter")}>
+            <option value="">{t("crm.convert.any")}</option>
+            <option value="yes">{t("crm.convert.converted")}</option>
+            <option value="no">{t("crm.convert.notConverted")}</option>
+          </Select>
           <div className="flex gap-2">
             <Button type="submit" variant="secondary">
               {t("crm.applyFilters")}
@@ -166,7 +227,7 @@ export default async function CrmPage({ searchParams }: PageProps<"/[locale]/crm
         {canManage ? (
           <details className="border-b">
             <summary className="cursor-pointer p-3 text-sm font-medium">{t("crm.addLead")}</summary>
-            <NewLeadForm base={base} locale={locale} owners={owners} viewerId={viewer.user.id} />
+            <NewLeadForm base={base} locale={locale} owners={owners} viewerId={viewer.user.id} sources={sources} fields={fields} />
           </details>
         ) : null}
         {leads.length === 0 ? (

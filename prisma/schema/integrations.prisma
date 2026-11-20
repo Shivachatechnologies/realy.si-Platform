@@ -1,0 +1,192 @@
+// Integrations OS (src/server/modules/integrations). Provider connections with encrypted credentials, sync runs,
+// incoming webhooks (hooks) and outbound webhook subscriptions with their delivery logs.
+
+enum IntegrationConnectionStatus {
+  CONNECTED
+  ERROR
+  DISCONNECTED
+}
+
+enum IntegrationSyncStatus {
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+}
+
+enum IntegrationHookVerification {
+  TOKEN
+  HMAC_SHA256
+}
+
+enum IntegrationHookDeliveryStatus {
+  ACCEPTED
+  REJECTED
+}
+
+enum IntegrationWebhookDeliveryStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+/// One connection per provider per company. Secrets live only in `credentialsEnc` (AES-256-GCM, never returned).
+model IntegrationConnection {
+  id                  String                      @id @default(uuid(7)) @db.Uuid
+  organizationId      String                      @map("organization_id") @db.Uuid
+  companyId           String                      @map("company_id") @db.Uuid
+  provider            String
+  status              IntegrationConnectionStatus @default(CONNECTED)
+  /// Encrypted JSON { accessToken?, refreshToken?, apiKey? }.
+  credentialsEnc      String?                     @map("credentials_enc")
+  tokenExpiresAt      DateTime?                   @map("token_expires_at") @db.Timestamptz(3)
+  scopes              String[]                    @default([])
+  /// Non-secret settings (phone number id, base URL, instance URL, tenant id...).
+  config              Json                        @default("{}")
+  /// Display label of the connected account (email, workspace or account name).
+  externalAccount     String?                     @map("external_account")
+  syncEnabled         Boolean                     @default(false) @map("sync_enabled")
+  syncIntervalMinutes Int                         @default(60) @map("sync_interval_minutes")
+  nextSyncAt          DateTime?                   @map("next_sync_at") @db.Timestamptz(3)
+  lastSyncAt          DateTime?                   @map("last_sync_at") @db.Timestamptz(3)
+  syncCursor          Json                        @default("{}") @map("sync_cursor")
+  lastError           String?                     @map("last_error")
+  lastErrorAt         DateTime?                   @map("last_error_at") @db.Timestamptz(3)
+  lastTestedAt        DateTime?                   @map("last_tested_at") @db.Timestamptz(3)
+  connectedById       String                      @map("connected_by_id") @db.Uuid
+  connectedAt         DateTime                    @default(now()) @map("connected_at") @db.Timestamptz(3)
+  createdAt           DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  syncRuns IntegrationSyncRun[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, provider])
+  @@index([organizationId, companyId, status])
+  @@index([syncEnabled, nextSyncAt])
+  @@map("integration_connections")
+}
+
+model IntegrationSyncRun {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  connectionId   String                @map("connection_id") @db.Uuid
+  provider       String
+  /// What was synced, e.g. "stripe.payments", "hubspot.contacts".
+  kind           String
+  /// "manual" or "scheduled".
+  trigger        String
+  status         IntegrationSyncStatus @default(RUNNING)
+  itemsRead      Int                   @default(0) @map("items_read")
+  itemsCreated   Int                   @default(0) @map("items_created")
+  itemsUpdated   Int                   @default(0) @map("items_updated")
+  itemsSkipped   Int                   @default(0) @map("items_skipped")
+  errorCount     Int                   @default(0) @map("error_count")
+  /// [{ message, ref? }] (no secrets, truncated).
+  errors         Json                  @default("[]")
+  startedAt      DateTime              @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime?             @map("finished_at") @db.Timestamptz(3)
+
+  company    Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, startedAt])
+  @@index([connectionId, startedAt])
+  @@map("integration_sync_runs")
+}
+
+/// Incoming webhook endpoint: POST {APP_URL}/api/v1/hooks/{id}, verified by a secret token or an HMAC signature.
+model IntegrationHook {
+  id              String                      @id @default(uuid(7)) @db.Uuid
+  organizationId  String                      @map("organization_id") @db.Uuid
+  companyId       String                      @map("company_id") @db.Uuid
+  name            String
+  verification    IntegrationHookVerification @default(TOKEN)
+  /// Header carrying the HMAC signature (HMAC_SHA256 mode).
+  signatureHeader String                      @default("x-realy-signature") @map("signature_header")
+  secretEnc       String                      @map("secret_enc")
+  active          Boolean                     @default(true)
+  lastReceivedAt  DateTime?                   @map("last_received_at") @db.Timestamptz(3)
+  createdById     String                      @map("created_by_id") @db.Uuid
+  createdAt       DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company                   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  deliveries IntegrationHookDelivery[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId])
+  @@map("integration_hooks")
+}
+
+model IntegrationHookDelivery {
+  id             String                        @id @default(uuid(7)) @db.Uuid
+  organizationId String                        @map("organization_id") @db.Uuid
+  companyId      String                        @map("company_id") @db.Uuid
+  hookId         String                        @map("hook_id") @db.Uuid
+  status         IntegrationHookDeliveryStatus
+  /// Truncated request body (accepted deliveries only).
+  body           String?
+  contentType    String?                       @map("content_type")
+  error          String?
+  eventId        String?                       @map("event_id") @db.Uuid
+  ip             String?
+  receivedAt     DateTime                      @default(now()) @map("received_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  hook    IntegrationHook @relation(fields: [hookId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([hookId, receivedAt])
+  @@map("integration_hook_deliveries")
+}
+
+/// Outbound webhook subscription: domain events of the company are POSTed, signed, to `url`.
+model IntegrationWebhookSubscription {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  url            String
+  /// Domain event types, or ["*"] for all.
+  eventTypes     String[] @map("event_types")
+  secretEnc      String   @map("secret_enc")
+  active         Boolean  @default(true)
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company                      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  deliveries IntegrationWebhookDelivery[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, active])
+  @@map("integration_webhook_subscriptions")
+}
+
+model IntegrationWebhookDelivery {
+  id             String                           @id @default(uuid(7)) @db.Uuid
+  organizationId String                           @map("organization_id") @db.Uuid
+  companyId      String                           @map("company_id") @db.Uuid
+  subscriptionId String                           @map("subscription_id") @db.Uuid
+  eventId        String                           @map("event_id") @db.Uuid
+  eventType      String                           @map("event_type")
+  payload        Json
+  status         IntegrationWebhookDeliveryStatus @default(PENDING)
+  attempts       Int                              @default(0)
+  nextAttemptAt  DateTime?                        @map("next_attempt_at") @db.Timestamptz(3)
+  lastStatusCode Int?                             @map("last_status_code")
+  lastError      String?                          @map("last_error")
+  deliveredAt    DateTime?                        @map("delivered_at") @db.Timestamptz(3)
+  createdAt      DateTime                         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company      Company                        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  subscription IntegrationWebhookSubscription @relation(fields: [subscriptionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([subscriptionId, eventId])
+  @@index([status, nextAttemptAt])
+  @@index([subscriptionId, createdAt])
+  @@map("integration_webhook_deliveries")
+}

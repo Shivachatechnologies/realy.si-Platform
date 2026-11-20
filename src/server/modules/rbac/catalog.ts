@@ -38,6 +38,11 @@ export const PERMISSIONS: PermissionDef[] = [
   ...tenant("sales", ["read", "manage"], "sales"),
   ...tenant("operations", ["read", "manage"], "operations"),
   ...tenant("support", ["read", "manage"], "customer support"),
+  ...tenant("hr", ["read", "manage"], "people, recruiting, leave and performance"),
+  ...tenant("payroll", ["read", "manage"], "salaries and payroll"),
+  ...tenant("communication", ["read", "post", "manage"], "announcements, discussions, meetings and inbox"),
+  ...tenant("marketplace", ["read", "install"], "marketplace listings and installed templates"),
+  ...tenant("developer", ["read", "manage"], "API keys, webhooks and developer settings"),
   ...tenant("ownership", ["read", "modify"], "ownership and equity"),
   ...tenant("audit", ["read"], "audit logs"),
   ...platform("pricing", ["read", "manage"], "plans, prices and promotions"),
@@ -68,6 +73,8 @@ export const MFA_GATED = new Set([
   "organizations.delete",
   "platform.security.manage",
   "platform.users.manage",
+  "payroll.manage",
+  "developer.manage",
 ]);
 
 /** Never assignable to AI identities (docs/rbac.md §6). */
@@ -79,6 +86,8 @@ export const NEVER_FOR_AGENTS = new Set([
   "finance.transfer",
   "billing.manage",
   "organizations.delete",
+  "payroll.manage",
+  "developer.manage",
   ...PLATFORM_ONLY,
 ]);
 
@@ -101,8 +110,13 @@ const companyResources = [
   "sales",
   "operations",
   "support",
+  "hr",
+  "payroll",
+  "communication",
+  "marketplace",
+  "developer",
 ];
-const businessAreas = ["marketing", "sales", "operations", "support", "analytics", "finance", "agents", "workflows", "integrations"];
+const businessAreas = ["marketing", "sales", "operations", "support", "analytics", "finance", "agents", "workflows", "integrations", "hr", "communication", "marketplace"];
 
 export interface SystemRoleDef {
   key: string;
@@ -247,6 +261,13 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
       "sales.manage",
       "operations.manage",
       "support.manage",
+      "hr.manage",
+      "communication.post",
+      "communication.manage",
+      "marketplace.install",
+      "analytics.manage",
+      "integrations.manage",
+      "agents.manage",
     ],
   },
   {
@@ -265,6 +286,8 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
       "objectives.read",
       ...businessAreas.filter((a) => a !== "finance").map((a) => `${a}.read`),
       "workflows.execute",
+      "communication.post",
+      "agents.run",
     ],
   },
   {
@@ -272,7 +295,7 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
     name: "Viewer",
     description: "Read-only access.",
     assignableAt: TENANT_SCOPES,
-    permissions: tenantKeys.filter((k) => k.endsWith(".read") && !["finance.read", "billing.read", "audit.read", "ownership.read"].includes(k)),
+    permissions: tenantKeys.filter((k) => k.endsWith(".read") && !["finance.read", "billing.read", "audit.read", "ownership.read", "payroll.read", "developer.read"].includes(k)),
   },
 ];
 

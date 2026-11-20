@@ -13,7 +13,10 @@ import { displayName, formatList, formatRelativeTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { redis } from "@/server/core/rate-limit";
 import { listAuditLogs } from "@/server/modules/audit/service";
-import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
+import { MetricTile } from "@/components/bi/metric-tile";
+import { formatChange, formatMetric } from "@/components/bi/format";
+import { resolveRange } from "@/server/modules/bi/range";
+import { metricContext, metricValues, type MetricValue } from "@/server/modules/bi/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -31,6 +34,17 @@ async function health(orgId: string) {
   return { database, queue, backlog };
 }
 
+/** Department order for the Command Center KPI strip (most business-critical first). */
+const KPI_ORDER = ["finance", "sales", "marketing", "support", "projects", "hr", "operations", "executive", "ai"];
+
+/** Up to 8 KPIs for the last 30 days vs the previous 30, or null when the viewer may not read analytics. */
+async function businessKpis(ctx: Parameters<typeof can>[0], orgId: string, companyId: string | null, chain: Awaited<ReturnType<typeof companyChain>> | null): Promise<{ values: MetricValue[]; currency: string } | null> {
+  if (!companyId || !chain || !(await can(ctx, "analytics.read", chain))) return null;
+  const { scope, metrics } = await metricContext(ctx, orgId, companyId);
+  const picked = [...metrics].sort((a, b) => KPI_ORDER.indexOf(a.department) - KPI_ORDER.indexOf(b.department)).slice(0, 8);
+  return { values: await metricValues(picked, scope, resolveRange("30d")), currency: scope.currency };
+}
+
 export default async function CommandCenterPage() {
   const locale = await getLocale();
   const t = await getT(locale);
@@ -40,7 +54,7 @@ export default async function CommandCenterPage() {
   const chain = company ? await companyChain(db(), org.id, company.id) : null;
   const scoped = { organizationId: org.id, companyId: company?.id ?? "" };
   const countIf = async (permission: string, count: () => Promise<number>) => (chain && (await can(viewer.ctx, permission, chain)) ? count() : null);
-  const [activity, status, billing, memberCount, taskCount, objectiveCount, approvalCount, notifications] = await Promise.all([
+  const [activity, status, billing, memberCount, taskCount, objectiveCount, approvalCount, notifications, aiEmployeeCount, kpis] = await Promise.all([
     listAuditLogs(viewer.ctx, org.id, { limit: 8 }).catch(() => null),
     health(org.id),
     db().billingProfile.findUnique({ where: { organizationId: org.id }, select: { billingCountryConfirmedAt: true } }),
@@ -49,6 +63,8 @@ export default async function CommandCenterPage() {
     countIf("objectives.read", () => db().objective.count({ where: { ...scoped, status: "ACTIVE" } })),
     countIf("approvals.read", () => db().approval.count({ where: { ...scoped, status: "PENDING", expiresAt: { gt: new Date() } } })),
     listMyNotifications(viewer.ctx, org.id, { unreadOnly: true, limit: 10 }),
+    countIf("agents.read", () => db().aiEmployee.count({ where: { ...scoped, archivedAt: null, status: "ACTIVE" } })),
+    businessKpis(viewer.ctx, org.id, company?.id ?? null, chain),
   ]);
 
   const country = (code: string | null) => (code ? displayName(code, "region", locale) : t("command.notSet"));
@@ -58,11 +74,10 @@ export default async function CommandCenterPage() {
     { key: "mfa", done: viewer.user.mfaEnabled, href: "/settings/security" },
     { key: "team", done: memberCount > 1, href: "/settings/members" },
   ];
-  const metrics = ["revenue", "mrr", "customers", "pipeline", "cash", "runway", "growth"] as const;
   const counters: { key: string; phase?: number; value?: number | null; href?: string }[] = [
     { key: "objectives", value: objectiveCount, href: "/objectives" },
     { key: "tasks", value: taskCount, href: "/tasks" },
-    { key: "workforce", value: AGENT_PROFILES.length, href: "/workforce" },
+    { key: "aiEmployees", value: aiEmployeeCount, href: "/workforce" },
     { key: "approvals", value: approvalCount, href: "/approvals" },
   ];
 
@@ -77,15 +92,28 @@ export default async function CommandCenterPage() {
 
       {notifications.length ? (
         <Card>
-          <CardHeader title={t("notifications.title")} actions={<MarkReadButton organizationId={org.id} />} />
+          <CardHeader
+            title={t("notifications.title")}
+            actions={
+              <span className="flex items-center gap-2">
+                <Link href={`/${locale}/notifications`} className="text-xs text-muted-foreground hover:underline">
+                  {t("notifications.viewAll")}
+                </Link>
+                <MarkReadButton organizationId={org.id} />
+              </span>
+            }
+          />
           <CardBody>
             <ul className="grid gap-1.5 text-sm">
               {notifications.map((n) => {
-                const p = n.payload as { summary?: string };
+                const p = n.payload as { summary?: string; title?: string; href?: string };
+                const href = n.type === "approval.requested" ? "/approvals" : p.href?.startsWith("/") ? p.href : "";
                 return (
                   <li key={n.id}>
-                    <Link className="hover:underline" href={`/${locale}/approvals`}>
-                      {t("notifications.approvalRequested", { summary: p.summary ?? "" })}
+                    <Link className="hover:underline" href={`/${locale}${href}`}>
+                      {n.type === "approval.requested"
+                        ? t("notifications.approvalRequested", { summary: p.summary ?? "" })
+                        : t(`notifications.kinds.${n.type}`, { title: p.title ?? "" })}
                     </Link>
                   </li>
                 );
@@ -96,16 +124,35 @@ export default async function CommandCenterPage() {
       ) : null}
 
       <Card>
-        <CardHeader title={t("command.business")} description={t("command.metricsNotConnected")} actions={<Badge tone="warning">{t("common.comingInPhase", { phase: 6 })}</Badge>} />
-        <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 lg:grid-cols-7 lg:divide-x rtl:lg:divide-x-reverse">
-          {metrics.map((m) => (
-            <div key={m} className="grid gap-1 px-4 py-3">
-              <span className="text-xs text-muted-foreground">{t(`command.metrics.${m}`)}</span>
-              <span className="tabular text-lg font-semibold text-muted-foreground/60" aria-label={t("common.notConnected")}>—</span>
-              <span className="text-[11px] text-muted-foreground">{t("common.notConnected")}</span>
-            </div>
-          ))}
-        </div>
+        <CardHeader
+          title={t("command.business")}
+          description={kpis ? t("command.kpisLast30") : undefined}
+          actions={
+            kpis ? (
+              <Link href={`/${locale}/analytics`} className="text-xs text-primary hover:underline">
+                {t("command.openAnalytics")}
+              </Link>
+            ) : null
+          }
+        />
+        {kpis === null ? (
+          <CardBody className="text-sm text-muted-foreground">{company ? t("command.kpisForbidden") : t("command.noCompany")}</CardBody>
+        ) : kpis.values.length === 0 ? (
+          <CardBody className="text-sm text-muted-foreground">{t("command.kpisEmpty")}</CardBody>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-4 lg:grid-cols-8">
+            {kpis.values.map((m) => (
+              <MetricTile
+                key={m.key}
+                label={t(m.labelKey)}
+                value={formatMetric(m.value, m.unit, locale, kpis.currency, { compact: true })}
+                change={formatChange(m.changePct, locale)}
+                trend={m.trend}
+                href={m.href ? `/${locale}${m.href}` : `/${locale}/analytics`}
+              />
+            ))}
+          </div>
+        )}
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">

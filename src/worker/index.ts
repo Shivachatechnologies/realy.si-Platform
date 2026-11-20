@@ -18,6 +18,8 @@ import { processPasswordResetRequest, purgeExpiredAuthTokens } from "@/server/mo
 import { AGENT_TASK_QUEUE, AUTH_EMAIL_QUEUE, queuePrefix, type AgentTaskJob, type PasswordResetJob } from "@/server/core/jobs";
 import { failStaleTasks, processAgentTask } from "@/server/modules/agents/service";
 import { expireApprovals } from "@/server/modules/approvals/service";
+import type { OutboxEvent } from "@/server/modules/events/relay";
+import { MODULE_JOBS } from "./modules";
 
 const POLL_MS = 500;
 let stopping = false;
@@ -71,6 +73,46 @@ async function main() {
     log.warn({ jobId: job?.id, err: err.message }, "agent-task attempt failed");
   });
 
+  // Business-module consumers of published domain events (automation engine, AI triggers, notifications...).
+  const handlers = MODULE_JOBS.flatMap((m) => m.onEvent);
+  const eventConsumer = new Worker<OutboxEvent & { occurredAt: string }>(
+    "events",
+    async (job) => {
+      const event: OutboxEvent = { ...job.data, occurredAt: new Date(job.data.occurredAt) };
+      for (const h of handlers) {
+        if (h.types !== "*" && !h.types.includes(event.type)) continue;
+        await withSpan("worker.event_handler", { handler: h.name, type: event.type }, () => h.handle(event));
+      }
+    },
+    { connection: new Redis(env().REDIS_URL, { maxRetriesPerRequest: null }), concurrency: 4 },
+  );
+  eventConsumer.on("failed", (job, err) => {
+    log.warn({ jobId: job?.id, type: job?.name, err: err.message }, "event handler failed");
+    captureException(err, { job: "event-handler", type: job?.name });
+  });
+
+  // Business-module periodic jobs (recurring invoices, scheduled posts, workflow schedules, AI schedules...).
+  const periodic = MODULE_JOBS.flatMap((m) => m.periodic).map((j) => ({ job: j, next: 0, running: false }));
+  const runPeriodic = () => {
+    const now = Date.now();
+    for (const p of periodic) {
+      if (p.running || now < p.next) continue;
+      p.running = true;
+      p.next = now + p.job.everyMs;
+      withSpan("worker.periodic", { job: p.job.name }, () => p.job.run())
+        .then((n) => {
+          if (n) log.info({ job: p.job.name, count: n }, "periodic job");
+        })
+        .catch((err) => {
+          log.error({ job: p.job.name, err }, "periodic job failed");
+          captureException(err, { job: p.job.name });
+        })
+        .finally(() => {
+          p.running = false;
+        });
+    }
+  };
+
   const publish = async (events: Awaited<Parameters<Parameters<typeof relayBatch>[0]>[0]>) => {
     // Job id = event id → BullMQ dedupes re-published events.
     await queue.addBulk(
@@ -84,6 +126,7 @@ async function main() {
 
   let nextMaintenance = 0;
   while (!stopping) {
+    runPeriodic();
     if (Date.now() >= nextMaintenance) {
       nextMaintenance = Date.now() + MAINTENANCE_MS;
       await maintenance(log);
@@ -100,6 +143,7 @@ async function main() {
   }
   await authEmail.close();
   await agentTasks.close();
+  await eventConsumer.close();
   await queue.close();
   await connection.quit();
   await db().$disconnect();

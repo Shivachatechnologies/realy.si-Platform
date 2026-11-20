@@ -56,7 +56,8 @@ export function ContextSwitcher({
   );
 }
 
-export function SignOutButton() {
+/** `to`: where to land after signing out (the admin console returns to its own login page). */
+export function SignOutButton({ to = "sign-in" }: { to?: "sign-in" | "admin/login" }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -67,7 +68,7 @@ export function SignOutButton() {
       onClick={() =>
         start(async () => {
           await api("/api/v1/auth/sign-out", { method: "POST" }).catch(() => undefined);
-          router.replace(`/${locale}/sign-in`);
+          router.replace(`/${locale}/${to}`);
           router.refresh();
         })
       }
