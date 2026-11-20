@@ -20,4 +20,5 @@ export const MODULE_TOOLS = (): Promise<Record<string, ToolDefinition>[]> =>
     import("@/server/modules/marketplace/ai-tools").then((m) => m.MARKETPLACE_TOOLS),
     import("@/server/modules/enterprise/ai-tools").then((m) => m.ENTERPRISE_TOOLS),
     import("@/server/modules/crm/ai-tools").then((m) => m.CRM_TOOLS),
+    import("@/server/modules/livechat/ai-tools").then((m) => m.LIVECHAT_TOOLS),
   ]);

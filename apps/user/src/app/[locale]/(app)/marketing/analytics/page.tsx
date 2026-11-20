@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Badge } from "@/components/ui/badge";
+import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { MarketingShell, loadMarketing } from "@/components/marketing/shell";
 import { BarChart, HelpPanel, InfoStrip } from "@/components/marketing/studio";
 import { TextPrompt } from "@/components/marketing/studio-forms";
@@ -13,7 +14,9 @@ import { AiTaskList } from "@/components/marketing/ai-tasks";
 import { getT } from "@/i18n/server";
 import { formatMoney, formatNumber } from "@/i18n/format";
 import { db } from "@/server/core/db";
-import { parseRange } from "@/server/modules/marketing/analytics";
+import { attribution, channelPerformance, parseRange } from "@/server/modules/marketing/analytics";
+import { CHANNELS } from "@/server/modules/marketing/common";
+import { SOCIAL_PROVIDERS } from "@/server/modules/marketing/social";
 import { getUnifiedAnalytics, listHelpTasks } from "@/server/modules/marketing/intelligence";
 import { listLearnings } from "@/server/modules/marketing/learning";
 
@@ -28,12 +31,18 @@ export default async function MarketingAnalyticsPage({ searchParams }: PageProps
   if (m.blocked) return <MarketingShell {...shell} blocked={m.blocked} />;
   const { org, company, viewer, base, tz, aiReady } = m;
   const range = parseRange(await searchParams);
-  const [a, learnings, asks, help] = await Promise.all([
+  const [a, learnings, asks, help, channels, campaigns] = await Promise.all([
     getUnifiedAnalytics(viewer.ctx, org.id, company.id, range),
     listLearnings(viewer.ctx, org.id, company.id),
     db().agentTask.findMany({ where: { organizationId: org.id, companyId: company.id, title: { startsWith: "Analyst:" } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, status: true, createdAt: true, output: true, errorCode: true } }),
     listHelpTasks(org.id, company.id, "analytics"),
+    channelPerformance(org.id, company.id, range),
+    attribution(org.id, company.id, range),
   ]);
+  // Cost per lead and attributed conversions from real rows: spend (entries + synced ad spend) over CRM leads;
+  // conversions = ad-platform conversions + won leads whose source is a campaign tracking code (UTM).
+  const cplMinor = a.kpis.leadsCreated ? a.totalSpendMinor / BigInt(a.kpis.leadsCreated) : null;
+  const attributedWon = campaigns.reduce((s, c) => s + c.won, 0);
   const cur = company.baseCurrency;
   const money = (v: bigint | null) => (v == null ? "—" : formatMoney({ amountMinor: v, currency: cur }, locale));
   const rate = (v: number | null) => (v == null ? "—" : `${(v * 100).toFixed(1)}%`);
@@ -73,7 +82,44 @@ export default async function MarketingAnalyticsPage({ searchParams }: PageProps
         <StatTile index={9} label="CAC" value={money(a.cacMinor)} />
         <StatTile index={10} label="ROAS" value={a.ads.roas == null ? "—" : `${a.ads.roas.toFixed(2)}×`} />
         <StatTile index={11} label="ROI" value={a.roi == null ? "—" : `${a.roi.toFixed(1)}%`} />
+        <StatTile index={12} label={t("marketing.run.analytics.cpl")} value={money(cplMinor)} />
+        <StatTile index={13} label={t("marketing.run.analytics.conversions")} value={a.ads.conversions + attributedWon} hint={t("marketing.run.analytics.conversionsHint", { ads: formatNumber(a.ads.conversions, locale), crm: formatNumber(attributedWon, locale) })} />
       </div>
+      <Card>
+        <CardHeader title={t("marketing.run.analytics.byChannel")} description={t("marketing.run.analytics.byChannelHint")} />
+        {channels.length ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <THead>
+                <Tr>
+                  <Th>{t("marketing.common.channel")}</Th>
+                  <Th className="text-end">{t("marketing.metrics.spend")}</Th>
+                  <Th className="text-end">{t("marketing.run.analytics.leads")}</Th>
+                  <Th className="text-end">{t("marketing.run.analytics.cpl")}</Th>
+                  <Th className="text-end">{t("marketing.studio.analytics.impressions")}</Th>
+                  <Th className="text-end">{t("marketing.studio.analytics.engagement")}</Th>
+                  <Th className="text-end">{t("marketing.metrics.emailsSent")}</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {channels.map((c) => (
+                  <Tr key={c.channel}>
+                    <Td>{(CHANNELS as readonly string[]).includes(c.channel) ? t(`marketing.channels.${c.channel}`) : (SOCIAL_PROVIDERS as readonly string[]).includes(c.channel.toUpperCase()) ? t(`marketing.provider.${c.channel.toUpperCase()}`) : c.channel}</Td>
+                    <Td className="text-end tabular-nums">{money(c.spendMinor)}</Td>
+                    <Td className="text-end tabular-nums">{formatNumber(c.leads, locale)}</Td>
+                    <Td className="text-end tabular-nums">{c.leads && c.spendMinor > 0n ? money(c.spendMinor / BigInt(c.leads)) : "—"}</Td>
+                    <Td className="text-end tabular-nums">{formatNumber(c.impressions, locale)}</Td>
+                    <Td className="text-end tabular-nums">{formatNumber(c.engagement, locale)}</Td>
+                    <Td className="text-end tabular-nums">{formatNumber(c.sent, locale)}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          </div>
+        ) : (
+          <p className="p-4 text-sm text-muted-foreground">{t("marketing.run.analytics.noChannels")}</p>
+        )}
+      </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader title={t("marketing.studio.analytics.byPlatform")} />

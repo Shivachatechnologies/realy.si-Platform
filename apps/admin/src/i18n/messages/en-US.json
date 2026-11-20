@@ -598,7 +598,28 @@
       "hr_plan_has_job": "This role already has a job. Cancel it instead of deleting it.",
       "hr_doc_field": "Fill in the details this letter needs.",
       "work_product_backlog_empty": "The backlog is empty — generate or add backlog tasks first.",
-      "work_product_no_work": "There is no completed or planned work yet to write release notes from."
+      "work_product_no_work": "There is no completed or planned work yet to write release notes from.",
+      "marketing_run_active": "Your marketing is already running — pause or stop it first.",
+      "marketing_run_agents_forbidden": "You need permission to run AI agents to start the marketing run.",
+      "livechat_invalid_origin": "Enter website addresses like https://www.example.com.",
+      "livechat_no_origins": "Add your website address before turning the chat on.",
+      "livechat_origin_not_allowed": "This website is not allowed to use the chat.",
+      "livechat_disabled": "The website chat is turned off.",
+      "livechat_unavailable": "The website chat is not available right now.",
+      "livechat_closed": "This conversation is closed.",
+      "livechat_ai_off": "The AI assistant is turned off in the chat settings.",
+      "livechat_conversation_limit": "This conversation is too long. Please start a new one.",
+      "workforce_ai_paused": "All AI in this company is paused. Resume it on the Autonomy page.",
+      "workforce_autonomy_hard_floor": "This kind of action always needs a person.",
+      "workforce_autonomy_cap_required": "Set a per-action money limit before money can move automatically.",
+      "workforce_autonomy_payment_cap": "Automatic payments can't be set above the hard limit.",
+      "workforce_autonomy_hours": "Set both a start and an end time, or neither.",
+      "workforce_autonomy_read_level": "Looking things up can only be on or off.",
+      "workforce_autonomy_amount": "Use the currency's number of decimals.",
+      "workforce_autonomy_no_recommendation": "This recommendation no longer applies.",
+      "workforce_autonomy_not_reversible": "This action can't be undone.",
+      "workforce_autonomy_undo_forbidden": "You don't have the permission this undo needs.",
+      "workforce_autonomy_undo_failed": "The undo didn't work; nothing else was changed."
     }
   },
   "onboarding": {
@@ -2663,7 +2684,11 @@
       "read_workforce_plan": "Read workforce plan",
       "propose_planned_role": "Propose a planned role",
       "read_financial_alerts": "Read financial alerts",
-      "read_money_flow": "Read money flow"
+      "read_money_flow": "Read money flow",
+      "read_marketing_run": "Read the marketing run",
+      "read_livechat_conversations": "Read website chats",
+      "read_livechat_transcript": "Read a chat transcript",
+      "livechat_book_meeting": "Book a meeting from a chat"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -2674,7 +2699,8 @@
       "tasks": "AI tasks",
       "org": "Org chart",
       "performance": "Performance & budgets",
-      "escalations": "Escalations"
+      "escalations": "Escalations",
+      "autonomy": "Autonomy"
     },
     "filters": {
       "search": "Search",
@@ -3358,6 +3384,10 @@
     "paid_ads_specialist": {
       "name": "Paid Ads Specialist",
       "summary": "Ad campaign plans, ad copy and optimization within spending caps."
+    },
+    "website_chat_agent": {
+      "name": "Website Chat Agent",
+      "summary": "Answers website visitors 24/7 from your knowledge, captures leads and hands over to you."
     }
   },
   "projects": {
@@ -3637,7 +3667,10 @@
         "plan_review": "Marketing plan waiting for approval: {title}",
         "plan_changes": "Changes requested on plan: {title}",
         "plan_approved": "Marketing plan approved: {title}",
-        "optimizations_proposed": "New marketing optimizations to review: {title}"
+        "optimizations_proposed": "New marketing optimizations to review: {title}",
+        "run_blocked": "Marketing run needs you: {title}",
+        "run_newsletter_ready": "Newsletter ready to send: {title}",
+        "run_completed": "Marketing run completed: {title}"
       },
       "crm": {
         "lead_assigned": "Lead assigned to you: {title}",
@@ -3724,10 +3757,17 @@
       },
       "workforce": {
         "statusReport": "Status report: {title}",
-        "escalation": "Escalation: {title}"
+        "escalation": "Escalation: {title}",
+        "autonomyDemoted": "Auto mode reduced to Ask me: {title}",
+        "autonomyPaused": "All AI paused: {title}",
+        "autonomyResumed": "AI resumed: {title}"
       },
       "growth": {
         "insight": "Critical growth signal: {title}"
+      },
+      "livechat": {
+        "handoff": "Website visitor needs a person: {title}",
+        "new_chat": "New website chat: {title}"
       }
     },
     "viewAll": "View all"
@@ -8735,7 +8775,8 @@
       "intelligence": "Intelligence",
       "strategy": "Strategy",
       "calendar": "Calendar",
-      "optimize": "Optimize"
+      "optimize": "Optimize",
+      "run": "Run my marketing"
     },
     "common": {
       "allStatuses": "All statuses",
@@ -10697,6 +10738,182 @@
       "recommendations": "Open recommendations",
       "open": "Open",
       "aiReviews": "AI reviews"
+    },
+    "run": {
+      "title": "Run my marketing",
+      "subtitle": "One click: research, strategy, campaigns, content, publishing, results and improvements — running by themselves, with you approving only what matters.",
+      "eyebrow": "Autonomous marketing run",
+      "startedAt": "Started {date}",
+      "blocked": "The run is waiting on something",
+      "approveTitle": "Your plan is ready for approval",
+      "approveCta": "Review the plan",
+      "approveBody": "Approve it and the AI creates the campaign, the autopilots and the content calendar right away.",
+      "changesRequested": "You asked for changes: {note}. Resubmit the plan to continue.",
+      "open": "Open",
+      "recentPosts": "Published posts",
+      "recentPostsHint": "Live links returned by the platforms, with the latest numbers pulled back from them.",
+      "postMetrics": "{impressions} impressions · {engagement} engagements",
+      "metricsPending": "Numbers arrive within an hour",
+      "viewPost": "View",
+      "noPosts": "Nothing published yet. Posts appear here with their live link once a platform confirms them.",
+      "autopilots": "Channels running",
+      "noAutopilots": "No channel autopilot yet — they start when the plan is approved.",
+      "log": "What happened",
+      "logHint": "Every step the run took, newest first.",
+      "history": "Earlier runs",
+      "loopTitle": "The marketing loop",
+      "inProgress": "{count} in progress",
+      "status": {
+        "RESEARCHING": "Researching your market",
+        "PLANNING": "Drafting your strategy",
+        "AWAITING_APPROVAL": "Waiting for your approval",
+        "LAUNCHING": "Launching campaigns",
+        "RUNNING": "Your marketing is running",
+        "BLOCKED": "Needs your help",
+        "PAUSED": "Paused",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "FAILED": "Failed"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "I review everything",
+          "hint": "You approve the plan and every post, article and email before it goes out."
+        },
+        "APPROVE_PLAN": {
+          "name": "I approve the plan",
+          "hint": "You approve the plan; posts and articles then publish by themselves. Emails and spend still ask you."
+        },
+        "FULL_AUTOPILOT": {
+          "name": "Full autopilot",
+          "hint": "Plan, posts, articles and newsletters run by themselves. Spend changes always ask you."
+        }
+      },
+      "planStatus": {
+        "DRAFT": "Draft",
+        "IN_REVIEW": "Awaiting approval",
+        "APPROVED": "Approved",
+        "ACTIVE": "Active",
+        "ARCHIVED": "Archived"
+      },
+      "apStatus": {
+        "ACTIVE": "Running",
+        "PAUSED": "Paused"
+      },
+      "artifact": {
+        "article": "Article",
+        "newsletter": "Newsletter"
+      },
+      "artifactState": {
+        "writing": "Being written",
+        "in_review": "Waiting for your review",
+        "awaiting_approval": "Ready — waiting for you to send",
+        "published": "Published",
+        "scheduled": "Scheduled",
+        "failed": "Failed"
+      },
+      "step": {
+        "research": "Research",
+        "plan": "Strategy",
+        "approval": "Approval",
+        "campaign": "Campaign",
+        "autopilot": "Channels",
+        "seo": "Blog & SEO",
+        "newsletter": "Newsletter",
+        "ads": "Ads",
+        "optimize": "Optimize",
+        "complete": "Done",
+        "control": "Control"
+      },
+      "stage": {
+        "research": "Research",
+        "strategy": "Strategy",
+        "campaign": "Campaign",
+        "calendar": "Calendar",
+        "content": "Content",
+        "creatives": "Creatives",
+        "publish": "Published",
+        "metrics": "Measured",
+        "optimize": "Improved"
+      },
+      "kpi": {
+        "reach": "Reach",
+        "impressions": "{count} impressions",
+        "engagement": "Engagement",
+        "posts": "{count} posts",
+        "leads": "Leads",
+        "won": "{count} became customers",
+        "cpl": "Cost per lead",
+        "spend": "{amount} spent",
+        "emails": "Emails sent",
+        "opens": "{opened} opened · {clicked} clicked",
+        "articles": "Articles published",
+        "articlesWritten": "{count} written",
+        "newsletters": "Newsletters",
+        "optimizations": "Improvements applied",
+        "proposed": "{count} waiting for you"
+      },
+      "form": {
+        "title": "Start your marketing",
+        "subtitle": "Tell us what to promote and to whom. The AI researches, plans and runs the rest.",
+        "products": "What should we promote?",
+        "noProducts": "No products in your company yet — we'll promote the company itself. Add products for sharper marketing.",
+        "audience": "Who are your ideal customers?",
+        "audiencePlaceholder": "e.g. owners of small dental practices in Germany who want more patients",
+        "regions": "Where?",
+        "regionsPlaceholder": "e.g. Germany, Austria",
+        "competitors": "Competitors (optional)",
+        "competitorsPlaceholder": "Comma separated",
+        "budget": "Budget for the period ({currency})",
+        "period": "Plan for",
+        "days": "{count} days",
+        "autonomy": "How much may the AI do alone?",
+        "note": "Anything else? (optional)",
+        "notePlaceholder": "e.g. launch of our new plan on 1 December",
+        "start": "Run my marketing",
+        "starting": "Starting…",
+        "startHint": "Research begins immediately. Nothing is published before the plan is approved.",
+        "forbidden": "Ask someone who can manage marketing and run AI agents to start the run."
+      },
+      "controls": {
+        "pause": "Pause",
+        "resume": "Resume",
+        "retry": "Try again",
+        "cancel": "Stop",
+        "cancelConfirm": "Stop this run? Autopilots pause; already scheduled posts stay in the queue."
+      },
+      "ready": {
+        "title": "What the AI can use",
+        "subtitle": "Connect more and the run does more. Missing pieces are skipped and shown, never faked.",
+        "ai": "AI",
+        "aiMissing": "AI is not configured on this platform",
+        "research": "Web research",
+        "researchMissing": "Connect a research provider for sourced market research",
+        "social": "Social accounts",
+        "socialMissing": "Connect LinkedIn, X, Instagram, Facebook, YouTube or TikTok to publish",
+        "email": "Email sending",
+        "emailMissing": "Connect an email provider to send newsletters",
+        "blog": "Blog",
+        "blogMissing": "Articles go to your Realy blog",
+        "seo": "SEO keywords",
+        "seoMissing": "Add an SEO project with keywords to get articles",
+        "products": "Products",
+        "productsMissing": "Add products so marketing can promote them",
+        "ok": "Ready",
+        "connect": "Set up",
+        "realyBlog": "Your Realy blog (connect WordPress, Webflow or Shopify to publish there)",
+        "safety": "Every post is checked against your brand and compliance rules, published only through the platform's API with a verified link, and sent emails always carry an unsubscribe link and skip opted-out contacts. Ad spend changes always wait for you.",
+        "channels": "Publishing supported on: {list}"
+      },
+      "analytics": {
+        "cpl": "Cost per lead",
+        "conversions": "Conversions (attributed)",
+        "conversionsHint": "{ads} from ad platforms · {crm} won leads with a campaign code",
+        "byChannel": "Results by channel",
+        "byChannelHint": "Spend, leads by UTM source, reach and engagement per channel — from real records only.",
+        "leads": "Leads (UTM)",
+        "noChannels": "No channel activity in this period yet."
+      }
     }
   },
   "sales": {

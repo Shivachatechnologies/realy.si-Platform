@@ -16,6 +16,7 @@ import { generateCreative, PRESET_KEYS } from "./assets";
 import { sendOutreach, sendReply } from "./community";
 import { createResearchReport, listResearchReports, parseFindings, parseSources, RESEARCH_KINDS } from "./research-reports";
 import { listPlans, planChannels, planObjectives } from "./plans";
+import { runOverview } from "./run";
 
 const money = (m: bigint | null, currency: string) => (m == null ? "n/a" : `${(Number(m) / 100).toFixed(2)} ${currency}`);
 const pct = (v: number | null) => (v == null ? "n/a" : `${v.toFixed(1)}%`);
@@ -654,6 +655,34 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
             ? `Research failed: ${r.error ?? "unknown error"}.`
             : `Research report saved with ${parseSources(r.sources).length} sources (status ${r.status}).`;
       return { content: what, records: [`marketing_research_report:${r.id}`] };
+    },
+  }),
+  read_marketing_run: def({
+    name: "read_marketing_run",
+    version: 1,
+    description: "Returns the company's autonomous \"Run my marketing\" loop: status, autonomy, plan, live channel autopilots, real counts (calendar slots, content, published posts, metrics, articles, newsletters, optimizations, leads, cost per lead) and the latest steps, including what is blocked and why.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read the marketing run",
+    async execute(_input, { ctx, organizationId, companyId }) {
+      const v = await runOverview(ctx, organizationId, companyId);
+      if (!v) return { content: "No marketing run has been started. The person can start one under Marketing → Run my marketing." };
+      const c = v.counts;
+      const currency = await companyCurrency(companyId);
+      const steps = v.run.log.slice(-12).map((e) => `- ${e.at.slice(0, 16)} [${e.step}/${e.outcome}] ${e.detail}`).join("\n");
+      return {
+        content: `Run ${v.run.id}: ${v.run.status} (autonomy ${v.run.autonomy})${v.run.blockedReason ? `, blocked: ${v.run.blockedReason}` : ""}.
+Plan: ${v.plan ? `${v.plan.name} (${v.plan.status}), channels ${v.plan.channels.map((x) => x.channel).join(", ")}` : "none yet"}. Campaign: ${v.campaign ? `${v.campaign.name} (${v.campaign.code}, ${v.campaign.status})` : "none yet"}.
+Autopilots: ${v.autopilots.map((a) => `${a.name} (${a.status})`).join("; ") || "none"}.
+Counts (real records): ${c.calendarSlots} upcoming calendar slots, ${c.ideas} ideas, ${c.drafting} drafting, ${c.ready} ready, ${c.scheduled} scheduled, ${c.published} published posts (${c.withMetrics} with metrics: ${c.impressions} impressions, ${c.engagement} engagements), ${c.creatives} creatives, ${c.articlesPublished}/${c.articles} articles published, ${c.newsletters} newsletters, ${c.emailsSent} emails sent, ${c.optimizationsApplied} optimizations applied / ${c.optimizationsProposed} waiting, ${c.leads} leads, ${c.won} won, spend ${money(c.spendMinor, currency)}, cost per lead ${money(c.cplMinor, currency)}.
+Latest steps:
+${steps}`,
+        records: [`marketing_run:${v.run.id}`],
+      };
     },
   }),
 };

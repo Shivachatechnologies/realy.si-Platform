@@ -14,6 +14,7 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { AUTONOMY_GUIDANCE, toolsForAutonomy } from "@/server/modules/workforce/autonomy";
 import { assertEmployeeBudget, budgetRefusal, employeeBudget } from "@/server/modules/workforce/budgets";
+import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
 import { AGENT_TASK_STATUSES } from "./statuses";
 import { PROFILE_KEYS, profileByKey } from "./profiles";
 import { aiConfigured, REMEMBER_LINE, runTask, TaskError } from "./runtime";
@@ -142,6 +143,8 @@ export async function createTask(
   const input = createTaskInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "agents.run");
   requireProvider();
+  // "Pause all AI" (/autonomy): no new AI work starts in this company until a person resumes it.
+  if (await isCompanyAiPaused(organizationId, companyId)) throw new AppError("not_available", "All AI in this company is paused; resume it in Autonomy", { reason: "workforce_ai_paused" });
   await requireBudget(organizationId, companyId, input.profile);
   const task = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.run", tx);
@@ -318,6 +321,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
     const refusal = await aiRefusal(task.organizationId, { profile: task.profile, model: await agentModel(env().AGENT_MODEL) });
     if (refusal) throw new TaskError(refusal, aiRefusalMessage(refusal));
     if (await isOrganizationSuspended(task.organizationId)) throw new TaskError("organization_suspended", "This organization is suspended by the platform");
+    if (await isCompanyAiPaused(task.organizationId, task.companyId)) throw new TaskError("company_ai_paused", "All AI in this company is paused; resume it in Autonomy and retry");
     // The requester must still be allowed to run tasks in this company when the task executes.
     await authorize(requester, task.organizationId, task.companyId, "agents.run");
     if ((await aiUsageToday(task.organizationId, task.companyId)).exhausted) {
@@ -361,6 +365,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       isCancelled: async () => !(await db().agentTask.count({ where: held })),
       tools,
       tokenCeiling,
+      autonomy: { department: employee?.department ?? profile.department ?? "operations", aiEmployeeId: employee?.id ?? null },
       employee: employee
         ? {
             name: employee.name,

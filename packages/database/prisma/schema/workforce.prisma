@@ -353,3 +353,165 @@ model CeoMessage {
   @@index([taskId])
   @@map("ceo_messages")
 }
+
+// ───────────── Autonomy ("Auto mode") and trust (src/server/modules/workforce/autonomy-*.ts, docs/autonomy.md) ─────────────
+
+/// How far the AI may go for one action class: off, suggest only, ask a person (approval), or act on its own within limits.
+enum AutonomyLevel {
+  OFF
+  SUGGEST
+  ASK
+  AUTO
+}
+
+enum AutonomousActionStatus {
+  /// Limits reserved; the action is being carried out.
+  RUNNING
+  EXECUTED
+  FAILED
+  /// Reversed by a person (undo).
+  UNDONE
+}
+
+/// Trust signals besides approvals and autonomous outcomes.
+enum AutonomyFeedbackKind {
+  /// A person changed the AI's proposal before it went out.
+  EDITED
+  /// A customer, colleague or the founder complained about an action.
+  COMPLAINT
+  /// The action had to be reversed outside Realy's undo.
+  REVERSAL
+}
+
+/// Company-wide Auto mode switch, the emergency pause and the trust thresholds.
+model AutonomySettings {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  organizationId     String    @map("organization_id") @db.Uuid
+  companyId          String    @map("company_id") @db.Uuid
+  /// Master switch: while off, every AUTO policy behaves as ASK (nothing runs without a person).
+  autoModeEnabled    Boolean   @default(false) @map("auto_mode_enabled")
+  /// "Pause all AI": no AI task starts or acts in this company until resumed.
+  paused             Boolean   @default(false)
+  pausedAt           DateTime? @map("paused_at") @db.Timestamptz(3)
+  pausedById         String?   @map("paused_by_id") @db.Uuid
+  pauseReason        String?   @map("pause_reason")
+  /// Negative signals (rejections, failures, undos, complaints) within `demotionWindowDays` that send an AUTO policy back to ASK.
+  demotionThreshold  Int       @default(3) @map("demotion_threshold")
+  demotionWindowDays Int       @default(7) @map("demotion_window_days")
+  updatedById        String?   @map("updated_by_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId])
+  @@index([organizationId])
+  @@map("autonomy_settings")
+}
+
+/// One rule: company-wide (department "*") or per department, for one action class. Missing rows fall back to "*",
+/// then to the built-in defaults (reads AUTO, everything else ASK).
+model AutonomyPolicy {
+  id                String        @id @default(uuid(7)) @db.Uuid
+  organizationId    String        @map("organization_id") @db.Uuid
+  companyId         String        @map("company_id") @db.Uuid
+  /// workforce DEPARTMENTS key, or "*" for the whole company.
+  department        String
+  /// ACTION_CLASSES key (autonomy-classes.ts), e.g. "send_message".
+  actionClass       String        @map("action_class")
+  level             AutonomyLevel
+  /// AUTO only: actions of this class per company-timezone day; null = no count limit.
+  dailyLimit        Int?          @map("daily_limit")
+  /// Money caps in minor units of `currency` (spend / pay classes).
+  perActionMaxMinor BigInt?       @map("per_action_max_minor")
+  dailyMaxMinor     BigInt?       @map("daily_max_minor")
+  monthlyMaxMinor   BigInt?       @map("monthly_max_minor")
+  currency          String?       @db.Char(3)
+  /// "HH:MM" window in the company timezone (both null = any time); `allowedDays` 0 = Sunday … 6 = Saturday (empty = every day).
+  hoursFrom         String?       @map("hours_from")
+  hoursTo           String?       @map("hours_to")
+  allowedDays       Int[]         @default([]) @map("allowed_days")
+  /// Channels the AI may use on its own (e.g. email, sms, whatsapp, phone, social, ads); empty = any.
+  allowedChannels   String[]      @default([]) @map("allowed_channels")
+  /// Set when the trust system demoted the rule (AUTO → ASK).
+  demotedAt         DateTime?     @map("demoted_at") @db.Timestamptz(3)
+  demotionReason    String?       @map("demotion_reason")
+  updatedById       String?       @map("updated_by_id") @db.Uuid
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, department, actionClass])
+  @@index([organizationId, companyId])
+  @@map("autonomy_policies")
+}
+
+/// An action the AI carried out without asking, because a policy allowed it (the "auto-approved" log). Counts toward limits.
+model AutonomousAction {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  companyId      String                 @map("company_id") @db.Uuid
+  department     String
+  actionClass    String                 @map("action_class")
+  /// The policy that allowed it (null = built-in default) and the rule as it stood.
+  policyId       String?                @map("policy_id") @db.Uuid
+  policySnapshot Json                   @default("{}") @map("policy_snapshot")
+  aiEmployeeId   String?                @map("ai_employee_id") @db.Uuid
+  taskId         String?                @map("task_id") @db.Uuid
+  /// The tool that ran (null for non-tool actions recorded by a module).
+  tool           String?
+  /// The module that recorded a non-tool action, e.g. "crm".
+  source         String?
+  summary        String
+  input          Json?
+  channel        String?
+  amountMinor    BigInt?                @map("amount_minor")
+  currency       String?                @db.Char(3)
+  status         AutonomousActionStatus @default(RUNNING)
+  /// Records changed, as "type:id".
+  records        String[]               @default([])
+  result         String?
+  error          String?
+  /// How to reverse it: { tool, input } run as the person who clicks undo; null = not reversible.
+  undo           Json?
+  undoneAt       DateTime?              @map("undone_at") @db.Timestamptz(3)
+  undoneById     String?                @map("undone_by_id") @db.Uuid
+  /// Company-timezone day "YYYY-MM-DD" and month "YYYY-MM" (limit windows).
+  day            String
+  month          String
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([companyId, department, actionClass, day])
+  @@index([companyId, department, actionClass, month])
+  @@map("autonomous_actions")
+}
+
+/// A trust signal recorded by a person or a module (edited proposal, complaint, reversal).
+model AutonomyFeedback {
+  id                 String               @id @default(uuid(7)) @db.Uuid
+  organizationId     String               @map("organization_id") @db.Uuid
+  companyId          String               @map("company_id") @db.Uuid
+  department         String
+  actionClass        String               @map("action_class")
+  kind               AutonomyFeedbackKind
+  aiEmployeeId       String?              @map("ai_employee_id") @db.Uuid
+  autonomousActionId String?              @map("autonomous_action_id") @db.Uuid
+  approvalId         String?              @map("approval_id") @db.Uuid
+  /// The module that recorded it, e.g. "support".
+  source             String?
+  note               String?
+  createdById        String?              @map("created_by_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, department, actionClass, createdAt])
+  @@index([organizationId, companyId, createdAt])
+  @@map("autonomy_feedback")
+}

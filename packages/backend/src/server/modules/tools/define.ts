@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { RequestContext } from "@/server/core/context";
 import type { ToolAutonomy, ToolRisk } from "@/generated/prisma/enums";
+import type { ActionClass } from "@/server/modules/workforce/autonomy-classes";
 
 /**
  * Tool contract (docs/tool-system.md §1). Business modules define their tools in src/server/modules/<module>/ai-tools.ts
@@ -48,6 +49,17 @@ export interface ToolDefinition<I = unknown> {
   /** One line describing the effect, shown on approval requests. */
   summarize(input: I): string;
   execute(input: I, x: ToolExecutionContext): Promise<ToolOutput>;
+  /**
+   * Autonomy policy (docs/autonomy.md). All optional: without them the class and channel are inferred from the name,
+   * permissions and risk (workforce/autonomy-classes.ts classifyTool), which is conservative.
+   */
+  actionClass?: ActionClass;
+  /** Channel used (email, sms, whatsapp, phone, social, ads, …), checked against a policy's allowed channels. */
+  channel?: string;
+  /** Money moved or committed by this call (minor units). Spend/pay tools without it can never run on their own. */
+  amount?(input: I): { amountMinor: bigint; currency: string } | null;
+  /** How a person can reverse an autonomous run: another registered tool and its input (null = not reversible). */
+  reverse?(input: I, output: ToolOutput): { tool: string; input: unknown } | null;
 }
 
 export const def = <I>(t: ToolDefinition<I>) => t as unknown as ToolDefinition;

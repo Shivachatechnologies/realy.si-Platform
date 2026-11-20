@@ -14,6 +14,7 @@ import { syncComments } from "./community";
 import { ingestResearchTask, RESEARCH_SUBJECT, sweepResearchReports } from "./research-reports";
 import { ingestPlanTask, PLAN_SUBJECT } from "./plans";
 import { ingestOptimizationReview, OPTIMIZATION_REVIEW_SUBJECT, runOptimizationLoop } from "./optimizations";
+import { runMarketingRuns } from "./run";
 
 interface DomainPayload {
   companyId: string;
@@ -81,6 +82,7 @@ export const MARKETING_JOBS: ModuleJobs = {
     { name: "marketing.learning_loop", everyMs: 6 * 60 * 60_000, run: runLearningLoop },
     { name: "marketing.research_sweep", everyMs: 2 * 60_000, run: sweepResearchReports },
     { name: "marketing.optimization_loop", everyMs: 12 * 60 * 60_000, run: runOptimizationLoop },
+    { name: "marketing.run_loop", everyMs: 2 * 60_000, run: runMarketingRuns },
   ],
   onEvent: [
     { name: "marketing.nurture_enrollment", types: ["form.submitted", "lead.created"], handle: nurture },

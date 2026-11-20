@@ -738,7 +738,28 @@
       "hr_plan_has_job": "This role already has a job. Cancel it instead of deleting it.",
       "hr_doc_field": "Fill in the details this letter needs.",
       "work_product_backlog_empty": "The backlog is empty — generate or add backlog tasks first.",
-      "work_product_no_work": "There is no completed or planned work yet to write release notes from."
+      "work_product_no_work": "There is no completed or planned work yet to write release notes from.",
+      "marketing_run_active": "Your marketing is already running — pause or stop it first.",
+      "marketing_run_agents_forbidden": "You need permission to run AI agents to start the marketing run.",
+      "livechat_invalid_origin": "Enter website addresses like https://www.example.com.",
+      "livechat_no_origins": "Add your website address before turning the chat on.",
+      "livechat_origin_not_allowed": "This website is not allowed to use the chat.",
+      "livechat_disabled": "The website chat is turned off.",
+      "livechat_unavailable": "The website chat is not available right now.",
+      "livechat_closed": "This conversation is closed.",
+      "livechat_ai_off": "The AI assistant is turned off in the chat settings.",
+      "livechat_conversation_limit": "This conversation is too long. Please start a new one.",
+      "workforce_ai_paused": "All AI in this company is paused. Resume it on the Autonomy page.",
+      "workforce_autonomy_hard_floor": "This kind of action always needs a person.",
+      "workforce_autonomy_cap_required": "Set a per-action money limit before money can move automatically.",
+      "workforce_autonomy_payment_cap": "Automatic payments can't be set above the hard limit.",
+      "workforce_autonomy_hours": "Set both a start and an end time, or neither.",
+      "workforce_autonomy_read_level": "Looking things up can only be on or off.",
+      "workforce_autonomy_amount": "Use the currency's number of decimals.",
+      "workforce_autonomy_no_recommendation": "This recommendation no longer applies.",
+      "workforce_autonomy_not_reversible": "This action can't be undone.",
+      "workforce_autonomy_undo_forbidden": "You don't have the permission this undo needs.",
+      "workforce_autonomy_undo_failed": "The undo didn't work; nothing else was changed."
     }
   },
   "onboarding": {
@@ -1982,7 +2003,11 @@
       "read_workforce_plan": "Read workforce plan",
       "propose_planned_role": "Propose a planned role",
       "read_financial_alerts": "Read financial alerts",
-      "read_money_flow": "Read money flow"
+      "read_money_flow": "Read money flow",
+      "read_marketing_run": "Read the marketing run",
+      "read_livechat_conversations": "Read website chats",
+      "read_livechat_transcript": "Read a chat transcript",
+      "livechat_book_meeting": "Book a meeting from a chat"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -1993,7 +2018,8 @@
       "tasks": "AI tasks",
       "org": "Org chart",
       "performance": "Performance & budgets",
-      "escalations": "Escalations"
+      "escalations": "Escalations",
+      "autonomy": "Autonomy"
     },
     "filters": {
       "search": "Search",
@@ -2677,6 +2703,10 @@
     "paid_ads_specialist": {
       "name": "Paid Ads Specialist",
       "summary": "Ad campaign plans, ad copy and optimization within spending caps."
+    },
+    "website_chat_agent": {
+      "name": "Website Chat Agent",
+      "summary": "Answers website visitors 24/7 from your knowledge, captures leads and hands over to you."
     }
   },
   "projects": {
@@ -2956,7 +2986,10 @@
         "plan_review": "Marketing plan waiting for approval: {title}",
         "plan_changes": "Changes requested on plan: {title}",
         "plan_approved": "Marketing plan approved: {title}",
-        "optimizations_proposed": "New marketing optimizations to review: {title}"
+        "optimizations_proposed": "New marketing optimizations to review: {title}",
+        "run_blocked": "Marketing run needs you: {title}",
+        "run_newsletter_ready": "Newsletter ready to send: {title}",
+        "run_completed": "Marketing run completed: {title}"
       },
       "crm": {
         "lead_assigned": "Lead assigned to you: {title}",
@@ -3043,10 +3076,17 @@
       },
       "workforce": {
         "statusReport": "Status report: {title}",
-        "escalation": "Escalation: {title}"
+        "escalation": "Escalation: {title}",
+        "autonomyDemoted": "Auto mode reduced to Ask me: {title}",
+        "autonomyPaused": "All AI paused: {title}",
+        "autonomyResumed": "AI resumed: {title}"
       },
       "growth": {
         "insight": "Critical growth signal: {title}"
+      },
+      "livechat": {
+        "handoff": "Website visitor needs a person: {title}",
+        "new_chat": "New website chat: {title}"
       }
     },
     "viewAll": "View all"
@@ -8206,7 +8246,8 @@
       "intelligence": "Intelligence",
       "strategy": "Strategy",
       "calendar": "Calendar",
-      "optimize": "Optimize"
+      "optimize": "Optimize",
+      "run": "Run my marketing"
     },
     "common": {
       "allStatuses": "All statuses",
@@ -10168,6 +10209,182 @@
       "recommendations": "Open recommendations",
       "open": "Open",
       "aiReviews": "AI reviews"
+    },
+    "run": {
+      "title": "Run my marketing",
+      "subtitle": "One click: research, strategy, campaigns, content, publishing, results and improvements — running by themselves, with you approving only what matters.",
+      "eyebrow": "Autonomous marketing run",
+      "startedAt": "Started {date}",
+      "blocked": "The run is waiting on something",
+      "approveTitle": "Your plan is ready for approval",
+      "approveCta": "Review the plan",
+      "approveBody": "Approve it and the AI creates the campaign, the autopilots and the content calendar right away.",
+      "changesRequested": "You asked for changes: {note}. Resubmit the plan to continue.",
+      "open": "Open",
+      "recentPosts": "Published posts",
+      "recentPostsHint": "Live links returned by the platforms, with the latest numbers pulled back from them.",
+      "postMetrics": "{impressions} impressions · {engagement} engagements",
+      "metricsPending": "Numbers arrive within an hour",
+      "viewPost": "View",
+      "noPosts": "Nothing published yet. Posts appear here with their live link once a platform confirms them.",
+      "autopilots": "Channels running",
+      "noAutopilots": "No channel autopilot yet — they start when the plan is approved.",
+      "log": "What happened",
+      "logHint": "Every step the run took, newest first.",
+      "history": "Earlier runs",
+      "loopTitle": "The marketing loop",
+      "inProgress": "{count} in progress",
+      "status": {
+        "RESEARCHING": "Researching your market",
+        "PLANNING": "Drafting your strategy",
+        "AWAITING_APPROVAL": "Waiting for your approval",
+        "LAUNCHING": "Launching campaigns",
+        "RUNNING": "Your marketing is running",
+        "BLOCKED": "Needs your help",
+        "PAUSED": "Paused",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "FAILED": "Failed"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "I review everything",
+          "hint": "You approve the plan and every post, article and email before it goes out."
+        },
+        "APPROVE_PLAN": {
+          "name": "I approve the plan",
+          "hint": "You approve the plan; posts and articles then publish by themselves. Emails and spend still ask you."
+        },
+        "FULL_AUTOPILOT": {
+          "name": "Full autopilot",
+          "hint": "Plan, posts, articles and newsletters run by themselves. Spend changes always ask you."
+        }
+      },
+      "planStatus": {
+        "DRAFT": "Draft",
+        "IN_REVIEW": "Awaiting approval",
+        "APPROVED": "Approved",
+        "ACTIVE": "Active",
+        "ARCHIVED": "Archived"
+      },
+      "apStatus": {
+        "ACTIVE": "Running",
+        "PAUSED": "Paused"
+      },
+      "artifact": {
+        "article": "Article",
+        "newsletter": "Newsletter"
+      },
+      "artifactState": {
+        "writing": "Being written",
+        "in_review": "Waiting for your review",
+        "awaiting_approval": "Ready — waiting for you to send",
+        "published": "Published",
+        "scheduled": "Scheduled",
+        "failed": "Failed"
+      },
+      "step": {
+        "research": "Research",
+        "plan": "Strategy",
+        "approval": "Approval",
+        "campaign": "Campaign",
+        "autopilot": "Channels",
+        "seo": "Blog & SEO",
+        "newsletter": "Newsletter",
+        "ads": "Ads",
+        "optimize": "Optimize",
+        "complete": "Done",
+        "control": "Control"
+      },
+      "stage": {
+        "research": "Research",
+        "strategy": "Strategy",
+        "campaign": "Campaign",
+        "calendar": "Calendar",
+        "content": "Content",
+        "creatives": "Creatives",
+        "publish": "Published",
+        "metrics": "Measured",
+        "optimize": "Improved"
+      },
+      "kpi": {
+        "reach": "Reach",
+        "impressions": "{count} impressions",
+        "engagement": "Engagement",
+        "posts": "{count} posts",
+        "leads": "Leads",
+        "won": "{count} became customers",
+        "cpl": "Cost per lead",
+        "spend": "{amount} spent",
+        "emails": "Emails sent",
+        "opens": "{opened} opened · {clicked} clicked",
+        "articles": "Articles published",
+        "articlesWritten": "{count} written",
+        "newsletters": "Newsletters",
+        "optimizations": "Improvements applied",
+        "proposed": "{count} waiting for you"
+      },
+      "form": {
+        "title": "Start your marketing",
+        "subtitle": "Tell us what to promote and to whom. The AI researches, plans and runs the rest.",
+        "products": "What should we promote?",
+        "noProducts": "No products in your company yet — we'll promote the company itself. Add products for sharper marketing.",
+        "audience": "Who are your ideal customers?",
+        "audiencePlaceholder": "e.g. owners of small dental practices in Germany who want more patients",
+        "regions": "Where?",
+        "regionsPlaceholder": "e.g. Germany, Austria",
+        "competitors": "Competitors (optional)",
+        "competitorsPlaceholder": "Comma separated",
+        "budget": "Budget for the period ({currency})",
+        "period": "Plan for",
+        "days": "{count} days",
+        "autonomy": "How much may the AI do alone?",
+        "note": "Anything else? (optional)",
+        "notePlaceholder": "e.g. launch of our new plan on 1 December",
+        "start": "Run my marketing",
+        "starting": "Starting…",
+        "startHint": "Research begins immediately. Nothing is published before the plan is approved.",
+        "forbidden": "Ask someone who can manage marketing and run AI agents to start the run."
+      },
+      "controls": {
+        "pause": "Pause",
+        "resume": "Resume",
+        "retry": "Try again",
+        "cancel": "Stop",
+        "cancelConfirm": "Stop this run? Autopilots pause; already scheduled posts stay in the queue."
+      },
+      "ready": {
+        "title": "What the AI can use",
+        "subtitle": "Connect more and the run does more. Missing pieces are skipped and shown, never faked.",
+        "ai": "AI",
+        "aiMissing": "AI is not configured on this platform",
+        "research": "Web research",
+        "researchMissing": "Connect a research provider for sourced market research",
+        "social": "Social accounts",
+        "socialMissing": "Connect LinkedIn, X, Instagram, Facebook, YouTube or TikTok to publish",
+        "email": "Email sending",
+        "emailMissing": "Connect an email provider to send newsletters",
+        "blog": "Blog",
+        "blogMissing": "Articles go to your Realy blog",
+        "seo": "SEO keywords",
+        "seoMissing": "Add an SEO project with keywords to get articles",
+        "products": "Products",
+        "productsMissing": "Add products so marketing can promote them",
+        "ok": "Ready",
+        "connect": "Set up",
+        "realyBlog": "Your Realy blog (connect WordPress, Webflow or Shopify to publish there)",
+        "safety": "Every post is checked against your brand and compliance rules, published only through the platform's API with a verified link, and sent emails always carry an unsubscribe link and skip opted-out contacts. Ad spend changes always wait for you.",
+        "channels": "Publishing supported on: {list}"
+      },
+      "analytics": {
+        "cpl": "Cost per lead",
+        "conversions": "Conversions (attributed)",
+        "conversionsHint": "{ads} from ad platforms · {crm} won leads with a campaign code",
+        "byChannel": "Results by channel",
+        "byChannelHint": "Spend, leads by UTM source, reach and engagement per channel — from real records only.",
+        "leads": "Leads (UTM)",
+        "noChannels": "No channel activity in this period yet."
+      }
     }
   },
   "sales": {
@@ -18679,6 +18896,500 @@
       "successTitle": "You're on the list.",
       "successBody": "Thank you. We'll email you as soon as Realy is ready for you.",
       "privacy": "We only use your details to contact you about access and to understand demand."
+    }
+  },
+  "livechat": {
+    "title": "Website chat",
+    "eyebrow": "Support · Live chat",
+    "subtitle": "An AI assistant answers your website visitors around the clock from your own knowledge — and brings you in when a person is needed.",
+    "tabs": {
+      "inbox": "Conversations",
+      "settings": "Setup & settings"
+    },
+    "aiMissingTitle": "The AI assistant is not connected",
+    "aiMissingBody": "No AI provider is configured on this platform, so new chats go straight to your team instead of being answered by the AI.",
+    "waitingTitle": "{count, plural, one {# visitor is waiting for a person} other {# visitors are waiting for a person}}",
+    "waitingBody": "The AI handed these chats over. Open one to reply — your answer appears in the visitor’s chat window right away.",
+    "waitingCta": "Show waiting chats",
+    "setup": {
+      "offTitle": "Your website chat is not live yet",
+      "offBody": "Add your website address, tell the AI what it may say, then paste one line of code into your site. It takes about five minutes.",
+      "cta": "Set up the chat"
+    },
+    "analytics": {
+      "title": "Last {days} days",
+      "conversations": "Conversations",
+      "aiResolution": "Resolved by AI",
+      "aiResolutionHint": "{resolved} of {closed} closed chats needed no person",
+      "leads": "Leads captured",
+      "meetings": "{count, plural, one {# meeting requested} other {# meetings requested}}",
+      "handoffs": "Handed to a person",
+      "tickets": "{count, plural, one {# support ticket opened} other {# support tickets opened}}",
+      "trendTitle": "Chats per day",
+      "trendHint": "All conversations, with the part the AI resolved on its own.",
+      "resolvedByAi": "Resolved by AI",
+      "empty": "No chats in this period yet."
+    },
+    "gaps": {
+      "title": "Questions the AI could not answer",
+      "hint": "Add the missing information so the AI can answer next time.",
+      "unknown": "Unanswered question",
+      "empty": "No knowledge gaps so far.",
+      "addArticle": "Write a help article"
+    },
+    "filters": {
+      "label": "Filter conversations",
+      "open": "Open",
+      "waiting": "Waiting for you",
+      "ai": "AI answering",
+      "human": "With a person",
+      "closed": "Closed",
+      "all": "All"
+    },
+    "search": "Search name, email or message",
+    "anonymous": "Anonymous visitor",
+    "noMessages": "No messages yet",
+    "messageCount": "{count, plural, one {# message} other {# messages}}",
+    "empty": "No conversations yet",
+    "emptyFiltered": "No conversations match",
+    "emptyHint": "As soon as a visitor writes on your website, the chat appears here live.",
+    "emptyHintOff": "Turn on the website chat in Setup & settings to start receiving conversations.",
+    "pager": "Pages",
+    "page": "Page {page} of {pages}",
+    "authors": {
+      "VISITOR": "Visitor",
+      "AI": "AI assistant",
+      "AGENT": "Team",
+      "SYSTEM": "System"
+    },
+    "status": {
+      "AI_ACTIVE": "AI answering",
+      "WAITING_HUMAN": "Waiting for a person",
+      "HUMAN_ACTIVE": "With a person",
+      "CLOSED": "Closed"
+    },
+    "outcomes": {
+      "answered": "Answered",
+      "lead": "Lead",
+      "ticket": "Ticket",
+      "meeting": "Meeting",
+      "handoff": "Handoff",
+      "knowledge_gap": "Knowledge gap",
+      "spam": "Spam",
+      "resolved": "Resolved",
+      "follow_up": "Follow up"
+    },
+    "events": {
+      "handoff": "A person from the team has been notified and will reply here.",
+      "handoff_unavailable": "Our assistant can’t answer right now. The team has been notified and will reply here.",
+      "agent_joined": "A team member joined the chat.",
+      "ai_returned": "The AI assistant is answering again.",
+      "closed": "The conversation was closed.",
+      "contact_shared": "Contact details shared.",
+      "lead_created": "Your request was passed to the sales team.",
+      "ticket_created": "Support ticket #{number} was opened.",
+      "meeting_proposed": "Meeting request sent — the team will confirm it.",
+      "meeting_confirmed": "The meeting is confirmed. A calendar invitation is on its way.",
+      "meeting_saved": "The meeting was noted; the team will confirm the details."
+    },
+    "view": {
+      "title": "Website chat conversation",
+      "back": "All conversations",
+      "waitingTitle": "This visitor is waiting for a person",
+      "waitingBody": "The AI handed this chat over.",
+      "handledBy": "Handled by {name}",
+      "visitorOnline": "Visitor is online",
+      "visitorAway": "Visitor is away",
+      "takeOver": "Take over",
+      "returnToAi": "Return to AI",
+      "close": "Close chat",
+      "transcript": "Transcript",
+      "aiThinking": "The AI is writing a reply…",
+      "outcomes": "Outcome tags",
+      "replyPlaceholder": "Write a reply…",
+      "replyTakesOver": "Write a reply — this takes the chat over from the AI",
+      "reply": "Reply",
+      "send": "Send",
+      "closedNote": "This conversation is closed. If the visitor writes again, a new conversation starts.",
+      "contactRequested": "The AI asked the visitor for contact details",
+      "source": {
+        "kb_article": "Help article",
+        "brain_document": "Document",
+        "product": "Product"
+      },
+      "action": {
+        "search_knowledge": "Searched knowledge",
+        "request_contact_details": "Asked for contact details",
+        "hand_off_to_human": "Handed to a person",
+        "create_lead": "Created lead",
+        "create_support_ticket": "Opened ticket",
+        "propose_meeting": "Requested meeting"
+      }
+    },
+    "visitor": {
+      "title": "Visitor",
+      "name": "Name",
+      "email": "Email",
+      "notShared": "Not shared",
+      "consentAt": "Consented to be contacted on {date}",
+      "language": "Language",
+      "page": "Started on page",
+      "firstSeen": "First visit",
+      "previous": "Earlier chats",
+      "previousCount": "{count, plural, one {# earlier conversation} other {# earlier conversations}}"
+    },
+    "links": {
+      "title": "Results",
+      "lead": "Lead: {name}",
+      "ticket": "Ticket #{number}",
+      "meeting": "Meeting request ({status})",
+      "none": "No lead, ticket or meeting from this chat yet."
+    },
+    "approval": {
+      "PENDING": "awaiting approval",
+      "APPROVED": "approved",
+      "REJECTED": "rejected",
+      "EXPIRED": "expired",
+      "EXECUTED": "booked",
+      "FAILED": "failed"
+    },
+    "gdpr": {
+      "title": "Privacy",
+      "hint": "Closed chats are deleted automatically after {days} days. You can erase this visitor’s data now.",
+      "confirm": "Delete this visitor and all their chats permanently? This cannot be undone.",
+      "delete": "Delete visitor data",
+      "linked": "A lead or ticket was created from this chat. Erase it in CRM or Support if the visitor asked for full deletion."
+    },
+    "settings": {
+      "title": "Website chat setup",
+      "readOnly": "You can view these settings. Changing them needs the support management permission.",
+      "step1": "1 · Your website",
+      "step1Hint": "The chat only works on the websites you list here.",
+      "origins": "Website addresses",
+      "originsHint": "One per line, e.g. https://www.example.com. Use https://*.example.com for all subdomains.",
+      "step2": "2 · Look and greeting",
+      "step2Hint": "Match your brand. Visitors see the chat in their own language automatically.",
+      "assistantName": "Assistant name",
+      "brandColor": "Brand colour",
+      "position": "Position",
+      "positionRight": "Bottom right",
+      "positionLeft": "Bottom left",
+      "greeting": "Greeting (optional)",
+      "greetingHint": "Leave empty to use a friendly greeting in the visitor’s language that says it is an AI assistant.",
+      "step3": "3 · What the AI knows",
+      "step3Hint": "The AI answers only from this information, your published help articles, tagged documents and your products. Anything else, it hands to you.",
+      "publicFacts": "Public facts",
+      "publicFactsHint": "Prices, opening hours, delivery, returns — anything visitors may be told. Never put private information here.",
+      "publicFactsPlaceholder": "e.g. Plans start at 29 € per month. We ship within the EU in 2–4 days. Support hours: Mon–Fri 9:00–17:00 CET.",
+      "brainTag": "Company Brain tag",
+      "brainTagHint": "Only Company Brain documents with this tag are used in the chat; all other documents stay private.",
+      "toggles": {
+        "aiEnabled": "Let the AI answer visitors",
+        "aiEnabledHint": "When off, visitors leave a message and your team answers.",
+        "autoCreateLeads": "Create CRM leads from sales chats",
+        "autoCreateLeadsHint": "Only after the visitor shares an email and agrees to be contacted.",
+        "autoCreateTickets": "Open support tickets for problems",
+        "autoCreateTicketsHint": "Only after the visitor shares an email and agrees to be contacted.",
+        "meetingsEnabled": "Let the AI request meetings",
+        "meetingsEnabledHint": "Each meeting needs your approval before the visitor gets a calendar invitation."
+      },
+      "step5": "5 · Privacy",
+      "step5Hint": "Visitors always see that they talk to an AI and give consent before sharing contact details.",
+      "step4": "4 · What the AI may do",
+      "step4Hint": "Answering is always allowed. Anything that leaves the chat follows these rules and your approvals.",
+      "privacyUrl": "Privacy policy link",
+      "privacyUrlHint": "Shown next to the consent checkbox.",
+      "retentionDays": "Keep chats for (days)",
+      "retentionHint": "Closed chats and their visitors are deleted after this period.",
+      "saved": "Saved",
+      "step6": "6 · Install and go live",
+      "step6Hint": "Paste this line before the closing </body> tag of your website (or into your site builder’s custom code field).",
+      "copy": "Copy code",
+      "copied": "Copied",
+      "rotate": "New key",
+      "rotateConfirm": "Create a new key? The code on your website stops working until you replace it.",
+      "cspHint": "If your website uses a Content Security Policy, allow this app’s address in script-src and connect-src.",
+      "liveTitle": "Your chat is live",
+      "liveBody": "Visitors on your listed websites can chat now.",
+      "turnOff": "Turn off",
+      "offTitle": "Your chat is off",
+      "offBody": "Try the preview, then turn the chat on for your website.",
+      "turnOn": "Turn on",
+      "preview": "Preview here",
+      "previewOff": "Hide preview"
+    },
+    "knowledge": {
+      "title": "Knowledge check",
+      "hint": "The more the AI knows, the more chats it resolves on its own.",
+      "facts": "Public facts written",
+      "articles": "{count, plural, =0 {No published help articles} one {# published help article} other {# published help articles}}",
+      "articlesLink": "Manage help articles",
+      "documents": "{count, plural, =0 {No documents tagged “{tag}”} one {# document tagged “{tag}”} other {# documents tagged “{tag}”}}",
+      "documentsLink": "Open Company Brain",
+      "products": "{count, plural, =0 {No active products} one {# active product} other {# active products}}",
+      "productsLink": "Manage products",
+      "ready": "ready",
+      "missing": "missing",
+      "none": "The AI has nothing to answer from yet, so it will hand every question to you. Add public facts or a help article first."
+    },
+    "trust": {
+      "title": "How the assistant behaves",
+      "disclosure": "It always says it is an AI.",
+      "grounded": "It answers only from your knowledge and says “I don’t know” otherwise.",
+      "consent": "Contact details are stored only with the visitor’s consent.",
+      "approvals": "Meetings and anything sent on your behalf need your approval.",
+      "retention": "Chats are deleted after your retention period; you can erase a visitor at any time."
+    },
+    "metrics": {
+      "conversations": "Website chats",
+      "aiResolutionRate": "Chats resolved by AI",
+      "leadsCaptured": "Leads from website chat",
+      "handoffs": "Chats handed to a person"
+    },
+    "widget": {
+      "launcher": "Chat with us",
+      "aiBadge": "AI assistant",
+      "disclosure": "You are chatting with an AI assistant. It answers from {company}’s information and can bring in a person.",
+      "greeting": "Hi! I’m {name}, the AI assistant of {company}. How can I help you?",
+      "placeholder": "Type your message…",
+      "send": "Send",
+      "close": "Close chat",
+      "human": "Talk to a person",
+      "typing": "Typing…",
+      "contactTitle": "Share your contact details",
+      "contactHint": "So the team can get back to you.",
+      "contactName": "Name",
+      "contactEmail": "Email",
+      "consent": "I agree that {company} stores my name and email to answer my request and contact me about it.",
+      "privacy": "Privacy policy",
+      "contactSubmit": "Share",
+      "error": "Something went wrong. Please try again.",
+      "rateLimited": "You are sending messages very quickly. Please wait a moment.",
+      "unavailable": "The chat is not available right now.",
+      "offline": "Hi! Leave us a message and the team will reply here.",
+      "newChat": "Start a new conversation",
+      "closed": "This conversation has ended. Write again to start a new one.",
+      "teamMember": "Team",
+      "you": "You",
+      "assistant": "AI assistant",
+      "endChat": "End chat",
+      "unread": "new message",
+      "honeypot": "Leave this field empty"
+    }
+  },
+  "autonomy": {
+    "title": "Autonomy",
+    "eyebrow": "AI Workforce",
+    "subtitle": "Decide what your AI departments may do on their own, what they ask you first, and what always needs you. Every automatic action is logged, counted against its limits and can be reviewed here.",
+    "company": "Whole company",
+    "companyHelp": "Default for every department unless a department has its own rule",
+    "readOnly": "You can view these settings; changing them needs permission to manage the AI workforce.",
+    "error": {
+      "title": "Autonomy settings could not be loaded",
+      "body": "Something went wrong while loading this page. Reload it in a moment; nothing was changed."
+    },
+    "autoMode": {
+      "title": "Auto mode",
+      "description": "The master switch for AI acting without you.",
+      "on": "Auto mode is on",
+      "off": "Auto mode is off",
+      "explainOn": "Rules set to Auto run on their own within their limits. Everything else still asks you first.",
+      "explainOff": "Nothing runs without you: rules set to Auto behave like Ask me until you turn Auto mode on.",
+      "turnOn": "Turn on Auto mode",
+      "turnOff": "Turn off Auto mode",
+      "mfa": "Requires a recent two-factor verification.",
+      "confirmOn": "Turn on Auto mode? AI departments will then act on their own wherever a rule is set to Auto, within its limits."
+    },
+    "pause": {
+      "title": "Emergency stop",
+      "explain": "Stops every AI employee in this company at once: no new tasks start and no action runs until you resume.",
+      "button": "Pause all AI",
+      "resume": "Resume AI",
+      "isPaused": "All AI is paused",
+      "dialogTitle": "Pause all AI in this company?",
+      "dialogDescription": "No AI task will start and no AI action will run until someone resumes. Your reason is saved in the activity log and your team is notified.",
+      "confirmResume": "Resume all AI in this company?",
+      "bannerTitle": "All AI is paused",
+      "banner": "Paused since {date}.",
+      "reason": "Reason: {reason}"
+    },
+    "platform": {
+      "disabled": "The AI workforce is turned off by the platform for your organization. Rules are kept and apply again once it is back.",
+      "paused": "The platform has temporarily paused AI actions. Nothing runs automatically right now.",
+      "supervised": "The platform currently requires approval for every AI action that changes data, so Auto rules ask you first for now."
+    },
+    "levels": {
+      "OFF": "Off",
+      "SUGGEST": "Suggest",
+      "ASK": "Ask me",
+      "AUTO": "Auto",
+      "ON": "On"
+    },
+    "levelsHelp": {
+      "OFF": "The AI never does this.",
+      "SUGGEST": "The AI only recommends it in its report; nothing is filed or done.",
+      "ASK": "The AI prepares it and you approve before anything happens.",
+      "AUTO": "The AI does it on its own within the limits you set, and logs it here."
+    },
+    "classes": {
+      "read": "Look things up",
+      "change_data": "Change company data",
+      "send_message": "Send messages",
+      "call": "Make calls",
+      "publish": "Publish",
+      "spend": "Spend money",
+      "pay": "Pay and transfer",
+      "contract": "Contracts and legal",
+      "hr": "Hiring and HR decisions",
+      "delete_data": "Delete data"
+    },
+    "classesHelp": {
+      "read": "Search documents, read records and reports",
+      "change_data": "Create and update records, tasks and drafts",
+      "send_message": "Emails, SMS, chat and social replies to people outside",
+      "call": "Phone calls to customers and contacts",
+      "publish": "Posts, pages and announcements the public sees",
+      "spend": "Ad budgets, purchases and other spending",
+      "pay": "Payments, refunds and transfers",
+      "contract": "Signing or sending contracts and legal terms",
+      "hr": "Hiring, offers, firing and pay decisions",
+      "delete_data": "Removing records or files"
+    },
+    "channels": {
+      "email": "Email",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "phone": "Phone",
+      "chat": "Chat",
+      "social": "Social",
+      "ads": "Ads",
+      "web": "Website"
+    },
+    "days": {
+      "0": "Sun",
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat"
+    },
+    "stats": {
+      "autoToday": "Done automatically (24 h)",
+      "autoTodayHint": "Actions the AI took on its own",
+      "recommendations": "Ready for more trust",
+      "recommendationsHint": "Areas with a clean record",
+      "employees": "AI employees",
+      "employeesHint": "{count, plural, one {in # department} other {in # departments}}"
+    },
+    "guide": {
+      "title": "Start with trust you can see",
+      "description": "Nothing changes until you decide. A safe way to begin:",
+      "step1": "Keep everything on Ask me for a couple of weeks and approve the AI's work as usual — this builds its track record.",
+      "step2": "When an area has a clean record, apply the recommendation below: it switches to Auto with a daily cap.",
+      "step3": "Turn on Auto mode. Watch the live log, undo anything reversible, and pause all AI any time."
+    },
+    "recommendations": {
+      "title": "Trust recommendations",
+      "description": "Based on the last 30 days of approvals, rejections, edits and problems.",
+      "text": "{department} · {action}: {approved} approved, {rejected} rejected in {days} days — switch to Auto with a {limit}/day cap?",
+      "apply": "Switch to Auto ({limit}/day)",
+      "autoModeOff": "Auto mode is off: rules you switch to Auto start working once you turn it on."
+    },
+    "demotions": {
+      "text": "{department} · {action} moved back to Ask me on {date}: {reason}"
+    },
+    "rules": {
+      "title": "Rules by department",
+      "subtitle": "Slide each kind of action between Off, Suggest, Ask me and Auto. Departments follow the whole-company rule unless you change them.",
+      "employees": "{count, plural, =0 {No AI employees yet} one {# AI employee} other {# AI employees}}",
+      "meter": "{auto} of {total} kinds of action on Auto",
+      "inherited": "Company rule",
+      "default": "Default",
+      "useCompany": "Use company rule",
+      "reset": "Reset to default",
+      "limits": "Limits",
+      "noLimits": "No limits set",
+      "locked": "Always needs a person",
+      "lockedHelp": "This kind of action can never run automatically",
+      "usedToday": "{used} of {limit} today",
+      "usedTodayNoLimit": "{used} today",
+      "spentToday": "spent today {amount}",
+      "perDay": "{count} per day",
+      "perAction": "up to {amount} each",
+      "perDayMoney": "{amount} per day",
+      "perMonthMoney": "{amount} per month"
+    },
+    "limits": {
+      "description": "Limits apply when this is on Auto. Anything beyond them is sent to you for approval instead.",
+      "dailyLimit": "Actions per day",
+      "dailyLimitHelp": "Counted in your company's time zone. Leave empty for no daily cap.",
+      "money": "Money limits ({currency})",
+      "perActionMax": "Per action",
+      "dailyMax": "Per day",
+      "monthlyMax": "Per month",
+      "capRequired": "Money only moves automatically with a per-action limit.",
+      "paymentCap": "Automatic payments can never exceed {amount} each.",
+      "hours": "When",
+      "from": "From",
+      "to": "To",
+      "hoursHelp": "Leave times empty for any time, and days unselected for every day.",
+      "days": "Days",
+      "channels": "Allowed channels",
+      "channelsHelp": "Leave all unselected to allow any channel.",
+      "save": "Save rule",
+      "cancel": "Cancel"
+    },
+    "floors": {
+      "title": "Hard floors",
+      "description": "These always need a person, whatever the rules say.",
+      "contract": "Signing or sending contracts and legal terms",
+      "hr": "Hiring, firing, offers and pay decisions",
+      "delete": "Deleting company data",
+      "pay": "Payments and transfers above {amount}",
+      "founderOnly": "Actions only the organization owner may approve",
+      "killSwitch": "Anything the platform's safety switches block"
+    },
+    "trust": {
+      "title": "Track record",
+      "description": "Last 30 days. {threshold} problems within {days} days send an Auto rule back to Ask me, and you are notified.",
+      "department": "Department",
+      "action": "Action",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "edited": "Edited",
+      "auto": "Automatic",
+      "problems": "Problems",
+      "employees": "AI employees",
+      "employeeLine": "{name}: {approved} ok, {rejected} rejected",
+      "empty": "No track record yet. It builds up as you approve or reject the AI's proposals."
+    },
+    "log": {
+      "title": "Live log of automatic actions",
+      "description": "Everything the AI did without asking, with the rule that allowed it.",
+      "live": "Live",
+      "emptyOn": "No automatic actions yet. They appear here the moment an AI employee acts under an Auto rule.",
+      "emptyOff": "Auto mode is off, so the AI has not acted on its own.",
+      "by": "by {name}",
+      "policy": "allowed by the {scope} rule",
+      "policyDefault": "allowed by the default rule",
+      "task": "Open task",
+      "failed": "Failed: {error}",
+      "undone": "Undone {date}",
+      "undo": "Undo",
+      "undoConfirm": "Undo this action? Realy will run the reverse step with your permissions.",
+      "notReversible": "Can't be undone automatically",
+      "report": "Report a problem",
+      "reportTitle": "Report a problem",
+      "reportDescription": "Problems count against this department's track record and can move the rule back to Ask me.",
+      "reportKind": "What happened?",
+      "reportKinds": {
+        "COMPLAINT": "Someone complained",
+        "REVERSAL": "We had to reverse it",
+        "EDITED": "It needed edits"
+      },
+      "reportNote": "Details (optional)",
+      "reportSend": "Send report"
     }
   }
 }

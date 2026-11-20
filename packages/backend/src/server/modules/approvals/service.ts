@@ -9,6 +9,7 @@ import { loadGrants, mfaSatisfied, requirePermission } from "@/server/modules/rb
 import { companyChain } from "@/server/modules/rbac/scope";
 import { authorizeTool, ToolDenied, withTimeout } from "@/server/modules/tools/gateway";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
+import { noteApprovalOutcome } from "@/server/modules/workforce/autonomy-policy";
 
 export const decideInput = z.object({ decision: z.enum(["approve", "reject"]), note: z.string().trim().max(1000).optional() });
 export const listApprovalsInput = z.object({ status: z.enum(["PENDING", "APPROVED", "REJECTED", "EXPIRED", "EXECUTED", "FAILED"]).optional() });
@@ -56,13 +57,16 @@ export async function decideApproval(ctx: RequestContext, organizationId: string
   const decided = { decidedById: ctx.actor.id, decidedAt: new Date(), decisionNote: note || null };
 
   if (decision === "reject") {
-    return transaction(async (tx) => {
+    const out = await transaction(async (tx) => {
       const { count } = await tx.approval.updateMany({ where: { id: a.id, status: "PENDING" }, data: { status: "REJECTED", ...decided } });
       if (!count) throw conflict("This request was decided by someone else", { reason: "approval_decided" });
       await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "approval.rejected", resourceType: "approval", resourceId: a.id, newValue: { tool: a.tool, note } });
       await resolved(tx, ctx, a, "REJECTED");
       return { id: a.id, status: "REJECTED" as const };
     });
+    // Trust system (docs/autonomy.md): rejections count against the AI department's record and may demote Auto mode.
+    await noteApprovalOutcome(a, "rejection");
+    return out;
   }
 
   await loadTools();
@@ -107,6 +111,7 @@ export async function decideApproval(ctx: RequestContext, organizationId: string
       await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "approval.failed", resourceType: "approval", resourceId: a.id, newValue: { tool: a.tool, error: message } });
       await resolved(tx, ctx, a, "FAILED");
     });
+    await noteApprovalOutcome(a, "failure");
     throw new AppError("conflict", `Approved, but the action failed: ${message}`, { reason: "approval_failed" });
   }
 }

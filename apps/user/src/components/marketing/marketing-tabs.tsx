@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /** Lifecycle order: research → strategy → create → schedule → publish → monitor → analyze → optimize, then audience tools. */
-export const MARKETING_TABS = ["overview", "start", "intelligence", "strategy", "autopilot", "studio", "campaigns", "content", "calendar", "social", "community", "seo", "blog", "email", "ads", "influencers", "analytics", "optimize", "audience", "forms", "automation", "brand"] as const;
+export const MARKETING_TABS = ["overview", "run", "start", "intelligence", "strategy", "autopilot", "studio", "campaigns", "content", "calendar", "social", "community", "seo", "blog", "email", "ads", "influencers", "analytics", "optimize", "audience", "forms", "automation", "brand"] as const;
 export type MarketingTab = (typeof MARKETING_TABS)[number];
 
 /** Secondary navigation shared by all Marketing OS pages. */

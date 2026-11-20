@@ -738,7 +738,28 @@
       "hr_plan_has_job": "该岗位已有职位，请取消而不是删除。",
       "hr_doc_field": "请填写此信函所需的信息。",
       "work_product_backlog_empty": "待办为空——请先生成或添加待办任务。",
-      "work_product_no_work": "目前还没有已完成或计划中的工作可用于撰写发布说明。"
+      "work_product_no_work": "目前还没有已完成或计划中的工作可用于撰写发布说明。",
+      "marketing_run_active": "您的营销已在运行——请先暂停或停止。",
+      "marketing_run_agents_forbidden": "您需要运行 AI 代理的权限才能启动营销运行。",
+      "livechat_invalid_origin": "请输入类似 https://www.example.com 的网站地址。",
+      "livechat_no_origins": "开启聊天前请先添加网站地址。",
+      "livechat_origin_not_allowed": "此网站无权使用该聊天。",
+      "livechat_disabled": "网站聊天已关闭。",
+      "livechat_unavailable": "网站聊天暂不可用。",
+      "livechat_closed": "此会话已结束。",
+      "livechat_ai_off": "聊天设置中已关闭 AI 助手。",
+      "livechat_conversation_limit": "此会话过长，请开始新的会话。",
+      "workforce_ai_paused": "本公司的所有 AI 已暂停。请在“自主权”页面恢复。",
+      "workforce_autonomy_hard_floor": "此类操作始终需要人工。",
+      "workforce_autonomy_cap_required": "请先设置每次金额限额，资金才能自动流动。",
+      "workforce_autonomy_payment_cap": "自动付款不能设置为高于硬性上限。",
+      "workforce_autonomy_hours": "请同时设置开始和结束时间，或都不设置。",
+      "workforce_autonomy_read_level": "查询信息只能开启或关闭。",
+      "workforce_autonomy_amount": "请使用该货币的小数位数。",
+      "workforce_autonomy_no_recommendation": "此建议已不再适用。",
+      "workforce_autonomy_not_reversible": "此操作无法撤销。",
+      "workforce_autonomy_undo_forbidden": "您没有执行此撤销所需的权限。",
+      "workforce_autonomy_undo_failed": "撤销未成功；没有其他更改。"
     }
   },
   "onboarding": {
@@ -1982,7 +2003,11 @@
       "read_workforce_plan": "读取人力规划",
       "propose_planned_role": "提议计划岗位",
       "read_financial_alerts": "读取财务警报",
-      "read_money_flow": "读取资金流"
+      "read_money_flow": "读取资金流",
+      "read_marketing_run": "读取营销运行",
+      "read_livechat_conversations": "读取网站聊天",
+      "read_livechat_transcript": "读取聊天记录",
+      "livechat_book_meeting": "从聊天预约会议"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -1993,7 +2018,8 @@
       "tasks": "AI 任务",
       "org": "组织架构",
       "performance": "绩效与预算",
-      "escalations": "升级事项"
+      "escalations": "升级事项",
+      "autonomy": "自主权"
     },
     "filters": {
       "search": "搜索",
@@ -2677,6 +2703,10 @@
     "paid_ads_specialist": {
       "name": "付费广告专员",
       "summary": "在支出上限内制定活动计划、撰写广告文案并优化。"
+    },
+    "website_chat_agent": {
+      "name": "网站聊天专员",
+      "summary": "依据您的资料全天候回答网站访客，获取潜在客户并转交给您。"
     }
   },
   "projects": {
@@ -2956,7 +2986,10 @@
         "plan_review": "营销计划等待批准：{title}",
         "plan_changes": "计划需要修改：{title}",
         "plan_approved": "营销计划已批准：{title}",
-        "optimizations_proposed": "有新的营销优化待审核：{title}"
+        "optimizations_proposed": "有新的营销优化待审核：{title}",
+        "run_blocked": "营销运行需要您：{title}",
+        "run_newsletter_ready": "简报可以发送：{title}",
+        "run_completed": "营销运行已完成：{title}"
       },
       "crm": {
         "lead_assigned": "分配给您的线索：{title}",
@@ -3043,10 +3076,17 @@
       },
       "workforce": {
         "statusReport": "状态汇报：{title}",
-        "escalation": "升级：{title}"
+        "escalation": "升级：{title}",
+        "autonomyDemoted": "自动模式已降为“问我”：{title}",
+        "autonomyPaused": "所有 AI 已暂停：{title}",
+        "autonomyResumed": "AI 已恢复：{title}"
       },
       "growth": {
         "insight": "严重增长信号：{title}"
+      },
+      "livechat": {
+        "handoff": "网站访客需要真人：{title}",
+        "new_chat": "新的网站聊天：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -8206,7 +8246,8 @@
       "intelligence": "市场洞察",
       "strategy": "策略",
       "calendar": "日历",
-      "optimize": "优化"
+      "optimize": "优化",
+      "run": "运行营销"
     },
     "common": {
       "allStatuses": "全部状态",
@@ -10168,6 +10209,182 @@
       "recommendations": "未处理的建议",
       "open": "打开",
       "aiReviews": "AI 审查"
+    },
+    "run": {
+      "title": "运行我的营销",
+      "subtitle": "一键完成：调研、策略、活动、内容、发布、结果与优化自动运行，您只需批准真正重要的事项。",
+      "eyebrow": "自主营销运行",
+      "startedAt": "开始于 {date}",
+      "blocked": "运行正在等待某项条件",
+      "approveTitle": "您的计划已可审批",
+      "approveCta": "查看计划",
+      "approveBody": "批准后，AI 会立即创建活动、自动驾驶和内容日历。",
+      "changesRequested": "您要求修改：{note}。重新提交计划即可继续。",
+      "open": "打开",
+      "recentPosts": "已发布的帖子",
+      "recentPostsHint": "平台返回的实时链接，以及从平台拉取的最新数据。",
+      "postMetrics": "{impressions} 次展示 · {engagement} 次互动",
+      "metricsPending": "数据将在一小时内到达",
+      "viewPost": "查看",
+      "noPosts": "尚未发布任何内容。平台确认后，帖子会连同实时链接显示在这里。",
+      "autopilots": "运行中的渠道",
+      "noAutopilots": "尚无渠道自动驾驶——计划批准后启动。",
+      "log": "发生了什么",
+      "logHint": "运行的每一步，最新的在前。",
+      "history": "以往运行",
+      "loopTitle": "营销闭环",
+      "inProgress": "{count} 进行中",
+      "status": {
+        "RESEARCHING": "正在调研您的市场",
+        "PLANNING": "正在起草您的策略",
+        "AWAITING_APPROVAL": "等待您的批准",
+        "LAUNCHING": "正在启动活动",
+        "RUNNING": "您的营销正在运行",
+        "BLOCKED": "需要您的帮助",
+        "PAUSED": "已暂停",
+        "COMPLETED": "已完成",
+        "CANCELLED": "已取消",
+        "FAILED": "失败"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "全部由我审核",
+          "hint": "您批准计划，并在每个帖子、文章和邮件发出前审核。"
+        },
+        "APPROVE_PLAN": {
+          "name": "我批准计划",
+          "hint": "您批准计划后，帖子和文章自动发布。邮件和支出仍需您确认。"
+        },
+        "FULL_AUTOPILOT": {
+          "name": "完全自动驾驶",
+          "hint": "计划、帖子、文章和简报自动运行。支出变更始终需要您批准。"
+        }
+      },
+      "planStatus": {
+        "DRAFT": "草稿",
+        "IN_REVIEW": "待审批",
+        "APPROVED": "已批准",
+        "ACTIVE": "进行中",
+        "ARCHIVED": "已归档"
+      },
+      "apStatus": {
+        "ACTIVE": "运行中",
+        "PAUSED": "已暂停"
+      },
+      "artifact": {
+        "article": "文章",
+        "newsletter": "简报"
+      },
+      "artifactState": {
+        "writing": "撰写中",
+        "in_review": "等待您审核",
+        "awaiting_approval": "已就绪——等待您发送",
+        "published": "已发布",
+        "scheduled": "已排期",
+        "failed": "失败"
+      },
+      "step": {
+        "research": "调研",
+        "plan": "策略",
+        "approval": "审批",
+        "campaign": "活动",
+        "autopilot": "渠道",
+        "seo": "博客与 SEO",
+        "newsletter": "简报",
+        "ads": "广告",
+        "optimize": "优化",
+        "complete": "完成",
+        "control": "控制"
+      },
+      "stage": {
+        "research": "调研",
+        "strategy": "策略",
+        "campaign": "活动",
+        "calendar": "日历",
+        "content": "内容",
+        "creatives": "创意",
+        "publish": "已发布",
+        "metrics": "已衡量",
+        "optimize": "已优化"
+      },
+      "kpi": {
+        "reach": "覆盖",
+        "impressions": "{count} 次展示",
+        "engagement": "互动",
+        "posts": "{count} 个帖子",
+        "leads": "潜在客户",
+        "won": "{count} 成为客户",
+        "cpl": "单个潜在客户成本",
+        "spend": "已花费 {amount}",
+        "emails": "已发送邮件",
+        "opens": "{opened} 打开 · {clicked} 点击",
+        "articles": "已发布文章",
+        "articlesWritten": "已撰写 {count} 篇",
+        "newsletters": "简报",
+        "optimizations": "已应用的优化",
+        "proposed": "{count} 项等待您处理"
+      },
+      "form": {
+        "title": "开始您的营销",
+        "subtitle": "告诉我们要推广什么、面向谁。AI 会调研、规划并完成其余工作。",
+        "products": "我们要推广什么？",
+        "noProducts": "您的公司还没有产品——我们将推广公司本身。添加产品可让营销更精准。",
+        "audience": "您的理想客户是谁？",
+        "audiencePlaceholder": "例如：德国希望获得更多患者的小型牙科诊所负责人",
+        "regions": "在哪里？",
+        "regionsPlaceholder": "例如：德国、奥地利",
+        "competitors": "竞争对手（可选）",
+        "competitorsPlaceholder": "用逗号分隔",
+        "budget": "本期预算（{currency}）",
+        "period": "规划周期",
+        "days": "{count} 天",
+        "autonomy": "AI 可以独立做多少？",
+        "note": "还有其他吗？（可选）",
+        "notePlaceholder": "例如：12 月 1 日发布我们的新套餐",
+        "start": "运行我的营销",
+        "starting": "正在启动…",
+        "startHint": "调研立即开始。计划批准前不会发布任何内容。",
+        "forbidden": "请让有权管理营销并运行 AI 代理的人启动此运行。"
+      },
+      "controls": {
+        "pause": "暂停",
+        "resume": "继续",
+        "retry": "重试",
+        "cancel": "停止",
+        "cancelConfirm": "停止此运行？自动驾驶将暂停；已排期的帖子仍保留在队列中。"
+      },
+      "ready": {
+        "title": "AI 可以使用的资源",
+        "subtitle": "连接越多，运行能做的越多。缺失的部分会被跳过并显示，绝不伪造。",
+        "ai": "AI",
+        "aiMissing": "此平台尚未配置 AI",
+        "research": "网络调研",
+        "researchMissing": "连接调研服务商以获得有来源的市场调研",
+        "social": "社交账号",
+        "socialMissing": "连接 LinkedIn、X、Instagram、Facebook、YouTube 或 TikTok 以发布",
+        "email": "邮件发送",
+        "emailMissing": "连接邮件服务商以发送简报",
+        "blog": "博客",
+        "blogMissing": "文章将发布到您的 Realy 博客",
+        "seo": "SEO 关键词",
+        "seoMissing": "添加带关键词的 SEO 项目以获得文章",
+        "products": "产品",
+        "productsMissing": "添加产品，以便营销进行推广",
+        "ok": "就绪",
+        "connect": "设置",
+        "realyBlog": "您的 Realy 博客（连接 WordPress、Webflow 或 Shopify 即可在那里发布）",
+        "safety": "每个帖子都会按照您的品牌和合规规则检查，只通过平台 API 发布并验证链接；发送的邮件始终包含退订链接，并跳过已退订的联系人。广告支出变更始终等待您批准。",
+        "channels": "支持发布到：{list}"
+      },
+      "analytics": {
+        "cpl": "单个潜在客户成本",
+        "conversions": "转化（已归因）",
+        "conversionsHint": "{ads} 来自广告平台 · {crm} 个带活动代码的成交潜在客户",
+        "byChannel": "按渠道的结果",
+        "byChannelHint": "各渠道的支出、按 UTM 来源的潜在客户、覆盖和互动——仅来自真实记录。",
+        "leads": "潜在客户（UTM）",
+        "noChannels": "此期间尚无渠道活动。"
+      }
     }
   },
   "sales": {
@@ -18679,6 +18896,500 @@
       "successTitle": "你已在名单上。",
       "successBody": "谢谢。Realy 为你准备就绪时，我们会发邮件通知你。",
       "privacy": "我们只会用你的信息就使用资格联系你，并了解需求。"
+    }
+  },
+  "livechat": {
+    "title": "网站聊天",
+    "eyebrow": "客服 · 在线聊天",
+    "subtitle": "AI 助手依据您自己的资料，全天候回答网站访客的问题——需要真人时会请您介入。",
+    "tabs": {
+      "inbox": "会话",
+      "settings": "设置"
+    },
+    "aiMissingTitle": "AI 助手未连接",
+    "aiMissingBody": "本平台未配置 AI 服务，因此新的聊天会直接交给您的团队，而不是由 AI 回答。",
+    "waitingTitle": "{count, plural, other {# 位访客正在等待真人}}",
+    "waitingBody": "AI 已移交这些聊天。打开一个即可回复——您的回复会立即显示在访客的聊天窗口中。",
+    "waitingCta": "查看等待中的聊天",
+    "setup": {
+      "offTitle": "您的网站聊天尚未上线",
+      "offBody": "添加网站地址，告诉 AI 可以说什么，然后在网站中粘贴一行代码。大约需要五分钟。",
+      "cta": "设置聊天"
+    },
+    "analytics": {
+      "title": "最近 {days} 天",
+      "conversations": "会话",
+      "aiResolution": "AI 解决",
+      "aiResolutionHint": "{closed} 个已结束的聊天中有 {resolved} 个无需真人",
+      "leads": "获得的潜在客户",
+      "meetings": "{count, plural, other {已请求 # 次会议}}",
+      "handoffs": "转交真人",
+      "tickets": "{count, plural, other {已创建 # 个客服工单}}",
+      "trendTitle": "每日聊天",
+      "trendHint": "所有会话，以及 AI 独立解决的部分。",
+      "resolvedByAi": "AI 解决",
+      "empty": "此期间暂无聊天。"
+    },
+    "gaps": {
+      "title": "AI 无法回答的问题",
+      "hint": "补充缺失的信息，下次 AI 就能回答。",
+      "unknown": "未回答的问题",
+      "empty": "目前没有知识空白。",
+      "addArticle": "撰写帮助文章"
+    },
+    "filters": {
+      "label": "筛选会话",
+      "open": "进行中",
+      "waiting": "等待您",
+      "ai": "AI 回答中",
+      "human": "真人处理中",
+      "closed": "已结束",
+      "all": "全部"
+    },
+    "search": "搜索姓名、邮箱或消息",
+    "anonymous": "匿名访客",
+    "noMessages": "暂无消息",
+    "messageCount": "{count, plural, other {# 条消息}}",
+    "empty": "暂无会话",
+    "emptyFiltered": "没有匹配的会话",
+    "emptyHint": "访客在您的网站上发消息后，聊天会实时显示在这里。",
+    "emptyHintOff": "在“设置”中开启网站聊天，即可开始接收会话。",
+    "pager": "分页",
+    "page": "第 {page} 页，共 {pages} 页",
+    "authors": {
+      "VISITOR": "访客",
+      "AI": "AI 助手",
+      "AGENT": "团队",
+      "SYSTEM": "系统"
+    },
+    "status": {
+      "AI_ACTIVE": "AI 回答中",
+      "WAITING_HUMAN": "等待真人",
+      "HUMAN_ACTIVE": "真人处理中",
+      "CLOSED": "已结束"
+    },
+    "outcomes": {
+      "answered": "已回答",
+      "lead": "潜在客户",
+      "ticket": "工单",
+      "meeting": "会议",
+      "handoff": "已转交",
+      "knowledge_gap": "知识空白",
+      "spam": "垃圾信息",
+      "resolved": "已解决",
+      "follow_up": "待跟进"
+    },
+    "events": {
+      "handoff": "已通知团队成员，他们会在这里回复。",
+      "handoff_unavailable": "我们的助手暂时无法回答。已通知团队，他们会在这里回复。",
+      "agent_joined": "一位团队成员加入了聊天。",
+      "ai_returned": "AI 助手重新开始回答。",
+      "closed": "会话已结束。",
+      "contact_shared": "已分享联系方式。",
+      "lead_created": "您的需求已转给销售团队。",
+      "ticket_created": "已创建客服工单 #{number}。",
+      "meeting_proposed": "会议请求已发送——团队会进行确认。",
+      "meeting_confirmed": "会议已确认，日历邀请即将发送。",
+      "meeting_saved": "会议已记录，团队会确认细节。"
+    },
+    "view": {
+      "title": "网站聊天会话",
+      "back": "全部会话",
+      "waitingTitle": "该访客正在等待真人",
+      "waitingBody": "AI 已移交此聊天。",
+      "handledBy": "由 {name} 处理",
+      "visitorOnline": "访客在线",
+      "visitorAway": "访客已离开",
+      "takeOver": "接管",
+      "returnToAi": "交回 AI",
+      "close": "结束聊天",
+      "transcript": "聊天记录",
+      "aiThinking": "AI 正在撰写回复…",
+      "outcomes": "结果标签",
+      "replyPlaceholder": "输入回复…",
+      "replyTakesOver": "输入回复——这将从 AI 手中接管聊天",
+      "reply": "回复",
+      "send": "发送",
+      "closedNote": "此会话已结束。如果访客再次发消息，将开始新的会话。",
+      "contactRequested": "AI 请访客提供联系方式",
+      "source": {
+        "kb_article": "帮助文章",
+        "brain_document": "文档",
+        "product": "产品"
+      },
+      "action": {
+        "search_knowledge": "检索知识",
+        "request_contact_details": "请求联系方式",
+        "hand_off_to_human": "转交真人",
+        "create_lead": "创建潜在客户",
+        "create_support_ticket": "创建工单",
+        "propose_meeting": "请求会议"
+      }
+    },
+    "visitor": {
+      "title": "访客",
+      "name": "姓名",
+      "email": "邮箱",
+      "notShared": "未分享",
+      "consentAt": "已于 {date} 同意被联系",
+      "language": "语言",
+      "page": "起始页面",
+      "firstSeen": "首次访问",
+      "previous": "之前的聊天",
+      "previousCount": "{count, plural, other {# 次之前的会话}}"
+    },
+    "links": {
+      "title": "结果",
+      "lead": "潜在客户：{name}",
+      "ticket": "工单 #{number}",
+      "meeting": "会议请求（{status}）",
+      "none": "此聊天尚未产生潜在客户、工单或会议。"
+    },
+    "approval": {
+      "PENDING": "等待审批",
+      "APPROVED": "已批准",
+      "REJECTED": "已拒绝",
+      "EXPIRED": "已过期",
+      "EXECUTED": "已预约",
+      "FAILED": "失败"
+    },
+    "gdpr": {
+      "title": "隐私",
+      "hint": "已结束的聊天会在 {days} 天后自动删除。您可以立即删除该访客的数据。",
+      "confirm": "永久删除该访客及其所有聊天？此操作无法撤销。",
+      "delete": "删除访客数据",
+      "linked": "此聊天创建了潜在客户或工单。如果访客要求完全删除，请在 CRM 或客服中一并删除。"
+    },
+    "settings": {
+      "title": "网站聊天设置",
+      "readOnly": "您可以查看这些设置。修改需要客服管理权限。",
+      "step1": "1 · 您的网站",
+      "step1Hint": "聊天只在此处列出的网站上可用。",
+      "origins": "网站地址",
+      "originsHint": "每行一个，例如 https://www.example.com。使用 https://*.example.com 表示所有子域名。",
+      "step2": "2 · 外观与问候语",
+      "step2Hint": "与您的品牌保持一致。访客会自动看到其语言版本的聊天。",
+      "assistantName": "助手名称",
+      "brandColor": "品牌色",
+      "position": "位置",
+      "positionRight": "右下角",
+      "positionLeft": "左下角",
+      "greeting": "问候语（可选）",
+      "greetingHint": "留空则使用访客语言的友好问候，并说明这是 AI 助手。",
+      "step3": "3 · AI 知道什么",
+      "step3Hint": "AI 只依据这些信息、您已发布的帮助文章、带标签的文档和您的产品回答。其他问题会转交给您。",
+      "publicFacts": "公开信息",
+      "publicFactsHint": "价格、营业时间、配送、退货——任何可以告诉访客的内容。切勿在此填写私密信息。",
+      "publicFactsPlaceholder": "例如：套餐每月 29 欧元起。欧盟境内 2–4 天送达。客服时间：周一至周五 9:00–17:00。",
+      "brainTag": "Company Brain 标签",
+      "brainTagHint": "聊天只使用带此标签的 Company Brain 文档，其他文档保持私密。",
+      "toggles": {
+        "aiEnabled": "让 AI 回答访客",
+        "aiEnabledHint": "关闭后，访客留言，由您的团队回复。",
+        "autoCreateLeads": "从销售聊天创建 CRM 潜在客户",
+        "autoCreateLeadsHint": "仅在访客分享邮箱并同意被联系之后。",
+        "autoCreateTickets": "为问题创建客服工单",
+        "autoCreateTicketsHint": "仅在访客分享邮箱并同意被联系之后。",
+        "meetingsEnabled": "让 AI 请求会议",
+        "meetingsEnabledHint": "每次会议都需要您批准，访客才会收到日历邀请。"
+      },
+      "step5": "5 · 隐私",
+      "step5Hint": "访客始终知道自己在与 AI 交谈，并在分享联系方式前给予同意。",
+      "step4": "4 · AI 可以做什么",
+      "step4Hint": "回答始终允许。任何超出聊天的操作都遵循这些规则和您的审批。",
+      "privacyUrl": "隐私政策链接",
+      "privacyUrlHint": "显示在同意复选框旁边。",
+      "retentionDays": "聊天保留天数",
+      "retentionHint": "已结束的聊天及其访客会在此期限后删除。",
+      "saved": "已保存",
+      "step6": "6 · 安装并上线",
+      "step6Hint": "将这行代码粘贴到网站结束 </body> 标签之前（或网站搭建工具的自定义代码字段中）。",
+      "copy": "复制代码",
+      "copied": "已复制",
+      "rotate": "新密钥",
+      "rotateConfirm": "创建新密钥？在您替换网站上的代码之前，聊天将无法使用。",
+      "cspHint": "如果您的网站使用内容安全策略（CSP），请在 script-src 和 connect-src 中允许本应用的地址。",
+      "liveTitle": "您的聊天已上线",
+      "liveBody": "所列网站的访客现在可以聊天了。",
+      "turnOff": "关闭",
+      "offTitle": "您的聊天已关闭",
+      "offBody": "先试用预览，然后为您的网站开启聊天。",
+      "turnOn": "开启",
+      "preview": "在此预览",
+      "previewOff": "隐藏预览"
+    },
+    "knowledge": {
+      "title": "知识检查",
+      "hint": "AI 知道得越多，独立解决的聊天就越多。",
+      "facts": "已填写公开信息",
+      "articles": "{count, plural, =0 {没有已发布的帮助文章} other {# 篇已发布的帮助文章}}",
+      "articlesLink": "管理帮助文章",
+      "documents": "{count, plural, =0 {没有带“{tag}”标签的文档} other {# 个带“{tag}”标签的文档}}",
+      "documentsLink": "打开 Company Brain",
+      "products": "{count, plural, =0 {没有在售产品} other {# 个在售产品}}",
+      "productsLink": "管理产品",
+      "ready": "已就绪",
+      "missing": "缺失",
+      "none": "AI 还没有可依据的资料，因此会把所有问题转交给您。请先添加公开信息或一篇帮助文章。"
+    },
+    "trust": {
+      "title": "助手的行为方式",
+      "disclosure": "始终说明自己是 AI。",
+      "grounded": "只依据您的资料回答，否则会说“我不知道”。",
+      "consent": "联系方式仅在访客同意后保存。",
+      "approvals": "会议以及任何以您名义发送的内容都需要您的批准。",
+      "retention": "聊天在保留期满后删除；您可以随时删除任何访客。"
+    },
+    "metrics": {
+      "conversations": "网站聊天",
+      "aiResolutionRate": "AI 解决的聊天",
+      "leadsCaptured": "来自网站聊天的潜在客户",
+      "handoffs": "转交真人的聊天"
+    },
+    "widget": {
+      "launcher": "与我们聊天",
+      "aiBadge": "AI 助手",
+      "disclosure": "您正在与 AI 助手聊天。它依据 {company} 的信息回答，并可以请真人协助。",
+      "greeting": "您好！我是 {name}，{company} 的 AI 助手。有什么可以帮您？",
+      "placeholder": "输入您的消息…",
+      "send": "发送",
+      "close": "关闭聊天",
+      "human": "联系真人",
+      "typing": "正在输入…",
+      "contactTitle": "分享您的联系方式",
+      "contactHint": "以便团队与您联系。",
+      "contactName": "姓名",
+      "contactEmail": "邮箱",
+      "consent": "我同意 {company} 保存我的姓名和邮箱，用于回复我的请求并就此与我联系。",
+      "privacy": "隐私政策",
+      "contactSubmit": "分享",
+      "error": "出了点问题，请重试。",
+      "rateLimited": "您发送消息过快，请稍候。",
+      "unavailable": "聊天暂不可用。",
+      "offline": "您好！请给我们留言，团队会在这里回复。",
+      "newChat": "开始新的会话",
+      "closed": "此会话已结束。再次发送消息即可开始新的会话。",
+      "teamMember": "团队",
+      "you": "您",
+      "assistant": "AI 助手",
+      "endChat": "结束聊天",
+      "unread": "新消息",
+      "honeypot": "请勿填写此字段"
+    }
+  },
+  "autonomy": {
+    "title": "自主权",
+    "eyebrow": "AI 团队",
+    "subtitle": "决定 AI 部门可以自行完成什么、哪些事要先问您、哪些事始终需要您。每个自动操作都会被记录、计入其限额，并可在此查看。",
+    "company": "整个公司",
+    "companyHelp": "各部门的默认规则，除非该部门有自己的规则",
+    "readOnly": "您可以查看这些设置；修改需要管理 AI 团队的权限。",
+    "error": {
+      "title": "无法加载自主权设置",
+      "body": "加载此页面时出错。请稍后重新加载；没有任何更改。"
+    },
+    "autoMode": {
+      "title": "自动模式",
+      "description": "AI 无需您参与即可行动的总开关。",
+      "on": "自动模式已开启",
+      "off": "自动模式已关闭",
+      "explainOn": "设为“自动”的规则会在其限额内自行运行。其余一切仍会先问您。",
+      "explainOff": "没有您什么都不会运行：在您开启自动模式之前，设为“自动”的规则与“问我”相同。",
+      "turnOn": "开启自动模式",
+      "turnOff": "关闭自动模式",
+      "mfa": "需要近期完成双重验证。",
+      "confirmOn": "开启自动模式？凡规则设为“自动”的地方，AI 部门将在限额内自行行动。"
+    },
+    "pause": {
+      "title": "紧急停止",
+      "explain": "立即停止本公司所有 AI 员工：在您恢复之前，不会启动新任务，也不会执行任何操作。",
+      "button": "暂停所有 AI",
+      "resume": "恢复 AI",
+      "isPaused": "所有 AI 已暂停",
+      "dialogTitle": "暂停本公司的所有 AI？",
+      "dialogDescription": "在有人恢复之前，不会启动任何 AI 任务，也不会执行任何 AI 操作。您的原因会保存在活动日志中，并通知您的团队。",
+      "confirmResume": "恢复本公司的所有 AI？",
+      "bannerTitle": "所有 AI 已暂停",
+      "banner": "自 {date} 起暂停。",
+      "reason": "原因：{reason}"
+    },
+    "platform": {
+      "disabled": "平台已为您的组织关闭 AI 团队。规则会被保留，恢复后重新生效。",
+      "paused": "平台已暂时暂停 AI 操作。目前不会自动运行任何内容。",
+      "supervised": "平台目前要求所有更改数据的 AI 操作都需审批，因此“自动”规则暂时会先问您。"
+    },
+    "levels": {
+      "OFF": "关闭",
+      "SUGGEST": "建议",
+      "ASK": "问我",
+      "AUTO": "自动",
+      "ON": "开启"
+    },
+    "levelsHelp": {
+      "OFF": "AI 从不执行此操作。",
+      "SUGGEST": "AI 只在报告中提出建议；不会提交或执行任何内容。",
+      "ASK": "AI 准备好后，由您批准才会执行。",
+      "AUTO": "AI 在您设定的限额内自行完成，并在此记录。"
+    },
+    "classes": {
+      "read": "查询信息",
+      "change_data": "更改公司数据",
+      "send_message": "发送消息",
+      "call": "拨打电话",
+      "publish": "发布",
+      "spend": "花钱",
+      "pay": "付款和转账",
+      "contract": "合同与法律",
+      "hr": "招聘与人事决定",
+      "delete_data": "删除数据"
+    },
+    "classesHelp": {
+      "read": "搜索文档，阅读记录和报告",
+      "change_data": "创建和更新记录、任务和草稿",
+      "send_message": "向外部人员发送邮件、短信、聊天和社交回复",
+      "call": "给客户和联系人打电话",
+      "publish": "公众可见的帖子、页面和公告",
+      "spend": "广告预算、采购及其他支出",
+      "pay": "付款、退款和转账",
+      "contract": "签署或发送合同和法律条款",
+      "hr": "招聘、录用、解雇和薪酬决定",
+      "delete_data": "删除记录或文件"
+    },
+    "channels": {
+      "email": "邮件",
+      "sms": "短信",
+      "whatsapp": "WhatsApp",
+      "phone": "电话",
+      "chat": "聊天",
+      "social": "社交媒体",
+      "ads": "广告",
+      "web": "网站"
+    },
+    "days": {
+      "0": "周日",
+      "1": "周一",
+      "2": "周二",
+      "3": "周三",
+      "4": "周四",
+      "5": "周五",
+      "6": "周六"
+    },
+    "stats": {
+      "autoToday": "自动完成（24 小时）",
+      "autoTodayHint": "AI 自行执行的操作",
+      "recommendations": "可给予更多信任",
+      "recommendationsHint": "记录良好的领域",
+      "employees": "AI 员工",
+      "employeesHint": "{count, plural, other {分布在 # 个部门}}"
+    },
+    "guide": {
+      "title": "从看得见的信任开始",
+      "description": "在您决定之前什么都不会改变。安全的起步方式：",
+      "step1": "前几周把所有内容保持在“问我”，像往常一样审批 AI 的工作——这会建立它的记录。",
+      "step2": "当某个领域记录良好时，应用下方的建议：它会切换为带每日上限的“自动”。",
+      "step3": "开启自动模式。关注实时日志，撤销可逆的操作，并可随时暂停所有 AI。"
+    },
+    "recommendations": {
+      "title": "信任建议",
+      "description": "基于过去 30 天的批准、拒绝、修改和问题。",
+      "text": "{department} · {action}：{days} 天内批准 {approved} 次、拒绝 {rejected} 次——切换为“自动”，每日上限 {limit}？",
+      "apply": "切换为自动（每日 {limit}）",
+      "autoModeOff": "自动模式已关闭：您切换为“自动”的规则会在开启后生效。"
+    },
+    "demotions": {
+      "text": "{department} · {action} 已于 {date} 恢复为“问我”：{reason}"
+    },
+    "rules": {
+      "title": "按部门的规则",
+      "subtitle": "将每类操作在关闭、建议、问我和自动之间滑动。除非您修改，各部门遵循整个公司的规则。",
+      "employees": "{count, plural, =0 {尚无 AI 员工} other {# 名 AI 员工}}",
+      "meter": "{total} 类操作中有 {auto} 类为自动",
+      "inherited": "公司规则",
+      "default": "默认",
+      "useCompany": "使用公司规则",
+      "reset": "恢复默认",
+      "limits": "限额",
+      "noLimits": "未设限额",
+      "locked": "始终需要人工",
+      "lockedHelp": "此类操作永远不能自动执行",
+      "usedToday": "今天 {used}/{limit}",
+      "usedTodayNoLimit": "今天 {used}",
+      "spentToday": "今日已花费 {amount}",
+      "perDay": "每天 {count} 次",
+      "perAction": "每次最多 {amount}",
+      "perDayMoney": "每天 {amount}",
+      "perMonthMoney": "每月 {amount}"
+    },
+    "limits": {
+      "description": "设为“自动”时适用限额。超出部分将改为提交给您审批。",
+      "dailyLimit": "每天操作次数",
+      "dailyLimitHelp": "按公司时区计算。留空表示无每日上限。",
+      "money": "金额限额（{currency}）",
+      "perActionMax": "每次",
+      "dailyMax": "每天",
+      "monthlyMax": "每月",
+      "capRequired": "只有设置了每次限额，资金才会自动流动。",
+      "paymentCap": "自动付款每笔永远不能超过 {amount}。",
+      "hours": "时间",
+      "from": "从",
+      "to": "到",
+      "hoursHelp": "时间留空表示任何时间，不选日期表示每天。",
+      "days": "日期",
+      "channels": "允许的渠道",
+      "channelsHelp": "全部不选表示允许任何渠道。",
+      "save": "保存规则",
+      "cancel": "取消"
+    },
+    "floors": {
+      "title": "硬性底线",
+      "description": "无论规则如何，这些始终需要人工。",
+      "contract": "签署或发送合同和法律条款",
+      "hr": "招聘、解雇、录用和薪酬决定",
+      "delete": "删除公司数据",
+      "pay": "超过 {amount} 的付款和转账",
+      "founderOnly": "只有组织所有者才能批准的操作",
+      "killSwitch": "平台安全开关阻止的任何操作"
+    },
+    "trust": {
+      "title": "表现记录",
+      "description": "过去 30 天。{days} 天内出现 {threshold} 个问题，“自动”规则会恢复为“问我”，并通知您。",
+      "department": "部门",
+      "action": "操作",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "edited": "已修改",
+      "auto": "自动",
+      "problems": "问题",
+      "employees": "AI 员工",
+      "employeeLine": "{name}：{approved} 次正常，{rejected} 次被拒",
+      "empty": "尚无表现记录。当您批准或拒绝 AI 的提议时会逐步建立。"
+    },
+    "log": {
+      "title": "自动操作实时日志",
+      "description": "AI 未经询问所做的一切，以及允许它的规则。",
+      "live": "实时",
+      "emptyOn": "尚无自动操作。AI 员工依据“自动”规则行动时会立即显示在这里。",
+      "emptyOff": "自动模式已关闭，因此 AI 没有自行行动。",
+      "by": "由 {name}",
+      "policy": "由“{scope}”规则允许",
+      "policyDefault": "由默认规则允许",
+      "task": "打开任务",
+      "failed": "失败：{error}",
+      "undone": "已于 {date} 撤销",
+      "undo": "撤销",
+      "undoConfirm": "撤销此操作？Realy 将以您的权限执行反向步骤。",
+      "notReversible": "无法自动撤销",
+      "report": "报告问题",
+      "reportTitle": "报告问题",
+      "reportDescription": "问题会计入该部门的表现记录，并可能使规则恢复为“问我”。",
+      "reportKind": "发生了什么？",
+      "reportKinds": {
+        "COMPLAINT": "有人投诉",
+        "REVERSAL": "我们不得不撤回",
+        "EDITED": "需要修改"
+      },
+      "reportNote": "详情（可选）",
+      "reportSend": "发送报告"
     }
   }
 }

@@ -598,7 +598,28 @@
       "hr_plan_has_job": "该岗位已有职位，请取消而不是删除。",
       "hr_doc_field": "请填写此信函所需的信息。",
       "work_product_backlog_empty": "待办为空——请先生成或添加待办任务。",
-      "work_product_no_work": "目前还没有已完成或计划中的工作可用于撰写发布说明。"
+      "work_product_no_work": "目前还没有已完成或计划中的工作可用于撰写发布说明。",
+      "marketing_run_active": "您的营销已在运行——请先暂停或停止。",
+      "marketing_run_agents_forbidden": "您需要运行 AI 代理的权限才能启动营销运行。",
+      "livechat_invalid_origin": "请输入类似 https://www.example.com 的网站地址。",
+      "livechat_no_origins": "开启聊天前请先添加网站地址。",
+      "livechat_origin_not_allowed": "此网站无权使用该聊天。",
+      "livechat_disabled": "网站聊天已关闭。",
+      "livechat_unavailable": "网站聊天暂不可用。",
+      "livechat_closed": "此会话已结束。",
+      "livechat_ai_off": "聊天设置中已关闭 AI 助手。",
+      "livechat_conversation_limit": "此会话过长，请开始新的会话。",
+      "workforce_ai_paused": "本公司的所有 AI 已暂停。请在“自主权”页面恢复。",
+      "workforce_autonomy_hard_floor": "此类操作始终需要人工。",
+      "workforce_autonomy_cap_required": "请先设置每次金额限额，资金才能自动流动。",
+      "workforce_autonomy_payment_cap": "自动付款不能设置为高于硬性上限。",
+      "workforce_autonomy_hours": "请同时设置开始和结束时间，或都不设置。",
+      "workforce_autonomy_read_level": "查询信息只能开启或关闭。",
+      "workforce_autonomy_amount": "请使用该货币的小数位数。",
+      "workforce_autonomy_no_recommendation": "此建议已不再适用。",
+      "workforce_autonomy_not_reversible": "此操作无法撤销。",
+      "workforce_autonomy_undo_forbidden": "您没有执行此撤销所需的权限。",
+      "workforce_autonomy_undo_failed": "撤销未成功；没有其他更改。"
     }
   },
   "onboarding": {
@@ -2663,7 +2684,11 @@
       "read_workforce_plan": "读取人力规划",
       "propose_planned_role": "提议计划岗位",
       "read_financial_alerts": "读取财务警报",
-      "read_money_flow": "读取资金流"
+      "read_money_flow": "读取资金流",
+      "read_marketing_run": "读取营销运行",
+      "read_livechat_conversations": "读取网站聊天",
+      "read_livechat_transcript": "读取聊天记录",
+      "livechat_book_meeting": "从聊天预约会议"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -2674,7 +2699,8 @@
       "tasks": "AI 任务",
       "org": "组织架构",
       "performance": "绩效与预算",
-      "escalations": "升级事项"
+      "escalations": "升级事项",
+      "autonomy": "自主权"
     },
     "filters": {
       "search": "搜索",
@@ -3358,6 +3384,10 @@
     "paid_ads_specialist": {
       "name": "付费广告专员",
       "summary": "在支出上限内制定活动计划、撰写广告文案并优化。"
+    },
+    "website_chat_agent": {
+      "name": "网站聊天专员",
+      "summary": "依据您的资料全天候回答网站访客，获取潜在客户并转交给您。"
     }
   },
   "projects": {
@@ -3637,7 +3667,10 @@
         "plan_review": "营销计划等待批准：{title}",
         "plan_changes": "计划需要修改：{title}",
         "plan_approved": "营销计划已批准：{title}",
-        "optimizations_proposed": "有新的营销优化待审核：{title}"
+        "optimizations_proposed": "有新的营销优化待审核：{title}",
+        "run_blocked": "营销运行需要您：{title}",
+        "run_newsletter_ready": "简报可以发送：{title}",
+        "run_completed": "营销运行已完成：{title}"
       },
       "crm": {
         "lead_assigned": "分配给您的线索：{title}",
@@ -3724,10 +3757,17 @@
       },
       "workforce": {
         "statusReport": "状态汇报：{title}",
-        "escalation": "升级：{title}"
+        "escalation": "升级：{title}",
+        "autonomyDemoted": "自动模式已降为“问我”：{title}",
+        "autonomyPaused": "所有 AI 已暂停：{title}",
+        "autonomyResumed": "AI 已恢复：{title}"
       },
       "growth": {
         "insight": "严重增长信号：{title}"
+      },
+      "livechat": {
+        "handoff": "网站访客需要真人：{title}",
+        "new_chat": "新的网站聊天：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -8735,7 +8775,8 @@
       "intelligence": "市场洞察",
       "strategy": "策略",
       "calendar": "日历",
-      "optimize": "优化"
+      "optimize": "优化",
+      "run": "运行营销"
     },
     "common": {
       "allStatuses": "全部状态",
@@ -10697,6 +10738,182 @@
       "recommendations": "未处理的建议",
       "open": "打开",
       "aiReviews": "AI 审查"
+    },
+    "run": {
+      "title": "运行我的营销",
+      "subtitle": "一键完成：调研、策略、活动、内容、发布、结果与优化自动运行，您只需批准真正重要的事项。",
+      "eyebrow": "自主营销运行",
+      "startedAt": "开始于 {date}",
+      "blocked": "运行正在等待某项条件",
+      "approveTitle": "您的计划已可审批",
+      "approveCta": "查看计划",
+      "approveBody": "批准后，AI 会立即创建活动、自动驾驶和内容日历。",
+      "changesRequested": "您要求修改：{note}。重新提交计划即可继续。",
+      "open": "打开",
+      "recentPosts": "已发布的帖子",
+      "recentPostsHint": "平台返回的实时链接，以及从平台拉取的最新数据。",
+      "postMetrics": "{impressions} 次展示 · {engagement} 次互动",
+      "metricsPending": "数据将在一小时内到达",
+      "viewPost": "查看",
+      "noPosts": "尚未发布任何内容。平台确认后，帖子会连同实时链接显示在这里。",
+      "autopilots": "运行中的渠道",
+      "noAutopilots": "尚无渠道自动驾驶——计划批准后启动。",
+      "log": "发生了什么",
+      "logHint": "运行的每一步，最新的在前。",
+      "history": "以往运行",
+      "loopTitle": "营销闭环",
+      "inProgress": "{count} 进行中",
+      "status": {
+        "RESEARCHING": "正在调研您的市场",
+        "PLANNING": "正在起草您的策略",
+        "AWAITING_APPROVAL": "等待您的批准",
+        "LAUNCHING": "正在启动活动",
+        "RUNNING": "您的营销正在运行",
+        "BLOCKED": "需要您的帮助",
+        "PAUSED": "已暂停",
+        "COMPLETED": "已完成",
+        "CANCELLED": "已取消",
+        "FAILED": "失败"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "全部由我审核",
+          "hint": "您批准计划，并在每个帖子、文章和邮件发出前审核。"
+        },
+        "APPROVE_PLAN": {
+          "name": "我批准计划",
+          "hint": "您批准计划后，帖子和文章自动发布。邮件和支出仍需您确认。"
+        },
+        "FULL_AUTOPILOT": {
+          "name": "完全自动驾驶",
+          "hint": "计划、帖子、文章和简报自动运行。支出变更始终需要您批准。"
+        }
+      },
+      "planStatus": {
+        "DRAFT": "草稿",
+        "IN_REVIEW": "待审批",
+        "APPROVED": "已批准",
+        "ACTIVE": "进行中",
+        "ARCHIVED": "已归档"
+      },
+      "apStatus": {
+        "ACTIVE": "运行中",
+        "PAUSED": "已暂停"
+      },
+      "artifact": {
+        "article": "文章",
+        "newsletter": "简报"
+      },
+      "artifactState": {
+        "writing": "撰写中",
+        "in_review": "等待您审核",
+        "awaiting_approval": "已就绪——等待您发送",
+        "published": "已发布",
+        "scheduled": "已排期",
+        "failed": "失败"
+      },
+      "step": {
+        "research": "调研",
+        "plan": "策略",
+        "approval": "审批",
+        "campaign": "活动",
+        "autopilot": "渠道",
+        "seo": "博客与 SEO",
+        "newsletter": "简报",
+        "ads": "广告",
+        "optimize": "优化",
+        "complete": "完成",
+        "control": "控制"
+      },
+      "stage": {
+        "research": "调研",
+        "strategy": "策略",
+        "campaign": "活动",
+        "calendar": "日历",
+        "content": "内容",
+        "creatives": "创意",
+        "publish": "已发布",
+        "metrics": "已衡量",
+        "optimize": "已优化"
+      },
+      "kpi": {
+        "reach": "覆盖",
+        "impressions": "{count} 次展示",
+        "engagement": "互动",
+        "posts": "{count} 个帖子",
+        "leads": "潜在客户",
+        "won": "{count} 成为客户",
+        "cpl": "单个潜在客户成本",
+        "spend": "已花费 {amount}",
+        "emails": "已发送邮件",
+        "opens": "{opened} 打开 · {clicked} 点击",
+        "articles": "已发布文章",
+        "articlesWritten": "已撰写 {count} 篇",
+        "newsletters": "简报",
+        "optimizations": "已应用的优化",
+        "proposed": "{count} 项等待您处理"
+      },
+      "form": {
+        "title": "开始您的营销",
+        "subtitle": "告诉我们要推广什么、面向谁。AI 会调研、规划并完成其余工作。",
+        "products": "我们要推广什么？",
+        "noProducts": "您的公司还没有产品——我们将推广公司本身。添加产品可让营销更精准。",
+        "audience": "您的理想客户是谁？",
+        "audiencePlaceholder": "例如：德国希望获得更多患者的小型牙科诊所负责人",
+        "regions": "在哪里？",
+        "regionsPlaceholder": "例如：德国、奥地利",
+        "competitors": "竞争对手（可选）",
+        "competitorsPlaceholder": "用逗号分隔",
+        "budget": "本期预算（{currency}）",
+        "period": "规划周期",
+        "days": "{count} 天",
+        "autonomy": "AI 可以独立做多少？",
+        "note": "还有其他吗？（可选）",
+        "notePlaceholder": "例如：12 月 1 日发布我们的新套餐",
+        "start": "运行我的营销",
+        "starting": "正在启动…",
+        "startHint": "调研立即开始。计划批准前不会发布任何内容。",
+        "forbidden": "请让有权管理营销并运行 AI 代理的人启动此运行。"
+      },
+      "controls": {
+        "pause": "暂停",
+        "resume": "继续",
+        "retry": "重试",
+        "cancel": "停止",
+        "cancelConfirm": "停止此运行？自动驾驶将暂停；已排期的帖子仍保留在队列中。"
+      },
+      "ready": {
+        "title": "AI 可以使用的资源",
+        "subtitle": "连接越多，运行能做的越多。缺失的部分会被跳过并显示，绝不伪造。",
+        "ai": "AI",
+        "aiMissing": "此平台尚未配置 AI",
+        "research": "网络调研",
+        "researchMissing": "连接调研服务商以获得有来源的市场调研",
+        "social": "社交账号",
+        "socialMissing": "连接 LinkedIn、X、Instagram、Facebook、YouTube 或 TikTok 以发布",
+        "email": "邮件发送",
+        "emailMissing": "连接邮件服务商以发送简报",
+        "blog": "博客",
+        "blogMissing": "文章将发布到您的 Realy 博客",
+        "seo": "SEO 关键词",
+        "seoMissing": "添加带关键词的 SEO 项目以获得文章",
+        "products": "产品",
+        "productsMissing": "添加产品，以便营销进行推广",
+        "ok": "就绪",
+        "connect": "设置",
+        "realyBlog": "您的 Realy 博客（连接 WordPress、Webflow 或 Shopify 即可在那里发布）",
+        "safety": "每个帖子都会按照您的品牌和合规规则检查，只通过平台 API 发布并验证链接；发送的邮件始终包含退订链接，并跳过已退订的联系人。广告支出变更始终等待您批准。",
+        "channels": "支持发布到：{list}"
+      },
+      "analytics": {
+        "cpl": "单个潜在客户成本",
+        "conversions": "转化（已归因）",
+        "conversionsHint": "{ads} 来自广告平台 · {crm} 个带活动代码的成交潜在客户",
+        "byChannel": "按渠道的结果",
+        "byChannelHint": "各渠道的支出、按 UTM 来源的潜在客户、覆盖和互动——仅来自真实记录。",
+        "leads": "潜在客户（UTM）",
+        "noChannels": "此期间尚无渠道活动。"
+      }
     }
   },
   "sales": {

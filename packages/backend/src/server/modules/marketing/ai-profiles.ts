@@ -1,7 +1,7 @@
 import type { AgentProfile } from "@/server/modules/agents/profile-types";
 
 const CORE = ["search_company_brain", "read_company_graph", "read_objectives", "read_brand_kit"] as const;
-const READS = ["read_campaigns", "read_campaign", "read_content_library", "read_seo_project", "read_marketing_kpis", "read_marketing_analytics", "read_autopilot", "read_marketing_learnings", "read_market_research", "read_marketing_plans"] as const;
+const READS = ["read_campaigns", "read_campaign", "read_content_library", "read_seo_project", "read_marketing_kpis", "read_marketing_analytics", "read_autopilot", "read_marketing_learnings", "read_market_research", "read_marketing_plans", "read_marketing_run"] as const;
 const GROUND = "Before writing any copy, call read_brand_kit and follow the brand's voice, pillars, personas and word lists. Ground every claim about the product, customers and results in the company's documents and the marketing data your tools return; never invent customers, numbers, rankings or results, and say plainly when data is missing.";
 const RESEARCH = "Use web_research for current market, competitor, search and trend facts (it uses the company's connected research provider) and cite the URLs it returns; if it reports no provider connected, say so instead of guessing.";
 

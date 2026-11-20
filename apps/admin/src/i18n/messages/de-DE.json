@@ -598,7 +598,28 @@
       "hr_plan_has_job": "Für diese Rolle gibt es bereits eine Stelle. Brechen Sie sie ab, statt sie zu löschen.",
       "hr_doc_field": "Füllen Sie die Angaben aus, die dieses Schreiben braucht.",
       "work_product_backlog_empty": "Das Backlog ist leer – erstelle oder füge zuerst Backlog-Aufgaben hinzu.",
-      "work_product_no_work": "Es gibt noch keine erledigte oder geplante Arbeit, aus der Release Notes entstehen können."
+      "work_product_no_work": "Es gibt noch keine erledigte oder geplante Arbeit, aus der Release Notes entstehen können.",
+      "marketing_run_active": "Ihr Marketing läuft bereits – pausieren oder stoppen Sie es zuerst.",
+      "marketing_run_agents_forbidden": "Sie benötigen die Berechtigung, KI-Agenten auszuführen, um den Marketing-Lauf zu starten.",
+      "livechat_invalid_origin": "Geben Sie Website-Adressen wie https://www.example.com ein.",
+      "livechat_no_origins": "Tragen Sie Ihre Website-Adresse ein, bevor Sie den Chat einschalten.",
+      "livechat_origin_not_allowed": "Diese Website darf den Chat nicht verwenden.",
+      "livechat_disabled": "Der Website-Chat ist ausgeschaltet.",
+      "livechat_unavailable": "Der Website-Chat ist gerade nicht verfügbar.",
+      "livechat_closed": "Dieses Gespräch ist beendet.",
+      "livechat_ai_off": "Der KI-Assistent ist in den Chat-Einstellungen ausgeschaltet.",
+      "livechat_conversation_limit": "Dieses Gespräch ist zu lang. Bitte beginnen Sie ein neues.",
+      "workforce_ai_paused": "Alle KI in diesem Unternehmen ist pausiert. Setzen Sie sie auf der Seite „Autonomie“ fort.",
+      "workforce_autonomy_hard_floor": "Diese Aktionsart braucht immer einen Menschen.",
+      "workforce_autonomy_cap_required": "Legen Sie ein Geldlimit je Aktion fest, bevor Geld automatisch fließen kann.",
+      "workforce_autonomy_payment_cap": "Automatische Zahlungen können nicht über die feste Grenze gesetzt werden.",
+      "workforce_autonomy_hours": "Legen Sie Start- und Endzeit fest – oder keine von beiden.",
+      "workforce_autonomy_read_level": "Nachschlagen kann nur an oder aus sein.",
+      "workforce_autonomy_amount": "Verwenden Sie die Anzahl Nachkommastellen der Währung.",
+      "workforce_autonomy_no_recommendation": "Diese Empfehlung gilt nicht mehr.",
+      "workforce_autonomy_not_reversible": "Diese Aktion kann nicht rückgängig gemacht werden.",
+      "workforce_autonomy_undo_forbidden": "Ihnen fehlt die Berechtigung für dieses Rückgängigmachen.",
+      "workforce_autonomy_undo_failed": "Das Rückgängigmachen hat nicht funktioniert; sonst wurde nichts geändert."
     }
   },
   "onboarding": {
@@ -2663,7 +2684,11 @@
       "read_workforce_plan": "Personalplan lesen",
       "propose_planned_role": "Geplante Rolle vorschlagen",
       "read_financial_alerts": "Finanzwarnungen lesen",
-      "read_money_flow": "Geldfluss lesen"
+      "read_money_flow": "Geldfluss lesen",
+      "read_marketing_run": "Marketing-Lauf lesen",
+      "read_livechat_conversations": "Website-Chats lesen",
+      "read_livechat_transcript": "Chatverlauf lesen",
+      "livechat_book_meeting": "Termin aus einem Chat buchen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2674,7 +2699,8 @@
       "tasks": "KI-Aufgaben",
       "org": "Organigramm",
       "performance": "Leistung & Budgets",
-      "escalations": "Eskalationen"
+      "escalations": "Eskalationen",
+      "autonomy": "Autonomie"
     },
     "filters": {
       "search": "Suche",
@@ -3358,6 +3384,10 @@
     "paid_ads_specialist": {
       "name": "Spezialist für bezahlte Anzeigen",
       "summary": "Kampagnenpläne, Anzeigentexte und Optimierung innerhalb der Ausgabenlimits."
+    },
+    "website_chat_agent": {
+      "name": "Website-Chat-Agent",
+      "summary": "Beantwortet Website-Besucher rund um die Uhr aus Ihrem Wissen, gewinnt Leads und übergibt an Sie."
     }
   },
   "projects": {
@@ -3637,7 +3667,10 @@
         "plan_review": "Marketingplan wartet auf Freigabe: {title}",
         "plan_changes": "Änderungen am Plan angefordert: {title}",
         "plan_approved": "Marketingplan freigegeben: {title}",
-        "optimizations_proposed": "Neue Marketing-Optimierungen zur Prüfung: {title}"
+        "optimizations_proposed": "Neue Marketing-Optimierungen zur Prüfung: {title}",
+        "run_blocked": "Marketing-Lauf braucht Sie: {title}",
+        "run_newsletter_ready": "Newsletter versandbereit: {title}",
+        "run_completed": "Marketing-Lauf abgeschlossen: {title}"
       },
       "crm": {
         "lead_assigned": "Ihnen zugewiesener Lead: {title}",
@@ -3724,10 +3757,17 @@
       },
       "workforce": {
         "statusReport": "Statusbericht: {title}",
-        "escalation": "Eskalation: {title}"
+        "escalation": "Eskalation: {title}",
+        "autonomyDemoted": "Automodus auf „Mich fragen“ zurückgestuft: {title}",
+        "autonomyPaused": "Alle KI pausiert: {title}",
+        "autonomyResumed": "KI fortgesetzt: {title}"
       },
       "growth": {
         "insight": "Kritisches Wachstumssignal: {title}"
+      },
+      "livechat": {
+        "handoff": "Website-Besucher braucht einen Menschen: {title}",
+        "new_chat": "Neuer Website-Chat: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -8735,7 +8775,8 @@
       "intelligence": "Marktwissen",
       "strategy": "Strategie",
       "calendar": "Kalender",
-      "optimize": "Optimieren"
+      "optimize": "Optimieren",
+      "run": "Marketing starten"
     },
     "common": {
       "allStatuses": "Alle Status",
@@ -10697,6 +10738,182 @@
       "recommendations": "Offene Empfehlungen",
       "open": "Öffnen",
       "aiReviews": "KI-Prüfungen"
+    },
+    "run": {
+      "title": "Mein Marketing starten",
+      "subtitle": "Ein Klick: Recherche, Strategie, Kampagnen, Inhalte, Veröffentlichung, Ergebnisse und Verbesserungen – laufen von selbst, Sie geben nur frei, was zählt.",
+      "eyebrow": "Autonomer Marketing-Lauf",
+      "startedAt": "Gestartet {date}",
+      "blocked": "Der Lauf wartet auf etwas",
+      "approveTitle": "Ihr Plan ist bereit zur Freigabe",
+      "approveCta": "Plan prüfen",
+      "approveBody": "Nach der Freigabe erstellt die KI sofort Kampagne, Autopiloten und Content-Kalender.",
+      "changesRequested": "Sie haben Änderungen angefordert: {note}. Reichen Sie den Plan erneut ein, um fortzufahren.",
+      "open": "Öffnen",
+      "recentPosts": "Veröffentlichte Beiträge",
+      "recentPostsHint": "Live-Links, die die Plattformen zurückgeben, mit den neuesten von dort abgerufenen Zahlen.",
+      "postMetrics": "{impressions} Impressionen · {engagement} Interaktionen",
+      "metricsPending": "Zahlen folgen innerhalb einer Stunde",
+      "viewPost": "Ansehen",
+      "noPosts": "Noch nichts veröffentlicht. Beiträge erscheinen hier mit Live-Link, sobald eine Plattform sie bestätigt.",
+      "autopilots": "Aktive Kanäle",
+      "noAutopilots": "Noch kein Kanal-Autopilot – sie starten, sobald der Plan freigegeben ist.",
+      "log": "Was passiert ist",
+      "logHint": "Jeder Schritt des Laufs, neueste zuerst.",
+      "history": "Frühere Läufe",
+      "loopTitle": "Der Marketing-Kreislauf",
+      "inProgress": "{count} in Arbeit",
+      "status": {
+        "RESEARCHING": "Ihr Markt wird recherchiert",
+        "PLANNING": "Ihre Strategie wird entworfen",
+        "AWAITING_APPROVAL": "Wartet auf Ihre Freigabe",
+        "LAUNCHING": "Kampagnen werden gestartet",
+        "RUNNING": "Ihr Marketing läuft",
+        "BLOCKED": "Braucht Ihre Hilfe",
+        "PAUSED": "Pausiert",
+        "COMPLETED": "Abgeschlossen",
+        "CANCELLED": "Abgebrochen",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "Ich prüfe alles",
+          "hint": "Sie geben den Plan und jeden Beitrag, Artikel und jede E-Mail vor der Veröffentlichung frei."
+        },
+        "APPROVE_PLAN": {
+          "name": "Ich gebe den Plan frei",
+          "hint": "Sie geben den Plan frei; Beiträge und Artikel erscheinen dann von selbst. E-Mails und Ausgaben fragen weiterhin Sie."
+        },
+        "FULL_AUTOPILOT": {
+          "name": "Voller Autopilot",
+          "hint": "Plan, Beiträge, Artikel und Newsletter laufen von selbst. Budgetänderungen fragen immer Sie."
+        }
+      },
+      "planStatus": {
+        "DRAFT": "Entwurf",
+        "IN_REVIEW": "Wartet auf Freigabe",
+        "APPROVED": "Freigegeben",
+        "ACTIVE": "Aktiv",
+        "ARCHIVED": "Archiviert"
+      },
+      "apStatus": {
+        "ACTIVE": "Läuft",
+        "PAUSED": "Pausiert"
+      },
+      "artifact": {
+        "article": "Artikel",
+        "newsletter": "Newsletter"
+      },
+      "artifactState": {
+        "writing": "Wird geschrieben",
+        "in_review": "Wartet auf Ihre Prüfung",
+        "awaiting_approval": "Bereit – wartet auf Ihren Versand",
+        "published": "Veröffentlicht",
+        "scheduled": "Geplant",
+        "failed": "Fehlgeschlagen"
+      },
+      "step": {
+        "research": "Recherche",
+        "plan": "Strategie",
+        "approval": "Freigabe",
+        "campaign": "Kampagne",
+        "autopilot": "Kanäle",
+        "seo": "Blog & SEO",
+        "newsletter": "Newsletter",
+        "ads": "Anzeigen",
+        "optimize": "Optimieren",
+        "complete": "Fertig",
+        "control": "Steuerung"
+      },
+      "stage": {
+        "research": "Recherche",
+        "strategy": "Strategie",
+        "campaign": "Kampagne",
+        "calendar": "Kalender",
+        "content": "Inhalte",
+        "creatives": "Kreative",
+        "publish": "Veröffentlicht",
+        "metrics": "Gemessen",
+        "optimize": "Verbessert"
+      },
+      "kpi": {
+        "reach": "Reichweite",
+        "impressions": "{count} Impressionen",
+        "engagement": "Interaktionen",
+        "posts": "{count} Beiträge",
+        "leads": "Leads",
+        "won": "{count} wurden Kunden",
+        "cpl": "Kosten pro Lead",
+        "spend": "{amount} ausgegeben",
+        "emails": "E-Mails gesendet",
+        "opens": "{opened} geöffnet · {clicked} geklickt",
+        "articles": "Veröffentlichte Artikel",
+        "articlesWritten": "{count} geschrieben",
+        "newsletters": "Newsletter",
+        "optimizations": "Angewendete Verbesserungen",
+        "proposed": "{count} warten auf Sie"
+      },
+      "form": {
+        "title": "Ihr Marketing starten",
+        "subtitle": "Sagen Sie uns, was beworben werden soll und für wen. Die KI recherchiert, plant und erledigt den Rest.",
+        "products": "Was sollen wir bewerben?",
+        "noProducts": "Noch keine Produkte im Unternehmen – wir bewerben das Unternehmen selbst. Fügen Sie Produkte für gezielteres Marketing hinzu.",
+        "audience": "Wer sind Ihre idealen Kunden?",
+        "audiencePlaceholder": "z. B. Inhaber kleiner Zahnarztpraxen in Deutschland, die mehr Patienten wollen",
+        "regions": "Wo?",
+        "regionsPlaceholder": "z. B. Deutschland, Österreich",
+        "competitors": "Wettbewerber (optional)",
+        "competitorsPlaceholder": "Kommagetrennt",
+        "budget": "Budget für den Zeitraum ({currency})",
+        "period": "Planen für",
+        "days": "{count} Tage",
+        "autonomy": "Wie viel darf die KI allein tun?",
+        "note": "Noch etwas? (optional)",
+        "notePlaceholder": "z. B. Start unseres neuen Tarifs am 1. Dezember",
+        "start": "Mein Marketing starten",
+        "starting": "Wird gestartet…",
+        "startHint": "Die Recherche beginnt sofort. Vor der Freigabe des Plans wird nichts veröffentlicht.",
+        "forbidden": "Bitten Sie jemanden, der Marketing verwalten und KI-Agenten ausführen darf, den Lauf zu starten."
+      },
+      "controls": {
+        "pause": "Pausieren",
+        "resume": "Fortsetzen",
+        "retry": "Erneut versuchen",
+        "cancel": "Stoppen",
+        "cancelConfirm": "Diesen Lauf stoppen? Autopiloten pausieren; bereits geplante Beiträge bleiben in der Warteschlange."
+      },
+      "ready": {
+        "title": "Was die KI nutzen kann",
+        "subtitle": "Je mehr Sie verbinden, desto mehr erledigt der Lauf. Fehlende Teile werden übersprungen und angezeigt, nie vorgetäuscht.",
+        "ai": "KI",
+        "aiMissing": "KI ist auf dieser Plattform nicht eingerichtet",
+        "research": "Web-Recherche",
+        "researchMissing": "Verbinden Sie einen Recherche-Anbieter für belegte Marktforschung",
+        "social": "Social-Media-Konten",
+        "socialMissing": "Verbinden Sie LinkedIn, X, Instagram, Facebook, YouTube oder TikTok zum Veröffentlichen",
+        "email": "E-Mail-Versand",
+        "emailMissing": "Verbinden Sie einen E-Mail-Anbieter, um Newsletter zu senden",
+        "blog": "Blog",
+        "blogMissing": "Artikel erscheinen in Ihrem Realy-Blog",
+        "seo": "SEO-Keywords",
+        "seoMissing": "Legen Sie ein SEO-Projekt mit Keywords an, um Artikel zu erhalten",
+        "products": "Produkte",
+        "productsMissing": "Fügen Sie Produkte hinzu, damit Marketing sie bewerben kann",
+        "ok": "Bereit",
+        "connect": "Einrichten",
+        "realyBlog": "Ihr Realy-Blog (verbinden Sie WordPress, Webflow oder Shopify, um dort zu veröffentlichen)",
+        "safety": "Jeder Beitrag wird gegen Ihre Marken- und Compliance-Regeln geprüft, nur über die API der Plattform mit verifiziertem Link veröffentlicht, und versendete E-Mails enthalten immer einen Abmeldelink und überspringen abgemeldete Kontakte. Budgetänderungen warten immer auf Sie.",
+        "channels": "Veröffentlichung möglich auf: {list}"
+      },
+      "analytics": {
+        "cpl": "Kosten pro Lead",
+        "conversions": "Conversions (zugeordnet)",
+        "conversionsHint": "{ads} von Werbeplattformen · {crm} gewonnene Leads mit Kampagnencode",
+        "byChannel": "Ergebnisse nach Kanal",
+        "byChannelHint": "Ausgaben, Leads nach UTM-Quelle, Reichweite und Interaktionen pro Kanal – nur aus echten Datensätzen.",
+        "leads": "Leads (UTM)",
+        "noChannels": "In diesem Zeitraum noch keine Kanalaktivität."
+      }
     }
   },
   "sales": {

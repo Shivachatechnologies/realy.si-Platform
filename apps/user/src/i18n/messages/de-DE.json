@@ -738,7 +738,28 @@
       "hr_plan_has_job": "Für diese Rolle gibt es bereits eine Stelle. Brechen Sie sie ab, statt sie zu löschen.",
       "hr_doc_field": "Füllen Sie die Angaben aus, die dieses Schreiben braucht.",
       "work_product_backlog_empty": "Das Backlog ist leer – erstelle oder füge zuerst Backlog-Aufgaben hinzu.",
-      "work_product_no_work": "Es gibt noch keine erledigte oder geplante Arbeit, aus der Release Notes entstehen können."
+      "work_product_no_work": "Es gibt noch keine erledigte oder geplante Arbeit, aus der Release Notes entstehen können.",
+      "marketing_run_active": "Ihr Marketing läuft bereits – pausieren oder stoppen Sie es zuerst.",
+      "marketing_run_agents_forbidden": "Sie benötigen die Berechtigung, KI-Agenten auszuführen, um den Marketing-Lauf zu starten.",
+      "livechat_invalid_origin": "Geben Sie Website-Adressen wie https://www.example.com ein.",
+      "livechat_no_origins": "Tragen Sie Ihre Website-Adresse ein, bevor Sie den Chat einschalten.",
+      "livechat_origin_not_allowed": "Diese Website darf den Chat nicht verwenden.",
+      "livechat_disabled": "Der Website-Chat ist ausgeschaltet.",
+      "livechat_unavailable": "Der Website-Chat ist gerade nicht verfügbar.",
+      "livechat_closed": "Dieses Gespräch ist beendet.",
+      "livechat_ai_off": "Der KI-Assistent ist in den Chat-Einstellungen ausgeschaltet.",
+      "livechat_conversation_limit": "Dieses Gespräch ist zu lang. Bitte beginnen Sie ein neues.",
+      "workforce_ai_paused": "Alle KI in diesem Unternehmen ist pausiert. Setzen Sie sie auf der Seite „Autonomie“ fort.",
+      "workforce_autonomy_hard_floor": "Diese Aktionsart braucht immer einen Menschen.",
+      "workforce_autonomy_cap_required": "Legen Sie ein Geldlimit je Aktion fest, bevor Geld automatisch fließen kann.",
+      "workforce_autonomy_payment_cap": "Automatische Zahlungen können nicht über die feste Grenze gesetzt werden.",
+      "workforce_autonomy_hours": "Legen Sie Start- und Endzeit fest – oder keine von beiden.",
+      "workforce_autonomy_read_level": "Nachschlagen kann nur an oder aus sein.",
+      "workforce_autonomy_amount": "Verwenden Sie die Anzahl Nachkommastellen der Währung.",
+      "workforce_autonomy_no_recommendation": "Diese Empfehlung gilt nicht mehr.",
+      "workforce_autonomy_not_reversible": "Diese Aktion kann nicht rückgängig gemacht werden.",
+      "workforce_autonomy_undo_forbidden": "Ihnen fehlt die Berechtigung für dieses Rückgängigmachen.",
+      "workforce_autonomy_undo_failed": "Das Rückgängigmachen hat nicht funktioniert; sonst wurde nichts geändert."
     }
   },
   "onboarding": {
@@ -1982,7 +2003,11 @@
       "read_workforce_plan": "Personalplan lesen",
       "propose_planned_role": "Geplante Rolle vorschlagen",
       "read_financial_alerts": "Finanzwarnungen lesen",
-      "read_money_flow": "Geldfluss lesen"
+      "read_money_flow": "Geldfluss lesen",
+      "read_marketing_run": "Marketing-Lauf lesen",
+      "read_livechat_conversations": "Website-Chats lesen",
+      "read_livechat_transcript": "Chatverlauf lesen",
+      "livechat_book_meeting": "Termin aus einem Chat buchen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -1993,7 +2018,8 @@
       "tasks": "KI-Aufgaben",
       "org": "Organigramm",
       "performance": "Leistung & Budgets",
-      "escalations": "Eskalationen"
+      "escalations": "Eskalationen",
+      "autonomy": "Autonomie"
     },
     "filters": {
       "search": "Suche",
@@ -2677,6 +2703,10 @@
     "paid_ads_specialist": {
       "name": "Spezialist für bezahlte Anzeigen",
       "summary": "Kampagnenpläne, Anzeigentexte und Optimierung innerhalb der Ausgabenlimits."
+    },
+    "website_chat_agent": {
+      "name": "Website-Chat-Agent",
+      "summary": "Beantwortet Website-Besucher rund um die Uhr aus Ihrem Wissen, gewinnt Leads und übergibt an Sie."
     }
   },
   "projects": {
@@ -2956,7 +2986,10 @@
         "plan_review": "Marketingplan wartet auf Freigabe: {title}",
         "plan_changes": "Änderungen am Plan angefordert: {title}",
         "plan_approved": "Marketingplan freigegeben: {title}",
-        "optimizations_proposed": "Neue Marketing-Optimierungen zur Prüfung: {title}"
+        "optimizations_proposed": "Neue Marketing-Optimierungen zur Prüfung: {title}",
+        "run_blocked": "Marketing-Lauf braucht Sie: {title}",
+        "run_newsletter_ready": "Newsletter versandbereit: {title}",
+        "run_completed": "Marketing-Lauf abgeschlossen: {title}"
       },
       "crm": {
         "lead_assigned": "Ihnen zugewiesener Lead: {title}",
@@ -3043,10 +3076,17 @@
       },
       "workforce": {
         "statusReport": "Statusbericht: {title}",
-        "escalation": "Eskalation: {title}"
+        "escalation": "Eskalation: {title}",
+        "autonomyDemoted": "Automodus auf „Mich fragen“ zurückgestuft: {title}",
+        "autonomyPaused": "Alle KI pausiert: {title}",
+        "autonomyResumed": "KI fortgesetzt: {title}"
       },
       "growth": {
         "insight": "Kritisches Wachstumssignal: {title}"
+      },
+      "livechat": {
+        "handoff": "Website-Besucher braucht einen Menschen: {title}",
+        "new_chat": "Neuer Website-Chat: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -8206,7 +8246,8 @@
       "intelligence": "Marktwissen",
       "strategy": "Strategie",
       "calendar": "Kalender",
-      "optimize": "Optimieren"
+      "optimize": "Optimieren",
+      "run": "Marketing starten"
     },
     "common": {
       "allStatuses": "Alle Status",
@@ -10168,6 +10209,182 @@
       "recommendations": "Offene Empfehlungen",
       "open": "Öffnen",
       "aiReviews": "KI-Prüfungen"
+    },
+    "run": {
+      "title": "Mein Marketing starten",
+      "subtitle": "Ein Klick: Recherche, Strategie, Kampagnen, Inhalte, Veröffentlichung, Ergebnisse und Verbesserungen – laufen von selbst, Sie geben nur frei, was zählt.",
+      "eyebrow": "Autonomer Marketing-Lauf",
+      "startedAt": "Gestartet {date}",
+      "blocked": "Der Lauf wartet auf etwas",
+      "approveTitle": "Ihr Plan ist bereit zur Freigabe",
+      "approveCta": "Plan prüfen",
+      "approveBody": "Nach der Freigabe erstellt die KI sofort Kampagne, Autopiloten und Content-Kalender.",
+      "changesRequested": "Sie haben Änderungen angefordert: {note}. Reichen Sie den Plan erneut ein, um fortzufahren.",
+      "open": "Öffnen",
+      "recentPosts": "Veröffentlichte Beiträge",
+      "recentPostsHint": "Live-Links, die die Plattformen zurückgeben, mit den neuesten von dort abgerufenen Zahlen.",
+      "postMetrics": "{impressions} Impressionen · {engagement} Interaktionen",
+      "metricsPending": "Zahlen folgen innerhalb einer Stunde",
+      "viewPost": "Ansehen",
+      "noPosts": "Noch nichts veröffentlicht. Beiträge erscheinen hier mit Live-Link, sobald eine Plattform sie bestätigt.",
+      "autopilots": "Aktive Kanäle",
+      "noAutopilots": "Noch kein Kanal-Autopilot – sie starten, sobald der Plan freigegeben ist.",
+      "log": "Was passiert ist",
+      "logHint": "Jeder Schritt des Laufs, neueste zuerst.",
+      "history": "Frühere Läufe",
+      "loopTitle": "Der Marketing-Kreislauf",
+      "inProgress": "{count} in Arbeit",
+      "status": {
+        "RESEARCHING": "Ihr Markt wird recherchiert",
+        "PLANNING": "Ihre Strategie wird entworfen",
+        "AWAITING_APPROVAL": "Wartet auf Ihre Freigabe",
+        "LAUNCHING": "Kampagnen werden gestartet",
+        "RUNNING": "Ihr Marketing läuft",
+        "BLOCKED": "Braucht Ihre Hilfe",
+        "PAUSED": "Pausiert",
+        "COMPLETED": "Abgeschlossen",
+        "CANCELLED": "Abgebrochen",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "autonomy": {
+        "REVIEW_EVERYTHING": {
+          "name": "Ich prüfe alles",
+          "hint": "Sie geben den Plan und jeden Beitrag, Artikel und jede E-Mail vor der Veröffentlichung frei."
+        },
+        "APPROVE_PLAN": {
+          "name": "Ich gebe den Plan frei",
+          "hint": "Sie geben den Plan frei; Beiträge und Artikel erscheinen dann von selbst. E-Mails und Ausgaben fragen weiterhin Sie."
+        },
+        "FULL_AUTOPILOT": {
+          "name": "Voller Autopilot",
+          "hint": "Plan, Beiträge, Artikel und Newsletter laufen von selbst. Budgetänderungen fragen immer Sie."
+        }
+      },
+      "planStatus": {
+        "DRAFT": "Entwurf",
+        "IN_REVIEW": "Wartet auf Freigabe",
+        "APPROVED": "Freigegeben",
+        "ACTIVE": "Aktiv",
+        "ARCHIVED": "Archiviert"
+      },
+      "apStatus": {
+        "ACTIVE": "Läuft",
+        "PAUSED": "Pausiert"
+      },
+      "artifact": {
+        "article": "Artikel",
+        "newsletter": "Newsletter"
+      },
+      "artifactState": {
+        "writing": "Wird geschrieben",
+        "in_review": "Wartet auf Ihre Prüfung",
+        "awaiting_approval": "Bereit – wartet auf Ihren Versand",
+        "published": "Veröffentlicht",
+        "scheduled": "Geplant",
+        "failed": "Fehlgeschlagen"
+      },
+      "step": {
+        "research": "Recherche",
+        "plan": "Strategie",
+        "approval": "Freigabe",
+        "campaign": "Kampagne",
+        "autopilot": "Kanäle",
+        "seo": "Blog & SEO",
+        "newsletter": "Newsletter",
+        "ads": "Anzeigen",
+        "optimize": "Optimieren",
+        "complete": "Fertig",
+        "control": "Steuerung"
+      },
+      "stage": {
+        "research": "Recherche",
+        "strategy": "Strategie",
+        "campaign": "Kampagne",
+        "calendar": "Kalender",
+        "content": "Inhalte",
+        "creatives": "Kreative",
+        "publish": "Veröffentlicht",
+        "metrics": "Gemessen",
+        "optimize": "Verbessert"
+      },
+      "kpi": {
+        "reach": "Reichweite",
+        "impressions": "{count} Impressionen",
+        "engagement": "Interaktionen",
+        "posts": "{count} Beiträge",
+        "leads": "Leads",
+        "won": "{count} wurden Kunden",
+        "cpl": "Kosten pro Lead",
+        "spend": "{amount} ausgegeben",
+        "emails": "E-Mails gesendet",
+        "opens": "{opened} geöffnet · {clicked} geklickt",
+        "articles": "Veröffentlichte Artikel",
+        "articlesWritten": "{count} geschrieben",
+        "newsletters": "Newsletter",
+        "optimizations": "Angewendete Verbesserungen",
+        "proposed": "{count} warten auf Sie"
+      },
+      "form": {
+        "title": "Ihr Marketing starten",
+        "subtitle": "Sagen Sie uns, was beworben werden soll und für wen. Die KI recherchiert, plant und erledigt den Rest.",
+        "products": "Was sollen wir bewerben?",
+        "noProducts": "Noch keine Produkte im Unternehmen – wir bewerben das Unternehmen selbst. Fügen Sie Produkte für gezielteres Marketing hinzu.",
+        "audience": "Wer sind Ihre idealen Kunden?",
+        "audiencePlaceholder": "z. B. Inhaber kleiner Zahnarztpraxen in Deutschland, die mehr Patienten wollen",
+        "regions": "Wo?",
+        "regionsPlaceholder": "z. B. Deutschland, Österreich",
+        "competitors": "Wettbewerber (optional)",
+        "competitorsPlaceholder": "Kommagetrennt",
+        "budget": "Budget für den Zeitraum ({currency})",
+        "period": "Planen für",
+        "days": "{count} Tage",
+        "autonomy": "Wie viel darf die KI allein tun?",
+        "note": "Noch etwas? (optional)",
+        "notePlaceholder": "z. B. Start unseres neuen Tarifs am 1. Dezember",
+        "start": "Mein Marketing starten",
+        "starting": "Wird gestartet…",
+        "startHint": "Die Recherche beginnt sofort. Vor der Freigabe des Plans wird nichts veröffentlicht.",
+        "forbidden": "Bitten Sie jemanden, der Marketing verwalten und KI-Agenten ausführen darf, den Lauf zu starten."
+      },
+      "controls": {
+        "pause": "Pausieren",
+        "resume": "Fortsetzen",
+        "retry": "Erneut versuchen",
+        "cancel": "Stoppen",
+        "cancelConfirm": "Diesen Lauf stoppen? Autopiloten pausieren; bereits geplante Beiträge bleiben in der Warteschlange."
+      },
+      "ready": {
+        "title": "Was die KI nutzen kann",
+        "subtitle": "Je mehr Sie verbinden, desto mehr erledigt der Lauf. Fehlende Teile werden übersprungen und angezeigt, nie vorgetäuscht.",
+        "ai": "KI",
+        "aiMissing": "KI ist auf dieser Plattform nicht eingerichtet",
+        "research": "Web-Recherche",
+        "researchMissing": "Verbinden Sie einen Recherche-Anbieter für belegte Marktforschung",
+        "social": "Social-Media-Konten",
+        "socialMissing": "Verbinden Sie LinkedIn, X, Instagram, Facebook, YouTube oder TikTok zum Veröffentlichen",
+        "email": "E-Mail-Versand",
+        "emailMissing": "Verbinden Sie einen E-Mail-Anbieter, um Newsletter zu senden",
+        "blog": "Blog",
+        "blogMissing": "Artikel erscheinen in Ihrem Realy-Blog",
+        "seo": "SEO-Keywords",
+        "seoMissing": "Legen Sie ein SEO-Projekt mit Keywords an, um Artikel zu erhalten",
+        "products": "Produkte",
+        "productsMissing": "Fügen Sie Produkte hinzu, damit Marketing sie bewerben kann",
+        "ok": "Bereit",
+        "connect": "Einrichten",
+        "realyBlog": "Ihr Realy-Blog (verbinden Sie WordPress, Webflow oder Shopify, um dort zu veröffentlichen)",
+        "safety": "Jeder Beitrag wird gegen Ihre Marken- und Compliance-Regeln geprüft, nur über die API der Plattform mit verifiziertem Link veröffentlicht, und versendete E-Mails enthalten immer einen Abmeldelink und überspringen abgemeldete Kontakte. Budgetänderungen warten immer auf Sie.",
+        "channels": "Veröffentlichung möglich auf: {list}"
+      },
+      "analytics": {
+        "cpl": "Kosten pro Lead",
+        "conversions": "Conversions (zugeordnet)",
+        "conversionsHint": "{ads} von Werbeplattformen · {crm} gewonnene Leads mit Kampagnencode",
+        "byChannel": "Ergebnisse nach Kanal",
+        "byChannelHint": "Ausgaben, Leads nach UTM-Quelle, Reichweite und Interaktionen pro Kanal – nur aus echten Datensätzen.",
+        "leads": "Leads (UTM)",
+        "noChannels": "In diesem Zeitraum noch keine Kanalaktivität."
+      }
     }
   },
   "sales": {
@@ -18679,6 +18896,500 @@
       "successTitle": "Sie stehen auf der Liste.",
       "successBody": "Danke. Wir schreiben Ihnen, sobald Realy für Sie bereit ist.",
       "privacy": "Wir nutzen Ihre Angaben nur, um Sie wegen des Zugangs zu kontaktieren und die Nachfrage zu verstehen."
+    }
+  },
+  "livechat": {
+    "title": "Website-Chat",
+    "eyebrow": "Support · Live-Chat",
+    "subtitle": "Ein KI-Assistent beantwortet Ihre Website-Besucher rund um die Uhr aus Ihrem eigenen Wissen – und holt Sie dazu, wenn ein Mensch gebraucht wird.",
+    "tabs": {
+      "inbox": "Gespräche",
+      "settings": "Einrichtung & Einstellungen"
+    },
+    "aiMissingTitle": "Der KI-Assistent ist nicht verbunden",
+    "aiMissingBody": "Auf dieser Plattform ist kein KI-Anbieter eingerichtet. Neue Chats gehen deshalb direkt an Ihr Team, statt von der KI beantwortet zu werden.",
+    "waitingTitle": "{count, plural, one {# Besucher wartet auf einen Menschen} other {# Besucher warten auf einen Menschen}}",
+    "waitingBody": "Die KI hat diese Chats übergeben. Öffnen Sie einen, um zu antworten – Ihre Antwort erscheint sofort im Chatfenster des Besuchers.",
+    "waitingCta": "Wartende Chats anzeigen",
+    "setup": {
+      "offTitle": "Ihr Website-Chat ist noch nicht live",
+      "offBody": "Tragen Sie Ihre Website ein, legen Sie fest, was die KI sagen darf, und fügen Sie eine Codezeile in Ihre Seite ein. Das dauert etwa fünf Minuten.",
+      "cta": "Chat einrichten"
+    },
+    "analytics": {
+      "title": "Letzte {days} Tage",
+      "conversations": "Gespräche",
+      "aiResolution": "Von der KI gelöst",
+      "aiResolutionHint": "{resolved} von {closed} abgeschlossenen Chats ohne Menschen",
+      "leads": "Gewonnene Leads",
+      "meetings": "{count, plural, one {# Termin angefragt} other {# Termine angefragt}}",
+      "handoffs": "An einen Menschen übergeben",
+      "tickets": "{count, plural, one {# Support-Ticket eröffnet} other {# Support-Tickets eröffnet}}",
+      "trendTitle": "Chats pro Tag",
+      "trendHint": "Alle Gespräche, mit dem Anteil, den die KI selbst gelöst hat.",
+      "resolvedByAi": "Von der KI gelöst",
+      "empty": "In diesem Zeitraum gibt es noch keine Chats."
+    },
+    "gaps": {
+      "title": "Fragen, die die KI nicht beantworten konnte",
+      "hint": "Ergänzen Sie die fehlenden Informationen, damit die KI beim nächsten Mal antworten kann.",
+      "unknown": "Unbeantwortete Frage",
+      "empty": "Bisher keine Wissenslücken.",
+      "addArticle": "Hilfeartikel schreiben"
+    },
+    "filters": {
+      "label": "Gespräche filtern",
+      "open": "Offen",
+      "waiting": "Warten auf Sie",
+      "ai": "KI antwortet",
+      "human": "Bei einem Menschen",
+      "closed": "Abgeschlossen",
+      "all": "Alle"
+    },
+    "search": "Name, E-Mail oder Nachricht suchen",
+    "anonymous": "Anonymer Besucher",
+    "noMessages": "Noch keine Nachrichten",
+    "messageCount": "{count, plural, one {# Nachricht} other {# Nachrichten}}",
+    "empty": "Noch keine Gespräche",
+    "emptyFiltered": "Keine passenden Gespräche",
+    "emptyHint": "Sobald ein Besucher auf Ihrer Website schreibt, erscheint der Chat hier live.",
+    "emptyHintOff": "Schalten Sie den Website-Chat unter „Einrichtung & Einstellungen“ ein, um Gespräche zu empfangen.",
+    "pager": "Seiten",
+    "page": "Seite {page} von {pages}",
+    "authors": {
+      "VISITOR": "Besucher",
+      "AI": "KI-Assistent",
+      "AGENT": "Team",
+      "SYSTEM": "System"
+    },
+    "status": {
+      "AI_ACTIVE": "KI antwortet",
+      "WAITING_HUMAN": "Wartet auf einen Menschen",
+      "HUMAN_ACTIVE": "Bei einem Menschen",
+      "CLOSED": "Abgeschlossen"
+    },
+    "outcomes": {
+      "answered": "Beantwortet",
+      "lead": "Lead",
+      "ticket": "Ticket",
+      "meeting": "Termin",
+      "handoff": "Übergabe",
+      "knowledge_gap": "Wissenslücke",
+      "spam": "Spam",
+      "resolved": "Gelöst",
+      "follow_up": "Nachfassen"
+    },
+    "events": {
+      "handoff": "Eine Person aus dem Team wurde benachrichtigt und antwortet hier.",
+      "handoff_unavailable": "Unser Assistent kann gerade nicht antworten. Das Team wurde benachrichtigt und antwortet hier.",
+      "agent_joined": "Ein Teammitglied ist dem Chat beigetreten.",
+      "ai_returned": "Der KI-Assistent antwortet wieder.",
+      "closed": "Das Gespräch wurde beendet.",
+      "contact_shared": "Kontaktdaten geteilt.",
+      "lead_created": "Ihre Anfrage wurde an das Vertriebsteam weitergegeben.",
+      "ticket_created": "Support-Ticket #{number} wurde eröffnet.",
+      "meeting_proposed": "Terminanfrage gesendet – das Team bestätigt sie.",
+      "meeting_confirmed": "Der Termin ist bestätigt. Eine Kalendereinladung ist unterwegs.",
+      "meeting_saved": "Der Termin wurde notiert; das Team bestätigt die Details."
+    },
+    "view": {
+      "title": "Website-Chat-Gespräch",
+      "back": "Alle Gespräche",
+      "waitingTitle": "Dieser Besucher wartet auf einen Menschen",
+      "waitingBody": "Die KI hat diesen Chat übergeben.",
+      "handledBy": "Betreut von {name}",
+      "visitorOnline": "Besucher ist online",
+      "visitorAway": "Besucher ist abwesend",
+      "takeOver": "Übernehmen",
+      "returnToAi": "An die KI zurückgeben",
+      "close": "Chat beenden",
+      "transcript": "Verlauf",
+      "aiThinking": "Die KI schreibt eine Antwort …",
+      "outcomes": "Ergebnis-Tags",
+      "replyPlaceholder": "Antwort schreiben …",
+      "replyTakesOver": "Antwort schreiben – damit übernehmen Sie den Chat von der KI",
+      "reply": "Antwort",
+      "send": "Senden",
+      "closedNote": "Dieses Gespräch ist beendet. Schreibt der Besucher erneut, beginnt ein neues Gespräch.",
+      "contactRequested": "Die KI hat den Besucher nach Kontaktdaten gefragt",
+      "source": {
+        "kb_article": "Hilfeartikel",
+        "brain_document": "Dokument",
+        "product": "Produkt"
+      },
+      "action": {
+        "search_knowledge": "Wissen durchsucht",
+        "request_contact_details": "Kontaktdaten angefragt",
+        "hand_off_to_human": "An einen Menschen übergeben",
+        "create_lead": "Lead erstellt",
+        "create_support_ticket": "Ticket eröffnet",
+        "propose_meeting": "Termin angefragt"
+      }
+    },
+    "visitor": {
+      "title": "Besucher",
+      "name": "Name",
+      "email": "E-Mail",
+      "notShared": "Nicht geteilt",
+      "consentAt": "Hat am {date} der Kontaktaufnahme zugestimmt",
+      "language": "Sprache",
+      "page": "Gestartet auf Seite",
+      "firstSeen": "Erster Besuch",
+      "previous": "Frühere Chats",
+      "previousCount": "{count, plural, one {# früheres Gespräch} other {# frühere Gespräche}}"
+    },
+    "links": {
+      "title": "Ergebnisse",
+      "lead": "Lead: {name}",
+      "ticket": "Ticket #{number}",
+      "meeting": "Terminanfrage ({status})",
+      "none": "Aus diesem Chat gibt es noch keinen Lead, kein Ticket und keinen Termin."
+    },
+    "approval": {
+      "PENDING": "wartet auf Freigabe",
+      "APPROVED": "freigegeben",
+      "REJECTED": "abgelehnt",
+      "EXPIRED": "abgelaufen",
+      "EXECUTED": "gebucht",
+      "FAILED": "fehlgeschlagen"
+    },
+    "gdpr": {
+      "title": "Datenschutz",
+      "hint": "Abgeschlossene Chats werden nach {days} Tagen automatisch gelöscht. Sie können die Daten dieses Besuchers jetzt löschen.",
+      "confirm": "Diesen Besucher und alle seine Chats endgültig löschen? Das kann nicht rückgängig gemacht werden.",
+      "delete": "Besucherdaten löschen",
+      "linked": "Aus diesem Chat wurde ein Lead oder Ticket erstellt. Löschen Sie es im CRM oder Support, wenn der Besucher die vollständige Löschung verlangt hat."
+    },
+    "settings": {
+      "title": "Website-Chat einrichten",
+      "readOnly": "Sie können diese Einstellungen ansehen. Zum Ändern brauchen Sie die Berechtigung zur Support-Verwaltung.",
+      "step1": "1 · Ihre Website",
+      "step1Hint": "Der Chat funktioniert nur auf den hier eingetragenen Websites.",
+      "origins": "Website-Adressen",
+      "originsHint": "Eine pro Zeile, z. B. https://www.example.com. Mit https://*.example.com gelten alle Subdomains.",
+      "step2": "2 · Aussehen und Begrüßung",
+      "step2Hint": "Passend zu Ihrer Marke. Besucher sehen den Chat automatisch in ihrer Sprache.",
+      "assistantName": "Name des Assistenten",
+      "brandColor": "Markenfarbe",
+      "position": "Position",
+      "positionRight": "Unten rechts",
+      "positionLeft": "Unten links",
+      "greeting": "Begrüßung (optional)",
+      "greetingHint": "Leer lassen für eine freundliche Begrüßung in der Sprache des Besuchers, die sagt, dass es ein KI-Assistent ist.",
+      "step3": "3 · Was die KI weiß",
+      "step3Hint": "Die KI antwortet nur aus diesen Angaben, Ihren veröffentlichten Hilfeartikeln, markierten Dokumenten und Ihren Produkten. Alles andere übergibt sie Ihnen.",
+      "publicFacts": "Öffentliche Fakten",
+      "publicFactsHint": "Preise, Öffnungszeiten, Versand, Rückgabe – alles, was Besucher erfahren dürfen. Tragen Sie hier nie vertrauliche Informationen ein.",
+      "publicFactsPlaceholder": "z. B. Tarife ab 29 € pro Monat. Versand innerhalb der EU in 2–4 Tagen. Support: Mo–Fr 9:00–17:00 MEZ.",
+      "brainTag": "Company-Brain-Tag",
+      "brainTagHint": "Nur Company-Brain-Dokumente mit diesem Tag werden im Chat verwendet; alle anderen Dokumente bleiben privat.",
+      "toggles": {
+        "aiEnabled": "Die KI darf Besuchern antworten",
+        "aiEnabledHint": "Wenn aus, hinterlassen Besucher eine Nachricht und Ihr Team antwortet.",
+        "autoCreateLeads": "CRM-Leads aus Vertriebs-Chats erstellen",
+        "autoCreateLeadsHint": "Nur nachdem der Besucher eine E-Mail geteilt und der Kontaktaufnahme zugestimmt hat.",
+        "autoCreateTickets": "Support-Tickets bei Problemen eröffnen",
+        "autoCreateTicketsHint": "Nur nachdem der Besucher eine E-Mail geteilt und der Kontaktaufnahme zugestimmt hat.",
+        "meetingsEnabled": "Die KI darf Termine anfragen",
+        "meetingsEnabledHint": "Jeder Termin braucht Ihre Freigabe, bevor der Besucher eine Kalendereinladung erhält."
+      },
+      "step5": "5 · Datenschutz",
+      "step5Hint": "Besucher sehen immer, dass sie mit einer KI sprechen, und stimmen zu, bevor sie Kontaktdaten teilen.",
+      "step4": "4 · Was die KI tun darf",
+      "step4Hint": "Antworten ist immer erlaubt. Alles, was über den Chat hinausgeht, folgt diesen Regeln und Ihren Freigaben.",
+      "privacyUrl": "Link zur Datenschutzerklärung",
+      "privacyUrlHint": "Wird neben dem Einwilligungs-Kästchen angezeigt.",
+      "retentionDays": "Chats aufbewahren (Tage)",
+      "retentionHint": "Abgeschlossene Chats und ihre Besucher werden nach diesem Zeitraum gelöscht.",
+      "saved": "Gespeichert",
+      "step6": "6 · Einbauen und live gehen",
+      "step6Hint": "Fügen Sie diese Zeile vor dem schließenden </body>-Tag Ihrer Website ein (oder in das Feld für eigenen Code Ihres Website-Baukastens).",
+      "copy": "Code kopieren",
+      "copied": "Kopiert",
+      "rotate": "Neuer Schlüssel",
+      "rotateConfirm": "Neuen Schlüssel erstellen? Der Code auf Ihrer Website funktioniert erst wieder, wenn Sie ihn ersetzen.",
+      "cspHint": "Wenn Ihre Website eine Content Security Policy nutzt, erlauben Sie die Adresse dieser App in script-src und connect-src.",
+      "liveTitle": "Ihr Chat ist live",
+      "liveBody": "Besucher Ihrer eingetragenen Websites können jetzt chatten.",
+      "turnOff": "Ausschalten",
+      "offTitle": "Ihr Chat ist aus",
+      "offBody": "Probieren Sie die Vorschau aus und schalten Sie den Chat dann für Ihre Website ein.",
+      "turnOn": "Einschalten",
+      "preview": "Hier ansehen",
+      "previewOff": "Vorschau ausblenden"
+    },
+    "knowledge": {
+      "title": "Wissens-Check",
+      "hint": "Je mehr die KI weiß, desto mehr Chats löst sie selbst.",
+      "facts": "Öffentliche Fakten eingetragen",
+      "articles": "{count, plural, =0 {Keine veröffentlichten Hilfeartikel} one {# veröffentlichter Hilfeartikel} other {# veröffentlichte Hilfeartikel}}",
+      "articlesLink": "Hilfeartikel verwalten",
+      "documents": "{count, plural, =0 {Keine Dokumente mit Tag „{tag}“} one {# Dokument mit Tag „{tag}“} other {# Dokumente mit Tag „{tag}“}}",
+      "documentsLink": "Company Brain öffnen",
+      "products": "{count, plural, =0 {Keine aktiven Produkte} one {# aktives Produkt} other {# aktive Produkte}}",
+      "productsLink": "Produkte verwalten",
+      "ready": "bereit",
+      "missing": "fehlt",
+      "none": "Die KI hat noch nichts, woraus sie antworten kann, und übergibt deshalb jede Frage an Sie. Tragen Sie zuerst öffentliche Fakten oder einen Hilfeartikel ein."
+    },
+    "trust": {
+      "title": "So verhält sich der Assistent",
+      "disclosure": "Er sagt immer, dass er eine KI ist.",
+      "grounded": "Er antwortet nur aus Ihrem Wissen und sagt sonst „Das weiß ich nicht“.",
+      "consent": "Kontaktdaten werden nur mit Einwilligung des Besuchers gespeichert.",
+      "approvals": "Termine und alles, was in Ihrem Namen versendet wird, brauchen Ihre Freigabe.",
+      "retention": "Chats werden nach Ihrer Aufbewahrungsfrist gelöscht; Sie können einen Besucher jederzeit löschen."
+    },
+    "metrics": {
+      "conversations": "Website-Chats",
+      "aiResolutionRate": "Von der KI gelöste Chats",
+      "leadsCaptured": "Leads aus dem Website-Chat",
+      "handoffs": "An einen Menschen übergebene Chats"
+    },
+    "widget": {
+      "launcher": "Chatten Sie mit uns",
+      "aiBadge": "KI-Assistent",
+      "disclosure": "Sie chatten mit einem KI-Assistenten. Er antwortet mit den Informationen von {company} und kann eine Person dazuholen.",
+      "greeting": "Hallo! Ich bin {name}, der KI-Assistent von {company}. Wie kann ich helfen?",
+      "placeholder": "Nachricht eingeben …",
+      "send": "Senden",
+      "close": "Chat schließen",
+      "human": "Mit einer Person sprechen",
+      "typing": "Schreibt …",
+      "contactTitle": "Kontaktdaten teilen",
+      "contactHint": "Damit sich das Team bei Ihnen melden kann.",
+      "contactName": "Name",
+      "contactEmail": "E-Mail",
+      "consent": "Ich bin einverstanden, dass {company} meinen Namen und meine E-Mail speichert, um meine Anfrage zu beantworten und mich dazu zu kontaktieren.",
+      "privacy": "Datenschutzerklärung",
+      "contactSubmit": "Teilen",
+      "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "rateLimited": "Sie senden sehr schnell Nachrichten. Bitte warten Sie einen Moment.",
+      "unavailable": "Der Chat ist gerade nicht verfügbar.",
+      "offline": "Hallo! Hinterlassen Sie uns eine Nachricht, das Team antwortet hier.",
+      "newChat": "Neues Gespräch beginnen",
+      "closed": "Dieses Gespräch ist beendet. Schreiben Sie erneut, um ein neues zu beginnen.",
+      "teamMember": "Team",
+      "you": "Sie",
+      "assistant": "KI-Assistent",
+      "endChat": "Chat beenden",
+      "unread": "neue Nachricht",
+      "honeypot": "Dieses Feld leer lassen"
+    }
+  },
+  "autonomy": {
+    "title": "Autonomie",
+    "eyebrow": "KI-Belegschaft",
+    "subtitle": "Legen Sie fest, was Ihre KI-Abteilungen selbstständig tun dürfen, wofür sie Sie vorher fragen und was immer Sie braucht. Jede automatische Aktion wird protokolliert, auf ihre Limits angerechnet und kann hier geprüft werden.",
+    "company": "Gesamtes Unternehmen",
+    "companyHelp": "Standard für jede Abteilung, sofern sie keine eigene Regel hat",
+    "readOnly": "Sie können diese Einstellungen ansehen; zum Ändern brauchen Sie die Berechtigung, die KI-Belegschaft zu verwalten.",
+    "error": {
+      "title": "Autonomie-Einstellungen konnten nicht geladen werden",
+      "body": "Beim Laden dieser Seite ist etwas schiefgelaufen. Laden Sie sie gleich neu; es wurde nichts geändert."
+    },
+    "autoMode": {
+      "title": "Automodus",
+      "description": "Der Hauptschalter dafür, dass die KI ohne Sie handelt.",
+      "on": "Automodus ist an",
+      "off": "Automodus ist aus",
+      "explainOn": "Regeln auf „Auto“ laufen selbstständig innerhalb ihrer Limits. Alles andere fragt Sie weiterhin zuerst.",
+      "explainOff": "Nichts läuft ohne Sie: Regeln auf „Auto“ verhalten sich wie „Mich fragen“, bis Sie den Automodus einschalten.",
+      "turnOn": "Automodus einschalten",
+      "turnOff": "Automodus ausschalten",
+      "mfa": "Erfordert eine aktuelle Zwei-Faktor-Bestätigung.",
+      "confirmOn": "Automodus einschalten? KI-Abteilungen handeln dann überall selbstständig, wo eine Regel auf „Auto“ steht – innerhalb ihrer Limits."
+    },
+    "pause": {
+      "title": "Notstopp",
+      "explain": "Stoppt alle KI-Mitarbeiter dieses Unternehmens sofort: Es starten keine neuen Aufgaben und keine Aktion läuft, bis Sie fortsetzen.",
+      "button": "Alle KI pausieren",
+      "resume": "KI fortsetzen",
+      "isPaused": "Alle KI ist pausiert",
+      "dialogTitle": "Alle KI in diesem Unternehmen pausieren?",
+      "dialogDescription": "Keine KI-Aufgabe startet und keine KI-Aktion läuft, bis jemand fortsetzt. Ihr Grund wird im Aktivitätsprotokoll gespeichert und Ihr Team benachrichtigt.",
+      "confirmResume": "Alle KI in diesem Unternehmen fortsetzen?",
+      "bannerTitle": "Alle KI ist pausiert",
+      "banner": "Pausiert seit {date}.",
+      "reason": "Grund: {reason}"
+    },
+    "platform": {
+      "disabled": "Die KI-Belegschaft ist von der Plattform für Ihre Organisation ausgeschaltet. Die Regeln bleiben erhalten und gelten wieder, sobald sie zurück ist.",
+      "paused": "Die Plattform hat KI-Aktionen vorübergehend pausiert. Derzeit läuft nichts automatisch.",
+      "supervised": "Die Plattform verlangt derzeit für jede KI-Aktion, die Daten ändert, eine Freigabe – „Auto“-Regeln fragen Sie daher vorerst zuerst."
+    },
+    "levels": {
+      "OFF": "Aus",
+      "SUGGEST": "Vorschlagen",
+      "ASK": "Mich fragen",
+      "AUTO": "Auto",
+      "ON": "An"
+    },
+    "levelsHelp": {
+      "OFF": "Die KI tut das nie.",
+      "SUGGEST": "Die KI empfiehlt es nur in ihrem Bericht; nichts wird eingereicht oder ausgeführt.",
+      "ASK": "Die KI bereitet es vor und Sie geben es frei, bevor etwas passiert.",
+      "AUTO": "Die KI erledigt es selbstständig innerhalb Ihrer Limits und protokolliert es hier."
+    },
+    "classes": {
+      "read": "Nachschlagen",
+      "change_data": "Unternehmensdaten ändern",
+      "send_message": "Nachrichten senden",
+      "call": "Anrufe tätigen",
+      "publish": "Veröffentlichen",
+      "spend": "Geld ausgeben",
+      "pay": "Zahlen und überweisen",
+      "contract": "Verträge und Rechtliches",
+      "hr": "Einstellungen und Personalentscheidungen",
+      "delete_data": "Daten löschen"
+    },
+    "classesHelp": {
+      "read": "Dokumente durchsuchen, Datensätze und Berichte lesen",
+      "change_data": "Datensätze, Aufgaben und Entwürfe anlegen und ändern",
+      "send_message": "E-Mails, SMS, Chat- und Social-Antworten an Externe",
+      "call": "Telefonate mit Kunden und Kontakten",
+      "publish": "Beiträge, Seiten und Ankündigungen für die Öffentlichkeit",
+      "spend": "Werbebudgets, Einkäufe und andere Ausgaben",
+      "pay": "Zahlungen, Erstattungen und Überweisungen",
+      "contract": "Verträge und Rechtstexte unterzeichnen oder versenden",
+      "hr": "Einstellung, Angebote, Kündigung und Gehaltsentscheidungen",
+      "delete_data": "Datensätze oder Dateien entfernen"
+    },
+    "channels": {
+      "email": "E-Mail",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "phone": "Telefon",
+      "chat": "Chat",
+      "social": "Social Media",
+      "ads": "Anzeigen",
+      "web": "Website"
+    },
+    "days": {
+      "0": "So",
+      "1": "Mo",
+      "2": "Di",
+      "3": "Mi",
+      "4": "Do",
+      "5": "Fr",
+      "6": "Sa"
+    },
+    "stats": {
+      "autoToday": "Automatisch erledigt (24 h)",
+      "autoTodayHint": "Aktionen, die die KI selbst ausgeführt hat",
+      "recommendations": "Bereit für mehr Vertrauen",
+      "recommendationsHint": "Bereiche mit sauberer Bilanz",
+      "employees": "KI-Mitarbeiter",
+      "employeesHint": "{count, plural, one {in # Abteilung} other {in # Abteilungen}}"
+    },
+    "guide": {
+      "title": "Mit sichtbarem Vertrauen beginnen",
+      "description": "Nichts ändert sich, bevor Sie entscheiden. Ein sicherer Einstieg:",
+      "step1": "Lassen Sie ein paar Wochen alles auf „Mich fragen“ und geben Sie die Arbeit der KI wie gewohnt frei – so entsteht ihre Bilanz.",
+      "step2": "Hat ein Bereich eine saubere Bilanz, übernehmen Sie die Empfehlung unten: Er wechselt auf „Auto“ mit Tageslimit.",
+      "step3": "Schalten Sie den Automodus ein. Verfolgen Sie das Live-Protokoll, machen Sie Umkehrbares rückgängig und pausieren Sie jederzeit alle KI."
+    },
+    "recommendations": {
+      "title": "Vertrauensempfehlungen",
+      "description": "Auf Basis der Freigaben, Ablehnungen, Änderungen und Probleme der letzten 30 Tage.",
+      "text": "{department} · {action}: {approved} freigegeben, {rejected} abgelehnt in {days} Tagen – auf „Auto“ mit {limit} pro Tag umstellen?",
+      "apply": "Auf Auto umstellen ({limit}/Tag)",
+      "autoModeOff": "Der Automodus ist aus: Regeln, die Sie auf „Auto“ stellen, greifen, sobald Sie ihn einschalten."
+    },
+    "demotions": {
+      "text": "{department} · {action} wurde am {date} auf „Mich fragen“ zurückgestuft: {reason}"
+    },
+    "rules": {
+      "title": "Regeln nach Abteilung",
+      "subtitle": "Schieben Sie jede Aktionsart zwischen Aus, Vorschlagen, Mich fragen und Auto. Abteilungen folgen der Unternehmensregel, solange Sie sie nicht ändern.",
+      "employees": "{count, plural, =0 {Noch keine KI-Mitarbeiter} one {# KI-Mitarbeiter} other {# KI-Mitarbeiter}}",
+      "meter": "{auto} von {total} Aktionsarten auf Auto",
+      "inherited": "Unternehmensregel",
+      "default": "Standard",
+      "useCompany": "Unternehmensregel verwenden",
+      "reset": "Auf Standard zurücksetzen",
+      "limits": "Limits",
+      "noLimits": "Keine Limits gesetzt",
+      "locked": "Braucht immer einen Menschen",
+      "lockedHelp": "Diese Aktionsart kann nie automatisch laufen",
+      "usedToday": "{used} von {limit} heute",
+      "usedTodayNoLimit": "{used} heute",
+      "spentToday": "heute ausgegeben {amount}",
+      "perDay": "{count} pro Tag",
+      "perAction": "bis {amount} je Aktion",
+      "perDayMoney": "{amount} pro Tag",
+      "perMonthMoney": "{amount} pro Monat"
+    },
+    "limits": {
+      "description": "Limits gelten auf „Auto“. Alles darüber hinaus wird Ihnen stattdessen zur Freigabe vorgelegt.",
+      "dailyLimit": "Aktionen pro Tag",
+      "dailyLimitHelp": "Gezählt in der Zeitzone Ihres Unternehmens. Leer lassen für kein Tageslimit.",
+      "money": "Geldlimits ({currency})",
+      "perActionMax": "Je Aktion",
+      "dailyMax": "Pro Tag",
+      "monthlyMax": "Pro Monat",
+      "capRequired": "Geld fließt nur automatisch mit einem Limit je Aktion.",
+      "paymentCap": "Automatische Zahlungen dürfen nie {amount} je Zahlung überschreiten.",
+      "hours": "Wann",
+      "from": "Von",
+      "to": "Bis",
+      "hoursHelp": "Zeiten leer lassen für jederzeit, Tage nicht auswählen für jeden Tag.",
+      "days": "Tage",
+      "channels": "Erlaubte Kanäle",
+      "channelsHelp": "Keinen auswählen, um jeden Kanal zu erlauben.",
+      "save": "Regel speichern",
+      "cancel": "Abbrechen"
+    },
+    "floors": {
+      "title": "Feste Grenzen",
+      "description": "Diese brauchen immer einen Menschen, egal was die Regeln sagen.",
+      "contract": "Verträge und Rechtstexte unterzeichnen oder versenden",
+      "hr": "Einstellungen, Kündigungen, Angebote und Gehaltsentscheidungen",
+      "delete": "Unternehmensdaten löschen",
+      "pay": "Zahlungen und Überweisungen über {amount}",
+      "founderOnly": "Aktionen, die nur der Organisationsinhaber freigeben darf",
+      "killSwitch": "Alles, was die Sicherheitsschalter der Plattform blockieren"
+    },
+    "trust": {
+      "title": "Bilanz",
+      "description": "Letzte 30 Tage. {threshold} Probleme innerhalb von {days} Tagen stufen eine „Auto“-Regel auf „Mich fragen“ zurück, und Sie werden benachrichtigt.",
+      "department": "Abteilung",
+      "action": "Aktion",
+      "approved": "Freigegeben",
+      "rejected": "Abgelehnt",
+      "edited": "Geändert",
+      "auto": "Automatisch",
+      "problems": "Probleme",
+      "employees": "KI-Mitarbeiter",
+      "employeeLine": "{name}: {approved} ok, {rejected} abgelehnt",
+      "empty": "Noch keine Bilanz. Sie entsteht, während Sie Vorschläge der KI freigeben oder ablehnen."
+    },
+    "log": {
+      "title": "Live-Protokoll automatischer Aktionen",
+      "description": "Alles, was die KI ohne Nachfrage getan hat, mit der Regel, die es erlaubt hat.",
+      "live": "Live",
+      "emptyOn": "Noch keine automatischen Aktionen. Sie erscheinen hier, sobald ein KI-Mitarbeiter unter einer „Auto“-Regel handelt.",
+      "emptyOff": "Der Automodus ist aus, daher hat die KI nicht selbstständig gehandelt.",
+      "by": "von {name}",
+      "policy": "erlaubt durch die Regel „{scope}“",
+      "policyDefault": "erlaubt durch die Standardregel",
+      "task": "Aufgabe öffnen",
+      "failed": "Fehlgeschlagen: {error}",
+      "undone": "Rückgängig gemacht {date}",
+      "undo": "Rückgängig",
+      "undoConfirm": "Diese Aktion rückgängig machen? Realy führt den Umkehrschritt mit Ihren Berechtigungen aus.",
+      "notReversible": "Nicht automatisch umkehrbar",
+      "report": "Problem melden",
+      "reportTitle": "Problem melden",
+      "reportDescription": "Probleme zählen gegen die Bilanz dieser Abteilung und können die Regel auf „Mich fragen“ zurücksetzen.",
+      "reportKind": "Was ist passiert?",
+      "reportKinds": {
+        "COMPLAINT": "Jemand hat sich beschwert",
+        "REVERSAL": "Wir mussten es rückgängig machen",
+        "EDITED": "Es musste überarbeitet werden"
+      },
+      "reportNote": "Details (optional)",
+      "reportSend": "Meldung senden"
     }
   }
 }

@@ -1,0 +1,153 @@
+// Website live chat (src/server/modules/livechat): an AI agent answers website visitors 24/7 on behalf of the
+// company, grounded only in company knowledge; people can take over from the app. Visitors are anonymous until they
+// share contact details with consent. User ids (assignees, authors) are plain uuids: no back-relations to User.
+
+enum LivechatStatus {
+  /// The AI is answering.
+  AI_ACTIVE
+  /// Handed off: waiting for a person to take over.
+  WAITING_HUMAN
+  /// A person is answering.
+  HUMAN_ACTIVE
+  CLOSED
+}
+
+enum LivechatAuthor {
+  VISITOR
+  AI
+  AGENT
+  SYSTEM
+}
+
+/// Per-company widget configuration. The public key identifies the company in the embed snippet (it is not a secret).
+model LivechatSettings {
+  companyId         String   @id @map("company_id") @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  enabled           Boolean  @default(false)
+  /// Public widget key ("lc_…"), unique across the platform. Rotating it breaks old snippets.
+  publicKey         String   @unique @map("public_key")
+  /// Exact website origins allowed to embed the widget, e.g. "https://example.com" or "https://*.example.com".
+  allowedOrigins    String[] @default([]) @map("allowed_origins")
+  /// Brand colour (#rrggbb) for the launcher, header and visitor bubbles.
+  brandColor        String   @default("#4f46e5") @map("brand_color")
+  position          String   @default("right")
+  assistantName     String   @default("Assistant") @map("assistant_name")
+  /// Custom greeting (any language); the localized default is used when empty.
+  greeting          String?
+  /// The AI answers; when off, visitors leave a message for the team.
+  aiEnabled         Boolean  @default(true) @map("ai_enabled")
+  /// Brain documents with this tag are public knowledge the AI may quote to visitors.
+  brainTag          String   @default("website") @map("brain_tag")
+  /// Founder-written public facts (pricing, opening hours, shipping …) the AI may use.
+  publicFacts       String?  @map("public_facts")
+  /// Granted by the founder: the AI may create CRM leads / support tickets from chats without approval.
+  autoCreateLeads   Boolean  @default(true) @map("auto_create_leads")
+  autoCreateTickets Boolean  @default(true) @map("auto_create_tickets")
+  /// The AI may propose meetings; each booking is filed for approval (it sends a calendar invitation).
+  meetingsEnabled   Boolean  @default(false) @map("meetings_enabled")
+  /// Link shown next to the consent checkbox.
+  privacyUrl        String?  @map("privacy_url")
+  /// GDPR: closed conversations and their visitors are deleted after this many days.
+  retentionDays     Int      @default(180) @map("retention_days")
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("livechat_settings")
+}
+
+/// An anonymous website visitor (browser), identified by a random token kept in the visitor's browser (stored hashed).
+model LivechatVisitor {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  tokenHash       String    @unique @map("token_hash") @db.Char(64)
+  name            String?
+  email           String?
+  emailNormalized String?   @map("email_normalized")
+  /// Consent to store contact details and be contacted about the request (GDPR), with the exact text shown.
+  consentAt       DateTime? @map("consent_at") @db.Timestamptz(3)
+  consentText     String?   @map("consent_text")
+  locale          String
+  /// Truncated, hashed IP (abuse control only).
+  ipHash          String?   @map("ip_hash")
+  userAgent       String?   @map("user_agent")
+  leadId          String?   @map("lead_id") @db.Uuid
+  firstSeenAt     DateTime  @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt      DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+
+  company       Company                @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  conversations LivechatConversation[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, lastSeenAt])
+  @@index([companyId, emailNormalized])
+  @@map("livechat_visitors")
+}
+
+model LivechatConversation {
+  id                String         @id @default(uuid(7)) @db.Uuid
+  organizationId    String         @map("organization_id") @db.Uuid
+  companyId         String         @map("company_id") @db.Uuid
+  visitorId         String         @map("visitor_id") @db.Uuid
+  status            LivechatStatus @default(AI_ACTIVE)
+  locale            String
+  pageUrl           String?        @map("page_url")
+  referrer          String?
+  /// Outcome tags: answered, lead, ticket, meeting, handoff, knowledge_gap, spam (+ custom tags from the inbox).
+  outcomes          String[]       @default([])
+  leadId            String?        @map("lead_id") @db.Uuid
+  ticketId          String?        @map("ticket_id") @db.Uuid
+  meetingApprovalId String?        @map("meeting_approval_id") @db.Uuid
+  /// The person who took over (plain user id).
+  assigneeId        String?        @map("assignee_id") @db.Uuid
+  handoffReason     String?        @map("handoff_reason")
+  handoffAt         DateTime?      @map("handoff_at") @db.Timestamptz(3)
+  /// Set at close: the AI handled it end to end (no handoff, at least one AI answer).
+  aiResolved        Boolean?       @map("ai_resolved")
+  messageCount      Int            @default(0) @map("message_count")
+  aiInputTokens     Int            @default(0) @map("ai_input_tokens")
+  aiOutputTokens    Int            @default(0) @map("ai_output_tokens")
+  /// Claim of the AI reply in progress (one at a time per conversation).
+  aiBusyUntil       DateTime?      @map("ai_busy_until") @db.Timestamptz(3)
+  agentTypingAt     DateTime?      @map("agent_typing_at") @db.Timestamptz(3)
+  visitorSeenAt     DateTime?      @map("visitor_seen_at") @db.Timestamptz(3)
+  lastMessageAt     DateTime       @default(now()) @map("last_message_at") @db.Timestamptz(3)
+  closedAt          DateTime?      @map("closed_at") @db.Timestamptz(3)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  visitor  LivechatVisitor   @relation(fields: [visitorId, companyId], references: [id, companyId], onDelete: Cascade)
+  messages LivechatMessage[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, lastMessageAt])
+  @@index([companyId, status])
+  @@index([visitorId])
+  @@map("livechat_conversations")
+}
+
+model LivechatMessage {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  conversationId String         @map("conversation_id") @db.Uuid
+  author         LivechatAuthor
+  /// AGENT messages: the person who wrote it (plain user id).
+  authorUserId   String?        @map("author_user_id") @db.Uuid
+  /// text | contact_request (the widget shows the contact form) | event (system notice).
+  kind           String         @default("text")
+  body           String
+  /// AI messages: knowledge sources used [{ ref, type, id, title }] and actions taken [{ action, ok, detail }].
+  meta           Json           @default("{}")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  conversation LivechatConversation @relation(fields: [conversationId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([organizationId, companyId, createdAt])
+  @@map("livechat_messages")
+}

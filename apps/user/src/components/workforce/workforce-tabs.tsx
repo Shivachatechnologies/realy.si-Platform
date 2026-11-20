@@ -2,11 +2,11 @@ import Link from "next/link";
 import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
-export type WorkforceTab = "employees" | "org" | "hire" | "usage" | "plans" | "tasks" | "performance" | "escalations";
+export type WorkforceTab = "employees" | "org" | "hire" | "usage" | "plans" | "tasks" | "performance" | "escalations" | "autonomy";
 
 /**
  * Secondary navigation of the AI Workforce area (server component). The org chart tab shows when its label is given;
- * the performance and escalations tabs are always shown and labelled here.
+ * the performance, escalations and autonomy tabs are always shown and labelled here.
  */
 export async function WorkforceTabs({
   locale,
@@ -15,7 +15,7 @@ export async function WorkforceTabs({
 }: {
   locale: string;
   active: WorkforceTab;
-  labels: Record<Exclude<WorkforceTab, "org" | "performance" | "escalations">, string> & { org?: string };
+  labels: Record<Exclude<WorkforceTab, "org" | "performance" | "escalations" | "autonomy">, string> & { org?: string };
 }) {
   const t = await getT();
   const tabs: { key: WorkforceTab; href: string; label?: string }[] = [
@@ -23,6 +23,7 @@ export async function WorkforceTabs({
     { key: "org", href: `/${locale}/workforce/org`, label: labels.org },
     { key: "performance", href: `/${locale}/workforce/performance`, label: t("workforce.tabs.performance") },
     { key: "escalations", href: `/${locale}/workforce/escalations`, label: t("workforce.tabs.escalations") },
+    { key: "autonomy", href: `/${locale}/autonomy`, label: t("workforce.tabs.autonomy") },
     { key: "hire", href: `/${locale}/workforce/hire`, label: labels.hire },
     { key: "usage", href: `/${locale}/workforce/usage`, label: labels.usage },
     { key: "plans", href: `/${locale}/plans`, label: labels.plans },

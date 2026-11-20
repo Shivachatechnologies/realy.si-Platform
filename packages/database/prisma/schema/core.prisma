@@ -687,6 +687,15 @@ model Company {
   crmMeetings                     CrmMeeting[]
   financeAlertLogs                FinanceAlertLog[]
   hrHeadcountPlans                HrHeadcountPlan[]
+  marketingRuns                   MarketingRun[]
+  livechatSettings                LivechatSettings[]
+  livechatVisitors                LivechatVisitor[]
+  livechatConversations           LivechatConversation[]
+  livechatMessages                LivechatMessage[]
+  autonomySettings                AutonomySettings[]
+  autonomyPolicies                AutonomyPolicy[]
+  autonomousActions               AutonomousAction[]
+  autonomyFeedbacks               AutonomyFeedback[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

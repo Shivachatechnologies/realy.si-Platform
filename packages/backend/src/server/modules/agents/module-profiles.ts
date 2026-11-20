@@ -13,6 +13,7 @@ import { BI_PROFILES } from "@/server/modules/bi/ai-profiles";
 import { MARKETPLACE_PROFILES } from "@/server/modules/marketplace/ai-profiles";
 import { ENTERPRISE_PROFILES } from "@/server/modules/enterprise/ai-profiles";
 import { CRM_PROFILES } from "@/server/modules/crm/ai-profiles";
+import { LIVECHAT_PROFILES } from "@/server/modules/livechat/ai-profiles";
 
 /** AI employee profiles contributed by business modules. */
-export const MODULE_PROFILES: AgentProfile[] = [...BRAIN_PROFILES, ...MARKETING_PROFILES, ...FINANCE_PROFILES, ...HR_PROFILES, ...WORK_PROFILES, ...COMMS_PROFILES, ...SUPPORT_PROFILES, ...AUTOMATION_PROFILES, ...INTEGRATIONS_PROFILES, ...WORKFORCE_PROFILES, ...BI_PROFILES, ...MARKETPLACE_PROFILES, ...ENTERPRISE_PROFILES, ...CRM_PROFILES];
+export const MODULE_PROFILES: AgentProfile[] = [...BRAIN_PROFILES, ...MARKETING_PROFILES, ...FINANCE_PROFILES, ...HR_PROFILES, ...WORK_PROFILES, ...COMMS_PROFILES, ...SUPPORT_PROFILES, ...AUTOMATION_PROFILES, ...INTEGRATIONS_PROFILES, ...WORKFORCE_PROFILES, ...BI_PROFILES, ...MARKETPLACE_PROFILES, ...ENTERPRISE_PROFILES, ...CRM_PROFILES, ...LIVECHAT_PROFILES];

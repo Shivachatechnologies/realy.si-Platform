@@ -32,7 +32,16 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
     const [journey, autopilots] = await Promise.all([db().marketingJourney.findUnique({ where: { companyId: company.id }, select: { completedAt: true } }), db().marketingAutopilot.count({ where: { companyId: company.id, archivedAt: null } })]);
     if (!journey?.completedAt && !autopilots) {
       return (
-        <MarketingShell {...shell} title={t("marketing.studio.journey.title")} subtitle={t("marketing.studio.journey.subtitle")} actions={<Link href={`/${locale}/marketing?view=studio`} className="text-sm text-muted-foreground hover:underline">{t("marketing.studio.journey.skip")}</Link>}>
+        <MarketingShell {...shell} title={t("marketing.studio.journey.title")} subtitle={t("marketing.studio.journey.subtitle")} actions={
+            <span className="flex flex-wrap items-center gap-3">
+              <Link href={`/${locale}/marketing/run`} className="text-sm font-medium hover:underline">
+                {t("marketing.run.form.start")}
+              </Link>
+              <Link href={`/${locale}/marketing?view=studio`} className="text-sm text-muted-foreground hover:underline">
+                {t("marketing.studio.journey.skip")}
+              </Link>
+            </span>
+          }>
           <JourneyWizard {...await journeyProps(m)} />
         </MarketingShell>
       );
@@ -49,7 +58,14 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
   const attributed = cc.campaigns.filter((c) => c.leads || c.won || c.spendMinor > 0n);
 
   return (
-    <MarketingShell {...shell}>
+    <MarketingShell
+      {...shell}
+      actions={
+        <Link href={`/${locale}/marketing/run`} className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          {t("marketing.run.form.start")}
+        </Link>
+      }
+    >
       <LifecycleLoop stages={lifecycle} t={t} locale={locale} />
       <StudioCommand m={m} />
       <Card>
