@@ -45,7 +45,7 @@ export function PageHeader({
         <div className={cn("grid items-center gap-x-10 gap-y-6", visual ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]" : "")}>
           <div className="min-w-0 animate-fade-up">
             {eyebrow ? <div className="eyebrow-rule mb-3">{eyebrow}</div> : null}
-            <h1 className="font-display text-display-xl text-balance">{title}</h1>
+            <h1 className="font-display text-display-xl text-balance break-words">{title}</h1>
             {description ? <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{description}</p> : null}
             {meta ? <div className="mt-4 flex flex-wrap items-center gap-2">{meta}</div> : null}
             {actions ? <div className="mt-5 flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -71,7 +71,7 @@ export function PageHeader({
           ) : null}
           <div className="min-w-0">
             {eyebrow ? <div className="mb-1 text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">{eyebrow}</div> : null}
-            <h1 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">{title}</h1>
+            <h1 className="text-xl font-semibold tracking-[-0.02em] break-words sm:text-2xl">{title}</h1>
             {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
             {meta ? <div className="mt-2 flex flex-wrap items-center gap-2">{meta}</div> : null}
           </div>

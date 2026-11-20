@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Settings2, Sparkles } from "lucide-react";
+import { Bot, Settings2, Wand2 } from "lucide-react";
 import { workflowsPage } from "@/components/automation/frame";
+import { NlComposer } from "@/components/automation/nl-composer";
 import { DescribeIt, SimpleBuilder } from "@/components/automation/simple-builder";
 import { PageIntro } from "@/components/guide-kit/page-intro";
 import { introLabels } from "@/components/guide-kit/server";
@@ -35,9 +36,9 @@ export default async function NewAutomationPage() {
     <div className="grid gap-4">
       <PageIntro labels={introLabels(t)} what={t("workflows.simple.intro.what")} why={t("workflows.simple.intro.why")} can={t("workflows.simple.intro.can")} accent="primary" />
       <Card variant="highlight">
-        <CardHeader title={t("workflows.simple.describeTitle")} description={t("workflows.simple.describeHint")} icon={<Sparkles />} />
+        <CardHeader title={t("workflows.compose.title")} description={t("workflows.compose.hint")} icon={<Wand2 />} />
         <CardBody>
-          <DescribeIt base={base} aiReady={aiConfigured() && canRunAgents} />
+          <NlComposer base={base} />
         </CardBody>
       </Card>
       <Card variant="elevated">
@@ -58,6 +59,12 @@ export default async function NewAutomationPage() {
             currency={company.baseCurrency}
             profiles={AGENT_PROFILES.map((x) => ({ key: x.key, name: label(`profiles.${x.key}.name`, x.key) }))}
           />
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title={t("workflows.compose.architectTitle")} description={t("workflows.compose.architectHint")} icon={<Bot />} />
+        <CardBody>
+          <DescribeIt base={base} aiReady={aiConfigured() && canRunAgents} />
         </CardBody>
       </Card>
     </div>,

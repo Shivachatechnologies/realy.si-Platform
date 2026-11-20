@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
@@ -82,7 +81,7 @@ export function MarketingShell({
           <span className="hidden rtl:inline">→</span> {back.label}
         </Link>
       ) : null}
-      <PageHeader eyebrow={t("marketing.studio.eyebrow")} icon={<Megaphone />} title={title} description={subtitle} actions={actions} />
+      <PageHeader variant="editorial" world="marketing" eyebrow={<span className="inline-flex items-center gap-1.5"><Megaphone className="size-3.5" aria-hidden />{t("marketing.studio.eyebrow")}</span>} illustration={back ? false : undefined} title={title} description={subtitle} actions={actions} />
       <MarketingTabs locale={locale} active={tab} labels={tabLabels(t)} />
       {blocked === "no_company" ? (
         <Card>

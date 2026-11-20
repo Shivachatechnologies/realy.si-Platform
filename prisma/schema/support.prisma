@@ -132,6 +132,10 @@ model SupportTicket {
   escalatedAt             DateTime?           @map("escalated_at") @db.Timestamptz(3)
   solvedAt                DateTime?           @map("solved_at") @db.Timestamptz(3)
   closedAt                DateTime?           @map("closed_at") @db.Timestamptz(3)
+  /// Customer satisfaction (1–5) given by the requester on the public ticket page after the ticket was solved.
+  csatScore               Int?                @map("csat_score")
+  csatComment             String?             @map("csat_comment")
+  csatRatedAt             DateTime?           @map("csat_rated_at") @db.Timestamptz(3)
   /// Rule-based classifier output: { categoryId, priority, matched[] }.
   classification          Json?
   createdById             String?             @map("created_by_id") @db.Uuid

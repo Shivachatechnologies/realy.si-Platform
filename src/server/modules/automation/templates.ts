@@ -12,6 +12,43 @@ export interface WorkflowTemplate {
 
 export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {
+    // Lead created → AI research brief → AI decision Hot/Warm/Cold → assign (CRM rules) → hot leads: notify the owner now.
+    key: "lead_research_score",
+    category: "sales",
+    definition: {
+      trigger: { type: "event", event: "lead.created", filters: [] },
+      variables: [],
+      steps: [
+        {
+          id: "research",
+          type: "action",
+          action: {
+            kind: "assign_ai_employee",
+            profile: "sales_researcher",
+            title: "Research {{event.data.name}}",
+            instructions: "Research the new lead {{event.data.name}} (lead {{event.entityId}}): who they are, their company, size, industry and recent news, and how well they fit our ideal customer. Write a short, sourced brief. Do not contact them.",
+            wait: true,
+          },
+        },
+        {
+          id: "score",
+          type: "action",
+          action: { kind: "ai_decision", profile: "sales_manager", question: "How promising is the lead {{event.data.name}}?", context: "Research brief: {{steps.research.output}}", options: ["Hot", "Warm", "Cold"] },
+        },
+        { id: "assign", type: "action", action: { kind: "assign_round_robin", entity: "lead", recordId: "{{event.entityId}}", pool: "crm_rules", userIds: [], fallbackPermission: "sales.manage" } },
+        {
+          id: "if_hot",
+          type: "branch",
+          match: "all",
+          conditions: [{ field: "steps.score.choice", op: "eq", value: "Hot" }],
+          then: [{ id: "notify_hot", type: "action", action: { kind: "notify", recipients: "field", userIds: [], userField: "{{steps.assign.userId}}", title: "Hot lead: {{event.data.name}}", href: "/crm/{{event.entityId}}" } }],
+          else: [],
+        },
+        { id: "notify_owner", type: "action", action: { kind: "notify", recipients: "owner", userIds: [], title: "New lead {{event.data.name}} scored {{steps.score.choice}}", href: "/crm/{{event.entityId}}" } },
+      ],
+    },
+  },
+  {
     // Lead created → auto-assign an owner (CRM rules, else round robin over sales managers) → follow-up task due tomorrow → notify the team.
     key: "new_lead_follow_up",
     category: "sales",

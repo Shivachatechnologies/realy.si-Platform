@@ -11,6 +11,7 @@ import { providerJson } from "./client";
 import { ProviderError } from "./providers";
 import { authorizeIntegrations } from "./service";
 import { ACCOUNTING_SYNCERS } from "./accounting-sync";
+import { dispatchJob, MODULE_JOBS_QUEUE } from "@/server/core/jobs";
 
 /**
  * Sync engine: pulls data from connected providers into Realy. Each run records an IntegrationSyncRun with counts and
@@ -320,7 +321,18 @@ export async function syncNow(ctx: RequestContext, organizationId: string, compa
   return runConnectionSync(conn.id, "manual");
 }
 
-/** Periodic job: run syncs whose time has come (a few per tick). */
+/** Module task: one scheduled sync of a connection (marks the connection failing when the whole run throws). */
+export async function runScheduledSync(connectionId: string): Promise<number> {
+  try {
+    const results = await runConnectionSync(connectionId, "scheduled");
+    return results.length;
+  } catch (err) {
+    await markConnectionError(connectionId, err instanceof Error ? err.message.slice(0, 300) : "sync failed");
+    throw err;
+  }
+}
+
+/** Periodic job: run syncs whose time has come (a few per tick; more when the worker queues run them in parallel). */
 export async function runDueSyncs(limit = 5): Promise<number> {
   const due = await db().integrationConnection.findMany({
     where: { syncEnabled: true, status: { in: ["CONNECTED", "ERROR"] }, nextSyncAt: { lte: new Date() } },
@@ -333,6 +345,13 @@ export async function runDueSyncs(limit = 5): Promise<number> {
     // Claim: only one worker moves nextSyncAt forward.
     const { count } = await db().integrationConnection.updateMany({ where: { id: c.id, nextSyncAt: c.nextSyncAt }, data: { nextSyncAt: new Date(Date.now() + 10 * 60_000) } });
     if (!count) continue;
+    // On the worker the sync runs as its own module-jobs job (retried with backoff, dead-lettered after the last
+    // attempt); otherwise inline, as before.
+    const queued = await dispatchJob(MODULE_JOBS_QUEUE, "integrations.sync_connection", { connectionId: c.id }, { jobId: `sync_${c.id}_${c.nextSyncAt?.getTime() ?? Date.now()}` });
+    if (queued) {
+      n++;
+      continue;
+    }
     try {
       await runConnectionSync(c.id, "scheduled");
       n++;

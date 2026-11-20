@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Aurora } from "@/components/motion/aurora";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Sidebar } from "./sidebar";
+import { MobileCommandEntry, MobileTabBar } from "./mobile-nav";
 
 export { Aurora };
 
@@ -37,7 +38,9 @@ const subscribeRail = (cb: () => void) => {
 const getRail = () => (railCache ??= readRail());
 
 /**
- * Responsive frame: glass sidebar (collapsible rail on desktop, drawer on mobile), glass topbar and the aurora canvas.
+ * Responsive frame: glass sidebar (collapsible rail on desktop, slide-over drawer below lg), glass topbar, the aurora canvas
+ * and, below lg, a bottom tab bar with a sticky AI command entry. Safe-area insets keep it clear of notches and the home
+ * indicator.
  * `activity` is an optional slot rendered at the end of the topbar (e.g. <AiActivityIndicator running={n} />).
  * Logical properties keep it correct in RTL.
  */
@@ -50,11 +53,18 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Lock page scroll behind the open drawer (restored on close).
+    const root = document.documentElement;
+    const prev = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      root.style.overflow = prev;
+    };
   }, [open]);
 
   return (
-    <div className="relative isolate flex min-h-dvh">
+    <div className="relative isolate flex min-h-dvh" data-app-frame>
       <Aurora />
       <a
         href="#main"
@@ -84,7 +94,7 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
       />
       <aside
         className={cn(
-          "glass-strong fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] border-e shadow-elev-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:hidden",
+          "glass-strong fixed inset-y-0 start-0 z-50 w-80 max-w-[86vw] border-e pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-elev-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:hidden",
           open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full",
         )}
         aria-hidden={!open}
@@ -93,19 +103,19 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="absolute end-2 top-3 z-10 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="absolute end-2 top-[calc(0.375rem+env(safe-area-inset-top))] z-10 grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={t("shell.closeNavigation")}
         >
-          <X className="size-4" aria-hidden />
+          <X className="size-5" aria-hidden />
         </button>
-        <Sidebar adminSlot={adminSlot} onNavigate={() => setOpen(false)} />
+        <Sidebar adminSlot={adminSlot} onNavigate={() => setOpen(false)} touch />
       </aside>
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-3 lg:px-5">
+        <header className="glass sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-2 border-b ps-[max(0.75rem,env(safe-area-inset-left))] pe-[max(0.75rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] lg:px-5">
           <button
             type="button"
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+            className="hidden size-10 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground md:grid lg:hidden"
             onClick={() => setOpen(true)}
             aria-label={t("common.toggleNavigation")}
             aria-expanded={open}
@@ -115,10 +125,17 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
           {topbar}
           {activity ? <div className="hidden shrink-0 items-center border-s ps-3 md:flex">{activity}</div> : null}
         </header>
-        <main id="main" className="min-w-0 flex-1 px-3 py-5 lg:px-6 lg:py-6">
+        <main
+          id="main"
+          className="min-w-0 flex-1 ps-[max(0.75rem,env(safe-area-inset-left))] pe-[max(0.75rem,env(safe-area-inset-right))] pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:px-6 lg:py-6"
+        >
           <PageTransition>{children}</PageTransition>
         </main>
       </div>
+
+      {/* Phones and tablets: bottom tab bar (+ "More" opens the drawer) and the sticky AI command entry. */}
+      <MobileTabBar onMore={() => setOpen(true)} moreOpen={open} />
+      <MobileCommandEntry />
     </div>
   );
 }

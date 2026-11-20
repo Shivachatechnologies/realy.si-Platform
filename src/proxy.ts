@@ -79,16 +79,20 @@ export function proxy(req: NextRequest) {
   }
   const blocked = surfaceRedirect(req, first, rest.filter(Boolean));
   if (blocked) return blocked;
+  // Signed-out visitors on the locale root see the public homepage (same URL); signed-in users get the Command Center.
+  const publicHome =
+    surface() !== "admin" && rest.filter(Boolean).length === 0 && !req.cookies.get(SESSION_COOKIE)?.value ? new URL(`/${first}/home`, req.url) : null;
+  const forward = (init: { request: { headers: Headers } }) => (publicHome ? NextResponse.rewrite(publicHome, init) : NextResponse.next(init));
   const requestHeaders = new Headers(req.headers);
   // Trusted page path for server-side platform controls (module gate in requireOrgContext); never client-supplied.
   requestHeaders.set("x-realy-path", pathname);
   // Prefetches render no scripts that need this request's nonce; they still get the trusted path.
-  if (req.headers.has("next-router-prefetch")) return NextResponse.next({ request: { headers: requestHeaders } });
+  if (req.headers.has("next-router-prefetch")) return forward({ request: { headers: requestHeaders } });
   const nonce = newNonce();
   const csp = buildCsp(nonce, { dev: process.env.NODE_ENV !== "production" });
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
-  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  const res = forward({ request: { headers: requestHeaders } });
   res.headers.set("content-security-policy", csp);
   return res;
 }

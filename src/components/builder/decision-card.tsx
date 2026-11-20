@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, PenLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { FormError } from "@/components/form-error";
-import { useT } from "@/i18n/client";
+import { useI18n, useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,26 @@ const SECTIONS = ["departments", "aiEmployees", "projects", "workflows", "pipeli
 
 /** A decision the run paused for: choose a name, approve the proposed structure / configuration, or ask for a revision. */
 export function DecisionCard({ base, decision, canManage }: { base: string; decision: { id: string; kind: string; options: unknown }; canManage: boolean }) {
+  // The journey's Company Blueprint and AI workforce are edited and approved in the onboarding journey editor.
+  if (decision.kind === "BLUEPRINT" || decision.kind === "WORKFORCE") return <JourneyDecision kind={decision.kind} />;
+  return <ChoiceDecision base={base} decision={decision} canManage={canManage} />;
+}
+
+function JourneyDecision({ kind }: { kind: "BLUEPRINT" | "WORKFORCE" }) {
+  const { t, locale } = useI18n();
+  return (
+    <Card variant="highlight">
+      <CardHeader title={t(`builder.decisions.kinds.${kind}.title`)} description={t(`builder.decisions.kinds.${kind}.description`)} actions={<Badge tone="warning">{t("builder.decisions.awaiting")}</Badge>} />
+      <CardBody>
+        <Button asChild>
+          <Link href={`/${locale}/onboarding?stage=${kind === "BLUEPRINT" ? "blueprint" : "workforce"}`}>{t(`builder.decisions.kinds.${kind}.approve`)}</Link>
+        </Button>
+      </CardBody>
+    </Card>
+  );
+}
+
+function ChoiceDecision({ base, decision, canManage }: { base: string; decision: { id: string; kind: string; options: unknown }; canManage: boolean }) {
   const t = useT();
   const router = useRouter();
   const o = (decision.options ?? {}) as Options;

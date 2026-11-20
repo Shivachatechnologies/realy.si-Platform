@@ -11,6 +11,9 @@ import { runLearningLoop } from "./learning";
 import { processScheduledPublications, syncAllSearchConsole } from "./seo-autopilot";
 import { syncAllAdAccounts } from "./ads";
 import { syncComments } from "./community";
+import { ingestResearchTask, RESEARCH_SUBJECT, sweepResearchReports } from "./research-reports";
+import { ingestPlanTask, PLAN_SUBJECT } from "./plans";
+import { ingestOptimizationReview, OPTIMIZATION_REVIEW_SUBJECT, runOptimizationLoop } from "./optimizations";
 
 interface DomainPayload {
   companyId: string;
@@ -50,6 +53,17 @@ async function nurture(event: OutboxEvent) {
   }
 }
 
+/** AI tasks attached to lifecycle records (research synthesis, plan drafts, optimization reviews) → store their results. */
+async function lifecycleTaskFinished(event: OutboxEvent) {
+  if (!event.companyId) return;
+  const data = ((event.payload ?? {}) as { data?: { subjectType?: string; subjectId?: string } }).data ?? {};
+  if (!data.subjectType || !data.subjectId) return;
+  const taskId = event.aggregateId;
+  if (data.subjectType === RESEARCH_SUBJECT) await ingestResearchTask(data.subjectId, event.companyId, taskId);
+  else if (data.subjectType === PLAN_SUBJECT) await ingestPlanTask(data.subjectId, event.companyId, taskId);
+  else if (data.subjectType === OPTIMIZATION_REVIEW_SUBJECT && event.type === "agent.task.completed") await ingestOptimizationReview(event.companyId, taskId);
+}
+
 /** Background work of the marketing module, run by the worker (src/worker/index.ts via src/worker/modules.ts). */
 export const MARKETING_JOBS: ModuleJobs = {
   periodic: [
@@ -65,6 +79,11 @@ export const MARKETING_JOBS: ModuleJobs = {
     { name: "marketing.ads_sync", everyMs: 60 * 60_000, run: syncAllAdAccounts },
     { name: "marketing.comments_sync", everyMs: 30 * 60_000, run: () => syncComments() },
     { name: "marketing.learning_loop", everyMs: 6 * 60 * 60_000, run: runLearningLoop },
+    { name: "marketing.research_sweep", everyMs: 2 * 60_000, run: sweepResearchReports },
+    { name: "marketing.optimization_loop", everyMs: 12 * 60 * 60_000, run: runOptimizationLoop },
   ],
-  onEvent: [{ name: "marketing.nurture_enrollment", types: ["form.submitted", "lead.created"], handle: nurture }],
+  onEvent: [
+    { name: "marketing.nurture_enrollment", types: ["form.submitted", "lead.created"], handle: nurture },
+    { name: "marketing.lifecycle_task_results", types: ["agent.task.completed", "agent.task.failed"], handle: lifecycleTaskFinished },
+  ],
 };

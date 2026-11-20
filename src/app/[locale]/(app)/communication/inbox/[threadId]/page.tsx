@@ -8,11 +8,13 @@ import { Notice } from "@/components/ui/notice";
 import { ActionButton, AiButtons } from "@/components/comms/client";
 import { ReplyForm, ThreadContactLink } from "@/components/comms/inbox";
 import { AiTasksCard } from "@/components/comms/bits";
+import { CustomerPanel } from "@/components/comms/customer-panel";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { isAppError } from "@/server/core/errors";
 import { listSubjectTasks } from "@/server/modules/agents/service";
+import { customerContext } from "@/server/modules/comms/customer-context";
 import { getThread, listTemplates } from "@/server/modules/comms/email";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,7 +32,7 @@ export default async function ThreadPage({ params }: PageProps<"/[locale]/commun
     if (isAppError(err) && err.code === "not_found") notFound();
     throw err;
   });
-  const [templates, tasks] = await Promise.all([listTemplates(viewer.ctx, org.id, company.id), perms.runAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "email_thread", th.id) : Promise.resolve([])]);
+  const [templates, customer, tasks] = await Promise.all([listTemplates(viewer.ctx, org.id, company.id), customerContext(viewer.ctx, org.id, company.id, th.contactId, { excludeThreadId: th.id }), perms.runAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "email_thread", th.id) : Promise.resolve([])]);
   const via = th.account && th.connection ? t("communication.inbox.viaMailbox", { address: th.account.address }) : t("communication.inbox.viaPlatform");
   return wrap(
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -67,20 +69,13 @@ export default async function ThreadPage({ params }: PageProps<"/[locale]/commun
           {th.canPost ? (
             <CardBody className="border-t">
               {th.account && !th.connection ? <Notice tone="warning" className="mb-2">{t("communication.inbox.threadMailboxDisconnected")}</Notice> : null}
-              <ReplyForm base={base} threadId={th.id} templates={templates} viaLabel={via} />
+              <ReplyForm base={base} threadId={th.id} templates={templates} viaLabel={via} aiDraft />
             </CardBody>
           ) : null}
         </Card>
       </div>
       <div className="grid content-start gap-4">
-        <Card>
-          <CardHeader title={t("communication.inbox.contact")} description={th.contact ? `${th.contact.firstName} ${th.contact.lastName ?? ""} ${th.contact.email ? `<${th.contact.email}>` : ""}` : t("communication.inbox.noContact")} />
-          {th.canPost ? (
-            <CardBody>
-              <ThreadContactLink base={base} threadId={th.id} current={th.contactId} />
-            </CardBody>
-          ) : null}
-        </Card>
+        <CustomerPanel ctx={customer} t={t} locale={locale} linker={th.canPost ? <ThreadContactLink base={base} threadId={th.id} current={th.contactId} /> : null} />
         {perms.runAgents ? (
           <AiTasksCard
             t={t}

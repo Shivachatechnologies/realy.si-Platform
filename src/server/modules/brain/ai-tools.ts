@@ -1,9 +1,54 @@
 import { z } from "zod";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
+import { searchKnowledge } from "./knowledge";
 import { createMemory, searchMemories } from "./memory";
 
 /** AI tools of the Company Brain module. Register BRAIN_TOOLS in src/server/modules/tools/modules.ts. */
 export const BRAIN_TOOLS: Record<string, ToolDefinition> = {
+  search_company_knowledge: def({
+    name: "search_company_knowledge",
+    version: 1,
+    description:
+      "Search everything the company knows in one go: Company Brain document passages, company memory, the company graph (people, teams, products, customers, vendors, partners with their relations) and core records (customers, deals, leads, projects). Each hit has a reference (K1, K2…) and an in-app path — cite the references you use. Only sources the requester may read are searched.",
+    input: z.object({ query: z.string().trim().min(2).max(200) }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { query: { type: "string", description: "Keywords or a short question, e.g. Acme renewal pricing" } },
+      required: ["query"],
+      additionalProperties: false,
+    },
+    permissions: ["companies.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ query }) => `Search company knowledge for "${query}"`,
+    async execute({ query }, { ctx, organizationId, companyId }) {
+      const r = await searchKnowledge(ctx, organizationId, companyId, query, 6);
+      const lines: string[] = [];
+      const records: string[] = [];
+      let n = 0;
+      for (const p of r.passages ?? []) {
+        lines.push(`[K${++n}] Document "${p.title}" passage ${p.passage} (${p.href}): ${p.snippet.map((s) => s.text).join("").replace(/\s+/g, " ").slice(0, 500)}`);
+        records.push(`brain_document:${p.documentId}`);
+      }
+      for (const m of r.memories ?? []) {
+        lines.push(`[K${++n}] Company memory "${m.title}": ${m.fact.replace(/\s+/g, " ").slice(0, 400)}${m.source ? ` (source: ${m.source})` : ""}`);
+        records.push(`company_memory:${m.id}`);
+      }
+      for (const e of r.entities ?? []) {
+        const rel = e.relations.slice(0, 8).map((x) => (x.direction === "out" ? `${x.relation} → ${x.name} (${x.kind.toLowerCase()})` : `${x.name} (${x.kind.toLowerCase()}) ${x.relation} →`)).join("; ");
+        lines.push(`[K${++n}] ${e.kind.toLowerCase()} "${e.name}" (${e.href})${e.description ? `: ${e.description.slice(0, 300)}` : ""}${rel ? ` — relations: ${rel}` : ""}`);
+        records.push(`graph_entity:${e.id}`);
+      }
+      for (const rec of r.records) {
+        lines.push(`[K${++n}] ${rec.type} "${rec.label}"${rec.status ? ` (${rec.status.toLowerCase()})` : ""} — ${rec.href}`);
+        records.push(`${rec.type}:${rec.id}`);
+      }
+      if (!lines.length) return { content: `Nothing in the company's knowledge matches "${query}".`, count: 0 };
+      return { content: lines.join("\n"), count: lines.length, records };
+    },
+  }),
+
   read_company_memory: def({
     name: "read_company_memory",
     version: 1,

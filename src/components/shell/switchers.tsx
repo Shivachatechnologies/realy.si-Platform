@@ -35,11 +35,11 @@ function ContextSelect({
   return (
     <span
       className={cn(
-        "group relative inline-flex h-8 min-w-0 max-w-32 sm:max-w-48 items-center gap-1.5 rounded-md border border-transparent px-2 text-xs transition-colors hover:border-border hover:bg-surface/80 focus-within:border-ring has-disabled:opacity-60",
+        "group relative inline-flex h-8 min-w-0 max-w-28 pointer-coarse:h-10 sm:max-w-48 items-center gap-1.5 rounded-md border border-transparent px-2 text-xs transition-colors hover:border-border hover:bg-surface/80 focus-within:border-ring has-disabled:opacity-60",
         className,
       )}
     >
-      <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      <Icon className="size-3.5 shrink-0 text-muted-foreground max-sm:hidden" aria-hidden />
       <label className="sr-only" htmlFor={id}>
         {label}
       </label>
@@ -134,7 +134,7 @@ export function SignOutButton({ to = "sign-in" }: { to?: "sign-in" | "admin/logi
       type="button"
       disabled={pending}
       onClick={signOut}
-      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60 pointer-coarse:p-3"
       aria-label={t("common.signOut")}
       title={t("common.signOut")}
     >
@@ -156,11 +156,11 @@ export function UserMenu({ name, email, to = "sign-in", settingsHref = "/setting
   const { t, locale } = useI18n();
   const { pending, signOut } = useSignOut(to);
   const item =
-    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground outline-none data-[highlighted]:bg-muted data-[disabled]:opacity-50";
+    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 pointer-coarse:min-h-11 text-sm text-foreground outline-none data-[highlighted]:bg-muted data-[disabled]:opacity-50";
   return (
     <M.Root>
       <M.Trigger
-        className="press grid size-8 shrink-0 place-items-center rounded-full bg-brand-gradient text-[11px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_oklch(1_0_0/0.25)] ring-2 ring-surface transition-shadow hover:shadow-glow data-[state=open]:shadow-glow"
+        className="press grid size-8 shrink-0 place-items-center rounded-full pointer-coarse:size-10 bg-brand-gradient text-[11px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_oklch(1_0_0/0.25)] ring-2 ring-surface transition-shadow hover:shadow-glow data-[state=open]:shadow-glow"
         aria-label={t("shell.userMenu")}
         title={name}
       >

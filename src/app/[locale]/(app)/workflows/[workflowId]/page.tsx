@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { FlowView } from "@/components/automation/flow-view";
+import { validateDefinition } from "@/server/modules/automation/definition";
 import { PageIntro } from "@/components/guide-kit/page-intro";
 import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
@@ -115,6 +117,17 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
           <WorkflowBuilder base={base} workflowId={wf.id} initial={wf.draft} opts={opts} canManage={canManage && !archived} publishedVersion={wf.currentVersion} />
         </div>
         <div className="grid content-start gap-4">
+          {(() => {
+            const v = validateDefinition(wf.draft);
+            return v.ok ? (
+              <Card>
+                <CardHeader title={t("workflows.flowCard.title")} description={t("workflows.flowCard.hint")} />
+                <CardBody>
+                  <FlowView definition={v.definition} />
+                </CardBody>
+              </Card>
+            ) : null;
+          })()}
           {canManage && !archived ? (
             <Card>
               <CardHeader title={t("workflows.ai.title")} description={t("workflows.ai.description")} />

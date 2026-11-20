@@ -44,6 +44,7 @@ export const ACTION_KINDS = [
   "ai_employee_task",
   "decompose_goal",
   "generate_ai_content",
+  "ai_decision",
   "notify",
   "request_approval",
   "send_email",
@@ -57,7 +58,7 @@ export const ACTION_GROUPS: Record<"crm" | "work" | "people" | "ai" | "messaging
   crm: ["create_lead", "create_contact", "create_account", "update_lead", "create_deal", "move_deal_stage", "assign_round_robin"],
   work: ["create_task", "create_project", "add_project_members", "update_record", "assign_user", "load_record"],
   people: ["start_onboarding", "create_meeting", "create_invoice"],
-  ai: ["assign_ai_employee", "ai_employee_task", "decompose_goal", "generate_ai_content"],
+  ai: ["assign_ai_employee", "ai_employee_task", "decompose_goal", "generate_ai_content", "ai_decision"],
   messaging: ["notify", "request_approval", "send_email", "send_slack", "send_teams"],
   developer: ["http_webhook", "custom_api"],
 };
@@ -185,6 +186,17 @@ export const actionSchema = z.discriminatedUnion("kind", [
     escalateToIds: z.array(uuid).max(20).default([]),
   }),
   z.object({ kind: z.literal("generate_ai_content"), profile: z.string().regex(/^[a-z0-9_]{2,60}$/), title: req(200), instructions: req(8000), wait: z.boolean().default(true) }),
+  /**
+   * AI decision step: an AI employee reads the context and picks exactly one of `options`; the run waits for it and later
+   * steps branch on {{steps.<id>.choice}}. If the AI cannot answer with a listed option the step fails (never guessed).
+   */
+  z.object({
+    kind: z.literal("ai_decision"),
+    profile: z.string().regex(/^[a-z0-9_]{2,60}$/),
+    question: req(2000),
+    context: tpl(6000).optional(),
+    options: z.array(z.string().trim().min(1).max(60)).min(2).max(8),
+  }),
   z.object({ kind: z.literal("send_email"), to: req(500), subject: req(300), body: req(10000) }),
   z.object({ kind: z.literal("send_slack"), channel: req(100), text: req(4000), ifNotConnected }),
   z.object({ kind: z.literal("send_teams"), teamId: req(200), channelId: req(200), text: req(4000), ifNotConnected }),
@@ -287,6 +299,10 @@ function actionIssues(id: string, a: Action): DefinitionIssue[] {
     if (a.pool === "permission" && !a.permission) at("permission", "Choose a permission");
     if (a.pool === "crm_rules" && a.entity !== "lead") at("pool", "CRM assignment rules only apply to leads");
   }
+  if (a.kind === "ai_decision") {
+    const seen = new Set(a.options.map((o) => o.toLowerCase()));
+    if (seen.size !== a.options.length) at("options", "Each choice must be different");
+  }
   if (a.kind === "request_approval") {
     if (a.approverMode === "permission" && !a.permission) at("permission", "Choose the permission whose holders approve");
     if (a.approverMode === "record_owner" && !a.ownerField?.trim()) at("ownerField", "Set the variable holding the record owner");
@@ -378,7 +394,8 @@ export function variableSuggestions(def: Definition): string[] {
     if (s.type === "action") {
       const k = s.action.kind;
       if (!["notify", "send_email", "send_slack", "send_teams", "http_webhook", "custom_api", "request_approval"].includes(k)) out.push(`steps.${s.id}.id`);
-      if (["generate_ai_content", "assign_ai_employee", "ai_employee_task", "decompose_goal"].includes(k)) out.push(`steps.${s.id}.output`);
+      if (["generate_ai_content", "assign_ai_employee", "ai_employee_task", "decompose_goal", "ai_decision"].includes(k)) out.push(`steps.${s.id}.output`);
+      if (k === "ai_decision") out.push(`steps.${s.id}.choice`, `steps.${s.id}.reason`);
       if (k === "load_record") out.push(`steps.${s.id}.name`, `steps.${s.id}.ownerId`, `steps.${s.id}.email`, `steps.${s.id}.accountId`);
       if (k === "assign_round_robin") out.push(`steps.${s.id}.userId`);
       if (k === "create_project" || k === "create_account" || k === "create_deal") out.push(`steps.${s.id}.name`);

@@ -1,4 +1,7 @@
-# Local infrastructure for development. Production uses managed PostgreSQL + Redis (docs/architecture.md).
+# Local infrastructure for development. Production uses managed PostgreSQL + Redis (docs/deployment.md).
+#   docker compose up -d                      → postgres + redis only (run `pnpm dev` and `pnpm worker` on the host)
+#   docker compose --profile app up --build   → also the web app and the worker service from the production image
+# The `app` profile needs REALY_ENCRYPTION_KEY in your shell or .env (32 random bytes, base64).
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -14,10 +17,46 @@ services:
       retries: 10
   redis:
     image: redis:7-alpine
+    # BullMQ needs keys kept (never evicted) and durable queues: AOF on, no eviction.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     ports: ["6379:6379"]
+    volumes: [redisdata:/data]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+
+  migrate:
+    profiles: [app]
+    build: { context: ., target: runtime }
+    command: ["node_modules/.bin/prisma", "migrate", "deploy"]
+    environment: &app-env
+      DATABASE_URL: postgresql://realy:realy@postgres:5432/realy
+      REDIS_URL: redis://redis:6379
+      REALY_ENCRYPTION_KEY: ${REALY_ENCRYPTION_KEY:?set REALY_ENCRYPTION_KEY}
+      APP_URL: http://localhost:3000
+    depends_on:
+      postgres: { condition: service_healthy }
+  web:
+    profiles: [app]
+    build: { context: ., target: runtime }
+    environment: *app-env
+    ports: ["3000:3000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+  worker:
+    profiles: [app]
+    build: { context: ., target: worker }
+    environment:
+      <<: *app-env
+      REALY_SERVICE: worker
+      WORKER_SHUTDOWN_TIMEOUT_MS: "25000"
+    stop_grace_period: 30s
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
 volumes:
   pgdata:
+  redisdata:

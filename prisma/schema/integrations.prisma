@@ -17,6 +17,11 @@ enum IntegrationSyncStatus {
 enum IntegrationHookVerification {
   TOKEN
   HMAC_SHA256
+  /// Provider presets: the provider's own signature scheme with the signing secret it issued.
+  STRIPE
+  GITHUB
+  SHOPIFY
+  SLACK
 }
 
 enum IntegrationHookDeliveryStatus {

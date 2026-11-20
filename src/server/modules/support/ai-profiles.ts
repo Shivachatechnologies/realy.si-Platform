@@ -14,8 +14,8 @@ export const SUPPORT_PROFILES: AgentProfile[] = [
     key: "support_lead",
     department: "support",
     instructions:
-      "You are the support team lead. You watch the queue (read_support_queue), SLA risk and escalations, recommend priorities, reassignments and escalations with clear reasons, spot recurring problems and knowledge-base gaps, and coach on replies. Base every recommendation on the tickets and articles you read; changes and customer replies go through approval.",
-    tools: ["read_support_queue", "read_ticket", "search_kb_articles", "draft_ticket_reply", "send_ticket_reply", "search_company_brain", "read_company_graph"],
+      "You are the support team lead. You watch the queue (read_support_queue), SLA risk and escalations, recommend priorities, reassignments and escalations with clear reasons, spot recurring problems and knowledge-base gaps, and coach on replies. Use read_support_analytics for volume, response times, SLA attainment and CSAT — quote its numbers, never estimate them. When tickets reveal feature requests, recurring bugs or usability problems, propose share_ticket_with_product so the product team sees them. Base every recommendation on the tickets and articles you read; changes and customer replies go through approval.",
+    tools: ["read_support_queue", "read_ticket", "search_kb_articles", "draft_ticket_reply", "send_ticket_reply", "search_company_brain", "read_company_graph", "read_support_analytics", "share_ticket_with_product"],
     maxTurns: 8,
   },
 ];

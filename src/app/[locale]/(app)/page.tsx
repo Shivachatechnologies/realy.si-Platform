@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowUpRight, CalendarClock, CheckCircle2, Circle, ListTodo, PhoneCall, Sparkles } from "lucide-react";
 import { Badge, StatusDot } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import { CommandEntry } from "@/components/command/command-entry";
 import { CommandCenterNextActions } from "@/components/command/next-actions-slot";
 import { KpiRibbon } from "@/components/command/kpi-ribbon";
 import { aiWorkload, companyUniverse, latestRecommendations, liveActivity } from "@/components/command/universe-data";
+import { OperatingStrip } from "@/components/command/operating-strip";
 import { CompanyUniverse } from "@/components/graphics/company-universe";
 import { GrowthChart } from "@/components/graphics/growth-chart";
 import { WorldIllustration } from "@/components/graphics/illustrations";
@@ -33,6 +35,9 @@ import { commandCounters, goalsProgress, myToday } from "@/server/modules/object
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
+import { journeyEntry } from "@/server/modules/builder/journey";
+import { businessHealth } from "@/server/modules/bi/health";
+import { liveCommandRuns } from "@/server/modules/guide/command";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("command.title") };
@@ -65,6 +70,11 @@ export default async function CommandCenterPage() {
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
 
+  // New founders (no company yet, or an unfinished onboarding journey) go to the guided journey, not an empty dashboard.
+  const companyCount = company ? 1 : await db().company.count({ where: { organizationId: org.id, deletedAt: null } });
+  const journey = await journeyEntry(viewer.user.id, org.id, companyCount);
+  if (journey) redirect(`/${locale}${journey}`);
+
   // Real counts from the company's records, each shown only to viewers allowed to read that area.
   const chain = company ? await companyChain(db(), org.id, company.id) : null;
   const tz = viewer.user.timezone;
@@ -90,6 +100,20 @@ export default async function CommandCenterPage() {
     kpis?.growth ? metricSeries(kpis.growth, kpis.scope, resolveRange("90d"), 13).catch(() => null) : Promise.resolve(null),
   ]);
   const base = company ? `/api/v1/organizations/${org.id}/companies/${company.id}` : null;
+  // The operating layer: AI commands in flight, proposals waiting for a decision, explainable business health.
+  const now = new Date();
+  const [runs, canReadApprovals, canDecide] = company && chain
+    ? await Promise.all([liveCommandRuns(viewer.ctx, org.id, company.id, 4).catch(() => null), can(viewer.ctx, "approvals.read", chain), can(viewer.ctx, "approvals.decide", chain)])
+    : [null, false, false];
+  const [pendingApprovals, bizHealth] = company && chain
+    ? await Promise.all([
+        canReadApprovals
+          ? db().approval.findMany({ where: { organizationId: org.id, companyId: company.id, status: "PENDING", expiresAt: { gt: now } }, orderBy: { expiresAt: "asc" }, take: 4, select: { id: true, summary: true, risk: true, expiresAt: true, taskId: true } })
+          : Promise.resolve(null),
+        kpis ? businessHealth(viewer.ctx, org.id, company.id).catch(() => null) : Promise.resolve(null),
+      ])
+    : [null, null];
+  const runBlocked = !aiConfigured() ? t("guide.ai.notConfigured") : !canRunAgents ? t("guide.ai.forbidden") : null;
   const canPlan = canManageObjectives && canRunAgents && aiConfigured();
   const planNote = canManageObjectives && !canPlan ? (aiConfigured() ? t("objectives.plan.noRunPermission") : t("objectives.plan.aiNotConfigured")) : null;
   const pct = (v: number | null) => (v === null ? "—" : formatNumber(v, locale, { style: "percent", maximumFractionDigits: 0 }));
@@ -155,6 +179,10 @@ export default async function CommandCenterPage() {
           <Section index={0} eyebrow={t("dna.command.nextEyebrow")} title={t("dna.command.nextTitle")}>
             <CommandCenterNextActions organizationId={org.id} companyId={company.id} locale={locale} />
           </Section>
+        ) : null}
+
+        {company && base ? (
+          <OperatingStrip t={t} locale={locale} base={base} runs={runs} approvals={pendingApprovals} canDecide={canDecide} health={bizHealth} runBlocked={runBlocked} />
         ) : null}
 
         {notifications.length ? (

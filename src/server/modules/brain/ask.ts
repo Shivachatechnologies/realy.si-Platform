@@ -34,8 +34,8 @@ export async function askBrain(ctx: RequestContext, organizationId: string, comp
     input.context ? `Context from the page the question was asked on:\n${input.context}` : null,
     [
       "Answer the question from the company's own knowledge only.",
-      "Use search_company_brain (several searches with different keywords if needed) and read_company_memory when it is available; do not use other tools.",
-      "Cite every statement taken from a document passage with its reference, e.g. [S1].",
+      "Use search_company_brain (several searches with different keywords if needed), read_company_memory and search_company_knowledge (records and relationships: customers, deals, projects, people, teams, products) when they are available; do not use other tools.",
+      "Cite every statement with the reference of its source, e.g. [S1] for a document passage or [K2] for a record.",
       "Start with a direct answer in one to three sentences, then the supporting details.",
       "If the documents and company memory do not answer the question, say so plainly and do not guess.",
     ].join(" "),

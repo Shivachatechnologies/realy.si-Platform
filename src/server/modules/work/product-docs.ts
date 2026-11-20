@@ -29,6 +29,11 @@ export const DOC_NAMES: Record<ProductDocKind, string> = {
   DESIGN_BRIEF: "Design brief",
   QA_PLAN: "QA and test plan",
   RELEASE_PLAN: "Release and launch plan",
+  IDEA_BRIEF: "Idea brief",
+  VALIDATION_REPORT: "Validation report",
+  LAUNCH_BRIEF: "Launch brief",
+  FEEDBACK_SYNTHESIS: "Customer feedback synthesis",
+  IMPROVEMENT_PLAN: "Improvement plan",
 };
 
 /** Which AI role drafts which document. */
@@ -42,6 +47,11 @@ export const DOC_PROFILE: Record<ProductDocKind, string> = {
   DESIGN_BRIEF: "ui_designer",
   QA_PLAN: "qa_agent",
   RELEASE_PLAN: "release_manager",
+  IDEA_BRIEF: "product_manager",
+  VALIDATION_REPORT: "product_researcher",
+  LAUNCH_BRIEF: "campaign_strategist",
+  FEEDBACK_SYNTHESIS: "product_researcher",
+  IMPROVEMENT_PLAN: "product_manager",
 };
 
 /** Expected sections per document (given to the AI as the outline). */
@@ -55,7 +65,41 @@ export const DOC_OUTLINE: Record<ProductDocKind, string> = {
   DESIGN_BRIEF: "Design goals; brand and visual direction; design principles; screen inventory with layout notes; component list; states (empty, loading, error); responsive and RTL considerations; accessibility (contrast, focus); deliverables and review criteria.",
   QA_PLAN: "Scope and quality goals; test strategy (unit, integration, end-to-end, exploratory); test cases per feature/acceptance criterion; non-functional testing; environments and data; entry/exit criteria; defect triage; release blockers.",
   RELEASE_PLAN: "Release scope and version; milestones and dates; readiness checklist (QA, docs, support, marketing); rollout strategy and rollback; launch communications (customers, sales, support); changelog draft; post-launch metrics and feedback loop.",
+  IDEA_BRIEF: "Problem statement; who has the problem (target users); current alternatives; proposed solution in one paragraph; value for users and for the business; riskiest assumptions to test first; what success looks like; open questions.",
+  VALIDATION_REPORT: "Hypotheses tested (one row each: hypothesis, method, sample, result); evidence summary quoting the recorded validation entries; what was validated and what was invalidated; confidence level and why; go / pivot / stop recommendation; next experiments.",
+  LAUNCH_BRIEF: "Launch goal and success metrics; audience segments; positioning and key message; value proposition per persona; offer and pricing notes; channels and sequencing (pre-launch, launch day, post-launch); assets needed; owners and dates; support and sales readiness; risks.",
+  FEEDBACK_SYNTHESIS: "Volume and sources of feedback in the period; sentiment split; top themes ranked by frequency and impact, each with representative quotes from the feedback records; feature requests mapped to existing features; pain points by persona; signals from support tickets; recommended actions.",
+  IMPROVEMENT_PLAN: "What the feedback and analytics say (cite numbers from the data); prioritized improvements (problem, proposed change, expected impact, effort, RICE where possible); quick wins vs. larger bets; KPIs to watch and targets; experiments; what goes into the next release and backlog.",
 };
+
+/** Extra data a stage deliverable needs beyond the product context (feedback, releases, analytics). */
+async function deliverableData(organizationId: string, companyId: string, productId: string, kind: ProductDocKind): Promise<string | null> {
+  if (kind === "FEEDBACK_SYNTHESIS" || kind === "IMPROVEMENT_PLAN") {
+    const since = new Date(Date.now() - 180 * 86_400_000);
+    const rows = await db().productFeedback.findMany({
+      where: { organizationId, companyId, productId, archivedAt: null, createdAt: { gte: since } },
+      orderBy: { createdAt: "desc" },
+      take: 60,
+      select: { source: true, sentiment: true, body: true, createdAt: true, supportTicketId: true, feature: { select: { title: true } } },
+    });
+    const lines = rows.map((f) => `- [${f.sentiment ?? "UNRATED"} · ${f.source}${f.supportTicketId ? " · from support ticket" : ""} · ${f.createdAt.toISOString().slice(0, 10)}${f.feature ? ` · feature "${f.feature.title}"` : ""}] ${clip(f.body, 260)}`);
+    const extra: string[] = [rows.length ? `Customer feedback (last 180 days, newest first, ${rows.length} items):\n${lines.join("\n")}` : "Customer feedback: none recorded in the last 180 days — say so plainly and recommend how to collect it."];
+    if (kind === "IMPROVEMENT_PLAN") {
+      const synthesis = await db().productDoc.findUnique({ where: { productId_kind: { productId, kind: "FEEDBACK_SYNTHESIS" } }, include: { versions: { orderBy: { version: "desc" }, take: 1 } } });
+      if (synthesis?.companyId === companyId && synthesis.versions[0]) extra.push(`Feedback synthesis (excerpt):\n${clip(synthesis.versions[0].content, 1500)}`);
+      const released = await db().productRelease.findMany({ where: { productId, companyId }, orderBy: { createdAt: "desc" }, take: 5, select: { version: true, status: true, releaseDate: true } });
+      if (released.length) extra.push(`Recent releases: ${released.map((r) => `${r.version} (${r.status}${r.releaseDate ? `, ${r.releaseDate.toISOString().slice(0, 10)}` : ""})`).join(", ")}`);
+    }
+    return extra.join("\n\n");
+  }
+  if (kind === "LAUNCH_BRIEF") {
+    const releases = await db().productRelease.findMany({ where: { productId, companyId }, orderBy: { createdAt: "desc" }, take: 3, select: { version: true, name: true, status: true, releaseDate: true, notes: true } });
+    return releases.length
+      ? `Releases:\n${releases.map((r) => `- ${r.version}${r.name ? ` "${r.name}"` : ""} [${r.status}]${r.releaseDate ? ` on ${r.releaseDate.toISOString().slice(0, 10)}` : ""}${r.notes ? `: ${clip(r.notes, 400)}` : ""}`).join("\n")}`
+      : "No release is planned yet — mark launch dates as open questions.";
+  }
+  return null;
+}
 
 export const docKind = z.enum(DOC_KINDS);
 export const docVersionInput = z.object({ content: z.string().trim().min(1).max(200_000), changeNote: optText(300) });
@@ -216,13 +260,15 @@ export async function restoreDocVersion(ctx: RequestContext, organizationId: str
 
 /** Instructions for an AI draft of one document, with the product context and earlier documents. */
 export async function docInstructions(organizationId: string, companyId: string, productId: string, kind: ProductDocKind, extra: { guidance?: string | null; previous?: string } = {}) {
-  const context = await productContextText(organizationId, companyId, productId, 3500);
+  const data = await deliverableData(organizationId, companyId, productId, kind);
+  const context = await productContextText(organizationId, companyId, productId, data ? 2200 : 3500);
   const current = await db().productDoc.findUnique({ where: { productId_kind: { productId, kind } }, include: { versions: { orderBy: { version: "desc" }, take: 1 } } });
   const parts = [
     `Write the ${DOC_NAMES[kind]} for this product, in Markdown, ready to save as the document. Output only the document (headings, lists, tables) — no preamble.`,
     `Sections: ${DOC_OUTLINE[kind]}`,
     "Ground every statement in the product data below, the company's documents (search_company_brain) and its graph. Mark assumptions clearly as assumptions and list open questions instead of inventing facts, numbers, customers or competitors.",
     `Product context:\n${context}`,
+    data ? clip(data, 2600) : null,
     extra.previous ? `Outputs of earlier steps (the full documents are in Company Brain, tag "product"):\n${clip(extra.previous, 2500)}` : null,
     current?.versions[0] ? `Current version ${current.versions[0].version} to improve on (excerpt):\n${clip(current.versions[0].content, 1200)}` : null,
     extra.guidance ? `Guidance from the requester: ${extra.guidance}` : null,

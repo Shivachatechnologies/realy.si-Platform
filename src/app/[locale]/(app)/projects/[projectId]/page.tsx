@@ -28,6 +28,8 @@ import { financeProjectCosts } from "@/server/modules/finance/project-costs";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { listPeople, userNames } from "@/server/modules/work/shared";
+import { listDeliverables } from "@/server/modules/work/deliverables";
+import { DeliverableForm, DeliverableList } from "@/components/projects/deliverables";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.projects.title") };
@@ -47,11 +49,12 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
   });
   // Finance's real postings for this project (bills, expenses, claims) — only for viewers who may see finance.
   const canSeeFinance = await can(viewer.ctx, "finance.read", await companyChain(db(), org.id, company.id));
-  const [people, aiTasks, timeEntries, financeCosts] = await Promise.all([
+  const [people, aiTasks, timeEntries, financeCosts, deliverables] = await Promise.all([
     listPeople(viewer.ctx, org.id, company.id),
     canRunAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "project", p.id) : [],
     db().workTimeEntry.findMany({ where: { projectId: p.id, companyId: company.id }, orderBy: { workDate: "desc" }, take: 20, include: { task: { select: { id: true, title: true } } } }),
     canSeeFinance ? financeProjectCosts(org.id, company.id, p.id).catch(() => null) : null,
+    listDeliverables(viewer.ctx, org.id, company.id, p.id),
   ]);
   const [names, delays, heat, helpTask] = await Promise.all([
     userNames(db(), timeEntries.map((e) => e.userId)),
@@ -202,6 +205,31 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
                 </div>
               ) : null}
               {manage ? <MilestoneForm base={base} projectId={p.id} /> : null}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title={t("projectsDeliverables.heading")}
+              description={t("projectsDeliverables.hint", { accepted: deliverables.filter((d) => d.status === "ACCEPTED").length, total: deliverables.length })}
+            />
+            <CardBody className="grid gap-3">
+              <DeliverableList
+                base={base}
+                manage={manage}
+                rows={deliverables.map((d) => ({
+                  id: d.id,
+                  title: d.title,
+                  status: d.status,
+                  ownerName: d.ownerName,
+                  milestoneTitle: p.projectMilestones.find((m) => m.id === d.milestoneId)?.title ?? null,
+                  due: d.dueDate ? day(d.dueDate) : null,
+                  overdue: !!d.dueDate && d.dueDate < new Date() && d.status !== "ACCEPTED",
+                  url: d.url,
+                  reviewNote: d.reviewNote,
+                }))}
+              />
+              {manage ? <DeliverableForm base={base} projectId={p.id} people={people} milestones={p.projectMilestones.map((m) => ({ id: m.id, title: m.title }))} /> : null}
             </CardBody>
           </Card>
 

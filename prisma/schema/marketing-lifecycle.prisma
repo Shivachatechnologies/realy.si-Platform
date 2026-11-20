@@ -1,0 +1,157 @@
+// Autonomous Marketing Department — lifecycle layer (extends marketing.prisma + marketing-os.prisma):
+// Intelligence (saved research reports) → Strategy (marketing plans with objectives, channel mix and budget) →
+// … → Optimize (optimization proposals that are applied only after a person approves them).
+
+enum MarketingResearchKind {
+  MARKET
+  COMPETITOR
+  AUDIENCE
+  TRENDS
+  KEYWORDS
+  BRAND
+}
+
+enum MarketingResearchStatus {
+  /// Queries are running against the connected research provider.
+  RESEARCHING
+  /// Sources were collected; an AI task is turning them into findings.
+  SYNTHESIZING
+  /// Findings are available.
+  READY
+  /// Sources were collected but no AI synthesis ran (AI not configured or not allowed).
+  SOURCES_ONLY
+  /// No research provider is connected; nothing was researched.
+  CREDENTIAL_REQUIRED
+  FAILED
+}
+
+/// A saved research report (market, competitor, audience, trends, keywords, brand) built from real web sources.
+model MarketingResearchReport {
+  id             String                  @id @default(uuid(7)) @db.Uuid
+  organizationId String                  @map("organization_id") @db.Uuid
+  companyId      String                  @map("company_id") @db.Uuid
+  kind           MarketingResearchKind
+  title          String
+  /// What was researched: market/industry, competitor name, audience, topic, seed keyword or brand name.
+  subject        String
+  /// Extra inputs: { region, competitors: string[], notes }.
+  inputs         Json                    @default("{}")
+  status         MarketingResearchStatus @default(RESEARCHING)
+  /// Integrations research provider that answered (tavily, exa, serpapi).
+  provider       String?
+  queries        String[]                @default([])
+  /// [{ title, url, snippet, publishedAt, query }] exactly as returned by the provider.
+  sources        Json                    @default("[]")
+  summary        String?
+  /// AI synthesis grounded in the sources: { insights, opportunities, risks, competitors, personas, trends, keywords }.
+  findings       Json?
+  taskId         String?                 @map("task_id") @db.Uuid
+  error          String?
+  createdById    String                  @map("created_by_id") @db.Uuid
+  archivedAt     DateTime?               @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([companyId, kind, createdAt])
+  @@index([status, updatedAt])
+  @@map("marketing_research_reports")
+}
+
+enum MarketingPlanStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  ACTIVE
+  ARCHIVED
+}
+
+/// A marketing plan: positioning, objectives, channel selection with budget allocation, for a period.
+model MarketingPlan {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  name           String
+  status         MarketingPlanStatus @default(DRAFT)
+  periodStart    DateTime            @map("period_start") @db.Date
+  periodEnd      DateTime            @map("period_end") @db.Date
+  positioning    String?
+  audience       String?
+  /// Key messages, one per line.
+  messaging      String?
+  /// [{ metric (marketing goal metric), target, label }]
+  objectives     Json                @default("[]")
+  /// [{ channel, role, budgetMinor (string), cadence, rationale }]
+  channels       Json                @default("[]")
+  budgetMinor    BigInt              @default(0) @map("budget_minor")
+  currency       String              @db.Char(3)
+  /// Research reports the plan is based on.
+  researchIds    String[]            @default([]) @map("research_ids")
+  /// Latest AI drafting task and its parsed proposal (applied to the plan only when a person clicks "Use this draft").
+  draftTaskId    String?             @map("draft_task_id") @db.Uuid
+  aiDraft        Json?               @map("ai_draft")
+  draftError     String?             @map("draft_error")
+  /// Marketing goals created from the objectives on approval, and the campaign created from the plan.
+  goalIds        String[]            @default([]) @map("goal_ids")
+  campaignId     String?             @map("campaign_id") @db.Uuid
+  reviewNote     String?             @map("review_note")
+  submittedAt    DateTime?           @map("submitted_at") @db.Timestamptz(3)
+  approvedById   String?             @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?           @map("approved_at") @db.Timestamptz(3)
+  createdById    String              @map("created_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([companyId, status])
+  @@map("marketing_plans")
+}
+
+enum MarketingOptimizationStatus {
+  PROPOSED
+  APPLIED
+  REJECTED
+  FAILED
+  EXPIRED
+}
+
+/// An optimization proposal computed from real performance (rules) or suggested by the AI analyst. It changes nothing
+/// until a person approves it; then `action` is applied through the owning service and the outcome stored in `result`.
+model MarketingOptimization {
+  id             String                      @id @default(uuid(7)) @db.Uuid
+  organizationId String                      @map("organization_id") @db.Uuid
+  companyId      String                      @map("company_id") @db.Uuid
+  /// retry_failed_post | pause_ad | ad_budget | autopilot_windows | shift_cadence
+  kind           String
+  title          String
+  rationale      String
+  /// The exact change applied on approval (validated per kind before applying).
+  action         Json
+  /// The real numbers behind the proposal.
+  evidence       Json                        @default("{}")
+  /// rules | ai
+  source         String                      @default("rules")
+  status         MarketingOptimizationStatus @default(PROPOSED)
+  entityType     String?                     @map("entity_type")
+  entityId       String?                     @map("entity_id") @db.Uuid
+  dedupeKey      String?                     @map("dedupe_key")
+  taskId         String?                     @map("task_id") @db.Uuid
+  result         Json?
+  error          String?
+  decidedById    String?                     @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?                   @map("decided_at") @db.Timestamptz(3)
+  appliedAt      DateTime?                   @map("applied_at") @db.Timestamptz(3)
+  createdAt      DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([companyId, dedupeKey])
+  @@index([companyId, status, createdAt])
+  @@map("marketing_optimizations")
+}

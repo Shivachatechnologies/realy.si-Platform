@@ -23,6 +23,19 @@ const TONES: Record<string, "neutral" | "accent" | "success" | "warning" | "dang
   UNSUBSCRIBED: "warning",
   QUEUED: "neutral",
   RUNNING: "accent",
+  RESEARCHING: "accent",
+  SYNTHESIZING: "accent",
+  READY: "success",
+  SOURCES_ONLY: "warning",
+  CREDENTIAL_REQUIRED: "warning",
+  ARCHIVED: "neutral",
+  PROPOSED: "warning",
+  APPLIED: "success",
+  REJECTED: "neutral",
+  EXPIRED: "neutral",
+  IDEA: "neutral",
+  RESEARCH: "neutral",
+  AI_REVIEW: "accent",
 };
 
 export function StatusBadge({ status, label }: { status: string; label: string }) {

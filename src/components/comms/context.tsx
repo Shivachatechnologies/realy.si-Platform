@@ -20,7 +20,7 @@ const PERMS = {
 } as const;
 
 export const COMMS_TABS = ["feed", "announcements", "channels", "messages", "meetings", "calendar", "inbox", "settings"] as const;
-export const SUPPORT_TABS = ["inbox", "customers", "knowledge", "dashboard", "settings"] as const;
+export const SUPPORT_TABS = ["inbox", "customers", "knowledge", "dashboard", "setup", "settings"] as const;
 
 /**
  * Shared loader for Communication / Support pages: locale, translator, viewer, company, permissions and the tab bar.

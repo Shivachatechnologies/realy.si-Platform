@@ -65,7 +65,61 @@ export const configurationSchema = z.object({
   pipelines: manifestSchema.shape.pipelines.unwrap().max(3).default([]),
 });
 
-export type Effect = "products" | "strategy" | "name" | "goals" | "structure" | "install" | "finance" | "configuration";
+/**
+ * The onboarding journey's Company Blueprint: everything the founder edits and approves in one place before any record
+ * is created. AI output must propose at least one department; the founder's edited version may be anything (manual).
+ */
+const blueprintShape = (min: number) =>
+  z.object({
+    summary: z.string().trim().max(2000).optional(),
+    departments: manifestSchema.shape.departments.unwrap().min(min).max(15),
+    products: z.array(z.object({ name, description: desc, pricing: z.string().trim().max(300).optional() })).max(20).default([]),
+    goals: goalsSchema.shape.goals.element.array().max(5).default([]),
+    objectives: manifestSchema.shape.objectives.unwrap().max(10).default([]),
+    projects: z
+      .array(
+        z.object({
+          name,
+          tasks: z
+            .array(z.object({ title: z.string().trim().min(1).max(200), description: desc, priority: z.enum(PRIORITIES).default("MEDIUM"), dueInDays: days.optional() }))
+            .max(30)
+            .default([]),
+        }),
+      )
+      .max(10)
+      .default([]),
+    workflows: manifestSchema.shape.workflows.unwrap().max(10).default([]),
+  });
+export const blueprintSchema = blueprintShape(1);
+/** What the founder approves (possibly built by hand when AI is not available). */
+export const blueprintInput = blueprintShape(0);
+export type Blueprint = z.output<typeof blueprintInput>;
+
+export const ORG_LEVELS = ["EXECUTIVE", "MANAGER", "SPECIALIST"] as const;
+const workforceShape = (min: number) =>
+  z.object({
+    team: z
+      .array(
+        z.object({
+          /** Stable key inside the plan (reportsTo points at it). */
+          key: z.string().trim().regex(/^[a-z0-9_-]{1,40}$/),
+          profile: z.string().trim().regex(/^[a-z_]{2,60}$/),
+          name: z.string().trim().min(1).max(80),
+          title: z.string().trim().max(120).optional(),
+          level: z.enum(ORG_LEVELS).default("SPECIALIST"),
+          reportsTo: z.string().trim().max(40).optional().nullable(),
+          responsibilities: z.array(z.string().trim().min(1).max(300)).max(10).default([]),
+          goals: z.array(z.string().trim().min(1).max(300)).max(10).default([]),
+        }),
+      )
+      .min(min)
+      .max(15),
+  });
+export const workforcePlanSchema = workforceShape(1);
+export const workforceInput = workforceShape(0);
+export type WorkforcePlan = z.output<typeof workforceInput>;
+
+export type Effect = "products" | "strategy" | "name" | "goals" | "structure" | "install" | "finance" | "configuration" | "blueprint" | "workforce";
 
 export interface StepDef {
   key: string;
@@ -122,6 +176,76 @@ export const EXISTING_STEPS: StepDef[] = [
   { key: "recommended_configuration", kind: "ai", profile: "ai_ceo", department: "executive", prompt: "Recommend how to run this business on the platform: departments and teams, AI employees to hire, the first projects with tasks, automated workflows and sales pipelines. Explain each recommendation briefly.", schema: configurationSchema, shape: `{"departments":[...],"aiEmployees":[...],"projects":[...],"workflows":[...],"pipelines":[...]} — each as in: ${STRUCTURE_SHAPE} ${AI_EMPLOYEES_SHAPE} ${PROJECTS_SHAPE} ${WORKFLOWS_SHAPE} ${PIPELINES_SHAPE}`, effect: "configuration" },
 ];
 
-export const stepsFor = (mode: RunMode): StepDef[] => (mode === "NEW_IDEA" ? NEW_IDEA_STEPS : EXISTING_STEPS);
-export const stepDef = (mode: RunMode, key: string): StepDef | undefined => stepsFor(mode).find((s) => s.key === key);
-export const ALL_STEP_KEYS = [...new Set([...NEW_IDEA_STEPS, ...EXISTING_STEPS].map((s) => s.key))];
+// ───────────── Onboarding journey (6 stages) ─────────────
+// Intelligence (live web research through the integrations research service + AI research tasks) → one Company
+// Blueprint the founder edits and approves → the AI workforce plan the founder approves → after launch the builder keeps
+// working in the background (positioning, go-to-market, launch plan, financial plan).
+
+const BLUEPRINT_SHAPE = `{"summary":"one paragraph","departments":[{"name":"Marketing","description":"...","teams":[{"name":"Content","description":"..."}]}],"products":[{"name":"...","description":"...","pricing":"e.g. 29 USD / month"}],"goals":[{"title":"...","description":"...","horizon":"QUARTER|YEAR"}],"objectives":[{"title":"...","description":"...","targetInDays":90,"milestones":[{"title":"...","dueInDays":30}]}],"projects":[{"name":"...","tasks":[{"title":"...","description":"...","priority":"LOW|MEDIUM|HIGH|URGENT","dueInDays":14}]}],"workflows":[{"key":"<template key or a new snake_case key>","name":"...","trigger":"<event type>","description":"..."}]}`;
+const WORKFORCE_SHAPE = `{"team":[{"key":"ceo","profile":"ai_ceo","name":"<a person-like name>","title":"Chief Executive","level":"EXECUTIVE","reportsTo":null,"responsibilities":["..."],"goals":["<one of the blueprint goals or objectives>"]},{"key":"marketing_lead","profile":"cmo","name":"...","title":"...","level":"MANAGER","reportsTo":"ceo","responsibilities":["..."],"goals":["..."]}]}`;
+
+const WEB_RESEARCH: StepDef = { key: "web_research", kind: "system", department: "research", prompt: "" };
+const BLUEPRINT: StepDef = {
+  key: "company_blueprint",
+  kind: "ai",
+  profile: "ai_ceo",
+  department: "executive",
+  prompt:
+    "Design the Company Blueprint from the research deliverables: a lean set of departments with teams (only what the next 12 months need), the products or services to offer at launch with pricing, up to 5 company goals, measurable objectives with milestones, the first 3 to 6 projects with concrete starter tasks, and the operational workflows to automate. Keep every item specific to this business.",
+  schema: blueprintSchema,
+  shape: BLUEPRINT_SHAPE,
+  effect: "blueprint",
+};
+const WORKFORCE: StepDef = {
+  key: "workforce_plan",
+  kind: "ai",
+  profile: "ai_ceo",
+  department: "executive",
+  prompt:
+    "Propose the AI workforce for the approved Company Blueprint (3 to 10 AI employees): exactly one AI CEO (level EXECUTIVE, reportsTo null), department managers (level MANAGER, reporting to the CEO) and specialists (level SPECIALIST, reporting to a manager). For each, the responsibilities and the blueprint goals or objectives it owns.",
+  schema: workforcePlanSchema,
+  shape: WORKFORCE_SHAPE,
+  effect: "workforce",
+};
+const plain = (key: string): StepDef => {
+  const d = [...NEW_IDEA_STEPS, ...EXISTING_STEPS].find((s) => s.key === key)!;
+  return { key: d.key, kind: d.kind, profile: d.profile, department: d.department, prompt: d.prompt.replace(/ List every product or service you find\./, "") };
+};
+const step = (key: string) => [...NEW_IDEA_STEPS, ...EXISTING_STEPS].find((s) => s.key === key)!;
+
+export const JOURNEY_NEW_IDEA_STEPS: StepDef[] = [
+  WEB_RESEARCH,
+  plain("idea_analysis"),
+  plain("market_research"),
+  plain("competitors"),
+  plain("customers_personas"),
+  { ...plain("business_model"), prompt: "Design the business model: the products or services to offer at launch, pricing for each, revenue streams, unit economics (with stated assumptions) and the cost structure." },
+  plain("opportunities_risks"),
+  BLUEPRINT,
+  WORKFORCE,
+  step("positioning"),
+  step("go_to_market"),
+  step("launch_plan"),
+  step("financial_plan"),
+];
+export const JOURNEY_EXISTING_STEPS: StepDef[] = [
+  step("website_ingest"),
+  WEB_RESEARCH,
+  plain("business_analysis"),
+  plain("market_competitors"),
+  plain("opportunities_weaknesses"),
+  BLUEPRINT,
+  WORKFORCE,
+  step("positioning_review"),
+  step("go_to_market"),
+  step("financial_plan"),
+];
+/** Journey steps shown in the Intelligence stage; everything after the workforce plan runs after launch. */
+export const JOURNEY_RESEARCH_KEYS = ["website_ingest", "web_research", "idea_analysis", "market_research", "competitors", "customers_personas", "business_model", "opportunities_risks", "business_analysis", "market_competitors", "opportunities_weaknesses"];
+export const BLUEPRINT_KEY = BLUEPRINT.key;
+export const WORKFORCE_KEY = WORKFORCE.key;
+
+export const stepsFor = (mode: RunMode, journey = false): StepDef[] =>
+  journey ? (mode === "NEW_IDEA" ? JOURNEY_NEW_IDEA_STEPS : JOURNEY_EXISTING_STEPS) : mode === "NEW_IDEA" ? NEW_IDEA_STEPS : EXISTING_STEPS;
+export const stepDef = (mode: RunMode, key: string, journey = false): StepDef | undefined => stepsFor(mode, journey).find((s) => s.key === key);
+export const ALL_STEP_KEYS = [...new Set([...NEW_IDEA_STEPS, ...EXISTING_STEPS, ...JOURNEY_NEW_IDEA_STEPS, ...JOURNEY_EXISTING_STEPS].map((s) => s.key))];

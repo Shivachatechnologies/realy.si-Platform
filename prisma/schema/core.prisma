@@ -670,6 +670,13 @@ model Company {
   guidedDrafts                    GuidedDraft[]
   aiDepartmentBudgets             AiDepartmentBudget[]
   aiDelegations                   AiDelegation[]
+  workProjectDeliverables         WorkProjectDeliverable[]
+  marketingResearchReports        MarketingResearchReport[]
+  marketingPlans                  MarketingPlan[]
+  marketingOptimizations          MarketingOptimization[]
+  commandRuns                     CommandRun[]
+  commandPlanSteps                CommandPlanStep[]
+  commsReminders                  CommsReminder[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -720,24 +727,25 @@ model Project {
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company              Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  workspace            Workspace             @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  owner                User?                 @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  milestones           Milestone[]
-  workTasks            WorkTask[]
-  members              ProjectMember[]
-  projectMilestones    ProjectMilestone[]
-  risks                ProjectRisk[]
-  expenses             ProjectExpense[]
-  timeEntries          WorkTimeEntry[]
-  sprints              Sprint[]
-  features             ProductFeature[]
-  incidents            OpsIncident[]
-  financeTransactions  FinanceTransaction[]
-  financeBillLines     FinanceBillLine[]
-  financeExpenseClaims FinanceExpenseClaim[]
-  products             Product[]             @relation("ProductDevelopmentProject")
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company                 Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workspace               Workspace                @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  owner                   User?                    @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  milestones              Milestone[]
+  workTasks               WorkTask[]
+  members                 ProjectMember[]
+  projectMilestones       ProjectMilestone[]
+  risks                   ProjectRisk[]
+  expenses                ProjectExpense[]
+  timeEntries             WorkTimeEntry[]
+  sprints                 Sprint[]
+  features                ProductFeature[]
+  incidents               OpsIncident[]
+  financeTransactions     FinanceTransaction[]
+  financeBillLines        FinanceBillLine[]
+  financeExpenseClaims    FinanceExpenseClaim[]
+  products                Product[]                @relation("ProductDevelopmentProject")
+  workProjectDeliverables WorkProjectDeliverable[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, workspaceId])

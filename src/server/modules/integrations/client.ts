@@ -37,6 +37,55 @@ export interface ProviderResponse<T = unknown> {
 }
 
 const PER_CONNECTION = { name: "integration-api", limit: 120, windowMs: 60_000 };
+
+/**
+ * Per-provider limits, kept below each provider's published per-account quota so Realy backs off before the provider
+ * starts rejecting (429) — counted per connection, on top of PER_CONNECTION. Providers not listed use PER_CONNECTION.
+ */
+export const PROVIDER_RATE_LIMITS: Record<string, { limit: number; windowMs: number }> = {
+  hubspot: { limit: 90, windowMs: 10_000 },
+  salesforce: { limit: 600, windowMs: 60_000 },
+  slack: { limit: 50, windowMs: 60_000 },
+  shopify: { limit: 100, windowMs: 60_000 },
+  webflow: { limit: 55, windowMs: 60_000 },
+  mailchimp: { limit: 300, windowMs: 60_000 },
+  sendgrid: { limit: 500, windowMs: 60_000 },
+  xero: { limit: 55, windowMs: 60_000 },
+  quickbooks: { limit: 400, windowMs: 60_000 },
+  linkedin: { limit: 90, windowMs: 60_000 },
+  linkedin_ads: { limit: 90, windowMs: 60_000 },
+  x: { limit: 45, windowMs: 15 * 60_000 },
+  facebook: { limit: 180, windowMs: 60 * 60_000 },
+  instagram: { limit: 180, windowMs: 60 * 60_000 },
+  threads: { limit: 180, windowMs: 60 * 60_000 },
+  meta_ads: { limit: 180, windowMs: 60 * 60_000 },
+  pinterest: { limit: 900, windowMs: 60 * 60_000 },
+  google: { limit: 500, windowMs: 60_000 },
+  google_ads: { limit: 300, windowMs: 60_000 },
+  youtube: { limit: 300, windowMs: 60_000 },
+  microsoft: { limit: 500, windowMs: 60_000 },
+  stripe: { limit: 80, windowMs: 1_000 },
+  razorpay: { limit: 20, windowMs: 1_000 },
+  twilio: { limit: 90, windowMs: 1_000 },
+  whatsapp: { limit: 70, windowMs: 1_000 },
+  openai: { limit: 450, windowMs: 60_000 },
+  gemini: { limit: 300, windowMs: 60_000 },
+  tavily: { limit: 90, windowMs: 60_000 },
+  exa: { limit: 60, windowMs: 60_000 },
+  serpapi: { limit: 50, windowMs: 60_000 },
+  stability: { limit: 140, windowMs: 10_000 },
+  replicate: { limit: 500, windowMs: 60_000 },
+  runway: { limit: 20, windowMs: 60_000 },
+};
+
+/** The effective limits of a provider's connections (per-connection rule + provider rule when listed). */
+export function providerRateLimit(provider: string): { limit: number; windowMs: number } {
+  const p = PROVIDER_RATE_LIMITS[provider];
+  if (!p) return { limit: PER_CONNECTION.limit, windowMs: PER_CONNECTION.windowMs };
+  // Compare per minute and report the stricter one.
+  const perMin = (r: { limit: number; windowMs: number }) => (r.limit * 60_000) / r.windowMs;
+  return perMin(p) < perMin(PER_CONNECTION) ? p : { limit: PER_CONNECTION.limit, windowMs: PER_CONNECTION.windowMs };
+}
 const MAX_BACKOFF_MS = 20_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -48,12 +97,14 @@ function retryAfterMs(res: Response, attempt: number): number {
   return Math.min(500 * 2 ** attempt + Math.floor(Math.random() * 250), MAX_BACKOFF_MS);
 }
 
-/** Wait for a slot in the connection's rate-limit window (bounded), or fail. */
-async function throttle(connectionId: string) {
+/** Wait for a slot in the connection's rate-limit windows (bounded), or fail. */
+async function throttle(connectionId: string, provider?: string) {
+  const providerRule = provider && PROVIDER_RATE_LIMITS[provider] ? { name: `integration-api:${provider}`, ...PROVIDER_RATE_LIMITS[provider] } : null;
   for (let i = 0; i < 3; i++) {
     const r = await consume(PER_CONNECTION, connectionId);
-    if (r.allowed) return;
-    await sleep(Math.min(r.resetSeconds * 1000, 5_000));
+    const p = r.allowed && providerRule ? await consume(providerRule, connectionId) : null;
+    if (r.allowed && (!p || p.allowed)) return;
+    await sleep(Math.min((p && !p.allowed ? p.resetSeconds : r.resetSeconds) * 1000, 5_000));
   }
   throw new ProviderError("rate limit for this connection exceeded; try again shortly", 429);
 }
@@ -172,7 +223,7 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
   let lastError: unknown = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     onAttempt();
-    await throttle(conn.id);
+    await throttle(conn.id, conn.provider);
     try {
       const res = await fetch(url, { method: req.method ?? (body !== undefined ? "POST" : "GET"), headers, body: body as BodyInit | undefined, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000), redirect: "follow" });
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {

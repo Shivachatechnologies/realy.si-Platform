@@ -9,7 +9,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { notifyUsers } from "@/server/modules/notifications/service";
 import { createEntity } from "@/server/modules/graph/service";
 import { createWorkProject } from "./projects";
-import { PRODUCT_STAGES } from "./product-constants";
+import { PRODUCT_STAGES, STAGE_DELIVERABLES } from "./product-constants";
 import { actorId, authorize, blank, isUuid, oneOf, optText, optUuid, PAGE_SIZE, pageParam, param, requireEligible, userNames } from "./shared";
 
 export { PRODUCT_STAGES };
@@ -361,6 +361,18 @@ export async function addGateItem(ctx: RequestContext, organizationId: string, c
   });
 }
 
+/** Deliverables of the product's current stage that have no saved version yet (Development: an empty backlog). */
+export async function missingDeliverables(client: Tx | ReturnType<typeof db>, companyId: string, p: { id: string; stage: ProductStage; developmentProjectId: string | null }) {
+  const kinds = STAGE_DELIVERABLES[p.stage];
+  const saved = kinds.length ? await client.productDoc.findMany({ where: { productId: p.id, companyId, kind: { in: kinds } }, select: { kind: true } }) : [];
+  const missing: string[] = kinds.filter((k) => !saved.some((d) => d.kind === k));
+  if (p.stage === "DEVELOPMENT") {
+    const tasks = p.developmentProjectId ? await client.workTask.count({ where: { companyId, projectId: p.developmentProjectId, archivedAt: null } }) : 0;
+    if (!tasks) missing.push("BACKLOG");
+  }
+  return missing;
+}
+
 /** The product owner approves the current stage's gate (every checklist item must be done). Without an owner, any manager may. */
 export async function approveGate(ctx: RequestContext, organizationId: string, companyId: string, productId: string, approve = true) {
   return transaction(async (tx) => {
@@ -370,6 +382,10 @@ export async function approveGate(ctx: RequestContext, organizationId: string, c
     const gate = await gateFor(tx, organizationId, companyId, productId, p.stage);
     const items = readChecklist(gate.checklist);
     if (approve && items.some((i) => !i.done)) throw conflict("Complete every checklist item first", { reason: "work_product_gate_incomplete" });
+    if (approve) {
+      const missing = await missingDeliverables(tx, companyId, p);
+      if (missing.length) throw conflict(`Save the stage deliverables first: ${missing.join(", ")}`, { reason: "work_product_gate_deliverables", missing });
+    }
     const g = await tx.productStageGate.update({ where: { id: gate.id }, data: approve ? { approvedAt: new Date(), approvedById: ctx.actor.id } : { approvedAt: null, approvedById: null } });
     await audit(tx, ctx, organizationId, approve ? "product.gate.approved" : "product.gate.reopened", productId, { stage: p.stage });
     return g;

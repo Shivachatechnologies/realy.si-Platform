@@ -15,6 +15,7 @@ import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { providerInfo, type ConnectionAccount } from "@/server/modules/integrations/catalog";
 import { getIntegration, storedSecretNames, usageSummary } from "@/server/modules/integrations/service";
+import { providerRateLimit } from "@/server/modules/integrations/client";
 import { listHooks } from "@/server/modules/integrations/webhooks";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
@@ -24,6 +25,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/integrat
   const { provider } = await params;
   return { title: providerInfo(provider)?.name ?? (await getT())("modules.integrations.title") };
 }
+
+const windowKey = (ms: number) => (ms <= 1_000 ? "sec1" : ms <= 10_000 ? "sec10" : ms <= 60_000 ? "min1" : ms <= 15 * 60_000 ? "min15" : "hour1");
 
 const TONE = { CONNECTED: "success", ERROR: "danger", DISCONNECTED: "neutral" } as const;
 const OAUTH_ERRORS = ["not_configured", "state_mismatch", "provider_error", "access_denied", "forbidden", "invalid_request", "rate_limited"];
@@ -65,6 +68,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   const activeAccountId = typeof cfg.activeAccountId === "string" ? cfg.activeAccountId : (accounts[0]?.id ?? null);
   const setupSteps = t(`integrations.providers.${info.key}.setup`).split("\n").filter(Boolean);
   const usesOAuth = info.authType === "oauth2" || !!info.oauthAlternative;
+  const rate = providerRateLimit(info.key);
   const tabs = (
     <IntegrationsTabs
       locale={locale}
@@ -167,6 +171,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                 <p className="text-sm text-muted-foreground">{t("integrations.notConnectedHelp")}</p>
               )}
               {conn?.lastError ? <Notice tone="danger">{conn.lastError}</Notice> : null}
+              {conn && conn.status === "CONNECTED" && !conn.lastError && !conn.lastTestedAt && !conn.lastSuccessAt ? <Notice tone="warning">{t("integrations.marketplace.unverifiedNotice")}</Notice> : null}
 
               {info.oauthAlternative && !data.oauthAvailable ? null : usesOAuth ? (
                 data.missingEnv.length && !data.oauthAvailable ? (
@@ -309,6 +314,12 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                   ))}
                 </div>
               </div>
+              {info.key !== "webhook" && info.authType !== "none" ? (
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("integrations.marketplace.rateLimit")}</p>
+                  <p>{t("integrations.marketplace.rateLimitValue", { limit: rate.limit, window: t(`integrations.marketplace.windows.${windowKey(rate.windowMs)}`) })}</p>
+                </div>
+              ) : null}
               <DocsLink href={info.docsUrl} label={t("integrations.docs")} />
             </CardBody>
           </Card>

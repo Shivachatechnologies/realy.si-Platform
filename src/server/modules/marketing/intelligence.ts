@@ -158,7 +158,7 @@ export async function deleteHashtagSet(ctx: RequestContext, organizationId: stri
 
 // ───────────── AI workforce activity ─────────────
 
-const MARKETING_SUBJECTS = ["marketing_content", "marketing_campaign", "seo_project", "marketing_autopilot_item", "marketing_journey", "marketing_ad_campaign", "marketing_engagement", "marketing_influencer"];
+const MARKETING_SUBJECTS = ["marketing_research_report", "marketing_plan", "marketing_optimization_review", "marketing_content", "marketing_campaign", "seo_project", "marketing_autopilot_item", "marketing_journey", "marketing_ad_campaign", "marketing_engagement", "marketing_influencer"];
 export async function marketingAiActivity(organizationId: string, companyId: string, take = 10) {
   return db().agentTask.findMany({
     where: { organizationId, companyId, OR: [{ subjectType: { in: MARKETING_SUBJECTS } }, { profile: { in: ["cmo", "growth_manager", "content_writer", "seo_specialist", "social_media_manager", "campaign_strategist", "marketing_analyst", "creative_designer", "video_producer", "content_strategist", "paid_ads_specialist"] } }] },
@@ -170,10 +170,14 @@ export async function marketingAiActivity(organizationId: string, companyId: str
 
 // ───────────── "Help me do this" ─────────────
 
-export const HELP_PAGES = ["start", "overview", "autopilot", "studio", "content", "social", "community", "seo", "blog", "email", "ads", "influencers", "analytics", "campaigns", "audience", "forms", "automation", "brand"] as const;
+export const HELP_PAGES = ["start", "overview", "intelligence", "strategy", "calendar", "optimize", "autopilot", "studio", "content", "social", "community", "seo", "blog", "email", "ads", "influencers", "analytics", "campaigns", "audience", "forms", "automation", "brand"] as const;
 const HELP_PROFILE: Record<(typeof HELP_PAGES)[number], string> = {
   start: "cmo",
   overview: "cmo",
+  intelligence: "marketing_analyst",
+  strategy: "cmo",
+  calendar: "social_media_manager",
+  optimize: "marketing_analyst",
   autopilot: "content_strategist",
   studio: "creative_designer",
   content: "content_writer",

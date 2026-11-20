@@ -423,3 +423,32 @@ model CommsChatPost {
   @@index([companyId, subjectType, subjectId])
   @@map("comms_chat_posts")
 }
+
+/// A reminder delivered as an in-app notification at `remindAt`: personal reminders people set (optionally about a
+/// record) and automatic meeting reminders (kind "meeting", one per attendee and meeting, 10 minutes before start).
+model CommsReminder {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  /// Recipient.
+  userId         String    @map("user_id") @db.Uuid
+  /// "custom" | "meeting"
+  kind           String    @default("custom")
+  title          String
+  note           String?
+  remindAt       DateTime  @map("remind_at") @db.Timestamptz(3)
+  /// In-app path opened from the notification ("/communication/meetings/<id>").
+  href           String?
+  subjectType    String?   @map("subject_type")
+  subjectId      String?   @map("subject_id") @db.Uuid
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz(3)
+  createdById    String?   @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([userId, kind, subjectId, remindAt])
+  @@index([sentAt, remindAt])
+  @@index([organizationId, companyId, userId, remindAt])
+  @@map("comms_reminders")
+}
