@@ -10,6 +10,7 @@ const CRM_TABS = [
   { key: "today", path: "/crm/today" },
   { key: "leads", path: "/crm" },
   { key: "discover", path: "/crm/discover" },
+  { key: "prospecting", path: "/crm/prospecting" },
   { key: "contacts", path: "/crm/contacts" },
   { key: "accounts", path: "/crm/accounts" },
   { key: "deals", path: "/crm/deals" },

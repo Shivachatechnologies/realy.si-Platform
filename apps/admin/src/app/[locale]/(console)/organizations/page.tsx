@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { AdminHeader, Avatar, EmptyState, FilterBar, NextPage, QuickFilters, guard, sp } from "@/components/admin/kit";
 import { DrawerSection, SideDrawer } from "@/components/admin/drawer";
 import { OrgStatusButton } from "@/components/admin/org-actions";
+import { CreateOrganization } from "@/components/admin/people-actions";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
@@ -38,6 +39,7 @@ export default async function AdminOrganizationsPage({ searchParams }: PageProps
         description={t("admin.organizations.hint")}
         why={t("admin.organizations.why")}
         meta={<Badge tone="accent">{t("admin.organizations.total", { count: n(orgs.total) })}</Badge>}
+        actions={canManage ? <CreateOrganization /> : null}
       />
       <Card>
         <QuickFilters

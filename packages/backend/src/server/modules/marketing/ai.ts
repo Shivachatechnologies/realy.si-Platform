@@ -7,6 +7,7 @@ import { authorize, isUuid } from "./common";
 import { applyAiToContent, CONTENT_TYPES, createContent } from "./content";
 import { addKeywords } from "./seo";
 import { brandContextFor } from "./brand";
+import { assertLimit, recordUsage } from "@/server/modules/entitlements/service";
 
 /** AI work attached to marketing records (agent tasks with a subject). Outputs are applied only from completed tasks. */
 export const AI_KINDS = ["content_draft", "content_meta", "seo_keywords", "seo_brief", "seo_report", "campaign_plan", "campaign_analysis"] as const;
@@ -90,7 +91,10 @@ export async function requestAi(ctx: RequestContext, organizationId: string, com
   }
   const brand = await brandContextFor(companyId);
   if (brand) instructions = `${instructions}\n\n${brand}`;
-  return createTask(ctx, organizationId, companyId, { profile: profile as never, title, instructions, subject: { type: subjectType, id: subjectId } });
+  await assertLimit(ctx, organizationId, "content.generations.month", 1);
+  const task = await createTask(ctx, organizationId, companyId, { profile: profile as never, title, instructions, subject: { type: subjectType, id: subjectId } });
+  await recordUsage(organizationId, "content.generations", 1, { companyId, idempotencyKey: task.id });
+  return task;
 }
 
 /** Strict JSON extraction from model output (first JSON object/array, fenced or not). */

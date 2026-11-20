@@ -38,6 +38,9 @@ export async function adminCapabilities(ctx: RequestContext) {
     "pricing.manage",
     "flags.read",
     "flags.manage",
+    "platform.content.manage",
+    "platform.support.read",
+    "platform.subscriptions.manage",
   ] as const;
   const values = await Promise.all(keys.map((k) => can(ctx, k, platformChain())));
   return Object.fromEntries(keys.map((k, i) => [k, values[i]!])) as Record<(typeof keys)[number], boolean>;

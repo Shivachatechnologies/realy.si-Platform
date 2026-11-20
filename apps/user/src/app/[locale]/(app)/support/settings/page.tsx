@@ -9,6 +9,8 @@ import { ActionButton } from "@/components/comms/client";
 import { areaPage } from "@/components/comms/context";
 import { AssignmentRuleForm, CategoriesManager, EscalationRuleForm, PolicyRowView, RuleActiveToggle, SettingsToggles, SlaPolicyForm } from "@/components/support/settings";
 import { getT } from "@/i18n/server";
+import { AiManagerStrip } from "@/components/work/ai-manager";
+import { departmentManager } from "@/server/modules/cockpit/department-manager";
 import { listAgents } from "@/server/modules/support/common";
 import { getSettings, listAssignmentRules, listCategories, listEscalationRules, listSlaPolicies } from "@/server/modules/support/config";
 
@@ -28,12 +30,14 @@ export default async function SupportSettingsPage() {
     listEscalationRules(viewer.ctx, org.id, company.id),
     listAgents(viewer.ctx, org.id, company.id),
   ]);
+  const manager = await departmentManager(company.id, ["support_agent", "support_lead"]);
   if (!perms.manage) return wrap(<Notice tone="warning">{t("support.settings.manageOnly")}</Notice>);
   const agentName = new Map(agents.map((a) => [a.id, a.name]));
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   return wrap(
     <>
     <PageIntro labels={introLabels(t)} what={t("support.intro.settings.what")} why={t("support.intro.settings.why")} can={t("support.intro.settings.can")} next={{ label: t("support.intro.settings.next"), href: `/${locale}/support/setup` }} accent="warning" />
+    <AiManagerStrip t={t} locale={locale} manager={manager} duty={t("support.settings.aiDuty")} />
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader title={t("support.settings.channels")} description={t("support.settings.channelsHint")} />

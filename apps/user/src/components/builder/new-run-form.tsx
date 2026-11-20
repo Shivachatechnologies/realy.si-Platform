@@ -18,8 +18,8 @@ export function NewRunForm({ base, mode, countries, currencies, defaultCurrency,
       defaultCountry={defaultCountry}
       submitLabel={mode === "NEW_IDEA" ? t("builder.new.submit") : t("builder.new.submitExisting")}
       onSubmit={async (brief) => {
-        const run = await api<{ id: string }>(`${base}/builder/runs`, { body: { mode, brief } });
-        router.push(`/${locale}/builder/${run.id}`);
+        const run = await api<{ id: string }>(`${base}/builder/runs`, { body: { mode, brief, kit: mode === "NEW_IDEA" } });
+        router.push(`/${locale}/builder/${run.id}${mode === "NEW_IDEA" ? "/kit" : ""}`);
         router.refresh();
       }}
     />

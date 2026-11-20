@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowUp, CheckSquare, ClipboardCheck, LayoutDashboard, Menu, Sparkles, Users, X, type LucideIcon } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { PlanLockBadge } from "@/components/billing/upgrade-prompt";
 
 interface Tab {
   /** i18n key */
@@ -29,7 +30,7 @@ const isActive = (pathname: string | null, locale: string, href: string) => {
   return href === "" ? pathname === full : pathname === full || pathname.startsWith(`${full}/`);
 };
 
-function TabLink({ tab, pathname }: { tab: Tab; pathname: string | null }) {
+function TabLink({ tab, pathname, locked = false }: { tab: Tab; pathname: string | null; locked?: boolean }) {
   const { t, locale } = useI18n();
   const active = isActive(pathname, locale, tab.href);
   const Icon = tab.icon;
@@ -53,16 +54,17 @@ function TabLink({ tab, pathname }: { tab: Tab; pathname: string | null }) {
         <Icon className="size-[1.15rem] rtl:-scale-x-100" aria-hidden />
       </span>
       <span className="max-w-full truncate leading-none">{t(tab.label)}</span>
+      {locked ? <PlanLockBadge className="absolute end-2 top-1.5" /> : null}
     </Link>
   );
 }
 
-function Tabs({ pathname, onMore, moreOpen }: { pathname: string | null; onMore: () => void; moreOpen: boolean }) {
+function Tabs({ pathname, onMore, moreOpen, lockedHrefs = [] }: { pathname: string | null; onMore: () => void; moreOpen: boolean; lockedHrefs?: string[] }) {
   const { t } = useI18n();
   return (
     <div className="mx-auto grid max-w-xl grid-cols-5 gap-1 px-2">
       {MOBILE_TABS.map((tab) => (
-        <TabLink key={tab.href} tab={tab} pathname={pathname} />
+        <TabLink key={tab.href} tab={tab} pathname={pathname} locked={lockedHrefs.includes(tab.href)} />
       ))}
       <button
         type="button"
@@ -83,7 +85,7 @@ function Tabs({ pathname, onMore, moreOpen }: { pathname: string | null; onMore:
   );
 }
 
-function TabsWithPath(props: { onMore: () => void; moreOpen: boolean }) {
+function TabsWithPath(props: { onMore: () => void; moreOpen: boolean; lockedHrefs?: string[] }) {
   return <Tabs {...props} pathname={usePathname()} />;
 }
 
@@ -91,15 +93,15 @@ function TabsWithPath(props: { onMore: () => void; moreOpen: boolean }) {
  * Bottom tab bar (below lg): the four places a founder returns to most, plus "More" for the full navigation drawer.
  * Respects the home-indicator safe area; every target is at least 56px tall.
  */
-export function MobileTabBar({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolean }) {
+export function MobileTabBar({ onMore, moreOpen, lockedHrefs }: { onMore: () => void; moreOpen: boolean; lockedHrefs?: string[] }) {
   const { t } = useI18n();
   return (
     <nav
       aria-label={t("shell.mobileNavigation")}
       className="glass-strong fixed inset-x-0 bottom-0 z-30 border-t pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-12px_oklch(0_0_0/0.25)] lg:hidden"
     >
-      <Suspense fallback={<Tabs pathname={null} onMore={onMore} moreOpen={moreOpen} />}>
-        <TabsWithPath onMore={onMore} moreOpen={moreOpen} />
+      <Suspense fallback={<Tabs pathname={null} onMore={onMore} moreOpen={moreOpen} lockedHrefs={lockedHrefs} />}>
+        <TabsWithPath onMore={onMore} moreOpen={moreOpen} lockedHrefs={lockedHrefs} />
       </Suspense>
     </nav>
   );

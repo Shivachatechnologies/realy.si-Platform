@@ -726,6 +726,8 @@ model CrmOutreachMessage {
   error             String?
   /// AI provider + model that drafted the text (null = written by a person).
   aiProvider        String?           @map("ai_provider")
+  /// Prospecting autopilot that created this email (first touch or one of its follow-ups); counts toward its send cap.
+  autopilotId       String?           @map("autopilot_id") @db.Uuid
   createdById       String?           @map("created_by_id") @db.Uuid
   approvedById      String?           @map("approved_by_id") @db.Uuid
   approvedAt        DateTime?         @map("approved_at") @db.Timestamptz(3)
@@ -742,6 +744,7 @@ model CrmOutreachMessage {
   @@index([companyId, leadId])
   @@index([companyId, contactId])
   @@index([companyId, toEmail])
+  @@index([autopilotId, status, sentAt])
   @@map("crm_outreach_messages")
 }
 
@@ -888,4 +891,250 @@ model CrmMeeting {
   @@index([companyId, leadId])
   @@index([companyId, contactId])
   @@map("crm_meetings")
+}
+
+// ───────────── Prospecting autopilot (AI SDR): decision makers, verified emails, suppression ─────────────
+
+enum CrmAutopilotStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+/// What the autopilot may do with the first email: keep a draft, queue it for a person's approval, or send it within caps.
+enum CrmAutopilotAutonomy {
+  DRAFT_ONLY
+  REVIEW
+  AUTO_SEND
+}
+
+/// A prospecting autopilot for one ideal-customer profile: finds companies, their decision makers and verified emails,
+/// creates leads (with the consent basis) and writes a personalized first email + follow-up sequence, within daily
+/// caps. Sending automatically requires a person to approve auto-send when activating (activatedById).
+model CrmProspectingAutopilot {
+  id                 String               @id @default(uuid(7)) @db.Uuid
+  organizationId     String               @map("organization_id") @db.Uuid
+  companyId          String               @map("company_id") @db.Uuid
+  name               String
+  status             CrmAutopilotStatus   @default(DRAFT)
+  /// The ideal customer in plain words ("independent bakeries that offer catering").
+  audience           String
+  /// What we offer and why it matters to them (grounding for the AI-written first email).
+  pitch              String               @default("")
+  regions            String[]             @default([])
+  /// Job titles to reach ("Owner", "Head of Operations").
+  roles              String[]             @default([])
+  /// Canonical seniorities (owner, founder, c_suite, partner, vp, head, director, manager, senior, entry).
+  seniorities        String[]             @default([])
+  /// Domains or words to skip (competitors, existing customers, industries).
+  exclusions         String[]             @default([])
+  /// Specific company domains to work through first (optional list from the founder).
+  targetDomains      String[]             @default([]) @map("target_domains")
+  /// New people to find per day.
+  dailyQuota         Int                  @default(10) @map("daily_quota")
+  /// Most emails (first touches + follow-ups) sent per day.
+  dailySendCap       Int                  @default(20) @map("daily_send_cap")
+  peoplePerCompany   Int                  @default(2) @map("people_per_company")
+  autonomy           CrmAutopilotAutonomy @default(REVIEW)
+  /// Explicit opt-in to contact addresses that could not be verified (never by default), with its own lower cap.
+  allowUnverified    Boolean              @default(false) @map("allow_unverified")
+  unverifiedDailyCap Int                  @default(3) @map("unverified_daily_cap")
+  /// Lawful basis recorded on every lead it creates (e.g. legitimate_interest).
+  consentBasis       String               @default("legitimate_interest") @map("consent_basis")
+  consentNote        String               @default("") @map("consent_note")
+  /// Contact-data provider order (apollo, hunter, pdl); empty = default order.
+  providerOrder      String[]             @default([]) @map("provider_order")
+  /// Founder-written first email used when no AI text provider is connected ({{firstName}}, {{company}}, {{sender}}).
+  firstSubject       String               @default("") @map("first_subject")
+  firstBody          String               @default("") @map("first_body")
+  /// Sentence before the unsubscribe link added to every email of this autopilot (in the founder's language).
+  unsubscribeLine    String               @default("") @map("unsubscribe_line")
+  /// Follow-up sequence created for this autopilot.
+  cadenceId          String?              @map("cadence_id") @db.Uuid
+  ownerId            String?              @map("owner_id") @db.Uuid
+  activatedById      String?              @map("activated_by_id") @db.Uuid
+  activatedAt        DateTime?            @map("activated_at") @db.Timestamptz(3)
+  lastRunAt          DateTime?            @map("last_run_at") @db.Timestamptz(3)
+  nextRunAt          DateTime?            @map("next_run_at") @db.Timestamptz(3)
+  lastError          String?              @map("last_error")
+  createdById        String               @map("created_by_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  companies CrmAutopilotCompany[]
+  people    CrmProspectPerson[]
+  runs      CrmAutopilotRun[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([status, nextRunAt])
+  @@map("crm_prospecting_autopilots")
+}
+
+enum CrmAutopilotCompanyStatus {
+  PENDING
+  DONE
+  NO_PEOPLE
+  EXCLUDED
+  FAILED
+}
+
+/// A company (by domain) the autopilot found or was given, and what came of it.
+model CrmAutopilotCompany {
+  id             String                    @id @default(uuid(7)) @db.Uuid
+  organizationId String                    @map("organization_id") @db.Uuid
+  companyId      String                    @map("company_id") @db.Uuid
+  autopilotId    String                    @map("autopilot_id") @db.Uuid
+  domain         String
+  name           String
+  /// Where it came from: web research URL or "manual".
+  sourceUrl      String?                   @map("source_url")
+  status         CrmAutopilotCompanyStatus @default(PENDING)
+  peopleFound    Int                       @default(0) @map("people_found")
+  error          String?
+  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  autopilot CrmProspectingAutopilot @relation(fields: [autopilotId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([autopilotId, domain])
+  @@index([autopilotId, status])
+  @@map("crm_autopilot_companies")
+}
+
+/// How an email address was checked. VERIFIED = a provider confirmed it deliverable; RISKY = accept-all / unknown
+/// server; UNVERIFIED = found but not confirmed; INVALID = undeliverable; NONE = no address found.
+enum CrmEmailVerification {
+  VERIFIED
+  RISKY
+  UNVERIFIED
+  INVALID
+  NONE
+}
+
+enum CrmProspectPersonStatus {
+  FOUND
+  READY
+  SKIPPED
+  CONTACTED
+  REPLIED
+  MEETING
+  BOUNCED
+  UNSUBSCRIBED
+  STOPPED
+}
+
+/// A decision maker found by a contact-data provider. Name, title and email are stored exactly as the provider returned
+/// them, with the verification result and its source; nothing is guessed.
+model CrmProspectPerson {
+  id              String                  @id @default(uuid(7)) @db.Uuid
+  organizationId  String                  @map("organization_id") @db.Uuid
+  companyId       String                  @map("company_id") @db.Uuid
+  autopilotId     String                  @map("autopilot_id") @db.Uuid
+  domain          String
+  companyName     String?                 @map("company_name")
+  firstName       String?                 @map("first_name")
+  lastName        String?                 @map("last_name")
+  fullName        String                  @map("full_name")
+  title           String?
+  seniority       String?
+  linkedinUrl     String?                 @map("linkedin_url")
+  location        String?
+  /// Provider that found the person (apollo / hunter / pdl) and its id there.
+  sourceProvider  String                  @map("source_provider")
+  externalId      String?                 @map("external_id")
+  email           String?
+  emailNormalized String?                 @map("email_normalized")
+  emailStatus     CrmEmailVerification    @default(NONE) @map("email_status")
+  /// Provider that supplied the address, and the one that verified it.
+  emailSource     String?                 @map("email_source")
+  verifiedBy      String?                 @map("verified_by")
+  verifiedAt      DateTime?               @map("verified_at") @db.Timestamptz(3)
+  /// Provider verdict as returned (status, score, accept_all...).
+  verification    Json                    @default("{}")
+  /// Lawful basis for contacting this person, copied from the autopilot when the lead was created.
+  consentBasis    String?                 @map("consent_basis")
+  consentNote     String?                 @map("consent_note")
+  status          CrmProspectPersonStatus @default(FOUND)
+  skipReason      String?                 @map("skip_reason")
+  leadId          String?                 @map("lead_id") @db.Uuid
+  firstMessageId  String?                 @map("first_message_id") @db.Uuid
+  enrollmentId    String?                 @map("enrollment_id") @db.Uuid
+  contactedAt     DateTime?               @map("contacted_at") @db.Timestamptz(3)
+  repliedAt       DateTime?               @map("replied_at") @db.Timestamptz(3)
+  meetingAt       DateTime?               @map("meeting_at") @db.Timestamptz(3)
+  bouncedAt       DateTime?               @map("bounced_at") @db.Timestamptz(3)
+  unsubscribedAt  DateTime?               @map("unsubscribed_at") @db.Timestamptz(3)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  autopilot CrmProspectingAutopilot @relation(fields: [autopilotId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([autopilotId, domain, fullName])
+  @@index([companyId, emailNormalized])
+  @@index([autopilotId, status])
+  @@index([autopilotId, createdAt])
+  @@index([companyId, leadId])
+  @@map("crm_prospect_people")
+}
+
+/// One autopilot run (worker job or "Run now"): what it found, verified, drafted and sent — the honest log.
+model CrmAutopilotRun {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  autopilotId    String    @map("autopilot_id") @db.Uuid
+  /// ok / partial / skipped / failed
+  outcome        String    @default("ok")
+  companies      Int       @default(0)
+  found          Int       @default(0)
+  verified       Int       @default(0)
+  leads          Int       @default(0)
+  drafted        Int       @default(0)
+  sent           Int       @default(0)
+  stopped        Int       @default(0)
+  /// Plain notes: missing providers, caps reached, provider errors.
+  notes          Json      @default("[]")
+  startedAt      DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime? @map("finished_at") @db.Timestamptz(3)
+
+  company   Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  autopilot CrmProspectingAutopilot @relation(fields: [autopilotId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([autopilotId, startedAt])
+  @@map("crm_autopilot_runs")
+}
+
+enum CrmSuppressionKind {
+  EMAIL
+  DOMAIN
+}
+
+/// Company-wide do-not-contact list for sales outreach (an email address or a whole domain). Checked before every CRM
+/// email together with the marketing unsubscribe list; bounces and unsubscribes are added automatically.
+model CrmSuppression {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  kind           CrmSuppressionKind
+  /// Lower-cased email address or domain.
+  value          String
+  /// unsubscribed / bounced / complaint / manual / customer / competitor / do_not_contact
+  reason         String
+  /// manual / autopilot / unsubscribe_link / bounce
+  source         String             @default("manual")
+  note           String?
+  createdById    String?            @map("created_by_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, kind, value])
+  @@index([organizationId, companyId, createdAt])
+  @@map("crm_suppressions")
 }

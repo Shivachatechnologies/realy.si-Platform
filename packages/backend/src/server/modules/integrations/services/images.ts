@@ -55,7 +55,7 @@ export async function generateImage(organizationId: string, companyId: string, i
       const outputs: { bytes: Uint8Array; contentType: string }[] = [];
       if (conn.provider === "openai") {
         model = "gpt-image-1";
-        const res = await providerFetch<{ data?: { b64_json?: string; url?: string }[] }>(conn, "https://api.openai.com/v1/images/generations", { json: { model, prompt, size, n }, timeoutMs: 180_000, retries: 1 });
+        const res = await providerFetch<{ data?: { b64_json?: string; url?: string }[] }>(conn, "https://api.openai.com/v1/images/generations", { json: { model, prompt, size, n }, timeoutMs: 180_000, retries: 1, costCents: (FLAT_COST_MICROS["openai.image"]! * n) / 10_000 });
         ensureOk(res, "OpenAI image generation");
         for (const d of res.data?.data ?? []) {
           if (d.b64_json) outputs.push({ bytes: new Uint8Array(Buffer.from(d.b64_json, "base64")), contentType: "image/png" });
@@ -68,7 +68,7 @@ export async function generateImage(organizationId: string, companyId: string, i
           form.set("prompt", prompt);
           form.set("aspect_ratio", ASPECT[size]);
           form.set("output_format", "png");
-          const res = await providerFetch<{ image?: string; finish_reason?: string }>(conn, "https://api.stability.ai/v2beta/stable-image/generate/core", { raw: form, timeoutMs: 120_000, retries: 1 });
+          const res = await providerFetch<{ image?: string; finish_reason?: string }>(conn, "https://api.stability.ai/v2beta/stable-image/generate/core", { raw: form, timeoutMs: 120_000, retries: 1, costCents: FLAT_COST_MICROS["stability.image"]! / 10_000 });
           ensureOk(res, "Stability image generation");
           if (res.data?.finish_reason === "CONTENT_FILTERED") throw new Error("Stability filtered the image (content policy)");
           if (res.data?.image) outputs.push({ bytes: new Uint8Array(Buffer.from(res.data.image, "base64")), contentType: "image/png" });
@@ -78,7 +78,7 @@ export async function generateImage(organizationId: string, companyId: string, i
         const res = await providerFetch<{ id?: string; status?: string; output?: string[] | string; error?: string; urls?: { get?: string } }>(
           conn,
           `https://api.replicate.com/v1/models/${model}/predictions`,
-          { json: { input: { prompt, num_outputs: n, aspect_ratio: ASPECT[size], output_format: "png" } }, headers: { prefer: "wait=60" }, timeoutMs: 90_000, retries: 1 },
+          { json: { input: { prompt, num_outputs: n, aspect_ratio: ASPECT[size], output_format: "png" } }, headers: { prefer: "wait=60" }, timeoutMs: 90_000, retries: 1, costCents: (FLAT_COST_MICROS["replicate.image"]! * n) / 10_000 },
         );
         ensureOk(res, "Replicate prediction");
         let pred = res.data;

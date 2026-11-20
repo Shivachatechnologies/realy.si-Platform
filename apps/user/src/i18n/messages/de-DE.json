@@ -591,7 +591,7 @@
       "objectives_metric_forbidden": "Sie haben keinen Zugriff auf diese Kennzahl.",
       "objectives_target_direction": "Der Zielwert muss sich in der gewählten Richtung vom Ausgangswert entfernen.",
       "objectives_plan_applied": "Der Plan dieses Unternehmensziels wurde bereits angewendet.",
-      "objectives_plan_running": "Es wird bereits ein Plan erstellt.",
+      "objectives_plan_running": "Ein Plan wird bereits geschrieben.",
       "objectives_plan_partial": "Ein Teil dieses Plans wurde bereits angewendet; wenden Sie ihn zuerst vollständig an.",
       "objectives_plan_keys": "Der Plan enthält doppelte Elemente.",
       "objectives_goal_inactive": "Nur aktive Unternehmensziele können geplant werden.",
@@ -759,7 +759,66 @@
       "workforce_autonomy_no_recommendation": "Diese Empfehlung gilt nicht mehr.",
       "workforce_autonomy_not_reversible": "Diese Aktion kann nicht rückgängig gemacht werden.",
       "workforce_autonomy_undo_forbidden": "Ihnen fehlt die Berechtigung für dieses Rückgängigmachen.",
-      "workforce_autonomy_undo_failed": "Das Rückgängigmachen hat nicht funktioniert; sonst wurde nichts geändert."
+      "workforce_autonomy_undo_failed": "Das Rückgängigmachen hat nicht funktioniert; sonst wurde nichts geändert.",
+      "command_run_cancelled": "Dieser Befehl wurde abgebrochen und kann nicht wiederholt werden.",
+      "command_step_retry_limit": "Dieser Schritt wurde zu oft versucht. Geben Sie stattdessen einen neuen Befehl.",
+      "command_step_not_retryable": "Nur fehlgeschlagene oder blockierte Schritte können wiederholt werden.",
+      "command_step_changed": "Dieser Schritt hat sich inzwischen geändert. Aktualisieren und erneut versuchen.",
+      "ceo_decision_closed": "Diese Entscheidung wurde bereits getroffen.",
+      "objectives_initiative_limit": "Ein Ziel kann höchstens 12 Initiativen haben.",
+      "objectives_initiative_closed": "Diese Initiative ist abgeschlossen.",
+      "objectives_initiative_running": "Für diese Initiative läuft bereits KI-Arbeit.",
+      "briefing_whatsapp_unverified": "Bestätigen Sie Ihre WhatsApp-Nummer, bevor Sie WhatsApp-Briefings einschalten.",
+      "briefing_whatsapp_no_number": "Speichern Sie zuerst Ihre WhatsApp-Nummer.",
+      "briefing_whatsapp_not_connected": "Verbinden Sie zuerst Twilio (WhatsApp-Absender) oder WhatsApp Business unter Integrationen.",
+      "briefing_test_limit": "Sie haben heute zehn Test-Briefings gesendet. Versuchen Sie es morgen wieder.",
+      "briefing_token_used": "Dieser Link wurde bereits verwendet oder ist abgelaufen.",
+      "briefing_token_wrong_user": "Dieser Link wurde an jemand anderen gesendet.",
+      "voice_hours_invalid": "Die Anrufzeiten müssen nach ihrem Beginn enden.",
+      "voice_member_invalid": "Wählen Sie ein aktives Mitglied Ihrer Organisation.",
+      "voice_number_invalid": "Verwenden Sie das internationale Format mit Ländervorwahl, z. B. +49 30 1234567.",
+      "voice_number_missing": "Für diesen Eintrag ist keine Telefonnummer hinterlegt.",
+      "voice_dnc_exists": "Diese Nummer steht bereits auf der Sperrliste.",
+      "voice_do_not_call": "Diese Nummer steht auf der Sperrliste.",
+      "voice_employee_invalid": "Wählen Sie einen KI-Mitarbeitenden dieses Unternehmens.",
+      "voice_no_provider": "Wählen Sie zuerst Vapi oder Retell AI.",
+      "voice_credential_required": "Ihre Sprachplattform ist nicht verbunden (oder hat den Schlüssel abgelehnt). Verbinden Sie sie unter Integrationen.",
+      "voice_sync_failed": "Die Sprachplattform hat den Agenten nicht angenommen. Prüfen Sie die Meldung beim Agenten und versuchen Sie es erneut.",
+      "voice_agent_in_use": "Dieser Agent nimmt eine Telefonnummer an. Verbinden Sie die Nummer zuerst mit einem anderen Agenten.",
+      "voice_agent_not_synced": "Synchronisieren Sie den Sprach-Agenten zuerst mit Ihrer Sprachplattform.",
+      "voice_no_number": "Fügen Sie zuerst eine Telefonnummer für diese Sprachplattform hinzu.",
+      "voice_provider_error": "Die Sprachplattform hat die Anfrage abgelehnt. Versuchen Sie es erneut oder prüfen Sie Ihr Konto dort.",
+      "voice_twilio_vapi_only": "Twilio-Nummern funktionieren mit Vapi. Mit Retell AI kaufen Sie die Nummer bei Retell.",
+      "voice_number_exists": "Diese Nummer ist bereits verbunden.",
+      "voice_twilio_not_owned": "Diese Nummer gehört nicht zu Ihrem Twilio-Konto.",
+      "voice_provider_mismatch": "Agent und Nummer müssen auf derselben Sprachplattform sein.",
+      "voice_call_not_cancellable": "Nur noch nicht gewählte Anrufe können abgebrochen werden.",
+      "voice_campaign_empty": "Niemand auf dieser Liste kann angerufen werden (fehlende oder ungültige Nummern oder Sperrliste).",
+      "voice_campaign_state": "Das ist im aktuellen Zustand der Kampagne nicht möglich.",
+      "voice_recording_unavailable": "Die Sprachplattform hat die Aufzeichnung nicht geliefert.",
+      "crm_contacts_not_connected": "Verbinden Sie zuerst einen Kontaktdaten-Dienst (Apollo.io, Hunter.io oder People Data Labs). Es wurde nichts abgefragt.",
+      "crm_contacts_failed": "Der Kontaktdaten-Dienst konnte nicht antworten. Bitte später erneut versuchen.",
+      "crm_autopilot_confirm_auto_send": "Bitte bestätigen Sie, dass der Autopilot innerhalb seiner Tageslimits selbstständig E-Mails senden darf.",
+      "crm_autopilot_not_active": "Schalten Sie den Autopiloten zuerst ein.",
+      "crm_do_not_contact": "Diese Adresse steht auf der Nicht-kontaktieren-Liste. Es wurde nichts gesendet.",
+      "crm_lookup_domain": "Geben Sie eine Firmen-Website wie acme.com ein.",
+      "builder_kit_generating": "Dieses Ergebnis wird gerade geschrieben — warte, bis es fertig ist.",
+      "builder_kit_not_ready": "Dieses Ergebnis ist noch nicht fertig.",
+      "builder_kit_no_data": "Dieses Ergebnis hat keine Angaben zum Bearbeiten.",
+      "builder_kit_invalid_data": "Einige Angaben fehlen oder sind ungültig. Prüfe die Felder oder erstelle das Ergebnis neu.",
+      "builder_kit_action_unavailable": "Diese Aktion ist für dieses Ergebnis nicht verfügbar.",
+      "builder_kit_action_done": "Das wurde bereits aus dem Kit erstellt.",
+      "builder_kit_no_objectives": "Der Fahrplan hat noch keine Ziele. Bearbeite ihn, um welche hinzuzufügen.",
+      "builder_kit_no_budgets": "Die Projektion hat noch keine Budgets. Bearbeite sie, um welche hinzuzufügen.",
+      "builder_kit_products_exist": "Diese Produkte gibt es bereits.",
+      "builder_kit_unknown_name": "Wähle einen der vorgeschlagenen Namen.",
+      "builder_kit_unknown_logo": "Wähle eines der erzeugten Logos.",
+      "plan_feature_locked": "Diese Funktion ist in Ihrem Plan nicht enthalten. Upgraden Sie, um sie zu nutzen.",
+      "plan_trial_expired": "Ihre kostenlose Testphase ist beendet. Wählen Sie einen Plan, um weiter Neues hinzuzufügen.",
+      "billing_no_subscription": "Es gibt noch kein aktives Abonnement zum Ändern. Starten Sie eines unter Abrechnung & Nutzung.",
+      "billing_same_plan": "Das ist bereits Ihr aktueller Plan.",
+      "billing_currency_change": "Planwechsel behalten Ihre aktuelle Abrechnungswährung.",
+      "plan_limit_unlimited_high_cost": "Kostenintensive Nutzung braucht ein endliches Kontingent. Mehr über Zusatzpakete anbieten."
     }
   },
   "onboarding": {
@@ -1289,7 +1348,14 @@
         "execution": "Arbeit mit Ihren echten Daten",
         "review": "Ergebnisse geprüft; Sie geben Änderungen frei",
         "completion": "Antwort plus bester nächster Schritt"
-      }
+      },
+      "fromCeo": "Vom KI-CEO",
+      "savedToBrain": "Im Company Brain gespeichert",
+      "notSavedToBrain": "Dieses Ergebnis konnte nicht im Company Brain gespeichert werden.",
+      "retryStep": "Diesen Schritt erneut versuchen",
+      "attempts": "{count, plural, one {# Mal wiederholt} other {# Mal wiederholt}}",
+      "docTitle": "Ergebnis von AI Command: {command}",
+      "docMeta": "Erstellt von den KI-Mitarbeitern des Unternehmens am {date}. Prüfen Sie die Zahlen, bevor Sie handeln."
     },
     "ops": {
       "runsTitle": "KI bei der Arbeit",
@@ -1312,6 +1378,187 @@
       "openHealth": "Details",
       "healthNotEnough": "Noch nicht genug Daten für einen Wert",
       "healthOutOf": "von 100 · aus {metrics} echten KPIs"
+    },
+    "ceo": {
+      "title": "KI-CEO",
+      "subtitle": "Jeden Tag prüft Ihr KI-CEO Ziele, Zahlen, Risiken und die Arbeit des KI-Teams, legt die Prioritäten der Woche fest, gibt Arbeit an die richtigen KI-Mitarbeiter und legt Ihnen nur die Entscheidungen vor, die Sie brauchen.",
+      "open": "KI-CEO öffnen",
+      "sessionTitle": "Delegierte Arbeit",
+      "forbidden": "Sie haben in diesem Unternehmen keinen Zugriff auf die KI-Belegschaft.",
+      "runNow": "Heutige Prüfung jetzt starten",
+      "openRun": "Arbeit verfolgen",
+      "openDocument": "Ergebnis im Brain",
+      "someone": "ein KI-Mitarbeiter",
+      "aiNotConfigured": "KI ist auf dieser Plattform noch nicht eingerichtet, daher kann der KI-CEO nicht arbeiten.",
+      "paused": "{name} ist pausiert, daher läuft die tägliche Prüfung nicht. Setzen Sie den KI-CEO unter KI-Belegschaft fort.",
+      "noCeo": {
+        "title": "Stellen Sie einen KI-CEO für das Tagesgeschäft ein",
+        "body": "Der KI-CEO prüft Ihr Unternehmen jeden Morgen, hält die Prioritäten der Woche fest und delegiert Arbeit an Ihr KI-Team. Nach außen passiert nichts ohne Ihre Freigabe.",
+        "action": "KI-CEO einstellen"
+      },
+      "review": {
+        "title": "Heutige Prüfung",
+        "when": "{when} · {trigger}",
+        "never": "Noch keine Prüfung",
+        "neverHint": "Die erste Prüfung läuft automatisch nach 7:00 Uhr in der Zeitzone Ihres Unternehmens – oder starten Sie sie jetzt.",
+        "counts": "Delegiert {delegated} · nachverfolgt {followedUp} · an Sie eskaliert {escalated}",
+        "cap": "{used} von {cap} KI-Arbeitsstarts heute genutzt",
+        "history": "Prüfungen der letzten Tage"
+      },
+      "trigger": {
+        "manual": "von Hand gestartet",
+        "schedule": "täglicher Zeitplan"
+      },
+      "cycleStatus": {
+        "RUNNING": "Prüft gerade",
+        "COMPLETED": "Fertig",
+        "SKIPPED": "Nicht gelaufen",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "skip": {
+        "maintenance_mode": "Die Plattform ist in Wartung, daher hat der KI-CEO die heutige Prüfung pausiert.",
+        "read_only_mode": "Die Plattform ist gerade schreibgeschützt, daher kann der KI-CEO nicht handeln.",
+        "platform_ai_disabled": "Die KI-Belegschaft ist von der Plattform abgeschaltet.",
+        "ai_execution_paused": "KI-Arbeit ist von der Plattform pausiert.",
+        "background_jobs_paused": "Hintergrundarbeit ist pausiert; die Prüfung läuft, sobald sie fortgesetzt wird.",
+        "organization_suspended": "Diese Organisation ist gesperrt.",
+        "module_disabled": "Die KI-Belegschaft ist für diese Organisation nicht verfügbar.",
+        "ai_not_configured": "KI ist auf dieser Plattform noch nicht eingerichtet.",
+        "platform_ai_org_disabled": "KI ist für diese Organisation von der Plattform deaktiviert.",
+        "platform_ai_profile_disabled": "Die Rolle KI-CEO ist von der Plattform deaktiviert.",
+        "platform_ai_model_disabled": "Das konfigurierte KI-Modell ist von der Plattform deaktiviert.",
+        "platform_ai_budget_exhausted": "Das KI-Budget der Plattform ist vorerst aufgebraucht.",
+        "plan_ai_tokens_exhausted": "Das monatliche KI-Kontingent Ihres Tarifs ist aufgebraucht.",
+        "no_ai_ceo": "In diesem Unternehmen gibt es keinen aktiven KI-CEO.",
+        "ceo_paused": "Der KI-CEO ist pausiert.",
+        "acting_user_forbidden": "Die Person, für die der KI-CEO handelt, darf keine KI-Arbeit mehr starten. Starten Sie die Prüfung selbst.",
+        "already_running": "Eine Prüfung läuft bereits.",
+        "already_ran": "Die heutige Prüfung ist bereits gelaufen.",
+        "other": "Bei der Prüfung ist etwas schiefgegangen. Sie läuft morgen erneut – oder starten Sie sie jetzt."
+      },
+      "figure": {
+        "healthScore": "Geschäftsgesundheit",
+        "offTrack": "Ziele nicht im Plan",
+        "openDeals": "Offene Deals",
+        "overdueInvoices": "Überfällige Rechnungen",
+        "pendingApprovals": "Warten auf Freigabe",
+        "aiRunning": "Laufende KI-Aufgaben"
+      },
+      "ask": {
+        "title": "Den CEO fragen",
+        "hint": "Sagen Sie dem KI-CEO, was Sie brauchen. Er plant die Arbeit, verteilt Teile an die richtigen KI-Mitarbeiter und berichtet zurück.",
+        "label": "Ihre Anfrage an den KI-CEO",
+        "placeholder": "Zum Beispiel: Gewinne diesen Monat fünf neue Kunden",
+        "submit": "An den CEO senden",
+        "suggestions": "Ideen",
+        "notConfigured": "KI ist auf dieser Plattform noch nicht eingerichtet.",
+        "forbidden": "Sie dürfen in diesem Unternehmen keine KI-Arbeit starten.",
+        "s1": "Worauf sollten wir uns diese Woche konzentrieren, um den Umsatz zu steigern?",
+        "s2": "Welche Risiken könnten uns diesen Monat schaden, und was tun wir dagegen?",
+        "s3": "Sorge dafür, dass unsere überfälligen Rechnungen bezahlt werden"
+      },
+      "priorities": {
+        "title": "Prioritäten dieser Woche",
+        "week": "Woche {week}, aus Ihren echten Zahlen gewählt",
+        "owner": "Verantwortlich: {role}",
+        "delegated": "Arbeit gestartet {when}",
+        "notYet": "noch nicht gestartet",
+        "drop": "Verwerfen",
+        "none": "Diese Woche ist nichts dringend: Die Ziele sind im Plan und es wurden keine Risiken gefunden.",
+        "noneYet": "Prioritäten erscheinen nach der ersten täglichen Prüfung.",
+        "closed": "{count, plural, one {# abgeschlossene Priorität} other {# abgeschlossene Prioritäten}}",
+        "restore": "Zurückholen"
+      },
+      "priorityStatus": {
+        "ACTIVE": "Aktiv",
+        "RESOLVED": "Erledigt",
+        "DROPPED": "Verworfen"
+      },
+      "kind": {
+        "objective": "Ziel",
+        "health": "Risiko",
+        "cash": "Liquidität",
+        "pipeline": "Vertrieb"
+      },
+      "priority": {
+        "objective": "„{objective}“ wieder in den Plan bringen ({progress} % erreicht)",
+        "health_metric_drop": "Herausfinden, warum sich {metric} um {change} % verändert hat, und es beheben",
+        "health_metric_attention": "{metric} angehen ({value})",
+        "health_overdue_work_tasks": "{count, plural, one {# überfällige Aufgabe erledigen} other {# überfällige Aufgaben erledigen}}",
+        "health_overdue_follow_ups": "{count, plural, one {# überfälliges Follow-up nachholen} other {# überfällige Follow-ups nachholen}}",
+        "cash": "{count, plural, one {# überfällige Rechnung einziehen} other {# überfällige Rechnungen einziehen}} ({amount})",
+        "pipeline": "{count, plural, one {# festgefahrenen Deal wiederbeleben} other {# festgefahrene Deals wiederbeleben}}",
+        "other": "Unternehmenspriorität"
+      },
+      "why": {
+        "objective_OFF_TRACK": "Nicht im Plan. Schwächstes Schlüsselergebnis: {kr}.",
+        "objective_AT_RISK": "Das Ziel droht verfehlt zu werden. Schwächstes Schlüsselergebnis: {kr}.",
+        "cash": "Geld, das Kunden Ihnen schulden, ist überfällig; es einzuziehen schützt Ihre Liquidität.",
+        "pipeline": "{count} von {open} offenen Deals haben sich zu lange nicht bewegt."
+      },
+      "decisions": {
+        "title": "Entscheidungen für Sie",
+        "hint": "Nur was der KI-CEO nicht allein entscheiden sollte.",
+        "approvals": "{count, plural, one {# Aktion wartet auf Ihre Freigabe} other {# Aktionen warten auf Ihre Freigabe}}",
+        "approveStart": "Freigeben und starten",
+        "replan": "Neuen Plan anfordern",
+        "acknowledge": "Verstanden",
+        "dismiss": "Verwerfen",
+        "open": "Ansehen",
+        "none": "Gerade braucht nichts Ihre Entscheidung."
+      },
+      "decision": {
+        "stalled_work": "Delegierte Arbeit steckt seit {hours} Stunden fest ({queued} wartend, {blocked} blockiert, {approvals} Freigaben offen)",
+        "delegation_proposal": "Der KI-CEO möchte dies an {role} übergeben",
+        "budget_exhausted": "Das KI-Budget für {role} ist aufgebraucht",
+        "objective_off_track": "„{objective}“ ist nicht im Plan ({progress} %)",
+        "approvals_backlog": "{count, plural, one {# Freigabe wartet auf Sie} other {# Freigaben warten auf Sie}}"
+      },
+      "actions": {
+        "title": "Was der KI-CEO getan hat und warum",
+        "hint": "Jede Delegation, Nachverfolgung und Eskalation mit der gestarteten Arbeit.",
+        "general": "Unternehmensprüfung",
+        "stop": "Diese Arbeit stoppen",
+        "stopConfirm": "Diese Arbeit und alle Aufgaben stoppen, die die KI-Mitarbeiter dafür gestartet haben?",
+        "none": "Der KI-CEO hat noch nicht gehandelt."
+      },
+      "actionKind": {
+        "DELEGATED": "Delegiert",
+        "RETRIED": "Erneut versucht",
+        "FOLLOWED_UP": "Nachverfolgt",
+        "ESCALATED": "Sie gefragt",
+        "REPLANNED": "Neuen Plan angefordert",
+        "PROPOSED": "Vorgeschlagen",
+        "HELD": "Zurückgehalten"
+      },
+      "reason": {
+        "delegate": "An {role} übergeben, weil die Zahlen zeigen, dass es Aufmerksamkeit braucht.",
+        "retry": "Der letzte Versuch wurde nicht fertig, daher versucht es {role} erneut.",
+        "follow_up": "Nach drei Tagen noch offen, daher geht {role} den nächsten Schritt.",
+        "stalled_work": "Die Arbeit kommt nicht voran ({queued} wartend, {blocked} blockiert, {approvals} Freigaben offen).",
+        "autonomy_suggest_only": "Der KI-CEO darf nur vorschlagen, daher hat er Sie zuerst gefragt.",
+        "ceo_budget": "Das Monatsbudget des KI-CEO ist aufgebraucht.",
+        "daily_cap": "Das heutige Limit von {cap} neuen KI-Arbeitsstarts ist erreicht; es geht morgen weiter.",
+        "delegation_refused": "{role} konnte die Arbeit nicht starten (siehe KI-Belegschaft).",
+        "objective_off_track": "Das Ziel ist aus dem Plan geraten, daher plant der Verantwortliche neue Initiativen.",
+        "replan_refused": "Ein neuer Plan konnte nicht gestartet werden.",
+        "approvals_backlog": "{count, plural, one {# Freigabe wartet} other {# Freigaben warten}} auf Sie.",
+        "profile_unavailable": "Diese KI-Rolle ist nicht verfügbar.",
+        "founder_approved": "Sie haben zugestimmt, daher hat {role} begonnen."
+      },
+      "outcomes": {
+        "title": "Ergebnisse",
+        "hint": "Abgeschlossene Arbeit, die der KI-CEO delegiert hat, mit dem empfohlenen nächsten Schritt.",
+        "none": "Noch keine delegierte Arbeit abgeschlossen.",
+        "noDocument": "Das Ergebnis konnte nicht im Company Brain gespeichert werden."
+      },
+      "strip": {
+        "title": "KI-CEO diese Woche",
+        "noCeo": "Noch kein KI-CEO",
+        "last": "Letzte Prüfung {when} · {count, plural, one {# Arbeit gestartet} other {# Arbeiten gestartet}}",
+        "priority": "Priorität {n}",
+        "decisions": "{count, plural, one {# Entscheidung wartet auf Sie} other {# Entscheidungen warten auf Sie}}"
+      }
     }
   },
   "company": {
@@ -2007,7 +2254,27 @@
       "read_marketing_run": "Marketing-Lauf lesen",
       "read_livechat_conversations": "Website-Chats lesen",
       "read_livechat_transcript": "Chatverlauf lesen",
-      "livechat_book_meeting": "Termin aus einem Chat buchen"
+      "livechat_book_meeting": "Termin aus einem Chat buchen",
+      "read_founder_briefing": "Gründer-Briefing lesen",
+      "read_voice_calls": "KI-Anrufe lesen",
+      "read_voice_call": "Einen KI-Anruf lesen",
+      "place_voice_call": "KI-Anruf tätigen",
+      "run_voice_campaign": "KI-Anrufkampagne starten",
+      "read_prospecting_autopilots": "Akquise-Autopiloten lesen",
+      "find_decision_makers": "Entscheider finden",
+      "read_revenue_forecast": "Umsatzprognose lesen",
+      "suggest_expense_categories": "Ausgabenkategorien vorschlagen",
+      "categorize_expense": "Ausgabe kategorisieren",
+      "read_budget_variance": "Budget vs. Ist erklären",
+      "read_employee_record": "Mitarbeiterakte lesen",
+      "read_team_overview": "Teamübersicht lesen",
+      "propose_onboarding_plan": "Onboardingplan vorschlagen",
+      "read_deadline_risks": "Terminrisiken lesen",
+      "read_workload_balance": "Auslastung lesen",
+      "read_ops_bottlenecks": "Betriebsengpässe lesen",
+      "read_process": "Prozess lesen",
+      "propose_process_version": "SOP-Version vorschlagen",
+      "triage_ticket": "Ticket einordnen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2707,6 +2974,26 @@
     "website_chat_agent": {
       "name": "Website-Chat-Agent",
       "summary": "Beantwortet Website-Besucher rund um die Uhr aus Ihrem Wissen, gewinnt Leads und übergibt an Sie."
+    },
+    "briefing_writer": {
+      "name": "Stabschef",
+      "summary": "Schreibt die kurze Zusammenfassung Ihrer Tages-, Abend- und Wochenbriefings – nur aus echten Zahlen."
+    },
+    "voice_caller": {
+      "name": "KI-Telefonist",
+      "summary": "Fordert KI-Anrufe an Leads und Kontakte an und fasst nach."
+    },
+    "voice_receptionist": {
+      "name": "KI-Empfangsleitung",
+      "summary": "Prüft eingehende Anrufe und verbessert das Wissen des Empfangs."
+    },
+    "hr_manager": {
+      "name": "HR-Manager",
+      "summary": "Stellenbeschreibungen, Interview-Kits, Kandidaten-Scorecards, Onboardingpläne, Beurteilungsentwürfe und Teamübersicht."
+    },
+    "operations_manager": {
+      "name": "Operations-Manager",
+      "summary": "Findet Engpässe, schreibt SOPs und organisiert Lösungen als Aufgaben."
     }
   },
   "projects": {
@@ -2927,6 +3214,57 @@
       "apply": "Plan anwenden",
       "applying": "Wird angewendet …",
       "partial": "Vor dem Fehler angelegt: {objectives} Ziele, {milestones} Meilensteine, {projects} Projekte, {tasks} Aufgaben."
+    },
+    "execution": {
+      "title": "Umsetzung des Ziels",
+      "subtitle": "Verantwortlicher, Live-Fortschritt und die Arbeit, die dieses Ziel voranbringt.",
+      "owner": "Verantwortlicher KI-Mitarbeiter",
+      "noOwner": "Kein Verantwortlicher",
+      "addInitiative": "Initiative hinzufügen",
+      "initiativeTitle": "Initiative",
+      "initiativeDescription": "Was passieren soll (optional)",
+      "initiativeKr": "Schlüsselergebnis, das sie bewegt",
+      "anyKr": "Das ganze Ziel",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "status": "Status",
+      "initiativeStatus": {
+        "PLANNED": "Geplant",
+        "ACTIVE": "In Arbeit",
+        "DONE": "Erledigt",
+        "DROPPED": "Verworfen"
+      },
+      "offTrackTitle": "Dieses Ziel ist nicht im Plan",
+      "offTrackBody": "Der KI-CEO fordert bei der nächsten täglichen Prüfung einen neuen Plan an – oder fordern Sie ihn unten jetzt an.",
+      "replanned": "Ein neuer Plan wurde {when} angefordert.",
+      "progressTitle": "Live-Fortschritt",
+      "noTarget": "Kein Zieldatum",
+      "krValue": "Aktuell {value} · Ziel {target}",
+      "krHidden": "{progress} geschafft (die Zahlen dieser Kennzahl sind für Sie nicht sichtbar)",
+      "noKrs": "Noch keine Schlüsselergebnisse. Fügen Sie sie auf der Zielseite hinzu, damit Fortschritt messbar wird.",
+      "ownerTitle": "Verantwortlicher und Plan",
+      "ownerIs": "{name} ({role}) verantwortet dieses Ziel.",
+      "ownerNone": "Wählen Sie den KI-Mitarbeiter, der für dieses Ziel verantwortlich ist.",
+      "noEmployees": "Sie haben noch keine KI-Mitarbeiter.",
+      "hire": "Einen einstellen",
+      "replan": "Neuen Plan anfordern",
+      "plan": "Initiativen mit KI planen",
+      "planning": "Der Verantwortliche schreibt den Plan …",
+      "cannotRun": "Sie dürfen in diesem Unternehmen keine KI-Arbeit starten.",
+      "initiativesTitle": "Initiativen",
+      "initiativesHint": "Die konkrete Arbeit, die die Schlüsselergebnisse bewegt. Übergeben Sie jede davon an das KI-Team.",
+      "source": {
+        "manual": "Von einer Person hinzugefügt",
+        "ai": "Von KI geplant",
+        "ceo": "Vom KI-CEO"
+      },
+      "openRun": "Arbeit verfolgen",
+      "result": "Ergebnis",
+      "delegate": "An das KI-Team übergeben",
+      "delegateAgain": "Erneut ausführen",
+      "noInitiatives": "Noch keine Initiativen. Planen Sie sie mit KI oder fügen Sie eigene hinzu.",
+      "runsTitle": "KI-Arbeit für dieses Ziel",
+      "runsHint": "Jeder dafür gestartete Befehlslauf."
     }
   },
   "notifications": {
@@ -2968,7 +3306,8 @@
         "deliverableAssigned": "Ihnen zugewiesenes Ergebnis: {title}",
         "deliverableSubmitted": "Ergebnis zur Prüfung eingereicht: {title}",
         "deliverableAccepted": "Ergebnis abgenommen: {title}",
-        "deliverableRejected": "Änderungen am Ergebnis angefordert: {title}"
+        "deliverableRejected": "Änderungen am Ergebnis angefordert: {title}",
+        "deadlineRisk": "Termin gefährdet: {title}"
       },
       "marketing": {
         "campaign_launched": "Kampagne gestartet: {title}",
@@ -3009,7 +3348,9 @@
         "sales_task_assigned": "Vertriebsaufgabe für Sie: {title}",
         "outreach_pending": "E-Mail wartet auf Freigabe: {title}",
         "sequence_replied": "Antwort erhalten – Sequenz gestoppt: {title}",
-        "sequence_failed": "Sequenz-E-Mail konnte nicht gesendet werden: {title}"
+        "sequence_failed": "Sequenz-E-Mail konnte nicht gesendet werden: {title}",
+        "autopilot_replied": "{title} hat auf Ihre Akquise-E-Mail geantwortet",
+        "autopilot_drafts": "{title} neue Akquise-E-Mails sind für Sie bereit"
       },
       "finance": {
         "invoice_paid": "Rechnung bezahlt: {title}",
@@ -3072,7 +3413,8 @@
       "builder": {
         "input_needed": "Der KI-Unternehmensaufbau braucht Ihre Entscheidung: {title}",
         "completed": "Der KI-Unternehmensaufbau ist abgeschlossen: {title}",
-        "step_failed": "Ein Aufbau-Schritt ist fehlgeschlagen: {title}"
+        "step_failed": "Ein Aufbau-Schritt ist fehlgeschlagen: {title}",
+        "kit_ready": "Dein Gründer-Kit ist fertig: {title}"
       },
       "workforce": {
         "statusReport": "Statusbericht: {title}",
@@ -3087,6 +3429,21 @@
       "livechat": {
         "handoff": "Website-Besucher braucht einen Menschen: {title}",
         "new_chat": "Neuer Website-Chat: {title}"
+      },
+      "command": {
+        "ceo_decision": "Der KI-CEO braucht Ihre Entscheidung: {title}"
+      },
+      "briefing": {
+        "ready": "Ihr Tagesbriefing für {title} ist bereit",
+        "weekly": "Ihr Wochenrückblick für {title} ist bereit",
+        "evening": "Ihr Tagesabschluss für {title} ist bereit"
+      },
+      "voice": {
+        "call_completed": "KI-Anruf beendet – {title}",
+        "message": "Telefonnachricht – {title}"
+      },
+      "platform": {
+        "announcement": "Ankündigung: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -3236,7 +3593,8 @@
       "discover": "Leads finden",
       "outreach": "Ansprache",
       "sequences": "Sequenzen",
-      "meetings": "Termine"
+      "meetings": "Termine",
+      "prospecting": "Autopilot"
     },
     "accountTypes": {
       "PROSPECT": "Interessent",
@@ -3863,6 +4221,12 @@
         "why": "In Terminen kommen Deals voran – bereite dich vor und halte fest, was vereinbart wurde.",
         "can": "Kalenderdateien herunterladen, Termine mit Notizen abschließen oder absagen.",
         "next": "Zurück zu den heutigen Aufgaben"
+      },
+      "prospecting": {
+        "what": "Ein KI-Vertriebsassistent, der bei passenden Firmen die richtigen Ansprechpartner findet, ihre geschäftliche E-Mail prüft und die erste E-Mail schreibt.",
+        "why": "Neue Kunden beginnen mit Gesprächen. Der Autopilot füllt Ihre Pipeline jeden Tag – und Sie entscheiden, wie viel er allein tun darf.",
+        "can": "In einfachen Worten festlegen, wen er ansprechen soll, den echten Trichter verfolgen, E-Mails freigeben und eine Nicht-kontaktieren-Liste pflegen.",
+        "next": "Wartende E-Mails prüfen"
       }
     },
     "smartEmpty": {
@@ -4349,6 +4713,291 @@
         "past": "Früher"
       },
       "customersEyebrow": "Kundenbeziehungen"
+    },
+    "prospecting": {
+      "eyebrow": "Akquise-Autopilot",
+      "title": "Ihr KI-Vertriebsentwickler",
+      "subtitle": "Beschreiben Sie Ihren idealen Kunden einmal. Jeden Tag findet der Autopilot Entscheider, prüft ihre E-Mail-Adressen, schreibt eine persönliche erste E-Mail und fasst nach – innerhalb Ihrer Grenzen.",
+      "noProvider": "Um Personen und ihre geschäftlichen E-Mails zu finden, verbinden Sie einen Kontaktdaten-Dienst (Apollo.io, Hunter.io oder People Data Labs). Bis dahin wird nichts abgefragt.",
+      "emptyReadOnly": "Noch kein Autopilot eingerichtet. Jemand mit Vertriebsverwaltungsrechten kann einen anlegen.",
+      "new": "Neuer Autopilot",
+      "edit": "Einstellungen bearbeiten",
+      "list": "Ihre Autopiloten",
+      "any": "Beliebig",
+      "turnOn": "Einschalten",
+      "pause": "Pausieren",
+      "runNow": "Jetzt ausführen",
+      "runQueued": "Der Lauf wurde im Hintergrund gestartet. Aktualisieren Sie in einer Minute, um die Ergebnisse zu sehen.",
+      "runDone": "Fertig: {found} Personen gefunden, {drafted} E-Mails geschrieben, {sent} gesendet.",
+      "runSkipped": "Gerade nichts zu tun (er lief eventuell gerade erst, oder Automationen sind pausiert).",
+      "archive": "Archivieren",
+      "archiveConfirm": "Diesen Autopiloten archivieren? E-Mails, die noch auf Freigabe warten, werden storniert. Erstellte Leads bleiben im CRM.",
+      "confirmTitle": "Darf der Autopilot E-Mails selbstständig senden?",
+      "confirmBody": "Nur verifizierte Adressen, höchstens {cap} E-Mails pro Tag, immer mit Abmeldelink, und er stoppt, sobald jemand antwortet, eine E-Mail unzustellbar ist oder sich jemand abmeldet. Sie werden als Freigebende(r) gespeichert. Sie können jederzeit pausieren.",
+      "confirmYes": "Ja, bis zu {cap} pro Tag senden",
+      "capsBadge": "{quota} Personen · {cap} E-Mails pro Tag",
+      "unverifiedBadge": "Unverifizierte erlaubt ({cap} pro Tag)",
+      "verifiedOnly": "Nur verifizierte E-Mails",
+      "cardFunnel": "{found} gefunden · {verified} verifiziert · {contacted} kontaktiert · {replied} geantwortet · {meetings} Termine",
+      "schedule": "Letzter Lauf {last} · nächster Lauf {next}",
+      "off": "Der Autopilot ist aus. Schalten Sie ihn ein, damit er Personen sucht.",
+      "toOutreach": "E-Mails, die auf Freigabe warten",
+      "toSequence": "Nachfass-Sequenz",
+      "status": {
+        "DRAFT": "Nicht gestartet",
+        "ACTIVE": "An",
+        "PAUSED": "Pausiert",
+        "ARCHIVED": "Archiviert"
+      },
+      "autonomy": {
+        "DRAFT_ONLY": "Nur Entwürfe",
+        "REVIEW": "Ich gebe jede E-Mail frei",
+        "AUTO_SEND": "Selbstständig senden (mit Limits)"
+      },
+      "autonomyHelp": {
+        "DRAFT_ONLY": "Der Autopilot schreibt E-Mails und lässt sie als Entwurf liegen. Sie bearbeiten und senden sie selbst.",
+        "REVIEW": "Jede E-Mail wartet in Ihrer Freigabeliste. Nichts wird gesendet, bevor Sie auf Senden klicken.",
+        "AUTO_SEND": "E-Mails an verifizierte Adressen werden automatisch gesendet, bis zu Ihrem Tageslimit. Sie bestätigen das einmal beim Einschalten."
+      },
+      "limited": {
+        "platform": "Die KI-Sicherheitseinstellung der Plattform begrenzt diesen Autopiloten derzeit: E-Mails warten auf Freigabe statt „{level}“.",
+        "not_approved": "Automatisches Senden ist noch nicht freigegeben, daher warten E-Mails auf Ihre Freigabe. Schalten Sie den Autopiloten erneut ein, um es freizugeben."
+      },
+      "consent": {
+        "legitimate_interest": "Berechtigtes Interesse (B2B)",
+        "consent": "Hat der Kontaktaufnahme zugestimmt",
+        "existing_relationship": "Bestehende Geschäftsbeziehung"
+      },
+      "seniority": {
+        "owner": "Inhaber",
+        "founder": "Gründer",
+        "c_suite": "C-Level (CEO, CFO …)",
+        "partner": "Partner",
+        "vp": "Vice President",
+        "head": "Leitung (Head of)",
+        "director": "Direktor",
+        "manager": "Manager",
+        "senior": "Erfahrene Fachkraft",
+        "entry": "Berufseinsteiger"
+      },
+      "email": {
+        "VERIFIED": "Verifiziert",
+        "RISKY": "Riskant (Catch-all)",
+        "UNVERIFIED": "Nicht verifiziert",
+        "INVALID": "Unzustellbar",
+        "NONE": "Keine E-Mail gefunden"
+      },
+      "personStatus": {
+        "FOUND": "Gefunden",
+        "READY": "Lead erstellt",
+        "SKIPPED": "Übersprungen",
+        "CONTACTED": "Kontaktiert",
+        "REPLIED": "Geantwortet",
+        "MEETING": "Termin",
+        "BOUNCED": "Unzustellbar",
+        "UNSUBSCRIBED": "Abgemeldet",
+        "STOPPED": "Gestoppt"
+      },
+      "skip": {
+        "no_email": "keine E-Mail-Adresse gefunden",
+        "invalid_email": "E-Mail ist unzustellbar",
+        "unverified_email": "E-Mail konnte nicht verifiziert werden",
+        "do_not_contact": "steht auf der Nicht-kontaktieren-Liste",
+        "already_in_crm": "bereits in Ihrem CRM",
+        "lead_duplicate": "bereits ein Lead",
+        "lead_failed": "Lead konnte nicht erstellt werden"
+      },
+      "funnel": {
+        "title": "Live-Trichter",
+        "scope": "{count, plural, =0 {Noch keine Autopiloten} one {# Autopilot} other {Alle # Autopiloten}}",
+        "found": "Gefunden",
+        "verified": "E-Mail verifiziert",
+        "contacted": "Kontaktiert",
+        "replied": "Geantwortet",
+        "meetings": "Termin",
+        "rate": "{pct} % der vorherigen Stufe",
+        "caption": "Echte Zahlen aus Ihrem CRM: {companies} Firmen geprüft, {skipped} Personen übersprungen, {bounced} unzustellbar, {unsubscribed} abgemeldet."
+      },
+      "figures": {
+        "awaiting": "Wartet auf Sie",
+        "awaitingHint": "E-Mails zur Freigabe",
+        "drafts": "Entwürfe",
+        "sentToday": "Heute gesendet",
+        "sentTodayHint": "Von allen Autopiloten (UTC-Tag)"
+      },
+      "people": {
+        "title": "Gefundene Personen",
+        "empty": "Noch niemand. Schalten Sie den Autopiloten ein, um zu starten.",
+        "emptyActive": "Noch niemand gefunden. Der erste Lauf ist meist innerhalb einer Stunde fertig.",
+        "linkedin": "Profil von {name} öffnen",
+        "source": "gefunden von {found} · E-Mail von {email} · geprüft von {checked}"
+      },
+      "runs": {
+        "title": "Was er getan hat",
+        "empty": "Noch keine Läufe.",
+        "summary": "{companies} Firmen · {found} gefunden · {verified} verifiziert · {leads} Leads · {drafted} E-Mails geschrieben · {sent} gesendet · {stopped} gestoppt",
+        "outcome": {
+          "ok": "Fertig",
+          "partial": "Teilweise erledigt",
+          "skipped": "Übersprungen",
+          "failed": "Fehlgeschlagen"
+        }
+      },
+      "notes": {
+        "no_contact_provider": "Kein Kontaktdaten-Dienst verbunden, daher wurden keine Personen gesucht.",
+        "no_research_provider": "Kein Recherchedienst verbunden, daher wurden keine neuen Firmen gefunden. Fügen Sie Firmen-Websites zur Zielliste hinzu oder verbinden Sie Tavily, Exa oder SerpApi.",
+        "research_failed": "Der Recherchedienst konnte nicht antworten",
+        "no_new_companies": "Die Websuche fand keine neuen Firmen; beschreiben Sie Ihre Kunden anders oder fügen Sie Regionen hinzu",
+        "provider_rate_limited": "Der Kontaktdaten-Dienst hat um eine Pause gebeten; der Rest folgt beim nächsten Lauf",
+        "provider_error": "Der Kontaktdaten-Dienst hat einen Fehler gemeldet",
+        "daily_quota_reached": "Das heutige Kontingent an neuen Personen ist erreicht.",
+        "send_cap_reached": "Das heutige E-Mail-Limit ist erreicht; der Rest wartet bis morgen.",
+        "ai_failed": "Der KI-Schreibdienst konnte nicht antworten",
+        "no_ai_no_template": "Kein KI-Schreibdienst verbunden und keine erste E-Mail in den Einstellungen hinterlegt, daher wurden keine E-Mails vorbereitet.",
+        "draft_failed": "Die erste E-Mail konnte nicht geschrieben werden.",
+        "send_failed": "Eine E-Mail konnte nicht gesendet werden"
+      },
+      "providers": {
+        "title": "Daten und Verbindungen",
+        "help": "Jede Abfrage nutzt Ihr eigenes Anbieterkonto; Nutzung und geschätzte Kosten werden pro Aufruf erfasst.",
+        "connect": "Verbinden",
+        "manage": "Verwalten",
+        "failing": "Verbindung fehlerhaft: {error}",
+        "usage": "Letzte 30 Tage: {calls} Aufrufe, {failed} fehlgeschlagen, {cost} geschätzt",
+        "what": {
+          "apollo": "Findet Entscheider nach Rolle und Hierarchie, mit verifizierten E-Mails.",
+          "hunter": "Findet und verifiziert geschäftliche E-Mail-Adressen.",
+          "pdl": "Optionale zusätzliche Quelle für Personen- und Firmendaten."
+        },
+        "research": "Firmenrecherche",
+        "ai": "KI-Texte",
+        "email": "E-Mail-Versand",
+        "missing": {
+          "research": "Nicht verbunden: Es wird nur Ihre Zielliste an Firmen verwendet.",
+          "ai": "Nicht verbunden: Ihr eigener Text für die erste E-Mail wird verwendet.",
+          "email": "Nicht verbunden: E-Mails können geschrieben, aber nicht gesendet werden."
+        }
+      },
+      "dnc": {
+        "title": "Nicht-kontaktieren-Liste",
+        "help": "{total, plural, =0 {Noch keine Einträge.} one {# Eintrag.} other {# Einträge.}} Ebenfalls beachtet: {marketing, plural, =0 {keine Abmeldungen} one {# Abmeldung} other {# Abmeldungen}} aus Ihrem E-Mail-Marketing. Unzustellbare Adressen und Abmeldungen werden automatisch ergänzt.",
+        "valueLabel": "E-Mail-Adresse oder Domain",
+        "pasteLabel": "Adressen oder Domains einfügen (eine pro Zeile)",
+        "reason": "Grund",
+        "add": "Hinzufügen",
+        "paste": "Liste einfügen",
+        "single": "Einzeln hinzufügen",
+        "added": "Hinzugefügt. Alles, was für diese Adresse geplant war, wurde gestoppt.",
+        "bulkResult": "{added} hinzugefügt, {duplicates} bereits gelistet, {invalid} ungültig.",
+        "search": "Liste durchsuchen",
+        "remove": "{value} entfernen",
+        "empty": "Noch niemand auf der Liste.",
+        "reasons": {
+          "do_not_contact": "Nicht kontaktieren",
+          "unsubscribed": "Abgemeldet",
+          "bounced": "Unzustellbar",
+          "complaint": "Beschwerde",
+          "customer": "Bestandskunde",
+          "competitor": "Wettbewerber",
+          "manual": "Manuell"
+        }
+      },
+      "rules": {
+        "title": "So bleibt es sicher",
+        "verified": "Nur verifizierte E-Mail-Adressen werden kontaktiert – außer Sie erlauben unverifizierte; diese haben ein niedrigeres Tageslimit und warten immer auf Ihre Freigabe.",
+        "unsubscribe": "Jede E-Mail enthält einen Abmeldelink mit einem Klick; eine Abmeldung stoppt alle Vertriebs- und Marketing-E-Mails.",
+        "stop": "Er stoppt für eine Person, sobald sie antwortet, eine E-Mail unzustellbar ist oder sie sich abmeldet.",
+        "caps": "Tageslimits für neue Personen und E-Mails werden nie überschritten, auch nicht durch Nachfass-E-Mails.",
+        "consent": "Die Rechtsgrundlage der Kontaktaufnahme wird bei jedem erstellten Lead gespeichert."
+      },
+      "wizard": {
+        "title": "Autopilot einrichten",
+        "subtitle": "Fünf kurze Schritte in einfacher Sprache. Nichts startet, bevor Sie ihn einschalten.",
+        "progress": "Einrichtungsschritte",
+        "steps": {
+          "who": "Wer",
+          "people": "Personen",
+          "message": "Nachricht",
+          "safety": "Limits",
+          "review": "Prüfen"
+        },
+        "whoIntro": "Sagen Sie dem Autopiloten, welche Firmen gut zu Ihnen passen.",
+        "name": "Name",
+        "nameHint": "Nur für Sie, z. B. die Kundengruppe.",
+        "namePlaceholder": "z. B. Bäckereien in Slowenien",
+        "audience": "Wer sind Ihre idealen Kunden?",
+        "audienceHint": "Branche, Größe oder Bedarf. Damit werden Firmen im Web gesucht.",
+        "regions": "Regionen (optional)",
+        "regionsPlaceholder": "z. B. Ljubljana, Maribor",
+        "listHint": "Mehrere durch Kommas trennen.",
+        "exclusions": "Überspringen (optional)",
+        "exclusionsHint": "Domains oder Wörter, die übersprungen werden: Wettbewerber, Bestandskunden.",
+        "exclusionsPlaceholder": "z. B. wettbewerber.de, Franchise",
+        "targets": "Bestimmte Firmen (optional)",
+        "targetsHint": "Firmen-Websites, die zuerst bearbeitet werden, eine pro Zeile.",
+        "peopleIntro": "Welche Personen in diesen Firmen sollen von Ihnen hören?",
+        "roles": "Jobtitel",
+        "rolesPlaceholder": "z. B. Inhaber, Leitung Betrieb",
+        "seniority": "Hierarchiestufe",
+        "perCompany": "Personen pro Firma",
+        "perCompanyHint": "1 bis 5. Weniger ist persönlicher.",
+        "tryTitle": "An einer Firma ausprobieren",
+        "tryDomain": "Firmen-Website",
+        "tryButton": "Zeigen, wer dort arbeitet",
+        "tryHint": "Eine Live-Abfrage bei Ihrem Anbieter (verbraucht ein Guthaben). Nichts wird gespeichert.",
+        "tryNone": "{provider} hat dort keine passenden Personen gefunden.",
+        "trySource": "Quelle: {provider}. Nur verifizierte Adressen werden kontaktiert.",
+        "tryNeedsProvider": "Verbinden Sie Apollo.io, Hunter.io oder People Data Labs, um eine Abfrage auszuprobieren.",
+        "messageIntro": "Die KI schreibt für jede Person eine kurze, persönliche erste E-Mail aus echten Fakten über deren Firma. Sagen Sie ihr, was Sie anbieten.",
+        "pitch": "Was Sie anbieten und warum es für sie wichtig ist",
+        "pitchHint": "Ein bis drei Sätze. Die KI erfindet nie Preise, Ergebnisse oder Kunden.",
+        "pitchPlaceholder": "z. B. Wir liefern jeden Morgen frisches Gebäck, damit Cafés nicht mehr um 4 Uhr backen müssen.",
+        "templateTitle": "Ihre eigene erste E-Mail (wenn kein KI-Schreibdienst verbunden ist)",
+        "templateHint": "Mit '{{firstName}}', '{{company}}' und '{{sender}}' personalisieren.",
+        "subject": "Betreff",
+        "body": "Text",
+        "followUps": "Nachfass-E-Mails",
+        "followUpsHint": "Werden nur gesendet, wenn die Person nicht geantwortet hat. Sie stoppen bei Antwort, Unzustellbarkeit oder Abmeldung.",
+        "afterDays": "Tage nach der vorherigen E-Mail",
+        "removeStep": "Entfernen",
+        "addStep": "Nachfass-E-Mail hinzufügen",
+        "mergeFields": "Mit '{{firstName}}', '{{name}}', '{{company}}' und '{{sender}}' personalisieren.",
+        "unsubscribeLine": "Satz vor dem Abmeldelink",
+        "unsubscribeHint": "Wird jeder E-Mail zusammen mit einem Abmeldelink hinzugefügt.",
+        "safetyIntro": "Legen Sie fest, wie viel der Autopilot täglich tut und wie viel er ohne Sie tun darf.",
+        "quota": "Neue Personen pro Tag",
+        "quotaHint": "Wie viele Entscheider täglich gefunden werden.",
+        "sendCap": "E-Mails pro Tag (maximal)",
+        "sendCapHint": "Inklusive Nachfass-E-Mails. Klein anfangen; 20 ist ein guter Start.",
+        "autonomy": "Wie viel darf er allein tun?",
+        "recommended": "Empfohlen",
+        "allowUnverified": "Auch Adressen kontaktieren, die nicht verifiziert werden konnten",
+        "allowUnverifiedHint": "Nicht empfohlen: Unverifizierte Adressen sind häufiger unzustellbar und können Ihrer Absender-Reputation schaden. Sie warten immer auf Ihre Freigabe.",
+        "unverifiedCap": "Unverifizierte E-Mails pro Tag",
+        "unverifiedCapHint": "Muss unter dem täglichen E-Mail-Limit liegen (max. 10).",
+        "unverifiedCapTooHigh": "Bitte niedriger als das tägliche E-Mail-Limit wählen.",
+        "consent": "Warum Sie sie kontaktieren dürfen",
+        "consentHint": "Wird bei jedem Lead gespeichert. Bei B2B-Kaltakquise ist das meist berechtigtes Interesse.",
+        "consentNote": "Notiz (optional)",
+        "consentNotePlaceholder": "z. B. Relevantes Angebot für ihre berufliche Rolle",
+        "reviewTitle": "Prüfen und anlegen",
+        "limits": "Tageslimits",
+        "limitsValue": "{quota} neue Personen, höchstens {cap} E-Mails",
+        "emails": "E-Mail-Adressen",
+        "emailsVerified": "Nur verifizierte",
+        "emailsUnverified": "Verifizierte, plus bis zu {cap} unverifizierte pro Tag (mit Freigabe)",
+        "followUpsValue": "{count, plural, =0 {Keine Nachfass-E-Mails} one {# Nachfass-E-Mail} other {# Nachfass-E-Mails}}",
+        "reviewNote": "Der Autopilot startet ausgeschaltet. Schalten Sie ihn ein, wenn Sie bereit sind; Sie können jederzeit pausieren.",
+        "create": "Autopilot anlegen",
+        "save": "Änderungen speichern",
+        "defaults": {
+          "unsubscribe": "Wenn Sie nichts mehr von mir hören möchten, können Sie sich hier abmelden:",
+          "fu1Subject": "Re: kurze Frage, '{{firstName}}'",
+          "fu1Body": "Hallo '{{firstName}}',\n\nich wollte meine Nachricht noch einmal nach oben holen. Wäre ein kurzes Gespräch sinnvoll?\n\nViele Grüße\n'{{sender}}'",
+          "fu2Subject": "Soll ich das Thema abschließen?",
+          "fu2Body": "Hallo '{{firstName}}',\n\nich habe nichts von Ihnen gehört und gehe davon aus, dass es gerade nicht passt. Falls sich das ändert, antworten Sie einfach auf diese E-Mail.\n\nAlles Gute\n'{{sender}}'"
+        }
+      }
     }
   },
   "plans": {
@@ -5003,7 +5652,12 @@
       "email_marketing": "E-Mail-Marketing",
       "sms": "SMS",
       "storage": "Dateispeicher",
-      "infrastructure": "Infrastruktur"
+      "infrastructure": "Infrastruktur",
+      "voice_calls": "KI-Anrufe",
+      "contact_data": "Kontaktdaten",
+      "email_finder": "E-Mail-Suche",
+      "email_verification": "E-Mail-Verifizierung",
+      "enrichment": "Personen- und Firmenanreicherung"
     },
     "providers": {
       "google": {
@@ -5177,6 +5831,26 @@
       "cloudflare": {
         "description": "Cloudflare-Kontozugriff (DNS, R2, Pages) für Infrastruktur-Automatisierung.",
         "setup": "Erstellen Sie unter dash.cloudflare.com → My Profile → API Tokens ein API-Token mit nur den nötigen Berechtigungen.\nOptional: zu verwendende Konto-ID eintragen."
+      },
+      "vapi": {
+        "description": "KI-Sprach-Agenten, die Anrufe tätigen und annehmen (Realy Telefon-Team).",
+        "setup": "Kopieren Sie Ihren Private API Key aus dem Vapi-Dashboard (Organization → API Keys).\nRealy legt Assistenten, Nummern und Webhooks für Sie an."
+      },
+      "retell": {
+        "description": "KI-Sprach-Agenten mit integrierter Anrufanalyse (Realy Telefon-Team).",
+        "setup": "Erstellen Sie im Retell-Dashboard einen API-Schlüssel (Settings → API Keys). Nutzen Sie einen Schlüssel mit Webhook-Kennzeichen: Realy prüft damit die Anrufereignisse.\nRealy legt Agenten und Webhooks für Sie an."
+      },
+      "apollo": {
+        "description": "B2B-Kontaktdaten: Entscheider nach Rolle und Hierarchie, verifizierte geschäftliche E-Mails und Firmendaten für den Akquise-Autopiloten.",
+        "setup": "Öffnen Sie in Apollo Settings → Integrations → API, erstellen Sie einen Master-API-Schlüssel und fügen Sie ihn hier ein."
+      },
+      "hunter": {
+        "description": "Geschäftliche E-Mail-Adressen finden und verifizieren; findet auch Personen zu einer Firmendomain.",
+        "setup": "Kopieren Sie Ihren API-Schlüssel unter hunter.io → API (Dashboard → API keys)."
+      },
+      "pdl": {
+        "description": "People Data Labs: optionale zusätzliche Quelle für Personen- und Firmenanreicherung.",
+        "setup": "Kopieren Sie Ihren API-Schlüssel im People-Data-Labs-Dashboard → API keys."
       }
     },
     "backToMarketplace": "Alle Integrationen",
@@ -5256,7 +5930,8 @@
       "apiToken": "API-Token",
       "accountId": "Konto-ID",
       "developerToken": "Entwickler-Token",
-      "loginCustomerId": "Manager-Kundennummer (Login)"
+      "loginCustomerId": "Manager-Kundennummer (Login)",
+      "privateApiKey": "Private API Key"
     },
     "syncStatus": {
       "RUNNING": "Läuft",
@@ -5456,7 +6131,12 @@
         "sms_send": "SMS",
         "whatsapp_send": "WhatsApp-Nachricht",
         "payments_link": "Zahlungslink",
-        "email_send": "E-Mail"
+        "email_send": "E-Mail",
+        "contacts_people_search": "Personensuche",
+        "contacts_email_find": "E-Mail-Suche",
+        "contacts_email_verify": "E-Mail-Verifizierung",
+        "contacts_enrich_person": "Personenanreicherung",
+        "contacts_enrich_company": "Firmenanreicherung"
       }
     },
     "marketplace": {
@@ -7654,7 +8334,8 @@
         "incidents": "Vorfälle",
         "overview": "Überblick",
         "processes": "SOPs",
-        "vendors": "Lieferanten"
+        "vendors": "Lieferanten",
+        "analytics": "Analysen"
       },
       "timeToResolve": "Lösungsdauer",
       "title": "Betrieb",
@@ -8221,6 +8902,89 @@
         "why": "Kleine Zyklen halten das Team fokussiert und zeigen echten Fortschritt.",
         "can": "Sprints planen, starten, abschließen und die Geschwindigkeit auswerten."
       }
+    },
+    "aiManager": {
+      "runBy": "Geleitet von {name}",
+      "none": "Diese Abteilung hat noch keine KI-Leitung",
+      "noneHint": "Stellen Sie eine in Ihrer KI-Belegschaft ein, sie übernimmt dann: {duty}",
+      "hire": "KI-Leitung einstellen",
+      "autonomy": {
+        "READ_ONLY": "Nur lesen",
+        "RECOMMEND": "Empfiehlt",
+        "PREPARE": "Bereitet Entwürfe vor",
+        "EXECUTE_WITH_APPROVAL": "Handelt mit Freigabe",
+        "AUTONOMOUS_LOW_RISK": "Autonom (geringes Risiko)"
+      }
+    },
+    "opsAnalytics": {
+      "title": "Betriebsanalysen",
+      "subtitle": "Wo Arbeit in Ihrem Unternehmen stockt – gefunden in Ihren echten Daten.",
+      "duty": "Achtet auf Engpässe, macht aus Prozessen SOPs und organisiert Lösungen als Aufgaben zur Freigabe.",
+      "areas": {
+        "checklists": "Überfällige Checklisten",
+        "workflows": "Hängende Workflow-Läufe",
+        "support": "Langsame Tickets",
+        "approvals": "Wartende Freigaben",
+        "tasks": "Langsame oder stockende Aufgaben"
+      },
+      "bottlenecks": "Engpässe",
+      "checkedAt": "Geprüft {time}",
+      "kinds": {
+        "overdue_checklist": "Überfällige Checklisten-Läufe ({count})",
+        "stuck_runs": "Workflow-Läufe ohne Fortschritt ({count})",
+        "failing_runs": "Workflow schlägt wiederholt fehl ({count} in 7 Tagen)",
+        "slow_tickets": "Support-Tickets warten zu lange ({count})",
+        "aging_approvals": "Liegengebliebene Freigaben ({count})",
+        "slow_cycle": "Lange Durchlaufzeit von Aufgaben ({count} Aufgaben)",
+        "stalled_wip": "Laufende Arbeit stockt ({count})"
+      },
+      "severity": {
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig"
+      },
+      "age": "{count} T.",
+      "open": "Öffnen",
+      "fixTask": "Lösungsaufgabe anlegen",
+      "fixAutomation": "Automation entwerfen",
+      "clear": "Derzeit keine Engpässe",
+      "clearHint": "Checklisten, Workflows, Tickets, Freigaben und Aufgaben laufen. Diese Seite prüft bei jedem Öffnen neu.",
+      "partial": "Einige Bereiche sind ausgeblendet, weil Sie keinen Zugriff darauf haben.",
+      "cycleTitle": "Durchlaufzeit nach Projekt",
+      "cycleHint": "Median der Tage von Anlage bis Erledigung in den letzten 60 Tagen. Unternehmensmedian: {days} Tage (Markierung).",
+      "cycleEmpty": "In den letzten 60 Tagen wurden noch keine Aufgaben erledigt.",
+      "days": "{count} Tage",
+      "doneCount": "{count} Aufgaben erledigt",
+      "sopTitle": "KI-SOP-Autor",
+      "sopHint": "Macht aus diesem Prozess eine klare Schritt-für-Schritt-SOP und schlägt sie als neue Version zur Freigabe vor.",
+      "sopRun": "SOP erstellen"
+    },
+    "radar": {
+      "title": "Liefer-Radar",
+      "duty": "Schreibt wöchentlich einen Statusbericht für jedes aktive Projekt und meldet Terminrisiken und überlastete Personen.",
+      "risksTitle": "Terminrisiken",
+      "risksHint": "Aus echten Aufgaben und Meilensteinen; Projektverantwortliche werden einmal täglich über hohe Risiken informiert.",
+      "severity": {
+        "high": "Hoch",
+        "medium": "Mittel"
+      },
+      "kinds": {
+        "overdue_tasks": "{count} überfällige Aufgaben",
+        "due_soon_not_started": "{count} Aufgaben in 3 Tagen fällig, nicht begonnen",
+        "milestone_at_risk": "Meilenstein „{label}“ fällig am {date} mit {count} offenen Aufgaben",
+        "projected_late": "Beim aktuellen Tempo werden die {count} offenen Aufgaben nach dem Fälligkeitsdatum {date} fertig"
+      },
+      "noRisks": "Keine Terminrisiken in Ihren laufenden Projekten.",
+      "balanceTitle": "Auslastung ausgleichen",
+      "balanceHint": "Teamdurchschnitt: {points} Punkte offene Arbeit pro Person.",
+      "load": {
+        "over": "{name}: überlastet ({points} Pkt.)",
+        "light": "{name}: hat Kapazität ({points} Pkt.)"
+      },
+      "move": "Von {from} zu {to} verschieben · {project}",
+      "reassign": "Neu zuweisen",
+      "balanced": "Die Auslastung ist ausgeglichen – keine Umverteilung nötig.",
+      "export": "Statusbericht exportieren"
     }
   },
   "marketing": {
@@ -10799,7 +11563,8 @@
       "claims": "Spesenabrechnungen",
       "start": "Hier starten",
       "alerts": "Warnungen",
-      "learn": "Begriffe lernen"
+      "learn": "Begriffe lernen",
+      "manager": "KI-Schreibtisch"
     },
     "accounting": {
       "tabs": {
@@ -11736,6 +12501,12 @@
         "why": "Sie müssen kein Buchhalter sein, um die Finanzen Ihres Unternehmens zu führen.",
         "can": "Einen Begriff suchen, ein Alltagsbeispiel lesen und die passende Seite öffnen.",
         "next": "Geführte Aufgabe starten"
+      },
+      "manager": {
+        "what": "Der Schreibtisch Ihres KI-Finanzmanagers: Monatsmemo, Umsatzausblick, Budgeterklärungen und saubere Bücher.",
+        "why": "Sie sehen, was sich geändert hat, warum und was als Nächstes zu tun ist – ohne jede Buchung zu lesen.",
+        "can": "Finanzmemo erstellen, Umsatzprognose prüfen, Budgetabweichungen verstehen und Ausgaben mit einem Klick kategorisieren.",
+        "next": "Budgets prüfen"
       }
     },
     "os": {
@@ -12195,6 +12966,60 @@
           "example": "Im März geleistete Arbeit zählt als März-Umsatz, auch wenn der Kunde im April zahlt."
         }
       }
+    },
+    "manager": {
+      "duty": "Schreibt zu Beginn jedes Monats das Finanzmemo und schlägt Folgeaufgaben und Ausgabenkategorien zur Freigabe vor.",
+      "forecast": {
+        "title": "Umsatzprognose",
+        "hint": "Nächste 6 Monate: vertraglich gesicherter und fakturierter Umsatz sowie die gewichtete Vertriebspipeline als Projektion.",
+        "legend": "Legende der Prognose",
+        "recurring": "Vertraglich (wiederkehrend)",
+        "receivables": "Fakturiert (fällig)",
+        "pipeline": "Pipeline (Projektion)",
+        "total": "Gesamt",
+        "empty": "Noch keine wiederkehrenden Rechnungen, offenen Rechnungen oder offenen Deals – die Prognose füllt sich, sobald Sie fakturieren und verkaufen.",
+        "pipelineIncluded": "Pipeline: {count} offene Deals, gewichtet nach Wahrscheinlichkeit.",
+        "pipelineNoAccess": "Die Vertriebspipeline ist nicht enthalten, da Sie keine Vertriebsdaten sehen dürfen.",
+        "pipelineUnavailable": "Die Vertriebspipeline konnte gerade nicht gelesen werden.",
+        "projectionNote": "Pipeline-Werte sind Projektionen, kein gebuchter Umsatz."
+      },
+      "memo": {
+        "title": "Monatliches Finanzmemo",
+        "scheduled": "{name} schreibt es automatisch in den ersten Tagen jedes Monats.",
+        "hint": "Der KI-CFO prüft Ihre echte GuV, Liquidität und Ausgaben und schlägt konkrete Maßnahmen als Aufgaben vor.",
+        "run": "Memo jetzt schreiben",
+        "noAgents": "Sie benötigen die Berechtigung, KI-Mitarbeitende einzusetzen, um das Finanzmemo anzufordern."
+      },
+      "variance": {
+        "title": "Budget vs. Ist, erklärt",
+        "hint": "Budgets dieses Monats: wie viel verbraucht ist, wohin es geht und welche Buchungen es verursacht haben.",
+        "line": "{actual} von {budget} ausgegeben, {elapsed} % des Zeitraums vorbei.",
+        "compare": "Vorperiode: {previous} · Prognose zum Periodenende: {projected}",
+        "drivers": "Größte Buchungen",
+        "empty": "Für diesen Monat gibt es noch keine Budgets.",
+        "setup": "Budget festlegen",
+        "status": {
+          "over": "Überschritten",
+          "trending_over": "Auf Überschreitungskurs",
+          "watch": "Beobachten",
+          "on_track": "Im Plan"
+        }
+      },
+      "categories": {
+        "title": "Ausgabenkategorien bestätigen",
+        "hint": "{count} unkategorisierte Ausgaben. Die Vorschläge lernen aus Ihrer bisherigen Kategorisierung ähnlicher Ausgaben.",
+        "expense": "Ausgabe",
+        "amount": "Betrag",
+        "suggested": "Vorgeschlagene Kategorie",
+        "why": "Warum",
+        "apply": "Übernehmen",
+        "noConfident": "Es gibt unkategorisierte Ausgaben, aber noch nicht genug Verlauf für einen sicheren Vorschlag.",
+        "allDone": "Alle aktuellen Ausgaben haben eine Kategorie.",
+        "basis": {
+          "vendor": "Gleicher Lieferant: {confidence} % von {count} früheren Ausgaben",
+          "words": "Ähnliche Beschreibungen: {confidence} % von {count} Treffern"
+        }
+      }
     }
   },
   "hr": {
@@ -12293,7 +13118,27 @@
       "recruiterTitle": "KI-Recruiter",
       "scoreCandidate": "Lebenslauf analysieren & bewerten",
       "showOutput": "Ergebnis anzeigen",
-      "starting": "Wird gestartet…"
+      "starting": "Wird gestartet…",
+      "scorecard": "Zusammenfassung & Scorecard",
+      "interviewKit": "Interview-Kit",
+      "assistantTitle": "KI-HR-Assistent",
+      "onboardingPlanHint": "Entwirft einen 30/60/90-Tage-Onboardingplan und schlägt die Schritte zur Freigabe vor; freigegebene Schritte werden zu Aufgaben.",
+      "reviewDraftHint": "Entwirft eine Leistungsbeurteilung aus Zielen, KPIs und Feedback dieser Person zur Bearbeitung durch die Führungskraft.",
+      "onboardingPlan": "Onboarding planen",
+      "reviewDraft": "Beurteilung entwerfen",
+      "managerDuty": "Erstellt Stellenbeschreibungen, Interview-Kits, Kandidaten-Scorecards, Onboardingpläne und Beurteilungsentwürfe; Änderungen warten auf Ihre Freigabe.",
+      "teamTitle": "Teamübersicht",
+      "teamHint": "{headcount} Personen · größtes Team pro Führungskraft: {largest}",
+      "teamOverview": "Teamübersicht",
+      "team": {
+        "headcount": "Personen",
+        "onLeave": "Abwesend",
+        "onboarding": "Onboarding",
+        "goalsAtRisk": "Ziele gefährdet",
+        "reviewsPending": "Offene Beurteilungen",
+        "openRoles": "Offene Stellen",
+        "late": "{count} verspätet"
+      }
     },
     "assets": {
       "add": "Gerät hinzufügen",
@@ -14450,7 +15295,11 @@
         "supportFormEnabled": "Öffentliches Supportformular",
         "supportFormEnabledHint": "Jede*r kann ein Ticket einreichen (mit Ratenbegrenzung).",
         "aiTriageEnabled": "KI-Triage für neue Tickets",
-        "aiTriageEnabledHint": "Startet eine KI-Klassifizierung für Tickets, die Ihr Team erstellt (verbraucht KI-Kontingent)."
+        "aiTriageEnabledHint": "Startet eine KI-Klassifizierung für Tickets, die Ihr Team erstellt (verbraucht KI-Kontingent).",
+        "aiFirstResponseEnabled": "KI-Erstantwort",
+        "aiFirstResponseEnabledHint": "Ihr KI-Support-Mitarbeiter entwirft für jedes neue Ticket eine recherchierte erste Antwort. Der Versand wartet auf Ihre Freigabe, sofern Sie keine Autonomie gewähren.",
+        "aiSlaEscalationEnabled": "KI-SLA-Eskalation",
+        "aiSlaEscalationEnabledHint": "Verletzt ein dringendes oder hoch priorisiertes Ticket sein SLA, schlägt die KI-Supportleitung eine Übernahme vor und entwirft eine Antwort."
       },
       "helpCenterLink": "Hilfecenter öffnen",
       "formLink": "Supportformular öffnen",
@@ -14510,7 +15359,8 @@
       "notifyManagers": "Support-Manager*innen benachrichtigen",
       "reassignTo": "Neu zuweisen an",
       "noReassign": "Nicht neu zuweisen",
-      "reassignToName": "Neu zuweisen an {name}"
+      "reassignToName": "Neu zuweisen an {name}",
+      "aiDuty": "Entwirft Erstantworten, sortiert neue Tickets und kümmert sich um SLA-Verletzungen; Antworten an Kunden warten auf Ihre Freigabe."
     },
     "help": {
       "title": "Hilfecenter",
@@ -15322,6 +16172,323 @@
       "step2": "Die KI recherchiert den Markt und entwirft einen Unternehmens-Blueprint, den du freigibst.",
       "step3": "Stelle ein KI-Team ein, das seine erste Woche echter Arbeit beginnt.",
       "help": "Hilf mir dabei"
+    },
+    "kit": {
+      "title": "Gründer-Kit",
+      "titleFor": "{name} — Gründer-Kit",
+      "description": "Alles für deinen Start, geschrieben von deinem KI-Team: Recherche, Plan, Marke, Zahlen und Launch. Prüfe jeden Teil, bearbeite ihn, gib ihn frei und mach daraus echte Arbeit.",
+      "cardTitle": "Dein Gründer-Kit",
+      "cardDescription": "17 sofort nutzbare Ergebnisse: Recherche, Businessplan, Marke, Preise, eine 12-Monats-Projektion, Launch-Fahrplan und mehr.",
+      "open": "Gründer-Kit öffnen",
+      "start": "Mein Gründer-Kit erstellen",
+      "backToRun": "Zurück zum Builder",
+      "readyCount": "{ready} von {total} fertig",
+      "approvedCount": "{count, plural, =0 {noch nichts freigegeben} one {# freigegeben} other {# freigegeben}}",
+      "approved": "Freigegeben",
+      "approvedShort": "freigegeben",
+      "editedByYou": "Von dir bearbeitet",
+      "progress": "Fortschritt des Gründer-Kits",
+      "liveNote": "Dein KI-Team arbeitet am Kit. Jedes Ergebnis startet, sobald die Ergebnisse, auf denen es aufbaut, fertig sind — fertige kannst du schon prüfen.",
+      "doneNote": "Dein Gründer-Kit ist vollständig. Prüfe jedes Ergebnis, gib es frei und mach daraus echte Arbeit.",
+      "stuckNote": "Einige Ergebnisse brauchen deine Aufmerksamkeit: erneut versuchen, fehlenden Anbieter verbinden oder Feedback geben.",
+      "exportAll": "Ganzes Kit herunterladen",
+      "toJourney": "Zurück zum Onboarding",
+      "allInBrain": "Alle Kit-Dokumente im Brain",
+      "connect": "Unter Integrationen verbinden",
+      "approve": "Freigeben",
+      "unapprove": "Freigabe zurückziehen",
+      "regenerate": "Neu erstellen",
+      "tryAgain": "Erneut versuchen",
+      "withFeedback": "Feedback hinzufügen",
+      "feedbackPlaceholder": "Was soll die KI ändern? z. B. „auf kleine Praxen fokussieren, niedrigere Preise“",
+      "inBrain": "Im Brain öffnen",
+      "openTask": "KI-Aufgabe ansehen",
+      "failed": "Dieses Ergebnis konnte nicht erstellt werden",
+      "fullWriteup": "Vollständigen Text lesen",
+      "created": "Aus diesem Ergebnis erstellt",
+      "sources": "{count, plural, one {# Recherchequelle} other {# Recherchequellen}}",
+      "days": "{count, plural, one {# Tag} other {# Tage}}",
+      "dayN": "Tag {day}",
+      "chapters": {
+        "understand": "Verstehen",
+        "business": "Geschäft",
+        "brand": "Marke",
+        "launch": "Markteintritt"
+      },
+      "status": {
+        "PENDING": "Wartet",
+        "GENERATING": "Wird geschrieben…",
+        "READY": "Bereit zur Prüfung",
+        "FAILED": "Braucht Aufmerksamkeit",
+        "NEEDS_SETUP": "Einrichtung nötig"
+      },
+      "statusShort": {
+        "PENDING": "wartet",
+        "GENERATING": "schreibt",
+        "READY": "bereit",
+        "FAILED": "Fehler",
+        "NEEDS_SETUP": "Setup"
+      },
+      "waiting": {
+        "title": "Noch nicht gestartet",
+        "deps": "Startet, sobald diese fertig sind: {items}.",
+        "queued": "Startet gleich."
+      },
+      "generating": {
+        "ai": "Dein KI-Team schreibt dieses Ergebnis…",
+        "image": "Logo-Entwürfe werden erzeugt…"
+      },
+      "empty": {
+        "title": "Mach aus deiner Idee ein vollständiges Gründer-Kit",
+        "description": "Dein KI-Team schreibt jedes Dokument, das neue Gründer brauchen — eins nach dem anderen, jedes baut auf dem vorherigen auf. Alles wird im Company Brain gespeichert, und du behältst die Kontrolle: prüfen, bearbeiten, freigeben und in echte Projekte, Aufgaben und Pläne verwandeln.",
+        "noPermission": "Bitte eine Person mit Verwaltungsrechten für das Unternehmen, das Gründer-Kit zu erstellen."
+      },
+      "availability": {
+        "aiTitle": "KI ist nicht eingerichtet",
+        "ai": "Auf dieser Plattform ist kein KI-Anbieter konfiguriert, daher kann noch nichts geschrieben werden. Bitte den Plattformbetreiber, einen KI-Schlüssel hinzuzufügen; danach läuft das Kit automatisch weiter.",
+        "aiOffTitle": "KI ist ausgeschaltet",
+        "research": "Kein Webrecherche-Anbieter ist verbunden. Markt- und Wettbewerbsrecherche werden ohne Live-Quellen geschrieben und klar als Schätzung markiert."
+      },
+      "research": {
+        "unsourcedTitle": "Ohne Live-Quellen geschrieben",
+        "unsourced": "Beim Schreiben war kein Recherche-Anbieter verbunden, daher beruht dies auf allgemeinem Wissen. Verbinde Tavily, Exa oder SerpApi und erstelle es neu, um zitierte Quellen zu erhalten."
+      },
+      "logo": {
+        "setupTitle": "Verbinde einen Bildgenerator, um dein Logo zu erstellen",
+        "setup": "Logo-Entwürfe werden mit OpenAI, Stability AI oder Replicate erzeugt. Verbinde einen davon unter Integrationen und klicke dann auf „Erneut versuchen“.",
+        "alt": "Logo-Entwurf für {name}",
+        "makeBrand": "Als unser Logo verwenden",
+        "isBrand": "Unser Markenlogo"
+      },
+      "names": {
+        "disclaimer": "Wir können nicht prüfen, ob ein Name oder eine Domain frei ist. Nutze „Selbst prüfen“, um die Domain nachzuschlagen, und durchsuche vor der Entscheidung das Handels- und Markenregister deines Landes.",
+        "checkManually": "Selbst prüfen",
+        "use": "Diesen Namen verwenden",
+        "current": "Aktueller Name",
+        "confirm": "Unternehmen in „{name}“ umbenennen?"
+      },
+      "website": {
+        "noBuilder": "Es ist kein Website-Baukasten verbunden, daher wird die Struktur als Dokument exportiert, das du einer Designerin geben oder in deinen Baukasten einfügen kannst."
+      },
+      "forecast": {
+        "projection": "Projektion — keine Garantie",
+        "revenue12": "Umsatz (12 Monate)",
+        "costs12": "Kosten (12 Monate)",
+        "endCash": "Liquidität nach 12 Monaten",
+        "breakEven": "Erster profitabler Monat",
+        "notInYear": "Nicht innerhalb von 12 Monaten",
+        "monthN": "Monat {month}",
+        "net": "Netto",
+        "cash": "Liquidität",
+        "chart": "Monatlicher Umsatz und Kosten mit kumulierter Liquidität"
+      },
+      "intervals": {
+        "month": "/ Monat",
+        "year": "/ Jahr",
+        "one_time": "einmalig",
+        "usage": "pro Nutzung"
+      },
+      "edit": {
+        "start": "Bearbeiten",
+        "structured": "Wichtige Angaben",
+        "writeup": "Vollständiger Text (Markdown)",
+        "save": "Meine Version speichern",
+        "cancel": "Abbrechen",
+        "add": "Hinzufügen",
+        "remove": "Entfernen",
+        "onePerLine": "eine pro Zeile"
+      },
+      "actions": {
+        "title": "In die Tat umsetzen",
+        "create_project": "Launch-Projekt & Aufgaben anlegen",
+        "create_objectives": "Ziele anlegen",
+        "create_campaigns": "Kampagnenentwürfe anlegen",
+        "save_icp": "Als CRM-Idealkunde speichern",
+        "save_strategy": "Mission, Vision & Werte speichern",
+        "create_budgets": "Budgets in Finanzen anlegen",
+        "create_products": "Produkte hinzufügen",
+        "use_workforce": "Dieses KI-Team einstellen",
+        "use_workforce_journey": "Im Team-Schritt verwenden",
+        "exportCsv": "CSV exportieren",
+        "exportSite": "Seitenstruktur exportieren",
+        "again": "Das wurde bereits einmal erstellt. Noch einmal erstellen?",
+        "noPermission": "Einige Aktionen sind deaktiviert, weil deine Rolle diese Datensätze nicht anlegen darf.",
+        "done": {
+          "create_project": "Das Launch-Projekt mit Meilensteinen und Aufgaben wurde angelegt.",
+          "create_objectives": "Die Ziele wurden angelegt.",
+          "create_campaigns": "Kampagnenentwürfe wurden angelegt — nichts wurde veröffentlicht.",
+          "save_icp": "Als Idealkundenprofil im CRM gespeichert.",
+          "save_strategy": "Mission, Vision und Werte wurden gespeichert.",
+          "create_budgets": "Die Budgets wurden in Finanzen angelegt.",
+          "create_products": "Die Produkte wurden hinzugefügt.",
+          "use_workforce": "Das KI-Team wurde deiner Belegschaft hinzugefügt.",
+          "use_name": "Das Unternehmen wurde umbenannt.",
+          "pin_logo": "Das ist jetzt dein Markenlogo."
+        }
+      },
+      "recordKinds": {
+        "project": "Projekt",
+        "objective": "Ziel",
+        "campaign": "Kampagne",
+        "crm_icp": "CRM",
+        "strategy": "Strategie",
+        "budget": "Budget",
+        "product": "Produkt",
+        "workforce_draft": "Team-Schritt",
+        "ai_employees": "Belegschaft",
+        "company_name": "Unternehmen",
+        "brand_logo": "Marke"
+      },
+      "items": {
+        "idea_refinement": {
+          "title": "Ideenschärfung",
+          "description": "Deine Idee als klarer Pitch: Problem, Lösung und die riskantesten Annahmen, die du zuerst testest."
+        },
+        "market_research": {
+          "title": "Marktrecherche",
+          "description": "Wer kauft, wie groß der Markt ist (mit Annahmen), Trends und Regeln — mit Webquellen, wenn Recherche verbunden ist."
+        },
+        "competitor_research": {
+          "title": "Wettbewerbsanalyse",
+          "description": "Echte Wettbewerber und Alternativen aus der Webrecherche im Vergleich, und wo du gewinnen kannst."
+        },
+        "customer_personas": {
+          "title": "Kunden-Personas",
+          "description": "Die Menschen, an die du verkaufst: Ziele, Probleme und Einwände, plus dein Idealkundenprofil."
+        },
+        "business_model_canvas": {
+          "title": "Business Model Canvas",
+          "description": "Dein ganzes Geschäft auf einer Seite: die neun Bausteine."
+        },
+        "revenue_model": {
+          "title": "Erlösmodell",
+          "description": "Wie das Geschäft Geld verdient, der erwartete Anteil jeder Quelle und die Unit Economics."
+        },
+        "pricing": {
+          "title": "Preisempfehlungen",
+          "description": "Startpreise und Pakete, warum sie Sinn ergeben und wie du sie testest."
+        },
+        "business_plan": {
+          "title": "Businessplan",
+          "description": "Der vollständige Plan, von der Zusammenfassung bis zum Finanzierungsbedarf — bereit zum Teilen."
+        },
+        "brand_positioning": {
+          "title": "Markenpositionierung",
+          "description": "Wofür du stehst: Positionierung, Mission, Vision, Werte, Slogans und visuelle Richtung."
+        },
+        "name_ideas": {
+          "title": "Namensideen",
+          "description": "Namensideen mit Domainvorschlägen, die du selbst prüfen kannst."
+        },
+        "logo": {
+          "title": "Logo",
+          "description": "Logo-Entwürfe aus deiner Markenpositionierung, gespeichert in deinen Marken-Assets."
+        },
+        "website_structure": {
+          "title": "Website-Struktur",
+          "description": "Sitemap und eine Gliederung mit Textentwurf für jede Seite."
+        },
+        "marketing_strategy": {
+          "title": "Marketingstrategie",
+          "description": "90-Tage-Plan: Kanäle, Botschaften und Launch-Kampagnen."
+        },
+        "sales_strategy": {
+          "title": "Vertriebsstrategie",
+          "description": "An wen du verkaufst, deine Vertriebsphasen und ein Playbook für die ersten 20 Kunden."
+        },
+        "launch_roadmap": {
+          "title": "Launch-Fahrplan",
+          "description": "Meilensteine und Aufgaben für die nächsten 90 Tage, bereit für ein echtes Projekt."
+        },
+        "financial_forecast": {
+          "title": "12-Monats-Finanzprojektion",
+          "description": "Umsatz, Kosten und Liquidität Monat für Monat, auf Basis klarer Annahmen."
+        },
+        "ai_workforce": {
+          "title": "Vorgeschlagenes KI-Team",
+          "description": "Die KI-Mitarbeitenden, die das Unternehmen führen, wer an wen berichtet und wofür jede Person zuständig ist."
+        }
+      },
+      "fields": {
+        "personas": "Personas",
+        "name": "Name",
+        "role": "Rolle",
+        "summary": "Zusammenfassung",
+        "goals": "Ziele",
+        "pains": "Probleme",
+        "objections": "Einwände",
+        "channels": "Kanäle",
+        "icp": "Idealkundenprofil",
+        "customerSegments": "Kundensegmente",
+        "valuePropositions": "Wertversprechen",
+        "customerRelationships": "Kundenbeziehungen",
+        "revenueStreams": "Einnahmequellen",
+        "keyResources": "Schlüsselressourcen",
+        "keyActivities": "Schlüsselaktivitäten",
+        "keyPartners": "Schlüsselpartner",
+        "costStructure": "Kostenstruktur",
+        "streams": "Einnahmequellen",
+        "type": "Art",
+        "description": "Beschreibung",
+        "sharePercent": "Umsatzanteil (%)",
+        "currency": "Währung",
+        "tiers": "Pakete",
+        "price": "Preis",
+        "interval": "Abrechnung",
+        "audience": "Für wen",
+        "features": "Enthalten",
+        "rationale": "Warum diese Preise",
+        "statement": "Positionierungsaussage",
+        "category": "Kategorie",
+        "targetCustomer": "Zielkunde",
+        "keyBenefit": "Hauptnutzen",
+        "differentiators": "Unterscheidungsmerkmale",
+        "mission": "Mission",
+        "vision": "Vision",
+        "values": "Werte",
+        "taglines": "Slogans",
+        "visual": "Visuelle Richtung",
+        "colors": "Farben",
+        "style": "Stil",
+        "names": "Namen",
+        "domain": "Domain",
+        "pages": "Seiten",
+        "slug": "Adresse",
+        "title": "Titel",
+        "purpose": "Zweck",
+        "sections": "Abschnitte",
+        "heading": "Überschrift",
+        "content": "Inhalt",
+        "campaigns": "Kampagnen",
+        "objective": "Ziel",
+        "durationDays": "Dauer (Tage)",
+        "budget": "Budget",
+        "stages": "Vertriebsphasen",
+        "playbook": "Playbook",
+        "projectName": "Projektname",
+        "milestones": "Meilensteine",
+        "dueInDays": "Fällig in (Tagen)",
+        "tasks": "Aufgaben",
+        "priority": "Priorität",
+        "objectives": "Ziele",
+        "targetInDays": "Ziel in (Tagen)",
+        "startingCash": "Startkapital",
+        "assumptions": "Annahmen",
+        "label": "Annahme",
+        "value": "Wert",
+        "months": "Monate",
+        "month": "Monat",
+        "revenue": "Umsatz",
+        "costs": "Kosten",
+        "note": "Notiz",
+        "budgets": "Budgets",
+        "team": "Team",
+        "key": "Schlüssel",
+        "profile": "Rolle",
+        "level": "Ebene",
+        "reportsTo": "Berichtet an",
+        "responsibilities": "Verantwortlichkeiten"
+      }
     }
   },
   "growth": {
@@ -19391,5 +20558,1080 @@
       "reportNote": "Details (optional)",
       "reportSend": "Meldung senden"
     }
+  },
+  "briefing": {
+    "title": "Tagesbriefing",
+    "eyebrow": "Ihr Unternehmen, jeden Morgen",
+    "subtitle": "Alles, was Ihr KI-Team getan hat, was schiefging, was auf Sie wartet und was zu entscheiden ist – auf einer Seite, jeden Morgen.",
+    "forbidden": "Für ein Briefing brauchen Sie die Berechtigung, Unternehmensanalysen zu sehen. Bitten Sie einen Inhaber um Zugriff.",
+    "aiLabel": "KI-Zusammenfassung",
+    "aiHint": "Von der KI nur aus den Zahlen unten geschrieben – jede Zahl wird dagegen geprüft.",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "needsMfa": "Zwei-Faktor-Bestätigung nötig",
+    "tabs": {
+      "today": "Aktuell",
+      "history": "Verlauf",
+      "settings": "Einstellungen"
+    },
+    "kinds": {
+      "MORNING": "Morgenbriefing",
+      "EVENING": "Tagesabschluss",
+      "WEEKLY": "Wochenrückblick",
+      "TEST": "Test-Briefing"
+    },
+    "status": {
+      "SUMMARIZING": "Wird vorbereitet",
+      "DELIVERED": "Zugestellt",
+      "PARTIAL": "Teilweise zugestellt",
+      "FAILED": "Nicht zugestellt"
+    },
+    "channels": {
+      "IN_APP": "In Realy",
+      "EMAIL": "E-Mail",
+      "WHATSAPP": "WhatsApp"
+    },
+    "delivery": {
+      "SENT": "gesendet",
+      "FAILED": "fehlgeschlagen",
+      "NOT_CONFIGURED": "nicht eingerichtet",
+      "SKIPPED": "übersprungen",
+      "why": {
+        "SENT": "gesendet",
+        "FAILED": "der Anbieter hat die Nachricht abgelehnt – prüfen Sie die Verbindung unter Integrationen.",
+        "NOT_CONFIGURED": "noch nicht eingerichtet – schließen Sie die Einrichtung in den Briefing-Einstellungen oder unter Integrationen ab.",
+        "SKIPPED": "übersprungen."
+      }
+    },
+    "risk": {
+      "LOW": "Geringes Risiko",
+      "MEDIUM": "Mittleres Risiko",
+      "HIGH": "Hohes Risiko",
+      "CRITICAL": "Kritisch"
+    },
+    "summaryState": {
+      "none": "Keine KI-Zusammenfassung für dieses Briefing – die Zahlen unten stammen direkt aus Ihren Daten.",
+      "pending": "Die KI-Zusammenfassung wird geschrieben. Das Briefing geht innerhalb von 10 Minuten raus, mit oder ohne sie.",
+      "failed": "Die KI-Zusammenfassung konnte diesmal nicht geschrieben werden (KI nicht verfügbar oder Tageskontingent aufgebraucht).",
+      "timeout": "Die KI-Zusammenfassung hat zu lange gedauert, daher wurde das Briefing ohne sie gesendet.",
+      "rejected": "Die KI-Zusammenfassung wurde verworfen, weil sie eine Zahl enthielt, die nicht in Ihren Daten steht."
+    },
+    "figures": {
+      "aiDone": "Erledigte KI-Aufgaben",
+      "waiting": "Wartet auf Sie",
+      "waitingHint": "Freigaben zu entscheiden",
+      "health": "Geschäftsgesundheit",
+      "healthHint": "von 100"
+    },
+    "sections": {
+      "yesterday": "Gestern",
+      "today": "Heute bisher",
+      "week": "Letzte 7 Tage",
+      "workforce": "Was Ihr KI-Team getan hat",
+      "workforceHint": "Erledigte Arbeit nach Abteilung und ausgeführte Aktionen.",
+      "results": "Ergebnisse",
+      "resultsHint": "Was rausging und was reinkam, verglichen mit dem Zeitraum davor.",
+      "problems": "Was fehlschlug oder feststeckt",
+      "problemsHint": "Beheben Sie das zuerst – es bremst Ihr KI-Team oder Ihre Kunden.",
+      "approvals": "Wartet auf Ihre Entscheidung",
+      "approvalsHint": "Mit einem Tipp genehmigen oder ablehnen. Riskante Aktionen verlangen eine Zwei-Faktor-Bestätigung.",
+      "approvalsCount": "{count, plural, =0 {Keine Freigaben offen} one {# Freigabe offen} other {# Freigaben offen}}",
+      "plan": "Plan für heute",
+      "tomorrowish": "Noch auf dem heutigen Plan",
+      "planHint": "Termine, geplante Beiträge und Kampagnen, Nachfassaktionen und KI-Routinen.",
+      "risks": "Risiken und Chancen",
+      "risksHint": "Aus Ihrem Geschäftsgesundheits-Check.",
+      "decisions": "Empfohlene Entscheidungen",
+      "decisionsHint": "Bis zu drei Punkte, die Ihre Aufmerksamkeit verdienen, aus den Zahlen abgeleitet."
+    },
+    "line": {
+      "aiWork": "{completed, plural, one {# Aufgabe erledigt} other {# Aufgaben erledigt}}, {failed, plural, =0 {keine fehlgeschlagen} one {# fehlgeschlagen} other {# fehlgeschlagen}}",
+      "failedShort": "{count} fehlgeschlagen",
+      "actions": "{auto, plural, one {# Aktion automatisch ausgeführt} other {# Aktionen automatisch ausgeführt}}, {people, plural, one {# von Menschen genehmigt} other {# von Menschen genehmigt}}",
+      "emails": "{count, plural, one {# E-Mail gesendet} other {# E-Mails gesendet}}",
+      "posts": "{count, plural, one {# Beitrag veröffentlicht} other {# Beiträge veröffentlicht}}",
+      "calls": "{count, plural, one {# Anruf geführt} other {# Anrufe geführt}}",
+      "meetings": "{count, plural, one {# Termin abgehalten} other {# Termine abgehalten}}",
+      "leads": "{count, plural, one {# neuer Lead} other {# neue Leads}}",
+      "deals": "{count, plural, one {# Deal gewonnen} other {# Deals gewonnen}} ({amount})",
+      "failedTasks": "{count, plural, one {# KI-Aufgabe fehlgeschlagen} other {# KI-Aufgaben fehlgeschlagen}}",
+      "failedActions": "{count, plural, one {# genehmigte Aktion fehlgeschlagen} other {# genehmigte Aktionen fehlgeschlagen}}",
+      "failedSends": "{count, plural, one {# E-Mail konnte nicht gesendet werden} other {# E-Mails konnten nicht gesendet werden}}",
+      "failedPosts": "{count, plural, one {# Beitrag fehlgeschlagen} other {# Beiträge fehlgeschlagen}}",
+      "overdue": "{count, plural, one {# überfällige Aufgabe} other {# überfällige Aufgaben}}",
+      "sla": "{count, plural, one {# Support-Zusage verpasst} other {# Support-Zusagen verpasst}}",
+      "noProblems": "Nichts ist fehlgeschlagen und nichts steckt fest.",
+      "meetingsToday": "{count, plural, one {# Termin} other {# Termine}}",
+      "postsToday": "{count, plural, one {# Beitrag geplant} other {# Beiträge geplant}}",
+      "campaignsToday": "{count, plural, one {# E-Mail-Kampagne geplant} other {# E-Mail-Kampagnen geplant}}",
+      "sequenceSteps": "{count, plural, one {# Nachfass-E-Mail fällig} other {# Nachfass-E-Mails fällig}}",
+      "aiRuns": "{count, plural, one {# KI-Routine} other {# KI-Routinen}}",
+      "dueTasks": "{count, plural, one {# Aufgabe fällig} other {# Aufgaben fällig}}",
+      "nothingScheduled": "Noch nichts geplant."
+    },
+    "decision": {
+      "decide_high_risk": "Entscheiden Sie über die riskante Anfrage #{ref}: {summary}",
+      "approvals_expiring": "{count, plural, one {# Anfrage läuft} other {# Anfragen laufen}} in 24 Stunden ab – entscheiden Sie vorher.",
+      "fix_insight": "Sehen Sie sich das an: {insight}",
+      "retry_failed": "{count, plural, one {# KI-Aufgabe ist fehlgeschlagen} other {# KI-Aufgaben sind fehlgeschlagen}} – prüfen und erneut starten.",
+      "runway": "Das Geld reicht beim aktuellen Tempo etwa {months} Monate – planen Sie Finanzierung oder Kostensenkungen.",
+      "chase_receivables": "{amount} an offenen Rechnungen sind überfällig – senden Sie Erinnerungen.",
+      "review_pending": "{count, plural, one {# Anfrage wartet} other {# Anfragen warten}} auf Sie – genehmigen Sie die sicheren mit einem Tipp."
+    },
+    "view": {
+      "inProgress": "{count} in Arbeit",
+      "noAiWork": "Ihr KI-Team hat in diesem Zeitraum keine Arbeit abgeschlossen.",
+      "hidden": "Ausgeblendet – Sie haben keine Berechtigung, dies zu sehen.",
+      "emailsSent": "E-Mails gesendet",
+      "postsPublished": "Beiträge veröffentlicht",
+      "calls": "Anrufe",
+      "meetingsHeld": "Termine abgehalten",
+      "newLeads": "Neue Leads",
+      "dealsWon": "{count, plural, one {# Deal gewonnen} other {# Deals gewonnen}}",
+      "alreadyDecided": "Bereits entschieden",
+      "expires": "Läuft ab am {date}",
+      "moreApprovals": "{count, plural, one {# weitere Anfrage} other {# weitere Anfragen}} unter Freigaben",
+      "noApprovals": "Nichts wartet auf Sie.",
+      "noRisks": "Derzeit keine Risiken gefunden.",
+      "noDecisions": "Heute sind keine Entscheidungen nötig – Ihr KI-Team hat alles im Griff.",
+      "plansRunning": "{count, plural, one {# Plan läuft} other {# Pläne laufen}}",
+      "meeting": {
+        "sales": "Vertriebstermin",
+        "team": "Teamtermin"
+      },
+      "campaign": "E-Mail-Kampagne",
+      "aiRoutines": "KI-Routinen heute",
+      "chartLabel": "Erledigte KI-Aufgaben pro Abteilung (erledigt / fehlgeschlagen)",
+      "period": "Zeitraum {from} – {to}",
+      "now": "jetzt",
+      "deliveries": "Wohin dieses Briefing gesendet wurde"
+    },
+    "intro": {
+      "what": "Eine Seite, die Ihnen zeigt, wie es dem ganzen Unternehmen geht und was Sie braucht.",
+      "why": "Sie führen ein KI-Unternehmen in fünf Minuten am Tag, ohne jedes Modul zu öffnen.",
+      "can": "Das neueste Briefing lesen, Anfragen genehmigen oder ablehnen, ältere ansehen und festlegen, wann und wo Sie es erhalten.",
+      "nextSetup": "Mein Briefing einrichten",
+      "nextHistory": "Frühere Briefings ansehen",
+      "schedule": "Die nächsten Briefings kommen um {time} ({tz}).",
+      "paused": "Ihre Briefings sind pausiert.",
+      "change": "Ändern"
+    },
+    "start": {
+      "title": "Start hier: Wählen Sie, wann Sie Ihr Briefing möchten",
+      "body": "Zwei Minuten: Uhrzeit wählen und wo Sie es erhalten (Realy, E-Mail oder WhatsApp). Wir empfehlen 7:30 an Werktagen.",
+      "cta": "Einrichten"
+    },
+    "empty": {
+      "title": "Noch kein Briefing",
+      "body": "Ihr erstes Briefing kommt zur gewählten Uhrzeit. Möchten Sie jetzt eines sehen? Senden Sie sich ein Test-Briefing aus den echten Daten von gestern."
+    },
+    "test": {
+      "title": "Test-Briefing an mich senden",
+      "hint": "Erstellt sofort das Briefing von gestern aus Ihren echten Daten und sendet es dorthin, wo Sie möchten.",
+      "button": "Test-Briefing an mich senden",
+      "channels": "Test senden an"
+    },
+    "help": {
+      "title": "Nicht sicher, womit Sie anfangen sollen?",
+      "hint": "Ihr KI-CEO liest die Zahlen und erklärt sie in einfachen Worten.",
+      "label": "Mein Briefing erklären"
+    },
+    "history": {
+      "title": "Frühere Briefings",
+      "subtitle": "Jedes Briefing, das Sie erhalten haben, das neueste zuerst.",
+      "empty": "Noch keine Briefings",
+      "emptyHint": "Sie erscheinen hier, sobald das erste gesendet wurde.",
+      "goToday": "Zu meinem Briefing",
+      "older": "Ältere Briefings anzeigen"
+    },
+    "settings": {
+      "title": "Briefing-Einstellungen",
+      "subtitle": "Wann und wo Sie Ihr Briefing erhalten.",
+      "intro": {
+        "what": "Ihr persönlicher Briefing-Zeitplan und Ihre Zustellkanäle.",
+        "why": "Das Briefing kommt zu Ihnen, Sie müssen nie danach suchen.",
+        "can": "Uhrzeit und Tage wählen, E-Mail oder WhatsApp einschalten und sich einen Test senden."
+      },
+      "journey": "Briefing-Einrichtung",
+      "steps": {
+        "when": "Wann",
+        "where": "Wo",
+        "whatsapp": "WhatsApp",
+        "try": "Ausprobieren"
+      },
+      "enabled": "Briefings an mich senden",
+      "always": "Immer an",
+      "when": {
+        "title": "Wann soll Ihr Briefing kommen?",
+        "hint": "Wählen Sie eine Zeit vor Ihrem Tagesbeginn. Empfohlen: 7:30 an Werktagen.",
+        "time": "Uhrzeit am Morgen",
+        "timeHint": "Ihre Ortszeit.",
+        "timezone": "Zeitzone",
+        "timezoneHint": "Damit senden wir es an Ihrem Morgen, wo auch immer Sie sind.",
+        "days": "An diesen Tagen",
+        "daysHint": "Montags erhalten Sie statt des Morgenbriefings den Wochenrückblick (unter Erweitert abschaltbar)."
+      },
+      "where": {
+        "title": "Wo möchten Sie es lesen?",
+        "hint": "Hier in Realy ist es immer. Fügen Sie E-Mail und WhatsApp hinzu, um es unterwegs zu lesen.",
+        "inApp": "Das vollständige Briefing mit Freigaben per Tipp, plus eine Benachrichtigung.",
+        "email": "Eine klare E-Mail mit Schaltflächen zum Genehmigen oder Ablehnen.",
+        "emailCompany": "Gesendet über das eigene E-Mail-Konto Ihres Unternehmens (SendGrid).",
+        "emailMissing": "E-Mail ist auf dieser Plattform noch nicht eingerichtet – das Briefing bleibt bis dahin in Realy.",
+        "whatsappReady": "Kurzfassung an {number}. Antworten Sie „approve 3“ oder „reject 3“, um zu entscheiden.",
+        "whatsappSetup": "Bestätigen Sie im nächsten Schritt Ihre Nummer, um dies einzuschalten."
+      },
+      "whatsapp": {
+        "title": "Per WhatsApp erhalten (optional)",
+        "hint": "Erhalten Sie ein kurzes Briefing und genehmigen Sie mit einer Antwort wie „approve 3“. Nur Ihre bestätigte Nummer kann entscheiden.",
+        "notConnected": "WhatsApp ist noch nicht verbunden",
+        "notConnectedHint": "Verbinden Sie zuerst Twilio (mit WhatsApp-Absender) oder WhatsApp Business unter Integrationen. Bis dahin wird nichts gesendet.",
+        "connect": "WhatsApp verbinden",
+        "number": "Ihre WhatsApp-Nummer",
+        "numberHint": "Internationales Format mit Ländervorwahl, z. B. +4915112345678.",
+        "saveFirst": "Speichern Sie die Nummer und bestätigen Sie sie dann.",
+        "saveNumber": "Nummer speichern",
+        "verified": "{number} ist bestätigt.",
+        "optional": "Sie können das überspringen und WhatsApp später hinzufügen."
+      },
+      "advanced": {
+        "title": "Erweitert",
+        "weekly": "Wochenrückblick am Montag",
+        "weeklyHint": "Ein Rückblick auf die letzten 7 Tage statt des Montagmorgen-Briefings.",
+        "evening": "Tagesabschluss",
+        "eveningHint": "Eine kurze Zusammenfassung des Tages zur gewählten Uhrzeit.",
+        "eveningTime": "Uhrzeit des Tagesabschlusses",
+        "ai": "Kurze KI-Zusammenfassung hinzufügen",
+        "aiHint": "Die KI schreibt 3–5 Sätze nur aus den berechneten Zahlen. Jede Zusammenfassung mit einer Zahl, die nicht in Ihren Daten steht, wird verworfen.",
+        "aiOff": "KI ist auf dieser Plattform nicht eingerichtet, daher kommen Briefings ohne Zusammenfassung.",
+        "language": "Sprache des Briefings"
+      },
+      "try": {
+        "title": "Jetzt ausprobieren",
+        "hint": "Senden Sie sich ein Test-Briefing aus den echten Daten von gestern, um zu sehen, wie es aussieht."
+      },
+      "back": "Zurück",
+      "continue": "Speichern und weiter",
+      "skip": "Vorerst überspringen",
+      "finish": "Einrichtung abschließen",
+      "save": "Speichern",
+      "saved": "Gespeichert"
+    },
+    "verify": {
+      "intro": "Um zu zeigen, dass die Nummer Ihnen gehört, senden Sie uns von diesem WhatsApp einen kurzen Code.",
+      "start": "Meinen Code holen",
+      "send": "Senden Sie diese Nachricht von Ihrem WhatsApp an {number}:",
+      "sendMeta": "Senden Sie diese Nachricht von Ihrem WhatsApp an die WhatsApp-Business-Nummer Ihres Unternehmens:",
+      "open": "WhatsApp öffnen",
+      "newCode": "Neuer Code",
+      "waiting": "Warten auf Ihre Nachricht … diese Seite aktualisiert sich selbst. Der Code gilt 15 Minuten."
+    },
+    "channelSettings": {
+      "title": "WhatsApp-Antworten",
+      "hint": "Damit Ihre Antworten wie „approve 3“ bei Realy ankommen. Einmal pro Unternehmen einrichten.",
+      "twilioUrl": "Twilio: als Webhook „When a message comes in“ Ihres WhatsApp-Absenders eintragen",
+      "metaUrl": "Meta: Callback-URL Ihres WhatsApp-Webhooks",
+      "verifyToken": "Meta: Verify-Token",
+      "webhookHint": "Antworten werden nur mit gültiger Twilio- oder Meta-Signatur und nur von bestätigten Nummern angenommen.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "appSecret": "Meta-App-Geheimnis",
+      "appSecretHint": "Aus Ihrer Meta-App (App-Einstellungen → Allgemein). Nötig, um zu prüfen, dass Antworten wirklich von Meta kommen.",
+      "appSecretSet": "Gespeichert (verschlüsselt). Geben Sie ein neues ein, um es zu ersetzen.",
+      "metaTemplate": "Name der genehmigten Vorlage",
+      "metaTemplateHint": "WhatsApp erlaubt freie Nachrichten nur innerhalb von 24 Stunden nach Ihrer letzten Nachricht. Außerhalb davon wird eine genehmigte Vorlage mit 3 Variablen (Titel, Schlagzeile, Link) verwendet.",
+      "language": "Sprache",
+      "twilioContent": "Twilio-Inhaltsvorlage (HX…)",
+      "twilioContentHint": "Eine genehmigte WhatsApp-Inhaltsvorlage mit den Variablen '{{1}}' Titel, '{{2}}' Schlagzeile, '{{3}}' Link – außerhalb des 24-Stunden-Fensters verwendet.",
+      "readOnly": "Nur Personen, die Integrationen verwalten, können diese Einstellungen ändern."
+    },
+    "decide": {
+      "title": "Über eine Anfrage entscheiden",
+      "note": "Notiz (optional)",
+      "noteHint": "Wird mit der Entscheidung im Audit-Log gespeichert.",
+      "mfaHint": "Dies ist eine riskante Aktion: Sie werden um eine Zwei-Faktor-Bestätigung gebeten.",
+      "done": {
+        "approved": "Genehmigt",
+        "rejected": "Abgelehnt"
+      },
+      "doneHint": "Die Entscheidung ist gespeichert. Sie können diese Seite schließen.",
+      "openApprovals": "Freigaben öffnen",
+      "openBriefing": "Briefing öffnen",
+      "state": {
+        "invalid": "Dieser Link ist ungültig.",
+        "wrong_user": "Dieser Link wurde an jemand anderen gesendet. Melden Sie sich mit dem Konto an, das das Briefing erhalten hat.",
+        "used": "Dieser Link wurde bereits verwendet.",
+        "expired": "Dieser Link ist abgelaufen – entscheiden Sie stattdessen unter Freigaben.",
+        "decided": "Über diese Anfrage wurde bereits entschieden."
+      }
+    },
+    "email": {
+      "subject": "{title} – {company} – {date}",
+      "open": "In Realy öffnen",
+      "settings": "Briefing-Einstellungen",
+      "footer": "Sie erhalten dies, weil Sie Briefings in Realy aktiviert haben."
+    },
+    "whatsapp": {
+      "replyHint": "Antworten Sie „approve {ref}“ oder „reject {ref}“.",
+      "headline": "{completed} KI-Aufgaben erledigt, {approvals} Freigaben offen, {problems} Probleme",
+      "help": "Antworten Sie „approve 3“ oder „reject 3“, um über Anfrage 3 aus Ihrem letzten Briefing zu entscheiden. Antworten Sie STOP, um WhatsApp-Briefings zu beenden.",
+      "joinFailed": "Dieser Code hat nicht funktioniert. Holen Sie sich in Realy einen neuen Code und senden Sie ihn von der gespeicherten Nummer.",
+      "verified": "Ihre Nummer ist bestätigt. Sie erhalten Ihr Briefing hier.",
+      "stopped": "Erledigt – keine Briefings mehr per WhatsApp. Sie können sie in Realy wieder einschalten.",
+      "unknownRef": "In Ihrem letzten Briefing gibt es keine offene Anfrage #{ref}.",
+      "alreadyDecided": "Über Anfrage #{ref} wurde bereits entschieden.",
+      "needsMfa": "Anfrage #{ref} ist riskant und braucht eine Zwei-Faktor-Bestätigung. Genehmigen Sie sie in Realy: {link}",
+      "approved": "Genehmigt: {summary}",
+      "rejected": "Abgelehnt: {summary}",
+      "failed": "Über Anfrage #{ref} konnte nicht entschieden werden: {reason}",
+      "words": {
+        "approve": "genehmigen|ja",
+        "reject": "ablehnen|nein",
+        "stop": "stopp"
+      }
+    }
+  },
+  "voice": {
+    "title": "Telefon-Team",
+    "eyebrow": "KI-Telefon-Team",
+    "subtitle": "KI-Mitarbeitende, die für Sie Anrufe tätigen und annehmen. Sie sagen immer, dass sie eine KI sind, halten Anrufzeiten und Sperrwünsche ein und protokollieren jeden Anruf im CRM.",
+    "tabs": {
+      "overview": "Übersicht",
+      "calls": "Anrufe",
+      "agents": "Sprach-Agenten",
+      "numbers": "Nummern",
+      "campaigns": "Kampagnen",
+      "analytics": "Auswertung",
+      "settings": "Einstellungen"
+    },
+    "credentialRequired": "{provider} ist nicht verbunden, daher können keine Anrufe getätigt oder angenommen werden. Verbinden Sie es unter Integrationen.",
+    "connection": {
+      "connected": "Verbunden",
+      "error": "Fehlerhaft",
+      "missing": "Nicht verbunden",
+      "disabled": "Von der Plattform deaktiviert"
+    },
+    "providers": {
+      "vapi": {
+        "name": "Vapi",
+        "pitch": "Flexible Sprach-Agenten. Nutzt Ihre eigenen Twilio-Nummern oder eine kostenlose US-Nummer von Vapi."
+      },
+      "retell": {
+        "name": "Retell AI",
+        "pitch": "Natürlich klingende Sprach-Agenten mit integrierter Anrufanalyse. US- und kanadische Nummern direkt bei Retell kaufen."
+      }
+    },
+    "days": {
+      "1": "Mo",
+      "2": "Di",
+      "3": "Mi",
+      "4": "Do",
+      "5": "Fr",
+      "6": "Sa",
+      "7": "So"
+    },
+    "languages": {
+      "en-US": "Englisch",
+      "de-DE": "Deutsch",
+      "hi-IN": "Hindi",
+      "zh-CN": "Chinesisch (Mandarin)",
+      "ar-AE": "Arabisch"
+    },
+    "goals": {
+      "QUALIFY_LEAD": {
+        "label": "Leads qualifizieren",
+        "hint": "Ermittelt Bedarf, Budget, Zeitplan und Entscheider; bietet bei Eignung einen Termin an."
+      },
+      "BOOK_MEETING": {
+        "label": "Termine buchen",
+        "hint": "Vereinbart ein konkretes Datum mit Uhrzeit und bucht den Termin im CRM."
+      },
+      "SUPPORT_TRIAGE": {
+        "label": "Support-Triage",
+        "hint": "Versteht das Problem und seine Dringlichkeit und eröffnet ein Support-Ticket."
+      },
+      "COLLECTIONS_REMINDER": {
+        "label": "Zahlungserinnerungen",
+        "hint": "Erinnert höflich an eine offene Zahlung und notiert, wann gezahlt wird. Nimmt nie Kartendaten an."
+      },
+      "RECEPTIONIST": {
+        "label": "Empfang",
+        "hint": "Nimmt Anrufe auf Ihrer Firmennummer an: leitet an Support oder Vertrieb weiter oder nimmt eine Nachricht für Sie auf."
+      }
+    },
+    "status": {
+      "AWAITING_APPROVAL": "Wartet auf Freigabe",
+      "SCHEDULED": "Geplant",
+      "QUEUED": "Wird gewählt",
+      "RINGING": "Klingelt",
+      "IN_PROGRESS": "Läuft",
+      "ENDED": "Beendet",
+      "FAILED": "Fehlgeschlagen",
+      "BLOCKED": "Nicht getätigt",
+      "CANCELLED": "Abgebrochen",
+      "REJECTED": "Abgelehnt"
+    },
+    "outcomes": {
+      "INTERESTED": "Interessiert",
+      "NOT_INTERESTED": "Kein Interesse",
+      "MEETING_REQUESTED": "Möchte einen Termin",
+      "MEETING_BOOKED": "Termin gebucht",
+      "CALLBACK_REQUESTED": "Rückruf",
+      "SUPPORT_ISSUE": "Support-Anliegen",
+      "PAYMENT_PROMISED": "Zahlung zugesagt",
+      "MESSAGE_TAKEN": "Nachricht aufgenommen",
+      "VOICEMAIL": "Mailbox",
+      "NO_ANSWER": "Keine Antwort",
+      "WRONG_NUMBER": "Falsche Nummer",
+      "DO_NOT_CALL": "Möchte nicht angerufen werden",
+      "OTHER": "Sonstiges"
+    },
+    "sentiment": {
+      "POSITIVE": "Positiv",
+      "NEUTRAL": "Neutral",
+      "NEGATIVE": "Negativ",
+      "UNKNOWN": "Unbekannt"
+    },
+    "direction": {
+      "INBOUND": "Eingehender Anruf",
+      "OUTBOUND": "Ausgehender Anruf"
+    },
+    "sync": {
+      "DRAFT": "Nicht synchronisiert",
+      "SYNCED": "Live beim Anbieter",
+      "ERROR": "Synchronisierung fehlgeschlagen"
+    },
+    "blocked": {
+      "do_not_call": "Diese Nummer steht auf der Sperrliste.",
+      "agent_not_ready": "Der Sprach-Agent ist nicht mit dem Anbieter synchronisiert.",
+      "number_released": "Die Telefonnummer ist nicht mehr verfügbar.",
+      "no_calling_window": "Ihre Anrufzeiten lassen keine Zeit für Anrufe.",
+      "credential_required": "Der Sprach-Anbieter ist nicht verbunden.",
+      "cancelled": "Von einer Person abgebrochen.",
+      "agent_archived": "Der Sprach-Agent wurde archiviert.",
+      "campaign_cancelled": "Die Kampagne wurde abgebrochen.",
+      "approval_rejected": "Die Freigabe wurde abgelehnt oder ist abgelaufen."
+    },
+    "stats": {
+      "calls": "Anrufe",
+      "last30": "Letzte 30 Tage",
+      "connected": "Gespräche",
+      "connectRate": "{rate} % der ausgehenden Anrufe verbunden",
+      "noOutbound": "Noch keine ausgehenden Anrufe",
+      "meetings": "Gebuchte Termine",
+      "awaiting": "Warten auf Freigabe"
+    },
+    "setup": {
+      "title": "Telefon-Team einrichten",
+      "intro": "Fünf kurze Schritte. Sie brauchen ein Konto bei Vapi oder Retell AI (beide bieten Startguthaben). Jeder ausgehende Anruf braucht weiterhin Ihre Freigabe, solange Sie Ihrer KI nicht mehr Autonomie geben.",
+      "readOnly": "Sie können die Einrichtung ansehen, ändern dürfen sie nur Personen, die die Kommunikation verwalten.",
+      "cardTitle": "Telefon-Team fertig einrichten",
+      "cardBody": "{done} von {total} Schritten erledigt.",
+      "continue": "Einrichtung fortsetzen",
+      "done": "Erledigt",
+      "todo": "Offen",
+      "connect": "Verbinden",
+      "use": "Diese Plattform nutzen",
+      "selected": "In Verwendung",
+      "saveRules": "Anrufregeln speichern",
+      "pickProviderFirst": "Wählen Sie zuerst in Schritt 1 Vapi oder Retell AI.",
+      "connectFirst": "Verbinden Sie zuerst Ihre Sprachplattform (Schritt 1).",
+      "manageNumbers": "{count, plural, one {# Nummer verbunden – Nummern verwalten} other {# Nummern verbunden – Nummern verwalten}}",
+      "routeInbound": "Festlegen, welcher Agent welche Nummer annimmt",
+      "webhookNote": "Realy registriert seinen gesicherten Webhook beim Anbieter automatisch, sobald ein Agent synchronisiert wird – Anrufergebnisse kommen so von selbst zurück.",
+      "steps": {
+        "provider": {
+          "title": "Sprachplattform wählen",
+          "body": "Der Dienst, über den die Anrufe laufen. Hinterlegen Sie Ihren API-Schlüssel unter Integrationen und wählen Sie ihn hier."
+        },
+        "rules": {
+          "title": "Anrufregeln festlegen",
+          "body": "Wann Ihre KI Menschen anrufen darf (in deren Ortszeit), wie lange Anrufe dauern dürfen, Aufzeichnung und was nach eingehenden Anrufen passiert."
+        },
+        "agent": {
+          "title": "Ersten Sprach-Agenten erstellen",
+          "body": "Geben Sie einem KI-Mitarbeitenden eine Stimme, ein Ziel und die Fakten, die er nennen darf. Er lernt aus Company Brain, Produkten und Hilfeartikeln."
+        },
+        "number": {
+          "title": "Telefonnummer besorgen",
+          "body": "Die Nummer, von der Ihre KI anruft und unter der Kunden anrufen können."
+        },
+        "inbound": {
+          "title": "KI-Empfang einschalten",
+          "body": "Verbinden Sie Ihre Nummer mit einem Agenten, damit eingehende Anrufe angenommen, an Support oder Vertrieb geleitet oder als Nachricht für Sie aufgenommen werden."
+        }
+      }
+    },
+    "settings": {
+      "platform": "Sprachplattform",
+      "platformHint": "Neue Agenten und Nummern nutzen diese Plattform.",
+      "rules": "Anrufregeln",
+      "rulesHint": "Gilt für jeden ausgehenden Anruf. Änderungen an Aufzeichnung oder Dauer aktualisieren Ihre Agenten beim Anbieter.",
+      "callingStart": "Anrufe ab",
+      "callingEnd": "Anrufe bis",
+      "callingHint": "In der Ortszeit der angerufenen Person (bei Ländern mit mehreren Zeitzonen in der Zeitzone Ihres Unternehmens).",
+      "callingDays": "Anruftage",
+      "maxDuration": "Maximale Anrufdauer (Minuten)",
+      "maxConcurrent": "Gleichzeitige Anrufe",
+      "recordCalls": "Anrufe aufzeichnen",
+      "recordHint": "Wenn aktiv, sagt die KI jeder Person zu Beginn, dass der Anruf aufgezeichnet wird. Aufzeichnungen bleiben bei Ihrem Sprach-Anbieter.",
+      "autoFollowUps": "Nach Anrufen Folgeaufgaben anlegen und Termine buchen",
+      "autoFollowUpsHint": "Rückrufe, zugesagte Zahlungen und vereinbarte Termine werden automatisch zu CRM-Folgeaufgaben oder Terminen.",
+      "inboundTickets": "Support-Tickets aus Anrufen eröffnen",
+      "inboundTicketsHint": "Meldet jemand ein Problem, wird ein Support-Ticket mit der Anrufzusammenfassung erstellt.",
+      "inboundLeads": "Leads aus neuen Anrufenden anlegen",
+      "inboundLeadsHint": "Unbekannte interessierte Anrufende werden Leads in Ihrem CRM.",
+      "voicemailUser": "Nachrichten gehen an",
+      "voicemailHint": "Wer benachrichtigt wird, wenn der Empfang eine Nachricht aufnimmt.",
+      "voicemailEveryone": "Alle, die die Kommunikation verwalten",
+      "saved": "Einstellungen gespeichert."
+    },
+    "agents": {
+      "new": "Neuer Sprach-Agent",
+      "newHint": "Eine Stimme für einen Ihrer KI-Mitarbeitenden, mit klarem Ziel.",
+      "empty": "Noch keine Sprach-Agenten. Erstellen Sie unten einen.",
+      "name": "Name des Agenten",
+      "nameHint": "Der Name, mit dem er sich vorstellt, z. B. „Mia“.",
+      "employee": "KI-Mitarbeitende",
+      "employeeHint": "Optional: der KI-Mitarbeitende, für den diese Stimme spricht; dessen Rollenhinweise werden genutzt.",
+      "noEmployee": "Kein KI-Mitarbeitender verknüpft",
+      "goal": "Ziel",
+      "language": "Sprache",
+      "greeting": "Begrüßung",
+      "greetingHint": "Wird direkt nach der KI-Vorstellung gesagt (die immer offenlegt, dass es eine KI ist).",
+      "offerNotes": "Angebote, Preise und Regeln, die er nennen darf",
+      "offerNotesHint": "Wird wortwörtlich wiedergegeben. Leer lassen, dann nennt der Agent keine Preise.",
+      "instructions": "Zusätzliche Anweisungen",
+      "instructionsHint": "Alles Weitere, das er wissen oder tun soll, in einfachen Worten.",
+      "advanced": "Erweitert",
+      "voiceId": "Stimmen-ID des Anbieters",
+      "voiceIdHint": "Optionale Stimme aus der Bibliothek Ihres Anbieters (z. B. Elliot bei Vapi, 11labs-Adrian bei Retell).",
+      "disclosureNote": "Jeder Anruf beginnt damit, dass sich der Agent als KI-Assistent Ihres Unternehmens vorstellt, z. B. „Hallo, hier ist Mia, ein KI-Assistent von Acme.“ Das lässt sich nicht abschalten.",
+      "create": "Agent erstellen",
+      "save": "Änderungen speichern",
+      "savedSynced": "Gespeichert und live auf Ihrer Sprachplattform.",
+      "savedNotSynced": "In Realy gespeichert, aber noch nicht live beim Anbieter: {error}",
+      "stats": "{calls, plural, one {# Anruf} other {# Anrufe}} · {numbers, plural, one {# Nummer} other {# Nummern}}",
+      "back": "Alle Sprach-Agenten",
+      "archived": "Dieser Agent ist archiviert.",
+      "onProvider": "Läuft auf {provider}",
+      "sync": "Jetzt synchronisieren",
+      "synced": "Synchronisiert",
+      "refreshKnowledge": "Wissen aktualisieren",
+      "knowledgeRefreshed": "Wissen aktualisiert",
+      "archive": "Archivieren",
+      "archiveConfirm": "Diesen Agenten archivieren? Noch nicht getätigte Anrufe werden abgebrochen.",
+      "opening": "Eröffnungssatz",
+      "knowledgeBuilt": "Wissen aus Company Brain, Produkten und Hilfeartikeln, aktualisiert {when}",
+      "noKnowledge": "Noch kein Unternehmenswissen geladen.",
+      "lastSynced": "synchronisiert {when}",
+      "promptPreview": "Genau sehen, was dem Agenten gesagt wird",
+      "edit": "Agent bearbeiten",
+      "calls": "Anrufe dieses Agenten"
+    },
+    "numbers": {
+      "title": "Telefonnummern",
+      "description": "Nummern, von denen Ihre KI anruft. Eine Nummer mit Agent nimmt auch eingehende Anrufe an.",
+      "empty": "Noch keine Nummern.",
+      "sync": "Vom Anbieter abgleichen",
+      "synced": "Nummern aktualisiert",
+      "number": "Nummer",
+      "source": "Herkunft",
+      "sources": {
+        "PROVIDER": "Auf der Plattform gekauft",
+        "TWILIO": "Twilio"
+      },
+      "inboundAgent": "Angenommen von",
+      "noInbound": "Niemand (nur ausgehend)",
+      "calls": "Anrufe",
+      "get": "Nummer besorgen",
+      "getHintVapi": "Nutzen Sie eine Nummer aus Ihrem Twilio-Konto (alle Länder, die Twilio anbietet) oder eine kostenlose US-Nummer von Vapi.",
+      "getHintRetell": "Kaufen Sie eine US- oder kanadische Nummer bei Retell. Im Retell-Dashboard hinzugefügte Nummern erscheinen nach dem Abgleich.",
+      "mode": {
+        "twilio": "Von Twilio",
+        "provider": "Kostenlose Vapi-Nummer (USA)"
+      },
+      "label": "Bezeichnung",
+      "labelPlaceholder": "z. B. Hauptnummer",
+      "areaCode": "Vorwahl",
+      "vapiFreeHint": "US-Vorwahl, z. B. 415. Kostenlose Vapi-Nummern können nicht international anrufen.",
+      "retellHint": "US- oder kanadische Vorwahl, z. B. 415. Wird Ihrem Retell-Konto berechnet.",
+      "buy": "Kaufen",
+      "buyConfirm": "Diese Nummer über Ihr Konto bei der Sprachplattform beziehen? Der Anbieter kann dafür Gebühren berechnen.",
+      "buyTwilioConfirm": "{number} über Ihr Twilio-Konto kaufen? Twilio berechnet eine monatliche Gebühr.",
+      "twilioMissing": "Verbinden Sie Twilio, um Twilio-Nummern zu nutzen oder zu kaufen.",
+      "country": "Land",
+      "search": "Suchen",
+      "owned": "Ihre Twilio-Nummern",
+      "available": "Zum Kauf verfügbar",
+      "noneOwned": "Keine sprachfähigen Nummern in Ihrem Twilio-Konto.",
+      "noneAvailable": "Keine Nummern gefunden. Versuchen Sie eine andere Vorwahl.",
+      "alreadyConnected": "Verbunden",
+      "import": "Mit Vapi nutzen",
+      "twilioShareNote": "Damit Vapi eine Twilio-Nummer nutzen kann, erhält Vapi Ihre Twilio Account SID und Ihr Auth Token, um über diese Nummer anzurufen und Anrufe anzunehmen."
+    },
+    "live": {
+      "title": "Laufende Anrufe",
+      "description": "Anrufe, die gerade gewählt werden oder laufen.",
+      "empty": "Keine laufenden Anrufe."
+    },
+    "recent": {
+      "title": "Letzte Anrufe",
+      "all": "Alle Anrufe",
+      "empty": "Noch keine Anrufe."
+    },
+    "manual": {
+      "title": "Jemanden anrufen",
+      "description": "Lassen Sie Ihre KI eine Nummer anrufen, die nicht im CRM ist. Sie geben den Anruf vor dem Wählen frei.",
+      "forbidden": "Sie dürfen in diesem Unternehmen keine Anrufe anfordern.",
+      "noAgent": "Erstellen und synchronisieren Sie zuerst einen ausgehenden Sprach-Agenten und fügen Sie eine Nummer hinzu."
+    },
+    "calls": {
+      "views": "Anrufansichten",
+      "view": {
+        "all": "Alle",
+        "live": "Live",
+        "pending": "Wartend",
+        "past": "Beendet",
+        "inbound": "Eingehend",
+        "outbound": "Ausgehend"
+      },
+      "person": "Person",
+      "agent": "Agent",
+      "status": "Status",
+      "outcome": "Ergebnis",
+      "duration": "Dauer",
+      "when": "Wann",
+      "unknown": "Unbekannter Anrufer",
+      "anyOutcome": "Jedes Ergebnis",
+      "filter": "Filtern",
+      "empty": "Keine passenden Anrufe.",
+      "pageInfo": "Seite {page} von {pages} · {total, plural, one {# Anruf} other {# Anrufe}}"
+    },
+    "call": {
+      "title": "Anruf",
+      "back": "Alle Anrufe",
+      "cancel": "Anruf abbrechen",
+      "cancelConfirm": "Diesen Anruf abbrechen? Er wird nicht getätigt.",
+      "numbers": "Von → an",
+      "cost": "Anbieterkosten",
+      "requestedBy": "Angefordert von",
+      "inboundCaller": "Die anrufende Person",
+      "campaign": "Kampagne",
+      "endedReason": "Beendet, weil",
+      "purpose": "Zweck",
+      "awaitingTitle": "Wartet auf Freigabe",
+      "awaitingBody": "Es wurde noch nichts gewählt. Der Anruf wird getätigt, sobald jemand ihn freigibt – innerhalb der Anrufzeiten der Person.",
+      "openApprovals": "Freigaben öffnen",
+      "approveNow": "Freigeben und anrufen",
+      "approved": "Freigegeben.",
+      "open": "Anruf öffnen",
+      "scheduledFor": "Freigegeben. Er wird am {when} innerhalb der Anrufzeiten gewählt.",
+      "failed": "Der Anruf konnte nicht getätigt werden",
+      "transcript": "Transkript",
+      "recording": "Anrufaufzeichnung",
+      "recordingHint": "Klicken Sie auf einen Zeitstempel, um die Aufzeichnung ab dort abzuspielen.",
+      "onProvider": "Beim Anbieter öffnen",
+      "ai": "KI",
+      "caller": "Anrufer",
+      "searchTranscript": "Im Transkript suchen",
+      "hits": "{count, plural, =0 {Keine Treffer} one {# Treffer} other {# Treffer}}",
+      "playFrom": "Ab {time} abspielen",
+      "transcriptLive": "Das Transkript erscheint, wenn der Anruf endet.",
+      "noTranscript": "Kein Transkript für diesen Anruf.",
+      "summary": "Zusammenfassung",
+      "noSummary": "Noch keine Zusammenfassung.",
+      "results": "Was danach passierte",
+      "resultsHint": "Nach dem Anruf angelegte Einträge.",
+      "noResults": "Es musste nichts angelegt werden.",
+      "notProcessed": "Erscheint, sobald der Anbieter die Anrufanalyse geliefert hat.",
+      "result": {
+        "AWAITING_APPROVAL": "Angefordert. Wartet auf Freigabe.",
+        "SCHEDULED": "Freigegeben und innerhalb der Anrufzeiten geplant.",
+        "QUEUED": "Der Anbieter hat den Anruf angenommen; er wird gewählt.",
+        "RINGING": "Klingelt.",
+        "IN_PROGRESS": "Der Anruf läuft.",
+        "ENDED": "Der Anruf ist beendet.",
+        "FAILED": "Der Anbieter hat den Anruf nicht angenommen.",
+        "BLOCKED": "Der Anruf wurde nicht getätigt.",
+        "CANCELLED": "Der Anruf wurde abgebrochen.",
+        "REJECTED": "Der Anruf wurde abgelehnt."
+      }
+    },
+    "analysis": {
+      "caller_name": "Name",
+      "caller_email": "E-Mail",
+      "caller_company": "Unternehmen",
+      "meeting_time": "Vereinbarter Termin",
+      "callback_time": "Rückruf um",
+      "follow_up_note": "Nächster Schritt",
+      "support_issue": "Gemeldetes Problem",
+      "urgency": "Dringlichkeit",
+      "payment_promise_date": "Zugesagtes Zahlungsdatum",
+      "message_for_team": "Nachricht für Sie"
+    },
+    "resultTypes": {
+      "lead_activity": "CRM",
+      "crm_activity": "CRM",
+      "lead_follow_up": "Folgeaufgabe",
+      "crm_follow_up": "Folgeaufgabe",
+      "crm_meeting": "Termin",
+      "support_ticket": "Ticket",
+      "lead": "Neuer Lead",
+      "do_not_call": "Sperrliste",
+      "notification": "Benachrichtigt"
+    },
+    "callButton": {
+      "label": "Mit KI anrufen",
+      "title": "KI-Anruf an {name}",
+      "description": "Ihr Sprach-Agent ruft an, sagt, dass er eine KI ist, und protokolliert das Ergebnis hier.",
+      "agent": "Sprach-Agent",
+      "purpose": "Worum geht es im Anruf?",
+      "purposeHint": "Ein oder zwei Sätze, mit denen der Agent arbeitet, z. B. „Wegen der Demo-Anfrage nachfassen und einen Termin nächste Woche anbieten.“",
+      "rules": "Der Anruf wird erst nach Freigabe getätigt, innerhalb der Anrufzeiten in der Zeitzone der Person, und nie an Nummern auf der Sperrliste.",
+      "request": "Anruf anfordern",
+      "phone": "Telefonnummer",
+      "phoneHint": "Internationales Format mit Ländervorwahl, z. B. +49 30 1234567.",
+      "name": "Name (optional)",
+      "disabled": {
+        "forbidden": "Sie dürfen keine Anrufe anfordern.",
+        "noPhone": "Für diesen Eintrag ist keine Telefonnummer hinterlegt.",
+        "badPhone": "Ergänzen Sie die Ländervorwahl der Telefonnummer (z. B. +49…).",
+        "dnc": "Diese Nummer steht auf der Sperrliste.",
+        "noAgent": "Noch kein Sprach-Agent bereit.",
+        "noNumber": "Noch keine Telefonnummer zum Anrufen."
+      }
+    },
+    "panel": {
+      "title": "KI-Anrufe",
+      "description": "Anrufe Ihres KI-Telefon-Teams mit dieser Person.",
+      "empty": "Noch keine KI-Anrufe.",
+      "setup": "Telefon-Team einrichten"
+    },
+    "campaigns": {
+      "new": "Neue Anrufkampagne",
+      "newHint": "Lassen Sie Ihre KI eine Liste von Leads oder Kontakten anrufen. Sie geben die ganze Liste einmal frei.",
+      "empty": "Noch keine Kampagnen.",
+      "name": "Name der Kampagne",
+      "number": "Anrufen von",
+      "people": "{count, plural, =0 {Personen zum Anrufen auswählen} one {# Person ausgewählt} other {# Personen ausgewählt}}",
+      "search": "Personen suchen",
+      "noPeople": "Noch keine Leads oder Kontakte mit Telefonnummer.",
+      "kind": {
+        "lead": "Lead",
+        "contact": "Kontakt"
+      },
+      "stage": {
+        "NEW": "Neu",
+        "CONTACTED": "Kontaktiert",
+        "QUALIFIED": "Qualifiziert",
+        "PROPOSAL": "Angebot",
+        "WON": "Gewonnen",
+        "LOST": "Verloren"
+      },
+      "approvalNote": "Nach dem Erstellen wartet die Kampagne auf Freigabe. Personen ohne gültige Nummer oder auf der Sperrliste werden übersprungen.",
+      "create": "Kampagne erstellen",
+      "created": "Kampagne erstellt",
+      "createdBody": "{count, plural, one {# Person wird} other {# Personen werden}} angerufen, sobald die Kampagne freigegeben ist.",
+      "skipped": "{count, plural, one {# Person wurde übersprungen} other {# Personen wurden übersprungen}} (keine gültige Nummer, doppelt oder Sperrliste).",
+      "needSetup": "Sie brauchen zuerst einen synchronisierten ausgehenden Sprach-Agenten und eine Telefonnummer.",
+      "status": {
+        "DRAFT": "Entwurf",
+        "AWAITING_APPROVAL": "Wartet auf Freigabe",
+        "RUNNING": "Läuft",
+        "PAUSED": "Pausiert",
+        "COMPLETED": "Abgeschlossen",
+        "CANCELLED": "Abgebrochen"
+      },
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "cancel": "Abbrechen",
+      "cancelConfirm": "Diese Kampagne abbrechen? Noch nicht getätigte Anrufe werden abgebrochen.",
+      "progress": "Kampagnenfortschritt",
+      "counts": "{total} Personen · {done} erreicht · {pending} wartend · {skipped} nicht getätigt",
+      "viewCalls": "Anrufe ansehen"
+    },
+    "analytics": {
+      "range": "Zeitraum",
+      "days": "{days} Tage",
+      "avgDuration": "Durchschnittliches Gespräch",
+      "cost": "Anbieterkosten",
+      "costHint": "Wie von Ihrer Sprachplattform gemeldet",
+      "empty": "In diesem Zeitraum noch keine Anrufe.",
+      "volume": "Anrufe pro Tag",
+      "volumeHint": "Getätigte oder angenommene Anrufe.",
+      "day": "Tag",
+      "outcomes": "Ergebnisse",
+      "outcomesHint": "{count, plural, one {Aus # analysierten Anruf} other {Aus # analysierten Anrufen}}",
+      "noOutcomes": "Noch keine analysierten Anrufe.",
+      "sentiment": "Wie sich die Menschen fühlten",
+      "sentimentHint": "{count, plural, one {# bewerteter Anruf} other {# bewertete Anrufe}}",
+      "noSentiment": "Noch keine Stimmung erfasst."
+    },
+    "dnc": {
+      "title": "Sperrliste",
+      "description": "Nummern, die Ihre KI nie anruft. Wer in einem Anruf bittet, nicht mehr angerufen zu werden, wird automatisch hinzugefügt.",
+      "phone": "Telefonnummer",
+      "reason": "Grund (optional)",
+      "add": "Hinzufügen",
+      "source": "Hinzugefügt von",
+      "sources": {
+        "MANUAL": "Ihrem Team",
+        "CALLER_REQUEST": "Wunsch der Person"
+      },
+      "added": "Hinzugefügt",
+      "remove": "Entfernen",
+      "removeConfirm": "Diese Nummer von der Sperrliste entfernen?",
+      "removeCallerConfirm": "Diese Person hat gebeten, nicht angerufen zu werden. Nur entfernen, wenn sie einem erneuten Anruf eindeutig zugestimmt hat. Entfernen?",
+      "empty": "Keine Nummern auf der Liste."
+    },
+    "metrics": {
+      "callsConnected": "Verbundene KI-Anrufe",
+      "inboundCalls": "Eingehende KI-Anrufe",
+      "meetingsBooked": "Durch KI-Anrufe gebuchte Termine",
+      "connectRate": "Verbindungsrate der KI-Anrufe",
+      "positiveSentiment": "Positive KI-Anrufe"
+    }
+  },
+  "planCatalog": {
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "audience": "Für Solo-Gründer, die ein erstes Unternehmen validieren, starten und führen."
+      },
+      "growth": {
+        "name": "Growth",
+        "audience": "Für laufende Unternehmen, die ein KI-Führungsteam und echte Wachstumsmotoren wollen."
+      },
+      "scale": {
+        "name": "Scale",
+        "audience": "Für etablierte Unternehmen mit einem vollständigen KI-Unternehmens-OS für bis zu 5 Firmen."
+      }
+    },
+    "groups": {
+      "workforce": "KI-Belegschaft",
+      "control": "Freigaben & Autonomie",
+      "company": "Unternehmensaufbau",
+      "sales": "Vertrieb & CRM",
+      "marketing": "Marketing",
+      "automation": "Automatisierung",
+      "operations": "Betrieb",
+      "analytics": "Analysen & Erkenntnisse",
+      "platform": "Plattform & Integrationen",
+      "support": "Team & Support"
+    },
+    "features": {
+      "founder_assistant": "KI-Gründerassistent",
+      "ai_task_execution": "KI-Aufgabenausführung",
+      "executive_team": "KI-CEO, Chief of Staff & Abteilungsleiter",
+      "department_delegation": "Delegation auf Abteilungsebene",
+      "performance_monitoring": "Leistungsüberwachung der KI-Mitarbeiter",
+      "full_departments": "Vollständige Abteilungsstruktur",
+      "workforce_management": "Erweitertes Workforce-Management",
+      "human_approvals": "Menschliche Freigabe wichtiger Aktionen",
+      "autonomy_auto": "Auto-Modus für Aktionen mit niedrigem und mittlerem Risiko",
+      "autonomy_custom": "Individuelle Autonomie pro Abteilung",
+      "advanced_approvals": "Erweiterte Freigabe-Workflows",
+      "company_builder": "Ideenvalidierung & Company Builder",
+      "business_plan": "Businessplan-Erstellung",
+      "website_builder": "Website- & Landingpage-Builder",
+      "company_builder_advanced": "Erweiterter Company Builder",
+      "company_os": "Vollständiges Company OS",
+      "crm": "CRM",
+      "sales_pipeline": "Vertriebspipeline",
+      "deal_followups": "Deals & automatische Nachfassaktionen",
+      "lead_generation": "Leadgenerierung & Interessentenrecherche",
+      "advanced_prospecting": "Erweiterte Leadgenerierung & Akquise",
+      "sales_intelligence": "Sales Intelligence & Pipeline-Automatisierung",
+      "email_marketing": "E-Mail-Marketing",
+      "ai_campaigns": "KI-Marketingkampagnen",
+      "email_automation": "E-Mail-Automatisierung & Sequenzen",
+      "marketing_autopilot": "Marketing-Autopilot",
+      "multichannel_campaigns": "Mehrkanal-Kampagnen",
+      "automations": "Automatisierungen",
+      "workflow_builder": "KI-Workflow-Builder",
+      "agent_chains": "Erweiterte Agenten-Workflows & Agentenketten",
+      "voice_agent": "KI-Sprachagent",
+      "live_chat": "KI-Live-Chat",
+      "finance": "Finanzen",
+      "hr": "Personal & Recruiting",
+      "projects_operations": "Projekte & Betrieb",
+      "support_automation": "Kundensupport-Automatisierung",
+      "basic_analytics": "Analysen",
+      "advanced_analytics": "Erweiterte Analysen & Berichte",
+      "growth_insights": "Wachstumsempfehlungen & Erkenntnisse",
+      "advanced_bi": "Erweiterte Business Intelligence",
+      "roi_monitoring": "KI-ROI-Überwachung",
+      "integrations_ads": "Werbeplattform-Integrationen",
+      "integrations_accounting": "Buchhaltungs-Integrationen",
+      "integrations_developer": "Entwickler-Integrationen (eigene APIs, Webhooks)",
+      "advanced_integrations": "Erweiterte Integrationen",
+      "data_exports": "Datenexporte",
+      "standard_support": "Standard-Support",
+      "priority_support": "Priorisierter Support",
+      "priority_onboarding": "Priorisiertes Onboarding"
+    },
+    "limits": {
+      "companies_max": "Unternehmen",
+      "agents_max": "KI-Mitarbeiter",
+      "seats_max": "Benutzerplätze",
+      "crm_contacts_max": "CRM-Kontakte",
+      "content_generations_month": "KI-Inhaltserstellungen / Monat",
+      "channels_max": "Verbundene Social- & Marketingkanäle",
+      "automations_active_max": "Aktive Automatisierungen",
+      "ai_credits_month": "KI-Credits / Monat",
+      "storage_mb": "Speicher",
+      "voice_minutes_month": "Sprachminuten / Monat",
+      "email_sends_month": "E-Mail-Versand / Monat",
+      "api_cost_month": "Kostenobergrenze externe APIs / Monat",
+      "ads_spend_month": "Werbebudget-Obergrenze / Monat"
+    },
+    "addons": {
+      "ai_credits_10k": "10.000 KI-Credits",
+      "ai_credits_50k": "50.000 KI-Credits",
+      "content_100": "100 Inhaltserstellungen",
+      "voice_minutes_250": "250 Sprachminuten",
+      "email_sends_10k": "10.000 E-Mail-Versände",
+      "api_cost_cap_50": "+50 $ API-Kostengrenze",
+      "ad_spend_cap_5000": "+5.000 $ Werbebudget-Grenze"
+    },
+    "units": {
+      "credits": "{value} Credits",
+      "minutes": "{value} Min.",
+      "gb": "{value} GB",
+      "mb": "{value} MB"
+    },
+    "unlimited": "Unbegrenzt",
+    "billingInterval": "Abrechnungszeitraum",
+    "annualSave": "2 Monate gratis",
+    "annualNote": "Jährliche Abrechnung — 2 Monate gratis",
+    "mostPopular": "Am beliebtesten",
+    "startTrial": "{days} Tage kostenlos testen",
+    "trialNote": "Jeder Plan beginnt mit einer {days}-tägigen kostenlosen Testphase auf Growth-Niveau — ohne Karte.",
+    "indicative": "Listenpreis in USD; Ihr lokaler Preis wird beim Checkout bestätigt.",
+    "everythingIn": "Alles aus {plan}, plus:",
+    "heroTitle": "Ein Gründer. Eine Plattform. Ein ganzes Unternehmen.",
+    "heroLede": "Drei Pläne für jede Phase, von der ersten Idee bis zum vollständig besetzten KI-Unternehmen. Monatlich oder jährlich — bei jährlicher Zahlung zwei Monate gratis.",
+    "compareTitle": "Alle Pläne vergleichen",
+    "compareLede": "Jedes Limit und jede Funktion, direkt aus demselben Katalog, den das Produkt durchsetzt.",
+    "feature": "Funktion",
+    "addonsLede": "Kostenintensive Nutzung — KI-Credits, Sprachminuten, E-Mail-Versand, externe API-Kosten und Werbebudget — hat immer ein Kontingent. Brauchen Sie in einem Monat mehr, kaufen Sie ein Zusatzpaket oder wechseln Sie in einen höheren Plan.",
+    "faqTitle": "Fragen zu den Preisen",
+    "faq": {
+      "q1": {
+        "q": "Wie funktioniert die kostenlose Testphase?",
+        "a": "Ihre 7-tägige Growth-Testphase beginnt, sobald Sie Ihr erstes Unternehmen anlegen – ohne Karte. Danach wählen Sie einen Plan; bis dahin bleiben Ihre Daten lesbar, aber neue KI-Arbeit, Kontakte und Automationen pausieren."
+      },
+      "q2": {
+        "q": "Was ist ein KI-Credit?",
+        "a": "KI-Credits messen die Arbeit Ihrer KI-Mitarbeiter. Ein Credit entspricht etwa 100 Modell-Tokens. Credits werden jeden Abrechnungsmonat zurückgesetzt; Sie können jederzeit ein Credit-Paket nachkaufen."
+      },
+      "q3": {
+        "q": "Kann ich den Plan später wechseln?",
+        "a": "Ja. Upgrades gelten sofort mit anteiliger Berechnung; Downgrades und der Wechsel zwischen monatlicher und jährlicher Abrechnung erfolgen ebenso unter Abrechnung & Nutzung."
+      },
+      "q4": {
+        "q": "Was passiert, wenn ich ein Limit erreiche?",
+        "a": "Es geht nichts verloren. Realy zeigt, welches Limit erreicht ist, und bietet den Plan mit mehr Kapazität an — oder bei Nutzung wie KI-Credits, E-Mail-Versand und Sprachminuten ein Zusatzpaket."
+      },
+      "q5": {
+        "q": "Handeln KI-Mitarbeiter ohne meine Freigabe?",
+        "a": "Bei Starter wartet jede wichtige Aktion auf Ihre Freigabe. Growth ergänzt den Auto-Modus für Arbeit mit niedrigem und mittlerem Risiko; bei Scale legen Sie die Autonomie pro Abteilung fest."
+      },
+      "q6": {
+        "q": "Werden Steuern und lokale Währungen unterstützt?",
+        "a": "Preise werden pro Markt festgelegt und, wo verfügbar, in der Währung Ihres Rechnungslandes angezeigt. Steuern werden beim Checkout anhand Ihres Rechnungslandes berechnet."
+      }
+    }
+  },
+  "billing": {
+    "title": "Abrechnung & Nutzung",
+    "plan": "Ihr Plan",
+    "states": {
+      "subscribed": "Aktiv",
+      "past_due": "Zahlung fehlgeschlagen — Handlung nötig",
+      "trial": "Kostenlose Testphase",
+      "trial_expired": "Testphase beendet"
+    },
+    "interval": {
+      "MONTH": "Monatlich",
+      "YEAR": "Jährlich"
+    },
+    "per": {
+      "MONTH": "pro Monat",
+      "YEAR": "pro Jahr"
+    },
+    "trialEnds": "Ihre kostenlose Testphase endet am {date}.",
+    "trialEnded": "Ihre kostenlose Testphase ist beendet. Wählen Sie einen Plan, damit Ihr KI-Unternehmen weiterarbeitet.",
+    "renews": "Verlängert sich am {date}.",
+    "cancelsOn": "Endet am {date}. Bis dahin behalten Sie den Zugang.",
+    "usageTitle": "Nutzung",
+    "usageWindow": "Aktueller Zeitraum: {start} – {end}",
+    "meterOf": "{used} von {limit}",
+    "resetsMonthly": "Wird monatlich zurückgesetzt",
+    "addonIncluded": "Enthält {value} aus Zusatzpaketen",
+    "nearLimit": "Nahe am Limit",
+    "atLimit": "Limit erreicht",
+    "changePlan": "Plan ändern",
+    "choosePlan": "Plan wählen",
+    "current": "Aktueller Plan",
+    "upgradeTo": "Auf {plan} upgraden",
+    "downgradeTo": "Zu {plan} wechseln",
+    "switchInterval": "Abrechnung wechseln",
+    "changeRequested": "Änderung angefordert. Sie erscheint hier, sobald Stripe sie bestätigt.",
+    "cancel": "Abonnement kündigen",
+    "cancelConfirm": "Ihr Plan bleibt bis {date} aktiv und endet dann. Abonnement kündigen?",
+    "resume": "Abonnement behalten",
+    "addonsTitle": "Zusatzpakete",
+    "addonsHint": "Kostenintensive Nutzung für den aktuellen Zeitraum aufstocken. Pakete gelten bis zum Ende des Zeitraums.",
+    "buy": "Kaufen",
+    "requiresFeature": "Erfordert {feature}",
+    "addonSuccess": "Zahlung erhalten. Ihr Zusatzpaket wird aktiv, sobald Stripe es bestätigt.",
+    "addonCanceled": "Der Kauf des Zusatzpakets wurde abgebrochen. Es wurde nichts berechnet.",
+    "featuresTitle": "Was Ihr Plan enthält",
+    "invoices": "Rechnungen",
+    "noInvoices": "Noch keine Rechnungen.",
+    "invoiceCols": {
+      "number": "Rechnung",
+      "date": "Datum",
+      "amount": "Betrag",
+      "status": "Status"
+    },
+    "view": "Ansehen",
+    "notEnforced": "Planlimits werden in dieser Installation nicht durchgesetzt; die Nutzung wird zur Information angezeigt."
+  },
+  "upgrade": {
+    "featureTitle": "{feature} freischalten",
+    "limitTitle": "Sie haben Ihr Limit für {limit} erreicht",
+    "trialExpiredTitle": "Ihre kostenlose Testphase ist beendet",
+    "trialExpiredBody": "Ihre Daten sind sicher und lesbar. Wählen Sie einen Plan, um wieder neue KI-Arbeit zu starten, Kontakte hinzuzufügen und Automatisierungen auszuführen.",
+    "featureBody": "Das ist ab {plan} enthalten.",
+    "higherPlan": "einem höheren Plan",
+    "limitBody": "Sie haben {used} von {limit} in Ihrem aktuellen Plan genutzt.",
+    "limitBodyShort": "Ihr aktueller Plan erlaubt hiervon nicht mehr.",
+    "currentPlan": "Aktueller Plan",
+    "unlocksWith": "Freigeschaltet mit",
+    "upgradeMonthly": "Auf {plan} upgraden — {price}/Monat",
+    "upgradeAnnual": "Jährlich — {price}/Jahr, 2 Monate gratis",
+    "orAddon": "Oder für diesen Zeitraum aufstocken:",
+    "addonOnly": "Für diesen Zeitraum aufstocken:",
+    "buyAddon": "{addon} — {price}",
+    "notConfiguredTitle": "Zahlungen sind noch nicht eingerichtet",
+    "notConfigured": "Bevor Pläne und Zusatzpakete gekauft werden können, sind Stripe-Zugangsdaten nötig. Ein Plattform-Administrator muss sie hinterlegen.",
+    "askAdmin": "Nur Abrechnungsverwalter können den Plan ändern. Bitten Sie einen Organisationsinhaber um ein Upgrade.",
+    "confirmCountry": "Bestätigen Sie zuerst Ihr Rechnungsland, damit wir Ihren genauen Preis und Steuern anzeigen können.",
+    "goToBilling": "Abrechnung & Nutzung öffnen",
+    "comparePlans": "Pläne vergleichen",
+    "pendingChange": "Planwechsel angefordert. Er wird wirksam, sobald Stripe ihn bestätigt.",
+    "loadFailed": "Die Planoptionen konnten nicht geladen werden. Versuchen Sie es gleich noch einmal.",
+    "contactUs": "Sie nutzen den größten Plan. Kontaktieren Sie uns für eine individuelle Lösung.",
+    "usageLine": "{used} von {limit} genutzt",
+    "pageTitle": "Dieser Bereich von Realy gehört zu einem höheren Plan",
+    "nowIncluded": "Das ist jetzt in Ihrem Plan enthalten.",
+    "back": "Zurück",
+    "lockedNav": "In einem höheren Plan verfügbar"
+  },
+  "cms": {
+    "publishedOn": "Veröffentlicht am {date}"
   }
 }

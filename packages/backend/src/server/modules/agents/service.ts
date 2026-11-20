@@ -4,7 +4,7 @@ import { userContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, isAppError, notFound } from "@/server/core/errors";
 import { enqueueAgentTask } from "@/server/core/jobs";
 import { env } from "@/server/core/env";
-import { agentModel, aiRefusal, aiRefusalMessage, assertAiAllowed, assertProfileAllowed, isOrganizationSuspended } from "@/server/core/platform-controls";
+import { aiRefusal, aiRefusalMessage, assertAiAllowed, assertProfileAllowed, isOrganizationSuspended } from "@/server/core/platform-controls";
 import { logger } from "@/server/core/logger";
 import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
@@ -15,6 +15,8 @@ import { getTool, loadTools } from "@/server/modules/tools/registry";
 import { AUTONOMY_GUIDANCE, toolsForAutonomy } from "@/server/modules/workforce/autonomy";
 import { assertEmployeeBudget, budgetRefusal, employeeBudget } from "@/server/modules/workforce/budgets";
 import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
+import { assertLimit, creditsForTokens, recordUsage } from "@/server/modules/entitlements/service";
+import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/admin/ai-models";
 import { AGENT_TASK_STATUSES } from "./statuses";
 import { PROFILE_KEYS, profileByKey } from "./profiles";
 import { aiConfigured, REMEMBER_LINE, runTask, TaskError } from "./runtime";
@@ -106,7 +108,10 @@ export async function aiUsageToday(organizationId: string, companyId: string) {
 async function requireBudget(organizationId: string, companyId: string, profile?: string | null) {
   // Platform AI controls first (Admin → AI & Workforce): kill switch, org AI switch, disabled role/model, platform and
   // per-organization token budgets and the plan's monthly AI tokens.
-  await assertAiAllowed(organizationId, { profile, model: await agentModel(env().AGENT_MODEL) });
+  await assertAiAllowed(organizationId, { profile, model: await resolvePlatformModel({ organizationId, profile }) });
+  // Platform-wide monthly AI spend cap (Admin → AI).
+  const platformBudget = await platformBudgetRefusal();
+  if (platformBudget) throw new AppError("not_available", "The platform's monthly AI budget is used up; try again later", { reason: platformBudget });
   const usage = await aiUsageToday(organizationId, companyId);
   if (usage.exhausted) throw new AppError("not_available", "Today's AI allowance for this company is used up; try again tomorrow", { reason: "ai_budget_exhausted", ...usage });
   // Organization-wide daily AI token limit (Settings → Usage).
@@ -146,6 +151,8 @@ export async function createTask(
   // "Pause all AI" (/autonomy): no new AI work starts in this company until a person resumes it.
   if (await isCompanyAiPaused(organizationId, companyId)) throw new AppError("not_available", "All AI in this company is paused; resume it in Autonomy", { reason: "workforce_ai_paused" });
   await requireBudget(organizationId, companyId, input.profile);
+  // Plan AI credits (docs/entitlements.md): metered per run in processAgentTask.
+  await assertLimit(ctx, organizationId, "ai.credits.month", 1);
   const task = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.run", tx);
     if (input.milestoneId && !(await tx.milestone.findFirst({ where: { id: input.milestoneId, organizationId, companyId }, select: { id: true } }))) {
@@ -318,8 +325,10 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
 
   try {
     // Platform AI controls may have changed since the task was queued (kill switch, disabled role/model, budgets).
-    const refusal = await aiRefusal(task.organizationId, { profile: task.profile, model: await agentModel(env().AGENT_MODEL) });
+    const refusal = await aiRefusal(task.organizationId, { profile: task.profile, model: await resolvePlatformModel({ organizationId: task.organizationId, profile: task.profile }) });
     if (refusal) throw new TaskError(refusal, aiRefusalMessage(refusal));
+    const platformBudget = await platformBudgetRefusal();
+    if (platformBudget) throw new TaskError(platformBudget, "The platform's monthly AI budget is used up; retry later");
     if (await isOrganizationSuspended(task.organizationId)) throw new TaskError("organization_suspended", "This organization is suspended by the platform");
     if (await isCompanyAiPaused(task.organizationId, task.companyId)) throw new TaskError("company_ai_paused", "All AI in this company is paused; resume it in Autonomy and retry");
     // The requester must still be allowed to run tasks in this company when the task executes.
@@ -394,6 +403,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
         },
       });
       if (count) {
+        await recordUsage(task.organizationId, "ai.credits", creditsForTokens(result.inputTokens + result.outputTokens), { companyId: task.companyId, idempotencyKey: taskId, client: tx });
         await writeAudit(tx, ctx, { category: "TENANT", organizationId: task.organizationId, action: "agent.task.completed", resourceType: "agent_task", resourceId: taskId, newValue: { model: result.model, citations: result.citations.length, companyId: task.companyId } });
         if (employee && remembered.length) {
           await tx.aiEmployeeMemory.createMany({
@@ -440,6 +450,9 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
         });
       }
     });
+    if (failure.usage) {
+      await recordUsage(task.organizationId, "ai.credits", creditsForTokens(failure.usage.inputTokens + failure.usage.outputTokens), { companyId: task.companyId, idempotencyKey: `${taskId}:failed` }).catch((e) => log.warn({ err: e instanceof Error ? e.message : String(e) }, "AI credit usage not recorded"));
+    }
     return "failed";
   }
 }

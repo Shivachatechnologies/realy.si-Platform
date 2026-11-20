@@ -14,6 +14,8 @@ import { renderMarketingHtml, sendMarketingEmail } from "./mailer";
 import { loadBrandKit } from "./brand";
 import { EMAIL_PROVIDERS } from "./providers/email";
 import { getMarketingConnection, isUsable } from "./connections-bridge";
+import { checkLimit, recordUsage } from "@/server/modules/entitlements/service";
+import { upsertRecommendation } from "./recommendations";
 
 export const EMAIL_CAMPAIGN_STATUSES = ["DRAFT", "SCHEDULED", "SENDING", "SENT", "FAILED", "CANCELLED"] as const;
 export const MERGE_TAGS = ["firstName", "lastName", "email", "company", "sender"] as const;
@@ -389,6 +391,22 @@ export async function processEmailCampaign(id: string, limit = 100): Promise<num
     }
   }
   if (!pending.length) return finish(c.id);
+  // Plan email sends (background, no user ctx): send only what still fits; nothing fits → wait, with a daily notice.
+  const allowance = await checkLimit(c.organizationId, "email.sends.month", pending.length);
+  if (!allowance.allowed) {
+    const room = allowance.state === "trial_expired" || allowance.limit === null ? 0 : Math.max(0, allowance.limit - allowance.used);
+    if (room === 0) {
+      await upsertRecommendation(c.organizationId, c.companyId, {
+        dedupeKey: `plan:email.sends:${new Date().toISOString().slice(0, 10)}`,
+        title: `Email campaign "${c.name}" paused: plan limit reached for email sends`,
+        detail: `Used ${allowance.used} of ${allowance.limit ?? "unlimited"} email sends this month. Sending resumes when the allowance resets or the plan is upgraded.`,
+        priority: "high",
+        href: "/settings/billing",
+      }).catch(() => false);
+      return 0;
+    }
+    pending = pending.slice(0, room);
+  }
   let processed = 0;
   for (const [i, r] of pending.entries()) {
     const v = content(i);
@@ -399,6 +417,7 @@ export async function processEmailCampaign(id: string, limit = 100): Promise<num
       { email: r.email!, firstName: r.firstName, lastName: r.lastName, accountName: r.account?.name, contactId: r.id },
     );
     if (status) processed++;
+    if (status === "SENT") await recordUsage(c.organizationId, "email.sends", 1, { companyId: c.companyId, idempotencyKey: `${c.id}:${r.email!.trim().toLowerCase()}` });
     if (status === "NOT_CONFIGURED") {
       await finish(c.id, "FAILED");
       break;

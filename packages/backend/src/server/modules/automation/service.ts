@@ -9,6 +9,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { grantsAllow, loadGrants, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { createTask } from "@/server/modules/agents/service";
+import { assertLimit } from "@/server/modules/entitlements/service";
 import { currentSlot, createRun, processRun, type TriggerEventData } from "./engine";
 import { EMPTY_DEFINITION, flattenSteps, triggerKeyOf, validateDefinition, type Definition } from "./definition";
 import { templateByKey } from "./templates";
@@ -229,6 +230,8 @@ export async function setWorkflowStatus(ctx: RequestContext, organizationId: str
     const wf = await findWorkflow(tx, organizationId, companyId, workflowId);
     if (status === "ACTIVE" && !wf.currentVersionId) throw conflict("Publish the workflow before enabling it", { reason: "automation_workflow_unpublished" });
     if (wf.status === "ARCHIVED" && status !== "ARCHIVED") throw conflict("Archived workflows cannot be re-enabled", { reason: "automation_workflow_archived" });
+    // Active automations of the plan (docs/entitlements.md).
+    if (status === "ACTIVE" && wf.status !== "ACTIVE") await assertLimit(ctx, organizationId, "automations.active.max", 1);
     await tx.workflow.update({ where: { id: wf.id }, data: { status } });
     if (status === "ARCHIVED") {
       await tx.workflowRun.updateMany({ where: { workflowId: wf.id, status: { in: ["QUEUED", "WAITING"] } }, data: { status: "CANCELLED", finishedAt: new Date(), error: "Workflow archived" } });

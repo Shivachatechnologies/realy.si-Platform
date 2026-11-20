@@ -27,6 +27,7 @@ export function OpsTabs({ t, locale, active }: { t: Translate; locale: string; a
       active={active}
       tabs={[
         { key: "overview", href: p, label: t("work.ops.tabs.overview") },
+        { key: "analytics", href: `${p}/analytics`, label: t("work.ops.tabs.analytics") },
         { key: "processes", href: `${p}/processes`, label: t("work.ops.tabs.processes") },
         { key: "checklists", href: `${p}/checklists`, label: t("work.ops.tabs.checklists") },
         { key: "assets", href: `${p}/assets`, label: t("work.ops.tabs.assets") },

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 export const FINANCE_TABS = [
   ["dashboard", ""],
   ["start", "/start"],
+  ["manager", "/manager"],
   ["alerts", "/alerts"],
   ["transactions", "/transactions"],
   ["accounts", "/accounts"],

@@ -7,6 +7,7 @@ import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { OPEN_STATUSES, supportAgents } from "./common";
+import { escalateBreaches } from "./automation";
 
 const RAISE: Record<SupportPriority, SupportPriority> = { LOW: "NORMAL", NORMAL: "HIGH", HIGH: "URGENT", URGENT: "URGENT" };
 
@@ -28,6 +29,7 @@ export async function runSlaChecks(): Promise<number> {
     orderBy: { resolutionDueAt: "asc" },
   });
   let handled = 0;
+  const breached: Parameters<typeof escalateBreaches>[0] = [];
   for (const t of due) {
     try {
       await transaction(async (tx) => {
@@ -66,11 +68,13 @@ export async function runSlaChecks(): Promise<number> {
         const payload = { companyId: fresh.companyId, title: `#${fresh.number} ${fresh.subject}`.slice(0, 120), href: `/support/tickets/${fresh.id}` };
         const managers = notifyManagers || !assigneeId ? await usersWithPermission(tx, fresh.organizationId, fresh.companyId, "support.manage") : [];
         await notifyUsers(tx, fresh.organizationId, [assigneeId, ...managers], escalated ? "support.escalated" : "support.sla_breached", payload);
+        breached.push({ id: fresh.id, organizationId: fresh.organizationId, companyId: fresh.companyId, number: fresh.number, subject: fresh.subject, priority, triggers });
         handled++;
       });
     } catch (err) {
       logger.warn({ err, ticketId: t.id }, "SLA check failed");
     }
   }
+  if (breached.length) await escalateBreaches(breached);
   return handled;
 }

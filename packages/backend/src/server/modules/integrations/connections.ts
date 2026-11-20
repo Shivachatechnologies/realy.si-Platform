@@ -170,3 +170,20 @@ export function activeAccount(conn: Pick<Connection, "config">): { id: string; n
   const active = typeof conn.config.activeAccountId === "string" ? conn.config.activeAccountId : null;
   return accounts.find((a) => a.id === active) ?? accounts[0] ?? null;
 }
+
+/**
+ * Plan entitlements for connecting a provider (docs/entitlements.md): restricted provider categories (ads,
+ * accounting, developer) need their plan feature, and a new social/marketing channel must fit channels.max.
+ * Reconnecting an existing connection never counts again.
+ */
+export async function assertConnectionEntitled(ctx: import("@/server/core/context").RequestContext, organizationId: string, companyId: string, provider: string): Promise<void> {
+  const info = providerInfo(provider);
+  if (!info) return;
+  const { assertFeature, assertLimit, INTEGRATION_CATEGORY_FEATURES, CHANNEL_CATEGORIES } = await import("@/server/modules/entitlements/service");
+  const feature = INTEGRATION_CATEGORY_FEATURES[info.category];
+  if (feature) await assertFeature(ctx, organizationId, feature);
+  if ((CHANNEL_CATEGORIES as readonly string[]).includes(info.category)) {
+    const existing = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider, status: { in: ["CONNECTED", "ERROR"] } }, select: { id: true } });
+    if (!existing) await assertLimit(ctx, organizationId, "channels.max", 1);
+  }
+}

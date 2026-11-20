@@ -11,6 +11,7 @@ import { searchArticles } from "@/server/modules/support/kb";
 import { searchDocuments } from "@/server/modules/brain/service";
 import type { LivechatSettings } from "@/generated/prisma/client";
 import { AI_CLAIM_MS } from "./common";
+import { checkLimit, creditsForTokens, hasFeature, recordUsage as meterUsage } from "@/server/modules/entitlements/service";
 import { createLeadFromChat, createTicketFromChat, handOff, proposeMeeting, requestContactDetails, type ChatActionResult } from "./actions";
 
 /** The AI role of the website chat (ai-profiles.ts); platform AI controls can disable it by this key. */
@@ -205,6 +206,11 @@ export async function generateAiReply(conv: Conversation, settings: LivechatSett
     await handOff(conv, settings, { reason: `AI unavailable (${refusal})`, knowledgeGap: false, silent: true });
     return { status: "unavailable", reason: refusal };
   }
+  // Plan (public visitor, no user ctx): without live chat or AI credits the team answers instead.
+  if (!(await hasFeature(conv.organizationId, "feature.live_chat")) || !(await checkLimit(conv.organizationId, "ai.credits.month", 1)).allowed) {
+    await handOff(conv, settings, { reason: "AI unavailable (plan limit reached)", knowledgeGap: false, silent: true });
+    return { status: "unavailable", reason: "plan_limit_reached" };
+  }
   if (!(await claim(conv.id, conv.companyId))) return { status: "skipped", reason: "busy" };
 
   const sources: Source[] = [];
@@ -302,6 +308,7 @@ export async function generateAiReply(conv: Conversation, settings: LivechatSett
     return { status: "unavailable", reason: "provider_error" };
   } finally {
     await recordUsage(conv, modelId, inputTokens, outputTokens).catch((err) => logger.warn({ err: err instanceof Error ? err.message : String(err) }, "livechat usage not recorded"));
+    await meterUsage(conv.organizationId, "ai.credits", creditsForTokens(inputTokens + outputTokens), { companyId: conv.companyId }).catch((err) => logger.warn({ err: err instanceof Error ? err.message : String(err) }, "livechat AI credits not recorded"));
     await db().livechatConversation.updateMany({ where: { id: conv.id, companyId: conv.companyId }, data: { aiBusyUntil: null } });
   }
 }

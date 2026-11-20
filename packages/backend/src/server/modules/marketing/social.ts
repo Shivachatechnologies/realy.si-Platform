@@ -15,6 +15,7 @@ import { checkPending, fetchMetrics, MEDIA_REQUIRED, ProviderError, publishTo, T
 import { isTransient } from "./providers/http";
 import { assetMedia, assetPublicUrl } from "./assets";
 import { markContentPublished } from "./content";
+import { assertLimit } from "@/server/modules/entitlements/service";
 
 export const SOCIAL_PROVIDERS = ["LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK", "THREADS", "PINTEREST"] as const;
 export const MAX_PUBLISH_ATTEMPTS = 5;
@@ -96,6 +97,7 @@ export async function accountChoices(ctx: RequestContext, organizationId: string
 
 export async function createAccount(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof accountInput>) {
   const input = accountInput.parse(raw);
+  await assertLimit(ctx, organizationId, "channels.max", 1);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const a = await tx.marketingSocialAccount.create({ data: { organizationId, companyId, provider: input.provider, name: input.name, handle: input.handle || null, externalId: input.externalId || null, createdById: actorId(ctx, organizationId) } });

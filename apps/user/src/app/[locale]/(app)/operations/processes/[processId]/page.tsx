@@ -5,7 +5,10 @@ import { Archive, ArchiveRestore } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
-import { ActionButton } from "@/components/work/actions";
+import { ActionButton, AiButton } from "@/components/work/actions";
+import { AiPanel } from "@/components/work/ai-panel";
+import { listSubjectTasks } from "@/server/modules/agents/service";
+import { aiConfigured } from "@/server/modules/agents/runtime";
 import { workContext } from "@/components/work/context";
 import { ProcessMetaForm, ProcessVersionForm } from "@/components/work/ops-forms";
 import { Facts } from "@/components/work/ui";
@@ -25,13 +28,16 @@ export default async function ProcessPage({ params, searchParams }: PageProps<"/
   const t = await getT();
   const w = await workContext("operations", t("work.ops.title"));
   if (w.gate) return w.gate;
-  const { locale, viewer, org, company, canManage, base, tz } = w;
+  const { locale, viewer, org, company, canManage, canRunAgents, base, tz } = w;
   const v = Number(param(raw, "v"));
   const p = await getProcess(viewer.ctx, org.id, company.id, processId, Number.isInteger(v) && v > 0 ? v : undefined).catch((err) => {
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
-  const people = canManage ? await listPeople(viewer.ctx, org.id, company.id, "operations.read") : [];
+  const [people, sopTasks] = await Promise.all([
+    canManage ? listPeople(viewer.ctx, org.id, company.id, "operations.read") : [],
+    canRunAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "ops_process", p.id, 5) : [],
+  ]);
   const latest = p.shown?.version === p.currentVersion;
   return (
     <div className="mx-auto grid max-w-[1100px] min-w-0 gap-4">
@@ -76,6 +82,18 @@ export default async function ProcessPage({ params, searchParams }: PageProps<"/
           ) : null}
         </CardBody>
       </Card>
+      {canRunAgents && canManage && !p.archivedAt ? (
+        <AiPanel
+          t={t}
+          locale={locale}
+          tz={tz}
+          title={t("work.opsAnalytics.sopTitle")}
+          description={t("work.opsAnalytics.sopHint")}
+          configured={aiConfigured()}
+          tasks={sopTasks}
+          actions={<AiButton url={`${base}/operations/processes/${p.id}/sop`} label={t("work.opsAnalytics.sopRun")} />}
+        />
+      ) : null}
       {canManage && !p.archivedAt ? (
         <>
           <Card>

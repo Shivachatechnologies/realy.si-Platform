@@ -126,6 +126,8 @@ export function VisionStage({ org, draft, countries, currencies, userCountry }: 
           brief,
           journey: true,
           hold,
+          // The Founder Kit is started from the Launch stage, so journey runs do not pay for research twice.
+          kit: false,
           company: {
             name: v.name?.trim() || undefined,
             incorporationCountryCode: v.countryCode || undefined,

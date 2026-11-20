@@ -3,6 +3,7 @@ import { Activity, Bot, Building2, CircleDollarSign, Cpu, Gauge as GaugeIcon, Ho
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
 import { CountUp } from "@/components/motion/count-up";
 import { LiveDot } from "@/components/motion/live-dot";
 import { SystemPulse } from "@/components/motion/system-pulse";
@@ -18,12 +19,20 @@ const CORE = new Set(["database", "redis"]);
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 
 /** Overview "control room": live health ring, KPIs with 30-day trends, AI fleet, queues and the admin activity timeline. */
-export default async function AdminOverviewPage() {
+export default async function AdminOverviewPage({ searchParams }: PageProps<"/[locale]">) {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
+  const denied = (await searchParams).denied;
+  const deniedNotice = typeof denied === "string" && denied ? <Notice tone="warning">{t("admin.common.sectionDenied", { section: denied.slice(0, 40) })}</Notice> : null;
   const r = await guard(Promise.all([platformOverview(viewer.ctx), platformTrends(viewer.ctx)]), t("errors.forbidden"));
-  if (!r.ok) return r.node;
+  if (!r.ok)
+    return (
+      <div className="grid gap-4">
+        {deniedNotice}
+        {r.node}
+      </div>
+    );
   const [o, tr] = r.value;
   const base = `/${locale}`;
   const tz = viewer.user.timezone;
@@ -43,6 +52,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="grid gap-5">
+      {deniedNotice}
       <AdminHeader
         eyebrow={t("admin.title")}
         icon={<Radar />}

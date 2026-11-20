@@ -377,6 +377,10 @@ export const entitlementInput = z.object({
 
 export async function setEntitlement(ctx: RequestContext, planId: string, raw: z.input<typeof entitlementInput>) {
   const input = entitlementInput.parse(raw);
+  const { isLimitKey, isHighCostLimit } = await import("@/server/modules/entitlements/catalog");
+  if (input.enabled && (input.limitValue ?? null) === null && isLimitKey(input.featureKey) && isHighCostLimit(input.featureKey)) {
+    throw invalid("High-cost usage needs a finite quota; sell more through add-ons", { reason: "plan_limit_unlimited_high_cost", field: "limitValue" });
+  }
   return transaction(async (tx) => {
     await requirePermission(ctx, "pricing.manage", platformChain(), tx);
     if (!(await tx.plan.findUnique({ where: { id: planId } }))) throw notFound("Plan");
@@ -387,6 +391,10 @@ export async function setEntitlement(ctx: RequestContext, planId: string, raw: z
       create: { planId, featureKey: input.featureKey, enabled: input.enabled, limitValue: input.limitValue ?? null },
     });
     await writeAudit(tx, ctx, { category: "ADMIN", action: "pricing.entitlement.set", resourceType: "plan", resourceId: planId, oldValue: before, newValue: after, reason: input.reason });
+    return after;
+  }).then(async (after) => {
+    // Plan values feed every organization's entitlements (docs/entitlements.md).
+    (await import("@/server/modules/entitlements/service")).invalidateEntitlements();
     return after;
   });
 }

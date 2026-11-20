@@ -77,6 +77,7 @@ const INTRO_NEXT: Record<string, string | undefined> = {
   "crm.leads": "/sales/start",
   "crm.today": "/crm/outreach",
   "crm.discover": "/crm",
+  "crm.prospecting": "/crm/outreach",
   "crm.outreach": "/crm/sequences",
   "crm.sequences": "/crm/outreach",
   "crm.meetings": "/crm/today",

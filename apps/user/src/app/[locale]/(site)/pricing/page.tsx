@@ -13,10 +13,10 @@ import { getPublicPricing } from "@/server/modules/pricing/service";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const t = await getT(locale);
-  return siteMetadata({ locale, path: "/pricing", title: t("pricing.title"), description: t("site.pricing.lede") });
+  return siteMetadata({ locale, path: "/pricing", title: t("pricing.title"), description: t("planCatalog.heroLede") });
 }
 
-const PRICING_FAQ = ["q1", "q2", "q3", "q4"] as const;
+const PRICING_FAQ = ["q1", "q2", "q3", "q4", "q5", "q6"] as const;
 
 /** BigInt-safe copy of server data for the client (same shape as the public pricing API). */
 const toClient = <T,>(v: T): T => JSON.parse(JSON.stringify(v, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
@@ -48,7 +48,7 @@ export default async function PricingPage() {
       <section className="relative overflow-hidden">
         <div aria-hidden className="site-hero-light pointer-events-none absolute inset-0 -z-10" />
         <SiteContainer className="grid gap-12 pt-14 pb-16 sm:pt-20">
-          <SiteHeading as="h1" eyebrow={t("site.nav.pricing")} title={t("site.pricing.title")} lede={t("site.pricing.lede")} />
+          <SiteHeading as="h1" eyebrow={t("site.nav.pricing")} title={t("planCatalog.heroTitle")} lede={t("planCatalog.heroLede")} />
           <Suspense fallback={<Skeleton className="h-96 rounded-3xl" />}>
             <Plans />
           </Suspense>
@@ -56,15 +56,15 @@ export default async function PricingPage() {
       </section>
       <section className="border-t py-16 sm:py-20">
         <SiteContainer className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <h2 className="font-display text-display-lg">{t("site.pricing.faqTitle")}</h2>
+          <h2 className="font-display text-display-lg">{t("planCatalog.faqTitle")}</h2>
           <div className="grid divide-y border-y">
             {PRICING_FAQ.map((q) => (
               <details key={q} className="group py-2">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
-                  {t(`site.pricing.faq.${q}.q`)}
+                  {t(`planCatalog.faq.${q}.q`)}
                   <span aria-hidden className="text-xl text-muted-foreground transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p className="pb-4 text-[14px] leading-relaxed text-muted-foreground">{t(`site.pricing.faq.${q}.a`)}</p>
+                <p className="pb-4 text-[14px] leading-relaxed text-muted-foreground">{t(`planCatalog.faq.${q}.a`)}</p>
               </details>
             ))}
           </div>

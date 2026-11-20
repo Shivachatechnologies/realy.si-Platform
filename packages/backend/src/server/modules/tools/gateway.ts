@@ -4,7 +4,7 @@ import { logger } from "@/server/core/logger";
 import type { RequestContext } from "@/server/core/context";
 import { toolPolicy } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
-import { emitEvent } from "@/server/modules/events/emit";
+import { emitDomainEvent, emitEvent } from "@/server/modules/events/emit";
 import { notifyApprovers } from "@/server/modules/notifications/service";
 import { NEVER_FOR_AGENTS } from "@/server/modules/rbac/catalog";
 import { requirePermission } from "@/server/modules/rbac/service";
@@ -132,6 +132,18 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
           undo = null;
         }
         await finishAutonomousAction(run.ctx, run.organizationId, run.companyId, reserved.actionId, { ok: true, result: out.content, records: out.records, undo });
+        // Automation trigger: an action ran without a person's approval under an Auto mode rule (best effort — the action
+        // itself is already done and logged).
+        const actionId = reserved.actionId;
+        await transaction((tx) =>
+          emitDomainEvent(tx, run.ctx, "autonomy.action_auto_approved", {
+            organizationId: run.organizationId,
+            companyId: run.companyId,
+            entityType: "autonomous_action",
+            entityId: actionId,
+            data: { tool: tool.name, department: req.department, actionClass: req.actionClass, channel: req.channel, amountMinor: req.amountMinor, currency: req.currency, reversible: !!undo, taskId: run.taskId },
+          }),
+        ).catch((err) => logger.warn({ err: err instanceof Error ? err.message : String(err), tool: tool.name }, "autonomy event not recorded"));
         return { status: "executed", ...out, content: `Done automatically under the company's Auto mode policy (logged for review): ${out.content}`, autonomousActionId: reserved.actionId };
       }
       autonomy = reserved; // a limit was reached in the meantime: fall through to an approval request

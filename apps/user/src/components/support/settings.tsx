@@ -16,12 +16,12 @@ interface Option {
   name: string;
 }
 
-export function SettingsToggles({ base, settings }: { base: string; settings: { helpCenterEnabled: boolean; supportFormEnabled: boolean; aiTriageEnabled: boolean } }) {
+export function SettingsToggles({ base, settings }: { base: string; settings: { helpCenterEnabled: boolean; supportFormEnabled: boolean; aiTriageEnabled: boolean; aiFirstResponseEnabled: boolean; aiSlaEscalationEnabled: boolean } }) {
   const t = useT();
   const { busy, error, run } = useAction();
   return (
     <div className="grid gap-2">
-      {(["helpCenterEnabled", "supportFormEnabled", "aiTriageEnabled"] as const).map((k) => (
+      {(["helpCenterEnabled", "supportFormEnabled", "aiTriageEnabled", "aiFirstResponseEnabled", "aiSlaEscalationEnabled"] as const).map((k) => (
         <label key={k} className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-1" checked={settings[k]} disabled={busy} onChange={(e) => void run(() => api(`${base}/support/settings`, { method: "PATCH", body: { [k]: e.target.checked } }))} />
           <span>

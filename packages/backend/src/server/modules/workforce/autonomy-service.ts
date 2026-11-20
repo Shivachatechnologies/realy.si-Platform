@@ -26,6 +26,7 @@ import {
   type AutonomyLevelKey,
 } from "./autonomy-classes";
 import { checkDemotion, companyClock, paymentHardCapMinor, ruleOf, type AutonomyRule } from "./autonomy-policy";
+import { assertFeature } from "@/server/modules/entitlements/service";
 
 /**
  * The /autonomy control room (docs/autonomy.md): policies per company → department → action class, the company Auto
@@ -373,6 +374,9 @@ export async function setAutonomyPolicy(ctx: RequestContext, organizationId: str
   if (input.level === "AUTO" && EXTERNAL_CLASSES.includes(cls) && !mfaSatisfied(ctx)) {
     throw new AppError("mfa_required", "Letting the AI act on its own outside the company requires a recent two-factor verification");
   }
+  // Plans: Auto needs Growth (feature.autonomy_auto); rules per department (custom autonomy) need Scale.
+  if (input.level === "AUTO") await assertFeature(ctx, organizationId, "feature.autonomy_auto");
+  if (input.level !== null && input.department !== ALL_DEPARTMENTS) await assertFeature(ctx, organizationId, "feature.autonomy_custom");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     const company = await tx.company.findFirstOrThrow({ where: { id: companyId, organizationId }, select: { baseCurrency: true } });
@@ -454,6 +458,7 @@ export async function setAutonomySettings(ctx: RequestContext, organizationId: s
   const input = settingsInput.parse(raw);
   const actorId = personId(ctx);
   if (input.autoModeEnabled && !mfaSatisfied(ctx)) throw new AppError("mfa_required", "Turning on Auto mode requires a recent two-factor verification");
+  if (input.autoModeEnabled) await assertFeature(ctx, organizationId, "feature.autonomy_auto");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     const before = await tx.autonomySettings.findUnique({ where: { companyId } });

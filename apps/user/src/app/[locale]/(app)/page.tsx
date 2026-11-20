@@ -38,6 +38,8 @@ import { requireOrgContext } from "@/server/workspace";
 import { journeyEntry } from "@/server/modules/builder/journey";
 import { businessHealth } from "@/server/modules/bi/health";
 import { liveCommandRuns } from "@/server/modules/guide/command";
+import { ceoSnapshot } from "@/server/modules/guide/ceo";
+import { CeoStrip } from "@/components/command/ceo-strip";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("command.title") };
@@ -102,9 +104,14 @@ export default async function CommandCenterPage() {
   const base = company ? `/api/v1/organizations/${org.id}/companies/${company.id}` : null;
   // The operating layer: AI commands in flight, proposals waiting for a decision, explainable business health.
   const now = new Date();
-  const [runs, canReadApprovals, canDecide] = company && chain
-    ? await Promise.all([liveCommandRuns(viewer.ctx, org.id, company.id, 4).catch(() => null), can(viewer.ctx, "approvals.read", chain), can(viewer.ctx, "approvals.decide", chain)])
-    : [null, false, false];
+  const [runs, canReadApprovals, canDecide, ceo] = company && chain
+    ? await Promise.all([
+        liveCommandRuns(viewer.ctx, org.id, company.id, 4).catch(() => null),
+        can(viewer.ctx, "approvals.read", chain),
+        can(viewer.ctx, "approvals.decide", chain),
+        ceoSnapshot(viewer.ctx, org.id, company.id).catch(() => null),
+      ])
+    : [null, false, false, null];
   const [pendingApprovals, bizHealth] = company && chain
     ? await Promise.all([
         canReadApprovals
@@ -180,6 +187,8 @@ export default async function CommandCenterPage() {
             <CommandCenterNextActions organizationId={org.id} companyId={company.id} locale={locale} />
           </Section>
         ) : null}
+
+        {company && ceo ? <CeoStrip t={t} locale={locale} data={ceo} /> : null}
 
         {company && base ? (
           <OperatingStrip t={t} locale={locale} base={base} runs={runs} approvals={pendingApprovals} canDecide={canDecide} health={bizHealth} runBlocked={runBlocked} />

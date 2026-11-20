@@ -20,6 +20,7 @@ import { ProviderError } from "./providers/http";
 import { assetPublicUrl, creativePrompt, presetFor, PRESETS } from "./assets";
 import { learningsContext } from "./learning";
 import { upsertRecommendation } from "./recommendations";
+import { assertFeature, hasFeature } from "@/server/modules/entitlements/service";
 
 type Item = MarketingAutopilotItem;
 export const AUTONOMY_LEVELS = ["DRAFT_ONLY", "REVIEW_REQUIRED", "AUTO_PUBLISH"] as const;
@@ -166,6 +167,7 @@ export async function listItems(ctx: RequestContext, organizationId: string, com
 
 export async function createAutopilot(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof autopilotInput>) {
   const input = autopilotInput.parse(raw);
+  await assertFeature(ctx, organizationId, "feature.marketing_autopilot");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     await checkRefs(tx, organizationId, companyId, input);
@@ -217,6 +219,7 @@ export async function archiveAutopilot(ctx: RequestContext, organizationId: stri
 export async function autopilotAction(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof autopilotActionInput>) {
   const input = autopilotActionInput.parse(raw);
   if (!isUuid(id)) throw notFound("Autopilot");
+  if (input.action === "activate" || input.action === "plan_now") await assertFeature(ctx, organizationId, "feature.marketing_autopilot");
   const a = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const row = await tx.marketingAutopilot.findFirst({ where: { id, organizationId, companyId, archivedAt: null } });
@@ -661,6 +664,8 @@ export async function advanceItem(itemId: string): Promise<void> {
   if (!it) return;
   const ap = await loadAp(it.autopilotId);
   if (!ap || ap.archivedAt) return;
+  // The organization's plan no longer includes the autopilot: leave the item where it is.
+  if (!(await hasFeature(ap.organizationId, "feature.marketing_autopilot"))) return;
   try {
     // A step is running as an agent task: collect it.
     if (it.pendingTaskId) {
@@ -795,8 +800,31 @@ export async function advanceItem(itemId: string): Promise<void> {
 }
 
 /** Worker: plan slots for active autopilots (hourly per plan) and advance pipeline items. */
+/**
+ * Worker: an organization whose plan lost feature.marketing_autopilot gets its active autopilots paused (once) with a
+ * notification to their owner, instead of failing items.
+ */
+async function pauseForPlan(a: { id: string; name: string; organizationId: string; companyId: string; ownerId: string | null; createdById: string }) {
+  await transaction(async (tx) => {
+    const { count } = await tx.marketingAutopilot.updateMany({ where: { id: a.id, status: "ACTIVE" }, data: { status: "PAUSED" } });
+    if (!count) return;
+    const users = await tx.user.findMany({ where: { id: { in: [a.ownerId, a.createdById].filter((x): x is string => !!x) } }, select: { id: true } });
+    await notifyUsers(tx, a.organizationId, users.map((u) => u.id), "marketing.autopilot_failed", { companyId: a.companyId, title: `${a.name}: plan limit reached`, href: "/settings/billing" });
+  });
+}
+
 export async function runAutopilots(): Promise<number> {
-  const active = await db().marketingAutopilot.findMany({ where: { status: "ACTIVE", archivedAt: null }, select: { id: true, lastPlannedAt: true } });
+  const all = await db().marketingAutopilot.findMany({
+    where: { status: "ACTIVE", archivedAt: null },
+    select: { id: true, name: true, organizationId: true, companyId: true, ownerId: true, createdById: true, lastPlannedAt: true },
+  });
+  const entitled = new Map<string, boolean>();
+  const active: typeof all = [];
+  for (const a of all) {
+    if (!entitled.has(a.organizationId)) entitled.set(a.organizationId, await hasFeature(a.organizationId, "feature.marketing_autopilot"));
+    if (entitled.get(a.organizationId)) active.push(a);
+    else await pauseForPlan(a).catch((err) => logger.warn({ autopilotId: a.id, err: String(err) }, "autopilot plan pause failed"));
+  }
   for (const a of active) {
     if (!a.lastPlannedAt || Date.now() - a.lastPlannedAt.getTime() > 3_600_000) await planSlots(a.id).catch((err) => logger.warn({ autopilotId: a.id, err: String(err) }, "autopilot planning failed"));
   }

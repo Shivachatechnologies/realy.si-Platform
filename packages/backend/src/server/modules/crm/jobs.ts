@@ -7,6 +7,7 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { runLeadIntake } from "./automation";
 import { expireProposals } from "./proposals";
 import { runCadences } from "./cadences";
+import { runAutopilot, runDueAutopilots } from "./prospecting";
 
 /**
  * Background work of the crm module, run by the worker (src/worker/index.ts via src/worker/modules.ts).
@@ -16,6 +17,9 @@ import { runCadences } from "./cadences";
  *   their owner is notified once.
  * - Proposals past their valid-until date are marked EXPIRED.
  * - Cadences (sequences): due steps run every 15 minutes; enrollments stop when the person replies (cadences.ts).
+ * - Prospecting autopilots (prospecting.ts): each active autopilot runs about hourly (due check every 15 minutes) —
+ *   find people, verify emails, create leads, draft/send first emails within its caps; "Run now" dispatches
+ *   crm.autopilot_run.
  * - lead.created: leads created outside createLead (e.g. marketing forms) without an owner go through the same intake
  *   workflow (assignment rule → follow-up → notify owner). Idempotent: only unowned leads are touched.
  */
@@ -108,6 +112,18 @@ export const CRM_JOBS: ModuleJobs = {
     { name: "crm.stale_deals", everyMs: 6 * HOUR, run: () => markStaleDeals() },
     { name: "crm.expire_proposals", everyMs: 6 * HOUR, run: () => expireProposals() },
     { name: "crm.cadences", everyMs: HOUR / 4, run: () => runCadences() },
+    { name: "crm.prospecting_autopilot", everyMs: HOUR / 4, run: () => runDueAutopilots() },
   ],
   onEvent: [{ name: "crm.lead_intake", types: ["lead.created"], handle: (event) => leadIntakeOnCreated(event) }],
+  tasks: [
+    {
+      name: "crm.autopilot_run",
+      attempts: 1,
+      async run(data) {
+        const id = typeof data.autopilotId === "string" ? data.autopilotId : "";
+        if (!id) throw new Error("missing autopilotId");
+        return (await runAutopilot(id, { force: true })) ? 1 : 0;
+      },
+    },
+  ],
 };

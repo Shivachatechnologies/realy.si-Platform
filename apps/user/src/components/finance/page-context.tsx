@@ -18,6 +18,7 @@ import { aiConfigured } from "@/server/modules/agents/runtime";
 const INTRO_NEXT: Record<FinanceTab, string | undefined> = {
   dashboard: "/start",
   start: undefined,
+  manager: "/budgets",
   transactions: "/start?flow=expense",
   accounts: "/transactions",
   invoices: "/start?flow=invoice",

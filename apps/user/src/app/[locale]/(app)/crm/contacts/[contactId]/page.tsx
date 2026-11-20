@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VoiceCallPanel } from "@/components/voice/call-panel";
 import { notFound } from "next/navigation";
 import { SubjectActivity } from "@/components/crm/activity-cards";
 import { EmailHistoryPanel } from "@/components/crm/record-panels";
@@ -155,6 +156,7 @@ export default async function ContactPage({ params }: { params: Promise<{ contac
           ) : null}
         </div>
       </div>
+      <VoiceCallPanel ctx={viewer.ctx} organizationId={org.id} companyId={company.id} locale={locale} subject={{ contactId: contact.id }} />
     </CrmFrame>
   );
 }

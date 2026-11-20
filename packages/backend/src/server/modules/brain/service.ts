@@ -7,6 +7,7 @@ import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pag
 import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
+import { assertLimit } from "@/server/modules/entitlements/service";
 import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, MAX_PDF_BYTES, mimeTypeFor } from "./extract";
 import { extractPdfText } from "./pdf";
 
@@ -140,6 +141,8 @@ export async function ingestDocument(ctx: RequestContext, organizationId: string
     if (err instanceof ExtractionError) throw invalid(err.message, { reason: err.reason });
     throw err;
   }
+  // Storage of the plan (docs/entitlements.md), in MiB.
+  await assertLimit(ctx, organizationId, "storage.mb", sizeBytes / (1024 * 1024));
   const sha = createHash("sha256").update(text).digest("hex");
   const chunks = chunkText(text);
   try {

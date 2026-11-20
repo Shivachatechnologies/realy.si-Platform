@@ -1,0 +1,79 @@
+// ───────────────────────────── Plan entitlements: per-organization overrides ─────────────────────────────
+// Plans, prices and plan entitlements live in core.prisma (Plan / PlanEntitlement / Price / PriceVersion).
+// An override is an admin grant (or restriction) for one organization that wins over its plan — e.g. extra AI
+// employees for a pilot customer. Every change is audited; rows are never hard-deleted (revokedAt).
+
+model EntitlementOverride {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  /// Feature key ("feature.voice") or limit key ("agents.max") from packages/backend/src/server/modules/entitlements/catalog.ts.
+  key            String
+  /// Features: granted (true) or withheld (false). Limits: ignored unless false (= limit 0).
+  enabled        Boolean   @default(true)
+  /// Limits only: the organization's limit (null = unlimited).
+  limitValue     BigInt?   @map("limit_value")
+  reason         String
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz(3)
+  createdById    String?   @map("created_by_id") @db.Uuid
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedById    String?   @map("revoked_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, key, revokedAt])
+  @@map("entitlement_overrides")
+}
+
+enum AddonPurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+/// A purchased (Stripe one-time checkout) or admin-granted add-on pack. Raises `limitKey` by `quantity` for the
+/// organization's monthly usage window [windowStart, windowEnd), set when the purchase is paid.
+model EntitlementAddonPurchase {
+  id              String              @id @default(uuid(7)) @db.Uuid
+  organizationId  String              @map("organization_id") @db.Uuid
+  addonKey        String              @map("addon_key")
+  limitKey        String              @map("limit_key")
+  packs           Int                 @default(1)
+  quantity        BigInt
+  status          AddonPurchaseStatus @default(PENDING)
+  /// "stripe" | "admin"
+  source          String
+  amountMinor     BigInt?             @map("amount_minor")
+  currency        String?             @db.Char(3)
+  stripeSessionId String?             @unique @map("stripe_session_id")
+  windowStart     DateTime?           @map("window_start") @db.Timestamptz(3)
+  windowEnd       DateTime?           @map("window_end") @db.Timestamptz(3)
+  reason          String              @default("")
+  createdById     String?             @map("created_by_id") @db.Uuid
+  paidAt          DateTime?           @map("paid_at") @db.Timestamptz(3)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, windowEnd])
+  @@map("entitlement_addon_purchases")
+}
+
+/// The organization's one no-card trial. The clock starts when the organization starts using Realy (its first company
+/// exists — new founders during onboarding; existing organizations on their first visit after plans launched), not at
+/// sign-up. One row per organization, never reset.
+model EntitlementTrial {
+  organizationId String   @id @map("organization_id") @db.Uuid
+  startedAt      DateTime @map("started_at") @db.Timestamptz(3)
+  endsAt         DateTime @map("ends_at") @db.Timestamptz(3)
+  /// "first_company" | "existing_org" | "manual"
+  source         String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("entitlement_trials")
+}

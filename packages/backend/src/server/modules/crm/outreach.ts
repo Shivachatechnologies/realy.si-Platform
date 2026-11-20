@@ -4,6 +4,7 @@ import { db, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
+import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { sendPlainEmail } from "@/server/modules/email/service";
 import { gmailSend, outlookSend } from "@/server/modules/comms/providers";
@@ -280,9 +281,29 @@ export async function approveAndSend(ctx: RequestContext, organizationId: string
 
 /** Deliver a claimed message and record the truth. Used by approveAndSend and by auto-send cadences. */
 export async function sendClaimed(ctx: RequestContext, organizationId: string, companyId: string, m: Prisma.CrmOutreachMessageGetPayload<object>, by: string | null) {
+  // Do-not-contact: the CRM suppression list (address or domain) and marketing unsubscribes block every sales email.
+  const { suppressionFor } = await import("./suppression");
+  const hit = await suppressionFor(db(), companyId, m.toEmail);
+  if (hit) {
+    await transaction(async (tx) => {
+      await tx.crmOutreachMessage.update({ where: { id: m.id }, data: { status: "CANCELLED", error: `Do not contact (${hit.reason})`.slice(0, 300), approvedAt: null } });
+      if (m.enrollmentId) await tx.crmCadenceEnrollment.updateMany({ where: { id: m.enrollmentId, status: { in: ["ACTIVE", "PAUSED"] } }, data: { status: "STOPPED", stoppedReason: "do_not_contact", nextRunAt: null } });
+      await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "crm.outreach.suppressed", resourceType: "crm_outreach_message", resourceId: m.id, newValue: { reason: hit.reason, list: hit.kind } });
+    });
+    throw conflict("This address is on the do-not-contact list (unsubscribed, bounced or blocked). Nothing was sent.", { reason: "crm_do_not_contact" });
+  }
+  // Prospecting emails always carry the one-click unsubscribe link (re-added if it was edited out).
+  let body = m.body;
+  if (m.autopilotId) {
+    const a = await db().crmProspectingAutopilot.findFirst({ where: { id: m.autopilotId, companyId }, select: { organizationId: true, companyId: true, unsubscribeLine: true } });
+    if (a) {
+      const { withUnsubscribe } = await import("./prospecting");
+      body = withUnsubscribe(body, a, m.toEmail);
+    }
+  }
   let delivery: Delivery;
   try {
-    delivery = await deliver(organizationId, companyId, { to: m.toEmail, subject: m.subject, body: m.body, userId: by });
+    delivery = await deliver(organizationId, companyId, { to: m.toEmail, subject: m.subject, body, userId: by });
   } catch (err) {
     const message = err instanceof Error ? err.message.slice(0, 300) : "send failed";
     await transaction(async (tx) => {
@@ -292,9 +313,20 @@ export async function sendClaimed(ctx: RequestContext, organizationId: string, c
     throw err;
   }
   return transaction(async (tx) => {
-    const sent = await tx.crmOutreachMessage.update({ where: { id: m.id }, data: { status: "SENT", sentAt: new Date(), channel: delivery.channel, providerMessageId: delivery.providerMessageId, error: null } });
-    await logSentEmail(tx, organizationId, companyId, by ?? organizationId, m);
+    const sent = await tx.crmOutreachMessage.update({ where: { id: m.id }, data: { status: "SENT", sentAt: new Date(), channel: delivery.channel, providerMessageId: delivery.providerMessageId, error: null, body } });
+    await logSentEmail(tx, organizationId, companyId, by ?? organizationId, { ...m, body });
+    if (m.autopilotId) {
+      const { afterAutopilotSend } = await import("./prospecting");
+      await afterAutopilotSend(tx, m);
+    }
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "crm.outreach.sent", resourceType: "crm_outreach_message", resourceId: m.id, newValue: { to: m.toEmail, channel: delivery.channel, sequence: !!m.enrollmentId } });
+    await emitDomainEvent(tx, ctx, "crm.outreach_sent", {
+      organizationId,
+      companyId,
+      entityType: "crm_outreach_message",
+      entityId: m.id,
+      data: { channel: delivery.channel, leadId: m.leadId, contactId: m.contactId, dealId: m.dealId, sequence: !!m.enrollmentId, autopilot: !!m.autopilotId },
+    });
     if (m.enrollmentId) {
       const { advanceAfterSend } = await import("./cadences");
       await advanceAfterSend(tx, m.enrollmentId);

@@ -3,6 +3,8 @@ import { getLocale } from "@/i18n/server";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { getT } from "@/i18n/server";
+import { Suspense } from "react";
+import { PlatformBanner } from "@/components/cms/platform-banner";
 
 /**
  * Public website chrome (homepage, platform, AI workforce, pricing, journal, docs, help, waitlist). No session needed;
@@ -20,6 +22,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         {t("common.skipToContent")}
       </a>
+      <Suspense fallback={null}>
+        <PlatformBanner />
+      </Suspense>
       <SiteHeader signedIn={signedIn} />
       <main id="site-main" className="relative flex-1">
         {children}

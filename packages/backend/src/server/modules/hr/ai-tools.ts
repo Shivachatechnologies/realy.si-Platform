@@ -6,6 +6,8 @@ import { createJob, getCandidate, listOpenJobs, recordAiScore } from "./recruiti
 import { headcountSummary } from "./summary";
 import { EMPLOYMENT_TYPES } from "./employees";
 import { createHeadcountPlan, PLAN_PRIORITIES, quarterKey, workforcePlan } from "./planning";
+import { applyOnboardingPlan, employeeRecordForAi, onboardingPlanInput, teamOverview } from "./manager";
+import { CHECKLIST_CATEGORIES, OWNER_ROLES } from "./onboarding";
 
 /** AI tools of the hr module, registered in src/server/modules/tools/modules.ts. Use `def` from tools/define. */
 
@@ -221,6 +223,79 @@ export const HR_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const plan = await createHeadcountPlan(ctx, organizationId, companyId, input);
       return { content: `Added "${plan.title}" (${plan.headcount}) to the workforce plan for ${quarterKey(plan.targetStart)} as PLANNED. A person approves it before hiring.`, records: [`hr_headcount_plan:${plan.id}`] };
+    },
+  }),
+  read_employee_record: def({
+    name: "read_employee_record",
+    version: 1,
+    description: "Returns one employee's work record for HR tasks: title, department, start date, onboarding checklist steps, goals, KPIs, feedback, development plans and past reviews. No salary or personal contact data.",
+    input: z.object({ employeeId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { employeeId: { type: "string" } }, required: ["employeeId"], additionalProperties: false },
+    permissions: ["hr.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read an employee's work record",
+    async execute({ employeeId }, { ctx, organizationId, companyId }) {
+      return { content: await employeeRecordForAi(ctx, organizationId, companyId, employeeId), records: [`employee:${employeeId}`] };
+    },
+  }),
+
+  read_team_overview: def({
+    name: "read_team_overview",
+    version: 1,
+    description: "Per-department team snapshot: headcount, people on leave today, onboarding in progress and running late, goals at risk, reviews pending in active cycles, open roles, and the largest manager span.",
+    input: z.object({}).strict(),
+    modelSchema: empty,
+    permissions: ["hr.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read the team overview",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const o = await teamOverview(ctx, organizationId, companyId);
+      const lines = o.departments.map(
+        (d) => `- ${d.name ?? "No department"}: ${d.headcount} people, ${d.onLeave} on leave today, ${d.onboarding} onboarding (${d.onboardingLate} late), ${d.goalsAtRisk} goal(s) at risk, ${d.reviewsPending} review(s) pending, ${d.openRoles} open role(s)`,
+      );
+      return { content: `Headcount ${o.headcount}. Largest team per manager: ${o.largestTeam}; managers with more than 8 reports: ${o.managersOver8}.\n${lines.join("\n")}`, count: lines.length };
+    },
+  }),
+
+  propose_onboarding_plan: def({
+    name: "propose_onboarding_plan",
+    version: 1,
+    description: "Propose adding onboarding steps to an employee's onboarding checklist (opened if needed). Each step becomes a tracked task for its owner. A person must approve the plan first; steps already on the checklist are skipped.",
+    input: onboardingPlanInput.strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        employeeId: { type: "string" },
+        steps: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              category: { type: "string", enum: [...CHECKLIST_CATEGORIES] },
+              ownerRole: { type: "string", enum: [...OWNER_ROLES] },
+              dueDate: { type: "string", description: "YYYY-MM-DD" },
+            },
+            required: ["title"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["employeeId", "steps"],
+      additionalProperties: false,
+    },
+    permissions: ["hr.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 30_000,
+    summarize: ({ steps }) => `Add ${steps.length} onboarding step(s) to the checklist`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const r = await applyOnboardingPlan(ctx, organizationId, companyId, input);
+      return { content: `Added ${r.added} step(s) to the onboarding checklist ${r.checklistId}.`, records: [`hr_checklist:${r.checklistId}`] };
     },
   }),
 };

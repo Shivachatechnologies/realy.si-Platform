@@ -18,6 +18,7 @@ const DENIAL: Record<ConsoleDenial, { status: number; code: string; message: str
   mfa_pending: { status: 401, code: "mfa_required", message: "Complete two-factor verification" },
   mfa_required: { status: 403, code: "mfa_required", message: "A recent two-factor verification is required" },
   forbidden: { status: 403, code: "forbidden", message: "Platform administrators only" },
+  section_forbidden: { status: 403, code: "forbidden", message: "Your admin role does not include this area" },
 };
 
 export async function proxy(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith("/api/")) {
     if (OPEN_API.some((re) => re.test(pathname))) return NextResponse.next();
-    const access = await verifyConsoleAccess(token);
+    const access = await verifyConsoleAccess(token, pathname);
     if (access.ok) return NextResponse.next();
     const d = DENIAL[access.reason];
     return NextResponse.json({ error: { code: d.code, message: d.message } }, { status: d.status, headers: { "cache-control": "no-store" } });
@@ -47,7 +48,15 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (!OPEN_PAGES.has(page[0] ?? "")) {
-    const access = await verifyConsoleAccess(token);
+    const access = await verifyConsoleAccess(token, pathname);
+    if (!access.ok && access.reason === "section_forbidden") {
+      // A platform admin without this area's permissions: back to the overview with a notice (not to sign-in).
+      const url = req.nextUrl.clone();
+      url.search = "";
+      url.pathname = `/${first}`;
+      url.searchParams.set("denied", page[0] ?? "");
+      return NextResponse.redirect(url);
+    }
     if (!access.ok) {
       const url = req.nextUrl.clone();
       url.search = "";
@@ -71,6 +80,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Pages (prefetches included) and the whole API; Next internals and static files excluded.
-  matcher: ["/api/:path*", "/((?!api|_next|.*\\..*).*)"],
+  // Pages (prefetches included) and the whole API; Next internals, static files and the generated Apple touch icon
+  // (/apple-icon) excluded.
+  matcher: ["/api/:path*", "/((?!api|_next|apple-icon|.*\\..*).*)"],
 };

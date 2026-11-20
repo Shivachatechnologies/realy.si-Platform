@@ -9,7 +9,8 @@ import type {
   MessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { env } from "@/server/core/env";
-import { agentModel } from "@/server/core/platform-controls";
+import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/admin/ai-models";
+import { fallbackModels } from "@/server/modules/admin/ops";
 import { db } from "@/server/core/db";
 import { effectiveModel } from "@/server/modules/workforce/models";
 import type { RequestContext } from "@/server/core/context";
@@ -114,8 +115,8 @@ export interface RunInput {
 
 /** The model for a run: explicit, else the task's AI employee's configured model (only allowed ids), else the default. */
 async function modelFor(input: RunInput): Promise<string> {
-  // Platform default: the Super Admin's model override (Admin → AI), else AGENT_MODEL.
-  const platformDefault = await agentModel(env().AGENT_MODEL);
+  // Platform default (Admin → AI): organization override → profile class default → platform default → AGENT_MODEL.
+  const platformDefault = await resolvePlatformModel({ organizationId: input.organizationId, profile: input.profile.key });
   if (input.model) return effectiveModel(input.model);
   if (!input.taskId) return platformDefault;
   try {
@@ -181,7 +182,10 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     return def ? [{ name: t, description: def.description, strict: true, input_schema: def.modelSchema as BetaTool["input_schema"] }] : [];
   });
   const messages: BetaMessageParam[] = [{ role: "user", content: `Task: ${input.title}\n\n${input.instructions}` }];
-  const model = await modelFor(input);
+  // Platform-wide monthly AI spend cap (Admin → AI): refuse new work once reached.
+  const budgetRefusal = await platformBudgetRefusal();
+  if (budgetRefusal) throw new TaskError(budgetRefusal, "The platform's monthly AI budget is used up; retry later");
+  let model = await modelFor(input);
 
   const cite = (c: Citable) => {
     let source = sources.get(c.passageId);
@@ -209,10 +213,9 @@ export async function runTask(input: RunInput): Promise<RunResult> {
         throw new TaskError("employee_over_budget", "The AI budget was reached during this task; raise the budget or retry next month");
       }
 
-      let response: BetaMessage;
-      try {
-        response = await callModel({
-          model,
+      const call = (m: string) =>
+        callModel({
+          model: m,
           max_tokens: MAX_TOKENS,
           system,
           tools,
@@ -222,8 +225,26 @@ export async function runTask(input: RunInput): Promise<RunResult> {
           betas: ["server-side-fallback-2026-07-01"],
           fallbacks: "default",
         });
+      let response: BetaMessage;
+      try {
+        response = await call(model);
       } catch (err) {
-        throw providerError(err);
+        if (!modelUnavailable(err)) throw providerError(err);
+        // The model is unavailable: try the platform's fallback chain (Admin → AI routing), keeping the first that works.
+        let recovered: BetaMessage | null = null;
+        let lastErr: unknown = err;
+        for (const alt of await fallbackModels(model).catch(() => [] as string[])) {
+          try {
+            recovered = await call(alt);
+            model = alt;
+            break;
+          } catch (e) {
+            lastErr = e;
+            if (!modelUnavailable(e)) break;
+          }
+        }
+        if (!recovered) throw providerError(lastErr);
+        response = recovered;
       }
       inputTokens += response.usage.input_tokens;
       outputTokens += response.usage.output_tokens;
@@ -284,6 +305,12 @@ function toolErrorMessage(err: unknown): string {
   if (err instanceof TaskError || err instanceof ToolDenied) return err.message;
   if (isAppError(err) && (err.code === "forbidden" || err.code === "not_found")) return "Not permitted: the requesting user cannot read this data";
   return "The lookup failed";
+}
+
+/** The provider says the model itself cannot serve the request (unknown / retired model, or overloaded). */
+function modelUnavailable(err: unknown): boolean {
+  if (err instanceof Anthropic.NotFoundError) return true;
+  return err instanceof Anthropic.APIError && (err.status === 529 || err.status === 503);
 }
 
 /** Map SDK errors to task errors; messages never include provider responses or credentials. */

@@ -9,9 +9,9 @@ import { getCandidate, getJob } from "./recruiting";
  * the requester's permissions. Writes (scoring a candidate, creating a job posting) go through supervised tools and need a
  * person's approval.
  */
-export const CANDIDATE_AI_MODES = ["score", "questions"] as const;
+export const CANDIDATE_AI_MODES = ["score", "questions", "scorecard"] as const;
 export const candidateAssistInput = z.object({ mode: z.enum(CANDIDATE_AI_MODES), guidance: z.string().trim().max(1000).optional() });
-export const jobAssistInput = z.object({ guidance: z.string().trim().max(1000).optional() });
+export const jobAssistInput = z.object({ mode: z.enum(["description", "interview_kit"]).default("description"), guidance: z.string().trim().max(1000).optional() });
 export const analystInput = z.object({ question: z.string().trim().min(1).max(2000) });
 export const policyQuestionInput = z.object({ question: z.string().trim().min(1).max(2000) });
 
@@ -21,6 +21,16 @@ export async function assistCandidate(ctx: RequestContext, organizationId: strin
   const input = candidateAssistInput.parse(raw);
   const c = await getCandidate(ctx, organizationId, companyId, candidateId);
   const name = employeeName(c);
+  if (input.mode === "scorecard") {
+    return createTask(ctx, organizationId, companyId, {
+      profile: "hr_manager",
+      title: `Candidate summary & scorecard: ${name}`.slice(0, 200),
+      instructions:
+        `Call read_candidate with candidateId ${c.id}. Using only the application data it returns (resume, cover letter, screening notes, interviews and interviewers' scorecards), write: (1) a five-line candidate summary; (2) a scorecard table with one row per requirement of the job — evidence from the application, rating 1–5, confidence (high / medium / low); (3) what the interviewers agree and disagree on; (4) open questions to resolve before a decision; (5) a recommendation (advance, hold or decline) with the reason. Never use or infer protected characteristics. Do not change the candidate.` +
+        extra(input.guidance),
+      subject: { type: "hr_candidate", id: c.id },
+    });
+  }
   const instructions =
     input.mode === "score"
       ? `Call read_candidate with candidateId ${c.id} (it includes the job description and the resume text). Analyze the resume against the job's requirements: summarize relevant experience, strengths, gaps and risks, and give a score from 0 to 100 with a short justification. Then propose writing the result onto the candidate by calling score_candidate with candidateId ${c.id}, the score and a concise summary (max ~120 words). A person must approve it before it is saved. If the candidate has no resume text, say so and score only on the information available, stating that clearly. Do not invent experience.`
@@ -36,6 +46,16 @@ export async function assistCandidate(ctx: RequestContext, organizationId: strin
 export async function assistJob(ctx: RequestContext, organizationId: string, companyId: string, jobId: string, raw: z.input<typeof jobAssistInput>) {
   const input = jobAssistInput.parse(raw);
   const job = await getJob(ctx, organizationId, companyId, jobId);
+  if (input.mode === "interview_kit") {
+    return createTask(ctx, organizationId, companyId, {
+      profile: "hr_manager",
+      title: `Interview kit: ${job.title}`.slice(0, 200),
+      instructions:
+        `Build a structured interview kit for the role "${job.title}" from its job description below and the company's documents (search_company_brain). Include: (1) the 4–6 competencies that matter most for this role, (2) per competency 2–3 behavioural or practical questions with what a strong, an average and a weak answer looks like, (3) a short work-sample or case exercise with evaluation criteria, (4) a scorecard template (competency, 1–5 scale anchors), (5) interviewer guidance on consistent, fair and legal interviewing (no questions about protected characteristics). Do not create or change records.\n\nJob description:\n${(job.description || "(no description yet — base the kit on the title and the company's documents, and say so)").slice(0, 6000)}` +
+        extra(input.guidance),
+      subject: { type: "hr_job", id: job.id },
+    });
+  }
   const instructions = `Draft a job description for the role "${job.title}"${job.department ? ` in the ${job.department.name} department` : ""}${job.location ? `, location ${job.location}` : ""}, employment type ${job.employmentType}${job.remote ? ", remote-friendly" : ""}. Use search_company_brain for the company's mission, products and culture, and read_open_jobs to stay consistent with other postings. Structure: about the company, the role, responsibilities, requirements, nice-to-haves, what we offer. Inclusive, specific language; no invented benefits or numbers that are not in the company's documents.${job.description ? `\n\nCurrent draft to improve:\n${job.description.slice(0, 4000)}` : ""} This is a draft for a person to paste into the job — do not call create_job_posting.`;
   return createTask(ctx, organizationId, companyId, {
     profile: "recruiter",

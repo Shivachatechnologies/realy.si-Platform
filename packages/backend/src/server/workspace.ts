@@ -18,6 +18,7 @@ export const requireOrgContext = cache(async (locale: AppLocale) => {
   const { orgs, org, preferredCompanyId } = await getWorkspaceContext(viewer.user.id);
   await platformPageGate(locale, viewer.user.id, org?.id ?? null);
   if (!org) redirect(`/${locale}/onboarding`);
+  await entitlementPageGate(locale, org.id);
   // Organization security policy for pages: an expired session (org timeout) signs in again; a blocked network address
   // is refused. Require-MFA is enforced on the API and shown as a banner so members can still reach MFA setup.
   const violations = await orgAccessViolations(viewer.ctx, org.id);
@@ -56,4 +57,15 @@ async function platformPageGate(locale: AppLocale, userId: string, orgId: string
   const path = (await headers()).get("x-realy-path") ?? "";
   const mod = moduleForPagePath(path);
   if (mod && !(await isModuleEnabled(orgId, mod))) unavailable("module_disabled", mod);
+}
+
+/**
+ * Plan entitlements for app pages (docs/entitlements.md): a page whose feature the organization's plan lacks shows
+ * the upgrade screen instead (after the platform gate, so disabled modules keep their own message).
+ */
+async function entitlementPageGate(locale: AppLocale, orgId: string) {
+  const path = (await headers()).get("x-realy-path") ?? "";
+  const { lockedFeatureForPage } = await import("@/server/modules/entitlements/gate");
+  const feature = await lockedFeatureForPage(orgId, path);
+  if (feature) redirect(`/${locale}/upgrade?${new URLSearchParams({ feature, from: path })}`);
 }

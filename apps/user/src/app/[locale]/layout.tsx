@@ -5,6 +5,7 @@ import { directionOf, type AppLocale } from "@/i18n/config";
 import { getLocale, getMessages, getT } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { Providers } from "@/components/providers";
+import { CookieNotice } from "@/components/legal/cookie-notice";
 import "../globals.css";
 
 /** Brand typography (Realy brand guidelines v1.0): Inter for body and UI, Sora for display and the wordmark. */
@@ -52,6 +53,8 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
       <body className="min-h-full bg-background font-sans text-sm text-foreground antialiased" data-surface="app">
         <I18nProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
+          {/* Strictly necessary cookies only, so an informational notice — not a consent gate (see the component). */}
+          <CookieNotice />
         </I18nProvider>
       </body>
     </html>

@@ -44,7 +44,7 @@ const getRail = () => (railCache ??= readRail());
  * `activity` is an optional slot rendered at the end of the topbar (e.g. <AiActivityIndicator running={n} />).
  * Logical properties keep it correct in RTL.
  */
-export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: ReactNode; adminSlot?: ReactNode; activity?: ReactNode; children: ReactNode }) {
+export function AppFrame({ topbar, adminSlot, activity, lockedHrefs, children }: { topbar: ReactNode; adminSlot?: ReactNode; activity?: ReactNode; lockedHrefs?: string[]; children: ReactNode }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const collapsed = useSyncExternalStore(subscribeRail, getRail, () => false);
@@ -80,7 +80,7 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
           collapsed ? "w-[3.75rem]" : "w-60",
         )}
       >
-        <Sidebar adminSlot={adminSlot} collapsed={collapsed} onToggleCollapsed={() => writeRail(!collapsed)} />
+        <Sidebar adminSlot={adminSlot} lockedHrefs={lockedHrefs} collapsed={collapsed} onToggleCollapsed={() => writeRail(!collapsed)} />
       </aside>
 
       {/* Mobile drawer */}
@@ -108,7 +108,7 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
         >
           <X className="size-5" aria-hidden />
         </button>
-        <Sidebar adminSlot={adminSlot} onNavigate={() => setOpen(false)} touch />
+        <Sidebar adminSlot={adminSlot} lockedHrefs={lockedHrefs} onNavigate={() => setOpen(false)} touch />
       </aside>
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
@@ -134,7 +134,7 @@ export function AppFrame({ topbar, adminSlot, activity, children }: { topbar: Re
       </div>
 
       {/* Phones and tablets: bottom tab bar (+ "More" opens the drawer) and the sticky AI command entry. */}
-      <MobileTabBar onMore={() => setOpen(true)} moreOpen={open} />
+      <MobileTabBar onMore={() => setOpen(true)} moreOpen={open} lockedHrefs={lockedHrefs} />
       <MobileCommandEntry />
     </div>
   );

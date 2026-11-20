@@ -116,14 +116,14 @@ export function CommandConsole({ base, initialSessionId, initialQuery, autoRun }
   };
 
   const submit = useCallback(
-    async (e?: FormEvent, override?: string) => {
+    async (e?: FormEvent, override?: string, parentRunId?: string) => {
       e?.preventDefault();
       const command = (override ?? text).trim();
       if (command.length < 2 || busy) return;
       setBusy(true);
       setError(null);
       try {
-        const s = await api<CommandSessionView>(`${base}/guide/command`, { body: { text: command, locale, ...(sessionId ? { sessionId } : {}) } });
+        const s = await api<CommandSessionView>(`${base}/guide/command`, { body: { text: command, locale, ...(sessionId ? { sessionId } : {}), ...(parentRunId ? { parentRunId } : {}) } });
         setSession(s);
         if (s.id !== sessionId) {
           setSessionId(s.id);
@@ -168,6 +168,14 @@ export function CommandConsole({ base, initialSessionId, initialQuery, autoRun }
       setError(err);
     }
   };
+  const retry = async (runId: string, stepId: string) => {
+    if (!sessionId) return;
+    try {
+      setSession(await api<CommandSessionView>(`${base}/guide/command/${sessionId}/runs/${runId}/steps/${stepId}/retry`, { method: "POST" }));
+    } catch (err) {
+      setError(err);
+    }
+  };
   const remove = async (id: string) => {
     try {
       await api(`${base}/guide/command/${id}`, { method: "DELETE" });
@@ -177,9 +185,9 @@ export function CommandConsole({ base, initialSessionId, initialQuery, autoRun }
       setError(err);
     }
   };
-  const followUp = (next: string) => {
-    setText(next);
-    inputRef.current?.focus();
+  // "Run next step": the recommended next action runs right away as a new command linked to the run it follows.
+  const followUp = (next: string, parentRunId: string) => {
+    void submit(undefined, next, parentRunId);
   };
 
   const live = isLive(session);
@@ -288,7 +296,7 @@ export function CommandConsole({ base, initialSessionId, initialQuery, autoRun }
                 .filter((m) => m.role === "USER")
                 .map((m) => {
                   const run = runByMessage.get(m.id);
-                  if (run) return <CommandRunCard key={m.id} run={run} canDecide={session.canDecide} onDecide={decide} onCancel={cancel} onFollowUp={followUp} />;
+                  if (run) return <CommandRunCard key={m.id} run={run} canDecide={session.canDecide} onDecide={decide} onCancel={cancel} onFollowUp={followUp} onRetry={retry} />;
                   const assigned = legacy.get(m.id) ?? [];
                   return (
                     <section key={m.id} className="grid gap-3">

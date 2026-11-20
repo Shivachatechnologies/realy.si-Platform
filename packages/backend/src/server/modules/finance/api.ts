@@ -21,6 +21,7 @@ import { parseRange } from "./common";
 import * as G from "./guided";
 import { createInvoicePaymentLink } from "./payment-links";
 import { notFound } from "@/server/core/errors";
+import * as FM from "./manager";
 
 /**
  * Finance REST API: /api/v1/organizations/:orgId/companies/:companyId/finance/<path>. Each entry is wrapped with route()
@@ -221,6 +222,13 @@ add("GET", "guided/options", async ({ ctx, o, c }) => G.guidedOptions(ctx, o, c)
 add("GET", "guided/progress/:flow", async ({ ctx, o, c, p }) => G.getFlowProgress(ctx, o, c, flowOf(p.flow)));
 add("PUT", "guided/progress/:flow", async ({ req, ctx, o, c, p }) => G.saveFlowProgress(ctx, o, c, flowOf(p.flow), await input(req, G.flowProgressInput)));
 add("POST", "ask", async ({ req, ctx, o, c }) => askCfo(ctx, o, c, await input(req, askInput)));
+
+// AI Finance Manager desk: memo, revenue forecast, categorisation suggestions, budget variance explanations.
+add("POST", "manager/memo", async ({ req, ctx, o, c }) => FM.requestFinanceMemo(ctx, o, c, await input(req, FM.memoInput)));
+add("GET", "manager/revenue-forecast", async ({ ctx, o, c, q }) => FM.revenueForecast(ctx, o, c, Number(q.months) || 6));
+add("GET", "manager/category-suggestions", async ({ ctx, o, c }) => FM.expenseCategorySuggestions(ctx, o, c));
+add("POST", "manager/category-suggestions/:id/apply", async ({ req, ctx, o, c, p }) => FM.applyExpenseCategory(ctx, o, c, p.id!, await input(req, FM.applyCategoryInput)));
+add("GET", "manager/budget-variance", async ({ ctx, o, c }) => ({ data: await FM.budgetVarianceExplanations(ctx, o, c) }));
 
 function match(method: string, path: string[]) {
   for (const e of entries) {

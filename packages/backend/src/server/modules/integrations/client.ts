@@ -5,6 +5,7 @@ import { consume } from "@/server/core/rate-limit";
 import type { Connection } from "./connections";
 import { recordCallOutcome } from "./health";
 import { authHeaders, ProviderError } from "./providers";
+import { assertLimit, recordUsage as recordPlanUsage } from "@/server/modules/entitlements/service";
 
 /**
  * Provider API client: per-request timeout, retries with exponential backoff (honouring Retry-After) on network
@@ -25,7 +26,12 @@ export interface ProviderRequest {
   noAuth?: boolean;
   /** Do not count this call toward the connection's health (e.g. requests to third-party URLs). */
   skipHealth?: boolean;
+  /** Known cost of this call in USD cents (paid providers): checked against and metered on the plan's API spend cap. */
+  costCents?: number;
 }
+
+/** Per-call cost (USD cents, rounded up) of paid research providers whose every call is a billed search. */
+const PAID_CALL_CENTS: Record<string, number> = { tavily: 1, exa: 1, serpapi: 2 };
 
 export interface ProviderResponse<T = unknown> {
   status: number;
@@ -73,6 +79,9 @@ export const PROVIDER_RATE_LIMITS: Record<string, { limit: number; windowMs: num
   tavily: { limit: 90, windowMs: 60_000 },
   exa: { limit: 60, windowMs: 60_000 },
   serpapi: { limit: 50, windowMs: 60_000 },
+  apollo: { limit: 45, windowMs: 60_000 },
+  hunter: { limit: 10, windowMs: 1_000 },
+  pdl: { limit: 90, windowMs: 60_000 },
   stability: { limit: 140, windowMs: 10_000 },
   replicate: { limit: 500, windowMs: 60_000 },
   runway: { limit: 20, windowMs: 60_000 },
@@ -190,8 +199,14 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
   let attempts = 0;
   const log = (status: number | null, responseSummary: string | null, error: string | null) =>
     logProviderCall(conn, { method, url: safeUrl(url), status, durationMs: Date.now() - started, attempts, requestSummary: requestSummary(req), responseSummary, error });
+  // Plan API spend cap (docs/entitlements.md): before a paid call, refuse when it would exceed the month's cap.
+  const costCents = Math.ceil(req.costCents ?? PAID_CALL_CENTS[conn.provider] ?? 0);
+  if (costCents > 0 && conn.organizationId) await assertLimit(null, conn.organizationId, "api.cost.month", costCents);
   try {
     const res = await providerFetchInner<T>(conn, url, req, () => attempts++);
+    if (costCents > 0 && conn.organizationId && res.ok) {
+      await recordPlanUsage(conn.organizationId, "api.cost_cents", costCents, { companyId: conn.companyId }).catch((e) => logger.warn({ provider: conn.provider, err: e instanceof Error ? e.message : String(e) }, "API spend not metered"));
+    }
     const type = res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
     await log(res.status, `${res.status} · ${type} · ${res.text.length} chars${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
     if (!req.skipHealth) await recordCallOutcome(conn, res.status, errorCode(res.data) ? `${new URL(url).host} responded ${res.status} (${errorCode(res.data)})` : null);

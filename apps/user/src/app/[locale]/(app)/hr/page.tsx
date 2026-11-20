@@ -19,6 +19,10 @@ import { listSubjectTasks } from "@/server/modules/agents/service";
 import { upcomingInterviews } from "@/server/modules/hr/recruiting";
 import { headcountSummary } from "@/server/modules/hr/summary";
 import { listLeaveRequests, whosOut } from "@/server/modules/hr/time";
+import { teamOverview } from "@/server/modules/hr/manager";
+import { departmentManager } from "@/server/modules/cockpit/department-manager";
+import { AiManagerStrip } from "@/components/work/ai-manager";
+import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.hr.title") };
@@ -39,10 +43,12 @@ export default async function HrOverviewPage() {
   ]);
   // An empty HR area starts with the guided hiring journey ("Do you need to hire someone?").
   if (access!.manage && summary.headcount === 0 && summary.openPositions === 0 && summary.activeCandidates === 0) redirect(`/${locale}/hr/hire`);
-  const [health, pipeline, helpTask] = await Promise.all([
+  const [health, pipeline, helpTask, team, manager] = await Promise.all([
     teamHealth(viewer.ctx, org.id, company.id),
     access!.manage ? hiringPipeline(viewer.ctx, org.id, company.id) : Promise.resolve(null),
     latestSubjectTask(viewer.ctx, org.id, company.id, "hr_overview", company.id),
+    teamOverview(viewer.ctx, org.id, company.id),
+    departmentManager(company.id, ["hr_manager", "people_analyst", "recruiter"]),
   ]);
   const maxDept = Math.max(1, ...summary.byDepartment.map((d) => d.count));
   const n = (v: number) => formatNumber(v, locale);
@@ -176,6 +182,43 @@ export default async function HrOverviewPage() {
           </Card>
         ) : null}
       </div>
+      <AiManagerStrip t={t} locale={locale} manager={manager} duty={t("hr.ai.managerDuty")} />
+      {team.departments.length ? (
+        <Card>
+          <CardHeader title={t("hr.ai.teamTitle")} description={t("hr.ai.teamHint", { headcount: team.headcount, largest: team.largestTeam })} />
+          <div className="overflow-x-auto">
+            <Table>
+              <THead>
+                <Tr>
+                  <Th>{t("hr.department")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.headcount")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.onLeave")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.onboarding")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.goalsAtRisk")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.reviewsPending")}</Th>
+                  <Th className="text-end">{t("hr.ai.team.openRoles")}</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {team.departments.map((d) => (
+                  <Tr key={d.name ?? "none"}>
+                    <Td className="font-medium">{d.name ?? t("hr.noDepartment")}</Td>
+                    <Td className="text-end tabular-nums">{n(d.headcount)}</Td>
+                    <Td className="text-end tabular-nums">{n(d.onLeave)}</Td>
+                    <Td className="text-end tabular-nums">
+                      {n(d.onboarding)}
+                      {d.onboardingLate ? <Badge tone="warning" className="ms-1">{t("hr.ai.team.late", { count: d.onboardingLate })}</Badge> : null}
+                    </Td>
+                    <Td className="text-end tabular-nums">{d.goalsAtRisk ? <Badge tone="warning">{n(d.goalsAtRisk)}</Badge> : "0"}</Td>
+                    <Td className="text-end tabular-nums">{n(d.reviewsPending)}</Td>
+                    <Td className="text-end tabular-nums">{n(d.openRoles)}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          </div>
+        </Card>
+      ) : null}
       {access!.agentsRun ? (
         <div className="grid gap-3">
           <Card>
@@ -184,7 +227,7 @@ export default async function HrOverviewPage() {
               <HrForm endpoint={`${base}/hr/assist/analyst`} columns={1} fields={[{ name: "question", label: t("hr.ai.question"), type: "textarea", rows: 2, required: true, placeholder: t("hr.ai.analystPlaceholder") }]} submitLabel={t("hr.ai.ask")} />
             </CardBody>
           </Card>
-          <AiPanel t={t} locale={locale} tz={tz} title={t("hr.ai.analystAnswers")} description={t("hr.ai.analystAnswersHint")} actions={[]} tasks={aiTasks} canRun={false} />
+          <AiPanel t={t} locale={locale} tz={tz} title={t("hr.ai.analystAnswers")} description={t("hr.ai.analystAnswersHint")} actions={[{ label: t("hr.ai.teamOverview"), endpoint: `${base}/hr/assist/team`, body: {} }]} tasks={aiTasks} canRun={access!.agentsRun} />
         </div>
       ) : null}
     </HrFrame>

@@ -11,6 +11,7 @@ import { cancelTask, createTask, getTask } from "@/server/modules/agents/service
 import { allowedModels } from "./models";
 import { costMicros } from "./pricing";
 import { tokenUsage, utcMonthStart } from "./usage";
+import { assertFeature, assertLimit } from "@/server/modules/entitlements/service";
 
 export const ORG_LEVELS = ["EXECUTIVE", "MANAGER", "SPECIALIST"] as const;
 /** Default org level of a role: the AI CEO is an executive, department leads are managers. */
@@ -184,6 +185,10 @@ export async function createEmployee(ctx: RequestContext, organizationId: string
   const profile = profileByKey(input.profileKey);
   if (!profile) throw notFound("Profile");
   checkTools(profile.key, input.allowedTools);
+  // Plan entitlements (docs/entitlements.md): AI employee count, Auto autonomy, executive / manager roles.
+  await assertLimit(ctx, organizationId, "agents.max", 1);
+  if (input.autonomy === "AUTONOMOUS_LOW_RISK") await assertFeature(ctx, organizationId, "feature.autonomy_auto");
+  if ((input.level ?? defaultLevelFor(profile.key)) !== "SPECIALIST") await assertFeature(ctx, organizationId, "feature.executive_team");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     await checkRunsAs(tx, organizationId, input.runsAsUserId);
@@ -229,6 +234,8 @@ export async function createEmployee(ctx: RequestContext, organizationId: string
 export async function updateEmployee(ctx: RequestContext, organizationId: string, companyId: string, employeeId: string, raw: z.input<typeof updateEmployeeInput>) {
   const input = updateEmployeeInput.parse(raw);
   if (!isUuid(employeeId)) throw notFound("AI employee");
+  if (input.autonomy === "AUTONOMOUS_LOW_RISK") await assertFeature(ctx, organizationId, "feature.autonomy_auto");
+  if (input.level !== undefined && input.level !== "SPECIALIST") await assertFeature(ctx, organizationId, "feature.executive_team");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     const before = await tx.aiEmployee.findFirst({ where: { id: employeeId, organizationId, companyId, archivedAt: null }, select: employeeSelect });

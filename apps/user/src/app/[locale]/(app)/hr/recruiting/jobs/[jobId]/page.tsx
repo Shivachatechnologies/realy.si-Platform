@@ -79,7 +79,10 @@ export default async function JobPage({ params }: { params: Promise<{ jobId: str
           title={t("hr.ai.recruiterTitle")}
           description={t("hr.ai.jobHint")}
           canRun={access!.agentsRun}
-          actions={[{ label: t("hr.ai.draftJobDescription"), endpoint: `${base}/hr/jobs/${job.id}/assist`, body: {} }]}
+          actions={[
+            { label: t("hr.ai.draftJobDescription"), endpoint: `${base}/hr/jobs/${job.id}/assist`, body: { mode: "description" } },
+            { label: t("hr.ai.interviewKit"), endpoint: `${base}/hr/jobs/${job.id}/assist`, body: { mode: "interview_kit" } },
+          ]}
           tasks={tasks}
         />
       </div>

@@ -3,40 +3,50 @@
 /*
  * Realy Control Center design system (apps/admin) — owned by the admin app, diverges freely from apps/user.
  *
- * Dense enterprise console: near-black slate neutrals, an amber "control room" accent and emerald live states,
+ * Dense enterprise console in the Realy.si brand: Realy Blue primary, Mist accent surfaces, Midnight text, a
+ * near-midnight dark theme; amber/green/red only as semantic warning/success/danger,
  * tight radii, flat hairline elevation, 13px base text, sans-serif display face (no editorial serif), no module
  * worlds or cinematic scenes. Light and dark are both first-class; dark follows the OS unless `data-theme` is set
  * on <html>. Layout uses logical properties only (RTL is first-class — see docs/globalization.md §4).
  * Motion is CSS-only (transform/opacity) and is switched off under prefers-reduced-motion.
  */
 
-/* ───────────────────────── Light ───────────────────────── */
+/* ───────────────────────── Light (Realy.si brand) ───────────────────────── */
 :root {
-  --background: oklch(0.972 0.004 250);
-  --foreground: oklch(0.19 0.015 250);
-  --surface: oklch(0.995 0.002 250);
-  --surface-2: oklch(0.962 0.005 250);
-  --muted: oklch(0.94 0.006 250);
-  --muted-foreground: oklch(0.47 0.016 250);
-  --border: oklch(0.895 0.008 250);
-  --border-strong: oklch(0.83 0.012 250);
-  --input: oklch(0.86 0.01 250);
-  --ring: oklch(0.6 0.15 62);
-  --primary: oklch(0.53 0.135 58);
-  --primary-2: oklch(0.6 0.13 160);
-  --primary-foreground: oklch(0.99 0.005 80);
-  --accent: oklch(0.95 0.04 80);
-  --accent-foreground: oklch(0.42 0.11 58);
-  --info: oklch(0.54 0.12 235);
+  /* Brand: Realy Blue #1764FF, Deep Blue #0B4FE6, Sky #6FA3FF, Mist #E8F0FF, Midnight #0B1220, Slate #5A6478, Cloud #F4F6FA. */
+  --brand-blue: #1764ff;
+  --brand-deep: #0b4fe6;
+  --brand-sky: #6fa3ff;
+  --brand-mist: #e8f0ff;
+  --brand-midnight: #0b1220;
+  --brand-slate: #5a6478;
+  --brand-cloud: #f4f6fa;
+  --brand-gradient: linear-gradient(135deg, #2f78ff 0%, #0b4fe6 100%);
+  --background: var(--brand-cloud);
+  --foreground: var(--brand-midnight);
+  --surface: #ffffff;
+  --surface-2: #f8f9fc;
+  --muted: #eef1f6;
+  --muted-foreground: var(--brand-slate);
+  --border: #e1e6ef;
+  --border-strong: #c9d1de;
+  --input: #d3dae6;
+  --ring: var(--brand-blue);
+  --primary: var(--brand-blue);
+  --primary-2: var(--brand-deep);
+  --primary-foreground: #ffffff;
+  --accent: var(--brand-mist);
+  --accent-foreground: var(--brand-deep);
+  --info: var(--brand-blue);
   --success: oklch(0.54 0.13 160);
   --warning: oklch(0.62 0.15 62);
   --danger: oklch(0.55 0.2 25);
-  --danger-foreground: oklch(0.99 0 0);
-  --aurora-1: oklch(0.8 0.13 75 / 0.14);
-  --aurora-2: oklch(0.78 0.12 160 / 0.1);
-  --aurora-3: oklch(0.8 0.05 250 / 0.12);
-  --glow: oklch(0.7 0.15 70 / 0.35);
-  --grid-line: oklch(0.2 0.02 250 / 0.045);
+  --danger-foreground: #ffffff;
+  --aurora-1: rgb(23 100 255 / 0.1);
+  --aurora-2: rgb(111 163 255 / 0.1);
+  --aurora-3: rgb(11 79 230 / 0.06);
+  --glow: rgb(23 100 255 / 0.3);
+  --grid-line: rgb(11 18 32 / 0.045);
   --radius: 0.3125rem;
 
   --elev-1: 0 0 0 1px oklch(0.2 0.02 250 / 0.04);
@@ -61,7 +71,7 @@
 [data-world] {
   --glass: color-mix(in oklch, var(--surface) 74%, transparent);
   --glass-strong: color-mix(in oklch, var(--surface) 88%, transparent);
-  --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  --gradient-brand: linear-gradient(135deg, #2f78ff 0%, #0b4fe6 100%);
   --gradient-border: linear-gradient(
     135deg,
     color-mix(in oklch, var(--primary) 70%, transparent),
@@ -70,73 +80,73 @@
   );
 }
 
-/* ───────────────────────── Dark (near-black control room) ───────────────────────── */
+/* ───────────────────────── Dark (near-midnight) ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: oklch(0.125 0.008 250);
-    --foreground: oklch(0.94 0.006 250);
-    --surface: oklch(0.16 0.009 250);
-    --surface-2: oklch(0.183 0.01 250);
-    --muted: oklch(0.21 0.011 250);
-    --muted-foreground: oklch(0.7 0.014 250);
-    --border: oklch(0.255 0.012 250);
-    --border-strong: oklch(0.32 0.014 250);
-    --input: oklch(0.3 0.014 250);
-    --ring: oklch(0.8 0.15 75);
-    --primary: oklch(0.8 0.155 75);
-    --primary-2: oklch(0.76 0.15 160);
-    --primary-foreground: oklch(0.17 0.03 65);
-    --accent: oklch(0.25 0.045 75);
-    --accent-foreground: oklch(0.86 0.12 80);
-    --info: oklch(0.72 0.12 235);
+    --background: var(--brand-midnight);
+    --foreground: #e8edf6;
+    --surface: #111a2b;
+    --surface-2: #152036;
+    --muted: #1a263d;
+    --muted-foreground: #98a3b8;
+    --border: #1f2c45;
+    --border-strong: #2b3b5a;
+    --input: #2a3956;
+    --ring: var(--brand-sky);
+    --primary: #3a7bff;
+    --primary-2: var(--brand-deep);
+    --primary-foreground: #ffffff;
+    --accent: #142a55;
+    --accent-foreground: #b9d0ff;
+    --info: var(--brand-sky);
     --success: oklch(0.75 0.16 160);
     --warning: oklch(0.82 0.15 80);
     --danger: oklch(0.68 0.19 25);
-    --danger-foreground: oklch(0.14 0 0);
-    --aurora-1: oklch(0.6 0.14 70 / 0.12);
-    --aurora-2: oklch(0.55 0.13 160 / 0.1);
-    --aurora-3: oklch(0.45 0.05 250 / 0.14);
-    --glow: oklch(0.8 0.15 75 / 0.3);
-    --grid-line: oklch(1 0 0 / 0.035);
-    --elev-1: 0 0 0 1px oklch(1 0 0 / 0.04);
-    --elev-2: 0 1px 2px oklch(0 0 0 / 0.4), 0 0 0 1px oklch(1 0 0 / 0.04);
-    --elev-3: 0 4px 12px -2px oklch(0 0 0 / 0.5), 0 0 0 1px oklch(1 0 0 / 0.05);
-    --elev-4: 0 16px 40px -12px oklch(0 0 0 / 0.7), 0 0 0 1px oklch(1 0 0 / 0.06);
-    --highlight: inset 0 1px 0 oklch(1 0 0 / 0.04);
+    --danger-foreground: #0b1220;
+    --aurora-1: rgb(23 100 255 / 0.14);
+    --aurora-2: rgb(111 163 255 / 0.08);
+    --aurora-3: rgb(11 79 230 / 0.12);
+    --glow: rgb(58 123 255 / 0.35);
+    --grid-line: rgb(255 255 255 / 0.035);
+    --elev-1: 0 0 0 1px rgb(255 255 255 / 0.04);
+    --elev-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.04);
+    --elev-3: 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.05);
+    --elev-4: 0 16px 40px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
+    --highlight: inset 0 1px 0 rgb(255 255 255 / 0.04);
   }
 }
 
 :root[data-theme="dark"] {
-  --background: oklch(0.125 0.008 250);
-  --foreground: oklch(0.94 0.006 250);
-  --surface: oklch(0.16 0.009 250);
-  --surface-2: oklch(0.183 0.01 250);
-  --muted: oklch(0.21 0.011 250);
-  --muted-foreground: oklch(0.7 0.014 250);
-  --border: oklch(0.255 0.012 250);
-  --border-strong: oklch(0.32 0.014 250);
-  --input: oklch(0.3 0.014 250);
-  --ring: oklch(0.8 0.15 75);
-  --primary: oklch(0.8 0.155 75);
-  --primary-2: oklch(0.76 0.15 160);
-  --primary-foreground: oklch(0.17 0.03 65);
-  --accent: oklch(0.25 0.045 75);
-  --accent-foreground: oklch(0.86 0.12 80);
-  --info: oklch(0.72 0.12 235);
+  --background: var(--brand-midnight);
+  --foreground: #e8edf6;
+  --surface: #111a2b;
+  --surface-2: #152036;
+  --muted: #1a263d;
+  --muted-foreground: #98a3b8;
+  --border: #1f2c45;
+  --border-strong: #2b3b5a;
+  --input: #2a3956;
+  --ring: var(--brand-sky);
+  --primary: #3a7bff;
+  --primary-2: var(--brand-deep);
+  --primary-foreground: #ffffff;
+  --accent: #142a55;
+  --accent-foreground: #b9d0ff;
+  --info: var(--brand-sky);
   --success: oklch(0.75 0.16 160);
   --warning: oklch(0.82 0.15 80);
   --danger: oklch(0.68 0.19 25);
-  --danger-foreground: oklch(0.14 0 0);
-  --aurora-1: oklch(0.6 0.14 70 / 0.12);
-  --aurora-2: oklch(0.55 0.13 160 / 0.1);
-  --aurora-3: oklch(0.45 0.05 250 / 0.14);
-  --glow: oklch(0.8 0.15 75 / 0.3);
-  --grid-line: oklch(1 0 0 / 0.035);
-  --elev-1: 0 0 0 1px oklch(1 0 0 / 0.04);
-  --elev-2: 0 1px 2px oklch(0 0 0 / 0.4), 0 0 0 1px oklch(1 0 0 / 0.04);
-  --elev-3: 0 4px 12px -2px oklch(0 0 0 / 0.5), 0 0 0 1px oklch(1 0 0 / 0.05);
-  --elev-4: 0 16px 40px -12px oklch(0 0 0 / 0.7), 0 0 0 1px oklch(1 0 0 / 0.06);
-  --highlight: inset 0 1px 0 oklch(1 0 0 / 0.04);
+  --danger-foreground: #0b1220;
+  --aurora-1: rgb(23 100 255 / 0.14);
+  --aurora-2: rgb(111 163 255 / 0.08);
+  --aurora-3: rgb(11 79 230 / 0.12);
+  --glow: rgb(58 123 255 / 0.35);
+  --grid-line: rgb(255 255 255 / 0.035);
+  --elev-1: 0 0 0 1px rgb(255 255 255 / 0.04);
+  --elev-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.04);
+  --elev-3: 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.05);
+  --elev-4: 0 16px 40px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.04);
 }
 
 /* Console canvas: a faint control-room grid behind sign-in and empty states. */
@@ -168,9 +178,9 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
-  --font-sans: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-locale, var(--font-inter)), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-display: var(--font-locale, var(--font-geist-sans)), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-locale, var(--font-inter)), ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 3px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 3px);

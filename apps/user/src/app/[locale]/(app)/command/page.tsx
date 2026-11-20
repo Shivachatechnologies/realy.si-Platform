@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Crown } from "lucide-react";
 import { CommandConsole } from "@/components/command/command-console";
 import { Card } from "@/components/ui/card";
 import { getLocale, getT } from "@/i18n/server";
@@ -30,7 +31,13 @@ export default async function CommandPage({ searchParams }: PageProps<"/[locale]
   const s = typeof sp.s === "string" && UUID.test(sp.s) ? sp.s : null;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 2000) : null;
   return (
-    <div className="mx-auto max-w-[1440px]">
+    <div className="mx-auto grid max-w-[1440px] gap-3">
+      <div className="flex justify-end">
+        <Link href={`/${locale}/command/ceo`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border bg-surface px-3 text-xs font-medium hover:border-primary/40 hover:text-primary">
+          <Crown className="size-3.5" aria-hidden />
+          {t("command.ceo.open")}
+        </Link>
+      </div>
       <CommandConsole base={`/api/v1/organizations/${org.id}/companies/${company.id}`} initialSessionId={s} initialQuery={q} autoRun={sp.run === "1"} />
     </div>
   );

@@ -49,7 +49,8 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Everything except API routes, Next internals and files with an extension. Prefetches included: they get the
-  // trusted x-realy-path header (but no CSP nonce, see proxy()).
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  // Everything except API routes, Next internals, the generated Apple touch icon (/apple-icon) and files with an
+  // extension (icon.svg, manifest.webmanifest, robots.txt…). Prefetches included: they get the trusted x-realy-path
+  // header (but no CSP nonce, see proxy()).
+  matcher: ["/((?!api|_next|apple-icon|.*\\..*).*)"],
 };

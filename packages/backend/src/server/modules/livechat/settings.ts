@@ -4,6 +4,7 @@ import type { RequestContext } from "@/server/core/context";
 import { env } from "@/server/core/env";
 import { invalid } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
+import { assertFeature } from "@/server/modules/entitlements/service";
 import { authorize, BRAND_COLOR, ensureSettings, newPublicKey, normalizeOrigin } from "./common";
 
 export const settingsInput = z
@@ -42,6 +43,8 @@ export async function updateLivechatSettings(ctx: RequestContext, organizationId
     }
     origins = [...new Set(origins)];
   }
+  // Turning the widget or its AI on needs a plan with live chat; turning things off always works.
+  if (input.enabled || input.aiEnabled) await assertFeature(ctx, organizationId, "feature.live_chat");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "support.manage", tx);
     const before = await ensureSettings(tx, organizationId, companyId);

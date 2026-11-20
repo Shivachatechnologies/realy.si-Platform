@@ -5,6 +5,7 @@ import { openDueChecklistRuns } from "./operations";
 import { advanceProductPlans } from "./product-plan";
 import { today } from "./shared";
 import { spawnNextOccurrence } from "./tasks";
+import { runDeadlineRiskAlerts, runWeeklyProjectReports } from "./delivery";
 
 const QUARTER_HOUR = 15 * 60_000;
 
@@ -30,6 +31,10 @@ export const WORK_JOBS: ModuleJobs = {
     { name: "work.recurring-tasks", everyMs: QUARTER_HOUR, run: () => spawnDueRecurrences() },
     { name: "work.checklist-runs", everyMs: QUARTER_HOUR, run: () => openDueChecklistRuns() },
     { name: "work.product-plans", everyMs: 60_000, run: () => advanceProductPlans() },
+    // Mondays: weekly AI status report per active project by the hired AI project manager (once per project per week).
+    { name: "work.weekly-status-reports", everyMs: 60 * 60_000, run: () => runWeeklyProjectReports() },
+    // High-severity deadline risks: the project owner is notified at most once a day per project.
+    { name: "work.deadline-risk-alerts", everyMs: 6 * 60 * 60_000, run: () => runDeadlineRiskAlerts() },
   ],
   onEvent: [],
 };

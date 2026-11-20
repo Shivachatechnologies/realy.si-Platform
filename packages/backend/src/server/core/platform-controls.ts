@@ -53,6 +53,7 @@ const API_SEGMENT_MODULE: Record<string, PlatformModule> = {
 
 /** First page path segment after the locale → module. */
 const PAGE_SEGMENT_MODULE: Record<string, PlatformModule> = {
+  voice: "comms",
   livechat: "support",
   crm: "crm",
   sales: "crm",

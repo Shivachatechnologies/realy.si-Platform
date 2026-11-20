@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Archive, ArchiveRestore } from "lucide-react";
+import { Archive, ArchiveRestore, FileDown } from "lucide-react";
 import { HelpMeButton } from "@/components/guide-kit/help-me";
 import { PageIntro } from "@/components/guide-kit/page-intro";
 import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
@@ -100,6 +100,12 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             </ActionButton>
           )
         ) : null}
+      </div>
+      <div className="flex justify-end">
+        <a href={`${base}/projects/${p.id}/report`} download className="inline-flex min-h-9 items-center gap-1.5 rounded-md border bg-surface px-3 text-sm font-medium hover:bg-muted">
+          <FileDown aria-hidden className="size-4" />
+          {t("work.radar.export")}
+        </a>
       </div>
       {!active ? <p className="rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-sm">{t("work.project.archivedNotice")}</p> : null}
       <ProjectTabs t={t} locale={locale} projectId={p.id} active="overview" />

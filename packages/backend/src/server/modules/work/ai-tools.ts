@@ -5,6 +5,9 @@ import { createRisk, getWorkProject, listWorkProjects, parseProjectFilters } fro
 import { getSprint, projectAgile } from "./agile";
 import { createWorkTask, myTasks, PRIORITIES, TASK_STATUSES, updateWorkTask, workload } from "./tasks";
 import { PRODUCT_TOOLS } from "./product-ai-tools";
+import { deadlineRisks, workloadBalance } from "./delivery";
+import { detectBottlenecks } from "./bottlenecks";
+import { addProcessVersion, getProcess } from "./operations";
 
 /** AI tools of the work module, registered in src/server/modules/tools/modules.ts. */
 
@@ -266,6 +269,118 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const r = await createRisk(ctx, organizationId, companyId, input.projectId, { ...input, status: "OPEN" });
       return { content: `Added risk "${r.title}" to the register.`, records: [`project_risk:${r.id}`] };
+    },
+  }),
+  read_deadline_risks: def({
+    name: "read_deadline_risks",
+    version: 1,
+    description: "Deadline risks across live projects from real tasks and milestones: overdue tasks, tasks due within 3 days not started, milestones due soon with open tasks, and projects whose remaining work at the recent pace finishes after the due date (projection).",
+    input: z.object({}).strict(),
+    modelSchema: empty,
+    permissions: ["projects.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read deadline risks",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const risks = await deadlineRisks(ctx, organizationId, companyId);
+      if (!risks.length) return { content: "No deadline risks detected in live projects.", count: 0 };
+      const content = risks
+        .map((r) => `- [${r.severity}] ${r.projectName} (${r.projectId}): ${r.kind.replace(/_/g, " ")} — ${r.count}${r.label ? `, milestone "${r.label}"` : ""}${r.date ? `, date ${r.date}` : ""}${r.weeks != null ? `, ~${r.weeks} weeks of work at the recent pace` : ""}`)
+        .join("\n");
+      return { content, count: risks.length, records: [...new Set(risks.map((r) => `project:${r.projectId}`))] };
+    },
+  }),
+
+  read_workload_balance: def({
+    name: "read_workload_balance",
+    version: 1,
+    description: "Open work per person (tasks, points, overdue) with who is overloaded or light, and concrete reassignment suggestions (not-started tasks to the lightest-loaded member of the same project). Apply a suggestion with assign_task.",
+    input: z.object({}).strict(),
+    modelSchema: empty,
+    permissions: ["projects.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read workload balance",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const w = await workloadBalance(ctx, organizationId, companyId);
+      if (!w.rows.length) return { content: "No open assigned tasks.", count: 0 };
+      const people = w.rows.map((r) => `- ${r.name ?? r.userId} (${r.userId}): ${r.open} open, ${r.points} pts, ${r.overdue} overdue — ${r.load}`).join("\n");
+      const sugg = w.suggestions.map((s) => `- Move task ${s.taskId} "${s.title}"${s.projectName ? ` (${s.projectName})` : ""} from ${s.fromName ?? s.fromId} to ${s.toName ?? s.toId} (${s.toId})`).join("\n");
+      return { content: `Team average ${w.averagePoints} pts.\n${people}\nSuggestions:\n${sugg || "- none"}`, count: w.rows.length };
+    },
+  }),
+
+  read_ops_bottlenecks: def({
+    name: "read_ops_bottlenecks",
+    version: 1,
+    description: "Operations bottlenecks from real records: checklist runs past due, workflow runs stuck or failing, support tickets waiting too long or past SLA, approvals left pending, slow task cycle times and stalled work in progress — with counts, age and severity.",
+    input: z.object({}).strict(),
+    modelSchema: empty,
+    permissions: ["operations.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 25_000,
+    summarize: () => "Read operations bottlenecks",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const b = await detectBottlenecks(ctx, organizationId, companyId);
+      const head = `Task cycle time (median, last 60 days): ${b.cycle.companyMedianDays ?? "no data"} days.`;
+      if (!b.items.length) return { content: `${head}\nNo bottlenecks detected.`, count: 0 };
+      return { content: `${head}\n${b.items.map((x) => `- [${x.severity}] ${x.area}/${x.kind}: ${x.summary}`).join("\n")}`, count: b.items.length };
+    },
+  }),
+
+  read_process: def({
+    name: "read_process",
+    version: 1,
+    description: "Read an operations process (SOP) with its current steps and version history.",
+    input: z.object({ processId: uuid }).strict(),
+    modelSchema: { type: "object", properties: { processId: { type: "string" } }, required: ["processId"], additionalProperties: false },
+    permissions: ["operations.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read a process",
+    async execute({ processId }, { ctx, organizationId, companyId }) {
+      const p = await getProcess(ctx, organizationId, companyId, processId);
+      const steps = p.shown?.steps.map((st, i) => `${i + 1}. ${st.title}${st.detail ? ` — ${st.detail}` : ""}`).join("\n") || "(no steps yet)";
+      return {
+        content: `Process ${p.id}: ${p.title}${p.category ? ` [${p.category}]` : ""}, owner ${p.ownerName ?? "none"}, version ${p.currentVersion} of ${p.versions.length}.\n${p.description ?? ""}\nSteps:\n${steps}`,
+        records: [`ops_process:${p.id}`],
+      };
+    },
+  }),
+
+  propose_process_version: def({
+    name: "propose_process_version",
+    version: 1,
+    description: "Propose saving new steps as the next version of an operations process (SOP). A person must approve it; earlier versions are kept.",
+    input: z
+      .object({
+        processId: uuid,
+        steps: z.array(z.object({ title: z.string().trim().min(1).max(300), detail: z.string().trim().max(5000).optional() }).strict()).min(1).max(200),
+        changeNote: z.string().trim().max(500).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        processId: { type: "string" },
+        steps: { type: "array", items: { type: "object", properties: { title: { type: "string" }, detail: { type: "string" } }, required: ["title"], additionalProperties: false } },
+        changeNote: { type: "string" },
+      },
+      required: ["processId", "steps"],
+      additionalProperties: false,
+    },
+    permissions: ["operations.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ steps }) => `Save a new process version with ${steps.length} step(s)`,
+    async execute({ processId, steps, changeNote }, { ctx, organizationId, companyId }) {
+      const r = await addProcessVersion(ctx, organizationId, companyId, processId, { steps, changeNote });
+      return { content: `Saved version ${r.version} of the process.`, records: [`ops_process:${processId}`] };
     },
   }),
   ...PRODUCT_TOOLS,

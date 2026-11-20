@@ -8,6 +8,7 @@ import { AnimatedProgress } from "@/components/motion/animated-progress";
 import { CountUp } from "@/components/motion/count-up";
 import { AdminHeader, AuditTimeline, Avatar, EmptyState, Facts, SectionLink, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
 import { OrgRestrictions, OrgStatusButton, TenantViewGate } from "@/components/admin/org-actions";
+import { OrgAdminExtras, OrgTabs } from "@/components/admin/people-extras";
 import { Sparkline, TrendChart } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatDateTime, formatNumber, formatRelativeTime } from "@/i18n/format";
@@ -64,6 +65,7 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
 
   return (
     <div className="grid gap-5">
+      <OrgTabs locale={locale} orgId={orgId} active="overview" />
       <nav aria-label={t("admin.common.breadcrumb")} className="text-xs text-muted-foreground">
         <Link href={`${base}/organizations`} className="hover:text-foreground hover:underline">
           {t("admin.nav.companies")}
@@ -279,6 +281,7 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
           />
         )}
       </Card>
+      <OrgAdminExtras ctx={viewer.ctx} locale={locale} org={{ id: o.id, name: o.name, slug: o.slug, defaultLocale: o.defaultLocale }} />
     </div>
   );
 }

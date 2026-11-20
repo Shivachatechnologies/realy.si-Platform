@@ -8,6 +8,7 @@ import { contactInput, contactName, insertContact, listContacts, parseContactFil
 import { dealInput, insertDeal, listDeals, parseDealFilters } from "./deals";
 import { normalizeEmail, normalizePhone } from "./scoring";
 import { createLead, createLeadInput, listLeads, parseLeadFilters } from "./service";
+import { assertLimit } from "@/server/modules/entitlements/service";
 
 /** CSV import (paste/upload → preview → import with duplicate detection) and export for leads, contacts, accounts, deals. */
 
@@ -254,11 +255,13 @@ export async function importCsv(ctx: RequestContext, organizationId: string, com
       const rows = await prepare(tx, ctx, organizationId, companyId, input.entity, records, chain);
       const accounts = new Map<string, string>();
       let created = 0;
-      for (const r of rows.filter((r) => r.status === "new")) {
+      const fresh = rows.filter((r) => r.status === "new");
+      if (input.entity === "contacts" && fresh.length) await assertLimit(ctx, organizationId, "crm.contacts.max", fresh.length);
+      for (const r of fresh) {
         if (input.entity === "contacts") {
           const { accountName, ...data } = r.data as Record<string, unknown> & { accountName?: string };
           const accountId = await accountByName(tx, ctx, organizationId, companyId, accountName, accounts);
-          await insertContact(tx, ctx, organizationId, companyId, contactInput.parse({ ...data, accountId }));
+          await insertContact(tx, ctx, organizationId, companyId, contactInput.parse({ ...data, accountId }), { limitChecked: true });
         } else if (input.entity === "accounts") {
           await insertAccount(tx, ctx, organizationId, companyId, accountInput.parse(r.data));
         } else {

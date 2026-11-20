@@ -215,6 +215,12 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         // Platform controls (Admin → Platform Controls): maintenance, read-only, suspended organizations, disabled
         // modules and plan API quota. Admin API is exempt; platform admins pass maintenance and read-only.
         await requestGate({ pathname: req.nextUrl.pathname, method: req.method, userId: session?.userId ?? null, serviceAccountOrgId: apiKeyOrgId });
+        // Plan entitlements (docs/entitlements.md): routes mapped to a plan feature answer plan_feature_locked when the
+        // organization's plan lacks it. Runs after the platform gate; no effect when the feature is included.
+        if ((session || apiCtx) && req.nextUrl.pathname.startsWith("/api/v1/organizations/")) {
+          const { entitlementApiGate } = await import("@/server/modules/entitlements/gate");
+          await entitlementApiGate({ pathname: req.nextUrl.pathname, method: req.method });
+        }
 
         const idemKey = req.headers.get("idempotency-key");
         const principalId = apiCtx?.actor.id ?? session?.userId ?? null;

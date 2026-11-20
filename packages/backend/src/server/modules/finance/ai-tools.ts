@@ -12,6 +12,7 @@ import { departmentBudgets, parseBudgetWindow } from "./budgets";
 import { budgetVsActual } from "./transactions";
 import { financeAlertCenter } from "./alerts";
 import { moneyFlow } from "./money-flow";
+import { applyExpenseCategory, budgetVarianceExplanations, expenseCategorySuggestions, revenueForecast } from "./manager";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const money = (v: bigint, currency: string) => `${fromMinor(v, currency)} ${currency}`;
@@ -474,6 +475,88 @@ export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
       return {
         content: `Period ${dayString(start)} to ${dayString(end)}. Income ${money(f.totalIncome, c)}, expenses ${money(f.totalExpense, c)}, net ${money(f.net, c)}.\nMoney in:\n${f.sources.map(line).join("\n") || "- none"}\nMoney out:\n${f.uses.map(line).join("\n") || "- none"}`,
       };
+    },
+  }),
+  read_revenue_forecast: def({
+    name: "read_revenue_forecast",
+    version: 1,
+    description:
+      "Revenue forecast for the next 1–12 months, split into contracted (active recurring invoices), invoiced (open invoices by due month) and projected (open CRM deals × probability, only when the requester may see sales). The pipeline part is a projection, not booked revenue.",
+    input: z.object({ months: z.number().int().min(1).max(12).optional() }).strict(),
+    modelSchema: { type: "object", properties: { months: { type: "integer", description: "Months ahead (default 6)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ months }) => `Read the ${months ?? 6}-month revenue forecast`,
+    async execute({ months }, { ctx, organizationId, companyId }) {
+      const f = await revenueForecast(ctx, organizationId, companyId, months ?? 6);
+      const c = f.currency;
+      const lines = f.months.map((m) => `- ${m.month}: contracted ${money(m.recurringMinor, c)}, invoiced ${money(m.receivablesMinor, c)}, projected pipeline ${money(m.pipelineMinor, c)}, total ${money(m.totalMinor, c)}`);
+      const note = f.pipeline === "included" ? `Pipeline: ${f.openDeals ?? 0} open deal(s), weighted by probability (projection).` : f.pipeline === "no_access" ? "Pipeline not included: the requester cannot see sales data." : "Pipeline not available.";
+      return { content: `${lines.join("\n")}\nTotals: contracted ${money(f.totals.recurringMinor, c)}, invoiced ${money(f.totals.receivablesMinor, c)}, projected ${money(f.totals.pipelineMinor, c)}.\n${note}`, count: lines.length };
+    },
+  }),
+
+  suggest_expense_categories: def({
+    name: "suggest_expense_categories",
+    version: 1,
+    description: "Uncategorised expenses with a suggested category learnt from the company's own categorised expenses (same vendor first, else shared words), with confidence and sample size. Read-only.",
+    input: z.object({ days: z.number().int().min(7).max(365).optional() }).strict(),
+    modelSchema: { type: "object", properties: { days: { type: "integer", description: "Look-back window in days (default 120)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Suggest categories for uncategorised expenses",
+    async execute({ days }, { ctx, organizationId, companyId }) {
+      const r = await expenseCategorySuggestions(ctx, organizationId, companyId, { days });
+      if (!r.suggestions.length) return { content: r.uncategorised ? `${r.uncategorised} uncategorised expense(s), but no confident suggestion from the history.` : "No uncategorised expenses.", count: 0 };
+      const content = r.suggestions
+        .map((s) => `- ${s.transactionId} ${s.date} ${money(s.amountMinor, s.currency)} "${s.description}"${s.vendor ? ` (${s.vendor})` : ""} → ${s.categoryName} [${s.categoryId}], ${s.confidence}% of ${s.samples} match(es) by ${s.basis}`)
+        .join("\n");
+      return { content: `${r.uncategorised} uncategorised expense(s); ${r.suggestions.length} suggestion(s):\n${content}`, count: r.suggestions.length, records: r.suggestions.map((s) => `finance_transaction:${s.transactionId}`) };
+    },
+  }),
+
+  categorize_expense: def({
+    name: "categorize_expense",
+    version: 1,
+    description: "Propose setting the category of an expense transaction (ids from suggest_expense_categories). A person must approve it; the ledger posting is updated.",
+    input: z.object({ transactionId: z.string().uuid(), categoryId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { transactionId: { type: "string" }, categoryId: { type: "string" } }, required: ["transactionId", "categoryId"], additionalProperties: false },
+    permissions: ["finance.manage"],
+    risk: "LOW",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: () => "Categorise an expense",
+    async execute({ transactionId, categoryId }, { ctx, organizationId, companyId }) {
+      await applyExpenseCategory(ctx, organizationId, companyId, transactionId, { categoryId });
+      return { content: "The expense was categorised.", records: [`finance_transaction:${transactionId}`] };
+    },
+  }),
+
+  read_budget_variance: def({
+    name: "read_budget_variance",
+    version: 1,
+    description: "Budget vs actual for this month's budgets with the explanation: variance, change vs the previous period, run-rate projection to period end (projection) and the largest postings that drove the spend.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Explain budget vs actual",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const rows = await budgetVarianceExplanations(ctx, organizationId, companyId);
+      if (!rows.length) return { content: "No budgets cover this month.", count: 0 };
+      const content = rows
+        .map(
+          (b) =>
+            `- ${b.name}${b.scope ? ` (${b.scope})` : ""} [${b.status}]: budget ${money(b.budgetMinor, b.currency)}, actual ${money(b.actualMinor, b.currency)} (${b.usedPct}% used, ${b.elapsedPct}% of period elapsed), previous period ${money(b.previousMinor, b.currency)}, projected at period end ${money(b.projectedMinor, b.currency)}. Largest postings: ${b.drivers.map((d) => `${d.description}${d.vendor ? ` / ${d.vendor}` : ""} ${money(d.amountMinor, b.currency)} on ${d.date}`).join("; ") || "none"}`,
+        )
+        .join("\n");
+      return { content, count: rows.length, records: rows.map((b) => `finance_budget:${b.id}`) };
     },
   }),
 };

@@ -66,6 +66,7 @@ model BuilderRun {
   steps     BuilderStep[]
   decisions BuilderDecision[]
   sources   BuilderSource[]
+  kitItems  BuilderKitItem[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, createdAt])
@@ -178,4 +179,58 @@ model BuilderOnboarding {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("builder_onboarding")
+}
+
+// ───────────── Founder Kit ─────────────
+// Every deliverable a first-time founder needs (idea refinement → AI workforce), each a real AI deliverable: an agent task
+// whose output is kept here (editable Markdown + validated structured part) and saved as a Company Brain document. The
+// logo is generated through the integrations image service into the assets module. "Turn this into action" creates real
+// records through the owning modules' services; what was created is listed in `actions`.
+
+enum BuilderKitItemStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+  /// A provider credential is missing (e.g. image generation for the logo); nothing was generated.
+  NEEDS_SETUP
+}
+
+model BuilderKitItem {
+  id              String               @id @default(uuid(7)) @db.Uuid
+  organizationId  String               @map("organization_id") @db.Uuid
+  companyId       String               @map("company_id") @db.Uuid
+  runId           String               @map("run_id") @db.Uuid
+  /// Deliverable key (builder/kit.ts → KIT).
+  key             String
+  status          BuilderKitItemStatus @default(PENDING)
+  agentTaskId     String?              @map("agent_task_id") @db.Uuid
+  brainDocumentId String?              @map("brain_document_id") @db.Uuid
+  /// The deliverable as Markdown (AI output, or the founder's edited version).
+  content         String?
+  /// Validated structured part (personas, canvas, pricing tiers, roadmap, forecast, sources, logo asset ids…).
+  data            Json?
+  /// The founder edited the AI's version.
+  edited          Boolean              @default(false)
+  feedback        String?
+  approvedAt      DateTime?            @map("approved_at") @db.Timestamptz(3)
+  approvedById    String?              @map("approved_by_id") @db.Uuid
+  /// Records created from this deliverable: [{ kind, id, label, at }].
+  actions         Json                 @default("[]")
+  errorCode       String?              @map("error_code")
+  errorMessage    String?              @map("error_message")
+  errorIssues     String[]             @default([]) @map("error_issues")
+  attempts        Int                  @default(0)
+  generatedAt     DateTime?            @map("generated_at") @db.Timestamptz(3)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     BuilderRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, key])
+  @@unique([id, companyId])
+  @@index([agentTaskId])
+  @@index([status])
+  @@map("builder_kit_items")
 }

@@ -8,6 +8,7 @@ import { LiveDot } from "@/components/motion/live-dot";
 import { AdminHeader, AuditTimeline, Avatar, EmptyState, Facts, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
 import { PlatformRoleGrant, PlatformRoleRevoke, UserActions } from "@/components/admin/user-actions";
 import { UserStatusButton } from "@/components/admin/user-status-button";
+import { UserAdminExtras } from "@/components/admin/people-extras";
 import { Sparkline, TrendChart } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatDateTime, formatRelativeTime } from "@/i18n/format";
@@ -275,6 +276,7 @@ export default async function AdminUserPage({ params }: PageProps<"/[locale]/use
           )}
         </Card>
       </div>
+      <UserAdminExtras ctx={viewer.ctx} locale={locale} user={{ id: u.id, name: u.name, email: u.email, locale: u.locale, timezone: u.timezone }} />
     </div>
   );
 }

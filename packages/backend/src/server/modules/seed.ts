@@ -77,7 +77,8 @@ const monthlyAndAnnual = (marketType: MarketType, marketCode: string, currency: 
 
 /**
  * Illustrative catalog for development and tests ONLY (docs/billing.md §2). Production catalogs are
- * created by admins in the Pricing Console. Never called when NODE_ENV=production.
+ * created by admins in the Pricing Console. Never called when NODE_ENV=production. The product plans (Starter / Growth /
+ * Scale) come from seedPlanCatalog (entitlements/seed.ts); these legacy examples are hidden from the public page.
  */
 export async function seedDevCatalog(db: PrismaClient): Promise<void> {
   if (process.env.NODE_ENV === "production") throw new Error("Dev catalog must not be seeded in production");
@@ -116,24 +117,6 @@ export async function seedDevCatalog(db: PrismaClient): Promise<void> {
       ],
     },
     {
-      key: "growth",
-      name: "Growth",
-      sortOrder: 20,
-      trial: 14,
-      prices: [
-        ...monthlyAndAnnual("GLOBAL", "*", "USD", 29900n),
-        ...monthlyAndAnnual("COUNTRY", "IN", "INR", 1499900n),
-        ...monthlyAndAnnual("COUNTRY", "AE", "AED", 109900n),
-        ...monthlyAndAnnual("COUNTRY", "GB", "GBP", 24900n),
-        ...monthlyAndAnnual("REGION", "EU", "EUR", 27900n),
-      ],
-      entitlements: [
-        { featureKey: "agents.max", enabled: true, limitValue: 60n },
-        { featureKey: "companies.max", enabled: true, limitValue: 3n },
-        { featureKey: "computer_use.advanced", enabled: false, limitValue: null },
-      ],
-    },
-    {
       key: "enterprise",
       name: "Enterprise",
       sortOrder: 30,
@@ -151,7 +134,7 @@ export async function seedDevCatalog(db: PrismaClient): Promise<void> {
     const plan = await db.plan.upsert({
       where: { key: p.key },
       update: {},
-      create: { key: p.key, name: p.name, productId: product.id, status: "ACTIVE", sortOrder: p.sortOrder, defaultTrialDays: p.trial },
+      create: { key: p.key, name: p.name, productId: product.id, status: "ACTIVE", public: false, sortOrder: p.sortOrder, defaultTrialDays: p.trial },
     });
     for (const e of p.entitlements) {
       await db.planEntitlement.upsert({

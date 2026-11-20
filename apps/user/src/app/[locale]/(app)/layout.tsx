@@ -16,6 +16,9 @@ import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
+import { lockedNavHrefs } from "@/server/modules/entitlements/service";
+import { NAV } from "@/components/shell/nav";
+import { PlatformBanner } from "@/components/cms/platform-banner";
 
 /** The admin console is a separate app (apps/admin); link to it only when ADMIN_URL is configured. */
 const adminReachable = () => !!process.env.ADMIN_URL;
@@ -92,6 +95,19 @@ async function OrgBranding() {
   return <BrandingStyle organizationId={org?.id} />;
 }
 
+/** Nav entries the active organization's plan does not include (lock badge in the sidebar / tab bar). */
+async function lockedHrefsForViewer(): Promise<string[]> {
+  try {
+    const viewer = await requireViewer(await getLocale());
+    const { org } = await getWorkspaceContext(viewer.user.id);
+    if (!org) return [];
+    return await lockedNavHrefs(org.id, NAV.flatMap((s) => s.items.map((i) => i.href)));
+  } catch {
+    // Signed-out viewers are redirected by the pages themselves; never fail the shell over a badge.
+    return [];
+  }
+}
+
 function PageFallback() {
   return (
     <div className="grid gap-4">
@@ -106,13 +122,18 @@ function PageFallback() {
   );
 }
 
-export default function AppLayout({ children }: LayoutProps<"/[locale]">) {
+export default async function AppLayout({ children }: LayoutProps<"/[locale]">) {
+  const lockedHrefs = await lockedHrefsForViewer();
   return (
     <>
       <Suspense fallback={null}>
         <OrgBranding />
       </Suspense>
+      <Suspense fallback={null}>
+        <PlatformBanner />
+      </Suspense>
       <AppFrame
+        lockedHrefs={lockedHrefs}
         topbar={
           <Suspense fallback={<Skeleton className="h-8 w-64" />}>
             <Topbar />

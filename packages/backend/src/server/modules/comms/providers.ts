@@ -271,11 +271,16 @@ const googleBody = (e: OutgoingEvent) => ({
 });
 
 /** Google Calendar API: events.insert / events.patch. */
-export async function googleUpsertEvent(conn: Conn, e: OutgoingEvent, externalId?: string | null) {
+/**
+ * Google Calendar: insert or patch an event. `sendUpdates: "all"` makes Google email the invitation (or the change) to
+ * every guest; by default Google only adds guests to the event without emailing them.
+ */
+export async function googleUpsertEvent(conn: Conn, e: OutgoingEvent, externalId?: string | null, opts: { sendUpdates?: "all" | "externalOnly" | "none" } = {}) {
   const base = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+  const query = opts.sendUpdates ? `?sendUpdates=${opts.sendUpdates}` : "";
   const r = externalId
-    ? await call<{ id: string }>("google_calendar", conn, `${base}/${encodeURIComponent(externalId)}`, { method: "PATCH", body: googleBody(e) })
-    : await call<{ id: string }>("google_calendar", conn, base, { body: googleBody(e) });
+    ? await call<{ id: string }>("google_calendar", conn, `${base}/${encodeURIComponent(externalId)}${query}`, { method: "PATCH", body: googleBody(e) })
+    : await call<{ id: string }>("google_calendar", conn, `${base}${query}`, { body: googleBody(e) });
   return r.id;
 }
 

@@ -199,6 +199,20 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
     permissions: ["platform.content.manage", "globalization.read"],
   },
   {
+    key: "AI_OPERATIONS_ADMIN",
+    name: "AI operations admin",
+    description: "Operates the AI workforce platform-wide: models, routing, budgets, task logs and AI employees.",
+    assignableAt: PLATFORM_SCOPES,
+    permissions: ["platform.ai.read", "platform.ai.manage", "platform.organizations.read", "platform.audit.read"],
+  },
+  {
+    key: "READ_ONLY_ADMIN",
+    name: "Read-only admin",
+    description: "Sees every Control Center area without changing anything.",
+    assignableAt: PLATFORM_SCOPES,
+    permissions: ["pricing.read", "globalization.read", "flags.read", "platform.users.read", "platform.organizations.read", "platform.subscriptions.read", "platform.security.read", "platform.support.read", "platform.audit.read", "platform.ai.read"],
+  },
+  {
     key: "REGION_ADMIN",
     name: "Region admin",
     description: "Pricing and configuration for one region and its countries.",

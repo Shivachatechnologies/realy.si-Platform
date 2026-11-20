@@ -11,6 +11,7 @@ import { addEvent, handOff } from "./actions";
 import { chatAiConfigured, generateAiReply } from "./agent";
 import { appOrigin } from "./settings";
 import { closeConversationTx } from "./lifecycle";
+import { hasFeature } from "@/server/modules/entitlements/service";
 
 /**
  * Public widget API (no session): every call carries the company's public key and comes from an allowed website origin
@@ -71,6 +72,8 @@ export async function resolveWidget(key: string, origin: string | null) {
   if (!originAllowed(origin, s.allowedOrigins, appOrigin())) throw new AppError("forbidden", "This website is not allowed to use this chat", { reason: "livechat_origin_not_allowed" });
   if (await isOrganizationSuspended(s.organizationId)) throw new AppError("not_available", "Chat unavailable", { reason: "livechat_unavailable" });
   if (!(await isModuleEnabled(s.organizationId, "support"))) throw new AppError("not_available", "Chat unavailable", { reason: "livechat_unavailable" });
+  // Plan without live chat: the widget shows "chat unavailable" (no plan details leak to website visitors).
+  if (!(await hasFeature(s.organizationId, "feature.live_chat"))) throw new AppError("not_available", "Chat unavailable", { reason: "livechat_unavailable" });
   // The app's own origin may preview a disabled widget (settings page); websites only see an enabled one.
   const preview = origin?.toLowerCase() === appOrigin().toLowerCase();
   if (!s.enabled && !preview) throw new AppError("not_available", "Chat is turned off", { reason: "livechat_disabled" });

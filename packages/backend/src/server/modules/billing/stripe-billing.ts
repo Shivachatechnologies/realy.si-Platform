@@ -13,6 +13,7 @@ import { orgChain } from "@/server/modules/rbac/scope";
 import { closestLocale } from "@/i18n/config";
 import { billingConfig, verifyStripeWebhook, type GatewaySubscription, type PaymentGateway } from "./gateway";
 import { quote, quoteInput } from "./service";
+import { ADDONS, invalidateEntitlements, isAddonKey, monthlyWindow, getEntitlements, type AddonKey, type FeatureKey } from "@/server/modules/entitlements/service";
 
 export const BILLING_NOT_CONFIGURED = "Billing is not configured.";
 
@@ -404,6 +405,7 @@ async function applySubscription(tx: Tx, sub: GatewaySubscription, event: Minima
 
 const HANDLED = new Set([
   "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
   "checkout.session.expired",
   "customer.subscription.created",
   "customer.subscription.updated",
@@ -453,13 +455,21 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
           data: done ? { status: "COMPLETED", completedAt: new Date() } : { status: "EXPIRED" },
         });
       }
+      if (event.type === "checkout.session.completed" || event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_succeeded") {
+        const addonOrg = await applyAddonCheckout(tx, event);
+        if (addonOrg) result = { outcome: "applied", organizationId: addonOrg };
+      }
       if (sub) result = await applySubscription(tx, sub, event);
       if (sub && result.outcome === "applied" && event.type.startsWith("invoice.")) {
         const field = event.type === "invoice.payment_failed" ? "lastPaymentFailedAt" : "lastPaymentSucceededAt";
         await tx.subscription.update({ where: { stripeSubscriptionId: sub.id }, data: { [field]: new Date() } });
       }
       await tx.stripeEvent.update({ where: { id: event.id }, data: { outcome: result.outcome, organizationId: result.organizationId } });
-      return result.outcome;
+      return result;
+    }).then((r) => {
+      // Plan, status or add-on balance may have changed: entitlements are re-resolved on the next check.
+      if (r.organizationId) invalidateEntitlements(r.organizationId);
+      return r.outcome;
     });
     if (outcome !== "applied" && outcome !== "ignored") logger.warn({ eventId: event.id, type: event.type, outcome }, "stripe webhook not applied");
     return { status: 200, body: { received: true, outcome } };
@@ -472,4 +482,197 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
     logger.error({ eventId: event.id, type: event.type, err: (err as Error).message }, "stripe webhook processing failed");
     throw err;
   }
+}
+
+// ───────────── Plan changes, cancellation, invoices (entitlements, docs/entitlements.md) ─────────────
+
+const NO_LIVE_SUBSCRIPTION = "This organization has no active subscription to change";
+
+async function liveStripeSubscription(organizationId: string) {
+  const sub = await db().subscription.findFirst({
+    where: { organizationId, status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] }, stripeSubscriptionId: { not: null } },
+    orderBy: { createdAt: "desc" },
+    include: { plan: true, items: true },
+  });
+  if (!sub?.stripeSubscriptionId) throw new AppError("not_available", NO_LIVE_SUBSCRIPTION, { reason: "billing_no_subscription" });
+  return sub;
+}
+
+function requireGatewayMethod<K extends keyof PaymentGateway>(gateway: PaymentGateway, key: K): NonNullable<PaymentGateway[K]> {
+  const fn = gateway[key];
+  if (!fn) throw new AppError("not_configured", BILLING_NOT_CONFIGURED);
+  return (fn as (...a: unknown[]) => unknown).bind(gateway) as NonNullable<PaymentGateway[K]>;
+}
+
+export const changePlanInput = z.object({ planKey: z.string().min(1).max(41), interval: z.enum(["MONTH", "YEAR"]) });
+
+/**
+ * Upgrade / downgrade / switch to annual for an organization that already has a Stripe subscription. The new
+ * price version comes from the same regional quote as checkout; Stripe prorates. The local subscription changes
+ * only when the verified webhook arrives (never optimistically). `ctx` may be a platform admin (admin console).
+ */
+export async function changeSubscriptionPlan(ctx: RequestContext, organizationId: string, raw: z.input<typeof changePlanInput>, opts: { asPlatform?: boolean } = {}) {
+  const input = changePlanInput.parse(raw);
+  if (!opts.asPlatform) await requirePermission(ctx, "billing.manage", orgChain(organizationId));
+  const gateway = requireGateway();
+  const update = requireGatewayMethod(gateway, "updateSubscriptionPrice");
+  const sub = await liveStripeSubscription(organizationId);
+  const item = sub.items[0];
+  if (!item?.stripeSubscriptionItemId) throw new AppError("not_available", NO_LIVE_SUBSCRIPTION, { reason: "billing_no_subscription" });
+  const q = await quote(opts.asPlatform ? systemContext(ctx.requestId) : ctx, organizationId, { planKey: input.planKey, interval: input.interval, billingCountryCode: sub.billingCountryCode });
+  if (q.price.priceVersionId === item.priceVersionId) throw conflict("This is already the current plan", { reason: "billing_same_plan" });
+  if (q.price.money.currency !== sub.currency) throw invalid("A plan change cannot change the billing currency", { reason: "billing_currency_change" });
+  const priceId = await ensureStripePrice(gateway, q.price.priceVersionId);
+  await update({ subscriptionId: sub.stripeSubscriptionId!, itemId: item.stripeSubscriptionItemId, priceId }, `realy-change-${sub.id}-${q.price.priceVersionId}`);
+  await transaction((tx) =>
+    writeAudit(tx, ctx, {
+      category: opts.asPlatform ? "ADMIN" : "TENANT",
+      organizationId,
+      action: "billing.subscription.change_requested",
+      resourceType: "subscription",
+      resourceId: sub.id,
+      oldValue: { plan: sub.plan.key, interval: sub.interval, priceVersionId: item.priceVersionId },
+      newValue: { plan: input.planKey, interval: input.interval, priceVersionId: q.price.priceVersionId },
+    }),
+  );
+  return { ok: true, pending: true };
+}
+
+/** Cancel at period end (or resume). Applied locally by the webhook. */
+export async function setSubscriptionCancellation(ctx: RequestContext, organizationId: string, cancel: boolean, opts: { asPlatform?: boolean; reason?: string } = {}) {
+  if (!opts.asPlatform) await requirePermission(ctx, "billing.manage", orgChain(organizationId));
+  const gateway = requireGateway();
+  const setCancel = requireGatewayMethod(gateway, "setCancelAtPeriodEnd");
+  const sub = await liveStripeSubscription(organizationId);
+  await setCancel(sub.stripeSubscriptionId!, cancel);
+  await transaction((tx) =>
+    writeAudit(tx, ctx, {
+      category: opts.asPlatform ? "ADMIN" : "TENANT",
+      organizationId,
+      action: cancel ? "billing.subscription.cancel_requested" : "billing.subscription.resume_requested",
+      resourceType: "subscription",
+      resourceId: sub.id,
+      oldValue: { cancelAtPeriodEnd: sub.cancelAtPeriodEnd },
+      newValue: { cancelAtPeriodEnd: cancel },
+      reason: opts.reason,
+    }),
+  );
+  return { ok: true, pending: true };
+}
+
+/** Recent invoices from Stripe (empty when there is no billing account; not_configured without Stripe). */
+export async function listInvoices(ctx: RequestContext, organizationId: string, limit = 12) {
+  await requirePermission(ctx, "billing.read", orgChain(organizationId));
+  const config = billingConfig();
+  if (!config?.gateway.listInvoices) return { configured: false as const, invoices: [] };
+  const profile = await db().billingProfile.findUnique({ where: { organizationId } });
+  if (!profile?.stripeCustomerId) return { configured: true as const, invoices: [] };
+  return { configured: true as const, invoices: await config.gateway.listInvoices(profile.stripeCustomerId, limit) };
+}
+
+// ───────────── Add-on packs ─────────────
+
+export const addonCheckoutInput = z.object({ addonKey: z.string().max(60), packs: z.number().int().min(1).max(50).default(1), locale: z.string().max(35).optional() });
+
+/**
+ * Stripe one-time checkout for add-on packs (AI credits, content, voice minutes, email sends, API cost cap, ad
+ * spend cap). The pack is granted only when the verified webhook reports the session paid.
+ */
+export async function createAddonCheckout(ctx: RequestContext, organizationId: string, raw: z.input<typeof addonCheckoutInput>) {
+  const input = addonCheckoutInput.parse(raw);
+  await requirePermission(ctx, "billing.manage", orgChain(organizationId));
+  if (!isAddonKey(input.addonKey)) throw invalid("Unknown add-on", { field: "addonKey" });
+  const addon = ADDONS[input.addonKey as AddonKey];
+  if (input.packs > addon.maxPacks) throw invalid(`At most ${addon.maxPacks} packs at once`, { field: "packs" });
+  const config = billingConfig();
+  if (!config) throw new AppError("not_configured", BILLING_NOT_CONFIGURED);
+  const create = requireGatewayMethod(config.gateway, "createPaymentCheckoutSession");
+  const ent = await getEntitlements(organizationId);
+  const req = (addon as { requires?: FeatureKey }).requires;
+  if (req && !ent.features[req]) throw new AppError("not_available", "This add-on needs a plan feature first", { reason: "plan_feature_locked", feature: req, currentPlan: ent.plan, requiredPlan: null, organizationId });
+  if (ent.state === "trial_expired") throw new AppError("not_available", "Choose a plan before buying add-ons", { reason: "plan_trial_expired", currentPlan: ent.plan, requiredPlan: "starter", organizationId });
+
+  const profile = await db().billingProfile.findUnique({ where: { organizationId } });
+  if (!profile?.billingCountryConfirmedAt) throw invalid("Confirm your billing country before checkout", { field: "billingCountryCode" });
+  const currency = profile.currency === "EUR" ? "EUR" : "USD";
+  const unit = BigInt(addon.prices[currency]);
+  let customerId = profile.stripeCustomerId;
+  if (!customerId) {
+    const org = await db().organization.findUniqueOrThrow({ where: { id: organizationId } });
+    const owner = ctx.actor.id ? await db().user.findUnique({ where: { id: ctx.actor.id }, select: { email: true } }) : null;
+    customerId = await config.gateway.createCustomer({ organizationId, name: profile.legalName ?? org.name, email: owner?.email ?? null, country: profile.billingCountryCode }, `realy-customer-${organizationId}`);
+    await db().billingProfile.updateMany({ where: { organizationId, stripeCustomerId: null }, data: { stripeCustomerId: customerId } });
+    customerId = (await db().billingProfile.findUniqueOrThrow({ where: { organizationId } })).stripeCustomerId!;
+  }
+  const purchase = await db().entitlementAddonPurchase.create({
+    data: {
+      organizationId,
+      addonKey: input.addonKey,
+      limitKey: addon.limit,
+      packs: input.packs,
+      quantity: BigInt(addon.quantity * input.packs),
+      source: "stripe",
+      amountMinor: unit * BigInt(input.packs),
+      currency,
+      createdById: ctx.actor.id ?? null,
+    },
+  });
+  const locale = closestLocale(input.locale);
+  const base = `${env().APP_URL}/${locale}/settings/billing`;
+  try {
+    const session = await create(
+      {
+        customerId,
+        name: `Realy ${input.addonKey.replace(/^addon\./, "").replace(/_/g, " ")}`,
+        unitAmountMinor: unit,
+        currency,
+        quantity: input.packs,
+        metadata: { organizationId, addonPurchaseId: purchase.id, addonKey: input.addonKey, kind: "addon" },
+        successUrl: `${base}?addon=success`,
+        cancelUrl: `${base}?addon=canceled`,
+        automaticTax: config.automaticTax,
+        locale,
+        expiresAt: new Date(Date.now() + CHECKOUT_TTL_MS),
+      },
+      `realy-addon-${purchase.id}`,
+    );
+    await transaction(async (tx) => {
+      await tx.entitlementAddonPurchase.update({ where: { id: purchase.id }, data: { stripeSessionId: session.id } });
+      await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "billing.addon.checkout_started", resourceType: "addon_purchase", resourceId: purchase.id, newValue: { addonKey: input.addonKey, packs: input.packs, amountMinor: unit * BigInt(input.packs), currency } });
+    });
+    return { url: session.url };
+  } catch (err) {
+    await db().entitlementAddonPurchase.update({ where: { id: purchase.id }, data: { status: "FAILED" } });
+    throw err;
+  }
+}
+
+/** Webhook: mark an add-on purchase paid (granting it for the current usage window) or canceled. Returns its org. */
+async function applyAddonCheckout(tx: Tx, event: MinimalEvent): Promise<string | null> {
+  const o = event.data.object as { id?: unknown; mode?: unknown; payment_status?: unknown; metadata?: Record<string, string> | null };
+  const purchaseId = o.metadata?.addonPurchaseId;
+  if (o.mode !== "payment" || !purchaseId || !/^[0-9a-f-]{36}$/.test(purchaseId)) return null;
+  const purchase = await tx.entitlementAddonPurchase.findUnique({ where: { id: purchaseId } });
+  if (!purchase || purchase.stripeSessionId !== String(o.id ?? "") || purchase.organizationId !== o.metadata?.organizationId) {
+    securityEvent("billing.addon_webhook_mismatch", { purchaseId });
+    return null;
+  }
+  if (purchase.status === "PAID") return purchase.organizationId;
+  if (event.type === "checkout.session.expired") {
+    await tx.entitlementAddonPurchase.update({ where: { id: purchase.id }, data: { status: "CANCELED" } });
+    return purchase.organizationId;
+  }
+  if (o.payment_status !== "paid") return null; // async methods: granted on checkout.session.async_payment_succeeded
+  const sub = await tx.subscription.findFirst({ where: { organizationId: purchase.organizationId, status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } }, orderBy: { createdAt: "desc" }, select: { currentPeriodStart: true } });
+  const window = monthlyWindow(sub?.currentPeriodStart ?? null);
+  await tx.entitlementAddonPurchase.update({ where: { id: purchase.id }, data: { status: "PAID", paidAt: new Date(), windowStart: window.start, windowEnd: window.end } });
+  await writeAudit(tx, { ...systemContext(), userAgent: "stripe-webhook" }, {
+    category: "TENANT",
+    organizationId: purchase.organizationId,
+    action: "billing.addon.paid",
+    resourceType: "addon_purchase",
+    resourceId: purchase.id,
+    newValue: { addonKey: purchase.addonKey, quantity: purchase.quantity, windowEnd: window.end, stripeEventId: event.id },
+  });
+  return purchase.organizationId;
 }

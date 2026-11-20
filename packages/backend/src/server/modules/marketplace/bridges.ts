@@ -8,6 +8,7 @@ import { profileByKey } from "@/server/modules/agents/profiles";
 import { departmentOf } from "@/server/modules/workforce/service";
 import { EMPTY_DEFINITION, TRIGGER_EVENTS } from "@/server/modules/automation/definition";
 import { templateByKey } from "@/server/modules/automation/templates";
+import { assertLimit } from "@/server/modules/entitlements/service";
 
 /**
  * Marketplace installs into the Automation, AI Workforce, CRM and Integrations modules, inside the install
@@ -69,6 +70,8 @@ export const installAiEmployees: Bridge<"aiEmployees"> = async (tx, ctx, scope, 
   for (const e of items) {
     const profile = profileByKey(e.profile);
     if (!profile || existing.has(`${profile.key}:${e.name}`)) continue;
+    // Plan limit (reads committed rows, so count the ones created in this transaction too).
+    await assertLimit(ctx, scope.organizationId, "agents.max", created + 1);
     await tx.aiEmployee.create({
       data: {
         organizationId: scope.organizationId,

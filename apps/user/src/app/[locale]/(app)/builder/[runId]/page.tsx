@@ -66,6 +66,9 @@ export default async function BuilderRunPage({ params }: PageProps<"/[locale]/bu
   const docs = steps.filter((s) => s.brainDocumentId && v.docs.has(s.brainDocumentId)).map((s) => ({ step: s.key, doc: v.docs.get(s.brainDocumentId!)! }));
   const brainCount = run.status === "DRAFT" ? await db().brainDocument.count({ where: { organizationId: org.id, companyId: run.companyId } }) : 0;
   const tz = viewer.user.timezone;
+  const kit = await db().builderKitItem.groupBy({ by: ["status"], where: { runId: run.id, organizationId: org.id }, _count: { _all: true } });
+  const kitTotal = kit.reduce((a, k) => a + k._count._all, 0);
+  const kitReady = kit.find((k) => k.status === "READY")?._count._all ?? 0;
   const live = run.status === "RUNNING";
 
   return (
@@ -133,6 +136,20 @@ export default async function BuilderRunPage({ params }: PageProps<"/[locale]/bu
           {run.status === "FAILED" && run.errorMessage ? <Notice tone="danger" title={t("builder.run.failed")}>{run.errorMessage}</Notice> : null}
         </CardBody>
       </Card>
+
+      {kitTotal || (canManage && run.status !== "CANCELLED") ? (
+        <Card variant="highlight">
+          <CardBody className="flex flex-wrap items-center justify-between gap-3">
+            <div className="grid gap-0.5">
+              <span className="font-display text-lg">{t("builder.kit.cardTitle")}</span>
+              <span className="text-sm text-muted-foreground">{kitTotal ? t("builder.kit.readyCount", { ready: kitReady, total: kitTotal }) : t("builder.kit.cardDescription")}</span>
+            </div>
+            <Button asChild variant="luminous">
+              <Link href={`/${locale}/builder/${run.id}/kit`}>{kitTotal ? t("builder.kit.open") : t("builder.kit.start")}</Link>
+            </Button>
+          </CardBody>
+        </Card>
+      ) : null}
 
       {run.status === "DRAFT" ? (
         <Card>

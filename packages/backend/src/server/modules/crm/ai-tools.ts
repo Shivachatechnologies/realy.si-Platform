@@ -14,6 +14,8 @@ import { nextActions } from "./next-actions";
 import { createOutreachDraft } from "./outreach";
 import { enrichLead, latestIntel } from "./intel";
 import { enroll } from "./cadences";
+import { listAutopilots } from "./prospecting";
+import { findPeople, SENIORITIES } from "@/server/modules/integrations/services/contacts";
 
 const money = (m: bigint, currency: string) => `${toMajor(m, currency) || "0"} ${currency}`;
 const uuidField = (description: string) => ({ type: "string", description });
@@ -525,6 +527,61 @@ export const CRM_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const r = await enroll(ctx, organizationId, companyId, input.sequenceId, { leadIds: input.leadIds ?? [], contactIds: input.contactIds ?? [] });
       return { content: `Added ${r.enrolled} people (${r.skipped} skipped).`, records: [`crm_cadence:${input.sequenceId}`] };
+    },
+  }),
+
+  read_prospecting_autopilots: def({
+    name: "read_prospecting_autopilots",
+    version: 1,
+    description:
+      "Lists the company's prospecting autopilots (AI SDR) with their ideal-customer profile, autonomy, daily caps and the real funnel: companies checked, people found, verified emails, contacted, replied, meetings, emails awaiting approval and sent today.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read prospecting autopilots",
+    async execute(_input, { ctx, organizationId, companyId }) {
+      const rows = await listAutopilots(ctx, organizationId, companyId);
+      if (!rows.length) return { content: "No prospecting autopilot is set up yet (/crm/prospecting)." };
+      const lines = rows.map(
+        (a) =>
+          `- ${a.id} "${a.name}" [${a.status}, ${a.effective.level}${a.effective.limitedBy ? ` (limited: ${a.effective.limitedBy})` : ""}] who: ${a.audience}; roles: ${a.roles.join(", ") || "any"}; regions: ${a.regions.join(", ") || "any"}; quota ${a.dailyQuota}/day, send cap ${a.dailySendCap}/day${a.allowUnverified ? `, unverified allowed (${a.unverifiedDailyCap}/day)` : ""}. Funnel: ${a.funnel.companies} companies → ${a.funnel.found} found → ${a.funnel.verified} verified → ${a.funnel.contacted} contacted → ${a.funnel.replied} replied → ${a.funnel.meetings} meetings; ${a.funnel.awaitingApproval} awaiting approval, ${a.funnel.sentToday} sent today${a.lastError ? `; last issue: ${a.lastError}` : ""}`,
+      );
+      return { content: lines.join("\n"), records: rows.map((a) => `crm_prospecting_autopilot:${a.id}`) };
+    },
+  }),
+
+  find_decision_makers: def({
+    name: "find_decision_makers",
+    version: 1,
+    description:
+      "Propose looking up decision makers at a company domain through the connected contact-data provider (Apollo.io, People Data Labs or Hunter.io): names, titles and work emails with their verification status, exactly as the provider returns them. Uses provider credits, so it runs after a person approves. Nothing is stored or sent.",
+    input: z.object({ domain: z.string().trim().min(3).max(253), titles: z.array(z.string().trim().min(1).max(80)).max(10).optional(), seniorities: z.array(z.enum(SENIORITIES)).max(10).optional(), limit: z.number().int().min(1).max(10).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        domain: { type: "string", description: "Company website domain, e.g. acme.com" },
+        titles: { type: "array", items: { type: "string" }, description: "Job titles to look for" },
+        seniorities: { type: "array", items: { type: "string", enum: [...SENIORITIES] } },
+        limit: { type: "integer", minimum: 1, maximum: 10 },
+      },
+      required: ["domain"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 45_000,
+    summarize: ({ domain }) => `Look up decision makers at ${domain}`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      await authorize(ctx, organizationId, companyId, "sales.manage");
+      const r = await findPeople(organizationId, companyId, { domain: input.domain, titles: input.titles, seniorities: input.seniorities, limit: input.limit ?? 5 });
+      if (!r.ok) return { content: r.code === "not_connected" ? "No contact-data provider is connected (Apollo.io, Hunter.io or People Data Labs) — connect one in Integrations. Nothing was looked up." : `The contact-data provider could not answer: ${r.error}` };
+      if (!r.data.people.length) return { content: `${r.providerId} found no matching people at ${input.domain}.` };
+      const lines = r.data.people.map((p) => `- ${p.fullName}${p.title ? `, ${p.title}` : ""}: ${p.email ? `${p.email} (${p.emailStatus.toLowerCase()}, from ${p.emailSource})` : "no email returned"}${p.linkedinUrl ? ` · ${p.linkedinUrl}` : ""}`);
+      return { content: `From ${r.providerId}:\n${lines.join("\n")}\nOnly verified addresses should be contacted.` };
     },
   }),
 };

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, ChevronDown, ClipboardCheck, ExternalLink, Search, Square } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ChevronDown, ClipboardCheck, Crown, ExternalLink, RotateCcw, Search, Square } from "lucide-react";
 import { AnimatedProgress, LiveDot, TypingText } from "@/components/motion";
 import { AiAvatar } from "@/components/graphics/ai-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +21,28 @@ export type RunView = CommandSessionView["runs"][number];
 type StepView = RunView["steps"][number];
 type TaskView = NonNullable<StepView["task"]>;
 type Decide = (approvalId: string, decision: "approve" | "reject") => Promise<void>;
+type Retry = (runId: string, stepId: string) => Promise<void>;
 
 const stepState = (s: StepView) => (s.task ? s.task.status : s.status);
 const tone = (state: string) => (state === "COMPLETED" ? "success" : state === "FAILED" || state === "BLOCKED" ? "danger" : state === "QUEUED" || state === "RUNNING" ? "info" : "neutral") as "success" | "danger" | "info" | "neutral";
 
 /** One command and everything that happened to it, from the persisted run. */
-export function CommandRunCard({ run, canDecide, onDecide, onCancel, onFollowUp }: { run: RunView; canDecide: boolean; onDecide: Decide; onCancel: (runId: string) => Promise<void>; onFollowUp: (text: string) => void }) {
-  const { t } = useI18n();
+export function CommandRunCard({
+  run,
+  canDecide,
+  onDecide,
+  onCancel,
+  onFollowUp,
+  onRetry,
+}: {
+  run: RunView;
+  canDecide: boolean;
+  onDecide: Decide;
+  onCancel: (runId: string) => Promise<void>;
+  onFollowUp: (text: string, parentRunId: string) => void;
+  onRetry?: Retry;
+}) {
+  const { t, locale } = useI18n();
   const [cancelling, setCancelling] = useState(false);
   const open = run.status === "PLANNED" || run.status === "RUNNING" || run.status === "REVIEWING";
   const work = run.steps.filter((s) => s.kind !== "REVIEW");
@@ -51,6 +66,12 @@ export function CommandRunCard({ run, canDecide, onDecide, onCancel, onFollowUp 
       <article className={cn("relative overflow-hidden rounded-2xl border bg-surface/80 p-4 shadow-elev-1 backdrop-blur sm:p-5", open && "border-gradient shadow-glow")}>
         <header className="mb-4 flex flex-wrap items-center gap-2">
           <Badge tone={run.status === "COMPLETED" ? "success" : run.status === "FAILED" ? "danger" : run.status === "CANCELLED" ? "neutral" : "info"}>{t(`command.ai.runStatus.${run.status}`)}</Badge>
+          {run.origin === "CEO" ? (
+            <Badge tone="accent">
+              <Crown className="me-1 inline size-3" aria-hidden />
+              {t("command.ai.fromCeo")}
+            </Badge>
+          ) : null}
           {open ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <LiveDot tone="info" />
@@ -85,7 +106,7 @@ export function CommandRunCard({ run, canDecide, onDecide, onCancel, onFollowUp 
         <ol className="mt-5 grid gap-3">
           {run.steps.map((s) => (
             <li key={s.id}>
-              <StepCard step={s} run={run} canDecide={canDecide} onDecide={onDecide} />
+              <StepCard step={s} run={run} canDecide={canDecide} onDecide={onDecide} onRetry={onRetry} />
             </li>
           ))}
         </ol>
@@ -95,13 +116,21 @@ export function CommandRunCard({ run, canDecide, onDecide, onCancel, onFollowUp 
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("command.ai.result")}</p>
             <Markdown text={result} />
             <p className="mt-3 text-[11px] text-muted-foreground">{t("guide.task.review")}</p>
+            {run.documentId ? (
+              <Link href={`/${locale}/brain/${run.documentId}`} className="mt-2 inline-flex min-h-9 items-center gap-1 text-xs font-medium text-primary hover:underline">
+                <BookOpen className="size-3.5" aria-hidden />
+                {t("command.ai.savedToBrain")}
+              </Link>
+            ) : run.documentError ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">{t("command.ai.notSavedToBrain")}</p>
+            ) : null}
           </div>
         ) : null}
         {run.status === "COMPLETED" && run.nextAction ? (
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
             <span className="text-xs font-semibold uppercase tracking-wide text-primary">{t("command.ai.nextAction")}</span>
             <span className="min-w-0 flex-1 text-sm">{run.nextAction}</span>
-            <Button type="button" size="sm" onClick={() => onFollowUp(run.nextAction!)}>
+            <Button type="button" size="sm" onClick={() => onFollowUp(run.nextAction!, run.id)}>
               {t("command.ai.runNext")}
               <ArrowRight aria-hidden className="rtl:-scale-x-100" />
             </Button>
@@ -222,8 +251,9 @@ function PlanGraph({ run }: { run: RunView }) {
   );
 }
 
-function StepCard({ step, run, canDecide, onDecide }: { step: StepView; run: RunView; canDecide: boolean; onDecide: Decide }) {
+function StepCard({ step, run, canDecide, onDecide, onRetry }: { step: StepView; run: RunView; canDecide: boolean; onDecide: Decide; onRetry?: Retry }) {
   const { t, locale } = useI18n();
+  const [retrying, setRetrying] = useState(false);
   const errorText = useErrorMessage();
   const [expanded, setExpanded] = useState(false);
   const task = step.task;
@@ -248,6 +278,25 @@ function StepCard({ step, run, canDecide, onDecide }: { step: StepView; run: Run
       {step.status === "WAITING" && deps.length ? <p className="mt-2 text-xs text-muted-foreground">{t("command.ai.waitingFor", { steps: deps.map((d) => d.position + 1).join(", ") })}</p> : null}
       {step.status === "BLOCKED" ? <p className="mt-2 text-sm text-danger">{errorText(new ApiError(step.errorReason ?? "internal_error", step.errorReason ?? "internal_error", { reason: step.errorReason ?? "internal_error" }))}</p> : null}
       {step.status === "SKIPPED" ? <p className="mt-2 text-xs text-muted-foreground">{t("command.ai.skipped")}</p> : null}
+      {step.canRetry && onRetry ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            loading={retrying}
+            onClick={async () => {
+              setRetrying(true);
+              await onRetry(run.id, step.id);
+              setRetrying(false);
+            }}
+          >
+            <RotateCcw aria-hidden />
+            {t("command.ai.retryStep")}
+          </Button>
+          {step.attempts ? <span className="text-xs text-muted-foreground">{t("command.ai.attempts", { count: step.attempts })}</span> : null}
+        </div>
+      ) : null}
 
       {task ? (
         <>

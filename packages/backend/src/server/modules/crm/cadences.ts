@@ -238,6 +238,10 @@ export async function runCadences(now = new Date()): Promise<number> {
     take: BATCH,
     include: { cadence: { include: { steps: { orderBy: { position: "asc" } } } } },
   });
+  const { autopilotHasSendBudget, autopilotsForCadences, effectiveAutonomy, nextUtcDay, withUnsubscribe } = await import("./prospecting");
+  const controls = await getControls();
+  const { suppressionFor } = await import("./suppression");
+  const autopilots = await autopilotsForCadences([...new Set(due.map((e) => e.cadenceId))]);
   let processed = 0;
   for (const e of due) {
     try {
@@ -280,7 +284,25 @@ export async function runCadences(now = new Date()): Promise<number> {
         processed++;
         continue;
       }
-      const auto = e.cadence.autoSend && !!e.cadence.activatedAt;
+      // Do-not-contact (unsubscribed, bounced, blocked): stop instead of writing another email.
+      const hit = await suppressionFor(db(), e.companyId, e.toEmail);
+      if (hit) {
+        await db().crmCadenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE" }, data: { status: "STOPPED", stoppedReason: "do_not_contact", nextRunAt: null } });
+        continue;
+      }
+      // Follow-ups of a prospecting autopilot respect its status and daily send cap (deferred to tomorrow when reached).
+      const autopilot = autopilots.get(e.cadenceId) ?? null;
+      if (autopilot && autopilot.status !== "ACTIVE") continue;
+      if (autopilot && !(await autopilotHasSendBudget(autopilot, now))) {
+        await db().crmCadenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE", nextRunAt: e.nextRunAt }, data: { nextRunAt: nextUtcDay(now) } });
+        continue;
+      }
+      let auto = e.cadence.autoSend && !!e.cadence.activatedAt;
+      if (auto && autopilot) {
+        // Autopilot follow-ups auto-send only within its effective autonomy and to verified addresses.
+        const person = await db().crmProspectPerson.findFirst({ where: { companyId: e.companyId, enrollmentId: e.id }, select: { emailStatus: true } });
+        auto = effectiveAutonomy(autopilot, controls).level === "AUTO_SEND" && person?.emailStatus === "VERIFIED";
+      }
       const msg = await transaction(async (tx) => {
         const { count } = await tx.crmCadenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE", nextStep: e.nextStep, nextRunAt: e.nextRunAt }, data: { nextRunAt: null } });
         if (!count) return null; // another run took it
@@ -295,7 +317,8 @@ export async function runCadences(now = new Date()): Promise<number> {
             toEmail: e.toEmail,
             toName: e.name,
             subject: renderTemplate(step.subject, vars).slice(0, 200),
-            body: renderTemplate(step.body, vars).slice(0, 10_000),
+            body: autopilot ? withUnsubscribe(renderTemplate(step.body, vars), autopilot, e.toEmail) : renderTemplate(step.body, vars).slice(0, 10_000),
+            autopilotId: autopilot?.id ?? null,
             status: "PENDING_APPROVAL",
             ...(auto ? { approvedById: e.cadence.activatedById, approvedAt: now } : {}),
           },

@@ -4,7 +4,8 @@ import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { contactName } from "./common";
 import { listCategories } from "./config";
 import { searchArticles } from "./kb";
-import { addMessage, getTicket, listTickets, parseTicketFilters, storeDraftReply, VIEWS } from "./tickets";
+import { addMessage, getTicket, listTickets, parseTicketFilters, storeDraftReply, updateTicket, VIEWS } from "./tickets";
+import { PRIORITIES } from "./common";
 import { supportAnalytics } from "./analytics";
 import { ticketToProductFeedback } from "./product-loop";
 import { db } from "@/server/core/db";
@@ -181,6 +182,47 @@ export const SUPPORT_TOOLS: Record<string, ToolDefinition> = {
       if (!p) throw notFound("Product");
       const f = await ticketToProductFeedback(ctx, organizationId, companyId, ticketId, { productId: p.id, summary, sentiment });
       return { content: `Recorded the ticket as feedback for "${p.name}".`, records: [`ticket:${ticketId}`, `product_feedback:${f.id}`] };
+    },
+  }),
+  triage_ticket: def({
+    name: "triage_ticket",
+    version: 1,
+    description: "Propose triaging a ticket: set its category (by name, from read_ticket's category list), priority and add up to three tags. A person must approve it.",
+    input: z
+      .object({
+        ticketId: z.string().uuid(),
+        categoryName: z.string().trim().min(1).max(120).optional(),
+        priority: z.enum(PRIORITIES).optional(),
+        tags: z.array(z.string().trim().toLowerCase().min(1).max(40)).max(3).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "string" },
+        categoryName: { type: "string", description: "Exact category name" },
+        priority: { type: "string", enum: [...PRIORITIES] },
+        tags: { type: "array", items: { type: "string" }, description: "Up to three short lower-case tags" },
+      },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+    permissions: ["support.manage"],
+    risk: "LOW",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ categoryName, priority, tags }) => `Triage ticket: ${[categoryName, priority, tags?.length ? `tags ${tags.join(", ")}` : null].filter(Boolean).join(" · ") || "no change"}`,
+    async execute({ ticketId, categoryName, priority, tags }, { ctx, organizationId, companyId }) {
+      const t = await getTicket(ctx, organizationId, companyId, ticketId);
+      let categoryId: string | undefined;
+      if (categoryName) {
+        const cat = (await listCategories(ctx, organizationId, companyId)).find((c) => c.name.toLowerCase() === categoryName.toLowerCase());
+        if (!cat) throw notFound("Category");
+        categoryId = cat.id;
+      }
+      const merged = tags?.length ? [...new Set([...t.tags, ...tags])].slice(0, 20) : undefined;
+      await updateTicket(ctx, organizationId, companyId, ticketId, { ...(categoryId ? { categoryId } : {}), ...(priority ? { priority } : {}), ...(merged ? { tags: merged } : {}) });
+      return { content: "The ticket was triaged.", records: [`ticket:${ticketId}`] };
     },
   }),
 };

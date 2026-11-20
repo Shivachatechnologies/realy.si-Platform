@@ -1,5 +1,5 @@
 import { Lock, ShieldCheck } from "lucide-react";
-import { ControlMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LiveDot } from "@/components/motion/live-dot";
 import { getLocale, getT } from "@/i18n/server";
@@ -12,7 +12,7 @@ export default async function AdminAuthLayout({ children }: LayoutProps<"/[local
     <div className="control-grid grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
       <aside className="hidden flex-col justify-between border-e bg-surface/60 p-10 lg:flex">
         <span className="flex w-fit items-center gap-2 text-sm font-semibold tracking-tight">
-          <ControlMark className="size-6" />
+          <BrandMark tone="tile" className="size-6" />
           {t("authHero.adminTitle")}
         </span>
         <div className="grid max-w-md gap-6">
@@ -38,7 +38,7 @@ export default async function AdminAuthLayout({ children }: LayoutProps<"/[local
       <div className="flex min-h-dvh flex-col bg-background">
         <header className="flex items-center justify-between gap-4 px-6 py-4">
           <span className="flex items-center gap-2 font-semibold tracking-tight lg:invisible">
-            <ControlMark />
+            <BrandMark tone="tile" />
             {t("authHero.adminTitle")}
           </span>
           <LanguageSwitcher />

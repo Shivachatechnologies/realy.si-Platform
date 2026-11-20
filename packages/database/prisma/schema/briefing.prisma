@@ -1,0 +1,201 @@
+// ───────────────────────────── Founder briefing ─────────────────────────────
+// The founder's daily briefing: a per-user subscription (time, days, channels, WhatsApp number), the generated
+// reports (deterministic data + optional AI summary), their deliveries per channel, single-use approval tokens and
+// inbound WhatsApp replies (deduplicated by provider message id).
+
+enum BriefingKind {
+  MORNING
+  EVENING
+  WEEKLY
+  TEST
+}
+
+enum BriefingReportStatus {
+  /// Data computed; waiting for the optional AI summary before delivery.
+  SUMMARIZING
+  /// Delivered on every enabled channel.
+  DELIVERED
+  /// At least one channel failed or was not configured.
+  PARTIAL
+  /// No channel accepted it (in-app history still shows it).
+  FAILED
+}
+
+enum BriefingChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+}
+
+enum BriefingDeliveryStatus {
+  SENT
+  FAILED
+  NOT_CONFIGURED
+  SKIPPED
+}
+
+/// One person's briefing preferences at one company. Times are local to `timezone`; days are 0 (Sun) – 6 (Sat).
+model BriefingSubscription {
+  id                    String    @id @default(uuid(7)) @db.Uuid
+  organizationId        String    @map("organization_id") @db.Uuid
+  companyId             String    @map("company_id") @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  enabled               Boolean   @default(true)
+  timezone              String
+  locale                String    @default("en-US")
+  morningTime           String    @default("07:30") @map("morning_time")
+  days                  Int[]     @default([1, 2, 3, 4, 5])
+  eveningEnabled        Boolean   @default(false) @map("evening_enabled")
+  eveningTime           String    @default("18:00") @map("evening_time")
+  weeklyEnabled         Boolean   @default(true) @map("weekly_enabled")
+  emailEnabled          Boolean   @default(true) @map("email_enabled")
+  whatsappEnabled       Boolean   @default(false) @map("whatsapp_enabled")
+  aiSummary             Boolean   @default(true) @map("ai_summary")
+  /// E.164 number; only used once verified (the founder sent the join code from it).
+  whatsappNumber        String?   @map("whatsapp_number")
+  whatsappVerifiedAt    DateTime? @map("whatsapp_verified_at") @db.Timestamptz(3)
+  /// SHA-256 of the pending join code and its expiry.
+  whatsappCodeHash      String?   @map("whatsapp_code_hash")
+  whatsappCodeExpiresAt DateTime? @map("whatsapp_code_expires_at") @db.Timestamptz(3)
+  /// Last message received from the number (WhatsApp's 24-hour customer service window).
+  whatsappLastInboundAt DateTime? @map("whatsapp_last_inbound_at") @db.Timestamptz(3)
+  lastMorningSlot       String?   @map("last_morning_slot")
+  lastEveningSlot       String?   @map("last_evening_slot")
+  lastWeeklySlot        String?   @map("last_weekly_slot")
+  setupCompletedAt      DateTime? @map("setup_completed_at") @db.Timestamptz(3)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([companyId, userId])
+  @@index([enabled])
+  @@index([companyId, whatsappNumber])
+  @@map("briefing_subscriptions")
+}
+
+/// Company-wide WhatsApp reply settings: the secret webhook path key, the Meta app secret (encrypted) and verify
+/// token, and the approved message templates used outside WhatsApp's 24-hour window.
+model BriefingChannelConfig {
+  id                   String   @id @default(uuid(7)) @db.Uuid
+  organizationId       String   @map("organization_id") @db.Uuid
+  companyId            String   @unique @map("company_id") @db.Uuid
+  webhookKey           String   @unique @map("webhook_key")
+  metaAppSecretEnc     String?  @map("meta_app_secret_enc")
+  metaVerifyToken      String   @map("meta_verify_token")
+  metaTemplateName     String?  @map("meta_template_name")
+  metaTemplateLanguage String?  @map("meta_template_language")
+  twilioContentSid     String?  @map("twilio_content_sid")
+  updatedById          String?  @map("updated_by_id") @db.Uuid
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("briefing_channel_configs")
+}
+
+/// A generated briefing for one person. `data` holds only computed figures (BriefingData); `summary` is the optional
+/// AI-written paragraph (labelled as AI in every channel).
+model BriefingReport {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  userId         String               @map("user_id") @db.Uuid
+  kind           BriefingKind
+  /// One report per subscription, kind and local slot (tests use a unique suffix).
+  dedupeKey      String               @unique @map("dedupe_key")
+  localDate      String               @map("local_date")
+  timezone       String
+  periodStart    DateTime             @map("period_start") @db.Timestamptz(3)
+  periodEnd      DateTime             @map("period_end") @db.Timestamptz(3)
+  data           Json
+  summary        String?
+  summaryTaskId  String?              @map("summary_task_id") @db.Uuid
+  /// none | pending | ready | failed | timeout
+  summaryStatus  String               @default("none") @map("summary_status")
+  status         BriefingReportStatus @default(SUMMARIZING)
+  /// Deliver at the latest at this time even when the AI summary is not ready.
+  deliverAfter   DateTime?            @map("deliver_after") @db.Timestamptz(3)
+  deliveredAt    DateTime?            @map("delivered_at") @db.Timestamptz(3)
+  channels       BriefingChannel[]    @default([])
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  deliveries   BriefingDelivery[]
+  actionTokens BriefingActionToken[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, userId, createdAt])
+  @@index([status, deliverAfter])
+  @@index([summaryTaskId])
+  @@map("briefing_reports")
+}
+
+/// What happened on one channel. SENT only when the provider accepted the message.
+model BriefingDelivery {
+  id                String                 @id @default(uuid(7)) @db.Uuid
+  organizationId    String                 @map("organization_id") @db.Uuid
+  companyId         String                 @map("company_id") @db.Uuid
+  reportId          String                 @map("report_id") @db.Uuid
+  channel           BriefingChannel
+  status            BriefingDeliveryStatus
+  provider          String?
+  providerMessageId String?                @map("provider_message_id")
+  error             String?
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  report  BriefingReport @relation(fields: [reportId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([reportId])
+  @@index([organizationId, companyId, createdAt])
+  @@map("briefing_deliveries")
+}
+
+/// Single-use, expiring decision token for one approval, bound to the report's recipient. Only its SHA-256 is
+/// stored; `ref` is the number used in WhatsApp replies ("approve 3").
+model BriefingActionToken {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  reportId       String    @map("report_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  approvalId     String    @map("approval_id") @db.Uuid
+  ref            Int
+  tokenHash      String    @unique @map("token_hash")
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt         DateTime? @map("used_at") @db.Timestamptz(3)
+  /// link | whatsapp | app
+  usedVia        String?   @map("used_via")
+  decision       String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  report  BriefingReport @relation(fields: [reportId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([reportId, ref])
+  @@index([companyId, userId, expiresAt])
+  @@index([approvalId])
+  @@map("briefing_action_tokens")
+}
+
+/// Inbound WhatsApp replies (deduplicated by provider message id). The body is not stored, only the parsed command.
+model BriefingInboundMessage {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  companyId         String   @map("company_id") @db.Uuid
+  provider          String
+  providerMessageId String   @map("provider_message_id")
+  userId            String?  @map("user_id") @db.Uuid
+  command           String?
+  result            String
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([provider, providerMessageId])
+  @@index([organizationId, companyId, createdAt])
+  @@map("briefing_inbound_messages")
+}

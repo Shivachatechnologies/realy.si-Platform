@@ -1,19 +1,20 @@
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
+import { BillingOverview, type InvoiceWire } from "@/components/billing/billing-overview";
+import type { OverviewWire } from "@/components/billing/upgrade-prompt";
+import { entitlementOverview } from "@/server/modules/entitlements/offers";
 import { Notice } from "@/components/ui/notice";
 import { BillingPanel } from "@/components/settings/billing";
 import { getLocale, getT } from "@/i18n/server";
-import { formatMoney } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
 import { orgChain } from "@/server/modules/rbac/scope";
-import { getActiveSubscription } from "@/server/modules/billing/service";
-import { billingConfigured } from "@/server/modules/billing/stripe-billing";
-import { formatDate } from "@/i18n/format";
-import { Badge } from "@/components/ui/badge";
+import { billingConfigured, listInvoices } from "@/server/modules/billing/stripe-billing";
 import { requireOrgContext } from "@/server/workspace";
 import { getOrgLimits, limitUsage } from "@/server/modules/enterprise/policy";
 import { formatNumber } from "@/i18n/format";
 import Link from "next/link";
+
+const toWire = <T,>(v: unknown): T => JSON.parse(JSON.stringify(v, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
 
 export default async function BillingSettingsPage() {
   const locale = await getLocale();
@@ -22,7 +23,7 @@ export default async function BillingSettingsPage() {
   const chain = orgChain(org.id);
   if (!(await can(viewer.ctx, "billing.read", chain))) return <Notice tone="warning">{t("errors.forbidden")}</Notice>;
 
-  const [profile, countries, plans, canManage, subscription] = await Promise.all([
+  const [profile, countries, plans, canManage] = await Promise.all([
     db().billingProfile.findUnique({ where: { organizationId: org.id } }),
     db().country.findMany({
       where: { status: "ACTIVE", billingEnabled: true },
@@ -35,7 +36,6 @@ export default async function BillingSettingsPage() {
       select: { key: true, name: true },
     }),
     can(viewer.ctx, "billing.manage", chain),
-    getActiveSubscription(viewer.ctx, org.id),
   ]);
   const [limits, members, companyCount, apiKeys] = await Promise.all([
     getOrgLimits(org.id),
@@ -49,46 +49,19 @@ export default async function BillingSettingsPage() {
     { k: "apiKeys", used: apiKeys, limit: limits.maxApiKeys },
     { k: "aiAgents", used: null, limit: limits.plan.agentsMax },
   ];
-  const item = subscription?.items[0];
+  const [overview, invoiceList] = await Promise.all([
+    entitlementOverview(viewer.ctx, org.id),
+    listInvoices(viewer.ctx, org.id).catch(() => ({ configured: false as const, invoices: [] })),
+  ]);
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader title={t("settings.billing.current")} />
-        <CardBody>
-          {subscription && item ? (
-            <div className="grid gap-1">
-              <p className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{subscription.plan.name}</span>
-                <Badge tone={subscription.status === "ACTIVE" || subscription.status === "TRIALING" ? "success" : "warning"}>
-                  {t(`settings.billing.statuses.${subscription.status}`)}
-                </Badge>
-                <span className="text-muted-foreground">
-                  {t("settings.billing.lockedPrice", {
-                    version: item.priceVersion.version,
-                    amount: formatMoney(
-                      {
-                        amountMinor: item.unitAmountMinor,
-                        currency: item.currency,
-                      },
-                      locale,
-                    ),
-                  })}
-                </span>
-              </p>
-              {subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd ? (
-                <p className="text-xs text-muted-foreground">
-                  {t("settings.billing.cancelsAt", {
-                    date: formatDate(subscription.currentPeriodEnd, locale, viewer.user.timezone),
-                  })}
-                </p>
-              ) : null}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">{t("settings.billing.noSubscription")}</p>
-          )}
-        </CardBody>
-      </Card>
+      <BillingOverview
+        initial={toWire<OverviewWire>(overview)}
+        invoices={toWire<InvoiceWire[]>(invoiceList.invoices)}
+        invoicesConfigured={invoiceList.configured}
+        timeZone={viewer.user.timezone}
+      />
       <Card>
         <CardHeader
           title={t("enterprise.limits.planLimits")}

@@ -7,6 +7,7 @@ import { conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
+import { assertFeature } from "@/server/modules/entitlements/service";
 import { actorId, authorize, blank, CHANNELS, day, enumParam, isUuid, money, PAGE_SIZE, pageParam, param, requireOwned, toDay, toMinor, uuid } from "./common";
 
 export const CAMPAIGN_STATUSES = ["DRAFT", "PLANNED", "ACTIVE", "PAUSED", "COMPLETED"] as const;
@@ -135,6 +136,7 @@ function checkDates(start: Date | null | undefined, end: Date | null | undefined
 export async function createCampaign(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createCampaignInput>) {
   const input = createCampaignInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "marketing.manage");
+  await assertFeature(ctx, organizationId, "feature.ai_campaigns");
   const finalCode = await uniqueCode(companyId, input.code, input.name);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);

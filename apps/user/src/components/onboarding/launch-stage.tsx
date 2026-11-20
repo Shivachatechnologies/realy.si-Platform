@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
@@ -24,6 +25,8 @@ interface Props {
   firstWeek: FirstWeekTask[] | null;
   canRun: boolean;
   universe: UniverseSource | null;
+  /** The run's Founder Kit (every founder deliverable); total 0 = not started yet. */
+  kit?: { href: string; ready: number; total: number } | null;
 }
 
 const TILES = [
@@ -41,7 +44,7 @@ const TILES = [
  * the builder steps that keep working after launch), then a cinematic hand-off into the Command Center. The journey is
  * marked complete server-side first, so it never repeats. Reduced motion navigates without the transition.
  */
-export function LaunchStage({ companyName, records, employees, later, base, firstWeek, canRun, universe }: Props) {
+export function LaunchStage({ companyName, records, employees, later, base, firstWeek, canRun, universe, kit }: Props) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const reduced = useReducedMotion();
@@ -101,6 +104,21 @@ export function LaunchStage({ companyName, records, employees, later, base, firs
         </div>
         {items.length ? <MaterializeScene items={items} center={companyName} ariaLabel={t("onboarding.journey.launch.sceneLabel")} /> : <AiCore className="mx-auto size-40" />}
       </section>
+
+      {kit ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-accent/30 p-4 sm:p-5" aria-labelledby="kit-title">
+          <div className="grid gap-0.5">
+            <h2 id="kit-title" className="font-display text-lg">
+              {t("builder.kit.cardTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{kit.total ? t("builder.kit.readyCount", { ready: kit.ready, total: kit.total }) : t("builder.kit.cardDescription")}</p>
+          </div>
+          <Link href={kit.href} className="press inline-flex h-10 items-center gap-2 rounded-lg bg-brand-gradient px-4 text-sm font-medium text-primary-foreground shadow-glow hover:brightness-110">
+            {kit.total ? t("builder.kit.open") : t("builder.kit.start")}
+            <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />
+          </Link>
+        </section>
+      ) : null}
 
       {firstWeek ? <FirstWeek base={base} tasks={firstWeek} employees={employees} canRun={canRun} /> : null}
 

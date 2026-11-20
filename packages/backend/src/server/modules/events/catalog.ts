@@ -47,6 +47,16 @@ export const DOMAIN_EVENTS = [
   "integration.synced",
   "agent.task.completed",
   "agent.task.failed",
+  // Launch modules (voice, autonomy, marketing engine, CRM prospecting/outreach, live chat, briefings).
+  "voice.call_placed",
+  "voice.call_completed",
+  "autonomy.action_auto_approved",
+  "autonomy.demoted",
+  "marketing.run_completed",
+  "crm.prospect_found",
+  "crm.outreach_sent",
+  "livechat.lead_captured",
+  "briefing.delivered",
 ] as const;
 export type DomainEventType = (typeof DOMAIN_EVENTS)[number];
 const scalar = z.union([z.string(), z.number(), z.boolean(), z.null()]);

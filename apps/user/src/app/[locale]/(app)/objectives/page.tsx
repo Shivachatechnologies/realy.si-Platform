@@ -140,7 +140,9 @@ export default async function ObjectivesPage({ searchParams }: { searchParams: P
             <CardHeader
               title={
                 <span className="flex flex-wrap items-center gap-2">
-                  {o.title}
+                  <Link href={`/${locale}/objectives/${o.id}`} className="hover:underline">
+                    {o.title}
+                  </Link>
                   {!canManage ? <Badge>{t(`objectives.status.${o.status}`)}</Badge> : null}
                   {o.goal ? <Badge tone="accent">{o.goal.title}</Badge> : null}
                   {o.department ? <Badge>{o.department.name}</Badge> : null}

@@ -8,6 +8,8 @@ import { emailConfigured } from "@/server/modules/email/service";
 import { actorId, authorize, isUuid, normalizeEmail, requireOwned, uuid } from "./common";
 import { segmentRecipients, suppressedEmails } from "./segments";
 import { sendMarketingEmail } from "./mailer";
+import { assertFeature, checkLimit, recordUsage } from "@/server/modules/entitlements/service";
+import { upsertRecommendation } from "./recommendations";
 
 export const SEQUENCE_TRIGGERS = ["manual", "form.submitted", "lead.created"] as const;
 export const ENROLLMENT_STATUSES = ["ACTIVE", "COMPLETED", "STOPPED", "UNSUBSCRIBED"] as const;
@@ -72,6 +74,7 @@ export async function getSequence(ctx: RequestContext, organizationId: string, c
 
 export async function createSequence(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof sequenceInput>) {
   const input = sequenceInput.parse(raw);
+  await assertFeature(ctx, organizationId, "feature.email_automation");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const s = await tx.marketingSequence.create({
@@ -206,6 +209,7 @@ export async function enrollTargets(tx: Tx, seq: { id: string; organizationId: s
 
 export async function enroll(ctx: RequestContext, organizationId: string, companyId: string, sequenceId: string, raw: z.input<typeof enrollInput>) {
   const input = enrollInput.parse(raw);
+  await assertFeature(ctx, organizationId, "feature.email_automation");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const seq = await loadSequence(tx, organizationId, companyId, sequenceId);
@@ -248,6 +252,8 @@ export async function processDueEnrollments(limit = 100): Promise<number> {
     include: { sequence: { include: { steps: { orderBy: { position: "asc" } }, company: { select: { name: true, defaultLocale: true } } } } },
   });
   let sent = 0;
+  // Plan email sends per organization for this batch (background: skip, never throw).
+  const room = new Map<string, number>();
   for (const e of due) {
     const steps = e.sequence.steps;
     const step = steps[e.nextStep];
@@ -261,11 +267,29 @@ export async function processDueEnrollments(limit = 100): Promise<number> {
       await db().marketingSequenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE" }, data: { status: "UNSUBSCRIBED", nextRunAt: null } });
       continue;
     }
+    if (!room.has(e.organizationId)) {
+      const c = await checkLimit(e.organizationId, "email.sends.month", 1);
+      room.set(e.organizationId, !c.allowed ? 0 : c.limit === null ? Number.POSITIVE_INFINITY : Math.max(0, c.limit - c.used));
+    }
+    if ((room.get(e.organizationId) ?? 0) <= 0) {
+      // Leave the enrollment due: it continues when the allowance resets or the plan is upgraded.
+      await upsertRecommendation(e.organizationId, e.companyId, {
+        dedupeKey: `plan:email.sends:${new Date().toISOString().slice(0, 10)}`,
+        title: "Email sequences paused: plan limit reached for email sends",
+        priority: "high",
+        href: "/settings/billing",
+      }).catch(() => false);
+      continue;
+    }
+    room.set(e.organizationId, room.get(e.organizationId)! - 1);
     const status = await sendMarketingEmail(
       { organizationId: e.organizationId, companyId: e.companyId, companyName: e.sequence.company.name, locale: e.sequence.company.defaultLocale, subject: step.subject, body: step.body, enrollmentId: e.id, stepId: step.id, userId: e.sequence.createdById },
       { email: e.email, firstName: e.firstName, contactId: e.contactId },
     );
-    if (status === "SENT") sent++;
+    if (status === "SENT") {
+      sent++;
+      await recordUsage(e.organizationId, "email.sends", 1, { companyId: e.companyId, idempotencyKey: `${e.id}:${step.id}` });
+    }
     if (status === "NOT_CONFIGURED") break; // provider went away: leave the rest waiting
     const following = steps[e.nextStep + 1];
     await db().marketingSequenceEnrollment.updateMany({

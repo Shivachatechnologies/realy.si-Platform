@@ -5,6 +5,7 @@ import { captureException } from "@/server/core/telemetry";
 import { closestLocale } from "@/i18n/config";
 import { createTranslator, type Messages } from "@/i18n/translate";
 import { companyEmailProvider, emailProvider } from "./provider";
+import { publishedEmail } from "@/server/modules/cms/email-templates";
 import enUS from "@/i18n/messages/en-US.json";
 import hiIN from "@/i18n/messages/hi-IN.json";
 import arAE from "@/i18n/messages/ar-AE.json";
@@ -55,7 +56,8 @@ export async function sendEmail(args: {
   let error: string | null = null;
   if (configured) {
     try {
-      const rendered = renderEmail(args.template, args.locale, args.vars, args.link);
+      // A template published in Admin → Content → Email templates wins over the built-in catalog text.
+      const rendered = (await publishedEmail(args.template, args.locale, { ...args.vars, link: args.link })) ?? renderEmail(args.template, args.locale, args.vars, args.link);
       const r = await configured.provider.send({ ...rendered, to: args.to, from: configured.from });
       status = "SENT";
       messageId = r.messageId;

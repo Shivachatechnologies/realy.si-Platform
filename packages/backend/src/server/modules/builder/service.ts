@@ -11,7 +11,9 @@ import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { briefSchema, parseBrief, RUN_MODES, type RunMode } from "./brief";
 import { advanceRun, initialSteps, installPart } from "./engine";
+import { startKit } from "./kit";
 import type { configurationSchema, structureSchema } from "./steps";
+import { assertFeature } from "@/server/modules/entitlements/service";
 
 /**
  * AI Company Builder: runs (one active per company), their decisions and the onboarding entry point that creates a
@@ -32,6 +34,8 @@ export const createRunInput = z.object({
   journey: z.boolean().default(false),
   /** Keep the run as a draft (documents are uploaded first, then it is started). */
   hold: z.boolean().default(false),
+  /** Also generate the Founder Kit (builder/kit.ts) for this run. */
+  kit: z.boolean().default(false),
 });
 
 function checkBrief(mode: RunMode, brief: z.output<typeof briefSchema>) {
@@ -49,6 +53,7 @@ async function runIn(tx: Tx | Db, organizationId: string, companyId: string, run
 export async function createRun(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createRunInput>) {
   const input = createRunInput.parse(raw);
   checkBrief(input.mode, input.brief);
+  if (input.kit) await assertFeature(ctx, organizationId, "feature.company_builder_advanced");
   const run = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "companies.manage", tx);
     const active = await tx.builderRun.findFirst({ where: { organizationId, companyId, status: { in: [...ACTIVE] } }, select: { id: true } });
@@ -72,6 +77,7 @@ export async function createRun(ctx: RequestContext, organizationId: string, com
     return r;
   });
   if (run.status === "RUNNING") await advanceRun(run.id, { inline: true });
+  if (input.kit) await startKit(ctx, organizationId, companyId, run.id);
   return { id: run.id, status: run.status, companyId };
 }
 
@@ -149,6 +155,16 @@ async function renameCompany(tx: Tx, ctx: RequestContext, organizationId: string
   if (taken) throw conflict("Another company in this organization already uses this name", { reason: "builder_name_taken" });
   await tx.company.update({ where: { id: companyId }, data: { name, slug } });
   await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "company.renamed", resourceType: "company", resourceId: companyId, oldValue: { name: company.name }, newValue: { name }, reason: "AI Company Builder name decision" });
+}
+
+/** Founder Kit "use this name": rename the company and remember the choice on the run's brief. */
+export async function chooseCompanyName(ctx: RequestContext, organizationId: string, companyId: string, runId: string, name: string) {
+  await transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "companies.manage", tx);
+    const run = await runIn(tx, organizationId, companyId, runId);
+    await renameCompany(tx, ctx, organizationId, companyId, name);
+    await tx.builderRun.update({ where: { id: runId }, data: { brief: { ...parseBrief(run.brief), name } as Prisma.InputJsonValue } });
+  });
 }
 
 const keep = <T extends { name: string }>(items: T[] | undefined, exclude: Set<string>) => (items ?? []).filter((i) => !exclude.has(i.name));
@@ -288,6 +304,7 @@ export const onboardInput = z.object({
   company: createCompanyInput.omit({ name: true }).extend({ name: z.string().trim().max(120).optional() }),
   journey: z.boolean().default(false),
   hold: z.boolean().default(false),
+  kit: z.boolean().default(false),
 });
 
 /** A unique working name when the founder has not chosen one (the builder's name decision renames it). */
@@ -304,6 +321,7 @@ async function workingName(organizationId: string, idea: string) {
 export async function onboardBusiness(ctx: RequestContext, organizationId: string, raw: z.input<typeof onboardInput>) {
   const input = onboardInput.parse(raw);
   checkBrief(input.mode, input.brief);
+  if (input.kit) await assertFeature(ctx, organizationId, "feature.company_builder_advanced");
   const name = input.company.name || input.brief.name || (await workingName(organizationId, input.brief.idea || input.brief.offering || ""));
   const company = await createCompany(ctx, organizationId, {
     ...input.company,
@@ -313,7 +331,7 @@ export async function onboardBusiness(ctx: RequestContext, organizationId: strin
     targetMarketCodes: input.company.targetMarketCodes?.length ? input.company.targetMarketCodes : input.brief.targetMarketCodes,
   });
   const brief = { ...input.brief, name: input.company.name || input.brief.name };
-  const run = await createRun(ctx, organizationId, company.id, { mode: input.mode, brief, journey: input.journey, hold: input.hold });
+  const run = await createRun(ctx, organizationId, company.id, { mode: input.mode, brief, journey: input.journey, hold: input.hold, kit: input.kit });
   // The journey resumes at Intelligence from now on (server-side, so a reload or another device lands there).
   if (input.journey && ctx.actor.type === "USER" && ctx.actor.id) {
     const data = { runId: run.id, journeyStage: "intelligence" };

@@ -4,6 +4,7 @@ import { runDueRecurringExpenses } from "./transactions";
 import { notifyOverdueBills } from "./payables";
 import { runBudgetAlerts } from "./budgets";
 import { runCashAlerts } from "./alerts";
+import { runMonthlyFinanceMemos } from "./manager";
 
 const HOUR = 60 * 60_000;
 
@@ -16,6 +17,8 @@ export const FINANCE_JOBS: ModuleJobs = {
     { name: "finance.overdue_bills", everyMs: HOUR, run: () => notifyOverdueBills() },
     { name: "finance.budget_alerts", everyMs: HOUR, run: () => runBudgetAlerts() },
     { name: "finance.cash_alerts", everyMs: 6 * HOUR, run: () => runCashAlerts() },
+    // The hired AI CFO writes the monthly finance memo in the first days of the month (once per month per company).
+    { name: "finance.monthly_memo", everyMs: 6 * HOUR, run: () => runMonthlyFinanceMemos() },
   ],
   onEvent: [],
 };

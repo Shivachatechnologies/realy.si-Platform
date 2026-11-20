@@ -421,8 +421,11 @@ export function authHeaders(provider: string, token: string, config: Record<stri
     case "gemini":
       return { "x-goog-api-key": token };
     case "exa":
+    case "apollo":
+    case "pdl":
       return { "x-api-key": token };
     case "serpapi":
+    case "hunter":
     case "s3":
       return {};
     case "runway":
@@ -576,6 +579,24 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const u = await getJson(`https://serpapi.com/account.json?${new URLSearchParams({ api_key: token })}`, {});
       return { account: str(u.account_email) ?? "SerpApi", extra: { plan: str(u.plan_name), searchesLeft: typeof u.total_searches_left === "number" ? u.total_searches_left : null } };
     }
+    case "apollo": {
+      // auth/health is free and says whether the key is valid.
+      const u = await getJson("https://api.apollo.io/v1/auth/health", authHeaders(provider, token, config));
+      if (u.is_logged_in === false) throw new ProviderError("Apollo did not accept this API key", 401);
+      return { account: "Apollo.io" };
+    }
+    case "hunter": {
+      // /account does not use search or verification credits.
+      const u = await getJson(`https://api.hunter.io/v2/account?${new URLSearchParams({ api_key: token })}`, {});
+      const d = (u.data ?? {}) as Record<string, unknown>;
+      const req = (d.requests ?? {}) as Record<string, { used?: number; available?: number } | undefined>;
+      return { account: str(d.email) ?? "Hunter.io", extra: { plan: str(d.plan_name), searchesLeft: typeof req.searches?.available === "number" && typeof req.searches?.used === "number" ? req.searches.available - req.searches.used : null } };
+    }
+    case "pdl": {
+      // Autocomplete does not use person or company credits.
+      await getJson(`https://api.peopledatalabs.com/v5/autocomplete?${new URLSearchParams({ field: "title", text: "founder", size: "1" })}`, authHeaders(provider, token, config));
+      return { account: "People Data Labs" };
+    }
     case "stability": {
       const u = await getJson("https://api.stability.ai/v1/user/account", bearer);
       return { account: str(u.email) ?? str(u.id) ?? "Stability AI" };
@@ -683,6 +704,9 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       if (str(u.status) && u.status !== "active") throw new ProviderError(`Twilio account is ${String(u.status)}`, 403);
       return { account: str(u.friendly_name) ?? sid };
     }
+    case "vapi":
+    case "retell":
+      return (await import("@/server/modules/voice/providers")).testVoiceConnection(provider, token);
     case "razorpay": {
       await getJson("https://api.razorpay.com/v1/payments?count=1", authHeaders(provider, token, config));
       const keyId = str(config.keyId) ?? "";

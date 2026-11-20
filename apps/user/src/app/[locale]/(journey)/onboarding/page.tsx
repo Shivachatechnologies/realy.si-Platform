@@ -257,6 +257,8 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const approved = view.blueprint.approved;
   const canRun = !!chain && (await can(viewer.ctx, "agents.run", chain));
   const working = view.run.status === "RUNNING" || !!view.firstWeek?.some((x) => x.status === "QUEUED" || x.status === "RUNNING");
+  const kitRows = await db().builderKitItem.groupBy({ by: ["status"], where: { runId: run!.id, organizationId: org!.id }, _count: { _all: true } });
+  const kitTotal = kitRows.reduce((a, k) => a + k._count._all, 0);
   return frame(
     <>
       <LiveRefresh base={base} active={working} />
@@ -264,6 +266,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         base={base}
         firstWeek={view.firstWeek}
         canRun={canRun}
+        kit={{ href: `/${locale}/builder/${run!.id}/kit`, ready: kitRows.find((k) => k.status === "READY")?._count._all ?? 0, total: kitTotal }}
         universe={{ companyName: view.run.companyName, departments: approved?.departments ?? [], products: approved?.products ?? [], goals: approved?.goals ?? [], employees: view.employees.map((e) => ({ id: e.id, name: e.name, department: e.department })) }}
         companyName={view.run.companyName}
         records={view.records}

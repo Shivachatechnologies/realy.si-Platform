@@ -52,6 +52,38 @@ export interface PaymentGateway {
   listUnendedSubscriptions(customerId: string): Promise<string[]>;
   createPortalSession(args: { customerId: string; returnUrl: string; locale: string }): Promise<{ url: string }>;
   retrieveSubscription(id: string): Promise<GatewaySubscription>;
+  // Optional (entitlements: plan changes, cancellation, invoices, add-on packs). A gateway without them reports
+  // the action as not configured; nothing is ever simulated.
+  /** Switch the subscription's single item to another price (prorated). */
+  updateSubscriptionPrice?(args: { subscriptionId: string; itemId: string; priceId: string }, idempotencyKey: string): Promise<void>;
+  setCancelAtPeriodEnd?(subscriptionId: string, cancel: boolean): Promise<void>;
+  listInvoices?(customerId: string, limit: number): Promise<GatewayInvoice[]>;
+  /** One-time payment checkout with an inline price (add-on packs). */
+  createPaymentCheckoutSession?(args: {
+    customerId: string;
+    name: string;
+    unitAmountMinor: bigint;
+    currency: string;
+    quantity: number;
+    metadata: Record<string, string>;
+    successUrl: string;
+    cancelUrl: string;
+    automaticTax: boolean;
+    locale: string;
+    expiresAt: Date;
+  }, idempotencyKey: string): Promise<{ id: string; url: string }>;
+}
+
+export interface GatewayInvoice {
+  id: string;
+  number: string | null;
+  status: string | null;
+  amountDueMinor: bigint;
+  amountPaidMinor: bigint;
+  currency: string;
+  created: number;
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
 }
 
 export interface BillingConfig {
@@ -197,6 +229,44 @@ export function stripeGateway(stripe: Stripe): PaymentGateway {
     },
     async retrieveSubscription(id) {
       return toGatewaySubscription(await stripe.subscriptions.retrieve(id));
+    },
+    async updateSubscriptionPrice(a, idempotencyKey) {
+      await stripe.subscriptions.update(a.subscriptionId, { items: [{ id: a.itemId, price: a.priceId }], proration_behavior: "create_prorations" }, { idempotencyKey });
+    },
+    async setCancelAtPeriodEnd(subscriptionId, cancel) {
+      await stripe.subscriptions.update(subscriptionId, { cancel_at_period_end: cancel });
+    },
+    async listInvoices(customerId, limit) {
+      const res = await stripe.invoices.list({ customer: customerId, limit });
+      return res.data.map((i) => ({
+        id: i.id ?? "",
+        number: i.number ?? null,
+        status: i.status ?? null,
+        amountDueMinor: BigInt(i.amount_due ?? 0),
+        amountPaidMinor: BigInt(i.amount_paid ?? 0),
+        currency: (i.currency ?? "usd").toUpperCase(),
+        created: i.created,
+        hostedInvoiceUrl: i.hosted_invoice_url ?? null,
+        invoicePdf: i.invoice_pdf ?? null,
+      }));
+    },
+    async createPaymentCheckoutSession(a, idempotencyKey) {
+      const s = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer: a.customerId,
+        client_reference_id: a.metadata.organizationId,
+        line_items: [{ quantity: a.quantity, price_data: { currency: a.currency.toLowerCase(), unit_amount: Number(a.unitAmountMinor), product_data: { name: a.name } } }],
+        metadata: a.metadata,
+        payment_intent_data: { metadata: a.metadata },
+        success_url: a.successUrl,
+        cancel_url: a.cancelUrl,
+        automatic_tax: { enabled: a.automaticTax },
+        customer_update: a.automaticTax ? { address: "auto", name: "auto" } : undefined,
+        locale: stripeLocale(a.locale),
+        expires_at: Math.floor(a.expiresAt.getTime() / 1000),
+      }, { idempotencyKey });
+      if (!s.url) throw new Error("Stripe did not return a checkout URL");
+      return { id: s.id, url: s.url };
     },
   };
 }

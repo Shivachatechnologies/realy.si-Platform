@@ -14,6 +14,8 @@ import { companyEmailProvider } from "@/server/modules/email/provider";
 export interface RevenueChannels {
   research: string[];
   aiText: string[];
+  /** Contact-data providers (prospecting: decision makers, verified emails). */
+  contacts: string[];
   mailbox: { id: string; provider: "gmail" | "outlook"; address: string } | null;
   sendgrid: boolean;
   calendar: "google_calendar" | "outlook_calendar" | null;
@@ -21,7 +23,7 @@ export interface RevenueChannels {
 
 export async function revenueChannels(organizationId: string, companyId: string): Promise<RevenueChannels> {
   const rows = await db().integrationConnection.findMany({
-    where: { organizationId, companyId, provider: { in: ["tavily", "exa", "serpapi", "openai", "gemini"] }, status: { not: "DISCONNECTED" }, credentialsEnc: { not: null } },
+    where: { organizationId, companyId, provider: { in: ["tavily", "exa", "serpapi", "openai", "gemini", "apollo", "hunter", "pdl"] }, status: { not: "DISCONNECTED" }, credentialsEnc: { not: null } },
     select: { provider: true },
   });
   const have = new Set(rows.map((r) => r.provider));
@@ -29,6 +31,7 @@ export async function revenueChannels(organizationId: string, companyId: string)
   return {
     research: ["tavily", "exa", "serpapi"].filter((p) => have.has(p)),
     aiText: ["openai", "gemini"].filter((p) => have.has(p)),
+    contacts: ["apollo", "hunter", "pdl"].filter((p) => have.has(p)),
     mailbox: mailbox ? { id: mailbox.id, provider: mailbox.provider, address: mailbox.address } : null,
     sendgrid: sendgrid?.scope === "company",
     calendar,

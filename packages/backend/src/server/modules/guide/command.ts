@@ -12,7 +12,7 @@ import { DEFAULT_LOCALE, isAppLocale, LOCALES, type AppLocale } from "@/i18n/con
 import { isUuid, resolveGuidePage, stripLocale } from "./pages";
 import { countMetrics, onboardingState } from "./state";
 import { recommend, REC_METRICS } from "./recommendations";
-import { advanceRun, cancelRun, deriveStages, STAGES, startRun, type Understanding } from "./command-run";
+import { advanceRun, cancelRun, deriveStages, MAX_STEP_ATTEMPTS, retryStep, STAGES, startRun, type Understanding } from "./command-run";
 
 
 /**
@@ -85,6 +85,10 @@ export const commandInput = z.object({
   locale: z.string().max(10).optional(),
   /** Browser path the command was given from (page context), when sent from the guide panel. */
   path: z.string().max(400).optional(),
+  /** "ceo": the AI CEO takes the command and decides who does what (Ask the CEO). */
+  mode: z.enum(["auto", "ceo"]).optional(),
+  /** The run whose recommended next action this command carries out. */
+  parentRunId: z.string().uuid().optional(),
 });
 
 /**
@@ -104,7 +108,8 @@ export async function runCommand(ctx: RequestContext, organizationId: string, co
     : null;
   if (input.sessionId && !existing) throw notFound("Command session");
 
-  const team = routeCommand(input.text);
+  const parent = input.parentRunId ? await db().commandRun.findFirst({ where: { ...scope, id: input.parentRunId }, select: { id: true } }) : null;
+  const team = input.mode === "ceo" && profileByKey(FALLBACK.profile) ? [{ key: FALLBACK.key, profile: FALLBACK.profile, score: 0 }] : routeCommand(input.text);
   const counts = await countMetrics(ctx, scope, chain, REC_METRICS);
   const facts = Object.fromEntries(Object.entries(counts).filter((e): e is [string, number] => typeof e[1] === "number"));
   const page = input.path ? resolveGuidePage(stripLocale(input.path, LOCALES)).path || "/" : null;
@@ -124,7 +129,7 @@ export async function runCommand(ctx: RequestContext, organizationId: string, co
     });
     return { session: s, message: m };
   });
-  await startRun(ctx, scope, { sessionId: session.id, messageId: message.id, userId: uid, text: input.text, locale, intents: team, facts, page });
+  await startRun(ctx, scope, { sessionId: session.id, messageId: message.id, userId: uid, text: input.text, locale, intents: team, facts, page, parentRunId: parent?.id ?? null });
   return getCommandSession(ctx, organizationId, companyId, session.id);
 }
 
@@ -224,6 +229,8 @@ export async function getCommandSession(ctx: RequestContext, organizationId: str
         status: st.status as string,
         errorReason: st.errorReason,
         delegatedAt: st.delegatedAt,
+        attempts: st.attempts,
+        canRetry: st.attempts < MAX_STEP_ATTEMPTS && (st.status === "BLOCKED" || (st.status === "DELEGATED" && (task?.status === "FAILED" || task?.status === "CANCELLED"))) && r.status !== "CANCELLED",
         task: task ? view(task) : null,
         children: task ? childrenOf(task.id) : [],
       };
@@ -235,9 +242,13 @@ export async function getCommandSession(ctx: RequestContext, organizationId: str
       text: r.text,
       status: r.status as string,
       nextAction: r.nextAction,
+      origin: r.origin as string,
+      documentId: r.documentId,
+      documentError: r.documentError,
+      parentRunId: r.parentRunId,
       createdAt: r.createdAt,
       completedAt: r.completedAt,
-      understanding: { intents: u.intents ?? [], research: !!u.research, facts: u.facts ?? {}, sources: u.sources ?? [], page: u.page ?? null },
+      understanding: { intents: u.intents ?? [], research: !!u.research, facts: u.facts ?? {}, sources: u.sources ?? [], page: u.page ?? null, brief: u.brief ?? null },
       stages: deriveStages(r, steps.map((st) => ({ kind: st.kind, status: st.status, task: st.task ? { status: st.task.status, approvals: st.task.approvals, children: st.children } : null }))),
       steps,
     };
@@ -276,6 +287,18 @@ export async function cancelCommandRun(ctx: RequestContext, organizationId: stri
   const run = await db().commandRun.findFirst({ where: { organizationId, companyId, id: runId, sessionId, userId: uid }, select: { id: true } });
   if (!run) throw notFound("Command run");
   await cancelRun(ctx, { organizationId, companyId }, uid, run.id);
+  return getCommandSession(ctx, organizationId, companyId, sessionId);
+}
+
+/** Retry a failed or blocked step of one of the viewer's command runs. */
+export async function retryCommandStep(ctx: RequestContext, organizationId: string, companyId: string, sessionId: string, runId: string, stepId: string) {
+  const chain = await authorize(ctx, organizationId, companyId);
+  await requirePermission(ctx, "agents.run", chain);
+  const uid = userId(ctx);
+  if (!isUuid(sessionId) || !isUuid(runId) || !isUuid(stepId)) throw notFound("Command run");
+  const run = await db().commandRun.findFirst({ where: { organizationId, companyId, id: runId, sessionId, userId: uid }, select: { id: true } });
+  if (!run) throw notFound("Command run");
+  await retryStep(ctx, { organizationId, companyId }, run.id, stepId);
   return getCommandSession(ctx, organizationId, companyId, sessionId);
 }
 

@@ -295,23 +295,26 @@ model Organization {
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  memberships              Membership[]
-  invitations              Invitation[]
-  companies                Company[]
-  workspaces               Workspace[]
-  projects                 Project[]
-  serviceAccounts          ServiceAccount[]
-  apiKeys                  ApiKey[]
-  customRoles              Role[]
-  billingProfile           BillingProfile?
-  subscriptions            Subscription[]
-  checkoutSessions         CheckoutSession[]
-  enterpriseOrgSettings    EnterpriseOrgSettings?
-  enterpriseBranding       EnterpriseBranding?
-  enterpriseSsoConnections EnterpriseSsoConnection[]
-  enterpriseSsoDomains     EnterpriseSsoDomain[]
-  enterpriseApiKeyMetas    EnterpriseApiKeyMeta[]
-  marketplacePublisher     MarketplacePublisher?
+  memberships               Membership[]
+  invitations               Invitation[]
+  companies                 Company[]
+  workspaces                Workspace[]
+  projects                  Project[]
+  serviceAccounts           ServiceAccount[]
+  apiKeys                   ApiKey[]
+  customRoles               Role[]
+  billingProfile            BillingProfile?
+  subscriptions             Subscription[]
+  checkoutSessions          CheckoutSession[]
+  enterpriseOrgSettings     EnterpriseOrgSettings?
+  enterpriseBranding        EnterpriseBranding?
+  enterpriseSsoConnections  EnterpriseSsoConnection[]
+  enterpriseSsoDomains      EnterpriseSsoDomain[]
+  enterpriseApiKeyMetas     EnterpriseApiKeyMeta[]
+  marketplacePublisher      MarketplacePublisher?
+  entitlementOverrides      EntitlementOverride[]
+  entitlementAddonPurchases EntitlementAddonPurchase[]
+  entitlementTrial          EntitlementTrial?
 
   @@map("organizations")
 }
@@ -696,6 +699,30 @@ model Company {
   autonomyPolicies                AutonomyPolicy[]
   autonomousActions               AutonomousAction[]
   autonomyFeedbacks               AutonomyFeedback[]
+  ceoCycles                       CeoCycle[]
+  ceoPriorities                   CeoPriority[]
+  ceoActions                      CeoAction[]
+  ceoDecisions                    CeoDecision[]
+  objectiveExecutions             ObjectiveExecution[]
+  objectiveInitiatives            ObjectiveInitiative[]
+  briefingSubscriptions           BriefingSubscription[]
+  briefingChannelConfigs          BriefingChannelConfig[]
+  briefingReports                 BriefingReport[]
+  briefingDeliveries              BriefingDelivery[]
+  briefingActionTokens            BriefingActionToken[]
+  briefingInboundMessages         BriefingInboundMessage[]
+  voiceSettings                   VoiceSettings[]
+  voiceAgents                     VoiceAgent[]
+  voicePhoneNumbers               VoicePhoneNumber[]
+  voiceCampaigns                  VoiceCampaign[]
+  voiceCalls                      VoiceCall[]
+  voiceDoNotCalls                 VoiceDoNotCall[]
+  crmProspectingAutopilots        CrmProspectingAutopilot[]
+  crmAutopilotCompanies           CrmAutopilotCompany[]
+  crmProspectPersons              CrmProspectPerson[]
+  crmAutopilotRuns                CrmAutopilotRun[]
+  crmSuppressions                 CrmSuppression[]
+  builderKitItems                 BuilderKitItem[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -1066,12 +1093,14 @@ model Objective {
   createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company    Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  goal       CompanyGoal?         @relation(fields: [goalId, companyId], references: [id, companyId], onDelete: NoAction)
-  owner      User?                @relation("ObjectiveOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  department Department?          @relation("ObjectiveDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
-  milestones Milestone[]
-  keyResults ObjectiveKeyResult[]
+  company              Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  goal                 CompanyGoal?          @relation(fields: [goalId, companyId], references: [id, companyId], onDelete: NoAction)
+  owner                User?                 @relation("ObjectiveOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  department           Department?           @relation("ObjectiveDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  milestones           Milestone[]
+  keyResults           ObjectiveKeyResult[]
+  objectiveExecutions  ObjectiveExecution[]
+  objectiveInitiatives ObjectiveInitiative[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])

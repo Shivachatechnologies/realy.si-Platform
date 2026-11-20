@@ -11,6 +11,7 @@ import { getMarketingConnection, isUsable } from "./connections-bridge";
 import { AD_PROVIDERS, createRemoteCampaign, fetchDailyMetrics, listAdAccounts, listRemoteCampaigns, setRemoteStatus, updateRemoteBudget, type AdProvider } from "./providers/ads";
 import { ProviderError } from "./providers/http";
 import { brandContextFor } from "./brand";
+import { assertFeature, assertLimit, recordUsage } from "@/server/modules/entitlements/service";
 
 export { AD_PROVIDERS } from "./providers/ads";
 
@@ -162,6 +163,7 @@ export async function syncAllAdAccounts(): Promise<number> {
 /** Local campaign draft (nothing is sent to the provider). */
 export async function createAdCampaignDraft(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof adCampaignInput>) {
   const input = adCampaignInput.parse(raw);
+  await assertFeature(ctx, organizationId, "feature.ai_campaigns");
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const acc = await tx.marketingAdAccount.findFirst({ where: { id: input.adAccountId, organizationId, companyId, archivedAt: null } });
@@ -214,12 +216,16 @@ export async function launchAdCampaign(ctx: RequestContext, organizationId: stri
   if (c.externalId) throw conflict("Already created at the provider", { reason: "marketing_ads_already_pushed" });
   if (!c.dailyBudgetMinor) throw invalid("Set a daily budget", { reason: "marketing_ads_no_budget" });
   const acc = await checkCaps(c.adAccountId, c.dailyBudgetMinor);
+  // Plan ad-spend cap (minor units of the account currency, counted as cents).
+  const budgetCents = Number(c.dailyBudgetMinor);
+  await assertLimit(ctx, organizationId, "ads.spend.month", budgetCents);
   const conn = await adConn(organizationId, companyId, acc.provider);
   const externalId = await createRemoteCampaign(acc.provider as AdProvider, conn, acc.externalId, { name: c.name, objective: c.objective ?? "", dailyBudgetMinor: c.dailyBudgetMinor, currency: acc.currency });
   await transaction(async (tx) => {
     await tx.marketingAdCampaign.update({ where: { id }, data: { externalId, status: "PAUSED", syncedAt: new Date() } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.ads.campaign_created", resourceType: "marketing_ad_campaign", resourceId: id, newValue: { provider: acc.provider, externalId, dailyBudgetMinor: c.dailyBudgetMinor } });
   });
+  await recordUsage(organizationId, "ads.spend_cents", budgetCents, { companyId, idempotencyKey: id });
   return { externalId, provider: acc.provider };
 }
 
@@ -230,8 +236,12 @@ export async function changeAdBudget(ctx: RequestContext, organizationId: string
   if (!c?.externalId) throw notFound("Ad campaign");
   const minor = toMinor(dailyBudget) ?? 0n;
   const acc = await checkCaps(c.adAccountId, minor);
+  // Plan ad-spend cap: only a raise commits more budget.
+  const raiseCents = Math.max(0, Number(minor - (c.dailyBudgetMinor ?? 0n)));
+  if (raiseCents > 0) await assertLimit(ctx, organizationId, "ads.spend.month", raiseCents);
   const conn = await adConn(organizationId, companyId, acc.provider);
   await updateRemoteBudget(acc.provider as AdProvider, conn, acc.externalId, c.externalId, minor, acc.currency);
+  if (raiseCents > 0) await recordUsage(organizationId, "ads.spend_cents", raiseCents, { companyId });
   await transaction(async (tx) => {
     await tx.marketingAdCampaign.update({ where: { id }, data: { dailyBudgetMinor: minor } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.ads.budget_changed", resourceType: "marketing_ad_campaign", resourceId: id, oldValue: { dailyBudgetMinor: c.dailyBudgetMinor }, newValue: { dailyBudgetMinor: minor } });

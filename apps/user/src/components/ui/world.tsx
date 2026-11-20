@@ -50,6 +50,7 @@ const PATH_WORLD: [string, WorldName][] = [
   ["/marketplace", "marketplace"],
   ["/settings", "settings"],
   ["/company", "command"],
+  ["/briefing", "command"],
 ];
 
 /** World for a path after the locale ("/finance/invoices" → "finance"); the Command Center world otherwise. */

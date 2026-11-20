@@ -1,6 +1,7 @@
 import type { ModuleJobs } from "@/server/core/module-jobs";
 import { db } from "@/server/core/db";
 import { advanceActiveRuns, advanceRun } from "./engine";
+import { advanceActiveKits, advanceKit } from "./kit";
 
 /**
  * Background work of the AI Company Builder (register BUILDER_JOBS in src/worker/modules.ts):
@@ -9,7 +10,11 @@ import { advanceActiveRuns, advanceRun } from "./engine";
  * Idempotent: every transition is a conditional update, so overlapping runs never repeat a step.
  */
 export const BUILDER_JOBS: ModuleJobs = {
-  periodic: [{ name: "builder.advance_runs", everyMs: 30_000, run: advanceActiveRuns }],
+  periodic: [
+    { name: "builder.advance_runs", everyMs: 30_000, run: advanceActiveRuns },
+    // Founder Kit: start deliverables whose inputs are ready, generate the logo, pick up finished tasks.
+    { name: "builder.advance_kits", everyMs: 30_000, run: advanceActiveKits },
+  ],
   onEvent: [
     {
       name: "builder.task_finished",
@@ -18,6 +23,8 @@ export const BUILDER_JOBS: ModuleJobs = {
         if (event.aggregateType !== "agent_task") return;
         const step = await db().builderStep.findFirst({ where: { agentTaskId: event.aggregateId }, select: { runId: true } });
         if (step) await advanceRun(step.runId);
+        const item = await db().builderKitItem.findFirst({ where: { agentTaskId: event.aggregateId }, select: { runId: true } });
+        if (item) await advanceKit(item.runId);
       },
     },
   ],

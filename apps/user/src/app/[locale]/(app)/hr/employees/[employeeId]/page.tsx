@@ -14,6 +14,8 @@ import { formatDate, formatDateTime, formatMoney } from "@/i18n/format";
 import { getLocale, getT } from "@/i18n/server";
 import { isAppError } from "@/server/core/errors";
 import { toMajor } from "@/server/modules/hr/access";
+import { AiPanel } from "@/components/hr/ai-panel";
+import { listSubjectTasks } from "@/server/modules/agents/service";
 import {
   ACCEPTED_DOCUMENT_EXTENSIONS,
   DOCUMENT_CATEGORIES,
@@ -837,6 +839,22 @@ export default async function EmployeePage({ params, searchParams }: { params: P
     );
   }
 
+  // AI HR assistant: onboarding plan (HR managers, onboarding tab) and performance review draft (leads, performance tab).
+  const aiModes = tab === "onboarding" && manage ? (["onboarding_plan"] as const) : tab === "performance" && (manage || isManager) ? (["review_draft"] as const) : [];
+  const aiTasks = aiModes.length && access!.agentsRun ? await listSubjectTasks(viewer.ctx, org.id, company.id, "hr_employee", e.id, 5).catch(() => []) : [];
+  const aiPanel = aiModes.length ? (
+    <AiPanel
+      t={t}
+      locale={locale}
+      tz={tz}
+      title={t("hr.ai.assistantTitle")}
+      description={t(tab === "onboarding" ? "hr.ai.onboardingPlanHint" : "hr.ai.reviewDraftHint")}
+      canRun={access!.agentsRun}
+      actions={aiModes.map((mode) => ({ label: t(mode === "onboarding_plan" ? "hr.ai.onboardingPlan" : "hr.ai.reviewDraft"), endpoint: `${base}/hr/employees/${e.id}/assist`, body: { mode } }))}
+      tasks={aiTasks}
+    />
+  ) : null;
+
   return (
     <HrFrame
       {...frame}
@@ -864,6 +882,7 @@ export default async function EmployeePage({ params, searchParams }: { params: P
         ))}
       </nav>
       {body}
+      {aiPanel}
     </HrFrame>
   );
 }

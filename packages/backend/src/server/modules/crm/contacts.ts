@@ -9,6 +9,7 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { actorId, authorize, blank, cleanTags, clearable, contains, isUuid, optText, pageOf, param, pick, requireOwner, tagsInput, uuid, ZERO_UUID } from "./common";
 import { validateCustomFields } from "./custom-fields";
 import { normalizeEmail, normalizePhone } from "./scoring";
+import { assertLimit } from "@/server/modules/entitlements/service";
 
 export const CONTACT_SORTS = ["name", "created", "updated"] as const;
 
@@ -138,7 +139,9 @@ async function requireAccountId(tx: Tx, organizationId: string, companyId: strin
 }
 
 /** Create a contact inside an existing transaction (lead conversion, CSV import). */
-export async function insertContact(tx: Tx, ctx: RequestContext, organizationId: string, companyId: string, input: z.output<typeof contactInput>, extra: { leadId?: string } = {}) {
+export async function insertContact(tx: Tx, ctx: RequestContext, organizationId: string, companyId: string, input: z.output<typeof contactInput>, extra: { leadId?: string; limitChecked?: boolean } = {}) {
+  // Plan limit (bulk callers such as the CSV import assert once for the whole batch and pass limitChecked).
+  if (!extra.limitChecked) await assertLimit(ctx, organizationId, "crm.contacts.max", 1);
   const c = await tx.contact.create({
     data: {
       organizationId,

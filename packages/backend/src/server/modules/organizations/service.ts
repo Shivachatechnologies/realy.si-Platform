@@ -179,8 +179,9 @@ export async function inviteMember(ctx: RequestContext, organizationId: string, 
     const role = await assertCanInvite(tx, ctx, organizationId, input.roleId, input.scopeType, scopeId);
     const { assertWithinLimit } = await import("@/server/modules/enterprise/policy");
     await assertWithinLimit(organizationId, "members", { client: tx });
-    const { assertPlanSeatsAvailable } = await import("@/server/core/platform-controls");
-    await assertPlanSeatsAvailable(organizationId);
+    // Human seats of the plan (active members + pending invitations), docs/entitlements.md.
+    const { assertLimit } = await import("@/server/modules/entitlements/service");
+    await assertLimit(ctx, organizationId, "seats.max", 1);
     const alreadyMember = await tx.membership.findFirst({ where: { organizationId, user: { email: input.email } } });
     if (alreadyMember) throw conflict("This person is already a member");
     const token = randomToken(32);

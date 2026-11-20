@@ -9,7 +9,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
-import { asConfig, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
+import { asConfig, assertConnectionEntitled, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
 import { logProviderCall, providerFetch } from "./client";
 import { buildAuthorizeUrl, type IntegrationOAuthState } from "./oauth";
 import { validateTargetUrl } from "./webhooks";
@@ -143,6 +143,7 @@ export async function saveApiKeyConnection(ctx: RequestContext, organizationId: 
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
   const info = requireInfo(provider);
   if (info.authType !== "api_key") throw invalid("This integration does not use an API key");
+  await assertConnectionEntitled(ctx, organizationId, companyId, provider);
   const { apiKey, config, secrets } = parseFields(info, apiKeyInput.parse(raw));
   validateUrlFields(provider, config);
   if (provider === "mailchimp") (config as Record<string, string>).authMode = "key";
@@ -189,6 +190,7 @@ export async function startOAuthConnection(ctx: RequestContext, organizationId: 
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
   const info = requireInfo(provider);
   if (info.authType !== "oauth2" && !info.oauthAlternative) throw invalid("This integration does not use OAuth");
+  await assertConnectionEntitled(ctx, organizationId, companyId, provider);
   if (!oauthClient(provider)) throw new AppError("not_configured", "OAuth app not configured", { reason: "integrations_not_configured", envVars: info.envVars });
   return buildAuthorizeUrl(provider, { organizationId, companyId, userId: ctx.actor.id!, locale });
 }

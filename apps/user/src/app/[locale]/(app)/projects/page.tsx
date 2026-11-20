@@ -22,6 +22,12 @@ import { formatDate } from "@/i18n/format";
 import { listPeople } from "@/server/modules/work/shared";
 import { listTemplates, listWorkProjects, parseProjectFilters, PROJECT_STATUSES } from "@/server/modules/work/projects";
 import { workload } from "@/server/modules/work/tasks";
+import { deadlineRisks, workloadBalance } from "@/server/modules/work/delivery";
+import { departmentManager } from "@/server/modules/cockpit/department-manager";
+import { AiManagerStrip } from "@/components/work/ai-manager";
+import { ActionButton } from "@/components/work/actions";
+import { CardBody } from "@/components/ui/card";
+import { AlarmClock, ArrowRightLeft } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.projects.title") };
@@ -45,6 +51,11 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
     projectDelays(viewer.ctx, org.id, company.id, list.data.map((p) => p.id)),
     workloadHeatmap(viewer.ctx, org.id, company.id),
     latestSubjectTask(viewer.ctx, org.id, company.id, "projects_overview", company.id),
+  ]);
+  const [deadline, balance, pm] = await Promise.all([
+    deadlineRisks(viewer.ctx, org.id, company.id),
+    workloadBalance(viewer.ctx, org.id, company.id),
+    departmentManager(company.id, ["ai_project_manager", "delivery_analyst"]),
   ]);
   const apiBase = `/api/v1/organizations/${org.id}/companies/${company.id}`;
   const active = list.data.filter((p) => p.status === "ACTIVE").length;
@@ -214,6 +225,76 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/[locale
           labels={{ prev: t("common.previous"), next: t("common.next"), summary: t("work.pageOf", { page: list.page, pages: Math.max(1, Math.ceil(list.total / list.pageSize)) }) }}
         />
       </Card>
+
+      <section className="grid gap-3" aria-labelledby="delivery-radar">
+        <h2 id="delivery-radar" className="text-base font-semibold tracking-tight">
+          {t("work.radar.title")}
+        </h2>
+        <AiManagerStrip t={t} locale={locale} manager={pm} duty={t("work.radar.duty")} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader icon={<AlarmClock />} title={t("work.radar.risksTitle")} description={t("work.radar.risksHint")} />
+            <CardBody>
+              {deadline.length ? (
+                <ul className="grid gap-2">
+                  {deadline.slice(0, 12).map((r, i) => (
+                    <li key={`${r.projectId}-${r.kind}-${i}`} className="flex flex-wrap items-start gap-2 rounded-md border p-2.5 text-sm">
+                      <Badge tone={r.severity === "high" ? "danger" : "warning"}>{t(`work.radar.severity.${r.severity}`)}</Badge>
+                      <div className="grid min-w-0 flex-1 gap-0.5">
+                        <Link href={`/${locale}/projects/${r.projectId}`} className="font-medium hover:underline">
+                          {r.projectName}
+                        </Link>
+                        <span className="text-muted-foreground">
+                          {t(`work.radar.kinds.${r.kind}`, { count: r.count, label: r.label ?? "", date: r.date ? formatDate(new Date(`${r.date}T00:00:00Z`), locale, "UTC") : "", weeks: r.weeks ?? 0 })}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t("work.radar.noRisks")}</p>
+              )}
+            </CardBody>
+          </Card>
+          <Card>
+            <CardHeader icon={<ArrowRightLeft />} title={t("work.radar.balanceTitle")} description={t("work.radar.balanceHint", { points: balance.averagePoints })} />
+            <CardBody className="grid gap-3">
+              {balance.rows.some((r) => r.load === "over") ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {balance.rows
+                    .filter((r) => r.load !== "balanced")
+                    .map((r) => (
+                      <Badge key={r.userId} tone={r.load === "over" ? "danger" : "success"}>
+                        {t(`work.radar.load.${r.load}`, { name: r.name ?? "—", points: r.points })}
+                      </Badge>
+                    ))}
+                </div>
+              ) : null}
+              {balance.suggestions.length ? (
+                <ul className="grid gap-2">
+                  {balance.suggestions.map((s) => (
+                    <li key={s.taskId} className="flex flex-wrap items-center gap-2 rounded-md border p-2.5 text-sm">
+                      <div className="grid min-w-0 flex-1 gap-0.5">
+                        <Link href={`/${locale}/projects/tasks/${s.taskId}`} className="truncate font-medium hover:underline">
+                          {s.title}
+                        </Link>
+                        <span className="text-xs text-muted-foreground">{t("work.radar.move", { from: s.fromName ?? "—", to: s.toName ?? "—", project: s.projectName ?? "" })}</span>
+                      </div>
+                      {canManage ? (
+                        <ActionButton url={`${base}/tasks/${s.taskId}`} method="PATCH" body={{ assigneeId: s.toId }}>
+                          {t("work.radar.reassign")}
+                        </ActionButton>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t("work.radar.balanced")}</p>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      </section>
 
       <Card>
         <CardHeader title={t("work.heatmap.title")} description={t("work.heatmap.hint")} />

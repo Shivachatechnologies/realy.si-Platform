@@ -278,6 +278,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ cand
             actions={[
               { label: t("hr.ai.scoreCandidate"), endpoint: `${cBase}/assist`, body: { mode: "score" } },
               { label: t("hr.ai.interviewQuestions"), endpoint: `${cBase}/assist`, body: { mode: "questions" } },
+              { label: t("hr.ai.scorecard"), endpoint: `${cBase}/assist`, body: { mode: "scorecard" } },
             ]}
             tasks={tasks}
           />

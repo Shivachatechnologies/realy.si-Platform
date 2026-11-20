@@ -11,6 +11,7 @@ import {
   CornerDownLeft,
   CreditCard,
   Gauge,
+  Globe2,
   LayoutDashboard,
   Loader2,
   Plug,
@@ -18,6 +19,7 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
+  Store,
   ToggleRight,
   User,
   Users,
@@ -38,19 +40,43 @@ interface Item {
 /** Admin Control Center sections (labels under admin.nav.*). */
 export const ADMIN_SECTIONS: Item[] = [
   { href: "", label: "overview", icon: LayoutDashboard },
-  { href: "/users", label: "users", icon: Users },
+  { href: "/users", label: "users", icon: Users, children: [{ href: "/users", label: "users" }, { href: "/roles", label: "roles" }, { href: "/roles/view-as", label: "viewAs" }] },
   { href: "/organizations", label: "companies", icon: Building2 },
-  { href: "/ai", label: "ai", icon: Bot, children: [{ href: "/ai", label: "aiOverview" }, { href: "/ai/tasks", label: "aiTasks" }, { href: "/ai/usage", label: "aiUsage" }] },
+  {
+    href: "/ai",
+    label: "ai",
+    icon: Bot,
+    children: [
+      { href: "/ai", label: "aiOverview" },
+      { href: "/ai/models", label: "aiModels" },
+      { href: "/ai/workforce", label: "aiWorkforce" },
+      { href: "/ai/tasks", label: "aiTasks" },
+      { href: "/ai/errors", label: "aiErrors" },
+      { href: "/ai/usage", label: "aiUsage" },
+    ],
+  },
   {
     href: "/pricing",
     label: "billing",
     icon: CreditCard,
-    children: [{ href: "/pricing", label: "pricing" }, { href: "/subscriptions", label: "subscriptions" }, { href: "/countries", label: "countries" }],
+    children: [{ href: "/pricing", label: "pricing" }, { href: "/subscriptions", label: "subscriptions" }, { href: "/revenue", label: "revenue" }, { href: "/countries", label: "countries" }],
   },
+  {
+    href: "/cms",
+    label: "content",
+    icon: Globe2,
+    children: [{ href: "/cms", label: "cms" }, { href: "/cms/media", label: "media" }, { href: "/email-templates", label: "emailTemplates" }, { href: "/announcements", label: "announcements" }],
+  },
+  { href: "/marketplace", label: "marketplace", icon: Store },
   { href: "/controls", label: "features", icon: SlidersHorizontal, children: [{ href: "/controls", label: "controls" }, { href: "/flags", label: "flags" }] },
-  { href: "/integrations", label: "integrations", icon: Plug },
-  { href: "/system", label: "system", icon: Gauge },
-  { href: "/audit", label: "securityAudit", icon: ShieldCheck, children: [{ href: "/audit", label: "audit" }, { href: "/security", label: "security" }] },
+  { href: "/integrations", label: "integrations", icon: Plug, children: [{ href: "/integrations", label: "integrations" }, { href: "/developers", label: "developers" }] },
+  { href: "/system", label: "system", icon: Gauge, children: [{ href: "/system", label: "system" }, { href: "/ops", label: "ops" }] },
+  {
+    href: "/audit",
+    label: "securityAudit",
+    icon: ShieldCheck,
+    children: [{ href: "/audit", label: "audit" }, { href: "/security", label: "security" }, { href: "/security/access", label: "securityAccess" }],
+  },
   { href: "/settings", label: "settings", icon: Settings },
 ];
 
@@ -85,7 +111,8 @@ function SidebarBase({ pathname }: { pathname: string | null }) {
             {s.children && sectionActive ? (
               <ul className="ms-6 mt-0.5 hidden gap-0.5 border-s ps-2 lg:grid">
                 {s.children.map((c) => {
-                  const active = pathname === `${base}${c.href}` || (c.href !== s.href && isActive(pathname, base, c.href));
+                  const longer = s.children!.some((o) => o.href !== c.href && o.href.startsWith(`${c.href}/`) && isActive(pathname, base, o.href));
+                  const active = pathname === `${base}${c.href}` || (!longer && c.href !== s.href && isActive(pathname, base, c.href)) || (!longer && c.href === s.href && isActive(pathname, base, c.href) && !s.children!.some((o) => o.href !== c.href && isActive(pathname, base, o.href)));
                   return (
                     <li key={c.href}>
                       <Link

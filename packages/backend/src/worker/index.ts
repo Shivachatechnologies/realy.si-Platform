@@ -16,6 +16,8 @@
  * Environment: DATABASE_URL, REDIS_URL, ENCRYPTION_KEY (+ provider keys); concurrency and roles in ./config.ts.
  * SIGTERM/SIGINT: stop taking jobs, wait up to WORKER_SHUTDOWN_TIMEOUT_MS for running ones, then exit.
  */
+// First: lets modules that import "server-only" load outside Next (see ./preload.ts).
+import "./preload";
 import "dotenv/config";
 import { Queue, Worker, type Job } from "bullmq";
 import { Redis } from "ioredis";

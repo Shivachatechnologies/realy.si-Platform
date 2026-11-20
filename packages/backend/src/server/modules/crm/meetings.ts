@@ -11,9 +11,9 @@ import { contactName } from "./contacts";
 
 /**
  * Sales meetings with customers. When a Google or Outlook calendar is connected (Integrations), the meeting is added to
- * the organiser's calendar with the customer as a guest (Outlook emails the invitation itself; Google adds the guest to
- * the event). Without a calendar the meeting is still saved and a calendar file (.ics) is offered — the UI says plainly
- * that nobody was invited.
+ * the organiser's calendar with the customer as a guest, and the calendar provider emails the invitation (Outlook does
+ * so itself; Google is asked to with sendUpdates=all). Without a calendar the meeting is still saved and a calendar
+ * file (.ics) is offered — the UI says plainly that nobody was invited.
  */
 
 const ref = z.object({ leadId: z.string().uuid().optional(), contactId: z.string().uuid().optional(), dealId: z.string().uuid().optional() });
@@ -99,7 +99,7 @@ async function pushToCalendar(organizationId: string, companyId: string, meeting
   const organizer = await db().user.findFirst({ where: { id: organizerId }, select: { email: true } });
   const event = { title: m.title, description: m.agenda, location: m.location, startsAt: m.startsAt, endsAt: m.endsAt, attendeeEmails: [m.attendeeEmail, organizer?.email].filter((x): x is string => !!x) };
   try {
-    const externalId = provider === "google_calendar" ? await googleUpsertEvent(conn, event, m.externalId) : await outlookUpsertEvent(conn, event, m.externalId);
+    const externalId = provider === "google_calendar" ? await googleUpsertEvent(conn, event, m.externalId, { sendUpdates: "all" }) : await outlookUpsertEvent(conn, event, m.externalId);
     const u = await db().crmMeeting.update({ where: { id: m.id }, data: { calendarProvider: provider, externalId, inviteSentAt: m.attendeeEmail ? new Date() : null, calendarError: null } });
     return { ...u, calendar: "added" as const };
   } catch (err) {

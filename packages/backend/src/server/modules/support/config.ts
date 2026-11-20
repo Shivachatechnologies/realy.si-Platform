@@ -11,6 +11,8 @@ export const settingsInput = z.object({
   helpCenterEnabled: z.boolean().optional(),
   supportFormEnabled: z.boolean().optional(),
   aiTriageEnabled: z.boolean().optional(),
+  aiFirstResponseEnabled: z.boolean().optional(),
+  aiSlaEscalationEnabled: z.boolean().optional(),
   emailChannelEnabled: z.boolean().optional(),
   supportEmail: z.string().trim().toLowerCase().email().max(254).nullable().optional().or(z.literal("").transform(() => null)),
   setupStep: z.enum(["channels", "promises", "articles", "done"]).optional(),

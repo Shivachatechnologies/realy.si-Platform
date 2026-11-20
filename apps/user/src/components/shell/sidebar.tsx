@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandMark, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { PlanLockBadge } from "@/components/billing/upgrade-prompt";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 
 /** Collapsed (icon-only) rail state, provided by the frame. */
@@ -15,7 +16,7 @@ const SidebarState = createContext<{ collapsed: boolean; touch: boolean }>({ col
 export const useSidebarCollapsed = () => useContext(SidebarState).collapsed;
 
 /** Link with active state. `pathname` null = unknown (static shell), rendered without highlighting. */
-function NavLinkBase({ item, onNavigate, pathname }: { item: NavItem; onNavigate?: () => void; pathname: string | null }) {
+function NavLinkBase({ item, onNavigate, pathname, locked = false }: { item: NavItem; onNavigate?: () => void; pathname: string | null; locked?: boolean }) {
   const { t, locale } = useI18n();
   const { collapsed, touch } = useContext(SidebarState);
   const href = `/${locale}${item.href}`;
@@ -40,6 +41,7 @@ function NavLinkBase({ item, onNavigate, pathname }: { item: NavItem; onNavigate
         aria-hidden
       />
       <span className={cn("truncate", collapsed && "sr-only")}>{label}</span>
+      {locked && !collapsed ? <PlanLockBadge /> : null}
       {item.phase && !collapsed ? (
         <span className="ms-auto font-mono text-[10px] text-muted-foreground/70" title={t("common.comingInPhase", { phase: item.phase })}>
           {t("nav.phaseShort", { phase: item.phase })}
@@ -49,12 +51,12 @@ function NavLinkBase({ item, onNavigate, pathname }: { item: NavItem; onNavigate
   );
 }
 
-function NavLinkWithPath(props: { item: NavItem; onNavigate?: () => void }) {
+function NavLinkWithPath(props: { item: NavItem; onNavigate?: () => void; locked?: boolean }) {
   return <NavLinkBase {...props} pathname={usePathname()} />;
 }
 
 /** The pathname is request data on dynamic routes, so it streams in behind Suspense; the shell renders without highlight. */
-export function NavLink(props: { item: NavItem; onNavigate?: () => void }) {
+export function NavLink(props: { item: NavItem; onNavigate?: () => void; locked?: boolean }) {
   return (
     <Suspense fallback={<NavLinkBase {...props} pathname={null} />}>
       <NavLinkWithPath {...props} />
@@ -120,8 +122,11 @@ export function Sidebar({
   collapsed = false,
   onToggleCollapsed,
   touch = false,
+  lockedHrefs = [],
 }: {
   adminSlot?: ReactNode;
+  /** Nav hrefs the organization's plan does not include (rendered with a lock badge). */
+  lockedHrefs?: string[];
   onNavigate?: () => void;
   /** Icon-only rail (desktop). */
   collapsed?: boolean;
@@ -172,7 +177,7 @@ export function Sidebar({
                   )
                 ) : null}
                 {section.items.map((item) => (
-                  <NavLink key={item.href} item={item} onNavigate={onNavigate} />
+                  <NavLink key={item.href} item={item} onNavigate={onNavigate} locked={lockedHrefs.includes(item.href)} />
                 ))}
               </div>
             ))}

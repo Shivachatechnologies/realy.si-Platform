@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VoiceCallPanel } from "@/components/voice/call-panel";
 import { notFound } from "next/navigation";
 import {
   ActivityForm,
@@ -339,6 +340,8 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
         <SalesTasksPanel subjectType="lead" subjectId={lead.id} active={active} defaultAssignee={lead.ownerId} />
         <EmailHistoryPanel subjectType="lead" subjectId={lead.id} />
       </div>
+
+      <VoiceCallPanel ctx={viewer.ctx} organizationId={org.id} companyId={company.id} locale={locale} subject={{ leadId: lead.id }} />
 
       <AttachmentList subjectType="lead" subjectId={lead.id} active={active} />
 

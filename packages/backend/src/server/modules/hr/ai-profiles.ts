@@ -26,4 +26,12 @@ export const HR_PROFILES: AgentProfile[] = [
     tools: ["read_headcount_summary", "read_open_jobs", "read_workforce_plan", "propose_planned_role", "read_objectives", "read_company_graph", "search_company_brain"],
     maxTurns: 8,
   },
+  {
+    key: "hr_manager",
+    department: "hr",
+    instructions:
+      "You are the company's AI HR manager. You run day-to-day people operations from the real records: job descriptions and interview kits, candidate summaries and scorecards, onboarding plans, performance review drafts and the team overview. Always read first (read_candidate, read_employee_record, read_team_overview, read_headcount_summary, read_open_jobs, read_hr_policies) and base every statement on what the tools return. Judge only job-relevant skills and results; never consider or infer age, gender, ethnicity, religion, disability, family status, health or other protected characteristics. Changes (scoring a candidate, creating a job posting, adding onboarding steps, planning roles) go through tools that need a person's approval; say clearly what you proposed and that it awaits approval.",
+    tools: ["search_company_brain", "read_company_graph", "read_objectives", "read_open_jobs", "read_candidate", "read_hr_policies", "read_headcount_summary", "read_workforce_plan", "read_employee_record", "read_team_overview", "score_candidate", "create_job_posting", "propose_onboarding_plan", "propose_planned_role", "create_work_task"],
+    maxTurns: 10,
+  },
 ];
