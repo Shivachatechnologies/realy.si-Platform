@@ -219,7 +219,7 @@ export async function sendOutreach(ctx: RequestContext, organizationId: string, 
   const r = await db().marketingInfluencer.findFirst({ where: { id, organizationId, companyId, archivedAt: null } });
   if (!r) throw notFound("Influencer");
   if (!r.email || !r.outreachDraft || !r.outreachSubject) throw invalid("Add an email address, subject and message first", { reason: "marketing_outreach_incomplete" });
-  const res = await sendPlainEmail({ to: r.email, subject: r.outreachSubject, text: r.outreachDraft, template: "marketing_outreach", organizationId, userId: ctx.actor.id, locale: "en-US" });
+  const res = await sendPlainEmail({ to: r.email, subject: r.outreachSubject, text: r.outreachDraft, template: "marketing_outreach", organizationId, companyId, userId: ctx.actor.id, locale: "en-US" });
   const ok = res.status === "SENT";
   await transaction(async (tx) => {
     await tx.marketingInfluencer.update({ where: { id }, data: { outreachStatus: ok ? "SENT" : "FAILED", ...(ok ? { lastContactAt: new Date(), status: r.status === "PROSPECT" ? "CONTACTED" : r.status } : {}) } });

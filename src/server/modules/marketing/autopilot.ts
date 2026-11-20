@@ -15,7 +15,7 @@ import { brandContextFor, loadBrandKit } from "./brand";
 import { contentHashOf, createPost, SOCIAL_PROVIDERS, withHashtags } from "./social";
 import { MEDIA_REQUIRED, TEXT_LIMITS } from "./social-providers";
 import { researchDigest, webSearch } from "./providers/research";
-import { ESTIMATED_COST_CENTS, generateImage, imageConnection, startVideoJob, videoConnection } from "./providers/generation";
+import { expectedCostMicros, generateImage, imageConnection, microsToMinor, startVideoJob, videoConnection } from "./providers/generation";
 import { ProviderError } from "./providers/http";
 import { assetPublicUrl, creativePrompt, presetFor, PRESETS } from "./assets";
 import { learningsContext } from "./learning";
@@ -454,7 +454,37 @@ async function fail(item: Item, error: string, ap: { id: string; name: string; o
   }
 }
 
-/** Charge an estimated generation cost against the autopilot's monthly cap; false when it would exceed the cap. */
+/**
+ * Last-resort per-generation estimate (minor units) when neither the company's Integrations usage records nor the list
+ * prices know the provider's cost.
+ */
+const FALLBACK_COST_MINOR = { image: 5, video: 60 } as const;
+const AUTOPILOT_VIDEO_SECONDS = 5;
+
+/**
+ * Expected cost (minor units) of one generation: from the company's Integrations usage records (real per-call
+ * estimates), else list price, else the fallback. Budgets count micro-USD as the autopilot currency's minor units.
+ */
+async function expectedMinor(it: Item, kind: "image" | "video", provider: string): Promise<number> {
+  const micros = await expectedCostMicros(it.organizationId, it.companyId, kind, provider, AUTOPILOT_VIDEO_SECONDS).catch(() => null);
+  return micros == null ? FALLBACK_COST_MINOR[kind] : Math.max(1, microsToMinor(micros));
+}
+
+/** Settle a reservation with the call's real estimate (Integrations usage record), or refund it when nothing was generated. */
+async function settleBudget(apId: string, reservedMinor: number, actualMicros: number | null | undefined, generated: boolean) {
+  const actual = !generated ? 0 : actualMicros == null ? reservedMinor : microsToMinor(actualMicros);
+  if (actual !== reservedMinor) await adjustBudget(apId, actual - reservedMinor);
+}
+
+async function adjustBudget(apId: string, deltaMinor: number) {
+  const month = new Date().toISOString().slice(0, 7);
+  const a = await db().marketingAutopilot.findUnique({ where: { id: apId }, select: { spentMinor: true, spentMonth: true } });
+  if (!a || a.spentMonth !== month) return;
+  const next = a.spentMinor + BigInt(deltaMinor);
+  await db().marketingAutopilot.update({ where: { id: apId }, data: { spentMinor: next < 0n ? 0n : next } });
+}
+
+/** Reserve an estimated generation cost against the autopilot's monthly cap; false when it would exceed the cap. */
 async function chargeBudget(apId: string, cents: number): Promise<boolean> {
   const a = await db().marketingAutopilot.findUniqueOrThrow({ where: { id: apId }, select: { monthlyBudgetMinor: true, spentMinor: true, spentMonth: true } });
   if (a.monthlyBudgetMinor == null) return false;
@@ -543,8 +573,14 @@ async function makeCreative(ap: NonNullable<Awaited<ReturnType<typeof loadAp>>>,
   if (needsVideo) {
     const conn = await videoConnection(it.organizationId, it.companyId);
     if (!conn) return { assetId: null, note: "video_requires_credentials" };
-    if (!(await chargeBudget(ap.id, ESTIMATED_COST_CENTS[conn.provider]))) return { assetId: null, note: "budget_cap_reached" };
-    const job = await startVideoJob(it.organizationId, it.companyId, { prompt, vertical: preset === "story_reel" });
+    const reserved = await expectedMinor(it, "video", conn.provider);
+    if (!(await chargeBudget(ap.id, reserved))) return { assetId: null, note: "budget_cap_reached" };
+    let job: Awaited<ReturnType<typeof startVideoJob>> = null;
+    try {
+      job = await startVideoJob(it.organizationId, it.companyId, { prompt, vertical: preset === "story_reel", seconds: AUTOPILOT_VIDEO_SECONDS });
+    } finally {
+      await settleBudget(ap.id, reserved, job?.estimatedCostMicros, !!job);
+    }
     if (!job) return { assetId: null, note: "video_requires_credentials" };
     const a = await db().marketingAsset.create({
       data: { organizationId: it.organizationId, companyId: it.companyId, kind: "VIDEO", status: "PROCESSING", name: `${it.platform} ${it.format}: ${(it.topic ?? "").slice(0, 60)}`, provider: job.provider, providerJobId: job.jobId, prompt: brief, preset, campaignId: ap.campaignId, createdById: ap.createdById },
@@ -555,8 +591,14 @@ async function makeCreative(ap: NonNullable<Awaited<ReturnType<typeof loadAp>>>,
   if (!ap.generateImages && !required) return { assetId: null, note: null };
   const conn = await imageConnection(it.organizationId, it.companyId);
   if (!conn) return { assetId: null, note: required ? "image_requires_credentials" : null };
-  if (!(await chargeBudget(ap.id, ESTIMATED_COST_CENTS[conn.provider]))) return { assetId: null, note: required ? "budget_cap_reached" : null };
-  const img = await generateImage(it.organizationId, it.companyId, prompt, PRESETS[preset]);
+  const reserved = await expectedMinor(it, "image", conn.provider);
+  if (!(await chargeBudget(ap.id, reserved))) return { assetId: null, note: required ? "budget_cap_reached" : null };
+  let img: Awaited<ReturnType<typeof generateImage>> = null;
+  try {
+    img = await generateImage(it.organizationId, it.companyId, prompt, PRESETS[preset]);
+  } finally {
+    await settleBudget(ap.id, reserved, img?.estimatedCostMicros, !!img);
+  }
   if (!img) return { assetId: null, note: required ? "image_requires_credentials" : null };
   const a = await db().marketingAsset.create({
     data: {
@@ -565,8 +607,8 @@ async function makeCreative(ap: NonNullable<Awaited<ReturnType<typeof loadAp>>>,
       kind: "IMAGE",
       name: `${it.platform}: ${(it.topic ?? "").slice(0, 70)}`,
       mimeType: img.mimeType,
-      data: new Uint8Array(img.bytes),
-      sizeBytes: img.bytes.length,
+      storageRef: img.stored.ref,
+      sizeBytes: img.sizeBytes,
       width: PRESETS[preset].width,
       height: PRESETS[preset].height,
       preset,

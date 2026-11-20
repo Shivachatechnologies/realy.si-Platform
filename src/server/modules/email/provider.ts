@@ -10,6 +10,8 @@ export interface OutboundEmail {
   html: string;
   /** Extra MIME headers (e.g. List-Unsubscribe). Names are passed through as given. */
   headers?: Record<string, string>;
+  /** Provider-side metadata echoed in delivery event webhooks (SendGrid custom_args), e.g. a send id. Not secret. */
+  customArgs?: Record<string, string>;
 }
 
 export interface EmailProvider {
@@ -84,7 +86,7 @@ export function sendgridProvider(conn: Connection & { accessToken: string }): Em
       const custom = m.headers && Object.keys(m.headers).length ? { headers: m.headers } : {};
       const res = await providerFetch(conn, "https://api.sendgrid.com/v3/mail/send", {
         json: {
-          personalizations: [{ to: [{ email: m.to }] }],
+          personalizations: [{ to: [{ email: m.to }], ...(m.customArgs && Object.keys(m.customArgs).length ? { custom_args: m.customArgs } : {}) }],
           from: parseFrom(m.from),
           subject: m.subject,
           content: [
@@ -101,8 +103,8 @@ export function sendgridProvider(conn: Connection & { accessToken: string }): Em
         await recordUsage({ organizationId: conn.organizationId, companyId: conn.companyId, connectionId: conn.id, provider: "sendgrid", operation: "email.send", unit: "message", estimatedCostMicros: ok ? 1_000 : 0, status: ok ? "SUCCEEDED" : "FAILED", error: ok ? null : `SendGrid responded ${res.status}` });
       }
       if (!ok) throw new Error(`email provider responded ${res.status}`);
-      // SendGrid returns the message id in the X-Message-Id header, which providerFetch does not expose.
-      return { messageId: null };
+      // SendGrid returns the message id in the X-Message-Id header.
+      return { messageId: res.headers?.get("x-message-id") ?? null };
     },
   };
 }

@@ -163,10 +163,10 @@ export default async function CreativeStudioPage({ searchParams }: PageProps<"/[
                         ) : a.status === "FAILED" ? (
                           <p className="p-4 text-center text-xs text-danger">{a.error ?? t("marketing.studio.creative.failed")}</p>
                         ) : a.kind === "VIDEO" && a.publicUrl ? (
-                          <video src={a.publicUrl} className="size-full object-cover" muted playsInline controls preload="metadata" />
+                          <video src={a.previewUrl ?? a.publicUrl} className="size-full object-cover" muted playsInline controls preload="metadata" />
                         ) : a.publicUrl && (a.mimeType?.startsWith("image/") ?? true) ? (
                           // eslint-disable-next-line @next/next/no-img-element -- signed asset URL
-                          <img src={a.publicUrl} alt={a.name} className="size-full object-cover" loading="lazy" />
+                          <img src={a.previewUrl ?? a.publicUrl} alt={a.name} className="size-full object-cover" loading="lazy" />
                         ) : (
                           <ImageIcon className="size-8 text-muted-foreground" aria-hidden />
                         )}

@@ -29,6 +29,8 @@ export interface VideoJob {
   outputUrls: string[];
   error: string | null;
   progress: number | null;
+  /** startVideoJob only: estimated cost in micro-USD (same value as its usage record); null when unknown. */
+  estimatedCostMicros?: number | null;
 }
 
 const RUNWAY = "https://api.dev.runwayml.com/v1";
@@ -65,7 +67,7 @@ export async function startVideoJob(organizationId: string, companyId: string, i
       }
       const est = conn.provider === "runway" ? FLAT_COST_MICROS["runway.second"]! * duration : null;
       await recordUsage({ organizationId, companyId, connectionId: conn.id, provider: conn.provider, operation: "video.start", units: duration, unit: "second", estimatedCostMicros: est, status: "SUCCEEDED", meta: { model, jobId: id } });
-      return { jobId: `${conn.provider}:${id}`, status: "PENDING" as const, outputUrls: [], error: null, progress: null };
+      return { jobId: `${conn.provider}:${id}`, status: "PENDING" as const, outputUrls: [], error: null, progress: null, estimatedCostMicros: est };
     } catch (err) {
       await recordUsage({ organizationId, companyId, connectionId: conn.id, provider: conn.provider, operation: "video.start", units: 0, unit: "second", estimatedCostMicros: 0, status: "FAILED", error: errorText(err), meta: { model } });
       throw err;

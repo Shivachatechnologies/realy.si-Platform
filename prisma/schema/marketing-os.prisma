@@ -163,6 +163,9 @@ model MarketingAsset {
   sizeBytes      Int?                 @map("size_bytes")
   /// External URL (provider output, CDN) when not stored as bytes.
   url            String?
+  /// Integrations storage reference ("s3:<key>" / "db:<id>", see integrations/services/storage.ts) of assets stored through
+  /// the storage service; older assets keep their bytes in `data`.
+  storageRef     String?              @map("storage_ref")
   width          Int?
   height         Int?
   /// Platform dimension preset key (e.g. "instagram_square").

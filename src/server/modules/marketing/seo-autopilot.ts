@@ -11,7 +11,7 @@ import { actorId, authorize, isUuid, uuid } from "./common";
 import { extractJson } from "./ai";
 import { brandContextFor } from "./brand";
 import { ARTICLE_TYPES, createContent, markContentPublished } from "./content";
-import { getMarketingConnection, isUsable } from "./connections-bridge";
+import { connectionAccounts, getMarketingConnection, isUsable } from "./connections-bridge";
 import { bodyToHtml, CMS_PROVIDERS, publishToCms, searchConsoleQuery, verifyUrl, type CmsProvider } from "./providers/cms";
 import { ProviderError } from "./providers/http";
 import { assetMedia } from "./assets";
@@ -280,7 +280,10 @@ export async function syncSearchConsole(projectId: string): Promise<number> {
   const p = await db().seoProject.findUniqueOrThrow({ where: { id: projectId } });
   const conn = await getMarketingConnection(p.organizationId, p.companyId, "google_search_console");
   if (!isUsable(conn)) throw new AppError("not_configured", "Google Search Console is not connected", { reason: "marketing_gsc_not_connected" });
-  const siteUrl = (typeof conn.config.siteUrl === "string" && conn.config.siteUrl) || `sc-domain:${p.domain}`;
+  // The connection's verified property for this project's domain (Integrations lists them as sub-accounts), else the configured one.
+  const host = p.domain.replace(/^www\./, "").toLowerCase();
+  const property = connectionAccounts(conn).find((a) => a.id === `sc-domain:${host}` || a.id.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").toLowerCase() === host)?.id;
+  const siteUrl = property ?? ((typeof conn.config.siteUrl === "string" && conn.config.siteUrl) || `sc-domain:${host}`);
   const end = new Date(Date.now() - 2 * 86_400_000);
   const start = new Date(end.getTime() - 28 * 86_400_000);
   const rows = await searchConsoleQuery(conn, siteUrl, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));

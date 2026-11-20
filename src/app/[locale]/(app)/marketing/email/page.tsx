@@ -10,9 +10,8 @@ import { MarketingShell, Pager, StatusBadge, loadMarketing } from "@/components/
 import { ActionButton } from "@/components/marketing/ui";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
-import { emailConfigured } from "@/server/modules/email/service";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
-import { EMAIL_CAMPAIGN_STATUSES, listEmailCampaigns, listTemplates, parseEmailFilters } from "@/server/modules/marketing/email";
+import { EMAIL_CAMPAIGN_STATUSES, listEmailCampaigns, listTemplates, parseEmailFilters, emailDeliveryReady } from "@/server/modules/marketing/email";
 import { listSegments } from "@/server/modules/marketing/segments";
 import { listSuppressions } from "@/server/modules/marketing/deliverability";
 import { SuppressionForm } from "@/components/marketing/studio-forms";
@@ -42,7 +41,7 @@ export default async function EmailPage({ searchParams }: PageProps<"/[locale]/m
   return (
     <MarketingShell {...shell}>
       <InfoStrip t={t} k="email" />
-      {!emailConfigured() ? <Notice tone="warning">{t("marketing.email.notConfigured")}</Notice> : null}
+      {!(await emailDeliveryReady(org.id, company.id)) ? <Notice tone="warning">{t("marketing.email.notConfigured")}</Notice> : null}
       {canManage ? (
         <Card>
           <details>

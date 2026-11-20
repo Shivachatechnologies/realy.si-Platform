@@ -4,7 +4,7 @@ import type { MarketingSendStatus } from "@/generated/prisma/enums";
 import { db } from "@/server/core/db";
 import { closestLocale } from "@/i18n/config";
 import { createTranslator, type Messages } from "@/i18n/translate";
-import { escapeHtml, sendHtmlEmail } from "@/server/modules/email/service";
+import { escapeHtml, sendPlainEmail } from "@/server/modules/email/service";
 import enUS from "@/i18n/messages/en-US.json";
 import hiIN from "@/i18n/messages/hi-IN.json";
 import arAE from "@/i18n/messages/ar-AE.json";
@@ -14,7 +14,7 @@ import { normalizeEmail, renderMergeTags } from "./common";
 import { clickUrl, openPixelUrl, trackLinks, unsubscribeUrl } from "./tracking";
 import { loadBrandKit, type BrandKit } from "./brand";
 import { getMarketingConnection, isUsable } from "./connections-bridge";
-import { sendViaProvider } from "./providers/email";
+import { sendViaMailchimp } from "./providers/email";
 import { ProviderError } from "./providers/http";
 
 const CATALOGS: Record<string, Messages> = { "en-US": enUS, "hi-IN": hiIN as Messages, "ar-AE": arAE as Messages, "de-DE": deDE as Messages, "zh-CN": zhCN as Messages };
@@ -41,12 +41,16 @@ export interface MarketingMessage {
   userId?: string | null;
   /** A/B variant the recipient got. */
   variantId?: string | null;
-  /** Delivery provider: the platform email provider (default) or the company's sendgrid / mailchimp connection. */
+  /**
+   * Delivery provider: default = the company's email provider (its connected SendGrid account, else the platform
+   * provider); "sendgrid" = only the company's SendGrid account; "mailchimp" = its Mailchimp Transactional connection.
+   */
   provider?: string | null;
 }
 
 /**
- * Claim, render and send one marketing email through the core email provider, and record the outcome per recipient.
+ * Claim, render and send one marketing email through the company's email provider (core email module →
+ * companyEmailProvider, or Mailchimp Transactional), and record the outcome per recipient.
  * The claim (a PENDING row unique per campaign/recipient or enrollment/step) prevents double sends across workers.
  * Returns null when another sender already claimed this recipient.
  */
@@ -86,14 +90,14 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
   const brand = await loadBrandKit(db(), msg.companyId);
   const html = renderMarketingHtml({ body, sendId: id, locale: l, footer, unsubLabel, unsubscribeLink: link, brand });
   const headers = { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
-  if (msg.provider === "sendgrid" || msg.provider === "mailchimp") {
-    const conn = await getMarketingConnection(msg.organizationId, msg.companyId, msg.provider);
+  if (msg.provider === "mailchimp") {
+    const conn = await getMarketingConnection(msg.organizationId, msg.companyId, "mailchimp");
     let status: MarketingSendStatus = "NOT_CONFIGURED";
     let messageId: string | null = null;
     let error: string | null = "not_configured";
     if (isUsable(conn)) {
       try {
-        messageId = await sendViaProvider(msg.provider, conn, { to: to.email, subject, text, html, headers, sendId: id, fromName: msg.companyName });
+        messageId = await sendViaMailchimp(conn, { to: to.email, subject, text, html, headers, sendId: id, fromName: msg.companyName });
         status = "SENT";
         error = null;
       } catch (err) {
@@ -104,15 +108,19 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
     await db().marketingEmailSend.update({ where: { id }, data: { status, providerMessageId: messageId, error } });
     return status;
   }
-  const result = await sendHtmlEmail({
+  const result = await sendPlainEmail({
     to: to.email,
     subject,
     text,
     html,
     // RFC 2369 / RFC 8058 one-click unsubscribe: mail clients POST to the signed link.
-    headers: { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+    headers,
     template: msg.emailCampaignId ? "marketing_campaign" : "marketing_sequence",
     organizationId: msg.organizationId,
+    companyId: msg.companyId,
+    companyOnly: msg.provider === "sendgrid",
+    // Echoed by SendGrid event webhooks (deliverability.ts matches events to this send).
+    customArgs: { sendId: id },
     userId: msg.userId ?? null,
     locale: l,
   });

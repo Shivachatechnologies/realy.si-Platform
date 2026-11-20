@@ -32,6 +32,8 @@ export interface ProviderResponse<T = unknown> {
   ok: boolean;
   data: T;
   text: string;
+  /** Response headers (ids returned only in headers, e.g. LinkedIn x-restli-id, upload session Location). */
+  headers?: Headers;
 }
 
 const PER_CONNECTION = { name: "integration-api", limit: 120, windowMs: 60_000 };
@@ -184,7 +186,7 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
       } catch {
         // non-JSON body: keep the text
       }
-      return { status: res.status, ok: res.ok, data: data as T, text: text.slice(0, 20_000) };
+      return { status: res.status, ok: res.ok, data: data as T, text: text.slice(0, 20_000), headers: res.headers };
     } catch (err) {
       lastError = err;
       if (attempt < retries) {
