@@ -312,3 +312,28 @@ export async function listMembers(ctx: RequestContext, organizationId: string, c
   const rows = await db().membership.findMany({ where: { organizationId, status: "ACTIVE" }, select: { user: { select: { id: true, name: true } } }, take: 500 });
   return rows.map((r) => r.user).sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/** The founder's core AI team: one AI employee per key role (profile key → display name). */
+export const STARTER_TEAM: { profileKey: string; name: string }[] = [
+  { profileKey: "ai_ceo", name: "AI CEO" },
+  { profileKey: "sales_manager", name: "AI Sales Manager" },
+  { profileKey: "cmo", name: "AI Marketing Manager" },
+  { profileKey: "ai_cfo", name: "AI Finance Analyst" },
+  { profileKey: "people_analyst", name: "AI HR Manager" },
+  { profileKey: "ai_project_manager", name: "AI Project Manager" },
+  { profileKey: "support_agent", name: "AI Customer Support" },
+  { profileKey: "research_analyst", name: "AI Research Analyst" },
+];
+
+/** Hire the starter team in one go; roles the company already staffs (same profile) are skipped. */
+export async function hireStarterTeam(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "agents.manage");
+  const existing = new Set((await db().aiEmployee.findMany({ where: { companyId, archivedAt: null }, select: { profileKey: true } })).map((e) => e.profileKey));
+  const created: string[] = [];
+  for (const m of STARTER_TEAM) {
+    if (existing.has(m.profileKey) || !profileByKey(m.profileKey)) continue;
+    const e = await createEmployee(ctx, organizationId, companyId, { profileKey: m.profileKey, name: m.name });
+    created.push(e.id);
+  }
+  return { created: created.length, skipped: STARTER_TEAM.length - created.length };
+}

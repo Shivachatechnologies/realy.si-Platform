@@ -1337,6 +1337,10 @@
       "aiCostUsd": "AI 成本（美元，估算）",
       "approvalsPending": "待审批",
       "aiEmployeesActive": "在岗 AI 员工"
+    },
+    "starterTeam": {
+      "action": "招聘核心 AI 团队",
+      "confirm": "招聘核心 AI 团队（CEO、销售、市场、财务、人力、项目、支持、研究）？已有的角色将被跳过。"
     }
   },
   "profiles": {
