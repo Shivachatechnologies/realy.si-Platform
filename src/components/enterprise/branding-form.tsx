@@ -29,7 +29,7 @@ export function BrandingForm({
   const [f, setF] = useState(initial);
   const a = useAction();
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
-  const color = /^#[0-9a-fA-F]{6}$/.test(f.primaryColor) ? f.primaryColor : "#4f46e5";
+  const color = /^#[0-9a-fA-F]{6}$/.test(f.primaryColor) ? f.primaryColor : "#1764ff";
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <form
@@ -60,7 +60,7 @@ export function BrandingForm({
                 onChange={(e) => setF((p) => ({ ...p, primaryColor: e.target.value }))}
                 className="h-9 w-12 cursor-pointer rounded-md border bg-surface"
               />
-              <Input id="br-color" dir="ltr" className="font-mono" value={f.primaryColor} maxLength={7} onChange={set("primaryColor")} placeholder="#4f46e5" />
+              <Input id="br-color" dir="ltr" className="font-mono" value={f.primaryColor} maxLength={7} onChange={set("primaryColor")} placeholder="#1764ff" />
             </div>
           </Field>
           <Field label={t("enterprise.branding.customDomain")} htmlFor="br-domain" hint={t("enterprise.branding.customDomainHint")} error={a.fields.customDomain}>

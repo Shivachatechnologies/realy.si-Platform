@@ -60,19 +60,14 @@ export function BrandWordmark({ className, markClassName, product, mono }: { cla
   );
 }
 
-/** Realy Control (admin console) mark: a shield on the control-room gradient. */
+/** Realy Control (admin console) mark: the brand R mark on a Midnight tile. */
 export function ControlMark({ className }: { className?: string }) {
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative inline-grid size-6 shrink-0 place-items-center overflow-hidden rounded-[30%] bg-[linear-gradient(135deg,oklch(0.24_0.02_250),oklch(0.14_0.01_250))] text-[oklch(0.82_0.15_75)] ring-1 ring-[oklch(0.82_0.15_75/0.35)] shadow-[0_2px_10px_-2px_oklch(0.8_0.15_75/0.45)]",
-        className,
-      )}
-    >
-      <svg viewBox="0 0 24 24" className="size-[68%]" fill="none">
-        <path d="M12 3.2 5.5 5.8v5.4c0 4.1 2.7 7.6 6.5 8.8 3.8-1.2 6.5-4.7 6.5-8.8V5.8L12 3.2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="m9 12 2.1 2.1L15.2 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <span aria-hidden className={cn("inline-grid size-6 shrink-0 place-items-center rounded-[22%] bg-[#0b1220] ring-1 ring-[#1764ff]/40", className)}>
+      <svg viewBox={R_MARK_VIEWBOX} className="size-[60%]" aria-hidden focusable="false">
+        {R_MARK_PATHS.map((d) => (
+          <path key={d} d={d} fill={REALY_BLUE} stroke={REALY_BLUE} strokeWidth={2.4} strokeLinejoin="round" />
+        ))}
       </svg>
     </span>
   );
