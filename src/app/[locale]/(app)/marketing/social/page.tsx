@@ -12,7 +12,12 @@ import { ActionButton } from "@/components/marketing/ui";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
-import { listAccounts, listPosts, parsePostFilters, POST_STATUSES, SOCIAL_PROVIDERS } from "@/server/modules/marketing/social";
+import { accountChoices, listAccounts, listPosts, parsePostFilters, POST_STATUSES, SOCIAL_PROVIDERS } from "@/server/modules/marketing/social";
+import { assetOptions } from "@/server/modules/marketing/assets";
+import { listHashtagSets, listHelpTasks } from "@/server/modules/marketing/intelligence";
+import { HashtagSetForm } from "@/components/marketing/studio-forms";
+import { HelpPanel, InfoStrip } from "@/components/marketing/studio";
+import { db } from "@/server/core/db";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.social") };
@@ -25,13 +30,32 @@ export default async function SocialPage({ searchParams }: PageProps<"/[locale]/
   if (m.blocked) return <MarketingShell {...shell} blocked={m.blocked} />;
   const { org, company, viewer, base, canManage, tz } = m;
   const f = parsePostFilters(await searchParams);
-  const [{ accounts, connected }, posts, campaigns] = await Promise.all([listAccounts(viewer.ctx, org.id, company.id), listPosts(viewer.ctx, org.id, company.id, f), campaignOptions(viewer.ctx, org.id, company.id)]);
+  const [{ accounts, connected }, posts, campaigns, choices, assets, hashtagSets, statusCounts, help] = await Promise.all([
+    listAccounts(viewer.ctx, org.id, company.id),
+    listPosts(viewer.ctx, org.id, company.id, f),
+    campaignOptions(viewer.ctx, org.id, company.id),
+    accountChoices(viewer.ctx, org.id, company.id),
+    assetOptions(viewer.ctx, org.id, company.id),
+    listHashtagSets(viewer.ctx, org.id, company.id),
+    db().marketingSocialPost.groupBy({ by: ["status"], where: { organizationId: org.id, companyId: company.id }, _count: { _all: true } }),
+    listHelpTasks(org.id, company.id, "social"),
+  ]);
+  const byStatus = Object.fromEntries(statusCounts.map((x) => [x.status, x._count._all])) as Record<string, number>;
   const path = `/${locale}/marketing/social`;
   const filtered = !!(f.q || f.status);
   const anyDisconnected = SOCIAL_PROVIDERS.some((p) => !connected[p]);
 
   return (
     <MarketingShell {...shell}>
+      <InfoStrip t={t} k="social" />
+      <nav className="stagger grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" aria-label={t("marketing.studio.social.board")}>
+        {POST_STATUSES.map((st) => (
+          <Link key={st} href={`${path}?status=${st}`} aria-current={f.status === st ? "page" : undefined} className={`hover-lift grid gap-0.5 rounded-md border bg-surface p-2 text-center ${f.status === st ? "border-primary" : ""}`}>
+            <span className="text-lg font-semibold tabular-nums">{byStatus[st] ?? 0}</span>
+            <span className="text-[11px] text-muted-foreground">{t(`marketing.postStatus.${st}`)}</span>
+          </Link>
+        ))}
+      </nav>
       {anyDisconnected ? (
         <Notice tone="info">
           {t("marketing.social.connectHint")}{" "}
@@ -44,7 +68,7 @@ export default async function SocialPage({ searchParams }: PageProps<"/[locale]/
         <Card className="lg:col-span-2">
           <CardHeader title={t("marketing.social.newPost")} description={t("marketing.social.newPostHint")} />
           {canManage ? (
-            <PostComposer base={base} locale={locale} accounts={accounts.map((a) => ({ id: a.id, name: a.name, provider: a.provider, connected: a.connected }))} campaigns={campaigns} />
+            <PostComposer base={base} locale={locale} accounts={accounts.map((a) => ({ id: a.id, name: a.name, provider: a.provider, connected: a.connected }))} campaigns={campaigns} assets={assets} hashtagSets={hashtagSets} />
           ) : (
             <p className="p-4 text-sm text-muted-foreground">{t("errors.forbidden")}</p>
           )}
@@ -79,9 +103,24 @@ export default async function SocialPage({ searchParams }: PageProps<"/[locale]/
           {canManage ? (
             <details className="border-t">
               <summary className="cursor-pointer p-3 text-sm font-medium">{t("marketing.social.addAccount")}</summary>
-              <AccountForm base={base} />
+              <AccountForm base={base} choices={choices} />
             </details>
           ) : null}
+          <div className="border-t">
+            <p className="px-4 pt-3 text-sm font-medium">{t("marketing.studio.hashtags.title")}</p>
+            <ul className="grid gap-1 px-4 py-2 text-xs">
+              {hashtagSets.length === 0 ? <li className="text-muted-foreground">{t("marketing.studio.hashtags.empty")}</li> : null}
+              {hashtagSets.map((h) => (
+                <li key={h.id} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate">
+                    <strong>{h.name}</strong> {h.tags.join(" ")}
+                  </span>
+                  {canManage ? <ActionButton path={`${base}/hashtag-sets/${h.id}`} method="DELETE" variant="ghost" label={t("marketing.common.delete")} confirm={t("marketing.common.confirmDelete")} /> : null}
+                </li>
+              ))}
+            </ul>
+            {canManage ? <HashtagSetForm base={base} /> : null}
+          </div>
         </Card>
       </div>
       <Card>
@@ -148,6 +187,7 @@ export default async function SocialPage({ searchParams }: PageProps<"/[locale]/
         )}
         <Pager path={path} params={{ q: f.q, status: f.status }} page={f.page} total={posts.total} pageSize={posts.pageSize} t={t} />
       </Card>
+      <HelpPanel t={t} base={base} page="social" tasks={help} locale={locale} tz={tz} aiReady={m.aiReady} canRun={m.canRunAgents} />
     </MarketingShell>
   );
 }

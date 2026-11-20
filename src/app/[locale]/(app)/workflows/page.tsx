@@ -5,9 +5,16 @@ import { eventLabelKey } from "@/components/automation/labels";
 import { Stat } from "@/components/automation/page-frame";
 import { NewWorkflowForm } from "@/components/automation/workflow-forms";
 import { Notice } from "@/components/ui/notice";
+import { Sparkles, Workflow } from "lucide-react";
+import { AutoRefresh } from "@/components/agents/auto-refresh";
+import { AutomationMap } from "@/components/automation/automation-map";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { automationMap } from "@/server/modules/automation/simple";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { getT } from "@/i18n/server";
@@ -24,7 +31,9 @@ export default async function WorkflowsPage({ searchParams }: PageProps<"/[local
   const p = await workflowsPage("workflows");
   if (p.page) return p.page;
   const { locale, t, viewer, org, company, canManage, tz, base } = p.ctx;
-  const filters = parseWorkflowFilters(await searchParams);
+  const sp = await searchParams;
+  const filters = parseWorkflowFilters(sp);
+  const advanced = sp.advanced === "1";
   const filtered = !!(filters.q || filters.status);
   const [workflows, overview, recent, integrations] = await Promise.all([
     listWorkflows(viewer.ctx, org.id, company.id, filters),
@@ -32,6 +41,9 @@ export default async function WorkflowsPage({ searchParams }: PageProps<"/[local
     listRuns(viewer.ctx, org.id, company.id, {}, 8),
     connectedCount(org.id, company.id),
   ]);
+  const map = await automationMap(viewer.ctx, org.id, company.id);
+  const triggerLabel = (tr: (typeof map)[number]["trigger"]) =>
+    !tr ? "?" : tr.type === "event" ? t(eventLabelKey(tr.event)) : tr.type === "schedule" ? t(`workflows.simple.scheduleShort.${tr.schedule.kind}`) : t(`workflows.builder.triggerTypes.${tr.type}`);
   const trigger = (w: (typeof workflows)[number]) => {
     const tr = w.draftTrigger;
     if (w.triggerType === "event" && w.triggerKey) return t(eventLabelKey(w.triggerKey));
@@ -40,6 +52,44 @@ export default async function WorkflowsPage({ searchParams }: PageProps<"/[local
   };
   return p.render(
     <>
+      <PageIntro
+        labels={introLabels(t)}
+        what={t("workflows.intro.list.what")}
+        why={t("workflows.intro.list.why")}
+        can={t("workflows.intro.list.can")}
+        next={canManage ? { label: t("workflows.intro.list.next"), href: `/${locale}/workflows/new` } : undefined}
+        accent="primary"
+      />
+      <AutoRefresh active={map.some((m) => m.running > 0)} intervalMs={10000} />
+      <Card variant="elevated">
+        <CardHeader title={t("workflows.map.title")} description={t("workflows.map.hint")} icon={<Workflow />} />
+        <CardBody>
+          {map.length ? (
+            <AutomationMap
+              locale={locale}
+              flows={map.map((m) => ({
+                id: m.id,
+                name: m.name,
+                triggerLabel: triggerLabel(m.trigger),
+                steps: m.steps.map((s) => (s.kind ? t(`workflows.builder.actions.${s.kind}`) : t(`workflows.builder.stepTypes.${s.type}`))),
+                moreSteps: m.moreSteps,
+                runs24h: m.runs24h,
+                runs30d: m.runs30d,
+                failed30d: m.failed30d,
+                running: m.running,
+              }))}
+            />
+          ) : (
+            <SmartEmpty
+              icon={<Workflow />}
+              title={t("workflows.map.emptyTitle")}
+              body={t("workflows.map.emptyBody")}
+              primary={canManage ? <Link href={`/${locale}/workflows/new`} className={buttonVariants({ size: "sm" })}><Sparkles aria-hidden /> {t("workflows.intro.list.next")}</Link> : undefined}
+              ai={canManage ? <Link href={`/${locale}/workflows/templates`} className={buttonVariants({ size: "sm", variant: "secondary" })}>{t("workflows.map.templates")}</Link> : undefined}
+            />
+          )}
+        </CardBody>
+      </Card>
       {overview.deadLetters ? (
         <Notice tone="danger">
           {t("workflows.runs.deadSummary", { count: overview.deadLetters })}{" "}
@@ -80,13 +130,20 @@ export default async function WorkflowsPage({ searchParams }: PageProps<"/[local
           </div>
         </form>
         {canManage ? (
-          <details className="border-b">
-            <summary className="cursor-pointer p-3 text-sm font-medium">{t("workflows.new")}</summary>
+          <details className="border-b" open={advanced}>
+            <summary className="cursor-pointer p-3 text-sm font-medium">{t("workflows.simple.advancedNew")}</summary>
             <NewWorkflowForm base={base} locale={locale} templates={WORKFLOW_TEMPLATES.map((x) => ({ key: x.key, name: t(`workflows.templates.${x.key}.name`) }))} />
           </details>
         ) : null}
         {workflows.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("workflows.empty")}</p>
+          <p className="p-4 text-muted-foreground">
+            {filtered ? t("common.noResults") : t("workflows.empty")}{" "}
+            {!filtered && canManage ? (
+              <Link href={`/${locale}/workflows/new`} className="text-primary hover:underline">
+                {t("workflows.intro.list.next")}
+              </Link>
+            ) : null}
+          </p>
         ) : (
           <Table>
             <THead>

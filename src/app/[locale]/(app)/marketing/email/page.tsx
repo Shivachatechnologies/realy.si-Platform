@@ -14,6 +14,9 @@ import { emailConfigured } from "@/server/modules/email/service";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
 import { EMAIL_CAMPAIGN_STATUSES, listEmailCampaigns, listTemplates, parseEmailFilters } from "@/server/modules/marketing/email";
 import { listSegments } from "@/server/modules/marketing/segments";
+import { listSuppressions } from "@/server/modules/marketing/deliverability";
+import { SuppressionForm } from "@/components/marketing/studio-forms";
+import { InfoStrip } from "@/components/marketing/studio";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.email") };
@@ -26,6 +29,7 @@ export default async function EmailPage({ searchParams }: PageProps<"/[locale]/m
   if (m.blocked) return <MarketingShell {...shell} blocked={m.blocked} />;
   const { org, company, viewer, base, canManage, tz } = m;
   const f = parseEmailFilters(await searchParams);
+  const suppressions = await listSuppressions(viewer.ctx, org.id, company.id);
   const [list, templates, segments, campaigns] = await Promise.all([
     listEmailCampaigns(viewer.ctx, org.id, company.id, f),
     listTemplates(viewer.ctx, org.id, company.id),
@@ -37,6 +41,7 @@ export default async function EmailPage({ searchParams }: PageProps<"/[locale]/m
 
   return (
     <MarketingShell {...shell}>
+      <InfoStrip t={t} k="email" />
       {!emailConfigured() ? <Notice tone="warning">{t("marketing.email.notConfigured")}</Notice> : null}
       {canManage ? (
         <Card>
@@ -137,6 +142,22 @@ export default async function EmailPage({ searchParams }: PageProps<"/[locale]/m
             <TemplateForm base={base} />
           </details>
         ) : null}
+      </Card>
+      <Card>
+        <CardHeader title={t("marketing.studio.email.suppressions")} description={t("marketing.studio.email.suppressionsHint", { count: suppressions.total })} />
+        {canManage ? <SuppressionForm base={base} /> : null}
+        <ul className="grid divide-y text-sm">
+          {suppressions.data.map((x) => (
+            <li key={x.id} className="flex items-center justify-between gap-2 px-4 py-2">
+              <span className="min-w-0 truncate">{x.emailNormalized}</span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                {t(`marketing.studio.email.reason.${["bounce", "complaint", "unsubscribe", "manual"].includes(x.reason) ? x.reason : "other"}`)}
+                {canManage ? <ActionButton path={`${base}/suppressions/${x.id}`} method="DELETE" variant="ghost" label={t("marketing.common.delete")} confirm={t("marketing.common.confirmDelete")} /> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="border-t p-3 text-[11px] text-muted-foreground">{t("marketing.studio.email.webhooks", { url: `/api/public/marketing/email-events/{sendgrid|mailchimp}/${company.id}` })}</p>
       </Card>
     </MarketingShell>
   );

@@ -145,6 +145,21 @@ enum MarketingContentType {
   AD
   LANDING_PAGE
   EMAIL
+  THREADS
+  TIKTOK_SCRIPT
+  YOUTUBE_SCRIPT
+  SEO_ARTICLE
+  NEWSLETTER
+  WEBSITE_COPY
+  CASE_STUDY
+  PRESS_RELEASE
+  PRODUCT_ANNOUNCEMENT
+  THOUGHT_LEADERSHIP
+  INDUSTRY_REPORT
+  VIDEO_SCRIPT
+  CAROUSEL
+  QUOTE
+  GRAPHIC_BRIEF
 }
 
 enum MarketingContentStatus {
@@ -174,6 +189,21 @@ model MarketingContent {
   metaTitle       String?                @map("meta_title")
   metaDescription String?                @map("meta_description")
   keywords        String[]               @default([])
+  /// Repurposing: the source item this one was derived from.
+  parentId        String?                @map("parent_id") @db.Uuid
+  categories      String[]               @default([])
+  tags            String[]               @default([])
+  authorName      String?                @map("author_name")
+  featuredAssetId String?                @map("featured_asset_id") @db.Uuid
+  /// JSON-LD schema markup object (Article/BlogPosting/FAQ...).
+  schemaMarkup    Json?                  @map("schema_markup")
+  /// [{ title, url, anchor }] internal link suggestions.
+  internalLinks   Json                   @default("[]") @map("internal_links")
+  /// Shown on the Realy-hosted public blog (/blog/<companyId>) when PUBLISHED.
+  blogPublic      Boolean                @default(false) @map("blog_public")
+  views           Int                    @default(0)
+  seoProjectId    String?                @map("seo_project_id") @db.Uuid
+  clusterId       String?                @map("cluster_id") @db.Uuid
   reviewerId      String?                @map("reviewer_id") @db.Uuid
   approvedById    String?                @map("approved_by_id") @db.Uuid
   approvedAt      DateTime?              @map("approved_at") @db.Timestamptz(3)
@@ -182,13 +212,18 @@ model MarketingContent {
   createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company     Company                   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  campaign    MarketingCampaign?        @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
-  versions    MarketingContentVersion[]
-  comments    MarketingContentComment[]
-  socialPosts MarketingSocialPost[]
+  company         Company                   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaign        MarketingCampaign?        @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
+  versions        MarketingContentVersion[]
+  comments        MarketingContentComment[]
+  socialPosts     MarketingSocialPost[]
+  parent          MarketingContent?         @relation("MarketingContentRepurpose", fields: [parentId, companyId], references: [id, companyId], onDelete: NoAction, onUpdate: NoAction)
+  children        MarketingContent[]        @relation("MarketingContentRepurpose")
+  featuredAsset   MarketingAsset?           @relation(fields: [featuredAssetId, companyId], references: [id, companyId], onDelete: NoAction, onUpdate: NoAction)
+  cmsPublications MarketingCmsPublication[]
 
   @@unique([id, companyId])
+  @@index([companyId, parentId])
   @@index([organizationId, companyId, status])
   @@index([companyId, scheduledAt])
   @@map("marketing_content")
@@ -239,6 +274,10 @@ enum MarketingSocialProvider {
   X
   INSTAGRAM
   FACEBOOK
+  YOUTUBE
+  TIKTOK
+  THREADS
+  PINTEREST
 }
 
 enum MarketingSocialPostStatus {
@@ -289,6 +328,9 @@ model MarketingSocialPost {
   text           String
   /// Public image URL (required by Instagram).
   mediaUrl       String?                   @map("media_url")
+  /// Media library asset (image or video) published with the post; overrides mediaUrl.
+  mediaAssetId   String?                   @map("media_asset_id") @db.Uuid
+  hashtags       String[]                  @default([])
   status         MarketingSocialPostStatus @default(DRAFT)
   scheduledAt    DateTime?                 @map("scheduled_at") @db.Timestamptz(3)
   publishedAt    DateTime?                 @map("published_at") @db.Timestamptz(3)
@@ -296,10 +338,11 @@ model MarketingSocialPost {
   createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company  Company                     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  campaign MarketingCampaign?          @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
-  content  MarketingContent?           @relation(fields: [contentId, companyId], references: [id, companyId], onDelete: NoAction)
-  targets  MarketingSocialPostTarget[]
+  company    Company                     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  campaign   MarketingCampaign?          @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
+  content    MarketingContent?           @relation(fields: [contentId, companyId], references: [id, companyId], onDelete: NoAction)
+  targets    MarketingSocialPostTarget[]
+  mediaAsset MarketingAsset?             @relation(fields: [mediaAssetId, companyId], references: [id, companyId], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -321,7 +364,12 @@ model MarketingSocialPostTarget {
   providerUrl    String?                     @map("provider_url")
   error          String?
   attempts       Int                         @default(0)
+  /// Retry with backoff (rate limits, transient provider errors).
+  nextAttemptAt  DateTime?                   @map("next_attempt_at") @db.Timestamptz(3)
+  /// sha256 of the normalized text + media, for duplicate prevention per account.
+  contentHash    String?                     @map("content_hash")
   publishedAt    DateTime?                   @map("published_at") @db.Timestamptz(3)
+  reach          Int?
   impressions    Int?
   likes          Int?
   comments       Int?
@@ -336,6 +384,7 @@ model MarketingSocialPostTarget {
 
   @@unique([id, companyId])
   @@unique([postId, accountId])
+  @@index([accountId, contentHash])
   @@map("marketing_social_post_targets")
 }
 
@@ -344,6 +393,7 @@ model MarketingSocialMetricSnapshot {
   organizationId String   @map("organization_id") @db.Uuid
   companyId      String   @map("company_id") @db.Uuid
   targetId       String   @map("target_id") @db.Uuid
+  reach          Int?
   impressions    Int?
   likes          Int?
   comments       Int?
@@ -395,6 +445,7 @@ model SeoKeyword {
   tracked        Boolean   @default(false)
   /// "manual" or "ai".
   source         String    @default("manual")
+  clusterId      String?   @map("cluster_id") @db.Uuid
   currentRank    Int?      @map("current_rank")
   previousRank   Int?      @map("previous_rank")
   rankedAt       DateTime? @map("ranked_at") @db.Timestamptz(3)
@@ -530,6 +581,18 @@ model MarketingEmailCampaign {
   sentCount          Int                          @default(0) @map("sent_count")
   failedCount        Int                          @default(0) @map("failed_count")
   notConfiguredCount Int                          @default(0) @map("not_configured_count")
+  /// "platform" (core email provider), "sendgrid" or "mailchimp" (company connection).
+  provider           String                       @default("platform")
+  abEnabled          Boolean                      @default(false) @map("ab_enabled")
+  /// Share of the audience (percent) that receives the test variants; the rest gets the winner.
+  abTestPercent      Int                          @default(20) @map("ab_test_percent")
+  /// "open" or "click".
+  abMetric           String                       @default("open") @map("ab_metric")
+  abWaitHours        Int                          @default(4) @map("ab_wait_hours")
+  /// null → not testing; "testing" → test sends; "waiting" → collecting results; "decided" → winner goes to the rest.
+  abPhase            String?                      @map("ab_phase")
+  abTestEndsAt       DateTime?                    @map("ab_test_ends_at") @db.Timestamptz(3)
+  abWinnerVariantId  String?                      @map("ab_winner_variant_id") @db.Uuid
   createdById        String                       @map("created_by_id") @db.Uuid
   createdAt          DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -539,6 +602,7 @@ model MarketingEmailCampaign {
   template MarketingEmailTemplate? @relation(fields: [templateId, companyId], references: [id, companyId], onDelete: NoAction)
   segment  MarketingSegment?       @relation(fields: [segmentId, companyId], references: [id, companyId], onDelete: NoAction)
   sends    MarketingEmailSend[]
+  variants MarketingEmailVariant[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
@@ -573,6 +637,9 @@ model MarketingEmailSend {
   openedAt          DateTime?           @map("opened_at") @db.Timestamptz(3)
   clickedAt         DateTime?           @map("clicked_at") @db.Timestamptz(3)
   unsubscribedAt    DateTime?           @map("unsubscribed_at") @db.Timestamptz(3)
+  variantId         String?             @map("variant_id") @db.Uuid
+  bouncedAt         DateTime?           @map("bounced_at") @db.Timestamptz(3)
+  complainedAt      DateTime?           @map("complained_at") @db.Timestamptz(3)
   createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company       Company                      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)

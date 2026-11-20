@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,8 @@ export default async function SupportCustomersPage({ searchParams }: PageProps<"
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const path = `/${locale}/support/customers`;
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.customers.what")} why={t("support.intro.customers.why")} can={t("support.intro.customers.can")} next={{ label: t("support.intro.customers.next"), href: `/${locale}/support` }} accent="warning" />
     <Card>
       <CardHeader title={t("support.customers.title")} description={t("support.customers.description")} />
       <form className="flex gap-2 border-b p-3" action={path}>
@@ -73,6 +77,7 @@ export default async function SupportCustomersPage({ searchParams }: PageProps<"
         </Table>
       )}
       <Pager labels={{ prev: t("common.previous"), next: t("common.next") }} info={t("support.pageInfo", { page, pages, total: list.total })} prevHref={page > 1 ? hrefWith(path, sp, { page: page - 1 }) : null} nextHref={page < pages ? hrefWith(path, sp, { page: page + 1 }) : null} />
-    </Card>,
+    </Card>
+    </>,
   );
 }

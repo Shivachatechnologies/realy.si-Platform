@@ -5,6 +5,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { formatDate } from "@/i18n/format";
 import type { Translate } from "@/i18n/translate";
 import { cn } from "@/lib/utils";
+import { GrowBar } from "./motion-bits";
 import { PRIORITY_TONE, STATUS_TONE, type TabDef, SectionTabs } from "./ui";
 
 export interface TaskRow {
@@ -45,6 +46,7 @@ export function ProjectTabs({ t, locale, projectId, active }: { t: Translate; lo
 export function ProjectsAreaTabs({ t, locale, active }: { t: Translate; locale: string; active: string }) {
   const tabs: TabDef[] = [
     { key: "projects", href: `/${locale}/projects`, label: t("work.tabs.projects") },
+    { key: "start", href: `/${locale}/projects/start`, label: t("work.tabs.start") },
     { key: "my", href: `/${locale}/projects/my-tasks`, label: t("work.tabs.myTasks") },
     { key: "tasks", href: `/${locale}/projects/tasks`, label: t("work.tabs.allTasks") },
     { key: "templates", href: `/${locale}/projects/templates`, label: t("work.tabs.templates") },
@@ -221,7 +223,7 @@ export function Timeline({
   const titles = new Map(tasks.map((x) => [x.id, x.title]));
   const grid = { gridTemplateColumns: `repeat(${days}, minmax(0.6rem, 1fr))` };
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto [--grow-origin:left] rtl:[--grow-origin:right]">
       <div className="grid min-w-[56rem] grid-cols-[14rem_minmax(0,1fr)] text-xs">
         <div className="border-b border-e px-2 py-1 font-medium text-muted-foreground">{t("work.task.title")}</div>
         <div className="grid border-b" style={grid}>
@@ -245,23 +247,30 @@ export function Timeline({
             </div>
           </>
         ) : null}
-        {tasks.map((x) => {
+        {tasks.map((x, rowIndex) => {
           const s = x.startDate ?? x.dueDate!;
           const e = x.dueDate ?? x.startDate!;
           const from = col(s);
           const span = Math.max(1, col(e) - from + 1);
           const waits = deps.filter((d) => d.taskId === x.id).map((d) => titles.get(d.dependsOnId)).filter(Boolean);
           const late = x.dueDate && x.dueDate < today && isOpen(x.status);
+          const lateDays = late ? Math.round((today.getTime() - x.dueDate!.getTime()) / DAY) : 0;
           return (
             <div key={x.id} className="contents">
-              <div className="truncate border-b border-e px-2 py-1.5">
-                <Link href={`/${locale}/projects/tasks/${x.id}`} className="hover:underline" title={x.title}>
+              <div className="flex min-w-0 items-center gap-1 border-b border-e px-2 py-1.5">
+                <Link href={`/${locale}/projects/tasks/${x.id}`} className="truncate hover:underline" title={x.title}>
                   {x.title}
                 </Link>
+                {late ? (
+                  <Badge tone="danger" pulse className="shrink-0">
+                    {t("work.delay.lateBy", { count: lateDays })}
+                  </Badge>
+                ) : null}
               </div>
               <div className="relative grid items-center border-b py-1.5" style={grid}>
                 {todayCol ? <span aria-hidden className="pointer-events-none absolute inset-y-0 w-px bg-primary/50" style={{ insetInlineStart: `${((todayCol - 0.5) / days) * 100}%` }} /> : null}
-                <span
+                <GrowBar
+                  index={rowIndex}
                   className={cn(
                     "h-3 rounded-sm",
                     x.status === "DONE" ? "bg-success/60" : late ? "bg-danger/70" : x.status === "IN_PROGRESS" || x.status === "IN_REVIEW" ? "bg-primary" : "bg-primary/40",

@@ -94,7 +94,7 @@ export async function requestAi(ctx: RequestContext, organizationId: string, com
 }
 
 /** Strict JSON extraction from model output (first JSON object/array, fenced or not). */
-function extractJson(output: string): unknown {
+export function extractJson(output: string): unknown {
   const fenced = output.match(/```(?:json)?\s*([\s\S]*?)```/);
   const text = (fenced ? fenced[1]! : output).trim();
   const start = text.search(/[[{]/);

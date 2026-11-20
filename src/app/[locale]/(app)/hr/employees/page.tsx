@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Users } from "lucide-react";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
 import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
@@ -147,7 +149,17 @@ export default async function EmployeesPage({ searchParams }: { searchParams: Pr
           </>
         ) : null}
         {list.rows.length === 0 ? (
-          <p className="p-4 text-muted-foreground">{filtered ? t("common.noResults") : t("hr.employees.empty")}</p>
+          filtered ? (
+            <p className="p-4 text-muted-foreground">{t("common.noResults")}</p>
+          ) : (
+            <SmartEmpty
+              icon={<Users />}
+              title={t("hr.empty.employees.title")}
+              body={t("hr.empty.employees.body")}
+              primary={manage ? <Link href={`/${locale}/hr/hire`} className={buttonVariants({ size: "sm" })}>{t("hr.intro.overview.next")}</Link> : undefined}
+              ai={manage ? <span className="self-center text-xs text-muted-foreground">{t("hr.empty.employees.orAdd")}</span> : undefined}
+            />
+          )
         ) : (
           <Table>
             <THead>

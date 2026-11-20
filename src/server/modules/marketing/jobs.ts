@@ -5,6 +5,12 @@ import { logger } from "@/server/core/logger";
 import { processDueEmailCampaigns } from "./email";
 import { enrollTargets, processDueEnrollments } from "./sequences";
 import { processDuePosts, refreshDueMetrics } from "./social";
+import { analyzePublishedItems, runAutopilots } from "./autopilot";
+import { processVideoJobs } from "./assets";
+import { runLearningLoop } from "./learning";
+import { processScheduledPublications, syncAllSearchConsole } from "./seo-autopilot";
+import { syncAllAdAccounts } from "./ads";
+import { syncComments } from "./community";
 
 interface DomainPayload {
   companyId: string;
@@ -51,6 +57,14 @@ export const MARKETING_JOBS: ModuleJobs = {
     { name: "marketing.email_campaigns", everyMs: 60_000, run: processDueEmailCampaigns },
     { name: "marketing.sequences", everyMs: 5 * 60_000, run: () => processDueEnrollments() },
     { name: "marketing.social_metrics", everyMs: 60 * 60_000, run: refreshDueMetrics },
+    { name: "marketing.autopilot", everyMs: 2 * 60_000, run: runAutopilots },
+    { name: "marketing.autopilot_analysis", everyMs: 60 * 60_000, run: analyzePublishedItems },
+    { name: "marketing.video_jobs", everyMs: 60_000, run: processVideoJobs },
+    { name: "marketing.cms_publications", everyMs: 60_000, run: processScheduledPublications },
+    { name: "marketing.search_console", everyMs: 6 * 60 * 60_000, run: syncAllSearchConsole },
+    { name: "marketing.ads_sync", everyMs: 60 * 60_000, run: syncAllAdAccounts },
+    { name: "marketing.comments_sync", everyMs: 30 * 60_000, run: () => syncComments() },
+    { name: "marketing.learning_loop", everyMs: 6 * 60 * 60_000, run: runLearningLoop },
   ],
   onEvent: [{ name: "marketing.nurture_enrollment", types: ["form.submitted", "lead.created"], handle: nurture }],
 };

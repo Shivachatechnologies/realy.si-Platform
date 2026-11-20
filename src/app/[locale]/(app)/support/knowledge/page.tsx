@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { BookOpen, ExternalLink, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { ArticleForm, KbCategories } from "@/components/support/kb";
 import { EmptyState, hrefWith, Pager } from "@/components/comms/bits";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
 import { formatDate } from "@/i18n/format";
@@ -31,6 +34,8 @@ export default async function KnowledgePage({ searchParams }: PageProps<"/[local
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const path = `/${locale}/support/knowledge`;
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.knowledge.what")} why={t("support.intro.knowledge.why")} can={t("support.intro.knowledge.can")} next={{ label: t("support.intro.knowledge.next"), href: `/${locale}/support/setup?step=articles` }} accent="warning" />
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="grid content-start gap-4">
         {perms.manage ? (
@@ -63,7 +68,16 @@ export default async function KnowledgePage({ searchParams }: PageProps<"/[local
             </Button>
           </form>
           {list.data.length === 0 ? (
-            <EmptyState>{q || status || categoryId ? t("common.noResults") : t("support.kb.empty")}</EmptyState>
+            q || status || categoryId ? (
+              <EmptyState>{t("common.noResults")}</EmptyState>
+            ) : (
+              <SmartEmpty
+                icon={<BookOpen />}
+                title={t("support.emptyKb.title")}
+                body={t("support.kb.empty")}
+                primary={<Link href={`/${locale}/support/setup?step=articles`} className={buttonVariants({ size: "sm" })}><Sparkles aria-hidden /> {t("support.emptyKb.ai")}</Link>}
+              />
+            )
           ) : (
             <Table>
               <THead>
@@ -113,6 +127,7 @@ export default async function KnowledgePage({ searchParams }: PageProps<"/[local
           </CardBody>
         </Card>
       </div>
-    </div>,
+    </div>
+    </>,
   );
 }

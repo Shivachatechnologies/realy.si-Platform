@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bot, Download, Paperclip } from "lucide-react";
@@ -50,6 +52,8 @@ export default async function TicketPage({ params, searchParams }: PageProps<"/[
   const customerUrl = publicTicketUrl(locale, tk.publicToken);
   const attachmentHref = (id: string) => `${base}/support/attachments/${id}`;
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.ticket.what")} why={t("support.intro.ticket.why")} can={t("support.intro.ticket.can")} accent="warning" />
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="grid content-start gap-4">
         <Card>
@@ -269,6 +273,7 @@ export default async function TicketPage({ params, searchParams }: PageProps<"/[
           ← {t("support.backToInbox")}
         </Link>
       </div>
-    </div>,
+    </div>
+    </>,
   );
 }

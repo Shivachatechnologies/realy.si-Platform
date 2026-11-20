@@ -672,7 +672,41 @@
       "crm_journey_no_lead": "Fügen Sie zuerst einen Kunden hinzu oder wählen Sie einen aus.",
       "crm_journey_no_deal": "Legen Sie zuerst den Deal an.",
       "crm_lead_no_email": "Dieser Lead hat keine E-Mail-Adresse.",
-      "crm_lead_archived": "Dieser Lead ist archiviert."
+      "crm_lead_archived": "Dieser Lead ist archiviert.",
+      "work_kickoff_applied": "Das Projekt zu diesem Plan wurde bereits angelegt.",
+      "work_kickoff_not_applied": "Legen Sie zuerst das Projekt aus dem Plan an.",
+      "marketing_ads_already_pushed": "Diese Kampagne existiert bereits auf der Werbeplattform.",
+      "marketing_ads_no_budget": "Legen Sie zuerst ein Tagesbudget fest.",
+      "marketing_ads_no_caps": "Legen Sie zuerst Tages- und Monatslimits für dieses Werbekonto fest.",
+      "marketing_ads_not_connected": "Diese Werbeplattform ist nicht verbunden.",
+      "marketing_ads_over_cap": "Dieses Budget würde das Ausgabenlimit des Kontos überschreiten.",
+      "marketing_ads_provider_error": "Die Werbeplattform hat die Anfrage abgelehnt.",
+      "marketing_asset_empty": "Wählen Sie eine Datei oder einen Link.",
+      "marketing_asset_not_ready": "Das Medium ist noch nicht bereit.",
+      "marketing_asset_too_large": "Die Datei ist zu groß (max. 10 MB).",
+      "marketing_asset_download_failed": "Die Datei konnte nicht heruntergeladen werden.",
+      "marketing_autopilot_no_accounts": "Wählen Sie mindestens ein Social-Media-Konto.",
+      "marketing_autopilot_no_cadence": "Legen Sie fest, wie oft gepostet wird.",
+      "marketing_bundle_exists": "Dieses Paket wurde bereits erstellt.",
+      "marketing_cms_failed": "Die Veröffentlichung im CMS ist fehlgeschlagen.",
+      "marketing_cms_not_connected": "Dieses CMS ist nicht verbunden.",
+      "marketing_cms_type": "Nur Artikel und Seiten können in einem Blog oder CMS veröffentlicht werden.",
+      "marketing_email_ab_variants": "Fügen Sie für einen A/B-Test mindestens zwei Varianten hinzu.",
+      "marketing_email_variants_max": "Höchstens vier Varianten.",
+      "marketing_generation_failed": "Der KI-Anbieter hat kein Ergebnis geliefert.",
+      "marketing_gsc_not_connected": "Google Search Console ist nicht verbunden.",
+      "marketing_image_not_connected": "Verbinden Sie zuerst einen Bildanbieter (OpenAI oder Stability).",
+      "marketing_video_not_connected": "Verbinden Sie zuerst einen Videoanbieter (Runway oder Replicate).",
+      "marketing_journey_incomplete": "Beantworten Sie zuerst die vorherigen Fragen.",
+      "marketing_journey_product": "Dieses Produkt wurde nicht gefunden.",
+      "marketing_outreach_incomplete": "Fügen Sie zuerst E-Mail-Adresse, Betreff und Nachricht hinzu.",
+      "marketing_outreach_failed": "Die Ansprache-E-Mail wurde nicht gesendet.",
+      "marketing_post_video_required": "Diese Plattform braucht ein Video aus der Medienbibliothek.",
+      "marketing_reply_done": "Dieser Kommentar wurde bereits beantwortet.",
+      "marketing_reply_empty": "Schreiben Sie zuerst eine Antwort.",
+      "marketing_reply_failed": "Die Plattform hat die Antwort abgelehnt.",
+      "marketing_reply_not_connected": "Das Konto ist nicht verbunden.",
+      "marketing_seo_no_keywords": "Fügen Sie zuerst Keywords hinzu."
     }
   },
   "onboarding": {
@@ -2022,7 +2056,19 @@
       "create_product_doc_draft": "Produktdokument entwerfen",
       "create_feature": "Feature anlegen",
       "create_backlog_tasks": "Backlog-Aufgaben anlegen",
-      "advance_product_stage": "Produktphase weiterschalten"
+      "advance_product_stage": "Produktphase weiterschalten",
+      "read_marketing_analytics": "Marketing-Analysen lesen",
+      "read_autopilot": "Autopilot-Pläne lesen",
+      "read_marketing_learnings": "Marketing-Erkenntnisse lesen",
+      "read_ad_performance": "Anzeigenleistung lesen",
+      "repurpose_content": "Inhalte umwandeln",
+      "generate_creative": "Kreativmaterial erzeugen",
+      "create_ad_campaign_draft": "Anzeigenkampagne entwerfen",
+      "launch_ad_campaign": "Anzeigenkampagne auf der Plattform erstellen",
+      "set_ad_budget": "Anzeigenbudget ändern",
+      "set_ad_campaign_status": "Anzeigenkampagne aktivieren oder pausieren",
+      "reply_to_comment": "Auf Kommentar antworten",
+      "send_influencer_outreach": "Influencer-Ansprache senden"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2559,6 +2605,22 @@
     "release_manager": {
       "name": "Release-Manager",
       "summary": "Release- und Launch-Pläne, Bereitschaft und Änderungsprotokoll."
+    },
+    "content_strategist": {
+      "name": "Content-Strategin",
+      "summary": "Content-Säulen, Redaktionspläne, Formate und Umwandlung anhand dessen, was funktioniert."
+    },
+    "creative_designer": {
+      "name": "Kreativ-Designer",
+      "summary": "Markengerechte Bild-Briefings und KI-Bilderzeugung für jede Plattform."
+    },
+    "video_producer": {
+      "name": "Videoproduzent",
+      "summary": "Skripte für Kurzvideos, YouTube-Titel und -Beschreibungen, Videoerzeugung."
+    },
+    "paid_ads_specialist": {
+      "name": "Spezialist für bezahlte Anzeigen",
+      "summary": "Kampagnenpläne, Anzeigentexte und Optimierung innerhalb der Ausgabenlimits."
     }
   },
   "projects": {
@@ -2828,7 +2890,8 @@
         "content_changes": "Änderungen angefordert: {title}",
         "content_comment": "Neuer Kommentar zu {title}",
         "post_published": "Social-Post veröffentlicht: {title}",
-        "post_failed": "Social-Post nicht vollständig veröffentlicht: {title}"
+        "post_failed": "Social-Post nicht vollständig veröffentlicht: {title}",
+        "autopilot_failed": "Autopilot braucht Aufmerksamkeit: {title}"
       },
       "crm": {
         "lead_assigned": "Ihnen zugewiesener Lead: {title}",
@@ -5311,6 +5374,259 @@
       "left": "Links",
       "right": "Rechts",
       "draft": "Aktueller Entwurf"
+    },
+    "intro": {
+      "list": {
+        "what": "Automatisierungen: „Wenn das passiert, tu dies“ – Realy.si erledigt Routinearbeit für Sie.",
+        "why": "Sparen Sie jede Woche Stunden und vergessen Sie nie eine Nachverfolgung.",
+        "can": "Automatisierungen in einfachen Worten erstellen, auf der Karte sehen und jeden Lauf prüfen.",
+        "next": "Automatisierung erstellen"
+      },
+      "runs": {
+        "what": "Jeder Lauf einer Automatisierung und was dabei passiert ist.",
+        "why": "Sehen, was funktioniert hat, und beheben, was fehlgeschlagen ist.",
+        "can": "Läufe öffnen, fehlgeschlagene wiederholen und jeden Schritt ansehen."
+      },
+      "approvals": {
+        "what": "Schritte, die auf ein Ja einer Person warten.",
+        "why": "Heikle Aktionen wie E-Mail-Versand passieren nie ohne Sie.",
+        "can": "Wartende Schritte freigeben oder ablehnen."
+      },
+      "templates": {
+        "what": "Fertige Automatisierungen.",
+        "why": "Mit bewährten Rezepten starten.",
+        "can": "Vorlage wählen und im erweiterten Editor anpassen."
+      },
+      "detail": {
+        "what": "Eine Automatisierung: was sie auslöst und welche Schritte sie ausführt.",
+        "why": "Änderungen hier beeinflussen, was Realy.si automatisch tut.",
+        "can": "Schritte bearbeiten, neue Version veröffentlichen, testen oder ein- und ausschalten."
+      }
+    },
+    "map": {
+      "title": "Automatisierungskarte",
+      "hint": "Ihre aktiven Automatisierungen: was sie auslöst → was sie tun. Bewegte Punkte = in den letzten 24 Stunden gelaufen.",
+      "aria": "{count, plural, one {Karte mit # aktiven Automatisierung} other {Karte mit # aktiven Automatisierungen}}",
+      "more": "+{count} weitere",
+      "counts": "{day} heute · {month} in 30 Tagen · {failed} fehlgeschlagen",
+      "emptyTitle": "Noch keine laufenden Automatisierungen",
+      "emptyBody": "Sagen Sie Realy.si, was passieren soll, wenn etwas eintritt – z. B. „Wenn ein neuer Lead kommt, Ana zuweisen und sie morgen erinnern“.",
+      "templates": "Vorlagen ansehen"
+    },
+    "simple": {
+      "title": "Neue Automatisierung",
+      "manageOnly": "Sie brauchen die Berechtigung, Workflows zu verwalten, um Automatisierungen zu erstellen.",
+      "describeTitle": "Beschreiben Sie es, die KI baut es",
+      "describeHint": "Schreiben Sie in eigenen Worten, was passieren soll.",
+      "describePlaceholder": "z. B. Wenn ein Deal gewonnen ist, ein Projekt für den Kunden anlegen, das Finanzteam benachrichtigen und die KI eine Willkommens-E-Mail schreiben lassen.",
+      "describeGo": "Mit KI bauen",
+      "describeNote": "Die KI erstellt einen Entwurf – nichts läuft, bevor Sie es prüfen und einschalten.",
+      "describeNotReady": "KI ist hier nicht verfügbar – nutzen Sie den Baukasten unten.",
+      "orTemplates": "Oder mit einer Vorlage beginnen",
+      "builderTitle": "Oder zusammenklicken",
+      "builderHint": "Vier einfache Schritte.",
+      "advanced": "Erweiterter Editor",
+      "advancedNew": "Neue Automatisierung im erweiterten Editor",
+      "whenTitle": "Wenn das passiert …",
+      "whenHint": "Wählen Sie den Moment, der die Automatisierung startet.",
+      "ifTitle": "Nur wenn … (optional)",
+      "ifHint": "Leer lassen, um jedes Mal auszuführen.",
+      "thenTitle": "Dann soll Realy.si …",
+      "thenHint": "Wählen Sie eine oder mehrere Aktionen. Sie laufen in dieser Reihenfolge.",
+      "summaryTitle": "Prüfen und einschalten",
+      "summaryHint": "Lesen Sie den Satz – genau das wird passieren.",
+      "summaryEmpty": "Wählen Sie einen Auslöser und mindestens eine Aktion.",
+      "name": "Name",
+      "nameHint": "Optional – sonst nutzen wir die Zusammenfassung.",
+      "turnOn": "Einschalten",
+      "saveDraft": "Speichern, ohne einzuschalten",
+      "emailIncomplete": "Füllen Sie Empfänger, Betreff und Text der E-Mail aus.",
+      "popular": "Beliebt",
+      "approval": "Braucht Freigabe",
+      "optional": "optional",
+      "noConds": "Für diesen Auslöser gibt es keine weiteren Bedingungen – er läuft jedes Mal.",
+      "pickTriggerFirst": "Wählen Sie zuerst, was passiert.",
+      "me": "ich",
+      "day": "Tag",
+      "time": "Uhrzeit",
+      "intro": {
+        "what": "Bauen Sie eine Automatisierung aus Karten: was passiert, optionale Bedingungen und was Realy.si tun soll.",
+        "why": "Kein technisches Wissen nötig – heraus kommt eine echte, geprüfte Automatisierung.",
+        "can": "Beschreiben Sie es der KI oder klicken Sie es unten zusammen. Schalten Sie es ein, wenn die Zusammenfassung stimmt."
+      },
+      "days": {
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "scheduleShort": {
+        "weekly": "Jede Woche",
+        "daily": "Jeden Tag",
+        "interval": "Wiederholt"
+      },
+      "triggers": {
+        "lead_created": {
+          "title": "Ein neuer Lead kommt",
+          "hint": "Jemand mit Kaufinteresse – aus einem Formular oder vom Team erfasst.",
+          "when": "Wenn ein neuer Lead kommt,"
+        },
+        "deal_won": {
+          "title": "Ein Deal ist gewonnen",
+          "hint": "Ein Kunde hat Ja gesagt.",
+          "when": "Wenn ein Deal gewonnen ist,"
+        },
+        "invoice_overdue": {
+          "title": "Eine Rechnung wird überfällig",
+          "hint": "Ein Kunde hat bis zum Fälligkeitsdatum nicht bezahlt.",
+          "when": "Wenn eine Rechnung überfällig wird,"
+        },
+        "payment_received": {
+          "title": "Eine Zahlung geht ein",
+          "hint": "Geld für eine Rechnung erhalten.",
+          "when": "Wenn eine Zahlung eingeht,"
+        },
+        "ticket_created": {
+          "title": "Ein Kunde bittet um Hilfe",
+          "hint": "Ein neues Support-Ticket.",
+          "when": "Wenn ein Kunde um Hilfe bittet,"
+        },
+        "customer_created": {
+          "title": "Jemand wird Kunde",
+          "hint": "Ein neuer zahlender Kunde.",
+          "when": "Wenn jemand Kunde wird,"
+        },
+        "candidate_applied": {
+          "title": "Jemand bewirbt sich",
+          "hint": "Eine neue Bewerbung.",
+          "when": "Wenn sich jemand bewirbt,"
+        },
+        "employee_joined": {
+          "title": "Neue Kollegin, neuer Kollege",
+          "hint": "Ein neuer Mitarbeitender wird angelegt.",
+          "when": "Wenn jemand Neues ins Team kommt,"
+        },
+        "task_completed": {
+          "title": "Eine Aufgabe ist erledigt",
+          "hint": "Jemand markiert eine Aufgabe als erledigt.",
+          "when": "Wenn eine Aufgabe erledigt ist,"
+        },
+        "form_submitted": {
+          "title": "Ein Formular wird ausgefüllt",
+          "hint": "Jemand sendet eines Ihrer Webformulare ab.",
+          "when": "Wenn ein Formular ausgefüllt wird,"
+        },
+        "monday": {
+          "title": "Jeden Montag um 9:00",
+          "hint": "Eine wöchentliche Routine (Tag und Uhrzeit änderbar).",
+          "when": "Jede Woche"
+        },
+        "daily": {
+          "title": "Jeden Morgen",
+          "hint": "Eine tägliche Routine zu einer Uhrzeit Ihrer Wahl.",
+          "when": "Jeden Tag"
+        }
+      },
+      "sentence": {
+        "weekly": "Jeden {day} um {time}",
+        "daily": "Jeden Tag um {time}",
+        "onlyIf": "aber nur wenn",
+        "and": "und",
+        "then": "wird Realy.si"
+      },
+      "conds": {
+        "scoreAbove": {
+          "label": "Die Lead-Bewertung liegt über",
+          "sentence": "die Lead-Bewertung über {value} liegt"
+        },
+        "sourceIs": {
+          "label": "Kam von (enthält)",
+          "sentence": "er von „{value}“ kam"
+        },
+        "amountAbove": {
+          "label": "Der Betrag liegt über ({currency})",
+          "sentence": "der Betrag über {value} {currency} liegt"
+        },
+        "balanceAbove": {
+          "label": "Der offene Betrag liegt über ({currency})",
+          "sentence": "der offene Betrag über {value} {currency} liegt"
+        },
+        "urgent": {
+          "label": "Es ist als dringend markiert",
+          "sentence": "es dringend ist"
+        },
+        "unhappy": {
+          "label": "Der Kunde klingt unzufrieden",
+          "sentence": "der Kunde unzufrieden klingt"
+        },
+        "jobIs": {
+          "label": "Der Stellentitel enthält",
+          "sentence": "der Stellentitel „{value}“ enthält"
+        }
+      },
+      "actions": {
+        "assign": {
+          "title": "Jemandem zuweisen",
+          "hint": "Eine Person dafür verantwortlich machen.",
+          "unavailable": "Für diesen Auslöser nicht verfügbar.",
+          "sentence": "es {person} zuweisen"
+        },
+        "task": {
+          "title": "Aufgabe anlegen",
+          "hint": "Eine To-do mit Fälligkeitsdatum.",
+          "sentence": "die Aufgabe „{title}“ für {person} anlegen"
+        },
+        "notify": {
+          "title": "Jemanden benachrichtigen",
+          "hint": "Eine Benachrichtigung in der App.",
+          "sentence": "{person} benachrichtigen"
+        },
+        "ai": {
+          "title": "Die KI bitten …",
+          "hint": "Ein KI-Mitarbeiter erledigt eine Aufgabe (Vorschläge brauchen weiterhin eine Freigabe).",
+          "sentence": "die Rolle {profile} bitten, sich darum zu kümmern"
+        },
+        "email": {
+          "title": "E-Mail senden",
+          "hint": "Wird erst nach Freigabe durch eine Person gesendet.",
+          "sentence": "nach Freigabe durch {person} eine E-Mail an {to} senden"
+        },
+        "project": {
+          "title": "Projekt anlegen",
+          "hint": "Ein neues Projekt mit einer verantwortlichen Person.",
+          "sentence": "ein Projekt mit {person} als Verantwortlichem anlegen"
+        }
+      },
+      "fields": {
+        "person": "Wer?",
+        "approver": "Wer gibt die E-Mail frei?",
+        "owner": "Projektverantwortliche/r",
+        "taskTitle": "Aufgabe",
+        "message": "Nachricht",
+        "projectName": "Projektname",
+        "placeholderHint": "Details wie der Name werden beim Ausführen automatisch eingesetzt.",
+        "due": "Fällig",
+        "dueIn": "{count, plural, =0 {Am selben Tag} one {In # Tag} other {In # Tagen}}",
+        "aiWho": "Welcher KI-Mitarbeiter?",
+        "aiWhat": "Was soll die KI tun?",
+        "aiPlaceholder": "z. B. Recherchiere diese Firma und schreibe eine kurze Zusammenfassung für den Vertrieb.",
+        "to": "An",
+        "toHint": "Vorausgefüllt mit der E-Mail-Adresse der betreffenden Person.",
+        "subject": "Betreff",
+        "body": "Text",
+        "emailNote": "Die E-Mail wartet auf Freigabe und wird nur gesendet, wenn der E-Mail-Versand eingerichtet ist; sonst meldet der Lauf, dass sie nicht gesendet wurde."
+      },
+      "defaults": {
+        "taskTitle": "Nachfassen: {name}",
+        "weeklyTask": "Wöchentliche Durchsicht",
+        "aiInstructions": "Sieh dir diesen Datensatz an und tu das Hilfreichste als Nächstes; erkläre dein Ergebnis in einfachen Worten.",
+        "approveEmail": "E-Mail-Versand an {to} freigeben",
+        "projectName": "Neues Projekt",
+        "name": "Meine Automatisierung"
+      }
     }
   },
   "marketplace": {
@@ -6734,7 +7050,8 @@
       "projectsLabel": "Projektnavigation",
       "sprints": "Sprints",
       "templates": "Vorlagen",
-      "timeline": "Zeitplan"
+      "timeline": "Zeitplan",
+      "start": "Projekt starten"
     },
     "task": {
       "add": "Neue Aufgabe",
@@ -6844,6 +7161,191 @@
       "person": "Person",
       "points": "Punkte",
       "title": "Team-Auslastung"
+    },
+    "start": {
+      "title": "Projekt starten",
+      "subtitle": "Beschreiben Sie, woran Sie arbeiten; der KI-Projektmanager plant es mit Ihnen.",
+      "manageOnly": "Sie brauchen die Berechtigung, Projekte zu verwalten, um eines zu starten.",
+      "progress": "Fortschritt des Projektstarts",
+      "youSaid": "Sie sagten:",
+      "aiNotReady": "KI ist hier nicht verfügbar. Sie können auf der Projektseite trotzdem ein Projekt aus einer Vorlage anlegen.",
+      "openTask": "KI-Aufgabe öffnen",
+      "intro": {
+        "what": "Ein geführter Start: Sie beschreiben die Arbeit in einfachen Worten und erhalten einen fertigen Plan mit Meilensteinen und Aufgaben.",
+        "why": "Ein klarer Plan mit Terminen und Verantwortlichen macht aus „wir sollten“ ein „erledigt“.",
+        "can": "Den KI-Plan prüfen, Unnötiges abwählen, das Projekt anlegen und Personen zuweisen."
+      },
+      "steps": {
+        "describe": "Beschreiben",
+        "plan": "Plan prüfen",
+        "assign": "Personen zuweisen",
+        "timeline": "Zeitplan"
+      },
+      "q": {
+        "describe": "Woran arbeiten Sie?",
+        "plan": "Hier ist ein Plan – passt er?",
+        "assign": "Wer macht was?",
+        "timeline": "Ihr Projekt ist bereit"
+      },
+      "qHint": {
+        "describe": "Schreiben Sie es so, wie Sie es einer Kollegin erklären würden. Nennen Sie eine Frist, falls es eine gibt.",
+        "plan": "Haken Sie die gewünschten Meilensteine und Aufgaben an. Sie können alles umbenennen.",
+        "assign": "Wählen Sie für jede Aufgabe eine Person. Die Zahlen zeigen, wie viel sie schon zu tun hat.",
+        "timeline": "Hier ist Ihr Plan auf einer Zeitleiste. Verspätete Arbeit wird automatisch rot."
+      },
+      "describe": {
+        "label": "Beschreiben Sie die Arbeit",
+        "hint": "Was muss passieren, für wen und bis wann.",
+        "placeholder": "z. B. Wir eröffnen im März eine zweite Filiale in Maribor. Wir müssen Räume finden, renovieren, zwei Leute einstellen und eine Eröffnungsfeier planen.",
+        "examples": "Beispiele",
+        "start": "Startdatum",
+        "startHint": "Leer = heute.",
+        "due": "Frist",
+        "dueHint": "Optional.",
+        "submit": "Mit KI planen"
+      },
+      "exampleLabel": {
+        "website": "Neue Website",
+        "event": "Kundenevent",
+        "launch": "Produktstart",
+        "office": "Büroumzug",
+        "campaign": "Marketingkampagne"
+      },
+      "example": {
+        "website": "Wir brauchen eine neue Firmenwebsite mit 5 Seiten, unserem Logo und einem Kontaktformular, online vor Ende nächsten Monats.",
+        "event": "Wir organisieren einen Abend für etwa 50 Kunden: Ort, Einladungen, Catering und eine kurze Präsentation.",
+        "launch": "Wir bringen ein neues Produkt heraus: Tests abschließen, die Webseite vorbereiten, den Vertrieb schulen und es den Kunden ankündigen.",
+        "office": "Wir ziehen in ein neues Büro: Umzugsfirma auswählen, Internet und Arbeitsplätze einrichten und Kunden die neue Adresse mitteilen.",
+        "campaign": "Wir möchten eine vierwöchige Marketingkampagne mit Social-Media-Beiträgen, einem Newsletter und einem kleinen Werbebudget, um mehr Interessenten zu gewinnen."
+      },
+      "plan": {
+        "queued": "Warte auf den KI-Projektmanager …",
+        "thinking": "Der KI-Projektmanager zerlegt Ihre Arbeit in Meilensteine und Aufgaben …",
+        "revising": "Plan wird überarbeitet",
+        "noTask": "Es wurde kein Plan angefordert. Gehen Sie zurück und beschreiben Sie die Arbeit erneut.",
+        "unreadable": "Die KI hat geantwortet, aber nicht in einem verwendbaren Planformat. Bitten Sie sie, es erneut zu versuchen.",
+        "failed": "Die KI konnte keinen Plan erstellen.",
+        "tryAgain": "Erneut versuchen",
+        "name": "Projektname",
+        "reviewHint": "{count, plural, one {# Aufgabe ausgewählt.} other {# Aufgaben ausgewählt.}} Wählen Sie ab, was Sie nicht brauchen, und klicken Sie auf einen Titel, um ihn umzubenennen.",
+        "otherTasks": "Weitere Aufgaben",
+        "byDate": "bis {date}",
+        "taskTitle": "Aufgabentitel",
+        "days": "{count, plural, one {# Tag} other {# Tage}}",
+        "team": "Wer ist im Team? (optional)",
+        "create": "{count, plural, one {Projekt mit # Aufgabe anlegen} other {Projekt mit # Aufgaben anlegen}}",
+        "changeTitle": "Nicht ganz richtig? Änderungen anfragen",
+        "changePlaceholder": "z. B. Kürzer machen, eine Testphase hinzufügen, wir sind nur zu zweit.",
+        "change": "Neuen Plan erstellen"
+      },
+      "assign": {
+        "loadLabel": "Aktuelle Auslastung",
+        "load": "{count, plural, one {# offene Aufgabe} other {# offene Aufgaben}}",
+        "noPeople": "Noch hat niemand sonst Zugriff auf Projekte. Laden Sie Kolleginnen und Kollegen in den Einstellungen ein, um die Arbeit zu teilen.",
+        "who": "Wer erledigt „{task}“?",
+        "nobody": "Nicht zugewiesen",
+        "save": "Speichern und Zeitplan ansehen"
+      },
+      "done": {
+        "title": "{name} ist bereit",
+        "body": "Meilensteine, Aufgaben und Verantwortliche sind gespeichert. Alle sehen ihre Aufgaben unter „Meine Aufgaben“.",
+        "open": "Projekt öffnen",
+        "board": "Aufgabenboard öffnen",
+        "another": "Weiteres Projekt starten"
+      },
+      "resume": {
+        "title": "Dort weitermachen, wo Sie aufgehört haben",
+        "continue": "Weiter"
+      }
+    },
+    "delay": {
+      "lateBy": "{count, plural, one {# Tag verspätet} other {# Tage verspätet}}",
+      "onTime": "Im Plan",
+      "summary": "{count, plural, one {# verspätete Aufgabe} other {# verspätete Aufgaben}} · bis zu {days} T.",
+      "column": "Verzug"
+    },
+    "heatmap": {
+      "title": "Wer ist wann ausgelastet",
+      "hint": "Offene Aufgaben pro Person nach Fälligkeitswoche. Dunkler = mehr zu tun; rot = schon verspätet.",
+      "hintProject": "Offene Aufgaben in diesem Projekt pro Person nach Fälligkeitswoche.",
+      "late": "Verspätet",
+      "cell": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "empty": "Noch keine zugewiesenen Aufgaben mit Fälligkeitsdatum."
+    },
+    "empty": {
+      "projects": {
+        "title": "Noch keine Projekte",
+        "body": "Ein Projekt bündelt Aufgaben, Personen und Termine für ein Ziel – einen Produktstart, ein Event, eine neue Website.",
+        "ai": "Mein erstes Projekt mit KI planen",
+        "manual": "oder oben „Neues Projekt“ nutzen"
+      },
+      "tasks": {
+        "title": "Hier sind keine Aufgaben",
+        "body": "Aufgaben sind die kleinen Schritte Ihrer Arbeit. Starten Sie ein Projekt und die KI schlägt sie vor."
+      }
+    },
+    "intro": {
+      "projects": {
+        "what": "Alle Ihre Projekte mit Fortschritt, Verantwortlichen und Verzögerungen.",
+        "why": "Auf einen Blick sehen, was im Plan ist und was Aufmerksamkeit braucht.",
+        "can": "Projekte starten, filtern, verspätete Arbeit erkennen und sehen, wer überlastet ist.",
+        "next": "Projekt starten",
+        "nextMine": "Meine Aufgaben"
+      },
+      "project": {
+        "what": "Alles zu diesem Projekt: Fortschritt, Meilensteine, Risiken, Budget und Personen.",
+        "why": "Ein Ort, um zu sehen, ob das Projekt rechtzeitig fertig wird.",
+        "can": "Meilensteine und Risiken hinzufügen, das Team verwalten und den KI-Projektmanager um Hilfe bitten.",
+        "next": "Zeitplan ansehen"
+      },
+      "task": {
+        "what": "Ein Arbeitspaket – wer es erledigt und bis wann.",
+        "why": "Klare Aufgaben werden erledigt, vage bleiben liegen.",
+        "can": "Status ändern, kommentieren, Dateien anhängen, Zeit erfassen – oder die KI fragen, wie es geht."
+      },
+      "tasks": {
+        "what": "Alle Aufgaben aus allen Projekten.",
+        "why": "Schnell alles finden und sehen, was unternehmensweit verspätet ist.",
+        "can": "Aufgaben filtern, sortieren und anlegen.",
+        "next": "Projekt starten"
+      },
+      "my": {
+        "what": "Die Aufgaben, die Ihnen zugewiesen sind.",
+        "why": "Konzentrieren Sie sich auf das, was heute zählt.",
+        "can": "Sehen, was überfällig, bald fällig und erledigt ist – als Liste oder Kalender.",
+        "next": "Alle Aufgaben"
+      },
+      "templates": {
+        "what": "Wiederverwendbare Projektpläne.",
+        "why": "Nicht bei null anfangen, wenn sich Arbeit wiederholt.",
+        "can": "Eingebaute Vorlagen nutzen oder eigene Projekte als Vorlage speichern.",
+        "next": "Stattdessen mit KI starten"
+      },
+      "board": {
+        "what": "Aufgaben als Karten in Spalten nach Status.",
+        "why": "Den Arbeitsfluss sehen und wo er stockt.",
+        "can": "Karten zwischen Spalten ziehen und Aufgaben hinzufügen."
+      },
+      "list": {
+        "what": "Die Aufgaben des Projekts als Liste.",
+        "why": "Der schnellste Weg, alles zu überblicken und zu sortieren.",
+        "can": "Aufgaben filtern, sortieren und öffnen."
+      },
+      "timeline": {
+        "what": "Die Aufgaben des Projekts auf einer Zeitleiste.",
+        "why": "Zeigt, was wann passiert und was verspätet ist (rot).",
+        "can": "Überschneidungen, Abhängigkeiten und rutschende Termine erkennen."
+      },
+      "calendar": {
+        "what": "Aufgaben nach Fälligkeit in einem Monatskalender.",
+        "why": "Rund um volle Wochen planen.",
+        "can": "Monate durchblättern und Aufgaben öffnen."
+      },
+      "sprints": {
+        "what": "Kurze Arbeitsphasen (meist 1–2 Wochen) mit festem Aufgabenumfang.",
+        "why": "Kleine Zyklen halten das Team fokussiert und zeigen echten Fortschritt.",
+        "can": "Sprints planen, starten, abschließen und die Geschwindigkeit auswerten."
+      }
     }
   },
   "marketing": {
@@ -6857,7 +7359,15 @@
       "audience": "Zielgruppen",
       "forms": "Formulare",
       "automation": "Automatisierung",
-      "brand": "Marke"
+      "brand": "Marke",
+      "start": "Hier starten",
+      "autopilot": "Autopilot",
+      "studio": "Creative Studio",
+      "community": "Community",
+      "blog": "Blog",
+      "ads": "Anzeigen",
+      "influencers": "Influencer",
+      "analytics": "Analysen"
     },
     "common": {
       "allStatuses": "Alle Status",
@@ -6899,7 +7409,9 @@
       "emailsSent": "Gesendete E-Mails",
       "postsPublished": "Veröffentlichte Social-Posts",
       "activeCampaigns": "Aktive Kampagnen",
-      "emailOpenRate": "E-Mail-Öffnungsrate"
+      "emailOpenRate": "E-Mail-Öffnungsrate",
+      "autopilotPublished": "Vom Autopilot veröffentlichte Beiträge",
+      "adSpend": "Werbeausgaben"
     },
     "commandCenter": {
       "title": "Marketing-Kommandozentrale",
@@ -7068,7 +7580,22 @@
       "FACEBOOK": "Facebook-Post",
       "AD": "Anzeige",
       "LANDING_PAGE": "Landingpage",
-      "EMAIL": "E-Mail"
+      "EMAIL": "E-Mail",
+      "THREADS": "Threads-Beitrag",
+      "TIKTOK_SCRIPT": "TikTok-Skript",
+      "YOUTUBE_SCRIPT": "YouTube-Video",
+      "SEO_ARTICLE": "SEO-Artikel",
+      "NEWSLETTER": "Newsletter",
+      "WEBSITE_COPY": "Website-Text",
+      "CASE_STUDY": "Fallstudie",
+      "PRESS_RELEASE": "Pressemitteilung",
+      "PRODUCT_ANNOUNCEMENT": "Produktankündigung",
+      "THOUGHT_LEADERSHIP": "Thought Leadership",
+      "INDUSTRY_REPORT": "Branchenbericht",
+      "VIDEO_SCRIPT": "Videoskript",
+      "CAROUSEL": "Karussell",
+      "QUOTE": "Zitate",
+      "GRAPHIC_BRIEF": "Grafik-Briefing"
     },
     "contentStatus": {
       "DRAFT": "Entwurf",
@@ -7162,7 +7689,11 @@
       "LINKEDIN": "LinkedIn",
       "X": "X",
       "INSTAGRAM": "Instagram",
-      "FACEBOOK": "Facebook"
+      "FACEBOOK": "Facebook",
+      "YOUTUBE": "YouTube",
+      "TIKTOK": "TikTok",
+      "THREADS": "Threads",
+      "PINTEREST": "Pinterest"
     },
     "social": {
       "title": "Social Media OS",
@@ -7182,7 +7713,11 @@
         "LINKEDIN": "Autor-URN, z. B. urn:li:organization:123",
         "X": "Für X optional.",
         "INSTAGRAM": "Instagram-Business-Nutzer-ID",
-        "FACEBOOK": "Facebook-Seiten-ID"
+        "FACEBOOK": "Facebook-Seiten-ID",
+        "YOUTUBE": "YouTube-Kanal-ID (optional)",
+        "TIKTOK": "Optional; das verbundene Konto wird verwendet",
+        "THREADS": "Threads-Benutzer-ID (optional; Standard ist der verbundene Benutzer)",
+        "PINTEREST": "Pinterest-Pinnwand-ID (erforderlich)"
       },
       "queue": "Veröffentlichungswarteschlange",
       "empty": "Noch keine Posts.",
@@ -7639,6 +8174,750 @@
       "preview": "Vorschau",
       "aiContext": "Was KI-Texter erhalten",
       "aiContextHint": "Wird an jede KI-Content-Aufgabe angehängt (Entwürfe, Social Posts, SEO-Briefings, E-Mails, Kampagnenpläne)."
+    },
+    "studio": {
+      "eyebrow": "Marketing Studio",
+      "advanced": "Erweiterte Optionen",
+      "aiLabel": "KI",
+      "strip": {
+        "what": "Was ist das?",
+        "why": "Warum es wichtig ist",
+        "do": "Was Sie hier tun können"
+      },
+      "pages": {
+        "overview": {
+          "what": "Ihr Marketing auf einen Blick: woran die KI arbeitet, was auf Sie wartet und wie es läuft.",
+          "why": "Ein Ort, um zu sehen, ob Marketing Ihr Geschäft voranbringt.",
+          "do": "Beiträge freigeben, die Pipeline verfolgen, Ziele setzen und die nächsten Schritte der KI umsetzen."
+        },
+        "autopilot": {
+          "what": "Autopilot-Pläne, die Beiträge für Sie recherchieren, schreiben, gestalten, prüfen und einplanen.",
+          "why": "Regelmäßig posten, ohne Ihren Tag dafür zu opfern.",
+          "do": "Plan erstellen, Häufigkeit wählen, Entwürfe freigeben und live gehen sehen."
+        },
+        "studio": {
+          "what": "Das Creative Studio: markengerechte Bilder und Videos erstellen und alle Medien in einer Bibliothek halten.",
+          "why": "Beiträge mit guten Bildern erhalten deutlich mehr Aufmerksamkeit.",
+          "do": "Bild beschreiben, Größe und Stil wählen, Varianten erzeugen, herunterladen oder in Beiträgen nutzen."
+        },
+        "social": {
+          "what": "Ihre Social-Media-Konten und die Veröffentlichungswarteschlange.",
+          "why": "Jeder Beitrag, sein Status und seine Ergebnisse in einer Liste.",
+          "do": "Konten verbinden, Beiträge schreiben, einplanen, Fehler wiederholen und Interaktionen sehen."
+        },
+        "community": {
+          "what": "Kommentare zu Ihren Beiträgen, von allen Plattformen gesammelt.",
+          "why": "Schnelle, freundliche Antworten schaffen Vertrauen und Umsatz.",
+          "do": "Kommentare lesen, Antworten von der KI entwerfen lassen, bearbeiten und senden."
+        },
+        "blog": {
+          "what": "Ihre Blog- und Website-Artikel, im eigenen CMS oder in einem kostenlosen Realy-Blog.",
+          "why": "Artikel bringen Monat für Monat Besucher über Google.",
+          "do": "Artikel schreiben oder erzeugen, veröffentlichen, einplanen und Aufrufe verfolgen."
+        },
+        "email": {
+          "what": "E-Mail-Kampagnen an Ihre Zielgruppe, mit A/B-Tests.",
+          "why": "E-Mail ist Ihr eigener Kanal; er macht aus Interesse Kunden.",
+          "do": "Kampagne schreiben, zwei Betreffzeilen testen, senden und Öffnungen sowie Klicks sehen."
+        },
+        "ads": {
+          "what": "Bezahlte Anzeigen auf Meta, Google, LinkedIn und TikTok mit strengen Ausgabenlimits.",
+          "why": "Anzeigen erreichen schnell neue Kunden, wenn sie gemessen und kontrolliert werden.",
+          "do": "Werbekonten importieren, Limits setzen, Kampagnen mit KI entwerfen und jede Änderung freigeben."
+        },
+        "influencers": {
+          "what": "Eine einfache Liste von Creators, mit denen Sie arbeiten möchten.",
+          "why": "Creators stellen Sie einem Publikum vor, das ihnen bereits vertraut.",
+          "do": "Creators hinzufügen, Ansprache von der KI entwerfen lassen, freigeben, senden und Status verfolgen."
+        },
+        "analytics": {
+          "what": "Alle Marketing-Ergebnisse in einer Ansicht.",
+          "why": "Wissen, was funktioniert, um mehr davon zu tun.",
+          "do": "Plattformen vergleichen, dem KI-Analysten eine Frage stellen und lesen, was das System gelernt hat."
+        },
+        "content": {
+          "what": "Alle Inhalte: Beiträge, Artikel, E-Mails, Skripte.",
+          "why": "Einmal schreiben, einmal prüfen, dann überall veröffentlichen.",
+          "do": "Inhalte erstellen, KI-Entwürfe anfordern, in viele Formate umwandeln und zur Freigabe senden."
+        },
+        "seo": {
+          "what": "Suchmaschinenoptimierung: die Begriffe, nach denen Menschen suchen, und Ihre Platzierung.",
+          "why": "Ein gutes Google-Ranking bringt täglich kostenlose Besucher.",
+          "do": "Keywords hinzufügen, von der KI in Themen gruppieren lassen, Artikel schreiben und Rankings verfolgen."
+        },
+        "campaigns": {
+          "what": "Kampagnen bündeln Inhalte, E-Mails, Anzeigen und Budget für ein Ziel.",
+          "why": "Sehen, welcher Einsatz Leads und Umsatz bringt.",
+          "do": "Kampagne anlegen, Ausgaben erfassen und Ergebnisse verfolgen."
+        }
+      },
+      "help": {
+        "title": "Hilf mir dabei",
+        "button": "Hilf mir dabei",
+        "placeholder": "Was möchten Sie tun? (optional)"
+      },
+      "preview": {
+        "followers": "Unternehmen · 1 Min.",
+        "justNow": "Gerade eben",
+        "needsMedia": "Diese Plattform braucht ein Bild oder Video.",
+        "needsVideo": "Diese Plattform braucht ein Video."
+      },
+      "stage": {
+        "IDEA": "Idee",
+        "RESEARCH": "Recherche",
+        "DRAFT": "Entwurf",
+        "AI_REVIEW": "KI-Prüfung",
+        "READY": "Bereit",
+        "SCHEDULED": "Geplant",
+        "PUBLISHED": "Veröffentlicht",
+        "ANALYZED": "Ausgewertet",
+        "REJECTED": "Abgelehnt",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "format": {
+        "post": "Beitrag",
+        "reel": "Reel",
+        "short": "Short",
+        "carousel": "Karussell",
+        "thread": "Thread",
+        "video": "Video"
+      },
+      "priority": {
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig"
+      },
+      "pipeline": {
+        "title": "Content-Pipeline",
+        "hint": "Jeder Beitrag läuft von der Idee bis zur Veröffentlichung; die Zahlen sind live."
+      },
+      "overview": {
+        "start": "Hier starten",
+        "openAutopilot": "Autopilot öffnen",
+        "activeAutopilots": "Aktive Autopiloten",
+        "waitingApproval": "Wartet auf Ihre Freigabe",
+        "scheduled": "Geplante Beiträge",
+        "published": "Veröffentlichte Beiträge"
+      },
+      "next": {
+        "title": "Was als Nächstes zu tun ist",
+        "hint": "Vorschläge aus Ihren echten Ergebnissen und aus Problemen, die das System gefunden hat.",
+        "empty": "Nichts Dringendes. Vorschläge erscheinen hier, sobald Ergebnisse vorliegen.",
+        "done": "Erledigt",
+        "dismiss": "Verwerfen"
+      },
+      "connections": {
+        "title": "Verbindungen",
+        "connect": "Verbinden",
+        "images": "Bilderzeugung",
+        "video": "Videoerzeugung"
+      },
+      "goals": {
+        "title": "Ziele",
+        "hint": "Zielwerte, gemessen an Ihren echten Daten.",
+        "empty": "Noch keine Ziele. Fügen Sie eines hinzu, um den Fortschritt zu verfolgen.",
+        "add": "Ziel hinzufügen",
+        "name": "Zielname",
+        "metricLabel": "Messgröße",
+        "target": "Zielwert",
+        "metric": {
+          "leads": "Leads",
+          "impressions": "Impressionen",
+          "engagement": "Interaktionen",
+          "clicks": "Klicks",
+          "posts": "Veröffentlichte Beiträge",
+          "emails_sent": "Gesendete E-Mails",
+          "spend": "Ausgaben",
+          "traffic": "Website-Besuche",
+          "customers": "Neue Kunden"
+        }
+      },
+      "ai": {
+        "title": "Aktivität der KI-Mitarbeiter",
+        "empty": "Noch keine KI-Arbeit."
+      },
+      "journey": {
+        "title": "Hier starten",
+        "subtitle": "Beantworten Sie ein paar einfache Fragen – Ihr KI-Marketingteam erledigt den Rest.",
+        "skip": "Zum Studio springen",
+        "stepOf": "Schritt {step} von {total}",
+        "progress": "Fortschritt",
+        "recommended": "Empfohlen",
+        "next": "Weiter",
+        "back": "Zurück",
+        "launch": "Autopilot starten",
+        "working": "Ihr KI-Team arbeitet daran. Diese Seite aktualisiert sich selbst.",
+        "s1": {
+          "short": "Bewerben",
+          "title": "Was möchten Sie bewerben?",
+          "hint": "Wählen Sie das Passendste. Sie können es später ändern."
+        },
+        "s2": {
+          "short": "Angebot",
+          "title": "Welches Produkt oder welche Dienstleistung?",
+          "hint": "Nennen Sie den Namen und was es nützlich macht."
+        },
+        "s3": {
+          "short": "Kunden",
+          "title": "Wer sind Ihre Kunden?",
+          "hint": "Beschreiben Sie sie in eigenen Worten, wie einem Freund."
+        },
+        "s4": {
+          "short": "Ziel",
+          "title": "Was soll Marketing erreichen?",
+          "hint": "Wählen Sie das Ergebnis, das jetzt am wichtigsten ist."
+        },
+        "s5": {
+          "short": "Strategie",
+          "title": "Ihre KI erstellt die Strategie",
+          "hint": "Ihre KI-Marketingleitung schreibt aus Ihren Antworten und Firmendokumenten einen einfachen Plan."
+        },
+        "s6": {
+          "short": "Inhalte",
+          "title": "Ihre ersten Beiträge prüfen",
+          "hint": "Sehen Sie genau, wie jeder Beitrag auf jeder Plattform aussieht. Bearbeiten Sie alles nach Belieben."
+        },
+        "s7": {
+          "short": "Planen",
+          "title": "Wann und wo sollen wir posten?",
+          "hint": "Wählen Sie ein Tempo und die Konten. Sie behalten die Kontrolle über alles, was veröffentlicht wird."
+        },
+        "s8": {
+          "short": "Ergebnisse",
+          "title": "Ihre KI überwacht die Ergebnisse",
+          "hint": "Beiträge werden geplant, geschrieben, geprüft und veröffentlicht; das System lernt, was funktioniert."
+        },
+        "promote": {
+          "product": "Ein Produkt",
+          "productHint": "Etwas, das Menschen kaufen, z. B. Software oder Waren.",
+          "service": "Eine Dienstleistung",
+          "serviceHint": "Arbeit für Kunden, z. B. Beratung oder Reparaturen.",
+          "event": "Eine Veranstaltung",
+          "eventHint": "Ein Launch, Webinar, Workshop oder Sale.",
+          "brand": "Meine Marke",
+          "brandHint": "Ihr Unternehmen allgemein bekannter machen.",
+          "offer": "Ein Sonderangebot",
+          "offerHint": "Ein Rabatt, Paket oder zeitlich begrenztes Angebot."
+        },
+        "pickProduct": "Aus Ihren Produkten wählen",
+        "somethingElse": "Etwas anderes",
+        "offerName": "Name",
+        "offerNameEx": "Beispiel: Realy Buchhaltung oder Yoga-Workshop im Frühling",
+        "offerDescription": "Was es tut und warum Menschen es mögen",
+        "offerDescriptionEx": "Beispiel: Automatisiert die Buchhaltung kleiner Läden und spart 5 Stunden pro Woche.",
+        "customers": "Ihre Kunden",
+        "customersEx": "Beispiel: Inhaber kleiner Cafés in Deutschland, 30–50 Jahre, wenig Zeit, suchen einfache Werkzeuge.",
+        "regions": "Wo sind sie?",
+        "regionsEx": "Länder oder Städte, durch Kommas getrennt",
+        "objective": {
+          "awareness": "Bekannt werden",
+          "awarenessHint": "Mehr passende Menschen erfahren von Ihnen.",
+          "leads": "Leads gewinnen",
+          "leadsHint": "Mehr Anfragen, Anmeldungen und Kontakte.",
+          "sales": "Mehr verkaufen",
+          "salesHint": "Mehr Bestellungen und zahlende Kunden.",
+          "traffic": "Mehr Website-Besuche",
+          "trafficHint": "Menschen auf Ihre Website bringen.",
+          "community": "Community aufbauen",
+          "communityHint": "Follower, die interagieren und wiederkommen."
+        },
+        "makeStrategy": "Meine Strategie mit KI erstellen",
+        "makePosts": "Meine ersten Beiträge schreiben",
+        "usePosts": "Diese Beiträge zu meinen Inhalten hinzufügen",
+        "editPost": "Bearbeiten",
+        "makeImage": "Bild erstellen",
+        "noImageProvider": "Verbinden Sie einen Bildanbieter (OpenAI oder Stability), um Bilder für Ihre Beiträge zu erstellen.",
+        "howOften": "Wie oft sollen wir posten?",
+        "pace": {
+          "gentle": "Ruhig",
+          "gentleHint": "Etwa ein Beitrag pro Tag und Plattform.",
+          "steady": "Regelmäßig",
+          "steadyHint": "Zwei Beiträge pro Tag und Plattform.",
+          "active": "Sehr aktiv",
+          "activeHint": "Drei Beiträge pro Tag und Plattform."
+        },
+        "where": "Wo sollen wir posten?",
+        "noAccounts": "Sie haben noch keine Social-Media-Konten.",
+        "addAccounts": "Social-Media-Konten hinzufügen",
+        "approval": "Wer gibt Beiträge frei?",
+        "reviewEach": "Ich prüfe jeden Beitrag",
+        "reviewEachHint": "Nichts wird veröffentlicht, bevor Sie es freigeben.",
+        "autoPublish": "Nach KI-Prüfung automatisch veröffentlichen",
+        "autoPublishHint": "Beiträge, die die KI-Qualitätsprüfung bestehen, gehen planmäßig live.",
+        "live": "Ihr Autopilot läuft. Neue Beiträge erscheinen in der Pipeline, während die KI arbeitet.",
+        "openAutopilot": "Meinen Autopilot öffnen",
+        "openAnalytics": "Ergebnisse ansehen",
+        "openStudio": "Zum Studio"
+      },
+      "autonomy": {
+        "DRAFT_ONLY": "Nur Entwürfe",
+        "DRAFT_ONLYHint": "Die KI bereitet Beiträge vor; Sie planen sie selbst ein.",
+        "REVIEW_REQUIRED": "Ich gebe jeden Beitrag frei",
+        "REVIEW_REQUIREDHint": "Fertige Beiträge warten auf Ihre Freigabe.",
+        "AUTO_PUBLISH": "Nach KI-Prüfung automatisch veröffentlichen",
+        "AUTO_PUBLISHHint": "Beiträge, die die Qualitätsprüfung bestehen, werden automatisch eingeplant."
+      },
+      "autopilot": {
+        "title": "Autopilot",
+        "subtitle": "Pläne, die Ihre Social-Media-Kanäle aktiv halten – unter Ihrer Kontrolle.",
+        "new": "Neuer Autopilot-Plan",
+        "create": "Plan erstellen",
+        "settings": "Planeinstellungen",
+        "name": "Planname",
+        "objective": "Ziel",
+        "objectiveEx": "Beispiel: 50 Demo-Anfragen pro Monat von Café-Inhabern",
+        "audience": "Zielgruppe",
+        "pillars": "Themen",
+        "accounts": "Konten für Beiträge",
+        "postsPerDay": "Beiträge pro Tag",
+        "reelsPerDay": "Reels pro Tag",
+        "shortsPerDay": "Shorts pro Tag",
+        "timezone": "Zeitzone",
+        "regions": "Regionen",
+        "windows": "Veröffentlichungszeiten für {platform}",
+        "windowsHint": "Leer lassen, um die aus Ihren Ergebnissen gelernten besten Zeiten zu nutzen.",
+        "rule": "Freigabe für {platform}",
+        "ruleDefault": "Planeinstellung verwenden",
+        "ruleReview": "Immer prüfen",
+        "ruleAuto": "Nach KI-Prüfung veröffentlichen",
+        "videoRule": "Freigabe für Videos",
+        "compliance": "Regeln, die jeder Beitrag einhalten muss",
+        "complianceHint": "Eine pro Zeile, z. B.: niemals Preise nennen",
+        "horizon": "Tage im Voraus planen",
+        "minScore": "Mindest-Qualitätswert der KI",
+        "budget": "Monatliches Kreativbudget",
+        "budgetHint": "Begrenzt kostenpflichtige Bild- und Videoerzeugung. Leer lassen, um nichts zu erzeugen.",
+        "currency": "Währung",
+        "useResearch": "Themen im Web recherchieren, wenn ein Recherche-Tool verbunden ist",
+        "generateImages": "Bilder für Beiträge erstellen",
+        "emptyTitle": "Noch kein Autopilot",
+        "emptyBody": "Der geführte Start erstellt Ihren ersten Plan in wenigen Minuten.",
+        "counts": "{ready} bereit · {scheduled} geplant · {published} veröffentlicht",
+        "status": {
+          "ACTIVE": "Läuft",
+          "PAUSED": "Pausiert"
+        },
+        "activate": "Starten",
+        "pause": "Pausieren",
+        "planNow": "Jetzt planen",
+        "lastPlanned": "Zuletzt geplant {when}",
+        "missingAccounts": "Kein Konto ausgewählt für: {platforms}. Diese Termine werden nicht geplant.",
+        "smartTimes": "Beste Zeiten aus Ihren Ergebnissen, sonst Plattform-Standards",
+        "noPaid": "Keine kostenpflichtige Erzeugung"
+      },
+      "canvas": {
+        "title": "Content-Leinwand",
+        "hint": "Jede Karte zeigt den Beitrag genau so, wie er erscheinen wird, mit seinem Prüfergebnis.",
+        "stage": "Phase",
+        "allStages": "Alle Phasen",
+        "allPlatforms": "Alle Plattformen",
+        "empty": "Noch nichts hier."
+      },
+      "item": {
+        "noTopic": "Wartet auf ein Thema",
+        "working": {
+          "ideate": "KI wählt Themen…",
+          "draft": "KI schreibt…",
+          "review": "KI prüft…"
+        },
+        "viewTask": "Aufgabe ansehen",
+        "videoProcessing": "Das Video wird erzeugt…",
+        "review": "KI-Prüfung: {score}/100",
+        "assumptions": "Annahmen",
+        "sources": "{count, plural, one {# Quelle} other {# Quellen}}",
+        "videoScript": "Videoskript",
+        "error": "Problem",
+        "performance": "{impressions} Impressionen · {engagement} Interaktionen",
+        "openPost": "In der Warteschlange öffnen",
+        "approve": "Freigeben",
+        "reject": "Ablehnen",
+        "retry": "Erneut versuchen",
+        "regenerate": "Neu schreiben",
+        "edit": "Text bearbeiten",
+        "copy": "Beitragstext",
+        "hashtags": "Hashtags",
+        "cta": "Handlungsaufforderung",
+        "saveReview": "Speichern und neu prüfen"
+      },
+      "check": {
+        "brandVoice": "Markenstimme",
+        "grammar": "Grammatik",
+        "format": "Plattformformat",
+        "cta": "Handlungsaufforderung",
+        "compliance": "Regeln",
+        "factual": "Fakten"
+      },
+      "creative": {
+        "title": "Creative Studio",
+        "subtitle": "Echte, markengerechte Bilder und Videos mit Ihren verbundenen KI-Anbietern erstellen.",
+        "generateTitle": "Bilder erstellen",
+        "generateHint": "Beschreiben Sie, was Sie möchten; wir ergänzen Markenfarben und Stil.",
+        "prompt": "Bild beschreiben",
+        "promptEx": "Beispiel: Eine Barista mit Tablet in einem sonnigen Café, warme Farben",
+        "style": "Stil",
+        "size": "Größe",
+        "variations": "Varianten",
+        "overlay": "Überschrift im Bild (optional)",
+        "overlayHint": "Wir lassen Platz dafür und zeigen sie in der Vorschau.",
+        "useBrand": "Meine Markenfarben und meinen Stil verwenden",
+        "generate": "Erzeugen",
+        "generating": "Wird erzeugt…",
+        "with": "Mit {provider}",
+        "notConnected": "Verbinden Sie OpenAI oder Stability, um Bilder zu erzeugen.",
+        "connectImages": "Bilderzeugung braucht einen verbundenen Anbieter:",
+        "styles": {
+          "photo": "Foto",
+          "minimal": "Minimalistisch",
+          "illustration": "Illustration",
+          "bold": "Plakativ",
+          "product": "Produktfoto",
+          "3d": "3D-Rendering",
+          "lifestyle": "Lifestyle"
+        },
+        "presets": {
+          "instagram_square": "Instagram quadratisch",
+          "instagram_portrait": "Instagram Hochformat",
+          "story_reel": "Story / Reel",
+          "linkedin_post": "LinkedIn-Beitrag",
+          "x_post": "X-Beitrag",
+          "facebook_post": "Facebook-Beitrag",
+          "pinterest_pin": "Pinterest-Pin",
+          "youtube_thumbnail": "YouTube-Vorschaubild",
+          "blog_featured": "Blog-Titelbild",
+          "ad_square": "Quadratische Anzeige"
+        },
+        "brandAssets": "Marken-Assets",
+        "noBrand": "Noch kein Markenkit. Fügen Sie Logo, Farben und Schriften hinzu.",
+        "presetsTitle": "Plattformgrößen",
+        "videoTitle": "Video erstellen",
+        "videoHint": "Kurze Videos für Reels, Shorts und TikTok.",
+        "videoPrompt": "Video beschreiben",
+        "startImage": "Von Bild starten",
+        "format": "Format",
+        "vertical": "Hochformat (9:16)",
+        "horizontal": "Querformat (16:9)",
+        "makeVideo": "Video erzeugen",
+        "videoNotConnected": "Verbinden Sie Runway oder Replicate, um Videos zu erzeugen.",
+        "uploadTitle": "Medien hochladen",
+        "file": "Datei (max. 10 MB)",
+        "kind": "Typ",
+        "kinds": {
+          "IMAGE": "Bild",
+          "VIDEO": "Video",
+          "LOGO": "Logo",
+          "DOCUMENT": "Dokument"
+        },
+        "upload": "Hochladen",
+        "tooLarge": "Die Datei ist größer als 10 MB.",
+        "library": "Medienbibliothek",
+        "search": "Medien suchen",
+        "allKinds": "Alle Typen",
+        "emptyTitle": "Noch keine Medien",
+        "emptyBody": "Erzeugen Sie oben Ihr erstes Bild oder laden Sie eines hoch.",
+        "failed": "Erzeugung fehlgeschlagen",
+        "processing": "In Bearbeitung",
+        "download": "Herunterladen",
+        "regenerate": "Neu erzeugen",
+        "saveTo": "Zur Kampagne speichern",
+        "noCampaign": "Keine Kampagne",
+        "useInPost": "In Beitrag verwenden"
+      },
+      "social": {
+        "board": "Veröffentlichungsstatus",
+        "subAccount": "Seite, Kanal oder Pinnwand",
+        "subAccountHint": "Aus Ihrem verbundenen Konto.",
+        "mediaLibrary": "Medien aus der Bibliothek",
+        "mediaLibraryHint": "Bilder und Videos aus dem Creative Studio.",
+        "hashtags": "Hashtags",
+        "needsMedia": "Diese Plattform braucht ein Bild oder Video.",
+        "preview": "Vorschau"
+      },
+      "hashtags": {
+        "title": "Hashtag-Sets",
+        "empty": "Noch keine Hashtag-Sets.",
+        "name": "Name des Sets",
+        "anyPlatform": "Jede Plattform",
+        "tags": "Hashtags",
+        "save": "Set speichern"
+      },
+      "repurpose": {
+        "title": "Content-Fabrik",
+        "hint": "Machen Sie aus diesem Inhalt mit einem Klick ein komplettes Paket für viele Plattformen.",
+        "run": "Mit KI umwandeln",
+        "apply": "Paket erstellen",
+        "from": "Umgewandelt aus",
+        "bundle": "{count, plural, one {# verknüpfter Inhalt} other {# verknüpfte Inhalte}}",
+        "variations": "{count, plural, one {# Version je Format} other {# Versionen je Format}}"
+      },
+      "publish": {
+        "title": "Veröffentlichen",
+        "hint": "Im CMS Ihrer Website oder in Ihrem kostenlosen Realy-Blog veröffentlichen.",
+        "target": "Wo",
+        "when": "Wann (optional)",
+        "now": "Jetzt veröffentlichen",
+        "schedule": "Einplanen",
+        "needsApproval": "Geben Sie den Inhalt zuerst frei, um ihn zu veröffentlichen.",
+        "open": "Öffnen",
+        "verified": "geprüft",
+        "details": "Artikeldetails",
+        "featured": "Titelbild",
+        "categories": "Kategorien",
+        "tags": "Schlagwörter",
+        "author": "Autor",
+        "targets": {
+          "realy": "Realy-Blog",
+          "wordpress": "WordPress",
+          "webflow": "Webflow",
+          "shopify": "Shopify"
+        }
+      },
+      "seo": {
+        "title": "SEO-Autopilot",
+        "hint": "Keywords in Themen gruppieren, Artikel mit Metadaten und Schema von der KI schreiben lassen, dann veröffentlichen.",
+        "clusters": "Themencluster",
+        "makeClusters": "Keywords mit KI gruppieren",
+        "applyClusters": "Cluster speichern",
+        "noClusters": "Noch keine Cluster.",
+        "pillar": "Haupt-Keyword",
+        "keywordsN": "{count, plural, one {# Keyword} other {# Keywords}}",
+        "writeArticle": "Artikel schreiben",
+        "articleFor": "Keyword für einen neuen Artikel",
+        "articles": "Artikel",
+        "noArticles": "Noch keine SEO-Artikel.",
+        "applyArticle": "Diesen Artikel verwenden",
+        "gsc": "Google Search Console",
+        "gscHint": "Klicks, Impressionen und Position der letzten 28 Tage.",
+        "gscConnect": "Verbinden Sie die Search Console, um echte Suchdaten zu sehen.",
+        "sync": "Synchronisieren",
+        "topPages": "Top-Seiten nach Klicks",
+        "noData": "Noch keine Suchdaten.",
+        "gaps": "Inhaltslücken",
+        "gapsHint": "Suchanfragen, die Sie gewinnen könnten, aber für die es keinen Inhalt gibt.",
+        "noGaps": "Keine Lücken gefunden.",
+        "gapKind": {
+          "keyword": "Keyword",
+          "query": "Suche"
+        },
+        "cover": "Darüber schreiben",
+        "refresh": "Zu aktualisierende Inhalte",
+        "noRefresh": "Nichts muss aktualisiert werden.",
+        "schema": "Schema-Markup (JSON-LD)",
+        "internalLinks": "{count, plural, one {# Vorschlag für interne Links} other {# Vorschläge für interne Links}}"
+      },
+      "blog": {
+        "title": "Blog & Website",
+        "subtitle": "Artikel in Ihrem CMS oder in Ihrem kostenlosen Realy-Blog.",
+        "openPublic": "Öffentlichen Blog öffnen",
+        "write": "Artikel schreiben",
+        "publicPosts": "Öffentliche Beiträge",
+        "views": "Aufrufe",
+        "articles": "Artikel",
+        "articlesHint": "Längere Inhalte und wo sie veröffentlicht sind.",
+        "emptyTitle": "Noch keine Artikel",
+        "emptyBody": "Schreiben Sie einen oder lassen Sie ihn vom SEO-Autopilot schreiben.",
+        "fromSeo": "SEO öffnen",
+        "published": "Veröffentlicht in"
+      },
+      "publicBlog": {
+        "title": "Blog von {name}",
+        "categories": "Kategorien",
+        "all": "Alle",
+        "empty": "Noch keine Beiträge.",
+        "back": "← Blog von {name}"
+      },
+      "email": {
+        "abTitle": "A/B-Test & Versand",
+        "abHint": "Betreffzeilen oder Inhalte an einem Teil der Zielgruppe testen; der Gewinner geht an alle anderen.",
+        "provider": "Senden mit",
+        "providers": {
+          "platform": "Realy-E-Mail",
+          "sendgrid": "SendGrid",
+          "mailchimp": "Mailchimp Transactional"
+        },
+        "abEnabled": "A/B-Test",
+        "testPercent": "Testgruppe (% der Zielgruppe)",
+        "metric": "Gewinner nach",
+        "metricOpen": "Öffnungen",
+        "metricClick": "Klicks",
+        "waitHours": "Wartezeit vor der Auswahl (Stunden)",
+        "phase": {
+          "testing": "Testvarianten werden gesendet…",
+          "waiting": "Ergebnisse werden gesammelt, bevor der Gewinner gewählt wird…",
+          "decided": "Gewinner gewählt; Versand an die übrigen Empfänger."
+        },
+        "winner": "Gewinner",
+        "variantStats": "{sent} gesendet · {open} % geöffnet · {click} % geklickt",
+        "label": "Bezeichnung",
+        "addVariant": "Variante hinzufügen",
+        "tokens": "Personalisieren mit den Platzhaltern firstName, lastName, company und email (in doppelten geschweiften Klammern).",
+        "providerNotReady": "Der gewählte E-Mail-Anbieter ist nicht verbunden.",
+        "suppressions": "Sperrliste",
+        "suppressionsHint": "{count, plural, one {# Adresse erhält nie Marketing-E-Mails} other {# Adressen erhalten nie Marketing-E-Mails}}",
+        "suppress": "Sperren",
+        "suppressEmail": "E-Mail-Adresse",
+        "reason": {
+          "bounce": "Unzustellbar",
+          "complaint": "Spam-Beschwerde",
+          "unsubscribe": "Abgemeldet",
+          "manual": "Manuell hinzugefügt",
+          "other": "Sonstiges"
+        },
+        "webhooks": "Webhooks für Bounces und Beschwerden: {url}"
+      },
+      "ads": {
+        "title": "Bezahlte Anzeigen",
+        "subtitle": "Anzeigen auf Meta, Google, LinkedIn und TikTok mit harten Ausgabenlimits und Freigaben.",
+        "safety": "Bei keiner Werbeplattform wird ohne Freigabe etwas erstellt oder geändert – und nie über Ihren Limits.",
+        "spend30": "Ausgaben (30 Tage)",
+        "spend": "Ausgaben",
+        "clicks": "Klicks",
+        "conversions": "Conversions",
+        "accounts": "Werbekonten",
+        "accountsHint": "Konten von verbundenen Plattformen importieren und Ausgabenlimits festlegen.",
+        "import": "Aus {provider} importieren",
+        "connect": "{provider} verbinden",
+        "providers": {
+          "meta_ads": "Meta Ads",
+          "google_ads": "Google Ads",
+          "linkedin_ads": "LinkedIn Ads",
+          "tiktok_ads": "TikTok Ads"
+        },
+        "emptyTitle": "Keine Werbekonten",
+        "emptyBody": "Verbinden Sie eine Werbeplattform und importieren Sie dann ihre Konten.",
+        "synced": "Synchronisiert {when}",
+        "neverSynced": "Noch nicht synchronisiert",
+        "noCaps": "Legen Sie Limits fest, bevor Kampagnen erstellt oder geändert werden können.",
+        "dailyCap": "Tageslimit",
+        "monthlyCap": "Monatslimit",
+        "sync": "Synchronisieren",
+        "campaigns": "Kampagnen",
+        "noCampaigns": "Noch keine Kampagnen.",
+        "name": "Kampagnenname",
+        "dailyBudget": "Tagesbudget",
+        "localDraft": "Entwurf (nicht live)",
+        "createDraft": "Neuer Kampagnenentwurf",
+        "account": "Werbekonto",
+        "objective": "Ziel",
+        "objectiveHint": "Ziel des Anbieters, z. B. OUTCOME_TRAFFIC oder SEARCH",
+        "audience": "Zielgruppe",
+        "headline": "Überschrift",
+        "cta": "Handlungsaufforderung",
+        "body": "Anzeigentext",
+        "url": "URL der Zielseite",
+        "performance": "Tägliche Leistung",
+        "noMetrics": "Noch keine Kennzahlen. Synchronisieren Sie das Werbekonto.",
+        "controls": "Steuerung",
+        "requestLaunch": "Erstellung auf der Plattform anfordern",
+        "requestActivate": "Aktivierung anfordern",
+        "requestPause": "Pause anfordern",
+        "newBudget": "Neues Tagesbudget",
+        "requestApproval": "Freigabe anfordern",
+        "approvalNote": "Anfragen erscheinen unter Freigaben; eine freigebende Person mit Zwei-Faktor-Bestätigung bestätigt sie.",
+        "adsTitle": "Anzeigen",
+        "aiPlan": "KI-Kampagnenplan",
+        "aiCopy": "KI-Anzeigenvarianten",
+        "aiOptimize": "KI-Optimierung"
+      },
+      "community": {
+        "title": "Community",
+        "subtitle": "Kommentare und Antworten auf allen Ihren Plattformen.",
+        "sync": "Kommentare abrufen",
+        "sentiment": {
+          "positive": "Positiv",
+          "neutral": "Neutral",
+          "negative": "Negativ"
+        },
+        "sentimentLabel": "Stimmung",
+        "anySentiment": "Jede Stimmung",
+        "status": {
+          "NEW": "Neu",
+          "DRAFTED": "Antwort entworfen",
+          "REPLIED": "Beantwortet",
+          "IGNORED": "Ignoriert"
+        },
+        "emptyTitle": "Noch keine Kommentare",
+        "emptyBody": "Kommentare zu Ihren veröffentlichten Beiträgen erscheinen hier nach einer Synchronisierung.",
+        "replied": "Ihre Antwort",
+        "reply": "Antwort",
+        "saveDraft": "Entwurf speichern",
+        "send": "Antwort senden",
+        "confirmSend": "Diese Antwort öffentlich posten?",
+        "aiDraft": "Mit KI entwerfen",
+        "useAiDraft": "KI-Entwurf verwenden",
+        "aiSuggests": "Die KI schlägt vor",
+        "ignore": "Ignorieren",
+        "reopen": "Wieder öffnen"
+      },
+      "influencers": {
+        "title": "Influencer",
+        "subtitle": "Creators, mit denen Sie arbeiten oder die Sie erreichen möchten.",
+        "add": "Creator hinzufügen",
+        "edit": "Bearbeiten",
+        "name": "Name",
+        "email": "E-Mail",
+        "followers": "Follower",
+        "followersN": "{count} Follower",
+        "niche": "Thema",
+        "url": "Profil-Link",
+        "subject": "E-Mail-Betreff",
+        "message": "Nachricht",
+        "platforms": {
+          "BLOG": "Blog",
+          "PODCAST": "Podcast",
+          "OTHER": "Sonstiges"
+        },
+        "status": {
+          "PROSPECT": "Interessent",
+          "CONTACTED": "Kontaktiert",
+          "NEGOTIATING": "In Verhandlung",
+          "ACTIVE": "Zusammenarbeit",
+          "DECLINED": "Abgelehnt"
+        },
+        "outreach": {
+          "DRAFT": "Nachricht entworfen",
+          "PENDING_APPROVAL": "Wartet auf Freigabe",
+          "SENT": "Nachricht gesendet",
+          "FAILED": "Senden fehlgeschlagen"
+        },
+        "aiDraft": "Ansprache mit KI entwerfen",
+        "useDraft": "KI-Entwurf verwenden",
+        "requestSend": "Freigabe zum Senden anfordern",
+        "emptyTitle": "Noch keine Creators",
+        "emptyBody": "Fügen Sie Creators hinzu, die Ihre Kunden erreichen."
+      },
+      "analytics": {
+        "title": "Marketing-Analysen",
+        "subtitle": "Ergebnisse aus Social Media, E-Mail, Anzeigen, Suche und Ihrem Blog.",
+        "impressions": "Impressionen",
+        "reach": "Reichweite",
+        "engagement": "Interaktionen",
+        "clicks": "Klicks",
+        "traffic": "Suchklicks",
+        "searchImpressions": "{count} Such-Impressionen",
+        "blogViews": "Blog-Aufrufe",
+        "totalSpend": "Gesamtausgaben",
+        "adSpend": "Anzeigen: {amount}",
+        "byPlatform": "Interaktionen nach Plattform",
+        "noSocial": "Keine veröffentlichten Beiträge mit Kennzahlen in diesem Zeitraum.",
+        "email": "E-Mail",
+        "clickRate": "Klickrate",
+        "bounced": "Unzustellbar",
+        "ask": "Den Marketing-Analysten fragen",
+        "askHint": "Eine Frage in einfachen Worten; die KI antwortet mit Ihren echten Zahlen.",
+        "askPlaceholder": "Beispiel: Welche Plattform brachte letzten Monat die meisten Leads?",
+        "askButton": "Fragen",
+        "learnings": "Was das System gelernt hat",
+        "learningsHint": "Wöchentlich aus echter Leistung aktualisiert und beim Schreiben neuer Inhalte genutzt.",
+        "noLearnings": "Noch nicht genug veröffentlichte Beiträge mit Ergebnissen.",
+        "kind": {
+          "platform": "Plattform",
+          "time": "Beste Zeit",
+          "topic": "Thema",
+          "format": "Format",
+          "cta": "Handlungsaufforderung",
+          "hashtag": "Hashtag"
+        }
+      }
     }
   },
   "sales": {
@@ -9265,7 +10544,8 @@
       "policies": "Richtlinien",
       "requests": "Anfragen",
       "payroll": "Gehaltsabrechnung",
-      "me": "Mein HR"
+      "me": "Mein HR",
+      "hire": "Jemanden einstellen"
     },
     "ai": {
       "analystAnswers": "Antworten des People Analyst",
@@ -10111,6 +11391,357 @@
       "certificate": "Zertifikat",
       "review": "Beurteilung",
       "other": "Sonstiges"
+    },
+    "hire": {
+      "title": "Jemanden einstellen",
+      "subtitle": "Schritt für Schritt von „Ich brauche Hilfe“ bis zum ersten Arbeitstag einer neuen Kollegin oder eines neuen Kollegen.",
+      "progress": "Fortschritt der Einstellung",
+      "recommended": "Empfohlen",
+      "advanced": "Erweitert",
+      "back": "Zurück",
+      "whatsThis": "Was ist das?",
+      "openJob": "Ganze Stelle öffnen",
+      "openTask": "KI-Aufgabe öffnen",
+      "aiNotReady": "KI ist hier nicht verfügbar – schreiben Sie die Beschreibung unten selbst.",
+      "intro": {
+        "what": "Ein geführter Weg zur Einstellung: Rolle beschreiben, Stellenanzeige von der KI schreiben lassen, veröffentlichen, Bewerber auswählen, Gespräche führen und einstellen.",
+        "why": "Gute Einstellungen brauchen Zeit. Hier bleibt jeder Schritt an einem Ort, damit nichts verloren geht.",
+        "can": "Beantworten Sie einfache Fragen; Realy.si legt die echte Stelle, den Karriereseiten-Link, Gespräche und das Onboarding für Sie an."
+      },
+      "steps": {
+        "need": "Bedarf",
+        "role": "Rolle",
+        "describe": "Stellenbeschreibung",
+        "publish": "Veröffentlichen",
+        "candidates": "Bewerber",
+        "interviews": "Gespräche",
+        "hire": "Einstellen & Onboarding"
+      },
+      "q": {
+        "need": "Müssen Sie jemanden einstellen?",
+        "role": "Welche Rolle brauchen Sie?",
+        "describe": "Schreiben wir die Stellenbeschreibung",
+        "publish": "Bereit, die Stelle zu veröffentlichen?",
+        "candidates": "Wer hat sich beworben?",
+        "interviews": "Lernen wir die besten Leute kennen",
+        "hire": "Wen stellen Sie ein?"
+      },
+      "qHint": {
+        "need": "Wenn Ihr Team Unterstützung braucht, führen wir Sie durch alles.",
+        "role": "Mit Ihren eigenen Worten – kein Personal-Fachjargon nötig.",
+        "describe": "Die Stellenbeschreibung ist die Anzeige, die Bewerber lesen. Die KI entwirft sie, Sie bearbeiten sie.",
+        "publish": "Beim Veröffentlichen erscheint die Stelle auf Ihrer öffentlichen Karriereseite, damit sich Leute bewerben können.",
+        "candidates": "Bewerbungen erscheinen hier. Die KI kann Lebensläufe lesen und bewerten, wie gut sie passen.",
+        "interviews": "Wählen Sie einen Termin. Der Bewerber rückt automatisch in die Gesprächsphase.",
+        "hire": "Die Einstellung legt den Mitarbeiterdatensatz an und startet die Onboarding-Checkliste."
+      },
+      "need": {
+        "yes": "Ja, ich muss jemanden einstellen",
+        "yesHint": "Wir fragen, was die Person tun wird, schreiben die Anzeige mit KI und helfen Ihnen, die Richtigen zu finden.",
+        "no": "Jetzt nicht – vorhandene Mitarbeitende hinzufügen",
+        "noHint": "Tragen Sie Ihr bestehendes Team ein, damit Realy.si weiß, wer hier arbeitet."
+      },
+      "resume": {
+        "title": "Dort weitermachen, wo Sie aufgehört haben",
+        "hint": "Einstellungen, die Sie bereits begonnen haben.",
+        "at": "bei: {step}",
+        "candidates": "{count, plural, one {# Bewerber} other {# Bewerber}}",
+        "continue": "Weiter"
+      },
+      "role": {
+        "titleLabel": "Wie soll die Stelle heißen?",
+        "titleHint": "Ein einfacher Titel, nach dem Leute suchen.",
+        "titlePlaceholder": "z. B. Vertriebsassistenz",
+        "examples": "Beispiele",
+        "briefLabel": "Was wird diese Person im Alltag tun?",
+        "briefHint": "Zwei, drei Sätze reichen. Die KI schreibt daraus die Anzeige.",
+        "briefPlaceholder": "z. B. Kunden-E-Mails beantworten, bei Bestellungen helfen und unsere Unterlagen ordentlich halten.",
+        "typeLabel": "Wie viel wird die Person arbeiten?",
+        "whereLabel": "Wo wird die Person arbeiten?",
+        "whereHint": "Eine Stadt oder ein Büro. Leer lassen, wenn es egal ist.",
+        "wherePlaceholder": "z. B. Ljubljana",
+        "remote": "Kann von zu Hause arbeiten",
+        "howMany": "Wie viele Personen?",
+        "department": "Abteilung",
+        "noDepartment": "Keine Abteilung",
+        "submit": "Weiter",
+        "submitHint": "Das speichert einen Stellenentwurf – noch wird nichts veröffentlicht.",
+        "example": {
+          "sales": {
+            "title": "Vertriebsassistenz",
+            "brief": "Potenzielle Kunden anrufen und anschreiben, die Kundenliste aktuell halten und beim Abschluss helfen."
+          },
+          "developer": {
+            "title": "Softwareentwickler/in",
+            "brief": "Unsere Website und App entwickeln und verbessern, Fehler beheben und mit dem Team an neuen Funktionen arbeiten."
+          },
+          "bookkeeper": {
+            "title": "Buchhalter/in",
+            "brief": "Rechnungen und Ausgaben erfassen, offene Zahlungen nachverfolgen und Zahlen für den Steuerberater vorbereiten."
+          },
+          "support": {
+            "title": "Kundenservice-Mitarbeiter/in",
+            "brief": "Kundenfragen per E-Mail und Chat beantworten, Probleme lösen und für zufriedene Kunden sorgen."
+          },
+          "designer": {
+            "title": "Designer/in",
+            "brief": "Unsere Marketingmaterialien, Webseiten und Social-Media-Beiträge gestalten."
+          },
+          "marketing": {
+            "title": "Marketingassistenz",
+            "brief": "Beiträge und Newsletter schreiben, einfache Kampagnen umsetzen und berichten, was funktioniert."
+          }
+        },
+        "type": {
+          "FULL_TIME": {
+            "label": "Vollzeit",
+            "hint": "Eine reguläre Stelle, etwa 40 Stunden pro Woche."
+          },
+          "PART_TIME": {
+            "label": "Teilzeit",
+            "hint": "Weniger Stunden, z. B. nur vormittags."
+          },
+          "CONTRACTOR": {
+            "label": "Freiberuflich",
+            "hint": "Arbeitet auf Vertragsbasis für Sie, nicht als Angestellte/r."
+          },
+          "INTERN": {
+            "label": "Praktikum",
+            "hint": "Studierende oder Einsteiger, die im Job lernen."
+          }
+        }
+      },
+      "describe": {
+        "youSaid": "Sie sagten, die Person wird:",
+        "write": "Mit KI für mich schreiben",
+        "rewrite": "Neue Version schreiben",
+        "writing": "Die KI schreibt Ihre Stellenbeschreibung …",
+        "failed": "Die KI konnte die Beschreibung nicht schreiben. Versuchen Sie es erneut oder schreiben Sie sie selbst.",
+        "editorLabel": "Stellenbeschreibung",
+        "editorHint": "Ändern Sie, was Sie möchten – genau dieser Text wird Bewerbern angezeigt.",
+        "placeholder": "Beschreiben Sie das Unternehmen, die Rolle, die Aufgaben und was Sie bieten …",
+        "save": "Speichern und weiter",
+        "needText": "Schreiben oder erzeugen Sie zuerst eine Beschreibung."
+      },
+      "publish": {
+        "explain": "Nach dem Veröffentlichen erscheint die Stelle auf Ihrer Karriereseite und jede Person mit dem Link kann sich bewerben.",
+        "liveTitle": "Ihre Stelle ist online",
+        "liveBody": "Teilen Sie den Link unten in sozialen Medien, per E-Mail oder mit Bekannten. Bewerbungen kommen automatisch hier an.",
+        "copy": "Link kopieren",
+        "copied": "Kopiert",
+        "view": "Stellenseite ansehen",
+        "publish": "Stelle veröffentlichen",
+        "next": "Bewerber ansehen",
+        "edit": "Beschreibung bearbeiten",
+        "preview": "Vorschau der Stellenbeschreibung",
+        "noDescription": "Noch keine Beschreibung."
+      },
+      "terms": {
+        "aiScoreWord": "KI-Bewertung",
+        "aiScore": "Eine Zahl von 0 bis 100, die zeigt, wie gut ein Lebenslauf zur Stelle passt – vergeben von der KI-Recruiterin nach dem Lesen. Ein Hinweis, keine Entscheidung: Sie wählen, wen Sie treffen."
+      },
+      "candidates": {
+        "approvalNote": "Bewertungen werden gespeichert, nachdem Sie sie freigeben unter",
+        "approvals": "Freigaben",
+        "screen": "{count, plural, =0 {Alle sind gesichtet} one {KI # neue Bewerbung sichten lassen} other {KI # neue Bewerbungen sichten lassen}}",
+        "screening": "{count, plural, one {KI sichtet # Bewerbung} other {KI sichtet # Bewerbungen}}",
+        "screenResult": "Gestartet {started}, läuft bereits {running}, wartet auf die nächste Runde {remaining}.",
+        "score": "Bewertung {score}",
+        "notScored": "Noch nicht bewertet",
+        "invite": "Zum Gespräch einladen",
+        "reject": "Passt nicht",
+        "rejectConfirm": "Diese Person als nicht passend für die Stelle markieren?",
+        "emptyTitle": "Noch keine Bewerbungen",
+        "emptyBody": "Teilen Sie den Link zu Ihrer Karriereseite oder fügen Sie selbst jemanden hinzu – zum Beispiel jemanden, der Ihnen den Lebenslauf gemailt hat.",
+        "publishFirst": "Zuerst die Stelle veröffentlichen",
+        "addTitle": "Selbst jemanden hinzufügen",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "email": "E-Mail",
+        "source": "Wie haben Sie die Person gefunden?",
+        "notes": "Notizen oder Lebenslauf-Text",
+        "notesHint": "Fügen Sie die Nachricht oder den Lebenslauf ein, damit die KI ihn lesen kann.",
+        "add": "Bewerber hinzufügen",
+        "next": "Weiter zu den Gesprächen",
+        "sources": {
+          "manual": "Von mir hinzugefügt",
+          "referral": "Empfehlung",
+          "linkedin": "LinkedIn",
+          "agency": "Personalagentur",
+          "other": "Sonstiges"
+        }
+      },
+      "interviews": {
+        "who": "Wen treffen Sie?",
+        "when": "Wann?",
+        "how": "Wie treffen Sie sich?",
+        "length": "Wie lange?",
+        "minutes": "{count} Minuten",
+        "link": "Meeting-Link",
+        "linkPlaceholder": "z. B. ein Videocall-Link",
+        "address": "Adresse",
+        "addressPlaceholder": "z. B. unsere Büroadresse",
+        "interviewer": "Wer ist noch dabei?",
+        "justMe": "Nur ich",
+        "schedule": "Gespräch planen",
+        "scheduled": "Gespräch geplant. Die Gesprächsperson wurde benachrichtigt.",
+        "noCandidates": "Noch keine Bewerber für Gespräche. Gehen Sie zurück zum Schritt Bewerber, um Personen hinzuzufügen oder zu sichten.",
+        "upcoming": "Anstehende Gespräche",
+        "none": "Noch nichts geplant.",
+        "markDone": "Erledigt",
+        "cancel": "Absagen",
+        "next": "Ich habe die richtige Person gefunden",
+        "types": {
+          "VIDEO": "Videoanruf",
+          "PHONE": "Telefonat",
+          "ONSITE": "Vor Ort"
+        }
+      },
+      "hire": {
+        "who": "Wen stellen Sie ein?",
+        "start": "Erster Arbeitstag",
+        "startHint": "Sie können ihn später ändern.",
+        "manager": "An wen wird die Person berichten?",
+        "managerHint": "Vorgesetzte/r oder Hauptansprechperson.",
+        "noManager": "Später entscheiden",
+        "note": "Notiz (optional)",
+        "submit": "Einstellen und Onboarding starten",
+        "submitHint": "Legt das Mitarbeiterprofil und eine Onboarding-Checkliste an.",
+        "noCandidates": "Noch niemand ist bereit zur Einstellung. Führen Sie zuerst ein Gespräch.",
+        "doneTitle": "Willkommen an Bord!",
+        "doneBody": "Das Mitarbeiterprofil ist angelegt und die Onboarding-Checkliste läuft.",
+        "openProfile": "Profil öffnen",
+        "openOnboarding": "Onboarding öffnen",
+        "finish": "Diese Einstellung abschließen",
+        "hiredList": "Für diese Stelle eingestellt"
+      },
+      "stage": {
+        "APPLIED": "Beworben",
+        "SCREENING": "Sichtung",
+        "INTERVIEW": "Gespräch",
+        "OFFER": "Angebot",
+        "HIRED": "Eingestellt"
+      },
+      "pipeline": {
+        "title": "Bewerbungs-Pipeline",
+        "hint": "Wie viele Personen sich bei dieser Stelle in welchem Schritt befinden.",
+        "hintAll": "Personen in Ihrer Bewerbungs-Pipeline über alle Stellen (eingestellt: letzte 90 Tage).",
+        "empty": "Noch keine Bewerber – sie erscheinen hier, sobald sich jemand bewirbt."
+      },
+      "health": {
+        "headcount": "Personen im Team",
+        "onboarding": "{count, plural, =0 {niemand fängt an} one {# fängt bald an} other {# fangen bald an}}",
+        "onLeave": "Heute abwesend",
+        "openRoles": "Offene Stellen",
+        "applicants": "Laufende Bewerbungen"
+      },
+      "help": {
+        "title": "Kommen Sie nicht weiter? Fragen Sie die KI",
+        "hint": "Die KI-Recruiterin sieht sich diese Stelle an und sagt Ihnen, was als Nächstes zu tun ist."
+      }
+    },
+    "intro": {
+      "overview": {
+        "what": "Ihr Team auf einen Blick: wer hier arbeitet, wer abwesend ist, wer neu dazukommt und welche Stellen offen sind.",
+        "why": "Ein gesundes Team ist die Basis jedes Unternehmens – erkennen Sie Probleme früh.",
+        "can": "Einstellen, Urlaub verwalten, Neue einarbeiten und alle Daten an einem Ort pflegen.",
+        "next": "Jemanden einstellen",
+        "nextSelf": "Mein Profil öffnen",
+        "helpHint": "Der KI-Personalanalyst liest Ihre Personaldaten und schlägt nächste Schritte vor."
+      },
+      "employees": {
+        "what": "Die Liste aller Personen, die für Sie arbeiten.",
+        "why": "Gehalt, Urlaub, Onboarding und Organigramm beginnen alle mit dieser Liste.",
+        "can": "Personen hinzufügen, eine Tabelle importieren, filtern und jedes Profil öffnen.",
+        "next": "Jemand Neues einstellen"
+      },
+      "recruiting": {
+        "what": "Alle offenen Stellen und alle Bewerbungen (ein „ATS“ – Bewerbermanagementsystem).",
+        "why": "Hält jede Bewerbung, jedes Gespräch und jede Entscheidung an einem Ort.",
+        "can": "Stellen anlegen, Bewerber durch die Phasen führen, Gespräche planen und Angebote machen.",
+        "next": "Geführte Einstellung starten"
+      },
+      "onboarding": {
+        "what": "Checklisten, die neue Leute willkommen heißen und den Abschied regeln.",
+        "why": "Eine gute erste Woche sorgt dafür, dass Menschen länger bleiben und schneller produktiv werden.",
+        "can": "Aufgaben wie Zugänge, Ausstattung und Schulungen verfolgen; Firmengeräte verwalten.",
+        "next": "Neue Mitarbeitende ansehen"
+      },
+      "performance": {
+        "what": "Ziele, Beurteilungen und Feedback für Ihr Team.",
+        "why": "Klare Ziele und regelmäßiges Feedback helfen Menschen zu wachsen.",
+        "can": "Beurteilungsrunden durchführen, Ziele setzen und Feedback teilen.",
+        "next": "Öffnen"
+      },
+      "time": {
+        "what": "Arbeitszeiten und Anwesenheit.",
+        "why": "Genaue Stunden bedeuten korrekte Bezahlung und faire Auslastung.",
+        "can": "Anwesenheit erfassen, Dienstpläne planen und sehen, wer wann arbeitet.",
+        "next": "Abwesenheiten verwalten"
+      },
+      "leave": {
+        "what": "Urlaub, Krankheitstage und andere Abwesenheiten.",
+        "why": "Wissen, wer weg ist, und Kontingente fair halten.",
+        "can": "Abwesenheiten beantragen, genehmigen, verfolgen und den Teamkalender sehen.",
+        "next": "Meine Abwesenheiten"
+      },
+      "policies": {
+        "what": "Die Regeln und Handbücher Ihres Unternehmens.",
+        "why": "Alle wissen, woran sie sind; die KI kann Fragen daraus beantworten.",
+        "can": "Richtlinien veröffentlichen, zum Lesen auffordern und verfolgen, wer sie gelesen hat.",
+        "next": "Meine Seite öffnen"
+      },
+      "requests": {
+        "what": "Anliegen von Mitarbeitenden an die Personalabteilung (Dokumente, Änderungen, Fragen).",
+        "why": "Nichts geht in einem Postfach verloren.",
+        "can": "Anliegen beantworten, zuweisen und abschließen.",
+        "next": "Meine Seite öffnen"
+      },
+      "payroll": {
+        "what": "Gehälter und Lohnabrechnungen.",
+        "why": "Pünktliche und korrekte Bezahlung schafft Vertrauen.",
+        "can": "Gehaltsläufe vorbereiten, Abrechnungen prüfen und Vergütung erfassen.",
+        "next": "Öffnen"
+      },
+      "me": {
+        "what": "Ihre eigene Personalseite.",
+        "why": "Eigene Daten sehen und ändern, ohne die Personalabteilung zu fragen.",
+        "can": "Urlaub beantragen, Richtlinien lesen und Fragen an die Personalabteilung stellen.",
+        "next": "Urlaub beantragen"
+      },
+      "org_structure": {
+        "what": "Wie Ihr Unternehmen organisiert ist: Abteilungen und Teams.",
+        "why": "Eine klare Struktur zeigt, wer wofür verantwortlich ist.",
+        "can": "Abteilungen und Teams anlegen und Leitungen festlegen.",
+        "next": "Organigramm ansehen"
+      },
+      "org_chart": {
+        "what": "Ein Bild davon, wer an wen berichtet.",
+        "why": "Neue Kolleginnen und Partner sehen schnell, an wen sie sich wenden.",
+        "can": "Den Baum durchsuchen und Profile öffnen. Vorgesetzte legen Sie im Mitarbeiterprofil fest.",
+        "next": "Personen verwalten"
+      },
+      "org_roles": {
+        "what": "Berufsbezeichnungen und Rollen im Unternehmen.",
+        "why": "Einheitliche Titel erleichtern Einstellung, Vergütung und Berichte.",
+        "can": "Titel prüfen und sehen, wie viele Personen sie tragen.",
+        "next": "Abteilungen und Teams"
+      },
+      "chart": {
+        "emptyTitle": "Noch niemand im Organigramm",
+        "addPeople": "Personen hinzufügen"
+      }
+    },
+    "empty": {
+      "employees": {
+        "title": "Ihre Teamliste ist leer",
+        "body": "Tragen Sie die Personen ein, die schon für Sie arbeiten (Formular oder Tabellenimport oben), oder stellen Sie jemand Neues ein.",
+        "orAdd": "oder oben „Mitarbeiter hinzufügen“ nutzen"
+      },
+      "jobs": {
+        "title": "Keine offenen Stellen",
+        "body": "Sagen Sie uns, welche Unterstützung Sie brauchen, und die KI schreibt die Stellenanzeige für Sie."
+      }
     }
   },
   "communication": {
@@ -10947,7 +12578,177 @@
       "submit": "Anfrage senden",
       "created": "Anfrage #{number} ist eingegangen. Wir haben Ihnen einen Link zum Verfolgen gemailt.",
       "viewTicket": "Anfrage ansehen",
-      "browseHelp": "Hilfecenter durchsuchen"
+      "browseHelp": "Hilfecenter durchsuchen",
+      "emailUs": "Lieber per E-Mail? Schreiben Sie an"
+    },
+    "setup": {
+      "title": "Kundensupport einrichten",
+      "progress": "Fortschritt der Support-Einrichtung",
+      "alreadyDone": "Die Einrichtung ist abgeschlossen. Sie können hier jederzeit alles ändern.",
+      "recommended": "Empfohlen",
+      "saveNext": "Speichern und weiter",
+      "finish": "Abschließen und Posteingang öffnen",
+      "aiNotReady": "KI ist hier nicht verfügbar.",
+      "intro": {
+        "what": "Eine kurze Einrichtung für Kundenanfragen: wie Kunden Sie erreichen, wie schnell Sie antworten und Ihre ersten Hilfeartikel.",
+        "why": "Kunden bleiben, wenn sie schnelle, klare Antworten bekommen.",
+        "can": "Kontaktwege aktivieren, Antwortzeiten zusagen und Hilfeartikel von der KI entwerfen lassen."
+      },
+      "steps": {
+        "channels": "Kontaktwege",
+        "promises": "Antwortzeiten",
+        "articles": "Hilfeartikel",
+        "inbox": "Posteingang"
+      },
+      "q": {
+        "channels": "Wie kontaktieren Sie Ihre Kunden?",
+        "promises": "Wie schnell werden Sie antworten?",
+        "articles": "Schreiben Sie Ihre ersten Hilfeartikel"
+      },
+      "qHint": {
+        "channels": "Wählen Sie alle Wege, auf denen Kunden Sie erreichen. Jede Nachricht wird ein Ticket in Ihrem Posteingang.",
+        "promises": "Das ist Ihr Serviceversprechen (ein „SLA“). Realy.si zählt herunter und warnt Sie, bevor es verfehlt wird.",
+        "articles": "Antworten auf häufige Fragen, damit Kunden sich selbst helfen können. Die KI schreibt Entwürfe, Sie prüfen sie."
+      },
+      "channels": {
+        "supportFormEnabled": {
+          "label": "Webformular",
+          "hint": "Ein Kontaktformular auf Ihrer eigenen Seite. Kunden erhalten einen Link, um ihre Anfrage zu verfolgen."
+        },
+        "helpCenterEnabled": {
+          "label": "Hilfecenter",
+          "hint": "Eine öffentliche Seite mit Ihren Hilfeartikeln und einer Suche."
+        },
+        "emailChannelEnabled": {
+          "label": "E-Mail",
+          "hint": "Ihre Support-E-Mail-Adresse im Hilfecenter und im Formular anzeigen."
+        },
+        "preview": "Vorschau",
+        "address": "Support-E-Mail-Adresse",
+        "addressHint": "Wird Kunden angezeigt. Dorthin gesendete E-Mails werden nicht automatisch importiert – erfassen Sie sie im Posteingang als Tickets.",
+        "emailReady": "E-Mail-Versand ist eingerichtet: Kunden erhalten Ihre Antworten per E-Mail.",
+        "emailNotReady": "E-Mail-Versand ist noch nicht eingerichtet: Ihre Antworten erscheinen auf der Ticketseite des Kunden, es werden aber keine E-Mails versendet."
+      },
+      "promise": {
+        "respondLabel": "Erste Antwort innerhalb von …",
+        "resolveLabel": "Problem gelöst innerhalb von …",
+        "businessHours": "Nur Arbeitszeiten zählen (Mo–Fr, 9:00–17:00)",
+        "previewTitle": "Ihr Versprechen",
+        "preview": "Normale Anfragen: erste Antwort innerhalb von {respond}, gelöst innerhalb von {resolve}. Dringende bekommen ein Viertel der Zeit, hohe Priorität die Hälfte, niedrige das Doppelte.",
+        "respond": {
+          "1h": "1 Stunde",
+          "4h": "4 Stunden",
+          "1d": "1 Tag",
+          "2d": "2 Tagen"
+        },
+        "resolve": {
+          "1d": "1 Tag",
+          "3d": "3 Tagen",
+          "1w": "1 Woche"
+        }
+      },
+      "articles": {
+        "pick": "Welche Fragen stellen Kunden am häufigsten?",
+        "custom": "Weiteres Thema (optional)",
+        "draft": "{count, plural, one {# Artikel mit KI entwerfen} other {# Artikel mit KI entwerfen}}",
+        "writeYourself": "Artikel selbst schreiben",
+        "title": "Artikeltitel",
+        "body": "Artikeltext",
+        "publish": "Veröffentlichen",
+        "saveDraft": "Als Entwurf speichern",
+        "saved": "In Ihrer Wissensdatenbank gespeichert.",
+        "open": "Artikel öffnen",
+        "topics": {
+          "contact": "So erreichen Sie uns",
+          "start": "Erste Schritte",
+          "account": "Ihr Konto verwalten",
+          "billing": "Zahlungen und Rechnungen",
+          "refunds": "Rücksendungen und Erstattungen",
+          "shipping": "Lieferung und Versand"
+        }
+      }
+    },
+    "pulse": {
+      "flowTitle": "Ticketfluss",
+      "flowHint": "Wo sich Kundenanfragen gerade befinden.",
+      "timersTitle": "Countdown der Antwortzeiten",
+      "timersHint": "Live-Timer bis zur Fälligkeit jedes Versprechens. Rot bedeutet: Versprechen verfehlt.",
+      "noTimers": "Keine offenen Tickets mit Antwortzeit-Versprechen.",
+      "respond": "Erste Antwort fällig",
+      "resolve": "Lösung fällig",
+      "overdueBy": "Überfällig seit {time}",
+      "leftAria": "{time} übrig",
+      "sentimentTitle": "Kundenstimmung",
+      "sentimentHint": "Wie neue Tickets in den letzten 14 Tagen klangen.",
+      "noSentiment": "Keine neuen Tickets in den letzten 14 Tagen.",
+      "sentimentAria": "Kundenstimmung: {positive} positiv und {negative} negativ von {total} neuen Tickets",
+      "positive": "{count} positiv",
+      "negative": "{count} unzufrieden",
+      "sentimentNote": "Erkannt an den Worten, die Kunden verwendet haben.",
+      "flow": {
+        "NEW": "Neu",
+        "OPEN": "In Bearbeitung",
+        "PENDING": "Wartet auf Kunden",
+        "ON_HOLD": "Zurückgestellt",
+        "SOLVED": "Gelöst (14 Tage)"
+      }
+    },
+    "intro": {
+      "inbox": {
+        "what": "Jede Kundenfrage, jedes Problem und jede Anfrage in einem Posteingang.",
+        "why": "Schnelle, freundliche Antworten machen Kunden zu Fans.",
+        "can": "Tickets beantworten, zuweisen, Antwortzeit-Versprechen im Blick behalten und Antworten von der KI entwerfen lassen.",
+        "next": "Meine Tickets",
+        "setup": "Support einrichten"
+      },
+      "customers": {
+        "what": "Personen und Firmen, die den Support kontaktiert haben.",
+        "why": "Den gesamten Verlauf eines Kunden sehen, bevor Sie antworten.",
+        "can": "Kunden suchen und ihre Tickets öffnen.",
+        "next": "Zurück zum Posteingang"
+      },
+      "customer": {
+        "what": "Der Support-Verlauf eines Kunden.",
+        "why": "Kontext verbessert Ihre Antwort.",
+        "can": "Tickets und Details ansehen."
+      },
+      "knowledge": {
+        "what": "Ihre Hilfeartikel („Wissensdatenbank“).",
+        "why": "Jeder gute Artikel beantwortet dieselbe Frage für viele Kunden.",
+        "can": "Artikel schreiben, veröffentlichen und ordnen, die in Ihrem Hilfecenter erscheinen.",
+        "next": "Artikel mit KI entwerfen"
+      },
+      "article": {
+        "what": "Ein Hilfeartikel.",
+        "why": "Klare Artikel verringern wiederholte Fragen.",
+        "can": "Bearbeiten, veröffentlichen oder zurückziehen."
+      },
+      "dashboard": {
+        "what": "Wie Ihr Support abschneidet.",
+        "why": "Zahlen zeigen, wo Kunden zu lange warten.",
+        "can": "Volumen, Antwortzeiten und eingehaltene Versprechen verfolgen.",
+        "next": "Zum Posteingang"
+      },
+      "settings": {
+        "what": "Detaillierte Support-Einstellungen.",
+        "why": "Weiterleitung, Kategorien und Antwortzeit-Regeln feinjustieren.",
+        "can": "Kategorien, Versprechen (SLA), Zuweisungs- und Eskalationsregeln verwalten.",
+        "next": "Geführte Einrichtung nutzen"
+      },
+      "ticket": {
+        "what": "Ein Kundengespräch.",
+        "why": "Eine gute Lösung hält den Kunden.",
+        "can": "Antworten, interne Notizen hinzufügen, Status ändern und die KI um einen Entwurf oder eine Zusammenfassung bitten."
+      }
+    },
+    "emptyInbox": {
+      "title": "Ihr Posteingang ist leer",
+      "body": "Wenn Kunden über Ihr Formular, Hilfecenter oder per E-Mail schreiben, erscheinen ihre Anfragen hier. Legen Sie zuerst fest, wie man Sie erreicht.",
+      "form": "Ihr Kontaktformular öffnen"
+    },
+    "emptyKb": {
+      "title": "Noch keine Hilfeartikel",
+      "ai": "Artikel mit KI entwerfen"
     }
   },
   "strategy": {
@@ -13181,6 +14982,38 @@
           "roles": "Prüfe Rollen und Berechtigungen",
           "security": "Schalte zusätzliche Sicherheit ein"
         }
+      }
+    }
+  },
+  "guideKit": {
+    "intro": {
+      "what": "Was ist das?",
+      "why": "Warum es wichtig ist",
+      "can": "Was Sie hier tun können",
+      "next": "Nächster Schritt"
+    },
+    "help": {
+      "label": "Hilf mir dabei",
+      "again": "Erneut fragen",
+      "addDetails": "Details hinzufügen",
+      "detailsPlaceholder": "Etwas Bestimmtes? (optional)",
+      "notConfigured": "KI ist für diesen Arbeitsbereich noch nicht eingerichtet, oder Sie dürfen keine KI-Aufgaben starten.",
+      "open": "Ganze Aufgabe öffnen",
+      "queued": "Wartet darauf, dass ein KI-Mitarbeiter die Aufgabe übernimmt …",
+      "working": "Die KI arbeitet daran …",
+      "pollError": "Status konnte nicht aktualisiert werden – neuer Versuch läuft.",
+      "more": "Mehr anzeigen",
+      "less": "Weniger anzeigen",
+      "next": "Weiter: Nutzen Sie die Vorschläge oben. Von der KI vorgeschlagene Änderungen warten auf Ihre Freigabe –",
+      "approvals": "Freigaben prüfen",
+      "failed": "Die KI konnte diese Aufgabe nicht abschließen.",
+      "retry": "Erneut versuchen",
+      "status": {
+        "QUEUED": "Wartet",
+        "RUNNING": "In Arbeit",
+        "COMPLETED": "Fertig",
+        "FAILED": "Fehlgeschlagen",
+        "CANCELLED": "Abgebrochen"
       }
     }
   }

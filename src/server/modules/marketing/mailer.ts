@@ -13,6 +13,9 @@ import zhCN from "@/i18n/messages/zh-CN.json";
 import { normalizeEmail, renderMergeTags } from "./common";
 import { clickUrl, openPixelUrl, trackLinks, unsubscribeUrl } from "./tracking";
 import { loadBrandKit, type BrandKit } from "./brand";
+import { getMarketingConnection, isUsable } from "./connections-bridge";
+import { sendViaProvider } from "./providers/email";
+import { ProviderError } from "./providers/http";
 
 const CATALOGS: Record<string, Messages> = { "en-US": enUS, "hi-IN": hiIN as Messages, "ar-AE": arAE as Messages, "de-DE": deDE as Messages, "zh-CN": zhCN as Messages };
 
@@ -36,6 +39,10 @@ export interface MarketingMessage {
   enrollmentId?: string;
   stepId?: string;
   userId?: string | null;
+  /** A/B variant the recipient got. */
+  variantId?: string | null;
+  /** Delivery provider: the platform email provider (default) or the company's sendgrid / mailchimp connection. */
+  provider?: string | null;
 }
 
 /**
@@ -57,6 +64,7 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
         enrollmentId: msg.enrollmentId ?? null,
         stepId: msg.stepId ?? null,
         contactId: to.contactId ?? null,
+        variantId: msg.variantId ?? null,
         email: to.email,
         emailNormalized,
         status: "PENDING",
@@ -77,6 +85,25 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
   const text = `${trackLinks(body, id)}\n\n—\n${footer}\n${unsubLabel}: ${link}`;
   const brand = await loadBrandKit(db(), msg.companyId);
   const html = renderMarketingHtml({ body, sendId: id, locale: l, footer, unsubLabel, unsubscribeLink: link, brand });
+  const headers = { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
+  if (msg.provider === "sendgrid" || msg.provider === "mailchimp") {
+    const conn = await getMarketingConnection(msg.organizationId, msg.companyId, msg.provider);
+    let status: MarketingSendStatus = "NOT_CONFIGURED";
+    let messageId: string | null = null;
+    let error: string | null = "not_configured";
+    if (isUsable(conn)) {
+      try {
+        messageId = await sendViaProvider(msg.provider, conn, { to: to.email, subject, text, html, headers, sendId: id, fromName: msg.companyName });
+        status = "SENT";
+        error = null;
+      } catch (err) {
+        status = "FAILED";
+        error = err instanceof ProviderError ? `${err.reason}${err.message !== err.reason ? `: ${err.message.slice(0, 200)}` : ""}` : "delivery_failed";
+      }
+    }
+    await db().marketingEmailSend.update({ where: { id }, data: { status, providerMessageId: messageId, error } });
+    return status;
+  }
   const result = await sendHtmlEmail({
     to: to.email,
     subject,

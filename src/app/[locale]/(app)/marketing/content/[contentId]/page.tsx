@@ -16,6 +16,16 @@ import { listSubjectTasks } from "@/server/modules/agents/service";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
 import { getContent } from "@/server/modules/marketing/content";
 import { listAccounts } from "@/server/modules/marketing/social";
+import { ARTICLE_TYPES, CONTENT_TYPES } from "@/server/modules/marketing/content";
+import { assetOptions, assetPublicUrl } from "@/server/modules/marketing/assets";
+import { getMarketingConnection, isUsable } from "@/server/modules/marketing/connections-bridge";
+import { loadBrandKit } from "@/server/modules/marketing/brand";
+import { db } from "@/server/core/db";
+import { PublishForm, RepurposeForm } from "@/components/marketing/studio-forms";
+import { JsonForm } from "@/components/marketing/studio-client";
+import { PlatformPreview, platformForContent } from "@/components/marketing/studio";
+import { Input, Select } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.content") };
@@ -42,7 +52,17 @@ export default async function ContentPage({ params }: PageProps<"/[locale]/marke
   const archived = !!c.archivedAt;
   const editable = canManage && !archived && c.status !== "PUBLISHED";
   const path = `${base}/content/${c.id}`;
-  const draftTasks = tasks.filter((x) => !x.title.startsWith("SEO meta:"));
+  const draftTasks = tasks.filter((x) => !x.title.startsWith("SEO meta:") && !x.title.startsWith("Repurpose:") && !x.title.startsWith("SEO article:"));
+  const repurposeTasks = tasks.filter((x) => x.title.startsWith("Repurpose:"));
+  const articleTasks = tasks.filter((x) => x.title.startsWith("SEO article:"));
+  const isArticle = ARTICLE_TYPES.has(c.type) || c.type === "LANDING_PAGE" || c.type === "WEBSITE_COPY";
+  const platform = platformForContent(c.type);
+  const [assets, kit, cms] = await Promise.all([
+    canManage ? assetOptions(viewer.ctx, org.id, company.id, ["IMAGE", "LOGO"]) : Promise.resolve([]),
+    loadBrandKit(db(), company.id),
+    isArticle ? Promise.all((["wordpress", "webflow", "shopify"] as const).map(async (k) => ({ key: k, connected: isUsable(await getMarketingConnection(org.id, company.id, k)) }))) : Promise.resolve([]),
+  ]);
+  const featuredUrl = c.featuredAsset ? assetPublicUrl(c.featuredAsset) : null;
   const metaTasks = tasks.filter((x) => x.title.startsWith("SEO meta:"));
 
   return (
@@ -100,6 +120,45 @@ export default async function ContentPage({ params }: PageProps<"/[locale]/marke
               />
             </div>
           </Card>
+          {platform ? (
+            <Card>
+              <CardHeader title={t("marketing.studio.social.preview")} />
+              <div className="mx-auto w-full max-w-md p-4">
+                <PlatformPreview platform={platform} brand={kit?.brandName ?? company.name} text={c.body || c.title} mediaUrl={featuredUrl} t={t} />
+              </div>
+            </Card>
+          ) : null}
+          <Card variant="elevated">
+            <CardHeader title={t("marketing.studio.repurpose.title")} description={t("marketing.studio.repurpose.hint")} />
+            <div className="grid gap-3 p-4">
+              {c.parent ? (
+                <p className="text-xs">
+                  {t("marketing.studio.repurpose.from")}{" "}
+                  <Link className="underline" href={`/${locale}/marketing/content/${c.parent.id}`}>
+                    {c.parent.title}
+                  </Link>
+                </p>
+              ) : null}
+              {canRunAgents && !archived ? <RepurposeForm base={base} contentId={c.id} types={CONTENT_TYPES} /> : null}
+              <AiTaskList tasks={repurposeTasks} locale={locale} tz={tz} t={t} aiReady={m.aiReady} showOutput={false} action={canManage ? (task) => <ActionButton path={`${path}/repurpose/apply`} body={{ taskId: task.id }} label={t("marketing.studio.repurpose.apply")} /> : undefined} />
+              {articleTasks.length ? <AiTaskList tasks={articleTasks} locale={locale} tz={tz} t={t} aiReady={m.aiReady} showOutput={false} action={editable ? (task) => <ActionButton path={`${path}/article`} body={{ taskId: task.id }} label={t("marketing.studio.seo.applyArticle")} /> : undefined} /> : null}
+              {c.children.length ? (
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium">{t("marketing.studio.repurpose.bundle", { count: c.children.length })}</p>
+                  <ul className="grid gap-1 sm:grid-cols-2">
+                    {c.children.map((ch) => (
+                      <li key={ch.id} className="flex items-center justify-between gap-2 rounded-md border px-2 py-1 text-xs">
+                        <Link href={`/${locale}/marketing/content/${ch.id}`} className="min-w-0 truncate hover:underline">
+                          {t(`marketing.contentType.${ch.type}`)} · {ch.title}
+                        </Link>
+                        <StatusBadge status={ch.status} label={t(`marketing.contentStatus.${ch.status}`)} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          </Card>
           <Card>
             <CardHeader title={t("marketing.seo.metaEditor")} description={t("marketing.seo.metaEditorHint")} />
             <MetaEditor base={base} readOnly={!canManage || archived} content={{ id: c.id, slug: c.slug ?? "", metaTitle: c.metaTitle ?? "", metaDescription: c.metaDescription ?? "", keywords: c.keywords }} />
@@ -119,6 +178,89 @@ export default async function ContentPage({ params }: PageProps<"/[locale]/marke
           </Card>
         </div>
         <div className="grid content-start gap-4">
+          {isArticle ? (
+            <Card variant="highlight">
+              <CardHeader title={t("marketing.studio.publish.title")} description={t("marketing.studio.publish.hint")} />
+              <div className="grid gap-3 p-4">
+                {canManage && ["APPROVED", "SCHEDULED", "PUBLISHED"].includes(c.status) ? <PublishForm base={base} contentId={c.id} targets={[{ key: "realy", connected: true }, ...cms]} /> : <p className="text-xs text-muted-foreground">{t("marketing.studio.publish.needsApproval")}</p>}
+                {c.cmsPublications.length ? (
+                  <ul className="grid gap-1 text-xs">
+                    {c.cmsPublications.map((p) => (
+                      <li key={p.id} className={p.status === "FAILED" ? "text-danger" : ""}>
+                        {t(`marketing.studio.publish.targets.${p.provider}`)} · {p.status}
+                        {p.url ? (
+                          <>
+                            {" · "}
+                            <a href={p.url} target="_blank" rel="noreferrer" className="underline">
+                              {t("marketing.studio.publish.open")}
+                            </a>
+                          </>
+                        ) : null}
+                        {p.verifiedAt ? ` · ${t("marketing.studio.publish.verified")}` : ""}
+                        {p.error ? ` · ${p.error}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {c.schemaMarkup ? (
+                  <details className="text-xs">
+                    <summary className="cursor-pointer">{t("marketing.studio.seo.schema")}</summary>
+                    <pre className="mt-1 max-h-48 overflow-auto rounded bg-surface-2 p-2">{JSON.stringify(c.schemaMarkup, null, 2)}</pre>
+                  </details>
+                ) : null}
+                {Array.isArray(c.internalLinks) && (c.internalLinks as unknown[]).length ? (
+                  <details className="text-xs">
+                    <summary className="cursor-pointer">{t("marketing.studio.seo.internalLinks", { count: (c.internalLinks as unknown[]).length })}</summary>
+                    <ul className="mt-1 grid gap-0.5">
+                      {(c.internalLinks as { title: string; url: string; anchor: string }[]).map((l) => (
+                        <li key={l.url}>
+                          “{l.anchor}” → <a className="underline" href={l.url}>{l.title}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+              </div>
+            </Card>
+          ) : null}
+          {canManage && !archived ? (
+            <Card>
+              <CardHeader title={t("marketing.studio.publish.details")} />
+              <div className="p-4">
+                {featuredUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- signed asset URL
+                  <img src={featuredUrl} alt="" className="mb-3 aspect-video w-full rounded-md object-cover" />
+                ) : null}
+                <JsonForm
+                  path={path}
+                  method="PATCH"
+                  reset={false}
+                  submit={t("common.save")}
+                  transform={(v) => ({ categories: (v.categories ?? "").split(",").map((x) => x.trim()).filter(Boolean), tags: (v.tags ?? "").split(",").map((x) => x.trim()).filter(Boolean), authorName: v.authorName ?? "", featuredAssetId: v.featuredAssetId ?? "" })}
+                >
+                  <Field label={t("marketing.studio.publish.featured")} htmlFor="cd-feat">
+                    <Select id="cd-feat" name="featuredAssetId" defaultValue={c.featuredAssetId ?? ""}>
+                      <option value="">{t("common.none")}</option>
+                      {assets.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label={t("marketing.studio.publish.categories")} htmlFor="cd-cat" hint={t("marketing.common.commaSeparated")}>
+                    <Input id="cd-cat" name="categories" defaultValue={c.categories.join(", ")} />
+                  </Field>
+                  <Field label={t("marketing.studio.publish.tags")} htmlFor="cd-tags" hint={t("marketing.common.commaSeparated")}>
+                    <Input id="cd-tags" name="tags" defaultValue={c.tags.join(", ")} />
+                  </Field>
+                  <Field label={t("marketing.studio.publish.author")} htmlFor="cd-author">
+                    <Input id="cd-author" name="authorName" maxLength={120} defaultValue={c.authorName ?? ""} />
+                  </Field>
+                </JsonForm>
+              </div>
+            </Card>
+          ) : null}
           {canManage && !archived && c.status !== "PUBLISHED" ? (
             <Card>
               <CardHeader title={t("marketing.content.workflow")} description={t(`marketing.content.workflowHint.${c.status}`)} />

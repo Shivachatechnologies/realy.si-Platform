@@ -9,7 +9,33 @@ import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { actorId, authorize, enumParam, instant, isUuid, PAGE_SIZE, pageParam, param, requireOwned, toInstant, uuid } from "./common";
 
-export const CONTENT_TYPES = ["BLOG", "LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "AD", "LANDING_PAGE", "EMAIL"] as const;
+export const CONTENT_TYPES = [
+  "BLOG",
+  "SEO_ARTICLE",
+  "LINKEDIN",
+  "X",
+  "INSTAGRAM",
+  "FACEBOOK",
+  "THREADS",
+  "TIKTOK_SCRIPT",
+  "YOUTUBE_SCRIPT",
+  "VIDEO_SCRIPT",
+  "CAROUSEL",
+  "QUOTE",
+  "GRAPHIC_BRIEF",
+  "NEWSLETTER",
+  "EMAIL",
+  "AD",
+  "LANDING_PAGE",
+  "WEBSITE_COPY",
+  "CASE_STUDY",
+  "PRESS_RELEASE",
+  "PRODUCT_ANNOUNCEMENT",
+  "THOUGHT_LEADERSHIP",
+  "INDUSTRY_REPORT",
+] as const;
+/** Long-form types that can be published as blog / CMS articles. */
+export const ARTICLE_TYPES = new Set<MarketingContentType>(["BLOG", "SEO_ARTICLE", "CASE_STUDY", "PRESS_RELEASE", "PRODUCT_ANNOUNCEMENT", "THOUGHT_LEADERSHIP", "INDUSTRY_REPORT", "NEWSLETTER"]);
 export const CONTENT_STATUSES = ["DRAFT", "IN_REVIEW", "APPROVED", "SCHEDULED", "PUBLISHED"] as const;
 
 export const contentInput = z.object({
@@ -18,6 +44,8 @@ export const contentInput = z.object({
   body: z.string().max(100_000).default(""),
   brief: z.string().trim().max(5000).optional(),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
+  parentId: uuid.optional(),
+  keywords: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
 });
 export const updateContentInput = z.object({
   type: z.enum(CONTENT_TYPES).optional(),
@@ -29,6 +57,11 @@ export const updateContentInput = z.object({
   metaTitle: z.string().trim().max(120).optional(),
   metaDescription: z.string().trim().max(320).optional(),
   keywords: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
+  categories: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
+  tags: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
+  authorName: z.string().trim().max(120).optional(),
+  featuredAssetId: uuid.or(z.literal("")).nullable().optional(),
+  schemaMarkup: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 export const workflowInput = z.discriminatedUnion("action", [
   z.object({ action: z.literal("submit"), comment: z.string().trim().max(2000).optional() }),
@@ -112,6 +145,10 @@ export async function getContent(ctx: RequestContext, organizationId: string, co
       versions: { orderBy: { version: "desc" }, take: 50 },
       comments: { orderBy: { createdAt: "asc" }, take: 200 },
       socialPosts: { select: { id: true, title: true, status: true, scheduledAt: true, publishedAt: true }, orderBy: { createdAt: "desc" }, take: 20 },
+      parent: { select: { id: true, title: true, type: true } },
+      children: { where: { archivedAt: null }, select: { id: true, title: true, type: true, status: true }, orderBy: { createdAt: "asc" }, take: 100 },
+      cmsPublications: { orderBy: { createdAt: "desc" }, take: 20 },
+      featuredAsset: { select: { id: true, name: true, url: true, mimeType: true, sizeBytes: true } },
     },
   });
   if (!c) throw notFound("Content");
@@ -139,7 +176,9 @@ export async function createContent(ctx: RequestContext, organizationId: string,
         title: input.title,
         body: input.body,
         brief: input.brief || null,
+        keywords: input.keywords ?? [],
         campaignId: await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign"),
+        parentId: await requireOwned(tx, "marketingContent", companyId, input.parentId || null, "Content"),
         createdById: by,
       },
     });
@@ -171,6 +210,14 @@ export async function updateContent(ctx: RequestContext, organizationId: string,
     if (input.metaTitle !== undefined) data.metaTitle = input.metaTitle || null;
     if (input.metaDescription !== undefined) data.metaDescription = input.metaDescription || null;
     if (input.keywords !== undefined) data.keywords = input.keywords;
+    if (input.categories !== undefined) data.categories = input.categories;
+    if (input.tags !== undefined) data.tags = input.tags;
+    if (input.authorName !== undefined) data.authorName = input.authorName || null;
+    if (input.schemaMarkup !== undefined) data.schemaMarkup = (input.schemaMarkup ?? undefined) as Prisma.InputJsonValue | undefined;
+    if (input.featuredAssetId !== undefined) {
+      if (input.featuredAssetId && !(await tx.marketingAsset.findFirst({ where: { id: input.featuredAssetId, companyId, archivedAt: null }, select: { id: true } }))) throw notFound("Asset");
+      data.featuredAssetId = input.featuredAssetId || null;
+    }
     if (input.campaignId !== undefined) data.campaignId = await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign");
     const title = input.title ?? c.title;
     const body = input.body ?? c.body;

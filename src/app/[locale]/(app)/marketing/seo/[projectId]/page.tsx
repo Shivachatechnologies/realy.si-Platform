@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SeoAutopilotPanel } from "@/components/marketing/seo-autopilot-panel";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -227,6 +228,7 @@ export default async function SeoProjectPage({ params }: PageProps<"/[locale]/ma
           </div>
         </Card>
       </div>
+      <SeoAutopilotPanel ctx={viewer.ctx} orgId={org.id} companyId={company.id} projectId={p.id} base={base} locale={locale} tz={tz} t={t} canManage={manage} canRunAgents={canRunAgents} aiReady={m.aiReady} />
     </MarketingShell>
   );
 }

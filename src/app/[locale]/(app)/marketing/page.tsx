@@ -9,6 +9,10 @@ import { getT } from "@/i18n/server";
 import { formatDateTime, formatMoney, formatNumber } from "@/i18n/format";
 import { commandCenter, parseRange } from "@/server/modules/marketing/analytics";
 import { CAMPAIGN_STATUSES } from "@/server/modules/marketing/campaigns";
+import { StudioCommand } from "@/components/marketing/studio-command";
+import { JourneyWizard } from "@/components/marketing/journey-wizard";
+import { journeyProps } from "@/components/marketing/journey-data";
+import { db } from "@/server/core/db";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.marketing.title") };
@@ -20,7 +24,19 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
   const shell = { locale, t, tab: "overview" as const, title: t("marketing.commandCenter.title"), subtitle: t("marketing.commandCenter.subtitle") };
   if (m.blocked) return <MarketingShell {...shell} blocked={m.blocked} />;
   const { org, company, viewer, tz } = m;
-  const range = parseRange(await searchParams);
+  const sp = await searchParams;
+  // Beginner default: until the guided journey is done (or an autopilot exists), the Studio opens on "Start here".
+  if (sp.view !== "studio") {
+    const [journey, autopilots] = await Promise.all([db().marketingJourney.findUnique({ where: { companyId: company.id }, select: { completedAt: true } }), db().marketingAutopilot.count({ where: { companyId: company.id, archivedAt: null } })]);
+    if (!journey?.completedAt && !autopilots) {
+      return (
+        <MarketingShell {...shell} title={t("marketing.studio.journey.title")} subtitle={t("marketing.studio.journey.subtitle")} actions={<Link href={`/${locale}/marketing?view=studio`} className="text-sm text-muted-foreground hover:underline">{t("marketing.studio.journey.skip")}</Link>}>
+          <JourneyWizard {...await journeyProps(m)} />
+        </MarketingShell>
+      );
+    }
+  }
+  const range = parseRange(sp);
   const cc = await commandCenter(viewer.ctx, org.id, company.id, range);
   const cur = company.baseCurrency;
   const money = (v: bigint | null) => (v == null ? "—" : formatMoney({ amountMinor: v, currency: cur }, locale));
@@ -32,6 +48,7 @@ export default async function MarketingCommandCenter({ searchParams }: PageProps
 
   return (
     <MarketingShell {...shell}>
+      <StudioCommand m={m} />
       <Card>
         <form className="flex flex-wrap items-end gap-2 p-3" action={`/${locale}/marketing`}>
           <label className="grid gap-1 text-xs">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InfoStrip } from "@/components/marketing/studio";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export default async function ContentLibraryPage({ searchParams }: PageProps<"/[
 
   return (
     <MarketingShell {...shell}>
+      <InfoStrip t={t} k="content" />
       <div className="flex flex-wrap gap-2">
         {CONTENT_STATUSES.map((s) => (
           <Link key={s} href={`${path}?status=${s}`} className="flex items-center gap-2 rounded-md border bg-surface px-3 py-2 text-sm hover:bg-muted">

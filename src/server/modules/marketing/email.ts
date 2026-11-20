@@ -11,6 +11,8 @@ import { actorId, authorize, enumParam, instant, isUuid, PAGE_SIZE, pageParam, p
 import { segmentRecipients } from "./segments";
 import { renderMarketingHtml, sendMarketingEmail } from "./mailer";
 import { loadBrandKit } from "./brand";
+import { EMAIL_PROVIDERS } from "./providers/email";
+import { getMarketingConnection, isUsable } from "./connections-bridge";
 
 export const EMAIL_CAMPAIGN_STATUSES = ["DRAFT", "SCHEDULED", "SENDING", "SENT", "FAILED", "CANCELLED"] as const;
 export const MERGE_TAGS = ["firstName", "lastName", "email", "company", "sender"] as const;
@@ -29,8 +31,18 @@ export const emailCampaignInput = z.object({
   templateId: uuid.or(z.literal("")).nullable().optional(),
   segmentId: uuid.or(z.literal("")).nullable().optional(),
   campaignId: uuid.or(z.literal("")).nullable().optional(),
+  provider: z.enum(EMAIL_PROVIDERS).optional(),
 });
+const abFields = {
+  provider: z.enum(EMAIL_PROVIDERS).optional(),
+  abEnabled: z.boolean().optional(),
+  abTestPercent: z.number().int().min(5).max(50).optional(),
+  abMetric: z.enum(["open", "click"]).optional(),
+  abWaitHours: z.number().int().min(1).max(72).optional(),
+};
+export const variantInput = z.object({ label: z.string().trim().min(1).max(20), subject: z.string().trim().min(1).max(250), body: z.string().trim().min(1).max(50_000) });
 export const updateEmailCampaignInput = z.object({
+  ...abFields,
   name: z.string().trim().min(1).max(200).optional(),
   subject: z.string().trim().max(250).optional(),
   body: z.string().max(50_000).optional(),
@@ -119,9 +131,10 @@ export async function getEmailCampaign(ctx: RequestContext, organizationId: stri
   if (!isUuid(id)) throw notFound("Email campaign");
   const c = await db().marketingEmailCampaign.findFirst({
     where: { id, organizationId, companyId },
-    include: { segment: true, campaign: { select: { id: true, name: true, code: true } }, template: { select: { id: true, name: true } } },
+    include: { segment: true, campaign: { select: { id: true, name: true, code: true } }, template: { select: { id: true, name: true } }, variants: { orderBy: { label: "asc" } } },
   });
   if (!c) throw notFound("Email campaign");
+  const variantStats = await variantResults(c.id, c.companyId);
   const statusFilter = (["SENT", "FAILED", "NOT_CONFIGURED", "PENDING"] as const).find((s) => s === sendFilter);
   const [stats, opened, clicked, unsubscribed, sends, audience] = await Promise.all([
     db().marketingEmailSend.groupBy({ by: ["status"], where: { companyId, emailCampaignId: id }, _count: { _all: true } }),
@@ -137,7 +150,62 @@ export async function getEmailCampaign(ctx: RequestContext, organizationId: stri
     stats: { sent: by.SENT ?? 0, failed: by.FAILED ?? 0, notConfigured: by.NOT_CONFIGURED ?? 0, pending: by.PENDING ?? 0, opened, clicked, unsubscribed },
     sends,
     audience,
+    variantStats,
+    providerReady: await providerReady(organizationId, companyId, c.provider),
   };
+}
+
+/** Sent / opened / clicked / rates per A/B variant. */
+export async function variantResults(emailCampaignId: string, companyId: string) {
+  const [sent, opened, clicked] = await Promise.all([
+    db().marketingEmailSend.groupBy({ by: ["variantId"], where: { companyId, emailCampaignId, status: "SENT", variantId: { not: null } }, _count: { _all: true } }),
+    db().marketingEmailSend.groupBy({ by: ["variantId"], where: { companyId, emailCampaignId, status: "SENT", variantId: { not: null }, openedAt: { not: null } }, _count: { _all: true } }),
+    db().marketingEmailSend.groupBy({ by: ["variantId"], where: { companyId, emailCampaignId, status: "SENT", variantId: { not: null }, clickedAt: { not: null } }, _count: { _all: true } }),
+  ]);
+  const get = (rows: typeof sent, id: string) => rows.find((r) => r.variantId === id)?._count._all ?? 0;
+  const ids = [...new Set(sent.map((r) => r.variantId!))];
+  return Object.fromEntries(ids.map((id) => {
+    const s = get(sent, id);
+    return [id, { sent: s, opened: get(opened, id), clicked: get(clicked, id), openRate: s ? get(opened, id) / s : 0, clickRate: s ? get(clicked, id) / s : 0 }];
+  })) as Record<string, { sent: number; opened: number; clicked: number; openRate: number; clickRate: number }>;
+}
+
+async function providerReady(organizationId: string, companyId: string, provider: string) {
+  if (provider === "sendgrid" || provider === "mailchimp") return isUsable(await getMarketingConnection(organizationId, companyId, provider));
+  return emailConfigured();
+}
+
+async function editableCampaign(tx: Prisma.TransactionClient, organizationId: string, companyId: string, id: string) {
+  const c = await tx.marketingEmailCampaign.findFirst({ where: { id, organizationId, companyId } });
+  if (!c) throw notFound("Email campaign");
+  if (!["DRAFT", "SCHEDULED", "FAILED"].includes(c.status)) throw conflict("Only drafts and scheduled emails can be edited", { reason: "marketing_email_locked" });
+  return c;
+}
+
+export async function addVariant(ctx: RequestContext, organizationId: string, companyId: string, id: string, raw: z.input<typeof variantInput>) {
+  const input = variantInput.parse(raw);
+  if (!isUuid(id)) throw notFound("Email campaign");
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
+    await editableCampaign(tx, organizationId, companyId, id);
+    if ((await tx.marketingEmailVariant.count({ where: { emailCampaignId: id } })) >= 4) throw conflict("At most 4 variants", { reason: "marketing_email_variants_max" });
+    if (await tx.marketingEmailVariant.findFirst({ where: { emailCampaignId: id, label: input.label } })) throw conflict("Label already used", { reason: "marketing_name_taken" });
+    const v = await tx.marketingEmailVariant.create({ data: { organizationId, companyId, emailCampaignId: id, ...input } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.email_variant.created", resourceType: "marketing_email_campaign", resourceId: id, newValue: { label: v.label } });
+    return v;
+  });
+}
+
+export async function deleteVariant(ctx: RequestContext, organizationId: string, companyId: string, id: string, variantId: string) {
+  if (!isUuid(id) || !isUuid(variantId)) throw notFound("Variant");
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
+    await editableCampaign(tx, organizationId, companyId, id);
+    const { count } = await tx.marketingEmailVariant.deleteMany({ where: { id: variantId, emailCampaignId: id, companyId } });
+    if (!count) throw notFound("Variant");
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.email_variant.deleted", resourceType: "marketing_email_campaign", resourceId: id });
+    return { ok: true };
+  });
 }
 
 export async function createEmailCampaign(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof emailCampaignInput>) {
@@ -156,6 +224,7 @@ export async function createEmailCampaign(ctx: RequestContext, organizationId: s
         templateId,
         segmentId: await requireOwned(tx, "marketingSegment", companyId, input.segmentId || null, "Segment"),
         campaignId: await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign"),
+        provider: input.provider ?? "platform",
         createdById: actorId(ctx, organizationId),
       },
     });
@@ -178,6 +247,7 @@ export async function updateEmailCampaign(ctx: RequestContext, organizationId: s
     if (input.body !== undefined) data.body = input.body;
     if (input.segmentId !== undefined) data.segmentId = await requireOwned(tx, "marketingSegment", companyId, input.segmentId || null, "Segment");
     if (input.campaignId !== undefined) data.campaignId = await requireOwned(tx, "marketingCampaign", companyId, input.campaignId || null, "Campaign");
+    for (const k of ["provider", "abEnabled", "abTestPercent", "abMetric", "abWaitHours"] as const) if (input[k] !== undefined) (data as Record<string, unknown>)[k] = input[k];
     const updated = await tx.marketingEmailCampaign.update({ where: { id }, data });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.email_campaign.updated", resourceType: "marketing_email_campaign", resourceId: id, newValue: { name: input.name, subject: input.subject } });
     return updated;
@@ -210,7 +280,11 @@ export async function emailCampaignAction(ctx: RequestContext, organizationId: s
   const input = emailActionInput.parse(raw);
   if (!isUuid(id)) throw notFound("Email campaign");
   if (input.action === "test") return sendTest(ctx, organizationId, companyId, id);
-  if (input.action === "send_now" || input.action === "retry") requireEmailProvider();
+  if (input.action === "send_now" || input.action === "retry") {
+    const c = await db().marketingEmailCampaign.findFirst({ where: { id, organizationId, companyId }, select: { provider: true, abEnabled: true } });
+    if (c && !(await providerReady(organizationId, companyId, c.provider))) throw new AppError("not_configured", "Email provider not configured", { reason: "marketing_email_not_configured" });
+    if (c?.abEnabled && (await db().marketingEmailVariant.count({ where: { emailCampaignId: id } })) < 2) throw invalid("Add at least two variants for an A/B test", { reason: "marketing_email_ab_variants" });
+  }
   const result = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "marketing.manage", tx);
     const c = await tx.marketingEmailCampaign.findFirst({ where: { id, organizationId, companyId } });
@@ -275,14 +349,47 @@ export async function processEmailCampaign(id: string, limit = 100): Promise<num
   const already = new Set(
     (await db().marketingEmailSend.findMany({ where: { companyId: c.companyId, emailCampaignId: c.id }, select: { emailNormalized: true } })).map((s) => s.emailNormalized),
   );
-  const pending = (await segmentRecipients(db(), c.segment)).filter((r) => !already.has(r.email!.trim().toLowerCase())).slice(0, limit);
+  const all = await segmentRecipients(db(), c.segment);
+  let pending = all.filter((r) => !already.has(r.email!.trim().toLowerCase())).slice(0, limit);
+  // A/B test: a test share gets the variants round-robin; after the wait the winner goes to everyone else.
+  const variants = c.abEnabled ? await db().marketingEmailVariant.findMany({ where: { emailCampaignId: c.id }, orderBy: { label: "asc" } }) : [];
+  let content: (i: number) => { subject: string; body: string; variantId: string | null } = () => ({ subject: c.subject, body: c.body, variantId: null });
+  if (variants.length >= 2) {
+    const testSize = Math.max(variants.length, Math.ceil((all.length * c.abTestPercent) / 100));
+    if (!c.abPhase || c.abPhase === "testing") {
+      const testRemaining = testSize - already.size;
+      if (testRemaining > 0) {
+        if (!c.abPhase) await db().marketingEmailCampaign.update({ where: { id: c.id }, data: { abPhase: "testing" } });
+        pending = pending.slice(0, testRemaining);
+        content = (i) => {
+          const v = variants[(already.size + i) % variants.length]!;
+          return { subject: v.subject, body: v.body, variantId: v.id };
+        };
+      } else {
+        await db().marketingEmailCampaign.update({ where: { id: c.id }, data: { abPhase: "waiting", abTestEndsAt: new Date(Date.now() + c.abWaitHours * 3_600_000) } });
+        return 0;
+      }
+    } else if (c.abPhase === "waiting") {
+      if (c.abTestEndsAt && c.abTestEndsAt > new Date()) return 0;
+      const results = await variantResults(c.id, c.companyId);
+      const metric = c.abMetric === "click" ? "clickRate" : "openRate";
+      const winner = [...variants].sort((a, b) => (results[b.id]?.[metric] ?? 0) - (results[a.id]?.[metric] ?? 0))[0]!;
+      await db().marketingEmailCampaign.update({ where: { id: c.id }, data: { abPhase: "decided", abWinnerVariantId: winner.id, subject: winner.subject, body: winner.body } });
+      await transaction((tx) => writeAudit(tx, systemContext(), { category: "TENANT", organizationId: c.organizationId, action: "marketing.email_campaign.ab_winner", resourceType: "marketing_email_campaign", resourceId: c.id, newValue: { winner: winner.label, metric: c.abMetric, results } }));
+      return 0;
+    } else {
+      const winner = variants.find((v) => v.id === c.abWinnerVariantId) ?? variants[0]!;
+      content = () => ({ subject: winner.subject, body: winner.body, variantId: winner.id });
+    }
+  }
   if (!pending.length) return finish(c.id);
   let processed = 0;
-  for (const r of pending) {
+  for (const [i, r] of pending.entries()) {
+    const v = content(i);
     // Stop if the campaign was cancelled meanwhile.
     if (processed % 20 === 0 && processed > 0 && !(await db().marketingEmailCampaign.findFirst({ where: { id, status: "SENDING" }, select: { id: true } }))) break;
     const status = await sendMarketingEmail(
-      { organizationId: c.organizationId, companyId: c.companyId, companyName: c.company.name, locale: c.company.defaultLocale, subject: c.subject, body: c.body, emailCampaignId: c.id, userId: c.createdById },
+      { organizationId: c.organizationId, companyId: c.companyId, companyName: c.company.name, locale: c.company.defaultLocale, subject: v.subject, body: v.body, emailCampaignId: c.id, userId: c.createdById, variantId: v.variantId, provider: c.provider },
       { email: r.email!, firstName: r.firstName, lastName: r.lastName, accountName: r.account?.name, contactId: r.id },
     );
     if (status) processed++;

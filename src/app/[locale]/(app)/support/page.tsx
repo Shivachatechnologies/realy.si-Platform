@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { NewTicketForm, CHANNELS, PRIORITIES } from "@/components/support/ticket-forms";
@@ -15,6 +13,16 @@ import { listAgents } from "@/server/modules/support/common";
 import { listCategories } from "@/server/modules/support/config";
 import { listTickets, parseTicketFilters, SORTS, viewCounts, VIEWS } from "@/server/modules/support/tickets";
 import { cn } from "@/lib/utils";
+import { Inbox, Sparkles } from "lucide-react";
+import { HelpMeButton } from "@/components/guide-kit/help-me";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels, latestSubjectTask } from "@/components/guide-kit/server";
+import { SmartEmpty } from "@/components/guide-kit/smart-empty";
+import { SentimentStrip, SlaTimers, TicketFlow } from "@/components/support/pulse";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { supportPulse } from "@/server/modules/support/setup";
+import { ensureSettings } from "@/server/modules/support/config";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.support.title") };
@@ -33,10 +41,57 @@ export default async function SupportInboxPage({ searchParams }: PageProps<"/[lo
     listCategories(viewer.ctx, org.id, company.id),
     db().team.findMany({ where: { organizationId: org.id, companyId: company.id, archivedAt: null }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
+  const [pulse, settings, helpTask] = await Promise.all([
+    supportPulse(viewer.ctx, org.id, company.id),
+    ensureSettings(db(), org.id, company.id),
+    latestSubjectTask(viewer.ctx, org.id, company.id, "support_inbox", company.id),
+  ]);
   const path = `/${locale}/support`;
+  const setupPending = perms.manage && !settings.setupCompletedAt;
+  const viewHref = (v: string) => `${path}${v === "open" ? "" : `?view=${v}`}`;
   const filtered = !!(f.q || f.priority || f.categoryId || f.assigneeId || f.channel || f.status);
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   return wrap(
+    <>
+    <PageIntro
+      labels={introLabels(t)}
+      what={t("support.intro.inbox.what")}
+      why={t("support.intro.inbox.why")}
+      can={t("support.intro.inbox.can")}
+      next={setupPending ? { label: t("support.intro.inbox.setup"), href: `${path}/setup` } : { label: t("support.intro.inbox.next"), href: viewHref("mine") }}
+      accent="warning"
+      extra={
+        <HelpMeButton
+          base={base}
+          aiReady={perms.aiReady && perms.runAgents}
+          profile="support_lead"
+          subject={{ type: "support_inbox", id: company.id }}
+          title="Help me with the support inbox"
+          instructions="The person is looking at the support inbox and is not a support expert. Read the queue (read_support_queue, views open, breached and unassigned). In plain words: which tickets to handle first and why (SLA risk, urgency, unhappy customers), who should take them, and any recurring problem worth a help article. Do not reply to customers; drafts and replies need approval."
+          initial={helpTask}
+        />
+      }
+    />
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <Card>
+        <CardHeader title={t("support.pulse.flowTitle")} description={t("support.pulse.flowHint")} />
+        <CardBody>
+          <TicketFlow flow={pulse.flow} hrefs={{ NEW: viewHref("unassigned"), OPEN: viewHref("open"), PENDING: viewHref("pending"), ON_HOLD: viewHref("all"), SOLVED: viewHref("solved") }} />
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title={t("support.pulse.sentimentTitle")} description={t("support.pulse.sentimentHint")} />
+        <CardBody>
+          <SentimentStrip days={pulse.sentiment} locale={locale} />
+        </CardBody>
+      </Card>
+    </div>
+    <Card>
+      <CardHeader title={t("support.pulse.timersTitle")} description={t("support.pulse.timersHint")} />
+      <CardBody>
+        <SlaTimers items={pulse.sla.map((x) => ({ ...x, dueAt: x.dueAt.toISOString() }))} locale={locale} />
+      </CardBody>
+    </Card>
     <div className="grid gap-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
       <nav className="flex gap-1 overflow-x-auto lg:grid lg:content-start" aria-label={t("support.views.label")}>
         {VIEWS.map((v) => (
@@ -110,7 +165,17 @@ export default async function SupportInboxPage({ searchParams }: PageProps<"/[lo
             </div>
           </form>
           {list.data.length === 0 ? (
-            <EmptyState>{filtered ? t("common.noResults") : t(`support.empty.${f.view}`)}</EmptyState>
+            !filtered && f.view === "open" && pulse.flow.SOLVED + pulse.flow.CLOSED === 0 ? (
+              <SmartEmpty
+                icon={<Inbox />}
+                title={t("support.emptyInbox.title")}
+                body={t("support.emptyInbox.body")}
+                primary={perms.manage ? <Link href={`${path}/setup`} className={buttonVariants({ size: "sm" })}><Sparkles aria-hidden /> {t("support.intro.inbox.setup")}</Link> : undefined}
+                ai={<Link href={`/${locale}/support-form/${company.id}`} target="_blank" className={buttonVariants({ size: "sm", variant: "secondary" })}>{t("support.emptyInbox.form")}</Link>}
+              />
+            ) : (
+              <EmptyState>{filtered ? t("common.noResults") : t(`support.empty.${f.view}`)}</EmptyState>
+            )
           ) : (
             <Table>
               <THead>
@@ -163,6 +228,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<"/[lo
           />
         </Card>
       </div>
-    </div>,
+    </div>
+    </>,
   );
 }

@@ -635,3 +635,28 @@ model OpsIncident {
   @@index([companyId, occurredAt])
   @@map("ops_incidents")
 }
+
+/// Guided project start (/projects/start): the person's description, the AI project manager's plan task and the project
+/// created from the reviewed plan. Step: describe | plan | assign | done.
+model WorkProjectKickoff {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  description    String
+  startDate      DateTime? @map("start_date") @db.Date
+  dueDate        DateTime? @map("due_date") @db.Date
+  step           String    @default("plan")
+  /// The AI project manager task that proposed the plan (agent_tasks.id).
+  agentTaskId    String?   @map("agent_task_id") @db.Uuid
+  /// The project created from the plan (projects.id).
+  projectId      String?   @map("project_id") @db.Uuid
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdById])
+  @@map("work_project_kickoffs")
+}

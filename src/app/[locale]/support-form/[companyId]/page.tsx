@@ -19,10 +19,22 @@ export default async function SupportFormPage({ params }: PageProps<"/[locale]/s
   if (!/^[0-9a-f-]{36}$/i.test(companyId)) notFound();
   const company = await db().company.findFirst({ where: { id: companyId, deletedAt: null, status: "ACTIVE" }, select: { id: true, name: true } });
   if (!company) notFound();
-  const settings = await db().supportSettings.findUnique({ where: { companyId }, select: { supportFormEnabled: true, helpCenterEnabled: true } });
+  const settings = await db().supportSettings.findUnique({ where: { companyId }, select: { supportFormEnabled: true, helpCenterEnabled: true, emailChannelEnabled: true, supportEmail: true } });
   const enabled = settings?.supportFormEnabled ?? true;
   return (
-    <PublicShell title={company.name}>
+    <PublicShell
+      title={company.name}
+      footer={
+        settings?.emailChannelEnabled && settings.supportEmail ? (
+          <>
+            {t("support.public.emailUs")}{" "}
+            <a href={`mailto:${settings.supportEmail}`} className="underline">
+              {settings.supportEmail}
+            </a>
+          </>
+        ) : undefined
+      }
+    >
       <Card>
         <CardHeader title={t("support.public.formTitle")} description={t("support.public.formSubtitle", { company: company.name })} />
         <CardBody>{enabled ? <SupportRequestForm companyId={company.id} /> : <Notice tone="warning">{t("support.public.formDisabled")}</Notice>}</CardBody>

@@ -1,13 +1,19 @@
 import { z } from "zod";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { db } from "@/server/core/db";
-import { attribution, campaignAnalytics, computeKpis } from "./analytics";
+import { attribution, campaignAnalytics, computeKpis, parseRange } from "./analytics";
 import { CAMPAIGN_STATUSES, createCampaign, listCampaigns } from "./campaigns";
 import { CONTENT_STATUSES, CONTENT_TYPES, createContent, listContent } from "./content";
 import { createPost, listAccounts } from "./social";
 import { getProject, seoReport } from "./seo";
 import { authorize, CHANNELS } from "./common";
 import { brandContext, getBrandKit } from "./brand";
+import { getUnifiedAnalytics } from "./intelligence";
+import { listAutopilots, listItems } from "./autopilot";
+import { listLearnings } from "./learning";
+import { adPerformanceText, changeAdBudget, changeAdStatus, createAdCampaignDraft, launchAdCampaign } from "./ads";
+import { generateCreative, PRESET_KEYS } from "./assets";
+import { sendOutreach, sendReply } from "./community";
 
 const money = (m: bigint | null, currency: string) => (m == null ? "n/a" : `${(Number(m) / 100).toFixed(2)} ${currency}`);
 const pct = (v: number | null) => (v == null ? "n/a" : `${v.toFixed(1)}%`);
@@ -305,6 +311,266 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
         content: `Queued post "${p.title}" (id ${p.id}) for ${p.scheduledAt?.toISOString()}. It is not published yet; the publishing queue sends it at that time.${notConnected.length ? ` Warning: not connected, it will fail unless connected first: ${notConnected.join(", ")}.` : ""}`,
         records: [`marketing_social_post:${p.id}`],
       };
+    },
+  }),
+
+  read_marketing_analytics: def({
+    name: "read_marketing_analytics",
+    version: 1,
+    description: "Returns unified marketing analytics for the last N days (default 30): social impressions/reach/engagement per platform, email sent/open/click/bounce rates, ads spend/clicks/conversions/ROAS, search clicks/impressions, blog views, leads, customers, total spend, CAC and ROI.",
+    input: z.object({ days: z.number().int().min(1).max(365).optional() }).strict(),
+    modelSchema: { type: "object", properties: { days: { type: "integer", description: "Look-back window in days (default 30)" } }, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read unified marketing analytics",
+    async execute({ days }, { ctx, organizationId, companyId }) {
+      const to = new Date();
+      const from = new Date(to.getTime() - (days ?? 30) * 86_400_000);
+      const r = parseRange({ from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) });
+      const a = await getUnifiedAnalytics(ctx, organizationId, companyId, r);
+      const cur = await companyCurrency(companyId);
+      const lines = [
+        `Period ${r.fromStr} → ${r.toStr}.`,
+        `Social: ${a.social.posts} deliveries, ${a.social.impressions} impressions, reach ${a.social.reach}, engagement ${a.social.engagement} (rate ${a.social.engagementRate == null ? "n/a" : pct(a.social.engagementRate * 100)}), clicks ${a.social.clicks}.`,
+        ...a.platforms.map((p) => `- ${p.provider}: ${p.posts} posts, ${p.impressions} impressions, engagement ${p.engagement} (rate ${p.engagementRate == null ? "n/a" : pct(p.engagementRate * 100)})`),
+        `Email: ${a.email.sent} sent, open rate ${a.email.openRate == null ? "n/a" : pct(a.email.openRate * 100)}, click rate ${a.email.clickRate == null ? "n/a" : pct(a.email.clickRate * 100)}, ${a.email.bounced} bounced.`,
+        `Ads: spend ${money(a.ads.spendMinor, cur)}, ${a.ads.impressions} impressions, ${a.ads.clicks} clicks, ${a.ads.conversions} conversions, ROAS ${a.ads.roas == null ? "n/a" : a.ads.roas.toFixed(2)}.`,
+        `Search (Search Console): ${a.search.clicks} clicks, ${a.search.impressions} impressions. Blog views (lifetime): ${a.blogViews}.`,
+        `Leads ${a.kpis.leadsCreated}, new customers ${a.kpis.newCustomers}, total spend ${money(a.totalSpendMinor, cur)}, CAC ${money(a.cacMinor, cur)}, ROI ${pct(a.roi)}.`,
+      ];
+      return { content: lines.join("\n") };
+    },
+  }),
+
+  read_autopilot: def({
+    name: "read_autopilot",
+    version: 1,
+    description: "Lists the company's marketing autopilot plans (objective, cadence, autonomy, status, pipeline counts by stage) and the next pipeline items with their stage, platform, slot, topic, review score and errors.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read marketing autopilot plans",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const plans = await listAutopilots(ctx, organizationId, companyId);
+      if (!plans.length) return { content: "No autopilot plans." };
+      const items = await listItems(ctx, organizationId, companyId, null, { page: 1 });
+      const lines = [
+        ...plans.map((p) => `- ${p.name} [${p.status}, ${p.autonomy}] (id ${p.id}): objective "${p.objective}"; cadence ${JSON.stringify(p.cadence)}; stages ${JSON.stringify(p.stages)}`),
+        "Next items:",
+        ...items.data.slice(0, 20).map((i) => `- ${i.slotAt.toISOString()} ${i.platform}/${i.format} [${i.stage}] ${i.topic ?? "(no topic yet)"}${i.reviewScore != null ? ` score ${i.reviewScore}` : ""}${i.error ? ` error: ${i.error}` : ""}`),
+      ];
+      return { content: lines.join("\n"), count: plans.length };
+    },
+  }),
+
+  read_marketing_learnings: def({
+    name: "read_marketing_learnings",
+    version: 1,
+    description: "Returns what the self-optimizing loop learned from real performance: best platforms, posting times, topics/pillars, formats, CTAs and hashtags, with engagement rates and sample sizes.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 10_000,
+    summarize: () => "Read marketing learnings",
+    async execute(_i, { ctx, organizationId, companyId }) {
+      const rows = await listLearnings(ctx, organizationId, companyId);
+      if (!rows.length) return { content: "No learnings yet: there is not enough published content with metrics." };
+      return { content: rows.map((r) => `- [${r.kind}${r.platform ? `/${r.platform}` : ""}] ${r.insight}`).join("\n"), count: rows.length };
+    },
+  }),
+
+  read_ad_performance: def({
+    name: "read_ad_performance",
+    version: 1,
+    description: "Returns paid ads campaigns mirrored from Meta/Google/LinkedIn/TikTok with status, daily budget, spend, impressions, clicks, CTR, conversions, CPA and ROAS; with adCampaignId also the last 30 days.",
+    input: z.object({ adCampaignId: z.string().uuid().optional() }).strict(),
+    modelSchema: { type: "object", properties: { adCampaignId: { type: "string" } }, required: [], additionalProperties: false },
+    permissions: ["marketing.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read ad performance",
+    async execute({ adCampaignId }, { ctx, organizationId, companyId }) {
+      await authorize(ctx, organizationId, companyId, "marketing.read");
+      return { content: await adPerformanceText(organizationId, companyId, adCampaignId) };
+    },
+  }),
+
+  repurpose_content: def({
+    name: "repurpose_content",
+    version: 1,
+    description: "Propose adding a repurposed bundle (social posts, video scripts, carousel, blog, newsletter, quotes, graphic briefs...) as draft child items of a source content item. A person approves before they are added.",
+    input: z.object({ contentId: z.string().uuid(), items: z.array(z.object({ type: z.enum(CONTENT_TYPES), title: z.string().trim().min(1).max(250), body: z.string().trim().min(1).max(50_000) }).strict()).min(1).max(20) }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        contentId: { type: "string", description: "Source content id (uuid)" },
+        items: { type: "array", items: { type: "object", properties: { type: { type: "string", enum: [...CONTENT_TYPES] }, title: { type: "string" }, body: { type: "string" } }, required: ["type", "title", "body"], additionalProperties: false } },
+      },
+      required: ["contentId", "items"],
+      additionalProperties: false,
+    },
+    permissions: ["marketing.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 20_000,
+    summarize: ({ items }) => `Add ${items.length} repurposed draft(s) to the content library`,
+    async execute({ contentId, items }, { ctx, organizationId, companyId }) {
+      const ids: string[] = [];
+      for (const it of items) ids.push((await createContent(ctx, organizationId, companyId, { ...it, parentId: contentId })).id);
+      return { content: `Added ${ids.length} draft(s) linked to the source.`, records: ids.map((id) => `marketing_content:${id}`) };
+    },
+  }),
+
+  generate_creative: def({
+    name: "generate_creative",
+    version: 1,
+    description: "Propose generating on-brand images with the company's connected image provider (OpenAI images or Stability) for a platform preset. Needs approval; fails if no provider is connected. Returns the new media library asset ids.",
+    input: z.object({ prompt: z.string().trim().min(3).max(3000), preset: z.enum(PRESET_KEYS as [string, ...string[]]), variations: z.number().int().min(1).max(4).optional(), campaignId: z.string().uuid().optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { prompt: { type: "string" }, preset: { type: "string", enum: [...PRESET_KEYS] }, variations: { type: "integer" }, campaignId: { type: "string" } },
+      required: ["prompt", "preset"],
+      additionalProperties: false,
+    },
+    permissions: ["marketing.manage"],
+    risk: "LOW",
+    autonomy: "SUPERVISED",
+    timeoutMs: 180_000,
+    summarize: ({ prompt, variations }) => `Generate ${variations ?? 1} image(s): "${prompt.slice(0, 120)}"`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const r = await generateCreative(ctx, organizationId, companyId, { ...input, preset: input.preset as never });
+      return { content: `Generated ${r.created.length} image(s) with ${r.provider}: ${r.created.join(", ")}${r.errors.length ? `; errors: ${r.errors.join("; ")}` : ""}.`, records: r.created.map((id) => `marketing_asset:${id}`) };
+    },
+  }),
+
+  create_ad_campaign_draft: def({
+    name: "create_ad_campaign_draft",
+    version: 1,
+    description: "Propose a paid ads campaign draft (local, with ads) for an imported ad account. Needs approval. It is NOT created at the provider until launch_ad_campaign is approved, and budgets must fit the account's spending caps.",
+    input: z
+      .object({
+        adAccountId: z.string().uuid(),
+        name: z.string().trim().min(1).max(200),
+        objective: z.string().trim().max(60).optional(),
+        dailyBudget: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/),
+        audience: z.string().trim().max(2000).optional(),
+        ads: z.array(z.object({ headline: z.string().trim().min(1).max(150), body: z.string().trim().min(1).max(2000), cta: z.string().trim().max(40).optional() }).strict()).max(10).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        adAccountId: { type: "string" },
+        name: { type: "string" },
+        objective: { type: "string" },
+        dailyBudget: { type: "string", description: 'Daily budget in major units, e.g. "50"' },
+        audience: { type: "string" },
+        ads: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, body: { type: "string" }, cta: { type: "string" } }, required: ["headline", "body"], additionalProperties: false } },
+      },
+      required: ["adAccountId", "name", "dailyBudget"],
+      additionalProperties: false,
+    },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ name, dailyBudget }) => `Create ad campaign draft "${name}" (daily budget ${dailyBudget})`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const c = await createAdCampaignDraft(ctx, organizationId, companyId, { ...input, ads: input.ads ?? [] });
+      return { content: `Created local ad campaign draft "${c.name}" (id ${c.id}). Not live at the provider.`, records: [`marketing_ad_campaign:${c.id}`] };
+    },
+  }),
+
+  launch_ad_campaign: def({
+    name: "launch_ad_campaign",
+    version: 1,
+    description: "Propose creating a local ad campaign draft at the ad provider (created PAUSED). Needs approval; refused if the daily budget exceeds the account's caps.",
+    input: z.object({ adCampaignId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { adCampaignId: { type: "string" } }, required: ["adCampaignId"], additionalProperties: false },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 60_000,
+    summarize: ({ adCampaignId }) => `Create ad campaign ${adCampaignId} at the provider (paused)`,
+    async execute({ adCampaignId }, { ctx, organizationId, companyId }) {
+      const r = await launchAdCampaign(ctx, organizationId, companyId, adCampaignId);
+      return { content: `Created at ${r.provider} with id ${r.externalId} (paused).`, records: [`marketing_ad_campaign:${adCampaignId}`] };
+    },
+  }),
+
+  set_ad_budget: def({
+    name: "set_ad_budget",
+    version: 1,
+    description: "Propose changing a live ad campaign's daily budget at the provider. Needs approval; refused above the account's daily/monthly caps.",
+    input: z.object({ adCampaignId: z.string().uuid(), dailyBudget: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/) }).strict(),
+    modelSchema: { type: "object", properties: { adCampaignId: { type: "string" }, dailyBudget: { type: "string", description: "Major units" } }, required: ["adCampaignId", "dailyBudget"], additionalProperties: false },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 60_000,
+    summarize: ({ adCampaignId, dailyBudget }) => `Set daily budget of ad campaign ${adCampaignId} to ${dailyBudget}`,
+    async execute({ adCampaignId, dailyBudget }, { ctx, organizationId, companyId }) {
+      await changeAdBudget(ctx, organizationId, companyId, adCampaignId, dailyBudget);
+      return { content: `Daily budget set to ${dailyBudget} at the provider.`, records: [`marketing_ad_campaign:${adCampaignId}`] };
+    },
+  }),
+
+  set_ad_campaign_status: def({
+    name: "set_ad_campaign_status",
+    version: 1,
+    description: "Propose activating or pausing an ad campaign at the provider. Needs approval; activation re-checks the spending caps.",
+    input: z.object({ adCampaignId: z.string().uuid(), active: z.boolean() }).strict(),
+    modelSchema: { type: "object", properties: { adCampaignId: { type: "string" }, active: { type: "boolean" } }, required: ["adCampaignId", "active"], additionalProperties: false },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 60_000,
+    summarize: ({ adCampaignId, active }) => `${active ? "Activate" : "Pause"} ad campaign ${adCampaignId}`,
+    async execute({ adCampaignId, active }, { ctx, organizationId, companyId }) {
+      await changeAdStatus(ctx, organizationId, companyId, adCampaignId, active);
+      return { content: `Campaign ${active ? "activated" : "paused"} at the provider.`, records: [`marketing_ad_campaign:${adCampaignId}`] };
+    },
+  }),
+
+  reply_to_comment: def({
+    name: "reply_to_comment",
+    version: 1,
+    description: "Propose posting a reply to a synced social comment. Needs approval; counts as replied only when the platform accepted it.",
+    input: z.object({ engagementId: z.string().uuid(), text: z.string().trim().min(1).max(3000) }).strict(),
+    modelSchema: { type: "object", properties: { engagementId: { type: "string" }, text: { type: "string" } }, required: ["engagementId", "text"], additionalProperties: false },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 30_000,
+    summarize: ({ text }) => `Reply to a social comment: "${text.slice(0, 120)}"`,
+    async execute({ engagementId, text }, { ctx, organizationId, companyId }) {
+      const r = await sendReply(ctx, organizationId, companyId, engagementId, text);
+      return { content: `Reply posted (platform id ${r.externalId}).`, records: [`marketing_engagement:${engagementId}`] };
+    },
+  }),
+
+  send_influencer_outreach: def({
+    name: "send_influencer_outreach",
+    version: 1,
+    description: "Propose sending the saved outreach email to an influencer. Needs approval; recorded as sent only when the email provider accepted it.",
+    input: z.object({ influencerId: z.string().uuid() }).strict(),
+    modelSchema: { type: "object", properties: { influencerId: { type: "string" } }, required: ["influencerId"], additionalProperties: false },
+    permissions: ["marketing.manage"],
+    risk: "HIGH",
+    autonomy: "SUPERVISED",
+    timeoutMs: 30_000,
+    summarize: ({ influencerId }) => `Send outreach email to influencer ${influencerId}`,
+    async execute({ influencerId }, { ctx, organizationId, companyId }) {
+      await sendOutreach(ctx, organizationId, companyId, influencerId);
+      return { content: "Outreach email sent.", records: [`marketing_influencer:${influencerId}`] };
     },
   }),
 };

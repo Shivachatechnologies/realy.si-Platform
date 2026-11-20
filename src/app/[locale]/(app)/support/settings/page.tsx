@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -30,6 +32,8 @@ export default async function SupportSettingsPage() {
   const agentName = new Map(agents.map((a) => [a.id, a.name]));
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.settings.what")} why={t("support.intro.settings.why")} can={t("support.intro.settings.can")} next={{ label: t("support.intro.settings.next"), href: `/${locale}/support/setup` }} accent="warning" />
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader title={t("support.settings.channels")} description={t("support.settings.channelsHint")} />
@@ -124,6 +128,7 @@ export default async function SupportSettingsPage() {
           <EscalationRuleForm base={base} agents={agents} />
         </CardBody>
       </Card>
-    </div>,
+    </div>
+    </>,
   );
 }

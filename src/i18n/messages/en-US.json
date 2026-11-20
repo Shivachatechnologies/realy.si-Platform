@@ -672,7 +672,41 @@
       "crm_journey_no_lead": "Add or choose a customer first.",
       "crm_journey_no_deal": "Create the deal first.",
       "crm_lead_no_email": "This lead has no email address.",
-      "crm_lead_archived": "This lead is archived."
+      "crm_lead_archived": "This lead is archived.",
+      "work_kickoff_applied": "The project for this plan was already created.",
+      "work_kickoff_not_applied": "Create the project from the plan first.",
+      "marketing_ads_already_pushed": "This campaign already exists at the ad platform.",
+      "marketing_ads_no_budget": "Set a daily budget first.",
+      "marketing_ads_no_caps": "Set daily and monthly spending caps for this ad account first.",
+      "marketing_ads_not_connected": "This ad platform is not connected.",
+      "marketing_ads_over_cap": "This budget would exceed the account's spending cap.",
+      "marketing_ads_provider_error": "The ad platform refused the request.",
+      "marketing_asset_empty": "Choose a file or a link.",
+      "marketing_asset_not_ready": "The media is not ready yet.",
+      "marketing_asset_too_large": "The file is too large (max 10 MB).",
+      "marketing_asset_download_failed": "The file could not be downloaded.",
+      "marketing_autopilot_no_accounts": "Choose at least one social account.",
+      "marketing_autopilot_no_cadence": "Set how often to post.",
+      "marketing_bundle_exists": "This bundle was already created.",
+      "marketing_cms_failed": "Publishing to the CMS failed.",
+      "marketing_cms_not_connected": "This CMS is not connected.",
+      "marketing_cms_type": "Only articles and pages can be published to a blog or CMS.",
+      "marketing_email_ab_variants": "Add at least two variants for an A/B test.",
+      "marketing_email_variants_max": "At most four variants.",
+      "marketing_generation_failed": "The AI provider did not return a result.",
+      "marketing_gsc_not_connected": "Google Search Console is not connected.",
+      "marketing_image_not_connected": "Connect an image provider (OpenAI or Stability) first.",
+      "marketing_video_not_connected": "Connect a video provider (Runway or Replicate) first.",
+      "marketing_journey_incomplete": "Answer the previous questions first.",
+      "marketing_journey_product": "That product was not found.",
+      "marketing_outreach_incomplete": "Add an email address, subject and message first.",
+      "marketing_outreach_failed": "The outreach email was not sent.",
+      "marketing_post_video_required": "This platform needs a video from the media library.",
+      "marketing_reply_done": "This comment was already answered.",
+      "marketing_reply_empty": "Write a reply first.",
+      "marketing_reply_failed": "The platform refused the reply.",
+      "marketing_reply_not_connected": "The account is not connected.",
+      "marketing_seo_no_keywords": "Add keywords first."
     }
   },
   "onboarding": {
@@ -2022,7 +2056,19 @@
       "create_product_doc_draft": "Draft a product document",
       "create_feature": "Create a feature",
       "create_backlog_tasks": "Create backlog tasks",
-      "advance_product_stage": "Advance product stage"
+      "advance_product_stage": "Advance product stage",
+      "read_marketing_analytics": "Read marketing analytics",
+      "read_autopilot": "Read autopilot plans",
+      "read_marketing_learnings": "Read marketing learnings",
+      "read_ad_performance": "Read ad performance",
+      "repurpose_content": "Repurpose content",
+      "generate_creative": "Generate creative",
+      "create_ad_campaign_draft": "Draft ad campaign",
+      "launch_ad_campaign": "Create ad campaign at platform",
+      "set_ad_budget": "Change ad budget",
+      "set_ad_campaign_status": "Activate or pause ad campaign",
+      "reply_to_comment": "Reply to comment",
+      "send_influencer_outreach": "Send influencer outreach"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -2559,6 +2605,22 @@
     "release_manager": {
       "name": "Release Manager",
       "summary": "Release and launch plans, readiness and changelog."
+    },
+    "content_strategist": {
+      "name": "Content Strategist",
+      "summary": "Content pillars, editorial calendars, formats and repurposing based on what performs."
+    },
+    "creative_designer": {
+      "name": "Creative Designer",
+      "summary": "On-brand visual briefs and AI image generation for every platform."
+    },
+    "video_producer": {
+      "name": "Video Producer",
+      "summary": "Short-form video scripts, YouTube titles and descriptions, video generation."
+    },
+    "paid_ads_specialist": {
+      "name": "Paid Ads Specialist",
+      "summary": "Ad campaign plans, ad copy and optimization within spending caps."
     }
   },
   "projects": {
@@ -2828,7 +2890,8 @@
         "content_changes": "Changes requested: {title}",
         "content_comment": "New comment on {title}",
         "post_published": "Social post published: {title}",
-        "post_failed": "Social post not fully published: {title}"
+        "post_failed": "Social post not fully published: {title}",
+        "autopilot_failed": "Autopilot needs attention: {title}"
       },
       "crm": {
         "lead_assigned": "Lead assigned to you: {title}",
@@ -5311,6 +5374,259 @@
       "left": "Left",
       "right": "Right",
       "draft": "Current draft"
+    },
+    "intro": {
+      "list": {
+        "what": "Automations: \"when this happens, do that\" — Realy.si does the routine work for you.",
+        "why": "Save hours every week and never forget a follow-up.",
+        "can": "Create automations in plain words, see them on the map and check every run.",
+        "next": "Create an automation"
+      },
+      "runs": {
+        "what": "Every time an automation ran, and what happened.",
+        "why": "See what worked and fix what failed.",
+        "can": "Open runs, retry failed ones and see each step."
+      },
+      "approvals": {
+        "what": "Steps that wait for a person to say yes.",
+        "why": "Sensitive actions like sending emails never happen without you.",
+        "can": "Approve or reject waiting steps."
+      },
+      "templates": {
+        "what": "Ready-made automations.",
+        "why": "Start from proven recipes.",
+        "can": "Pick a template and adjust it in the advanced editor."
+      },
+      "detail": {
+        "what": "One automation: what starts it and the steps it takes.",
+        "why": "Changes here affect what Realy.si does automatically.",
+        "can": "Edit steps, publish a new version, test it or turn it on and off."
+      }
+    },
+    "map": {
+      "title": "Automation map",
+      "hint": "Your active automations: what starts them → what they do. Moving dots = ran in the last 24 hours.",
+      "aria": "{count, plural, one {Map of # active automation} other {Map of # active automations}}",
+      "more": "+{count} more",
+      "counts": "{day} today · {month} in 30 days · {failed} failed",
+      "emptyTitle": "No automations running yet",
+      "emptyBody": "Tell Realy.si what to do when something happens — e.g. \"when a new lead arrives, assign it to Ana and remind her tomorrow\".",
+      "templates": "Browse templates"
+    },
+    "simple": {
+      "title": "New automation",
+      "intro": {
+        "what": "Build an automation by picking cards: what happens, optional conditions, and what Realy.si should do.",
+        "why": "No technical knowledge needed — the result is a real, tested automation.",
+        "can": "Describe it to AI, or click it together below. Turn it on when the summary reads right."
+      },
+      "manageOnly": "You need permission to manage workflows to create automations.",
+      "describeTitle": "Describe it and AI builds it",
+      "describeHint": "Write what should happen in your own words.",
+      "describePlaceholder": "e.g. When a deal is won, create a project for the customer, notify the finance team and ask AI to write a welcome email.",
+      "describeGo": "Build it with AI",
+      "describeNote": "AI creates a draft — nothing runs until you check and turn it on.",
+      "describeNotReady": "AI isn't available here — use the builder below.",
+      "orTemplates": "Or start from a template",
+      "builderTitle": "Or click it together",
+      "builderHint": "Four simple steps.",
+      "advanced": "Advanced editor",
+      "advancedNew": "New automation in the advanced editor",
+      "whenTitle": "When this happens…",
+      "whenHint": "Pick the moment that starts the automation.",
+      "ifTitle": "Only if… (optional)",
+      "ifHint": "Leave empty to run every time.",
+      "thenTitle": "Then Realy.si should…",
+      "thenHint": "Pick one or more actions. They run in this order.",
+      "summaryTitle": "Check and turn on",
+      "summaryHint": "Read the sentence — it's exactly what will happen.",
+      "summaryEmpty": "Pick a trigger and at least one action.",
+      "name": "Name",
+      "nameHint": "Optional — we use the summary if empty.",
+      "turnOn": "Turn on",
+      "saveDraft": "Save without turning on",
+      "emailIncomplete": "Fill in the email's recipient, subject and text.",
+      "popular": "Popular",
+      "approval": "Needs approval",
+      "optional": "optional",
+      "noConds": "No extra conditions for this one — it runs every time.",
+      "pickTriggerFirst": "Pick what happens first.",
+      "me": "me",
+      "day": "Day",
+      "time": "Time",
+      "days": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "scheduleShort": {
+        "weekly": "Every week",
+        "daily": "Every day",
+        "interval": "Repeatedly"
+      },
+      "triggers": {
+        "lead_created": {
+          "title": "A new lead arrives",
+          "hint": "Someone interested in buying, from a form or added by your team.",
+          "when": "When a new lead arrives,"
+        },
+        "deal_won": {
+          "title": "A deal is won",
+          "hint": "A customer said yes.",
+          "when": "When a deal is won,"
+        },
+        "invoice_overdue": {
+          "title": "An invoice becomes overdue",
+          "hint": "A customer hasn't paid by the due date.",
+          "when": "When an invoice becomes overdue,"
+        },
+        "payment_received": {
+          "title": "A payment comes in",
+          "hint": "Money received for an invoice.",
+          "when": "When a payment comes in,"
+        },
+        "ticket_created": {
+          "title": "A customer asks for help",
+          "hint": "A new support ticket.",
+          "when": "When a customer asks for help,"
+        },
+        "customer_created": {
+          "title": "Someone becomes a customer",
+          "hint": "A new paying customer.",
+          "when": "When someone becomes a customer,"
+        },
+        "candidate_applied": {
+          "title": "Someone applies for a job",
+          "hint": "A new job application.",
+          "when": "When someone applies for a job,"
+        },
+        "employee_joined": {
+          "title": "A new colleague joins",
+          "hint": "A new employee is added.",
+          "when": "When a new colleague joins,"
+        },
+        "task_completed": {
+          "title": "A task is finished",
+          "hint": "Someone marks a task as done.",
+          "when": "When a task is finished,"
+        },
+        "form_submitted": {
+          "title": "A form is filled in",
+          "hint": "Someone submits one of your web forms.",
+          "when": "When a form is filled in,"
+        },
+        "monday": {
+          "title": "Every Monday at 9:00",
+          "hint": "A weekly routine (you can change the day and time).",
+          "when": "Every week,"
+        },
+        "daily": {
+          "title": "Every morning",
+          "hint": "A daily routine at a time you choose.",
+          "when": "Every day,"
+        }
+      },
+      "sentence": {
+        "weekly": "Every {day} at {time},",
+        "daily": "Every day at {time},",
+        "onlyIf": "but only if",
+        "and": "and",
+        "then": "Realy.si will"
+      },
+      "conds": {
+        "scoreAbove": {
+          "label": "The lead's score is above",
+          "sentence": "the lead's score is above {value}"
+        },
+        "sourceIs": {
+          "label": "It came from (contains)",
+          "sentence": "it came from “{value}”"
+        },
+        "amountAbove": {
+          "label": "The amount is above ({currency})",
+          "sentence": "the amount is above {value} {currency}"
+        },
+        "balanceAbove": {
+          "label": "The unpaid amount is above ({currency})",
+          "sentence": "the unpaid amount is above {value} {currency}"
+        },
+        "urgent": {
+          "label": "It's marked urgent",
+          "sentence": "it's urgent"
+        },
+        "unhappy": {
+          "label": "The customer sounds unhappy",
+          "sentence": "the customer sounds unhappy"
+        },
+        "jobIs": {
+          "label": "The job title contains",
+          "sentence": "the job title contains “{value}”"
+        }
+      },
+      "actions": {
+        "assign": {
+          "title": "Assign it to someone",
+          "hint": "Make a person responsible for it.",
+          "unavailable": "Not available for this trigger.",
+          "sentence": "assign it to {person}"
+        },
+        "task": {
+          "title": "Create a task",
+          "hint": "A to-do with a due date.",
+          "sentence": "create the task “{title}” for {person}"
+        },
+        "notify": {
+          "title": "Notify someone",
+          "hint": "An in-app notification.",
+          "sentence": "notify {person}"
+        },
+        "ai": {
+          "title": "Ask AI to…",
+          "hint": "An AI employee does a job (proposals still need approval).",
+          "sentence": "ask the {profile} to take care of it"
+        },
+        "email": {
+          "title": "Send an email",
+          "hint": "Sent only after a person approves it.",
+          "sentence": "send an email to {to} after {person} approves it"
+        },
+        "project": {
+          "title": "Create a project",
+          "hint": "A new project owned by someone.",
+          "sentence": "create a project owned by {person}"
+        }
+      },
+      "fields": {
+        "person": "Who?",
+        "approver": "Who approves the email?",
+        "owner": "Project owner",
+        "taskTitle": "Task",
+        "message": "Message",
+        "projectName": "Project name",
+        "placeholderHint": "Details like the name are filled in automatically when it runs.",
+        "due": "Due",
+        "dueIn": "{count, plural, =0 {Same day} one {In # day} other {In # days}}",
+        "aiWho": "Which AI employee?",
+        "aiWhat": "What should the AI do?",
+        "aiPlaceholder": "e.g. Research this company and write a short summary for the sales team.",
+        "to": "To",
+        "toHint": "Prefilled with the email address of the person it is about.",
+        "subject": "Subject",
+        "body": "Text",
+        "emailNote": "The email waits for approval and is sent only if email sending is set up; otherwise the run reports it was not sent."
+      },
+      "defaults": {
+        "taskTitle": "Follow up: {name}",
+        "weeklyTask": "Weekly review",
+        "aiInstructions": "Look at this record and do what is most helpful next; explain your result in plain words.",
+        "approveEmail": "Approve sending an email to {to}",
+        "projectName": "New project",
+        "name": "My automation"
+      }
     }
   },
   "marketplace": {
@@ -6734,7 +7050,8 @@
       "projectsLabel": "Projects navigation",
       "sprints": "Sprints",
       "templates": "Templates",
-      "timeline": "Timeline"
+      "timeline": "Timeline",
+      "start": "Start a project"
     },
     "task": {
       "add": "New task",
@@ -6844,6 +7161,191 @@
       "person": "Person",
       "points": "Points",
       "title": "Team workload"
+    },
+    "start": {
+      "title": "Start a project",
+      "subtitle": "Describe what you're working on; the AI project manager plans it with you.",
+      "intro": {
+        "what": "A guided start: you describe the work in plain words and get a ready plan with milestones and tasks.",
+        "why": "A clear plan with dates and owners is the difference between \"we should\" and \"done\".",
+        "can": "Review the AI's plan, untick what you don't need, create the project and assign people."
+      },
+      "manageOnly": "You need permission to manage projects to start one.",
+      "progress": "Project start progress",
+      "steps": {
+        "describe": "Describe",
+        "plan": "Review plan",
+        "assign": "Assign people",
+        "timeline": "Timeline"
+      },
+      "q": {
+        "describe": "What are you working on?",
+        "plan": "Here's a plan — does it look right?",
+        "assign": "Who will do what?",
+        "timeline": "Your project is ready"
+      },
+      "qHint": {
+        "describe": "Write it like you'd explain it to a colleague. Mention a deadline if there is one.",
+        "plan": "Tick the milestones and tasks you want. You can rename anything.",
+        "assign": "Pick a person for each task. The numbers show how much they already have on their plate.",
+        "timeline": "Here's your plan on a timeline. Late work turns red automatically."
+      },
+      "youSaid": "You said:",
+      "aiNotReady": "AI isn't available here. You can still create a project from a template on the projects page.",
+      "openTask": "Open the AI task",
+      "describe": {
+        "label": "Describe the work",
+        "hint": "What needs to happen, for whom, and by when.",
+        "placeholder": "e.g. We're opening a second shop in Maribor in March. We need to find the space, renovate, hire two people and plan an opening event.",
+        "examples": "Examples",
+        "start": "Start date",
+        "startHint": "Empty = today.",
+        "due": "Deadline",
+        "dueHint": "Optional.",
+        "submit": "Plan it with AI"
+      },
+      "exampleLabel": {
+        "website": "New website",
+        "event": "Customer event",
+        "launch": "Product launch",
+        "office": "Office move",
+        "campaign": "Marketing campaign"
+      },
+      "example": {
+        "website": "We need a new company website with 5 pages, our logo and a contact form, live before the end of next month.",
+        "event": "We're organising an evening event for about 50 customers: venue, invitations, catering and a short presentation.",
+        "launch": "We're launching a new product: finish testing, prepare the website page, train the sales team and announce it to customers.",
+        "office": "We're moving to a new office: pick a moving company, set up internet and desks, and tell customers our new address.",
+        "campaign": "We want a 4-week marketing campaign with social posts, a newsletter and a small ad budget to get more leads."
+      },
+      "plan": {
+        "queued": "Waiting for the AI project manager…",
+        "thinking": "The AI project manager is breaking your work into milestones and tasks…",
+        "revising": "Revising the plan",
+        "noTask": "No plan was requested. Go back and describe the work again.",
+        "unreadable": "The AI answered, but not in a plan format we can use. Ask it to try again.",
+        "failed": "The AI couldn't make a plan.",
+        "tryAgain": "Try again",
+        "name": "Project name",
+        "reviewHint": "{count, plural, one {# task selected.} other {# tasks selected.}} Untick anything you don't need and click a title to rename it.",
+        "otherTasks": "Other tasks",
+        "byDate": "by {date}",
+        "taskTitle": "Task title",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "team": "Who's on the team? (optional)",
+        "create": "{count, plural, one {Create project with # task} other {Create project with # tasks}}",
+        "changeTitle": "Not quite right? Ask for changes",
+        "changePlaceholder": "e.g. Make it shorter, add a testing phase, we have only two people.",
+        "change": "Make a new plan"
+      },
+      "assign": {
+        "loadLabel": "Current workload",
+        "load": "{count, plural, one {# open task} other {# open tasks}}",
+        "noPeople": "Nobody else has access to projects yet. Invite colleagues in Settings to share the work.",
+        "who": "Who does “{task}”?",
+        "nobody": "Not assigned",
+        "save": "Save and see the timeline"
+      },
+      "done": {
+        "title": "{name} is ready",
+        "body": "Milestones, tasks and owners are saved. Everyone sees their tasks under “My tasks”.",
+        "open": "Open the project",
+        "board": "Open the task board",
+        "another": "Start another project"
+      },
+      "resume": {
+        "title": "Continue where you left off",
+        "continue": "Continue"
+      }
+    },
+    "delay": {
+      "lateBy": "{count, plural, one {# day late} other {# days late}}",
+      "onTime": "On time",
+      "summary": "{count, plural, one {# late task} other {# late tasks}} · up to {days}d",
+      "column": "Delays"
+    },
+    "heatmap": {
+      "title": "Who is busy when",
+      "hint": "Open tasks per person by due week. Darker = busier; red = already late.",
+      "hintProject": "Open tasks in this project per person by due week.",
+      "late": "Late",
+      "cell": "{count, plural, one {# task} other {# tasks}}",
+      "empty": "No assigned tasks with due dates yet."
+    },
+    "empty": {
+      "projects": {
+        "title": "No projects yet",
+        "body": "A project groups the tasks, people and dates for one goal — a launch, an event, a new website.",
+        "ai": "Plan my first project with AI",
+        "manual": "or use “New project” above"
+      },
+      "tasks": {
+        "title": "No tasks here",
+        "body": "Tasks are the small steps of your work. Start a project and the AI will suggest them."
+      }
+    },
+    "intro": {
+      "projects": {
+        "what": "All your projects with progress, owners and delays.",
+        "why": "See at a glance what's on track and what needs attention.",
+        "can": "Start projects, filter them, spot late work and see who is overloaded.",
+        "next": "Start a project",
+        "nextMine": "My tasks"
+      },
+      "project": {
+        "what": "Everything about this project: progress, milestones, risks, budget and people.",
+        "why": "One place to see if the project will finish on time.",
+        "can": "Add milestones and risks, manage the team and ask the AI project manager for help.",
+        "next": "See the timeline"
+      },
+      "task": {
+        "what": "One piece of work, with who does it and by when.",
+        "why": "Clear tasks get done; vague ones get stuck.",
+        "can": "Update the status, comment, attach files, log time — or ask AI how to get it done."
+      },
+      "tasks": {
+        "what": "Every task in every project.",
+        "why": "Find anything quickly and see what's late across the company.",
+        "can": "Filter, sort and create tasks.",
+        "next": "Start a project"
+      },
+      "my": {
+        "what": "The tasks assigned to you.",
+        "why": "Focus on what matters today.",
+        "can": "See what's overdue, due soon and done, in a list or calendar.",
+        "next": "All tasks"
+      },
+      "templates": {
+        "what": "Reusable project plans.",
+        "why": "Don't start from zero for work you do again and again.",
+        "can": "Use built-in templates or save your own projects as templates.",
+        "next": "Start with AI instead"
+      },
+      "board": {
+        "what": "Tasks as cards in columns by status.",
+        "why": "See the flow of work and where it gets stuck.",
+        "can": "Drag cards between columns and add tasks."
+      },
+      "list": {
+        "what": "The project's tasks as a list.",
+        "why": "The quickest way to scan and sort everything.",
+        "can": "Filter, sort and open tasks."
+      },
+      "timeline": {
+        "what": "The project's tasks on a calendar line.",
+        "why": "Shows what happens when and what is late (red).",
+        "can": "Spot overlaps, dependencies and slipping dates."
+      },
+      "calendar": {
+        "what": "Tasks by due date on a month calendar.",
+        "why": "Plan around busy weeks.",
+        "can": "Browse months and open tasks."
+      },
+      "sprints": {
+        "what": "Short work periods (usually 1–2 weeks) with a fixed set of tasks.",
+        "why": "Small cycles keep the team focused and show real progress.",
+        "can": "Plan, start and finish sprints and review velocity."
+      }
     }
   },
   "marketing": {
@@ -6857,7 +7359,15 @@
       "audience": "Audience",
       "forms": "Forms",
       "automation": "Automation",
-      "brand": "Brand"
+      "brand": "Brand",
+      "start": "Start here",
+      "autopilot": "Autopilot",
+      "studio": "Creative Studio",
+      "community": "Community",
+      "blog": "Blog",
+      "ads": "Ads",
+      "influencers": "Influencers",
+      "analytics": "Analytics"
     },
     "common": {
       "allStatuses": "All statuses",
@@ -6899,7 +7409,9 @@
       "emailsSent": "Emails sent",
       "postsPublished": "Social posts published",
       "activeCampaigns": "Active campaigns",
-      "emailOpenRate": "Email open rate"
+      "emailOpenRate": "Email open rate",
+      "autopilotPublished": "Posts published by autopilot",
+      "adSpend": "Ad spend"
     },
     "commandCenter": {
       "title": "Marketing Command Center",
@@ -7068,7 +7580,22 @@
       "FACEBOOK": "Facebook post",
       "AD": "Ad",
       "LANDING_PAGE": "Landing page",
-      "EMAIL": "Email"
+      "EMAIL": "Email",
+      "THREADS": "Threads post",
+      "TIKTOK_SCRIPT": "TikTok script",
+      "YOUTUBE_SCRIPT": "YouTube video",
+      "SEO_ARTICLE": "SEO article",
+      "NEWSLETTER": "Newsletter",
+      "WEBSITE_COPY": "Website copy",
+      "CASE_STUDY": "Case study",
+      "PRESS_RELEASE": "Press release",
+      "PRODUCT_ANNOUNCEMENT": "Product announcement",
+      "THOUGHT_LEADERSHIP": "Thought leadership",
+      "INDUSTRY_REPORT": "Industry report",
+      "VIDEO_SCRIPT": "Video script",
+      "CAROUSEL": "Carousel",
+      "QUOTE": "Quotes",
+      "GRAPHIC_BRIEF": "Graphics brief"
     },
     "contentStatus": {
       "DRAFT": "Draft",
@@ -7162,7 +7689,11 @@
       "LINKEDIN": "LinkedIn",
       "X": "X",
       "INSTAGRAM": "Instagram",
-      "FACEBOOK": "Facebook"
+      "FACEBOOK": "Facebook",
+      "YOUTUBE": "YouTube",
+      "TIKTOK": "TikTok",
+      "THREADS": "Threads",
+      "PINTEREST": "Pinterest"
     },
     "social": {
       "title": "Social Media OS",
@@ -7182,7 +7713,11 @@
         "LINKEDIN": "Author URN, e.g. urn:li:organization:123",
         "X": "Optional for X.",
         "INSTAGRAM": "Instagram business user ID",
-        "FACEBOOK": "Facebook page ID"
+        "FACEBOOK": "Facebook page ID",
+        "YOUTUBE": "YouTube channel id (optional)",
+        "TIKTOK": "Optional; the connected account is used",
+        "THREADS": "Threads user id (optional; defaults to the connected user)",
+        "PINTEREST": "Pinterest board id (required)"
       },
       "queue": "Publishing queue",
       "empty": "No posts yet.",
@@ -7639,6 +8174,750 @@
       "preview": "Preview",
       "aiContext": "What AI writers receive",
       "aiContextHint": "Appended to every AI content task (drafts, social posts, SEO briefs, emails, campaign plans)."
+    },
+    "studio": {
+      "eyebrow": "Marketing Studio",
+      "advanced": "Advanced options",
+      "aiLabel": "AI",
+      "strip": {
+        "what": "What is this?",
+        "why": "Why it matters",
+        "do": "What you can do"
+      },
+      "pages": {
+        "overview": {
+          "what": "Your marketing at a glance: what the AI is working on, what is waiting for you and how it performs.",
+          "why": "One place to see whether marketing is moving your business forward.",
+          "do": "Approve posts, follow the pipeline, set goals and act on the AI's next-step suggestions."
+        },
+        "autopilot": {
+          "what": "Autopilot plans that research, write, design, check and schedule posts for you.",
+          "why": "Consistent posting without spending your day on it.",
+          "do": "Create a plan, choose how often to post, approve drafts and watch them go live."
+        },
+        "studio": {
+          "what": "The Creative Studio: generate on-brand images and videos, and keep every asset in one library.",
+          "why": "Posts with good visuals get far more attention.",
+          "do": "Describe an image, pick a size and style, generate variations, download them or use them in posts."
+        },
+        "social": {
+          "what": "Your social accounts and the publishing queue.",
+          "why": "Every post, its status and its results in one list.",
+          "do": "Connect accounts, write posts, schedule them, retry failures and see engagement."
+        },
+        "community": {
+          "what": "Comments on your posts, gathered from every platform.",
+          "why": "Fast, friendly replies build trust and sales.",
+          "do": "Read comments, let AI draft replies, edit them and send."
+        },
+        "blog": {
+          "what": "Your blog and website articles, on your own CMS or a free Realy-hosted blog.",
+          "why": "Articles bring visitors from Google month after month.",
+          "do": "Write or generate articles, publish them, schedule them and track views."
+        },
+        "email": {
+          "what": "Email campaigns to your audience, with A/B tests.",
+          "why": "Email is the channel you own; it turns interest into customers.",
+          "do": "Write a campaign, test two subject lines, send and see opens and clicks."
+        },
+        "ads": {
+          "what": "Paid ads on Meta, Google, LinkedIn and TikTok, with strict spending caps.",
+          "why": "Ads reach new customers quickly when they are measured and controlled.",
+          "do": "Import ad accounts, set caps, draft campaigns with AI and approve every change."
+        },
+        "influencers": {
+          "what": "A simple list of creators you would like to work with.",
+          "why": "Creators can introduce you to an audience that already trusts them.",
+          "do": "Add creators, let AI draft outreach, approve and send it, and track their status."
+        },
+        "analytics": {
+          "what": "All your marketing results in one view.",
+          "why": "Know what works so you can do more of it.",
+          "do": "Compare platforms, ask the AI analyst a question and read what the system has learned."
+        },
+        "content": {
+          "what": "Every piece of content: posts, articles, emails, scripts.",
+          "why": "Write once, review once, then publish everywhere.",
+          "do": "Create content, ask AI for drafts, repurpose it into many formats and send it for approval."
+        },
+        "seo": {
+          "what": "Search engine optimization: the words people search for and how you rank.",
+          "why": "Ranking on Google brings free visitors every day.",
+          "do": "Add keywords, let AI group them into topics, write articles and track rankings."
+        },
+        "campaigns": {
+          "what": "Campaigns group your content, emails, ads and budget around one goal.",
+          "why": "See which effort brings leads and revenue.",
+          "do": "Create a campaign, add spend and follow its results."
+        }
+      },
+      "help": {
+        "title": "Help me do this",
+        "button": "Help me do this",
+        "placeholder": "What do you want to do? (optional)"
+      },
+      "preview": {
+        "followers": "Company · 1m",
+        "justNow": "Just now",
+        "needsMedia": "This platform needs an image or video.",
+        "needsVideo": "This platform needs a video."
+      },
+      "stage": {
+        "IDEA": "Idea",
+        "RESEARCH": "Research",
+        "DRAFT": "Draft",
+        "AI_REVIEW": "AI review",
+        "READY": "Ready",
+        "SCHEDULED": "Scheduled",
+        "PUBLISHED": "Published",
+        "ANALYZED": "Analyzed",
+        "REJECTED": "Rejected",
+        "FAILED": "Failed"
+      },
+      "format": {
+        "post": "Post",
+        "reel": "Reel",
+        "short": "Short",
+        "carousel": "Carousel",
+        "thread": "Thread",
+        "video": "Video"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "pipeline": {
+        "title": "Content pipeline",
+        "hint": "Every post moves from idea to published; the numbers are live."
+      },
+      "overview": {
+        "start": "Start here",
+        "openAutopilot": "Open autopilot",
+        "activeAutopilots": "Active autopilots",
+        "waitingApproval": "Waiting for your approval",
+        "scheduled": "Scheduled posts",
+        "published": "Published posts"
+      },
+      "next": {
+        "title": "What to do next",
+        "hint": "Suggestions from your real results and from problems the system found.",
+        "empty": "Nothing urgent. Suggestions appear here as results come in.",
+        "done": "Done",
+        "dismiss": "Dismiss"
+      },
+      "connections": {
+        "title": "Connections",
+        "connect": "Connect",
+        "images": "Image generation",
+        "video": "Video generation"
+      },
+      "goals": {
+        "title": "Goals",
+        "hint": "Targets measured from your real data.",
+        "empty": "No goals yet. Add one to track progress.",
+        "add": "Add goal",
+        "name": "Goal name",
+        "metricLabel": "Measure",
+        "target": "Target",
+        "metric": {
+          "leads": "Leads",
+          "impressions": "Impressions",
+          "engagement": "Engagement",
+          "clicks": "Clicks",
+          "posts": "Posts published",
+          "emails_sent": "Emails sent",
+          "spend": "Spend",
+          "traffic": "Website visits",
+          "customers": "New customers"
+        }
+      },
+      "ai": {
+        "title": "AI workforce activity",
+        "empty": "No AI work yet."
+      },
+      "journey": {
+        "title": "Start here",
+        "subtitle": "Answer a few simple questions and your AI marketing team does the rest.",
+        "skip": "Skip to the studio",
+        "stepOf": "Step {step} of {total}",
+        "progress": "Journey progress",
+        "recommended": "Recommended",
+        "next": "Continue",
+        "back": "Back",
+        "launch": "Start autopilot",
+        "working": "Your AI team is working on it. This page updates by itself.",
+        "s1": {
+          "short": "Promote",
+          "title": "What do you want to promote?",
+          "hint": "Pick the closest match. You can change it later."
+        },
+        "s2": {
+          "short": "Offer",
+          "title": "Which product or service?",
+          "hint": "Tell us its name and what makes it useful."
+        },
+        "s3": {
+          "short": "Customers",
+          "title": "Who are your customers?",
+          "hint": "Describe them in your own words, as you would to a friend."
+        },
+        "s4": {
+          "short": "Goal",
+          "title": "What should marketing achieve?",
+          "hint": "Choose the one result that matters most right now."
+        },
+        "s5": {
+          "short": "Strategy",
+          "title": "Your AI creates the strategy",
+          "hint": "Your AI marketing lead writes a simple plan from your answers and your company documents."
+        },
+        "s6": {
+          "short": "Content",
+          "title": "Review your first posts",
+          "hint": "See exactly how each post will look on each platform. Edit anything you like."
+        },
+        "s7": {
+          "short": "Schedule",
+          "title": "When and where should we post?",
+          "hint": "Pick a pace and the accounts to use. You stay in control of what goes out."
+        },
+        "s8": {
+          "short": "Results",
+          "title": "Your AI monitors the results",
+          "hint": "Posts are planned, written, checked and published; the system learns what works."
+        },
+        "promote": {
+          "product": "A product",
+          "productHint": "Something people buy, like software or goods.",
+          "service": "A service",
+          "serviceHint": "Work you do for clients, like consulting or repairs.",
+          "event": "An event",
+          "eventHint": "A launch, webinar, workshop or sale.",
+          "brand": "My brand",
+          "brandHint": "Make your company better known in general.",
+          "offer": "A special offer",
+          "offerHint": "A discount, bundle or limited-time deal."
+        },
+        "pickProduct": "Pick from your products",
+        "somethingElse": "Something else",
+        "offerName": "Name",
+        "offerNameEx": "Example: Realy Accounting, or Spring yoga workshop",
+        "offerDescription": "What it does and why people like it",
+        "offerDescriptionEx": "Example: Automates bookkeeping for small shops and saves them 5 hours a week.",
+        "customers": "Your customers",
+        "customersEx": "Example: Owners of small cafés in Germany, 30-50 years old, short on time, looking for simple tools.",
+        "regions": "Where are they?",
+        "regionsEx": "Countries or cities, separated by commas",
+        "objective": {
+          "awareness": "Get known",
+          "awarenessHint": "More of the right people hear about you.",
+          "leads": "Get leads",
+          "leadsHint": "More enquiries, sign-ups and contacts.",
+          "sales": "Sell more",
+          "salesHint": "More orders and paying customers.",
+          "traffic": "More website visits",
+          "trafficHint": "Bring people to your site.",
+          "community": "Build a community",
+          "communityHint": "Followers who engage and come back."
+        },
+        "makeStrategy": "Create my strategy with AI",
+        "makePosts": "Write my first posts",
+        "usePosts": "Add these posts to my content",
+        "editPost": "Edit",
+        "makeImage": "Create image",
+        "noImageProvider": "Connect an image provider (OpenAI or Stability) to create images for your posts.",
+        "howOften": "How often should we post?",
+        "pace": {
+          "gentle": "Gently",
+          "gentleHint": "About one post a day on each platform.",
+          "steady": "Steady",
+          "steadyHint": "Two posts a day on each platform.",
+          "active": "Very active",
+          "activeHint": "Three posts a day on each platform."
+        },
+        "where": "Where should we post?",
+        "noAccounts": "You have no social accounts yet.",
+        "addAccounts": "Add your social accounts",
+        "approval": "Who approves posts?",
+        "reviewEach": "I review each post",
+        "reviewEachHint": "Nothing is published until you approve it.",
+        "autoPublish": "Publish automatically after AI review",
+        "autoPublishHint": "Posts that pass the AI quality check go out on schedule.",
+        "live": "Your autopilot is running. New posts appear in the pipeline as the AI works.",
+        "openAutopilot": "Open my autopilot",
+        "openAnalytics": "See results",
+        "openStudio": "Go to the studio"
+      },
+      "autonomy": {
+        "DRAFT_ONLY": "Drafts only",
+        "DRAFT_ONLYHint": "The AI prepares posts; you schedule them yourself.",
+        "REVIEW_REQUIRED": "I approve each post",
+        "REVIEW_REQUIREDHint": "Ready posts wait for your approval.",
+        "AUTO_PUBLISH": "Auto-publish after AI review",
+        "AUTO_PUBLISHHint": "Posts that pass the quality check are scheduled automatically."
+      },
+      "autopilot": {
+        "title": "Autopilot",
+        "subtitle": "Plans that keep your social channels active, with you in control.",
+        "new": "New autopilot plan",
+        "create": "Create plan",
+        "settings": "Plan settings",
+        "name": "Plan name",
+        "objective": "Goal",
+        "objectiveEx": "Example: 50 demo requests a month from café owners",
+        "audience": "Audience",
+        "pillars": "Topics to talk about",
+        "accounts": "Accounts to post to",
+        "postsPerDay": "Posts per day",
+        "reelsPerDay": "Reels per day",
+        "shortsPerDay": "Shorts per day",
+        "timezone": "Time zone",
+        "regions": "Regions",
+        "windows": "Posting times for {platform}",
+        "windowsHint": "Leave empty to use the best times learned from your results.",
+        "rule": "Approval for {platform}",
+        "ruleDefault": "Use the plan setting",
+        "ruleReview": "Always review",
+        "ruleAuto": "Publish after AI review",
+        "videoRule": "Approval for videos",
+        "compliance": "Rules every post must follow",
+        "complianceHint": "One per line, for example: never mention prices",
+        "horizon": "Days planned ahead",
+        "minScore": "Minimum AI quality score",
+        "budget": "Monthly creative budget",
+        "budgetHint": "Caps paid image and video generation. Leave empty to generate none.",
+        "currency": "Currency",
+        "useResearch": "Research topics on the web when a research tool is connected",
+        "generateImages": "Create images for posts",
+        "emptyTitle": "No autopilot yet",
+        "emptyBody": "The guided start creates your first plan in a few minutes.",
+        "counts": "{ready} ready · {scheduled} scheduled · {published} published",
+        "status": {
+          "ACTIVE": "Running",
+          "PAUSED": "Paused"
+        },
+        "activate": "Start",
+        "pause": "Pause",
+        "planNow": "Plan now",
+        "lastPlanned": "Last planned {when}",
+        "missingAccounts": "No account selected for: {platforms}. Those slots are not planned.",
+        "smartTimes": "Best times from your results, else platform defaults",
+        "noPaid": "No paid generation"
+      },
+      "canvas": {
+        "title": "Content canvas",
+        "hint": "Each card shows the post exactly as it will appear, with its review result.",
+        "stage": "Stage",
+        "allStages": "All stages",
+        "allPlatforms": "All platforms",
+        "empty": "Nothing here yet."
+      },
+      "item": {
+        "noTopic": "Waiting for a topic",
+        "working": {
+          "ideate": "AI is choosing topics…",
+          "draft": "AI is writing…",
+          "review": "AI is reviewing…"
+        },
+        "viewTask": "View task",
+        "videoProcessing": "The video is being generated…",
+        "review": "AI review: {score}/100",
+        "assumptions": "Assumptions",
+        "sources": "{count, plural, one {# source} other {# sources}}",
+        "videoScript": "Video script",
+        "error": "Problem",
+        "performance": "{impressions} impressions · {engagement} interactions",
+        "openPost": "Open in the publishing queue",
+        "approve": "Approve",
+        "reject": "Reject",
+        "retry": "Try again",
+        "regenerate": "Rewrite",
+        "edit": "Edit text",
+        "copy": "Post text",
+        "hashtags": "Hashtags",
+        "cta": "Call to action",
+        "saveReview": "Save and re-check"
+      },
+      "check": {
+        "brandVoice": "Brand voice",
+        "grammar": "Grammar",
+        "format": "Platform format",
+        "cta": "Call to action",
+        "compliance": "Rules",
+        "factual": "Facts"
+      },
+      "creative": {
+        "title": "Creative Studio",
+        "subtitle": "Create real, on-brand images and videos with your connected AI providers.",
+        "generateTitle": "Create images",
+        "generateHint": "Describe what you want; we add your brand colors and style.",
+        "prompt": "Describe the image",
+        "promptEx": "Example: A barista using a tablet in a sunny café, warm colors",
+        "style": "Style",
+        "size": "Size",
+        "variations": "Variations",
+        "overlay": "Headline overlay (optional)",
+        "overlayHint": "We leave space for it and show it on the preview.",
+        "useBrand": "Use my brand colors and style",
+        "generate": "Generate",
+        "generating": "Generating…",
+        "with": "Using {provider}",
+        "notConnected": "Connect OpenAI or Stability to generate images.",
+        "connectImages": "Image generation needs a connected provider:",
+        "styles": {
+          "photo": "Photo",
+          "minimal": "Minimal",
+          "illustration": "Illustration",
+          "bold": "Bold poster",
+          "product": "Product shot",
+          "3d": "3D render",
+          "lifestyle": "Lifestyle"
+        },
+        "presets": {
+          "instagram_square": "Instagram square",
+          "instagram_portrait": "Instagram portrait",
+          "story_reel": "Story / Reel",
+          "linkedin_post": "LinkedIn post",
+          "x_post": "X post",
+          "facebook_post": "Facebook post",
+          "pinterest_pin": "Pinterest pin",
+          "youtube_thumbnail": "YouTube thumbnail",
+          "blog_featured": "Blog header",
+          "ad_square": "Square ad"
+        },
+        "brandAssets": "Brand assets",
+        "noBrand": "No brand kit yet. Add your logo, colors and fonts.",
+        "presetsTitle": "Platform sizes",
+        "videoTitle": "Create a video",
+        "videoHint": "Short videos for Reels, Shorts and TikTok.",
+        "videoPrompt": "Describe the video",
+        "startImage": "Start from image",
+        "format": "Format",
+        "vertical": "Vertical (9:16)",
+        "horizontal": "Horizontal (16:9)",
+        "makeVideo": "Generate video",
+        "videoNotConnected": "Connect Runway or Replicate to generate videos.",
+        "uploadTitle": "Upload media",
+        "file": "File (max 10 MB)",
+        "kind": "Type",
+        "kinds": {
+          "IMAGE": "Image",
+          "VIDEO": "Video",
+          "LOGO": "Logo",
+          "DOCUMENT": "Document"
+        },
+        "upload": "Upload",
+        "tooLarge": "The file is larger than 10 MB.",
+        "library": "Asset library",
+        "search": "Search assets",
+        "allKinds": "All types",
+        "emptyTitle": "No assets yet",
+        "emptyBody": "Generate your first image above or upload one.",
+        "failed": "Generation failed",
+        "processing": "Processing",
+        "download": "Download",
+        "regenerate": "Regenerate",
+        "saveTo": "Save to campaign",
+        "noCampaign": "No campaign",
+        "useInPost": "Use in post"
+      },
+      "social": {
+        "board": "Publishing status",
+        "subAccount": "Page, channel or board",
+        "subAccountHint": "From your connected account.",
+        "mediaLibrary": "Media from library",
+        "mediaLibraryHint": "Images and videos from the Creative Studio.",
+        "hashtags": "Hashtags",
+        "needsMedia": "This platform needs an image or video.",
+        "preview": "Preview"
+      },
+      "hashtags": {
+        "title": "Hashtag sets",
+        "empty": "No hashtag sets yet.",
+        "name": "Set name",
+        "anyPlatform": "Any platform",
+        "tags": "Hashtags",
+        "save": "Save set"
+      },
+      "repurpose": {
+        "title": "Content Factory",
+        "hint": "Turn this piece into a full multi-platform bundle in one click.",
+        "run": "Repurpose with AI",
+        "apply": "Create the bundle",
+        "from": "Repurposed from",
+        "bundle": "{count, plural, one {# linked item} other {# linked items}}",
+        "variations": "{count, plural, one {# version each} other {# versions each}}"
+      },
+      "publish": {
+        "title": "Publish",
+        "hint": "Publish to your website CMS or to your free Realy blog.",
+        "target": "Where",
+        "when": "When (optional)",
+        "now": "Publish now",
+        "schedule": "Schedule",
+        "needsApproval": "Approve the content first to publish it.",
+        "open": "Open",
+        "verified": "verified",
+        "details": "Article details",
+        "featured": "Featured image",
+        "categories": "Categories",
+        "tags": "Tags",
+        "author": "Author",
+        "targets": {
+          "realy": "Realy blog",
+          "wordpress": "WordPress",
+          "webflow": "Webflow",
+          "shopify": "Shopify"
+        }
+      },
+      "seo": {
+        "title": "SEO autopilot",
+        "hint": "Group keywords into topics, let AI write articles with metadata and schema, then publish.",
+        "clusters": "Topic clusters",
+        "makeClusters": "Group keywords with AI",
+        "applyClusters": "Save clusters",
+        "noClusters": "No clusters yet.",
+        "pillar": "Pillar keyword",
+        "keywordsN": "{count, plural, one {# keyword} other {# keywords}}",
+        "writeArticle": "Write article",
+        "articleFor": "Keyword for a new article",
+        "articles": "Articles",
+        "noArticles": "No SEO articles yet.",
+        "applyArticle": "Use this article",
+        "gsc": "Google Search Console",
+        "gscHint": "Clicks, impressions and position for the last 28 days.",
+        "gscConnect": "Connect Search Console to see real search data.",
+        "sync": "Sync",
+        "topPages": "Top pages by clicks",
+        "noData": "No search data yet.",
+        "gaps": "Content gaps",
+        "gapsHint": "Searches you could win but have no content for.",
+        "noGaps": "No gaps found.",
+        "gapKind": {
+          "keyword": "Keyword",
+          "query": "Search"
+        },
+        "cover": "Write about it",
+        "refresh": "Content to refresh",
+        "noRefresh": "Nothing needs a refresh.",
+        "schema": "Schema markup (JSON-LD)",
+        "internalLinks": "{count, plural, one {# internal link suggestion} other {# internal link suggestions}}"
+      },
+      "blog": {
+        "title": "Blog & website",
+        "subtitle": "Articles on your CMS or your free Realy-hosted blog.",
+        "openPublic": "Open public blog",
+        "write": "Write article",
+        "publicPosts": "Public posts",
+        "views": "Views",
+        "articles": "Articles",
+        "articlesHint": "Long-form content and where it is published.",
+        "emptyTitle": "No articles yet",
+        "emptyBody": "Write one, or let the SEO autopilot write it for you.",
+        "fromSeo": "Open SEO",
+        "published": "Published to"
+      },
+      "publicBlog": {
+        "title": "{name} blog",
+        "categories": "Categories",
+        "all": "All",
+        "empty": "No posts yet.",
+        "back": "← {name} blog"
+      },
+      "email": {
+        "abTitle": "A/B test & delivery",
+        "abHint": "Test subject lines or content on part of the audience; the winner goes to everyone else.",
+        "provider": "Send with",
+        "providers": {
+          "platform": "Realy email",
+          "sendgrid": "SendGrid",
+          "mailchimp": "Mailchimp Transactional"
+        },
+        "abEnabled": "A/B test",
+        "testPercent": "Test group (% of audience)",
+        "metric": "Winner by",
+        "metricOpen": "Opens",
+        "metricClick": "Clicks",
+        "waitHours": "Wait before choosing (hours)",
+        "phase": {
+          "testing": "Sending test variants…",
+          "waiting": "Collecting results before choosing the winner…",
+          "decided": "Winner chosen; sending to the rest."
+        },
+        "winner": "Winner",
+        "variantStats": "{sent} sent · {open}% opened · {click}% clicked",
+        "label": "Label",
+        "addVariant": "Add variant",
+        "tokens": "Personalize with the merge tags firstName, lastName, company and email (in double curly braces).",
+        "providerNotReady": "The chosen email provider is not connected.",
+        "suppressions": "Suppression list",
+        "suppressionsHint": "{count, plural, one {# address never receives marketing email} other {# addresses never receive marketing email}}",
+        "suppress": "Suppress",
+        "suppressEmail": "Email address",
+        "reason": {
+          "bounce": "Bounced",
+          "complaint": "Spam complaint",
+          "unsubscribe": "Unsubscribed",
+          "manual": "Added by hand",
+          "other": "Other"
+        },
+        "webhooks": "Bounce and complaint webhooks: {url}"
+      },
+      "ads": {
+        "title": "Paid ads",
+        "subtitle": "Meta, Google, LinkedIn and TikTok ads with hard spending caps and approvals.",
+        "safety": "Nothing is created or changed at an ad platform without an approval, and never above the caps you set.",
+        "spend30": "Spend (30 days)",
+        "spend": "Spend",
+        "clicks": "Clicks",
+        "conversions": "Conversions",
+        "accounts": "Ad accounts",
+        "accountsHint": "Import accounts from connected platforms and set their spending caps.",
+        "import": "Import from {provider}",
+        "connect": "Connect {provider}",
+        "providers": {
+          "meta_ads": "Meta Ads",
+          "google_ads": "Google Ads",
+          "linkedin_ads": "LinkedIn Ads",
+          "tiktok_ads": "TikTok Ads"
+        },
+        "emptyTitle": "No ad accounts",
+        "emptyBody": "Connect an ad platform, then import its accounts.",
+        "synced": "Synced {when}",
+        "neverSynced": "Not synced yet",
+        "noCaps": "Set caps before any campaign can be created or changed.",
+        "dailyCap": "Daily cap",
+        "monthlyCap": "Monthly cap",
+        "sync": "Sync",
+        "campaigns": "Campaigns",
+        "noCampaigns": "No campaigns yet.",
+        "name": "Campaign name",
+        "dailyBudget": "Daily budget",
+        "localDraft": "Draft (not live)",
+        "createDraft": "New campaign draft",
+        "account": "Ad account",
+        "objective": "Objective",
+        "objectiveHint": "Provider objective, e.g. OUTCOME_TRAFFIC or SEARCH",
+        "audience": "Audience",
+        "headline": "Headline",
+        "cta": "Call to action",
+        "body": "Ad text",
+        "url": "Landing page URL",
+        "performance": "Daily performance",
+        "noMetrics": "No metrics yet. Sync the ad account.",
+        "controls": "Controls",
+        "requestLaunch": "Request creation at the platform",
+        "requestActivate": "Request activation",
+        "requestPause": "Request pause",
+        "newBudget": "New daily budget",
+        "requestApproval": "Request approval",
+        "approvalNote": "Requests appear in Approvals; an approver with two-factor verification confirms them.",
+        "adsTitle": "Ads",
+        "aiPlan": "AI campaign plan",
+        "aiCopy": "AI ad variations",
+        "aiOptimize": "AI optimization"
+      },
+      "community": {
+        "title": "Community",
+        "subtitle": "Comments and replies across your platforms.",
+        "sync": "Fetch comments",
+        "sentiment": {
+          "positive": "Positive",
+          "neutral": "Neutral",
+          "negative": "Negative"
+        },
+        "sentimentLabel": "Mood",
+        "anySentiment": "Any mood",
+        "status": {
+          "NEW": "New",
+          "DRAFTED": "Reply drafted",
+          "REPLIED": "Replied",
+          "IGNORED": "Ignored"
+        },
+        "emptyTitle": "No comments yet",
+        "emptyBody": "Comments on your published posts appear here after a sync.",
+        "replied": "Your reply",
+        "reply": "Reply",
+        "saveDraft": "Save draft",
+        "send": "Send reply",
+        "confirmSend": "Post this reply publicly?",
+        "aiDraft": "Draft with AI",
+        "useAiDraft": "Use AI draft",
+        "aiSuggests": "AI suggests",
+        "ignore": "Ignore",
+        "reopen": "Reopen"
+      },
+      "influencers": {
+        "title": "Influencers",
+        "subtitle": "Creators you work with or want to reach.",
+        "add": "Add creator",
+        "edit": "Edit",
+        "name": "Name",
+        "email": "Email",
+        "followers": "Followers",
+        "followersN": "{count} followers",
+        "niche": "Topic",
+        "url": "Profile link",
+        "subject": "Email subject",
+        "message": "Message",
+        "platforms": {
+          "BLOG": "Blog",
+          "PODCAST": "Podcast",
+          "OTHER": "Other"
+        },
+        "status": {
+          "PROSPECT": "Prospect",
+          "CONTACTED": "Contacted",
+          "NEGOTIATING": "Negotiating",
+          "ACTIVE": "Working together",
+          "DECLINED": "Declined"
+        },
+        "outreach": {
+          "DRAFT": "Message drafted",
+          "PENDING_APPROVAL": "Waiting for approval",
+          "SENT": "Message sent",
+          "FAILED": "Sending failed"
+        },
+        "aiDraft": "Draft outreach with AI",
+        "useDraft": "Use AI draft",
+        "requestSend": "Request approval to send",
+        "emptyTitle": "No creators yet",
+        "emptyBody": "Add creators who talk to your customers."
+      },
+      "analytics": {
+        "title": "Marketing analytics",
+        "subtitle": "Results across social, email, ads, search and your blog.",
+        "impressions": "Impressions",
+        "reach": "Reach",
+        "engagement": "Engagement",
+        "clicks": "Clicks",
+        "traffic": "Search clicks",
+        "searchImpressions": "{count} search impressions",
+        "blogViews": "Blog views",
+        "totalSpend": "Total spend",
+        "adSpend": "Ads: {amount}",
+        "byPlatform": "Engagement by platform",
+        "noSocial": "No published posts with metrics in this period.",
+        "email": "Email",
+        "clickRate": "Click rate",
+        "bounced": "Bounced",
+        "ask": "Ask the Marketing Analyst",
+        "askHint": "A question in plain words; the AI answers from your real numbers.",
+        "askPlaceholder": "Example: Which platform brought the most leads last month?",
+        "askButton": "Ask",
+        "learnings": "What the system learned",
+        "learningsHint": "Updated weekly from real performance and used when the AI writes new content.",
+        "noLearnings": "Not enough published posts with results yet.",
+        "kind": {
+          "platform": "Platform",
+          "time": "Best time",
+          "topic": "Topic",
+          "format": "Format",
+          "cta": "Call to action",
+          "hashtag": "Hashtag"
+        }
+      }
     }
   },
   "sales": {
@@ -9265,7 +10544,8 @@
       "policies": "Policies",
       "requests": "Requests",
       "payroll": "Payroll",
-      "me": "My HR"
+      "me": "My HR",
+      "hire": "Hire someone"
     },
     "ai": {
       "analystAnswers": "People analyst answers",
@@ -10111,6 +11391,357 @@
       "certificate": "Certificate",
       "review": "Review",
       "other": "Other"
+    },
+    "hire": {
+      "title": "Hire someone",
+      "subtitle": "A step-by-step guide from \"I need help\" to a new colleague's first day.",
+      "intro": {
+        "what": "A guided way to hire: describe the role, let AI write the job ad, publish it, pick candidates, interview and hire.",
+        "why": "Good hires take time. This keeps every step in one place so nothing gets lost.",
+        "can": "Answer simple questions; Realy.si creates the real job, careers page link, interviews and onboarding for you."
+      },
+      "progress": "Hiring progress",
+      "recommended": "Recommended",
+      "advanced": "Advanced",
+      "back": "Back",
+      "whatsThis": "What's this?",
+      "openJob": "Open the full job",
+      "openTask": "Open the AI task",
+      "aiNotReady": "AI isn't available here, so write the description yourself below.",
+      "steps": {
+        "need": "Need",
+        "role": "Role",
+        "describe": "Job description",
+        "publish": "Publish",
+        "candidates": "Candidates",
+        "interviews": "Interviews",
+        "hire": "Hire & onboard"
+      },
+      "q": {
+        "need": "Do you need to hire someone?",
+        "role": "What role do you need?",
+        "describe": "Let's write the job description",
+        "publish": "Ready to publish the job?",
+        "candidates": "Who has applied?",
+        "interviews": "Let's meet the best people",
+        "hire": "Who are you hiring?"
+      },
+      "qHint": {
+        "need": "If your team needs an extra pair of hands, we'll guide you through it.",
+        "role": "Use your own words — no HR jargon needed.",
+        "describe": "The job description is the ad people read before applying. AI drafts it, you edit it.",
+        "publish": "Publishing puts the job on your public careers page so people can apply.",
+        "candidates": "Applicants appear here. AI can read their CVs and score how well they fit.",
+        "interviews": "Pick a time to talk. The candidate moves to the interview stage automatically.",
+        "hire": "Hiring creates the employee record and starts their onboarding checklist."
+      },
+      "need": {
+        "yes": "Yes, I need to hire",
+        "yesHint": "We'll ask what the person will do, write the job ad with AI and help you find the right people.",
+        "no": "Not now — add people I already have",
+        "noHint": "Add your existing team so Realy.si knows who works here."
+      },
+      "resume": {
+        "title": "Continue where you left off",
+        "hint": "Hiring you started earlier.",
+        "at": "at: {step}",
+        "candidates": "{count, plural, one {# candidate} other {# candidates}}",
+        "continue": "Continue"
+      },
+      "role": {
+        "titleLabel": "What should the job be called?",
+        "titleHint": "A simple title people will search for.",
+        "titlePlaceholder": "e.g. Sales assistant",
+        "examples": "Examples",
+        "example": {
+          "sales": {
+            "title": "Sales assistant",
+            "brief": "Call and email potential customers, keep our customer list up to date and help close deals."
+          },
+          "developer": {
+            "title": "Software developer",
+            "brief": "Build and improve our website and app, fix bugs and work with the team on new features."
+          },
+          "bookkeeper": {
+            "title": "Bookkeeper",
+            "brief": "Record invoices and expenses, chase late payments and prepare numbers for our accountant."
+          },
+          "support": {
+            "title": "Customer support agent",
+            "brief": "Answer customer questions by email and chat, solve problems and keep customers happy."
+          },
+          "designer": {
+            "title": "Designer",
+            "brief": "Design our marketing materials, website pages and social media posts."
+          },
+          "marketing": {
+            "title": "Marketing assistant",
+            "brief": "Write posts and newsletters, run simple campaigns and report what works."
+          }
+        },
+        "briefLabel": "What will this person do day to day?",
+        "briefHint": "Two or three sentences are enough. AI uses this to write the job ad.",
+        "briefPlaceholder": "e.g. Answer customer emails, help with orders and keep our records tidy.",
+        "typeLabel": "How much will they work?",
+        "type": {
+          "FULL_TIME": {
+            "label": "Full time",
+            "hint": "A regular job, around 40 hours a week."
+          },
+          "PART_TIME": {
+            "label": "Part time",
+            "hint": "Fewer hours, e.g. mornings only."
+          },
+          "CONTRACTOR": {
+            "label": "Freelancer",
+            "hint": "Works for you on a contract, not as an employee."
+          },
+          "INTERN": {
+            "label": "Intern",
+            "hint": "A student or beginner learning on the job."
+          }
+        },
+        "whereLabel": "Where will they work?",
+        "whereHint": "A city or office. Leave empty if it doesn't matter.",
+        "wherePlaceholder": "e.g. Ljubljana",
+        "remote": "Can work from home",
+        "howMany": "How many people?",
+        "department": "Department",
+        "noDepartment": "No department",
+        "submit": "Continue",
+        "submitHint": "This saves a draft job — nothing is published yet."
+      },
+      "describe": {
+        "youSaid": "You said the person will:",
+        "write": "Write it for me with AI",
+        "rewrite": "Write a new version",
+        "writing": "AI is writing your job description…",
+        "failed": "The AI couldn't write the description. Try again or write it yourself.",
+        "editorLabel": "Job description",
+        "editorHint": "Change anything you like — this exact text is what applicants will read.",
+        "placeholder": "Describe the company, the role, what the person will do and what you offer…",
+        "save": "Save and continue",
+        "needText": "Write or generate a description first."
+      },
+      "publish": {
+        "explain": "When you publish, the job appears on your careers page and anyone with the link can apply.",
+        "liveTitle": "Your job is live",
+        "liveBody": "Share the link below on social media, by email or with friends. Applications arrive here automatically.",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "view": "View the job page",
+        "publish": "Publish the job",
+        "next": "See candidates",
+        "edit": "Edit description",
+        "preview": "Job description preview",
+        "noDescription": "No description yet."
+      },
+      "terms": {
+        "aiScoreWord": "AI score",
+        "aiScore": "A number from 0 to 100 showing how well a CV matches the job, written by the AI recruiter after reading it. It's a hint, not a decision — you choose who to meet."
+      },
+      "candidates": {
+        "approvalNote": "Scores are saved after you approve them in",
+        "approvals": "Approvals",
+        "screen": "{count, plural, =0 {Everyone is screened} one {Ask AI to screen # new applicant} other {Ask AI to screen # new applicants}}",
+        "screening": "{count, plural, one {AI is screening # applicant} other {AI is screening # applicants}}",
+        "screenResult": "Started {started}, already running {running}, waiting for the next round {remaining}.",
+        "score": "Score {score}",
+        "notScored": "Not scored yet",
+        "invite": "Invite to interview",
+        "reject": "Not a fit",
+        "rejectConfirm": "Mark this person as not a fit for the job?",
+        "emptyTitle": "No applicants yet",
+        "emptyBody": "Share your careers page link, or add someone yourself — for example a person who emailed you their CV.",
+        "publishFirst": "Publish the job first",
+        "addTitle": "Add someone yourself",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "source": "How did you find them?",
+        "sources": {
+          "manual": "Added by me",
+          "referral": "Someone recommended them",
+          "linkedin": "LinkedIn",
+          "agency": "Recruitment agency",
+          "other": "Other"
+        },
+        "notes": "Notes or CV text",
+        "notesHint": "Paste their message or CV so AI can read it.",
+        "add": "Add candidate",
+        "next": "Continue to interviews"
+      },
+      "interviews": {
+        "who": "Who are you meeting?",
+        "when": "When?",
+        "how": "How will you meet?",
+        "types": {
+          "VIDEO": "Video call",
+          "PHONE": "Phone call",
+          "ONSITE": "In person"
+        },
+        "length": "How long?",
+        "minutes": "{count} minutes",
+        "link": "Meeting link",
+        "linkPlaceholder": "e.g. a video call link",
+        "address": "Address",
+        "addressPlaceholder": "e.g. our office address",
+        "interviewer": "Who else joins?",
+        "justMe": "Just me",
+        "schedule": "Schedule interview",
+        "scheduled": "Interview scheduled. The interviewer is notified.",
+        "noCandidates": "No candidates to interview yet. Go back to the candidates step to add or screen people.",
+        "upcoming": "Upcoming interviews",
+        "none": "Nothing scheduled yet.",
+        "markDone": "Done",
+        "cancel": "Cancel",
+        "next": "I found the right person"
+      },
+      "hire": {
+        "who": "Who are you hiring?",
+        "start": "First working day",
+        "startHint": "You can change it later.",
+        "manager": "Who will they report to?",
+        "managerHint": "Their manager or main contact.",
+        "noManager": "Decide later",
+        "note": "Note (optional)",
+        "submit": "Hire and start onboarding",
+        "submitHint": "Creates their employee profile and an onboarding checklist.",
+        "noCandidates": "Nobody is ready to hire yet. Interview someone first.",
+        "doneTitle": "Welcome aboard!",
+        "doneBody": "The employee profile is ready and their onboarding checklist has started.",
+        "openProfile": "Open their profile",
+        "openOnboarding": "Open onboarding",
+        "finish": "Finish this hiring",
+        "hiredList": "Hired for this job"
+      },
+      "stage": {
+        "APPLIED": "Applied",
+        "SCREENING": "Screening",
+        "INTERVIEW": "Interview",
+        "OFFER": "Offer",
+        "HIRED": "Hired"
+      },
+      "pipeline": {
+        "title": "Hiring pipeline",
+        "hint": "How many people are at each step for this job.",
+        "hintAll": "People in your hiring pipeline across all jobs (hired: last 90 days).",
+        "empty": "No candidates yet — they'll flow in here as people apply."
+      },
+      "health": {
+        "headcount": "People on the team",
+        "onboarding": "{count, plural, =0 {nobody starting} one {# starting soon} other {# starting soon}}",
+        "onLeave": "Off today",
+        "openRoles": "Open roles",
+        "applicants": "Applicants in progress"
+      },
+      "help": {
+        "title": "Stuck? Ask AI",
+        "hint": "The AI recruiter looks at this job and tells you what to do next."
+      }
+    },
+    "intro": {
+      "overview": {
+        "what": "Your people at a glance: who works here, who is off, who is joining and which roles are open.",
+        "why": "A healthy team is the base of every business — spot problems early.",
+        "can": "Hire, manage time off, onboard newcomers and keep everyone's details in one place.",
+        "next": "Hire someone",
+        "nextSelf": "Open my profile",
+        "helpHint": "The AI people analyst reads your HR data and suggests what to do next."
+      },
+      "employees": {
+        "what": "The list of everyone who works for you.",
+        "why": "Payroll, time off, onboarding and the org chart all start from this list.",
+        "can": "Add people, import a spreadsheet, filter and open anyone's profile.",
+        "next": "Hire someone new"
+      },
+      "recruiting": {
+        "what": "All your job openings and the people who applied (an \"ATS\" — applicant tracking system).",
+        "why": "Keeps every candidate, interview and decision in one place.",
+        "can": "Create jobs, move candidates through stages, schedule interviews and make offers.",
+        "next": "Start guided hiring"
+      },
+      "onboarding": {
+        "what": "Checklists that welcome new people and wrap up when someone leaves.",
+        "why": "A good first week makes people stay longer and get productive faster.",
+        "can": "Track tasks like accounts, equipment and training; manage company equipment.",
+        "next": "See people starting"
+      },
+      "performance": {
+        "what": "Goals, reviews and feedback for your team.",
+        "why": "Clear goals and regular feedback help people grow.",
+        "can": "Run review cycles, set goals and share feedback.",
+        "next": "Open"
+      },
+      "time": {
+        "what": "Working hours and attendance.",
+        "why": "Accurate hours mean correct pay and fair workloads.",
+        "can": "Record attendance, plan schedules and see who works when.",
+        "next": "Manage time off"
+      },
+      "leave": {
+        "what": "Holidays, sick days and other time off.",
+        "why": "Know who is away and keep allowances fair.",
+        "can": "Request, approve and track leave and see the team calendar.",
+        "next": "My time off"
+      },
+      "policies": {
+        "what": "Your company's rules and handbooks.",
+        "why": "Everyone knows what to expect; the AI can answer questions from them.",
+        "can": "Publish policies, ask people to read them and track who did.",
+        "next": "Open my page"
+      },
+      "requests": {
+        "what": "Requests from employees to HR (documents, changes, questions).",
+        "why": "Nothing gets forgotten in an inbox.",
+        "can": "Answer, assign and close requests.",
+        "next": "Open my page"
+      },
+      "payroll": {
+        "what": "Salaries and payslips.",
+        "why": "Paying people correctly and on time builds trust.",
+        "can": "Prepare pay runs, review payslips and record compensation.",
+        "next": "Open"
+      },
+      "me": {
+        "what": "Your own HR page.",
+        "why": "See and update your details without asking HR.",
+        "can": "Request time off, read policies and ask HR questions.",
+        "next": "Request time off"
+      },
+      "org_structure": {
+        "what": "How your company is organised: departments and teams.",
+        "why": "Clear structure shows who is responsible for what.",
+        "can": "Create departments and teams and choose who leads them.",
+        "next": "See the org chart"
+      },
+      "org_chart": {
+        "what": "A picture of who reports to whom.",
+        "why": "Newcomers and partners quickly see who to talk to.",
+        "can": "Browse the tree and open anyone's profile. Set managers on employee profiles.",
+        "next": "Manage people"
+      },
+      "org_roles": {
+        "what": "Job titles and roles used across the company.",
+        "why": "Consistent titles make hiring, pay and reporting easier.",
+        "can": "Review titles and how many people hold each one.",
+        "next": "Departments and teams"
+      },
+      "chart": {
+        "emptyTitle": "Nobody on the chart yet",
+        "addPeople": "Add people"
+      }
+    },
+    "empty": {
+      "employees": {
+        "title": "Your team list is empty",
+        "body": "Add the people who already work for you (use the form or import a spreadsheet above), or start hiring someone new.",
+        "orAdd": "or use “Add employee” above"
+      },
+      "jobs": {
+        "title": "No open jobs",
+        "body": "Tell us what kind of help you need and the AI will write the job ad for you."
+      }
     }
   },
   "communication": {
@@ -10947,7 +12578,177 @@
       "submit": "Submit request",
       "created": "Request #{number} received. We emailed you a link to follow it.",
       "viewTicket": "View your request",
-      "browseHelp": "Browse the help center"
+      "browseHelp": "Browse the help center",
+      "emailUs": "Prefer email? Write to"
+    },
+    "setup": {
+      "title": "Set up customer support",
+      "intro": {
+        "what": "A short setup for answering customers: how they reach you, how fast you reply and your first help articles.",
+        "why": "Customers stay when they get quick, clear answers.",
+        "can": "Turn on contact options, set reply-time promises and let AI draft help articles."
+      },
+      "progress": "Support setup progress",
+      "alreadyDone": "Setup is complete. You can change anything here at any time.",
+      "recommended": "Recommended",
+      "saveNext": "Save and continue",
+      "finish": "Finish and open the inbox",
+      "aiNotReady": "AI isn't available here.",
+      "steps": {
+        "channels": "Contact options",
+        "promises": "Reply times",
+        "articles": "Help articles",
+        "inbox": "Inbox"
+      },
+      "q": {
+        "channels": "How do customers contact you?",
+        "promises": "How fast will you reply?",
+        "articles": "Write your first help articles"
+      },
+      "qHint": {
+        "channels": "Pick every way customers can reach you. Each message becomes a ticket in your inbox.",
+        "promises": "This is your service promise (an \"SLA\"). Realy.si counts down and warns you before it's missed.",
+        "articles": "Answers to common questions, so customers can help themselves. AI writes drafts; you check them."
+      },
+      "channels": {
+        "supportFormEnabled": {
+          "label": "Web form",
+          "hint": "A contact form on your own page. Customers get a link to follow their request."
+        },
+        "helpCenterEnabled": {
+          "label": "Help center",
+          "hint": "A public page with your help articles and a search box."
+        },
+        "emailChannelEnabled": {
+          "label": "Email",
+          "hint": "Show your support email address on the help center and form."
+        },
+        "preview": "Preview",
+        "address": "Support email address",
+        "addressHint": "Shown to customers. Emails sent there aren't imported automatically — log them as tickets in the inbox.",
+        "emailReady": "Email sending is set up: customers receive your replies by email.",
+        "emailNotReady": "Email sending isn't set up yet: your replies appear on the customer's ticket page, but no emails are sent."
+      },
+      "promise": {
+        "respondLabel": "First reply within…",
+        "resolveLabel": "Problem solved within…",
+        "respond": {
+          "1h": "1 hour",
+          "4h": "4 hours",
+          "1d": "1 day",
+          "2d": "2 days"
+        },
+        "resolve": {
+          "1d": "1 day",
+          "3d": "3 days",
+          "1w": "1 week"
+        },
+        "businessHours": "Only count working hours (Mon–Fri, 9:00–17:00)",
+        "previewTitle": "Your promise",
+        "preview": "Normal requests: first reply within {respond}, solved within {resolve}. Urgent ones get a quarter of the time, high-priority half, low-priority double."
+      },
+      "articles": {
+        "pick": "Which questions do customers ask most?",
+        "topics": {
+          "contact": "How to contact us",
+          "start": "Getting started",
+          "account": "Managing your account",
+          "billing": "Payments and invoices",
+          "refunds": "Returns and refunds",
+          "shipping": "Delivery and shipping"
+        },
+        "custom": "Another topic (optional)",
+        "draft": "{count, plural, one {Draft # article with AI} other {Draft # articles with AI}}",
+        "writeYourself": "Write articles yourself",
+        "title": "Article title",
+        "body": "Article text",
+        "publish": "Publish",
+        "saveDraft": "Save as draft",
+        "saved": "Saved to your knowledge base.",
+        "open": "Open article"
+      }
+    },
+    "pulse": {
+      "flowTitle": "Ticket flow",
+      "flowHint": "Where customer requests are right now.",
+      "flow": {
+        "NEW": "New",
+        "OPEN": "Being worked on",
+        "PENDING": "Waiting for customer",
+        "ON_HOLD": "On hold",
+        "SOLVED": "Solved (14 days)"
+      },
+      "timersTitle": "Reply-time countdowns",
+      "timersHint": "Live timers until each promise is due. Red means the promise was missed.",
+      "noTimers": "No open tickets with a reply-time promise.",
+      "respond": "First reply due",
+      "resolve": "Solution due",
+      "overdueBy": "Overdue by {time}",
+      "leftAria": "{time} left",
+      "sentimentTitle": "Customer mood",
+      "sentimentHint": "How new tickets sounded over the last 14 days.",
+      "noSentiment": "No new tickets in the last 14 days.",
+      "sentimentAria": "Customer mood: {positive} positive and {negative} negative out of {total} new tickets",
+      "positive": "{count} positive",
+      "negative": "{count} unhappy",
+      "sentimentNote": "Detected from the words customers used."
+    },
+    "intro": {
+      "inbox": {
+        "what": "Every customer question, problem and request in one inbox.",
+        "why": "Fast, friendly answers turn customers into fans.",
+        "can": "Answer tickets, assign them, watch reply-time promises and let AI draft replies.",
+        "next": "My tickets",
+        "setup": "Set up support"
+      },
+      "customers": {
+        "what": "The people and companies who contacted support.",
+        "why": "See a customer's full history before you reply.",
+        "can": "Search customers and open their tickets.",
+        "next": "Back to the inbox"
+      },
+      "customer": {
+        "what": "One customer's support history.",
+        "why": "Context makes your answer better.",
+        "can": "See their tickets and details."
+      },
+      "knowledge": {
+        "what": "Your help articles (\"knowledge base\").",
+        "why": "Every good article answers the same question for many customers.",
+        "can": "Write, publish and organise articles that appear in your help center.",
+        "next": "Draft articles with AI"
+      },
+      "article": {
+        "what": "One help article.",
+        "why": "Clear articles reduce repeat questions.",
+        "can": "Edit, publish or unpublish it."
+      },
+      "dashboard": {
+        "what": "How your support is performing.",
+        "why": "Numbers show where customers wait too long.",
+        "can": "Track volume, reply times and promises kept.",
+        "next": "Go to the inbox"
+      },
+      "settings": {
+        "what": "Detailed support settings.",
+        "why": "Fine-tune routing, categories and reply-time rules.",
+        "can": "Manage categories, promises (SLA), assignment and escalation rules.",
+        "next": "Use the guided setup"
+      },
+      "ticket": {
+        "what": "One customer conversation.",
+        "why": "Solving it well keeps the customer.",
+        "can": "Reply, add internal notes, change status and ask AI for a draft or summary."
+      }
+    },
+    "emptyInbox": {
+      "title": "Your inbox is empty",
+      "body": "When customers write through your form, help center or email, their requests appear here. Set up how they can reach you first.",
+      "form": "Open your contact form"
+    },
+    "emptyKb": {
+      "title": "No help articles yet",
+      "ai": "Draft articles with AI"
     }
   },
   "strategy": {
@@ -13181,6 +14982,38 @@
           "roles": "Check roles and permissions",
           "security": "Turn on extra security"
         }
+      }
+    }
+  },
+  "guideKit": {
+    "intro": {
+      "what": "What is this?",
+      "why": "Why it matters",
+      "can": "What you can do here",
+      "next": "Next step"
+    },
+    "help": {
+      "label": "Help me do this",
+      "again": "Ask again",
+      "addDetails": "Add details",
+      "detailsPlaceholder": "Anything specific you need? (optional)",
+      "notConfigured": "AI isn't set up for this workspace yet, or you don't have permission to run AI tasks.",
+      "open": "Open full task",
+      "queued": "Waiting for an AI worker to pick this up…",
+      "working": "The AI is working on it…",
+      "pollError": "Couldn't refresh the status — retrying.",
+      "more": "Show more",
+      "less": "Show less",
+      "next": "Next: use the suggestions above. If the AI proposed changes, they wait for your approval —",
+      "approvals": "review approvals",
+      "failed": "The AI could not finish this task.",
+      "retry": "Try again",
+      "status": {
+        "QUEUED": "Waiting",
+        "RUNNING": "Working",
+        "COMPLETED": "Done",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
       }
     }
   }

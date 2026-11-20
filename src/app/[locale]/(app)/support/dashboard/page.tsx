@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Stat } from "@/components/comms/bits";
@@ -58,6 +60,8 @@ export default async function SupportDashboardPage({ searchParams }: PageProps<"
     );
   };
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.dashboard.what")} why={t("support.intro.dashboard.why")} can={t("support.intro.dashboard.can")} next={{ label: t("support.intro.dashboard.next"), href: `/${locale}/support` }} accent="warning" />
     <div className="grid gap-4">
       <div className="flex gap-1 text-sm">
         {[7, 30, 90].map((d) => (
@@ -95,6 +99,7 @@ export default async function SupportDashboardPage({ searchParams }: PageProps<"
           {bar(byChannel.map((c) => ({ key: c.channel, label: t(`support.channels.${c.channel}`), count: c._count._all })))}
         </Card>
       </div>
-    </div>,
+    </div>
+    </>,
   );
 }

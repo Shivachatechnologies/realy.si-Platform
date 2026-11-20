@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageIntro } from "@/components/guide-kit/page-intro";
+import { introLabels } from "@/components/guide-kit/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -27,6 +29,8 @@ export default async function CustomerRecordPage({ params }: PageProps<"/[locale
   });
   const open = c.tickets.filter((x) => !["SOLVED", "CLOSED"].includes(x.status)).length;
   return wrap(
+    <>
+    <PageIntro labels={introLabels(t)} what={t("support.intro.customer.what")} why={t("support.intro.customer.why")} can={t("support.intro.customer.can")} accent="warning" />
     <div className="grid gap-4">
       <Card>
         <CardHeader title={c.name} description={[t(`support.customers.kinds.${kind}`), c.email, c.phone, c.title].filter(Boolean).join(" · ")} />
@@ -95,6 +99,7 @@ export default async function CustomerRecordPage({ params }: PageProps<"/[locale
           </Table>
         )}
       </Card>
-    </div>,
+    </div>
+    </>,
   );
 }
