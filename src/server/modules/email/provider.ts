@@ -5,6 +5,8 @@ export interface OutboundEmail {
   subject: string;
   text: string;
   html: string;
+  /** Extra MIME headers (e.g. List-Unsubscribe). Names are passed through as given. */
+  headers?: Record<string, string>;
 }
 
 export interface EmailProvider {
@@ -35,7 +37,14 @@ export function resendProvider(apiKey: string): EmailProvider {
   return {
     id: "resend",
     async send(m) {
-      const r = await postJson("https://api.resend.com/emails", { authorization: `Bearer ${apiKey}` }, { from: m.from, to: [m.to], subject: m.subject, text: m.text, html: m.html });
+      const r = await postJson("https://api.resend.com/emails", { authorization: `Bearer ${apiKey}` }, {
+        from: m.from,
+        to: [m.to],
+        subject: m.subject,
+        text: m.text,
+        html: m.html,
+        ...(m.headers && Object.keys(m.headers).length ? { headers: m.headers } : {}),
+      });
       return { messageId: typeof r.id === "string" ? r.id : null };
     },
   };
@@ -49,7 +58,15 @@ export function postmarkProvider(serverToken: string): EmailProvider {
       const r = await postJson(
         "https://api.postmarkapp.com/email",
         { "x-postmark-server-token": serverToken },
-        { From: m.from, To: m.to, Subject: m.subject, TextBody: m.text, HtmlBody: m.html, MessageStream: "outbound" },
+        {
+          From: m.from,
+          To: m.to,
+          Subject: m.subject,
+          TextBody: m.text,
+          HtmlBody: m.html,
+          MessageStream: "outbound",
+          ...(m.headers && Object.keys(m.headers).length ? { Headers: Object.entries(m.headers).map(([Name, Value]) => ({ Name, Value })) } : {}),
+        },
       );
       return { messageId: typeof r.MessageID === "string" ? r.MessageID : null };
     },

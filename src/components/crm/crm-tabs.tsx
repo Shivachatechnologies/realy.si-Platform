@@ -12,6 +12,7 @@ const CRM_TABS = [
   { key: "accounts", path: "/crm/accounts" },
   { key: "deals", path: "/crm/deals" },
   { key: "pipeline", path: "/crm/pipeline" },
+  { key: "proposals", path: "/crm/proposals" },
   { key: "calendar", path: "/crm/calendar" },
   { key: "dashboard", path: "/crm/dashboard" },
   { key: "import", path: "/crm/import" },
@@ -22,6 +23,7 @@ const SALES_TABS = [
   { key: "targets", path: "/sales/targets" },
   { key: "commissions", path: "/sales/commissions" },
   { key: "reports", path: "/sales/reports" },
+  { key: "team", path: "/sales/team" },
 ] as const;
 
 export type CrmTab = (typeof CRM_TABS)[number]["key"];

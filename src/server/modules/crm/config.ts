@@ -50,6 +50,9 @@ const schemas = {
       ownerIds: z.array(uuid).min(1).max(50),
       matchSource: z.string().trim().max(100).optional(),
       matchTerritory: z.string().trim().max(100).optional(),
+      /** Follow-up for the assigned owner N days after assignment (omit = none). */
+      followUpDays: z.number().int().min(0).max(365).nullable().optional(),
+      followUpNote: z.string().trim().max(1000).optional(),
       position: z.number().int().min(0).max(1000).optional(),
       active: z.boolean().default(true),
     }),
@@ -63,6 +66,8 @@ const schemas = {
       followUpNote: z.string().trim().max(1000).optional(),
       createWorkTask: z.boolean().default(false),
       workTaskTitle: z.string().trim().max(200).optional(),
+      workTaskDueDays: z.number().int().min(0).max(365).default(1),
+      workTaskPriority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
       notifyOwner: z.boolean().default(true),
       active: z.boolean().default(true),
     }),
@@ -169,7 +174,18 @@ export async function createConfig(ctx: RequestContext, organizationId: string, 
         const i = schemas["assignment-rules"].create.parse(raw);
         await requireOwners(tx, organizationId, chain, i.ownerIds);
         row = await tx.crmAssignmentRule.create({
-          data: { ...base, name: i.name, strategy: i.strategy, ownerIds: [...new Set(i.ownerIds)], matchSource: i.matchSource || null, matchTerritory: i.matchTerritory || null, position: i.position ?? 0, active: i.active },
+          data: {
+            ...base,
+            name: i.name,
+            strategy: i.strategy,
+            ownerIds: [...new Set(i.ownerIds)],
+            matchSource: i.matchSource || null,
+            matchTerritory: i.matchTerritory || null,
+            followUpDays: i.followUpDays ?? null,
+            followUpNote: i.followUpNote || null,
+            position: i.position ?? 0,
+            active: i.active,
+          },
         });
         break;
       }
@@ -227,6 +243,8 @@ const patchSchemas: Record<ConfigKind, z.ZodType<Record<string, unknown>>> = {
     strategy: z.enum(["ROUND_ROBIN", "FIXED"]).optional(),
     matchSource: z.string().trim().max(100).nullable().optional(),
     matchTerritory: z.string().trim().max(100).nullable().optional(),
+    followUpDays: z.number().int().min(0).max(365).nullable().optional(),
+    followUpNote: z.string().trim().max(1000).nullable().optional(),
   }),
   "stage-rules": z.object({ active: z.boolean().optional(), name: z.string().trim().min(1).max(100).optional() }),
   targets: z.object({ amount: moneyInput.optional(), dealsTarget: z.number().int().min(0).max(100_000).nullable().optional() }),

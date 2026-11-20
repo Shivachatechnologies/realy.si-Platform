@@ -52,7 +52,7 @@ export function SendEmailForm({ endpoint, to, subject, message, link }: { endpoi
   );
 }
 
-export function PaymentForm({ endpoint, accounts, balance, currencyHint }: { endpoint: string; accounts: Option[]; balance: string; currencyHint: string }) {
+export function PaymentForm({ endpoint, accounts, balance, currencyHint, accountLabel }: { endpoint: string; accounts: Option[]; balance: string; currencyHint: string; accountLabel?: string }) {
   const t = useT();
   const [v, setV] = useState({ amount: balance, date: new Date().toISOString().slice(0, 10), method: "BANK_TRANSFER", financeAccountId: accounts[0]?.value ?? "", reference: "" });
   const { busy, error, run } = useAction();
@@ -80,7 +80,7 @@ export function PaymentForm({ endpoint, accounts, balance, currencyHint }: { end
           ))}
         </Select>
       </Field>
-      <Field label={t("finance.payments.depositTo")} htmlFor="pay-account">
+      <Field label={accountLabel ?? t("finance.payments.depositTo")} htmlFor="pay-account">
         <Select id="pay-account" value={v.financeAccountId} onChange={(e) => setV((p) => ({ ...p, financeAccountId: e.target.value }))}>
           {accounts.map((o) => (
             <option key={o.value} value={o.value}>

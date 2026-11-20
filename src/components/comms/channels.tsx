@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquareReply, Pencil, Plus, Trash2 } from "lucide-react";
+import { ListChecks, MessageSquareReply, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
@@ -95,9 +95,27 @@ export interface MessageView {
   edited: boolean;
   deleted: boolean;
   replyCount: number;
+  /** Linked WorkTasks (title/status null when the viewer can't read projects). */
+  tasks?: { id: string; title: string | null; status: string | null }[];
 }
 
-export function MessageItem({ base, m, people, me, canManage, threadHref }: { base: string; m: MessageView; people: Person[]; me: string; canManage: boolean; threadHref?: string }) {
+/** Chip linking a message to a project task. */
+export function TaskChip({ task, locale }: { task: { id: string; title: string | null; status: string | null }; locale: string }) {
+  const t = useT();
+  const done = task.status === "DONE";
+  return (
+    <Link
+      href={`/${locale}/projects/tasks/${task.id}`}
+      className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-xs hover:bg-muted ${done ? "text-muted-foreground line-through" : ""}`}
+    >
+      <ListChecks className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{task.title ?? t("communication.tasks.linkedTask")}</span>
+      {task.status ? <span className="shrink-0 text-muted-foreground">· {t(`work.taskStatus.${task.status}`)}</span> : null}
+    </Link>
+  );
+}
+
+export function MessageItem({ base, m, people, me, canManage, threadHref, locale }: { base: string; m: MessageView; people: Person[]; me: string; canManage: boolean; threadHref?: string; locale: string }) {
   const t = useT();
   const [editing, setEditing] = useState(false);
   return (
@@ -128,6 +146,13 @@ export function MessageItem({ base, m, people, me, canManage, threadHref }: { ba
       ) : (
         <Markdownish text={m.body} />
       )}
+      {m.tasks?.length && !m.deleted ? (
+        <div className="flex flex-wrap gap-1">
+          {m.tasks.map((task) => (
+            <TaskChip key={task.id} task={task} locale={locale} />
+          ))}
+        </div>
+      ) : null}
       {threadHref && !m.deleted ? (
         <Link href={threadHref} className="flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline">
           <MessageSquareReply className="size-3.5" aria-hidden />

@@ -9,6 +9,7 @@ import { can, loadGrants, requirePermission } from "@/server/modules/rbac/servic
 import { companyChain, orgChain, workspaceChain } from "@/server/modules/rbac/scope";
 import { slugify } from "@/server/modules/organizations/service";
 import { closestLocale } from "@/i18n/config";
+import { assertCompanyCreationAllowed, assertPlanCompaniesAvailable } from "@/server/core/platform-controls";
 
 const iso2 = z.string().regex(/^[A-Z]{2}$/);
 const DATA_REGIONS = ["US_EAST", "EU_WEST", "ME_CENTRAL", "AP_SOUTH", "AP_SOUTHEAST"] as const;
@@ -46,6 +47,9 @@ export async function createCompany(ctx: RequestContext, organizationId: string,
     await requirePermission(ctx, "companies.manage", orgChain(organizationId), tx);
     const { assertWithinLimit } = await import("@/server/modules/enterprise/policy");
     await assertWithinLimit(organizationId, "companies", { client: tx });
+    // Platform controls: company-creation switch, suspended organization, and the plan's companies limit.
+    await assertCompanyCreationAllowed(organizationId);
+    await assertPlanCompaniesAvailable(organizationId, tx);
 
     const codes = [...new Set([input.incorporationCountryCode, ...input.operatingCountryCodes, ...input.targetMarketCodes].filter(Boolean) as string[])];
     const countries = await tx.country.findMany({ where: { code: { in: codes } }, include: { region: true } });

@@ -12,7 +12,7 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { normalizeEmail, normalizePhone, scoreLead } from "./scoring";
 import { effectiveProbability, isOpenStage, weightedMinor } from "./pipeline";
 import { cleanTags, eligibleOwnerIds, requireOwner, tagsInput } from "./common";
-import { pickAutoOwner } from "./automation";
+import { runLeadIntake } from "./automation";
 import { validateCustomFields } from "./custom-fields";
 
 export const LEAD_STAGES = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"] as const;
@@ -239,8 +239,7 @@ export async function createLead(ctx: RequestContext, organizationId: string, co
   return transaction(async (tx) => {
     const chain = await authorize(ctx, organizationId, companyId, "sales.manage", tx);
     if (input.ownerId) await requireOwner(tx, organizationId, chain, input.ownerId);
-    const auto = input.ownerId ? null : await pickAutoOwner(tx, organizationId, companyId, chain, { source: input.source || null, territory: input.territory || null });
-    const ownerId = input.ownerId ?? auto?.ownerId ?? null;
+    const ownerId = input.ownerId ?? null;
     const company = await tx.company.findFirstOrThrow({ where: { id: companyId, organizationId }, select: { baseCurrency: true } });
     const emailNormalized = normalizeEmail(input.email);
     const phoneNormalized = normalizePhone(input.phone);
@@ -282,15 +281,18 @@ export async function createLead(ctx: RequestContext, organizationId: string, co
       action: "lead.created",
       resourceType: "lead",
       resourceId: lead.id,
-      newValue: { name: lead.name, stage: lead.stage, score, ownerId: lead.ownerId, ...(auto ? { assignmentRule: auto.ruleId } : {}) },
+      newValue: { name: lead.name, stage: lead.stage, score, ownerId: lead.ownerId },
     });
-    const data = leadEventData(lead);
-    await emitDomainEvent(tx, ctx, "lead.created", { organizationId, companyId, entityType: "lead", entityId: lead.id, data });
-    if (lead.ownerId) {
+    // Lead intake workflow (assignment rule → follow-up → notify owner), see automation.ts.
+    const auto = await runLeadIntake(tx, ctx, chain, lead, { notify: true, emit: false });
+    const final = auto ? { ...lead, ownerId: auto.ownerId } : lead;
+    const data = leadEventData(final);
+    await emitDomainEvent(tx, ctx, "lead.created", { organizationId, companyId, entityType: "lead", entityId: lead.id, data: { ...data, ...(auto ? { assignmentRule: auto.ruleName } : {}) } });
+    if (final.ownerId) {
       await emitDomainEvent(tx, ctx, "lead.assigned", { organizationId, companyId, entityType: "lead", entityId: lead.id, data: { ...data, previousOwnerId: null, rule: auto?.ruleName ?? null } });
-      if (lead.ownerId !== ctx.actor.id) await notifyUsers(tx, organizationId, [lead.ownerId], "crm.lead_assigned", { companyId, title: lead.name, href: `/crm/${lead.id}` });
+      if (!auto && final.ownerId !== ctx.actor.id) await notifyUsers(tx, organizationId, [final.ownerId], "crm.lead_assigned", { companyId, title: lead.name, href: `/crm/${lead.id}` });
     }
-    return lead;
+    return final;
   });
 }
 

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { ActionButton, AiButtons } from "@/components/comms/client";
-import { ActionItemToggle, ActionItemsFromSummary, AddActionItems, DecisionsEditor, MeetingForm, NotesEditor } from "@/components/comms/meetings";
+import { ActionItemToggle, ActionItemsFromSummary, AddActionItems, DecisionsEditor, DeleteMeeting, FollowUpEmail, MeetingForm, NotesEditor, RsvpButtons } from "@/components/comms/meetings";
 import { CommentThread } from "@/components/comms/feed";
 import { AiTasksCard, MEETING_TONE } from "@/components/comms/bits";
 import { areaPage } from "@/components/comms/context";
@@ -17,7 +17,7 @@ import { isAppError } from "@/server/core/errors";
 import { listSubjectTasks } from "@/server/modules/agents/service";
 import { listPeople } from "@/server/modules/comms/common";
 import { connectionStatuses } from "@/server/modules/comms/connections-bridge";
-import { getMeeting } from "@/server/modules/comms/meetings";
+import { getMeeting, listAgendaTemplates } from "@/server/modules/comms/meetings";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("communication.meetings.title") };
@@ -32,11 +32,15 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
     if (isAppError(err) && err.code === "not_found") notFound();
     throw err;
   });
-  const [people, tasks, conns] = await Promise.all([
+  const [people, tasks, conns, templates] = await Promise.all([
     listPeople(viewer.ctx, org.id, company.id),
     perms.runAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "meeting", m.id) : Promise.resolve([]),
     connectionStatuses(org.id, company.id),
+    listAgendaTemplates(viewer.ctx, org.id, company.id),
   ]);
+  const inSeries = m.series.length > 1;
+  const seriesIndex = m.series.findIndex((x) => x.id === m.id);
+  const fu = m.followUpResult as { sent?: number; failed?: number; notConfigured?: number; skipped?: number } | null;
   const attendees = m.attendees.map((a) => ({ id: a.userId, name: a.name ?? "?" }));
   const peopleLite = people.map((u) => ({ id: u.id, name: u.name }));
   const editable = m.canEdit && perms.post;
@@ -48,9 +52,20 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
           <CardHeader
             title={m.title}
             description={`${formatDateTime(m.startsAt, locale, tz)} – ${formatDateTime(m.endsAt, locale, tz)}${m.location ? ` · ${m.location}` : ""}`}
-            actions={<Badge tone={MEETING_TONE[m.status]}>{t(`communication.meetings.statuses.${m.status}`)}</Badge>}
+            actions={
+              <span className="flex flex-wrap items-center gap-1.5">
+                {m.recurrence ? <Badge>{t(`communication.meetings.recurrence.${m.recurrence}`)}{inSeries ? ` · ${seriesIndex + 1}/${m.series.length}` : ""}</Badge> : null}
+                <Badge tone={MEETING_TONE[m.status]}>{t(`communication.meetings.statuses.${m.status}`)}</Badge>
+              </span>
+            }
           />
           <CardBody className="grid gap-3">
+            {m.myRsvp && m.organizerId !== viewer.user.id && m.status === "SCHEDULED" ? (
+              <div className="grid gap-1">
+                <p className="text-xs font-medium text-muted-foreground">{t("communication.meetings.yourRsvp")}</p>
+                <RsvpButtons base={base} meetingId={m.id} current={m.myRsvp === "PENDING" ? null : m.myRsvp} inSeries={inSeries} />
+              </div>
+            ) : null}
             <div>
               <p className="text-xs font-medium text-muted-foreground">{t("communication.meetings.agenda")}</p>
               {m.agenda ? <Markdownish text={m.agenda} /> : <p className="text-sm text-muted-foreground">{t("communication.meetings.noAgenda")}</p>}
@@ -73,11 +88,7 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
                     {t("communication.meetings.reschedule")}
                   </ActionButton>
                 ) : null}
-                {m.organizerId === viewer.user.id || perms.manage ? (
-                  <ActionButton path={path} method="DELETE" variant="danger" confirm={t("communication.confirmDelete")} redirectTo={`/${locale}/communication/meetings`}>
-                    {t("communication.delete")}
-                  </ActionButton>
-                ) : null}
+                {m.organizerId === viewer.user.id || perms.manage ? <DeleteMeeting base={base} locale={locale} meetingId={m.id} inSeries={inSeries} /> : null}
               </div>
             ) : null}
           </CardBody>
@@ -136,7 +147,8 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
                 locale={locale}
                 me={m.organizerId}
                 people={peopleLite}
-                initial={{ id: m.id, title: m.title, agenda: m.agenda ?? "", location: m.location ?? "", startsAt: m.startsAt.toISOString(), endsAt: m.endsAt.toISOString(), attendeeIds: m.attendees.map((a) => a.userId).filter((u) => u !== m.organizerId) }}
+                templates={templates.map((x) => ({ id: x.id, name: x.name, body: x.body }))}
+                initial={{ inSeries, id: m.id, title: m.title, agenda: m.agenda ?? "", location: m.location ?? "", startsAt: m.startsAt.toISOString(), endsAt: m.endsAt.toISOString(), attendeeIds: m.attendees.map((a) => a.userId).filter((u) => u !== m.organizerId) }}
               />
             </details>
           </Card>
@@ -147,13 +159,43 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
           <CardHeader title={t("communication.meetings.attendeesCount", { count: m.attendees.length })} />
           <ul className="grid divide-y">
             {m.attendees.map((a) => (
-              <li key={a.userId} className="flex items-center justify-between px-4 py-1.5 text-sm">
-                <span>{a.name ?? "?"}</span>
-                {a.userId === m.organizerId ? <Badge>{t("communication.meetings.organizer")}</Badge> : null}
+              <li key={a.userId} className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm">
+                <span className="truncate">{a.name ?? "?"}</span>
+                {a.userId === m.organizerId ? (
+                  <Badge>{t("communication.meetings.organizer")}</Badge>
+                ) : (
+                  <Badge tone={a.rsvp === "ACCEPTED" ? "success" : a.rsvp === "DECLINED" ? "danger" : a.rsvp === "TENTATIVE" ? "warning" : "neutral"}>{t(`communication.meetings.rsvp.${a.rsvp}`)}</Badge>
+                )}
               </li>
             ))}
           </ul>
         </Card>
+        {inSeries ? (
+          <Card>
+            <CardHeader title={t("communication.meetings.series")} />
+            <ul className="grid max-h-64 divide-y overflow-y-auto">
+              {m.series.map((o) => (
+                <li key={o.id} className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm">
+                  {o.id === m.id ? <span className="font-medium">{formatDateTime(o.startsAt, locale, tz)}</span> : <Link href={`/${locale}/communication/meetings/${o.id}`} className="hover:underline">{formatDateTime(o.startsAt, locale, tz)}</Link>}
+                  <Badge tone={MEETING_TONE[o.status]}>{t(`communication.meetings.statuses.${o.status}`)}</Badge>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : null}
+        {editable && m.status === "COMPLETED" ? (
+          <Card>
+            <CardHeader title={t("communication.meetings.followUpTitle")} description={t("communication.meetings.followUpDescription")} />
+            <CardBody>
+              <FollowUpEmail
+                base={base}
+                meetingId={m.id}
+                last={m.followUpSentAt && fu ? { at: m.followUpSentAt.toISOString(), sent: fu.sent ?? 0, failed: fu.failed ?? 0, notConfigured: fu.notConfigured ?? 0, skipped: fu.skipped ?? 0 } : null}
+              />
+              {m.followUpSentAt ? <p className="mt-1 text-xs text-muted-foreground">{t("communication.meetings.followUpLast", { when: formatDateTime(m.followUpSentAt, locale, tz) })}</p> : null}
+            </CardBody>
+          </Card>
+        ) : null}
         {perms.runAgents ? (
           <AiTasksCard
             t={t}

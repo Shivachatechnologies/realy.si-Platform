@@ -377,13 +377,18 @@ export async function closeDeal(ctx: RequestContext, organizationId: string, com
   const input = closeDealInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "sales.manage", tx);
-    const deal = await requireDeal(tx, organizationId, companyId, dealId);
-    const type: CrmStageType = input.outcome === "won" ? "WON" : input.outcome === "lost" ? "LOST" : "OPEN";
-    const target = await tx.crmPipelineStage.findFirst({ where: { pipelineId: deal.pipelineId, archivedAt: null, type }, orderBy: { position: "asc" } });
-    if (!target) throw invalid("This pipeline has no stage of that type", { reason: "crm_stage_missing" });
-    if (input.outcome === "lost" && !input.lostReason) throw invalid("Give a reason the deal was lost", { reason: "crm_lost_reason_required" });
-    return moveInTx(tx, ctx, organizationId, companyId, deal, target.id, input.lostReason);
+    return closeDealTx(tx, ctx, organizationId, companyId, dealId, input);
   });
+}
+
+/** closeDeal inside the caller's transaction (e.g. a proposal accepted on its public page). Caller authorizes. */
+export async function closeDealTx(tx: Tx, ctx: RequestContext, organizationId: string, companyId: string, dealId: string, input: z.output<typeof closeDealInput>) {
+  const deal = await requireDeal(tx, organizationId, companyId, dealId);
+  const type: CrmStageType = input.outcome === "won" ? "WON" : input.outcome === "lost" ? "LOST" : "OPEN";
+  const target = await tx.crmPipelineStage.findFirst({ where: { pipelineId: deal.pipelineId, archivedAt: null, type }, orderBy: { position: "asc" } });
+  if (!target) throw invalid("This pipeline has no stage of that type", { reason: "crm_stage_missing" });
+  if (input.outcome === "lost" && !input.lostReason) throw invalid("Give a reason the deal was lost", { reason: "crm_lost_reason_required" });
+  return moveInTx(tx, ctx, organizationId, companyId, deal, target.id, input.lostReason);
 }
 
 export async function archiveDeal(ctx: RequestContext, organizationId: string, companyId: string, dealId: string) {

@@ -1,7 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { authorize, companyCurrency, isUuid, param, userNames } from "./common";
+import { authorize, companyCurrency, eligibleOwnerIds, isUuid, param, userNames } from "./common";
 import { periodStartOf } from "./config";
 import { dealProbability, dealWeighted } from "./deals";
 
@@ -221,7 +221,7 @@ export async function conversionMetrics(ctx: RequestContext, organizationId: str
   await authorize(ctx, organizationId, companyId, "sales.read");
   const leads = await db().lead.findMany({
     where: { organizationId, companyId, createdAt: { gte: r.from, lt: r.to }, mergedIntoId: null, ...(r.owner ? { ownerId: r.owner } : {}), ...(r.source ? { source: { equals: r.source, mode: "insensitive" as const } } : {}) },
-    select: { id: true, ownerId: true, source: true, convertedAt: true, qualified: true, crmDeals: { select: { status: true } } },
+    select: { id: true, ownerId: true, source: true, campaignCode: true, convertedAt: true, qualified: true, crmDeals: { select: { status: true } } },
     take: 50_000,
   });
   const group = (key: (l: (typeof leads)[number]) => string | null) => {
@@ -241,7 +241,125 @@ export async function conversionMetrics(ctx: RequestContext, organizationId: str
     total: group(() => "all")[0] ?? null,
     byOwner: byOwner.map((o) => ({ ...o, name: o.key ? (names.get(o.key) ?? null) : null })),
     bySource: group((l) => l.source?.trim() || null),
+    byCampaign: group((l) => l.campaignCode?.trim() || null),
   };
+}
+
+/**
+ * Stage analytics of one pipeline (the given one or the default) for deals with stage activity in the range, from
+ * CrmDealStageChange: how many deals reached each open stage, stage-to-stage conversion (reached next / reached this),
+ * the share that reached WON, and the average days spent in each stage (finished stays, plus the ongoing stay of
+ * still-open deals).
+ */
+export async function stageAnalytics(ctx: RequestContext, organizationId: string, companyId: string, r: SalesRange, now = new Date()) {
+  await authorize(ctx, organizationId, companyId, "sales.read");
+  const pipeline = await db().crmPipeline.findFirst({
+    where: { organizationId, companyId, archivedAt: null, ...(r.pipelineId ? { id: r.pipelineId } : {}) },
+    orderBy: [{ isDefault: "desc" }, { position: "asc" }],
+    include: { stages: { orderBy: { position: "asc" } } },
+  });
+  if (!pipeline) return null;
+  const deals = await db().crmDeal.findMany({
+    where: {
+      ...dealScope(organizationId, companyId, { ...r, pipelineId: pipeline.id }),
+      stageHistory: { some: { changedAt: { gte: r.from, lt: r.to } } },
+    },
+    select: { id: true, status: true, stageId: true, stageHistory: { orderBy: { changedAt: "asc" }, select: { toStageId: true, changedAt: true } } },
+    take: 20_000,
+  });
+  const stages = pipeline.stages.filter((s) => !s.archivedAt || deals.some((d) => d.stageHistory.some((h) => h.toStageId === s.id)));
+  const pos = new Map(stages.map((s, i) => [s.id, i]));
+  const openStages = stages.filter((s) => s.type === "OPEN");
+  const won = stages.filter((s) => s.type === "WON").map((s) => s.id);
+  // Furthest open-stage position each deal reached (a WON deal reached every open stage).
+  const reachedIdx = deals.map((d) => {
+    if (d.status === "WON" || d.stageHistory.some((h) => won.includes(h.toStageId))) return Number.MAX_SAFE_INTEGER;
+    let max = -1;
+    for (const h of d.stageHistory) {
+      const st = stages[pos.get(h.toStageId) ?? -1];
+      if (st?.type === "OPEN") max = Math.max(max, pos.get(h.toStageId)!);
+    }
+    return max;
+  });
+  const days = new Map<string, number[]>();
+  for (const d of deals) {
+    d.stageHistory.forEach((h, i) => {
+      const next = d.stageHistory[i + 1];
+      const end = next ? next.changedAt : d.status === "OPEN" && d.stageId === h.toStageId ? now : null;
+      if (!end) return;
+      days.set(h.toStageId, [...(days.get(h.toStageId) ?? []), (end.getTime() - h.changedAt.getTime()) / DAY]);
+    });
+  }
+  const avg = (xs: number[] | undefined) => (xs?.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+  const reachedCount = (idx: number) => reachedIdx.filter((x) => x >= idx).length;
+  const wonCount = reachedIdx.filter((x) => x === Number.MAX_SAFE_INTEGER).length;
+  const rows = openStages.map((s, i) => {
+    const reached = reachedCount(pos.get(s.id)!);
+    const nextStage = openStages[i + 1];
+    const nextReached = nextStage ? reachedCount(pos.get(nextStage.id)!) : wonCount;
+    return { stageId: s.id, name: s.name, reached, toNext: reached ? nextReached / reached : null, nextName: nextStage?.name ?? null, avgDays: avg(days.get(s.id)), stays: days.get(s.id)?.length ?? 0 };
+  });
+  return { pipeline: { id: pipeline.id, name: pipeline.name }, deals: deals.length, won: wonCount, winShare: deals.length ? wonCount / deals.length : null, rows };
+}
+
+/**
+ * Sales team management: every member who can own sales records, with their capacity settings, open workload
+ * (leads, deals, sales tasks, follow-ups) and attainment of this month's and quarter's targets.
+ */
+export async function salesTeam(ctx: RequestContext, organizationId: string, companyId: string, now = new Date()) {
+  const chain = await authorize(ctx, organizationId, companyId, "sales.read");
+  const ids = await eligibleOwnerIds(db(), organizationId, chain);
+  const { baseCurrency } = await companyCurrency(db(), organizationId, companyId);
+  const month = periodStartOf("MONTH", now);
+  const quarter = periodStartOf("QUARTER", now);
+  const monthEnd = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + 1, 1));
+  const quarterEnd = new Date(Date.UTC(quarter.getUTCFullYear(), quarter.getUTCMonth() + 3, 1));
+  const [users, reps, openDeals, openLeads, tasks, followUps, leadFollowUps, targets, wonQ] = await Promise.all([
+    db().user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
+    db().crmSalesRep.findMany({ where: { companyId, ownerId: { in: ids } } }),
+    db().crmDeal.groupBy({ by: ["ownerId", "currency"], where: { organizationId, companyId, archivedAt: null, status: "OPEN", ownerId: { in: ids } }, _count: { _all: true }, _sum: { amountMinor: true } }),
+    db().lead.groupBy({ by: ["ownerId"], where: { organizationId, companyId, archivedAt: null, convertedAt: null, ownerId: { in: ids } }, _count: { _all: true } }),
+    db().workTask.groupBy({ by: ["assigneeId"], where: { organizationId, companyId, archivedAt: null, assigneeId: { in: ids }, sourceType: { in: ["crm_deal", "crm_lead", "crm_account"] }, status: { notIn: ["DONE", "CANCELLED"] } }, _count: { _all: true } }),
+    db().crmFollowUp.groupBy({ by: ["assigneeId"], where: { organizationId, companyId, completedAt: null, assigneeId: { in: ids } }, _count: { _all: true } }),
+    db().leadFollowUp.findMany({ where: { organizationId, companyId, completedAt: null, lead: { ownerId: { in: ids }, archivedAt: null } }, select: { lead: { select: { ownerId: true } } }, take: 50_000 }),
+    db().crmSalesTarget.findMany({ where: { organizationId, companyId, ownerId: { in: ids }, OR: [{ period: "MONTH", periodStart: month }, { period: "QUARTER", periodStart: quarter }] } }),
+    db().crmDeal.findMany({ where: { organizationId, companyId, archivedAt: null, status: "WON", ownerId: { in: ids }, closedAt: { gte: quarter, lt: quarterEnd } }, select: { ownerId: true, amountMinor: true, currency: true, closedAt: true } }),
+  ]);
+  const count = <K extends string>(rows: ({ _count: { _all: number } } & Record<K, string | null>)[], key: K) => new Map(rows.map((r) => [r[key], r._count._all]));
+  const leadsBy = count(openLeads, "ownerId");
+  const tasksBy = count(tasks, "assigneeId");
+  const fuBy = count(followUps, "assigneeId");
+  const lfu = new Map<string, number>();
+  for (const f of leadFollowUps) if (f.lead.ownerId) lfu.set(f.lead.ownerId, (lfu.get(f.lead.ownerId) ?? 0) + 1);
+  const attainment = (target: { amountMinor: bigint; currency: string } | undefined, won: bigint) => (target && target.amountMinor > 0n ? Number((won * 10_000n) / target.amountMinor) / 10_000 : null);
+  const members = users.map((u) => {
+    const rep = reps.find((r) => r.ownerId === u.id) ?? null;
+    const deals = openDeals.filter((d) => d.ownerId === u.id);
+    const openDealCount = deals.reduce((a, d) => a + d._count._all, 0);
+    const mine = wonQ.filter((d) => d.ownerId === u.id && d.currency === baseCurrency);
+    const wonQuarter = sum(mine.map((d) => d.amountMinor));
+    const wonMonth = sum(mine.filter((d) => d.closedAt! >= month && d.closedAt! < monthEnd).map((d) => d.amountMinor));
+    const tMonth = targets.find((t) => t.ownerId === u.id && t.period === "MONTH");
+    const tQuarter = targets.find((t) => t.ownerId === u.id && t.period === "QUARTER");
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: rep?.role ?? null,
+      available: rep?.available ?? true,
+      maxOpenDeals: rep?.maxOpenDeals ?? null,
+      maxOpenLeads: rep?.maxOpenLeads ?? null,
+      openDeals: openDealCount,
+      openDealsMinor: sum(deals.filter((d) => d.currency === baseCurrency).map((d) => d._sum.amountMinor ?? 0n)),
+      openLeads: leadsBy.get(u.id) ?? 0,
+      openTasks: tasksBy.get(u.id) ?? 0,
+      openFollowUps: (fuBy.get(u.id) ?? 0) + (lfu.get(u.id) ?? 0),
+      dealLoad: rep?.maxOpenDeals ? openDealCount / rep.maxOpenDeals : null,
+      month: { targetMinor: tMonth?.amountMinor ?? null, wonMinor: wonMonth, attainment: attainment(tMonth, wonMonth) },
+      quarter: { targetMinor: tQuarter?.amountMinor ?? null, wonMinor: wonQuarter, attainment: attainment(tQuarter, wonQuarter) },
+    };
+  });
+  return { currency: baseCurrency, month, quarter, members };
 }
 
 /** Won revenue in the range attributed by source, campaign code and owner; plus lost-reason breakdown. */

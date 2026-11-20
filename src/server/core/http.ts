@@ -10,6 +10,7 @@ import { sha256 } from "./crypto";
 import { consume, mostRestrictive, rateLimitHeaders, type RateLimitResult, type RateLimitRule } from "./rate-limit";
 import { claimIdempotencyKey, completeIdempotencyKey, releaseIdempotencyKey, requestHash } from "./idempotency";
 import { captureException, securityEvent, withSpan } from "./telemetry";
+import { requestGate } from "./platform-controls";
 import { SESSION_COOKIE, validateSessionToken, type SessionInfo } from "@/server/modules/auth/session";
 
 export interface HandlerArgs {
@@ -171,9 +172,12 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         const ip = clientIp(req);
         let session: SessionInfo | null = null;
         let apiCtx: RequestContext | null = null;
+        let apiKeyOrgId: string | null = null;
         if (apiKeyAuth) {
           const { authenticateApiKey } = await import("@/server/modules/enterprise/api-keys");
-          apiCtx = (await authenticateApiKey(req.headers, { requestId, ip, userAgent: req.headers.get("user-agent") })).ctx;
+          const principal = await authenticateApiKey(req.headers, { requestId, ip, userAgent: req.headers.get("user-agent") });
+          apiCtx = principal.ctx;
+          apiKeyOrgId = principal.organizationId;
         } else if (opts.auth !== "none") {
           session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
           if (!session) throw new AppError("unauthenticated", "Sign in required");
@@ -208,6 +212,9 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
           const { assertOrgAccess } = await import("@/server/modules/enterprise/policy");
           await assertOrgAccess(ctx, orgMatch[1]!);
         }
+        // Platform controls (Admin → Platform Controls): maintenance, read-only, suspended organizations, disabled
+        // modules and plan API quota. Admin API is exempt; platform admins pass maintenance and read-only.
+        await requestGate({ pathname: req.nextUrl.pathname, method: req.method, userId: session?.userId ?? null, serviceAccountOrgId: apiKeyOrgId });
 
         const idemKey = req.headers.get("idempotency-key");
         const principalId = apiCtx?.actor.id ?? session?.userId ?? null;

@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
       className={`${geistSans.variable} ${geistMono.variable} ${arabic.variable} ${devanagari.variable} h-full`}
       style={font ? ({ "--font-locale": font } as React.CSSProperties) : undefined}
     >
-      <body className="min-h-full font-sans text-sm">
+      <body className="min-h-full bg-background font-sans text-sm text-foreground antialiased" data-surface="app">
         <I18nProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </I18nProvider>

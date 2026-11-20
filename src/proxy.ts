@@ -79,9 +79,13 @@ export function proxy(req: NextRequest) {
   }
   const blocked = surfaceRedirect(req, first, rest.filter(Boolean));
   if (blocked) return blocked;
+  const requestHeaders = new Headers(req.headers);
+  // Trusted page path for server-side platform controls (module gate in requireOrgContext); never client-supplied.
+  requestHeaders.set("x-realy-path", pathname);
+  // Prefetches render no scripts that need this request's nonce; they still get the trusted path.
+  if (req.headers.has("next-router-prefetch")) return NextResponse.next({ request: { headers: requestHeaders } });
   const nonce = newNonce();
   const csp = buildCsp(nonce, { dev: process.env.NODE_ENV !== "production" });
-  const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
@@ -95,10 +99,7 @@ export const config = {
     // Admin API vs company API, per deployment surface.
     "/api/v1/admin/:path*",
     "/api/v1/organizations/:path*",
-    {
-      source: "/((?!api|_next|.*\\..*).*)",
-      // Prefetches don't render scripts that need the nonce of a later navigation.
-      missing: [{ type: "header", key: "next-router-prefetch" }],
-    },
+    // Prefetches included: they get the trusted x-realy-path header (but no CSP nonce, see proxy()).
+    "/((?!api|_next|.*\\..*).*)",
   ],
 };

@@ -193,6 +193,10 @@
     "communication": {
       "title": "Communication",
       "description": "Announcements, discussions, meetings, calendar and inbox."
+    },
+    "builder": {
+      "title": "Company Builder",
+      "description": "Turn an idea or an existing business into a fully configured company with AI."
     }
   },
   "auth": {
@@ -242,7 +246,8 @@
       "already_linked": "This {provider} account is already connected to another Realy account.",
       "not_configured": "OAuth provider not configured.",
       "account_disabled": "This account is not active.",
-      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox."
+      "verify_email_first": "Verify your email address before connecting {provider}. Look for the verification link in your inbox.",
+      "registrations_closed": "New registrations are currently closed."
     },
     "verifySignInFirst": "Sign in to the account this link was sent for, and your email address will be confirmed.",
     "ssoSignIn": "Sign in with SSO"
@@ -536,7 +541,72 @@
       "support_attachment_empty": "The file is empty.",
       "support_attachment_too_large": "Attachments can be at most 5 MB.",
       "support_ticket_closed": "This request is closed.",
-      "sso_required": "Your organization requires single sign-on. Use “Sign in with SSO”."
+      "sso_required": "Your organization requires single sign-on. Use “Sign in with SSO”.",
+      "brain_link_exists": "This document is already linked to that record.",
+      "brain_source_managed": "This document is managed by its source module; unpublish or archive it there to remove it.",
+      "comms_discussion_private": "This task is discussed in a private channel you are not a member of.",
+      "comms_not_attendee": "Only invited attendees can respond.",
+      "comms_meeting_not_scheduled": "This meeting is no longer scheduled.",
+      "comms_meeting_not_completed": "Mark the meeting as held before sending the follow-up.",
+      "comms_followup_empty": "There is nothing to send yet — add notes, decisions, action items or an AI summary.",
+      "finance_approver_required": "Choose the person who approves.",
+      "finance_no_approvers": "Nobody can approve this yet: give someone the finance.manage permission.",
+      "finance_vendor_required": "Choose a vendor.",
+      "finance_bill_duplicate": "This vendor already has a bill with that number.",
+      "finance_bill_not_draft": "Only draft bills can be changed or submitted.",
+      "finance_bill_not_pending": "The bill is already approved or void.",
+      "finance_bill_empty": "The bill total must be greater than zero.",
+      "finance_bill_has_payments": "Remove the bill's payments first.",
+      "finance_bill_not_open": "Payments can be recorded on approved, unpaid bills only.",
+      "finance_claim_not_pending": "The expense claim has already been decided.",
+      "finance_claim_no_account": "Add a bank, cash or card account to reimburse the claim from.",
+      "finance_not_approver": "You are not an approver of this request.",
+      "finance_approval_decided": "This request was already decided.",
+      "crm_proposal_locked": "Accepted or declined proposals can't be changed.",
+      "crm_proposal_archived": "This proposal is archived.",
+      "crm_proposal_expired": "This proposal has expired.",
+      "crm_proposal_no_lines": "Add at least one line item first.",
+      "crm_proposal_no_email": "The contact has no email address.",
+      "crm_email_not_configured": "Email delivery isn't configured; nothing was sent.",
+      "crm_email_failed": "The email provider rejected the message; nothing was sent.",
+      "crm_proposal_decided": "A decision was already recorded for this proposal.",
+      "crm_proposal_no_account": "Link the deal to an account first.",
+      "crm_proposal_currency": "Finance estimates use the company currency; this proposal uses another currency.",
+      "crm_proposal_tax_rate": "A line's tax rate has no matching finance tax rate.",
+      "crm_proposal_estimate_exists": "An estimate already exists for this proposal.",
+      "crm_ai_draft_incomplete": "The AI draft isn't complete yet.",
+      "automation_workflow_step_unknown": "This step is not part of the run's workflow version.",
+      "objectives_owner_ineligible": "This person has no access to objectives.",
+      "objectives_dates_order": "The target date is before the start date.",
+      "objectives_has_ai_tasks": "AI tasks are linked to it; mark it abandoned instead.",
+      "objectives_unknown_metric": "This metric doesn't exist.",
+      "objectives_metric_forbidden": "You don't have access to this metric.",
+      "objectives_target_direction": "The target must move away from the baseline in the chosen direction.",
+      "objectives_plan_applied": "This goal's plan was already applied.",
+      "objectives_plan_running": "A plan is already being generated.",
+      "objectives_plan_partial": "Part of this plan was already applied; finish applying it first.",
+      "objectives_plan_keys": "The plan contains duplicate items.",
+      "objectives_goal_inactive": "Only active goals can be planned.",
+      "maintenance": "The platform is under maintenance. Please try again shortly.",
+      "read_only": "The platform is temporarily read-only; changes can't be saved right now.",
+      "registrations_closed": "New registrations are currently closed.",
+      "signup_domain_not_allowed": "Sign-up is limited to approved email domains.",
+      "company_creation_disabled": "Creating companies is temporarily disabled.",
+      "organization_suspended": "This organization is suspended by the platform. Contact support.",
+      "module_disabled": "This module is currently disabled.",
+      "platform_ai_disabled": "The AI workforce is turned off by the platform.",
+      "platform_ai_org_disabled": "AI is disabled for this organization by the platform.",
+      "platform_ai_profile_disabled": "This AI role is disabled by the platform.",
+      "platform_ai_model_disabled": "The configured AI model is disabled by the platform.",
+      "platform_ai_budget_exhausted": "The AI token budget is used up. Try again later.",
+      "plan_ai_tokens_exhausted": "Your plan's monthly AI allowance is used up. Upgrade or wait for the next month.",
+      "plan_limit_reached": "Your plan's limit is reached. Upgrade to add more.",
+      "plan_api_quota_exhausted": "Your plan's monthly API quota is used up.",
+      "confirmation_mismatch": "The confirmation text doesn't match.",
+      "sole_owner": "This user is the only owner of an organization with other members. Transfer ownership first.",
+      "last_super_admin": "The platform must keep at least one super admin.",
+      "platform_lockdown_active": "End the emergency lockdown first.",
+      "platform_lockdown_inactive": "No emergency lockdown is active."
     }
   },
   "onboarding": {
@@ -586,7 +656,10 @@
       "tasks": "Active tasks",
       "workforce": "AI employee profiles",
       "approvals": "Pending approvals",
-      "aiEmployees": "Active AI employees"
+      "aiEmployees": "Active AI employees",
+      "myTasks": "My open tasks",
+      "aiRunning": "AI tasks running",
+      "overdueInvoices": "Overdue invoices"
     },
     "systemHealth": "System health",
     "health": {
@@ -618,7 +691,32 @@
     "kpisLast30": "Last 30 days vs the 30 before",
     "openAnalytics": "Open analytics",
     "kpisForbidden": "You don't have access to company analytics.",
-    "kpisEmpty": "No business metrics are available yet. They appear as your teams use finance, CRM and the other modules."
+    "kpisEmpty": "No business metrics are available yet. They appear as your teams use finance, CRM and the other modules.",
+    "allGoals": "All goals",
+    "countersForbidden": "You don't have access to these areas yet.",
+    "objectiveForbidden": "You need permission to manage objectives to set company goals.",
+    "objectiveHint": "Press Enter: the goal is saved and the AI drafts a plan (objectives, key results, milestones, projects, tasks) for you to review before anything is created.",
+    "objectiveNoAi": "The goal is saved; AI planning is unavailable, so you can plan it yourself.",
+    "goals": {
+      "title": "Goals progress",
+      "open": "Strategy",
+      "forbidden": "You don't have access to company goals.",
+      "empty": "No active goals yet. Type one above to get started.",
+      "planPending": "Plan to review",
+      "atRisk": "{count, plural, one {# key result at risk} other {# key results at risk}}",
+      "objectives": "{count, plural, one {# objective} other {# objectives}}"
+    },
+    "today": {
+      "title": "Today",
+      "forbidden": "Nothing to show for your access level.",
+      "tasks": "My tasks due",
+      "noTasks": "No tasks due today.",
+      "meetings": "Meetings",
+      "noMeetings": "No meetings today.",
+      "followUps": "Follow-ups due",
+      "noFollowUps": "No follow-ups due.",
+      "overdue": "Overdue"
+    }
   },
   "company": {
     "title": "Companies",
@@ -770,7 +868,20 @@
       "audit": "Audit log",
       "system": "System status",
       "users": "Users",
-      "organizations": "Organizations"
+      "organizations": "Organizations",
+      "companies": "Companies",
+      "ai": "AI & Workforce",
+      "aiOverview": "Control center",
+      "aiTasks": "AI task logs",
+      "aiUsage": "Cost & usage",
+      "billing": "Plans & Billing",
+      "subscriptions": "Subscriptions",
+      "features": "Platform Features",
+      "controls": "Platform Controls",
+      "integrations": "Integrations & API",
+      "securityAudit": "Security & Audit",
+      "security": "Security",
+      "settings": "Settings"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -840,7 +951,8 @@
       "noRules": "No targeting rules.",
       "remove": "Remove",
       "turnOn": "Turn on",
-      "turnOff": "Turn off"
+      "turnOff": "Turn off",
+      "subtitle": "Feature flags with targeting rules."
     },
     "audit": {
       "time": "Time",
@@ -854,7 +966,17 @@
         "ADMIN": "Admin",
         "SECURITY": "Security"
       },
-      "empty": "No audit entries."
+      "empty": "No audit entries.",
+      "subtitle": "Every administrative and security change, with actor and reason. Filter and export as CSV.",
+      "exportCsv": "Export CSV",
+      "actorEmail": "Actor email",
+      "from": "From",
+      "to": "To",
+      "scope": "Scope",
+      "scopes": {
+        "platform": "Platform & security",
+        "all": "Everything (incl. tenants)"
+      }
     },
     "system": {
       "title": "External services",
@@ -871,6 +993,33 @@
         "sentry": "Error tracking (Sentry)",
         "otel": "Tracing (OpenTelemetry)",
         "redis": "Rate-limit store (Redis)"
+      },
+      "subtitle": "Live health, queues, worker heartbeat and recent errors.",
+      "health": "Health",
+      "reachable": "Reachable",
+      "unreachable": "Unreachable",
+      "worker": "Background worker",
+      "lastHeartbeat": "Last heartbeat {time}",
+      "noHeartbeat": "No worker heartbeat yet.",
+      "queues": "Queues",
+      "queue": "Queue",
+      "waiting": "Waiting",
+      "active": "Active",
+      "delayed": "Delayed",
+      "failed": "Failed",
+      "completed": "Completed",
+      "workers": "Worker processes",
+      "startedAt": "started {time}",
+      "recentErrors": "Recent errors",
+      "recentErrorsHint": "Failed jobs, AI tasks, syncs, workflow runs and webhook deliveries (7 days).",
+      "noErrors": "No errors in the last 7 days.",
+      "errorCount": "{count} errors",
+      "kinds": {
+        "job": "Job",
+        "task": "AI task",
+        "sync": "Sync",
+        "workflow": "Workflow",
+        "webhook": "Webhook"
       }
     },
     "users": {
@@ -889,12 +1038,58 @@
         "status": "Status",
         "security": "Security",
         "organizations": "Organizations",
-        "created": "Joined"
+        "created": "Joined",
+        "lastLogin": "Last sign-in"
       },
       "status": {
         "ACTIVE": "Active",
         "SUSPENDED": "Suspended",
         "DELETED": "Deleted"
+      },
+      "subtitle": "Every account on the platform. Suspend, sign out, delete safely or change platform roles — always with a reason.",
+      "total": "{count} users",
+      "filters": {
+        "status": "Status",
+        "mfa": "Two-factor",
+        "created": "Joined",
+        "login": "Last sign-in"
+      },
+      "login": {
+        "7d": "Signed in within 7 days",
+        "30d": "Signed in within 30 days",
+        "inactive30": "Inactive for 30+ days",
+        "never": "Never signed in"
+      },
+      "revokeSessions": "Revoke all sessions",
+      "revokeSessionsHint": "The user is signed out on every device immediately.",
+      "delete": "Delete user",
+      "deleteHint": "The account is deactivated and its email and name are anonymized; sessions, sign-in links and two-factor are removed. Audit history is kept. Not possible while the user is the only owner of an organization with other members.",
+      "grantRole": "Grant platform role",
+      "grantRoleHint": "Requires two-factor verification. You can only grant permissions you hold yourself.",
+      "revokeRole": "Remove",
+      "role": "Role",
+      "detail": {
+        "lastLogin": "Last sign-in",
+        "activeSessions": "{count} active sessions",
+        "registered": "Registered",
+        "aiTasks": "AI tasks created",
+        "aiTokens": "AI tokens this month",
+        "profile": "Profile",
+        "signIn": "Sign-in methods",
+        "password": "Password",
+        "locale": "Language & time zone",
+        "country": "Country",
+        "platformRoles": "Platform roles",
+        "noPlatformRoles": "No platform roles.",
+        "memberships": "Organizations",
+        "noMemberships": "Not a member of any organization.",
+        "roles": "Roles",
+        "sessions": "Sign-in history",
+        "signedIn": "Signed in",
+        "lastSeen": "Last seen",
+        "revoked": "Ended",
+        "active": "Active",
+        "securityLog": "Security & admin events"
       }
     },
     "organizations": {
@@ -905,12 +1100,464 @@
         "members": "Members",
         "companies": "Companies",
         "subscription": "Subscription",
-        "created": "Created"
+        "created": "Created",
+        "aiTasks": "AI tasks (30 d)"
+      },
+      "total": "{count} organizations",
+      "noSubscription": "No subscription",
+      "status": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "CLOSED": "Closed"
+      },
+      "suspend": "Suspend organization",
+      "reactivate": "Reactivate organization",
+      "suspendHint": "Members lose access to every page and API of this organization and its AI tasks stop, until it is reactivated.",
+      "restrictions": "Platform restrictions",
+      "restrictionsHint": "Disable modules or AI for this organization and set its token budgets. Enforced on every request.",
+      "editRestrictions": "Restrictions",
+      "disabledModules": "Disabled modules",
+      "aiDisabled": "AI disabled for this organization",
+      "aiDaily": "Daily AI token budget",
+      "aiMonthly": "Monthly AI token budget",
+      "viewGate": {
+        "title": "Open {name}",
+        "hint": "Tenant details are confidential. Your reason is recorded in the audit log (platform.tenant_viewed) and asked once per session.",
+        "placeholder": "e.g. support ticket #1234",
+        "open": "Open details"
+      },
+      "detail": {
+        "aiTasks30": "AI tasks (30 days)",
+        "failed": "{count} failed",
+        "aiTokensMonth": "AI tokens this month",
+        "plan": "Plan & limits",
+        "usage": "Usage this month",
+        "modules": "Modules in use",
+        "modulesHint": "Record counts per module.",
+        "inUse": "In use",
+        "members": "Members",
+        "deleted": "Deleted",
+        "recentTasks": "Recent AI tasks",
+        "activity": "Activity log"
+      },
+      "counts": {
+        "leads": "Leads",
+        "deals": "Deals",
+        "contacts": "Contacts",
+        "accounts": "Accounts",
+        "campaigns": "Campaigns",
+        "content": "Content",
+        "invoices": "Invoices",
+        "transactions": "Transactions",
+        "employees": "Employees",
+        "candidates": "Candidates",
+        "projects": "Projects",
+        "tasks": "Tasks",
+        "channels": "Channels",
+        "announcements": "Announcements",
+        "tickets": "Tickets",
+        "workflows": "Workflows",
+        "runs": "Runs",
+        "connections": "Connections",
+        "aiEmployees": "AI employees",
+        "dashboards": "Dashboards",
+        "installs": "Installs",
+        "documents": "Documents",
+        "objectives": "Objectives"
       }
     },
     "signInTitle": "Admin console sign-in",
     "signInSubtitle": "Platform administrators only. Use your platform admin account.",
-    "openApp": "Open the app"
+    "openApp": "Open the app",
+    "common": {
+      "edit": "Edit",
+      "add": "Add",
+      "reasonAudited": "Required. Stored in the audit log with your name.",
+      "criticalWarning": "This is a critical action that affects the whole platform.",
+      "typeToConfirm": "Type {phrase} to confirm",
+      "thisMonth": "This month",
+      "lastDays": "Last {count} days",
+      "period": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      }
+    },
+    "search": {
+      "placeholder": "Search users, companies, tasks, settings…",
+      "title": "Search",
+      "hint": "Search across users, organizations, companies, AI tasks, switches and integrations.",
+      "resultsFor": "{count} results for “{q}”",
+      "tooShort": "Type at least two characters.",
+      "organizations": "Organizations",
+      "companies": "Companies",
+      "controls": "Switches & settings",
+      "connections": "{count} connections"
+    },
+    "emergency": {
+      "title": "Emergency state active:",
+      "manage": "Platform Controls"
+    },
+    "overview": {
+      "users": "Users",
+      "newUsers": "New: {d7} in 7 days · {d30} in 30 days",
+      "activeUsers": "Active users (7 days)",
+      "active30": "{count} in the last 30 days",
+      "organizations": "Organizations",
+      "companiesSuspended": "{companies} companies · {suspended} suspended",
+      "subscriptions": "Active subscriptions",
+      "mrr": "MRR",
+      "noMrr": "No paying subscriptions yet",
+      "aiEmployees": "AI employees active",
+      "paused": "{count} paused",
+      "aiTasks": "AI tasks running",
+      "tasksHint": "{queued} queued · {failed} failed (24 h)",
+      "aiUsage": "AI tokens this month",
+      "aiCost": "Estimated cost {cost}",
+      "apiUsage": "API requests",
+      "last30": "Last 30 days",
+      "approvals": "Pending approvals",
+      "approvalsHint": "AI actions waiting for a person",
+      "queues": "Queued jobs",
+      "unavailable": "Unavailable (Redis not reachable)",
+      "health": "System health",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "recentActivity": "Recent admin activity",
+      "viewAll": "View all"
+    },
+    "health": {
+      "database": "Database",
+      "redis": "Redis",
+      "email": "Email",
+      "ai": "AI provider",
+      "stripe": "Stripe"
+    },
+    "modules": {
+      "crm": "CRM & Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "hr": "HR",
+      "work": "Projects & Operations",
+      "comms": "Communication",
+      "support": "Support",
+      "automation": "Automation",
+      "integrations": "Integrations",
+      "workforce": "AI Workforce",
+      "bi": "Analytics & BI",
+      "marketplace": "Marketplace",
+      "enterprise": "Enterprise",
+      "brain": "Company Brain",
+      "objectives": "Objectives"
+    },
+    "controls": {
+      "subtitle": "Global kill switches with real enforcement. Every change needs a reason, critical ones a typed confirmation, and all are audited.",
+      "readOnlyNotice": "You can view these switches but not change them (needs platform.controls.manage).",
+      "groups": {
+        "emergency": "Maintenance & read-only",
+        "kill": "Kill switches",
+        "modules": "Modules & integrations"
+      },
+      "changed": "Changed",
+      "critical": "Critical",
+      "on": "On",
+      "off": "Off",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "none": "None",
+      "notSet": "Not set",
+      "unlimited": "Unlimited",
+      "emptyNoLimit": "Leave empty for no limit.",
+      "onePerLine": "One value per line.",
+      "addValue": "Add value",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "history": "Last changes",
+      "noChanges": "Everything runs on defaults.",
+      "control": "Control",
+      "value": "Value",
+      "lockdown": {
+        "title": "Emergency lockdown",
+        "hint": "One click: maintenance mode on, AI workforce off, background jobs paused and every non-admin session revoked.",
+        "activeSince": "Active since {date} · {sessions} sessions revoked",
+        "start": "Start emergency lockdown",
+        "startHint": "Users are signed out and see the maintenance page; AI and background work stop. Administrators keep access.",
+        "end": "End lockdown",
+        "endHint": "Restores the switch values from before the lockdown."
+      },
+      "keys": {
+        "lockdown": {
+          "label": "Emergency lockdown",
+          "hint": "Maintenance, AI off, jobs paused, sessions revoked."
+        },
+        "aiWorkforceEnabled": {
+          "label": "AI workforce",
+          "hint": "Off: no AI task can be created or run anywhere on the platform."
+        },
+        "aiExecutionPaused": {
+          "label": "Pause AI task execution",
+          "hint": "The worker stops picking up AI tasks; queued tasks wait and resume afterwards."
+        },
+        "registrationsEnabled": {
+          "label": "New registrations",
+          "hint": "Off: sign-up is refused with “registrations closed”."
+        },
+        "companyCreationEnabled": {
+          "label": "Company creation",
+          "hint": "Off: no organization can create new companies."
+        },
+        "automationsEnabled": {
+          "label": "Automations",
+          "hint": "Off: workflow schedules, triggers and runs are skipped by the worker."
+        },
+        "backgroundJobsPaused": {
+          "label": "Pause all background jobs",
+          "hint": "Module jobs and event handlers stop; events keep queuing and are processed when resumed."
+        },
+        "maintenanceMode": {
+          "label": "Maintenance mode",
+          "hint": "All non-admin pages show the maintenance page and APIs answer 503. Administrators keep working."
+        },
+        "readOnlyMode": {
+          "label": "Read-only mode",
+          "hint": "Every change through the API is refused with 503; reading and admin work continue."
+        },
+        "disabledModules": {
+          "label": "Disabled modules",
+          "hint": "Pages and APIs of these modules are closed for every organization."
+        },
+        "disabledIntegrations": {
+          "label": "Disabled integration providers",
+          "hint": "These providers cannot be connected or used."
+        },
+        "aiDisabledModels": {
+          "label": "Disabled models",
+          "hint": "Tasks on a disabled model are refused."
+        },
+        "aiAllowedModels": {
+          "label": "Allowed models",
+          "hint": "Empty: every model is allowed. Otherwise only these model ids may run."
+        },
+        "aiDefaultModel": {
+          "label": "Default model override",
+          "hint": "Model id used instead of the server's AGENT_MODEL. Empty: use the server default."
+        },
+        "aiDisabledProfiles": {
+          "label": "Disabled AI roles",
+          "hint": "Tasks for these roles are refused."
+        },
+        "aiDailyTokenBudget": {
+          "label": "Platform daily token budget",
+          "hint": "All organizations together, per UTC day."
+        },
+        "aiMonthlyTokenBudget": {
+          "label": "Platform monthly token budget",
+          "hint": "All organizations together, per UTC month."
+        },
+        "aiRequireApprovalForWrites": {
+          "label": "Require approval for all AI writes",
+          "hint": "Every non-read AI tool becomes an approval request."
+        },
+        "aiAutonomyCeiling": {
+          "label": "Autonomy ceiling",
+          "hint": "The most any AI employee may do on its own, platform-wide."
+        },
+        "platformName": {
+          "label": "Platform name",
+          "hint": "Shown on system pages such as maintenance."
+        },
+        "supportEmail": {
+          "label": "Support email",
+          "hint": "Contact address shown to users when something is unavailable."
+        },
+        "defaultLocale": {
+          "label": "Default language",
+          "hint": "Platform default language."
+        },
+        "signupDomainAllowlist": {
+          "label": "Sign-up domain allowlist",
+          "hint": "Empty: anyone can sign up. Otherwise only emails from these domains (and subdomains)."
+        },
+        "maintenanceMessage": {
+          "label": "Maintenance message",
+          "hint": "Optional text on the maintenance page and in 503 responses."
+        }
+      }
+    },
+    "ai": {
+      "subtitle": "The AI workforce across all organizations: provider, switches, budgets, models and roles. API keys are never shown.",
+      "provider": "AI provider",
+      "tasks24h": "AI tasks active",
+      "tasks24hHint": "24 h: {completed} completed · {failed} failed",
+      "tokensMonth": "Tokens this month",
+      "today": "{tokens} today",
+      "switches": "Execution & policy",
+      "budgets": "Token budgets",
+      "budgetsHint": "Platform-wide budgets, checked when a task is created and when it runs. Per-company daily limit from the server: {perCompany}.",
+      "models": "Models",
+      "modelsHint": "Server default (AGENT_MODEL): {env}. Usage over the last 30 days.",
+      "envDefault": "Server default ({model})",
+      "inUse": "In use",
+      "notAllowed": "Not allowed",
+      "profiles": "AI roles",
+      "profilesHint": "Disabling a role refuses new tasks for it and stops queued ones when they run.",
+      "columns": {
+        "model": "Model",
+        "tasks30": "Tasks (30 d)",
+        "tasks": "Tasks",
+        "tokens": "Tokens",
+        "cost": "Est. cost",
+        "profile": "Role",
+        "department": "Department",
+        "tools": "Tools",
+        "task": "Task",
+        "status": "Status",
+        "name": "Name"
+      },
+      "ceiling": {
+        "full": "As configured per AI employee",
+        "supervised": "Supervised: every write needs approval",
+        "read_only": "Read-only: AI may only read"
+      },
+      "status": {
+        "QUEUED": "Queued",
+        "RUNNING": "Running",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "tasksSubtitle": "Every AI task on the platform. Search by id or title, filter failures, cancel or retry.",
+      "failures": "Failures (7 days)",
+      "failuresHint": "Grouped by error code.",
+      "searchTasks": "Task id or title",
+      "noTasks": "No AI tasks.",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "usageSubtitle": "Tokens and estimated cost (list prices) by organization, model and day.",
+      "byOrg": "By organization",
+      "byModel": "By model",
+      "byDay": "By day",
+      "noUsage": "No AI usage in this period."
+    },
+    "plans": {
+      "subtitle": "Plans, market prices, entitlements and usage quotas.",
+      "limitsTitle": "Plan limits & module access",
+      "limitsHint": "Enforced for subscribed organizations: seats, companies, AI tokens and API calls per month, and module access. Empty = unlimited.",
+      "modules": "Modules",
+      "allModules": "All modules",
+      "trial": "{count}-day trial",
+      "limits": {
+        "seats": {
+          "max": "Seats"
+        },
+        "companies": {
+          "max": "Companies"
+        },
+        "ai": {
+          "tokens": {
+            "month": "AI tokens / month"
+          }
+        },
+        "api": {
+          "calls": {
+            "month": "API calls / month"
+          }
+        },
+        "storage": {
+          "mb": "Storage (MB)"
+        },
+        "agents": {
+          "max": "AI employees"
+        }
+      }
+    },
+    "subscriptions": {
+      "subtitle": "Subscription status across all organizations. MRR comes only from real subscription items.",
+      "byPlan": "Live subscriptions by plan",
+      "plan": "Plan",
+      "periodEnd": "Period end",
+      "cancelsAtEnd": "Cancels at period end",
+      "trialEnds": "Trial ends {date}",
+      "interval": {
+        "MONTH": "Monthly",
+        "YEAR": "Yearly"
+      },
+      "status": {
+        "INCOMPLETE": "Incomplete",
+        "INCOMPLETE_EXPIRED": "Expired",
+        "TRIALING": "Trial",
+        "ACTIVE": "Active",
+        "PAST_DUE": "Past due",
+        "CANCELED": "Canceled",
+        "UNPAID": "Unpaid",
+        "PAUSED": "Paused"
+      }
+    },
+    "integrations": {
+      "subtitle": "Provider connections, API keys and webhook deliveries across organizations. Credentials are never shown.",
+      "manageProviders": "Disable providers",
+      "providers": "Providers",
+      "provider": "Provider",
+      "platform": "Platform",
+      "connections": "Connections",
+      "noConnections": "No connections.",
+      "lastError": "Last error",
+      "lastSync": "Last sync",
+      "status": {
+        "CONNECTED": "Connected",
+        "ERROR": "Error",
+        "DISCONNECTED": "Disconnected"
+      },
+      "apiKeys": "API keys",
+      "noKeys": "No API keys.",
+      "key": "Key",
+      "lastUsed": "Last used",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "active": "Active",
+      "revoke": "Revoke",
+      "revokeHint": "The key stops working immediately and its service account is disabled.",
+      "apiUsage": "API usage by organization",
+      "noUsage": "No API requests.",
+      "webhookFailures": "Webhook delivery failures",
+      "noFailures": "No failed deliveries.",
+      "event": "Event",
+      "endpoint": "Endpoint",
+      "attempts": "{count} attempts"
+    },
+    "security": {
+      "subtitle": "Security events, platform administrators and their sessions.",
+      "byAction": "Security events by type",
+      "admins": "Platform administrators",
+      "adminSessions": "Active admin sessions",
+      "noSessions": "No active admin sessions.",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "events": "Security events (30 days)"
+    },
+    "settings": {
+      "subtitle": "Platform-wide settings. Changes are audited.",
+      "general": "General",
+      "registration": "Registration",
+      "anyDomain": "Any email domain"
+    },
+    "unavailable": {
+      "title": "Unavailable",
+      "titles": {
+        "maintenance": "Down for maintenance",
+        "organization_suspended": "Organization suspended",
+        "module_disabled": "Module unavailable"
+      },
+      "maintenance": "We're doing scheduled maintenance. Please try again shortly.",
+      "suspended": "This organization has been suspended by the platform. Contact support for help.",
+      "moduleDisabled": "{module} is currently disabled for your organization.",
+      "contact": "Contact:",
+      "switchOrg": "Switch organization",
+      "home": "Go to home",
+      "retry": "Try again"
+    }
   },
   "email": {
     "invitation": {
@@ -978,7 +1625,13 @@
     },
     "description": "Description",
     "kindCount": "{count, plural, one {# entry} other {# entries}}",
-    "emptyKind": "Nothing here yet."
+    "emptyKind": "Nothing here yet.",
+    "confirmDelete": "Delete this entity and all its relations?",
+    "details": "Details",
+    "open": "Open {name}",
+    "save": "Save",
+    "saved": "Saved",
+    "since": "In the graph since {date}"
   },
   "brain": {
     "subtitle": "Documents of {company}, indexed for search. Every result cites the passage it came from.",
@@ -997,7 +1650,8 @@
       "type": "Type",
       "passages": "Passages",
       "status": "Status",
-      "added": "Added"
+      "added": "Added",
+      "source": "Source"
     },
     "status": {
       "PROCESSING": "Processing",
@@ -1015,7 +1669,128 @@
     "paste": "Or paste text",
     "addSubmit": "Add and index",
     "indexing": "Indexing…",
-    "tooLarge": "The file is too large (text up to 1 MB, PDF up to 8 MB)."
+    "tooLarge": "The file is too large (text up to 1 MB, PDF up to 8 MB).",
+    "allDocuments": "All documents",
+    "cancel": "Cancel",
+    "department": "Department",
+    "noDepartment": "No department (company-wide)",
+    "tags": "Tags",
+    "tagsHint": "Comma-separated module or area tags, e.g. sales, onboarding.",
+    "noMatches": "Nothing matches these filters.",
+    "firstPage": "First page",
+    "nextPage": "Next page",
+    "indexedFrom": "Indexed automatically from its module · source updated {date}",
+    "openSource": "Open source",
+    "passages": "Passages",
+    "recent": "Recently added",
+    "save": "Save",
+    "saved": "Saved",
+    "searchHint": "Search every passage of the company's documents. Filter by department or tag to narrow results.",
+    "sourcesTitle": "Knowledge sources",
+    "sourcesHint": "Published support articles, HR policies, operations SOPs and product releases and features are indexed automatically and kept up to date.",
+    "tabs": {
+      "search": "Search",
+      "documents": "Documents",
+      "memory": "Company memory",
+      "ask": "Ask the Brain"
+    },
+    "sources": {
+      "upload": "Uploaded",
+      "support_kb_article": "Support article",
+      "hr_policy": "HR policy",
+      "ops_process": "Operations SOP",
+      "product_release": "Product release",
+      "product_feature": "Product feature"
+    },
+    "filters": {
+      "all": "All",
+      "allDepartments": "All departments",
+      "allSources": "All sources",
+      "allTags": "All tags",
+      "apply": "Apply",
+      "byTitle": "Title A–Z",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "sort": "Sort",
+      "titleSearch": "Title or file name"
+    },
+    "links": {
+      "title": "Knowledge relationships",
+      "description": "Graph entities, CRM accounts and contacts, and projects this document is about.",
+      "empty": "Not linked to any record yet.",
+      "add": "Link",
+      "find": "Find",
+      "noMatches": "No matching record",
+      "record": "Record",
+      "remove": "Remove link",
+      "restricted": "Restricted record",
+      "type": "Type",
+      "types": {
+        "graph_entity": "Graph entity",
+        "account": "Account",
+        "contact": "Contact",
+        "project": "Project"
+      }
+    },
+    "related": {
+      "title": "Related knowledge",
+      "description": "{count, plural, =0 {No linked documents} one {# linked document} other {# linked documents}}",
+      "empty": "No documents are linked to this record and none mention it yet.",
+      "linked": "Linked documents",
+      "mentions": "Mentioned in",
+      "findDocument": "Find a document",
+      "document": "Document"
+    },
+    "citedIn": {
+      "title": "Cited in",
+      "description": "{count, plural, =0 {No AI task has cited this document yet} one {Cited by # AI task} other {Cited by # AI tasks}}",
+      "empty": "AI deliverables that cite passages of this document will appear here."
+    },
+    "memory": {
+      "title": "Company memory",
+      "subtitle": "Durable facts about the company that every AI task takes into account.",
+      "promptNote": "Pinned facts are added to every AI task's instructions; other facts are added when they match the task's keywords. AI employees can propose facts, which are saved only after approval.",
+      "new": "Add a fact",
+      "add": "Add fact",
+      "titleLabel": "Title",
+      "fact": "Fact",
+      "source": "Source",
+      "sourceHint": "Optional — e.g. a meeting, document or URL.",
+      "sourceIs": "Source: {source}",
+      "pinLabel": "Pin (always include in AI tasks)",
+      "pinned": "Pinned",
+      "pinnedOnly": "Pinned only",
+      "unpinnedOnly": "Not pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete this fact from company memory?",
+      "search": "Search facts",
+      "count": "{count, plural, one {# fact} other {# facts}}",
+      "empty": "No facts yet. Add decisions, conventions and key numbers the AI should always know.",
+      "companyWide": "Company-wide",
+      "byAi": "Proposed by AI, approved",
+      "byHuman": "Added by a person"
+    },
+    "ask": {
+      "title": "Ask the Brain",
+      "subtitle": "Ask a question and get an answer from the company's documents and memory, with sources.",
+      "hint": "Answers come only from Company Brain and company memory, with citations of the passages used.",
+      "question": "Question",
+      "placeholder": "e.g. What is our refund policy for annual plans?",
+      "submit": "Ask",
+      "sending": "Asking…",
+      "working": "Searching the company's knowledge…",
+      "answer": "Answer",
+      "openTask": "Open task",
+      "history": "Recent questions",
+      "historyCount": "{count, plural, one {# question} other {# questions}}",
+      "empty": "No questions asked yet.",
+      "notConfigured": "AI is not configured on this platform, so questions cannot be answered yet.",
+      "noPermission": "You need permission to run AI tasks to ask the Brain.",
+      "tryAsking": "No passage matches — ask the Brain instead"
+    }
   },
   "agentTasks": {
     "subtitle": "Give an AI employee a task. It works from {company}'s documents and graph and returns a deliverable for you to review, with citations.",
@@ -1162,7 +1937,15 @@
       "search_kb_articles": "Search help articles",
       "read_support_queue": "Read support queue",
       "draft_ticket_reply": "Draft ticket reply",
-      "send_ticket_reply": "Send ticket reply"
+      "send_ticket_reply": "Send ticket reply",
+      "read_company_memory": "Read company memory",
+      "remember_company_fact": "Save a company fact",
+      "read_brand_kit": "Read brand kit",
+      "read_payables": "Read accounts payable",
+      "read_budget_status": "Read budget status",
+      "create_bill_draft": "Create draft vendor bill",
+      "read_proposals": "Read proposals",
+      "create_proposal_draft": "Create proposal draft"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -1463,6 +2246,14 @@
     "support_lead": {
       "name": "Support Lead",
       "summary": "Queue health, SLA risk, escalations and knowledge-base gaps."
+    },
+    "brain_answerer": {
+      "name": "Brain Answerer",
+      "summary": "Answers questions from your documents and company memory, with sources."
+    },
+    "knowledge_manager": {
+      "name": "Knowledge Manager",
+      "summary": "Keeps Company Brain useful: summaries, gaps and facts for company memory."
     }
   },
   "projects": {
@@ -1525,6 +2316,164 @@
       "ACTIVE": "Active",
       "ACHIEVED": "Achieved",
       "ABANDONED": "Abandoned"
+    },
+    "tabs": {
+      "objectives": "Objectives",
+      "goals": "Goals",
+      "strategy": "Strategy"
+    },
+    "allDepartments": "All departments",
+    "allGoals": "All goals",
+    "delete": "Delete objective",
+    "deleteConfirm": "Delete the objective \"{title}\" with its milestones and key results?",
+    "deleteMilestone": "Delete milestone",
+    "deleteMilestoneConfirm": "Delete the milestone \"{title}\"? The linked project stays.",
+    "department": "Department",
+    "description": "Description",
+    "edit": "Edit objective",
+    "editLabel": "Edit",
+    "filter": "Filter",
+    "goal": "Goal",
+    "milestones": "Milestones",
+    "moreDetails": "More details",
+    "noDepartment": "No department",
+    "noGoal": "No goal",
+    "noOwner": "No owner",
+    "overallProgress": "Progress",
+    "ownedBy": "Owner: {name}",
+    "owner": "Owner",
+    "startDate": "Start date",
+    "sort": {
+      "label": "Sort",
+      "created": "Newest",
+      "target": "Target date",
+      "title": "Title"
+    },
+    "goals": {
+      "heading": "Company goals",
+      "subtitle": "The few outcomes the company commits to this quarter or year. Each goal breaks down into objectives, key results, milestones and projects.",
+      "count": "{count, plural, one {# goal} other {# goals}}",
+      "empty": "No goals yet.",
+      "title": "Goal",
+      "titlePlaceholder": "e.g. Reach 1 million in annual recurring revenue",
+      "horizon": "Horizon",
+      "horizons": {
+        "QUARTER": "Quarter",
+        "YEAR": "Year"
+      },
+      "allHorizons": "All horizons",
+      "targetHint": "Defaults to the end of the quarter or year.",
+      "ownerDefault": "Me",
+      "planWithAi": "Draft a plan with AI (you review it before anything is created)",
+      "create": "Add goal",
+      "createAndPlan": "Add goal and plan with AI",
+      "edit": "Edit goal",
+      "delete": "Delete goal",
+      "deleteConfirm": "Delete the goal \"{title}\"? Its objectives stay, without a goal.",
+      "manage": "Manage goals"
+    },
+    "kr": {
+      "heading": "Key results",
+      "title": "Key result",
+      "titlePlaceholder": "e.g. Monthly recurring revenue reaches 80,000",
+      "add": "Add key result",
+      "addHint": "Link a metric from your company's data, or track a value you update yourself.",
+      "edit": "Edit key result",
+      "delete": "Delete key result",
+      "deleteConfirm": "Delete the key result \"{title}\"?",
+      "empty": "No key results yet.",
+      "source": "Measured by",
+      "sources": {
+        "METRIC": "Company metric",
+        "MANUAL": "Manual value"
+      },
+      "metric": "Metric",
+      "chooseMetric": "Choose a metric",
+      "unit": "Unit",
+      "unitPlaceholder": "e.g. customers",
+      "unitHint": {
+        "money": "Amounts in your company currency (major units).",
+        "percent": "Percent, 0–100.",
+        "count": "A count.",
+        "days": "Days.",
+        "hours": "Hours."
+      },
+      "direction": "Direction",
+      "directions": {
+        "INCREASE": "Increase to",
+        "DECREASE": "Decrease to"
+      },
+      "baseline": "Baseline",
+      "target": "Target",
+      "current": "Current",
+      "values": "Now {current} · from {baseline} to {target}",
+      "hidden": "Values hidden: you don't have access to this metric.",
+      "status": {
+        "ACHIEVED": "Achieved",
+        "ON_TRACK": "On track",
+        "AT_RISK": "At risk",
+        "OFF_TRACK": "Off track",
+        "NO_DATA": "No data"
+      }
+    },
+    "plan": {
+      "heading": "AI plan",
+      "subtitle": "The AI's proposal for this goal. Edit or untick anything, choose owners, then apply: the records are created only when you apply.",
+      "open": "Plan",
+      "review": "Review plan",
+      "applied": "Plan applied",
+      "appliedOn": "This plan was applied on {date}.",
+      "viewObjectives": "View objectives",
+      "viewTree": "View goals tree",
+      "none": "No plan has been generated for this goal yet.",
+      "generate": "Generate plan with AI",
+      "regenerate": "Generate a new plan",
+      "guidance": "Guidance for the AI (optional)",
+      "guidanceHint": "Constraints, budget, priorities or teams to involve.",
+      "generating": "The AI is drafting the plan…",
+      "generatingHint": "This page updates automatically when the plan is ready.",
+      "openTask": "Open AI task",
+      "startFailed": "The plan could not be started: {reason}",
+      "taskForbidden": "You need access to AI tasks to see this goal's plan.",
+      "aiNotConfigured": "AI planning is unavailable: no AI provider is configured.",
+      "noRunPermission": "You need permission to run AI tasks to plan with AI.",
+      "invalid": "The plan could not be used",
+      "taskFailed": "The AI task did not finish: {reason}",
+      "parseErrors": {
+        "no_output": "The AI returned no output.",
+        "no_json": "The AI's answer contains no JSON plan.",
+        "invalid_json": "The AI's answer contains malformed JSON.",
+        "invalid_plan": "The AI's plan does not have the required structure."
+      },
+      "rawOutput": "Show the AI's answer",
+      "readOnly": "Only people who manage objectives can apply this plan.",
+      "objectiveShape": "{krs} key results, {milestones} milestones",
+      "ready": "Plan ready for review",
+      "readyHint": "Nothing has been created yet.",
+      "resumable": "{count, plural, one {# item of this plan was already created} other {# items of this plan were already created}} by an interrupted apply. Applying again continues without duplicates.",
+      "noProjectsPermission": "You can't create projects, so only objectives, key results and milestones will be created.",
+      "objectiveN": "Objective {n}",
+      "suggested": "AI suggested: {value}",
+      "include": "Include",
+      "unassigned": "Unassigned",
+      "ownerMe": "Me",
+      "projectName": "Project name",
+      "projectOwner": "Project owner",
+      "taskTitle": "Task",
+      "assignee": "Assignee",
+      "priority": "Priority",
+      "priorities": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      },
+      "metricConverted": "The AI proposed the metric {key}, which isn't available; it is tracked manually.",
+      "krDirectionInvalid": "The target must be above the baseline to increase, below it to decrease.",
+      "summary": "Creates {objectives} objectives, {keyResults} key results, {milestones} milestones, {projects} projects and {tasks} tasks.",
+      "apply": "Apply plan",
+      "applying": "Applying…",
+      "partial": "Created before the error: {objectives} objectives, {milestones} milestones, {projects} projects, {tasks} tasks."
     }
   },
   "notifications": {
@@ -1537,7 +2486,8 @@
         "notification": "{title}",
         "task_assigned": "Workflow assigned you a task: {title}",
         "approval_requested": "Workflow approval needed: {title}",
-        "run_failed": "Workflow run failed: {title}"
+        "run_failed": "Workflow run failed: {title}",
+        "approval_escalated": "Workflow approval escalated to you: {title}"
       },
       "marketplace": {
         "installed": "Installed from the marketplace: {title}",
@@ -1581,12 +2531,23 @@
         "follow_up_assigned": "Follow-up for you: {title}",
         "follow_ups_due": "Follow-ups due today: {title}",
         "follow_ups_overdue": "Follow-ups due: {title}",
-        "deal_stale": "Deal has gone stale: {title}"
+        "deal_stale": "Deal has gone stale: {title}",
+        "proposal_viewed": "Proposal viewed: {title}",
+        "proposal_accepted": "Proposal accepted: {title}",
+        "proposal_declined": "Proposal declined: {title}",
+        "proposal_expired": "Proposal expired: {title}",
+        "sales_task_assigned": "Sales task for you: {title}"
       },
       "finance": {
         "invoice_paid": "Invoice paid: {title}",
         "invoice_overdue": "Invoice overdue: {title}",
-        "recurring_invoice_generated": "Recurring invoice ready to review: {title}"
+        "recurring_invoice_generated": "Recurring invoice ready to review: {title}",
+        "approval_requested": "Approval requested: {title}",
+        "approval_approved": "Approved: {title}",
+        "approval_rejected": "Rejected: {title}",
+        "bill_overdue": "Bill overdue: {title}",
+        "budget_warning": "Budget 80% used: {title}",
+        "budget_exceeded": "Budget exceeded: {title}"
       },
       "hr": {
         "candidate_applied": "New application: {title}",
@@ -1611,7 +2572,11 @@
         "meeting_invite": "Meeting invitation: {title}",
         "meeting_cancelled": "Meeting cancelled: {title}",
         "meeting_completed": "Meeting notes ready: {title}",
-        "action_item": "New action item: {title}"
+        "action_item": "New action item: {title}",
+        "task_discussion": "Task discussion started: {title}",
+        "meeting_accepted": "Accepted: {title}",
+        "meeting_tentative": "Tentative: {title}",
+        "meeting_declined": "Declined: {title}"
       },
       "support": {
         "assigned": "Ticket assigned to you: {title}",
@@ -1763,7 +2728,8 @@
       "calendar": "Calendar",
       "dashboard": "Dashboard",
       "import": "Import & export",
-      "settings": "Settings"
+      "settings": "Settings",
+      "proposals": "Proposals"
     },
     "accountTypes": {
       "PROSPECT": "Prospect",
@@ -1802,7 +2768,9 @@
       "winRate": "Win rate",
       "avgDealSize": "Average deal size",
       "salesCycle": "Sales cycle (days)",
-      "conversionRate": "Lead conversion rate"
+      "conversionRate": "Lead conversion rate",
+      "proposalsSent": "Proposals sent",
+      "proposalAcceptance": "Proposal acceptance rate"
     },
     "accounts": {
       "add": "Add account",
@@ -2099,7 +3067,11 @@
       "strategy": "Strategy",
       "subtitle": "Pipelines, sources, custom fields, segments and sales automation.",
       "whenEntering": "When a deal enters",
-      "workTaskTitle": "Task title"
+      "workTaskTitle": "Task title",
+      "intakeFollowUpDays": "Follow-up after (days)",
+      "intakeFollowUpHint": "Schedules a follow-up for the assigned owner. Leave empty for none.",
+      "taskDueDays": "Task due in (days)",
+      "createSalesTask": "Create a sales task for the owner"
     },
     "sort": "Sort",
     "sortCreated": "Newest",
@@ -2107,7 +3079,163 @@
     "sortUpdated": "Recently updated",
     "tag": "Tag",
     "tagsPlaceholder": "e.g. enterprise, renewal",
-    "viewExistingRecord": "View existing record"
+    "viewExistingRecord": "View existing record",
+    "proposals": {
+      "needDeal": "Create an open deal first — every proposal belongs to a deal.",
+      "deal": "Deal",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Website relaunch proposal",
+      "create": "Create proposal",
+      "revisionNotice": "This proposal was already sent. Saving changes keeps the sent version as a revision and creates a new version that must be sent again.",
+      "validUntil": "Valid until",
+      "estimateOnAccept": "Create a finance estimate when accepted",
+      "sections": {
+        "intro": "Introduction",
+        "scope": "Scope",
+        "timeline": "Timeline",
+        "terms": "Terms"
+      },
+      "preview": "Preview",
+      "formatHint": "Formatting: blank line for a new paragraph, \"- \" for bullet lists, \"## \" for headings, **bold**.",
+      "lines": "Line items",
+      "description": "Description",
+      "quantity": "Qty",
+      "unitPrice": "Unit price ({currency})",
+      "discountPct": "Discount %",
+      "taxPct": "Tax %",
+      "addLine": "Add line",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Tax",
+      "total": "Total",
+      "totalsHint": "Totals are an estimate while editing; the server calculates the final amounts when you save.",
+      "saved": "Saved",
+      "emailNotConfigured": "Email delivery isn't configured on this platform, so sending will fail and nothing will be recorded as sent. You can still share the link yourself.",
+      "sendTo": "Send to",
+      "subject": "Subject",
+      "message": "Message",
+      "messageHint": "Optional. The share link is always added below your message.",
+      "send": "Send proposal",
+      "sentTo": "Sent to {to}.",
+      "aiHint": "Creates an AI task for the account executive; review the result, then use it here.",
+      "draftWithAi": "Draft with AI",
+      "useAiConfirm": "Replace the sections with this AI draft? A sent proposal becomes a new version.",
+      "useAiDraft": "Use AI draft",
+      "subtitle": "Priced proposals for deals, with versions, a share link and online acceptance.",
+      "matching": "Matching proposals",
+      "viewedOpen": "Viewed, awaiting decision",
+      "acceptedCount": "Accepted",
+      "new": "New proposal",
+      "newHint": "Pick an open deal; prices use the deal's currency.",
+      "count": "{count, plural, one {# proposal} other {# proposals}}",
+      "searchPlaceholder": "Search title, number, deal or account",
+      "status": {
+        "DRAFT": "Draft",
+        "SENT": "Sent",
+        "VIEWED": "Viewed",
+        "ACCEPTED": "Accepted",
+        "DECLINED": "Declined",
+        "EXPIRED": "Expired"
+      },
+      "sorts": {
+        "created": "Newest",
+        "updated": "Recently updated",
+        "total": "Highest total",
+        "valid": "Expiring first"
+      },
+      "noMatch": "No proposals match these filters.",
+      "empty": "No proposals yet.",
+      "document": "Proposal",
+      "validUntilDate": "Valid until {date}",
+      "preparedFor": "Prepared for",
+      "pricing": "Pricing",
+      "price": "Price",
+      "amount": "Amount",
+      "versionN": "Version {version}",
+      "back": "All proposals",
+      "printable": "Printable version",
+      "acceptedNotice": "Accepted by {name} on {date}.",
+      "declinedNotice": "Declined by {name} on {date}.",
+      "expiredNotice": "This proposal has expired. Set a new valid-until date and send it again.",
+      "editor": "Editor",
+      "editorHint": "Sections and line items; amounts in {currency}.",
+      "previewHint": "What the customer sees on the share link.",
+      "sentAt": "Last sent",
+      "views": "Views",
+      "viewsValue": "{count, plural, one {# view} other {# views}} · first {date}",
+      "decision": "Decision",
+      "decisionIp": "IP address",
+      "decisionNote": "Customer note",
+      "shareLink": "Share link",
+      "shareDraftHint": "The link works once the proposal has been sent.",
+      "shareHint": "Anyone with this link can view the proposal and accept or decline it.",
+      "viewEstimate": "View finance estimate",
+      "createEstimate": "Create finance estimate",
+      "sendTitle": "Send by email",
+      "sendHint": "Emails the share link to the contact. It is recorded as sent only if the email provider accepts it.",
+      "aiDescription": "AI drafts of the proposal text, linked to this proposal.",
+      "sends": "Email deliveries",
+      "notSent": "Not sent yet.",
+      "revisions": "Revisions",
+      "revisionsHint": "Earlier versions, kept when a sent proposal was changed.",
+      "noRevisions": "No earlier versions.",
+      "viewAll": "View all",
+      "noneForDeal": "No proposals for this deal yet."
+    },
+    "publicProposal": {
+      "title": "Proposal",
+      "from": "Proposal from {company}",
+      "acceptConfirm": "Accept this proposal? Your name, the time and your IP address are recorded.",
+      "declineConfirm": "Decline this proposal?",
+      "yourName": "Your full name",
+      "note": "Note (optional)",
+      "accept": "Accept proposal",
+      "decline": "Decline",
+      "recordNote": "Your decision is recorded with your name, the time and your IP address.",
+      "accepted": "Accepted by {name} on {date}. Thank you!",
+      "declined": "Declined by {name} on {date}.",
+      "expired": "This proposal has expired. Please contact us for an updated offer.",
+      "decide": "Your decision",
+      "decideHint": "Accept or decline this proposal."
+    },
+    "salesTasks": {
+      "priorities": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      },
+      "title": "Task",
+      "titlePlaceholder": "e.g. Send pricing comparison",
+      "assignee": "Assignee",
+      "add": "Add task",
+      "complete": "Completed",
+      "panel": "Tasks",
+      "openCount": "{count, plural, =0 {No open tasks} one {# open task} other {# open tasks}}",
+      "due": "Due {date}",
+      "doneOn": "Done {date}",
+      "open": "Open task",
+      "none": "No tasks yet.",
+      "new": "New task"
+    },
+    "emails": {
+      "title": "Emails",
+      "empty": "No emails yet.",
+      "inbound": "Received",
+      "outbound": "Sent",
+      "sources": {
+        "crm": "CRM",
+        "proposal": "Proposal",
+        "marketing": "Marketing",
+        "inbox": "Inbox"
+      },
+      "engagement": "{opens} opens, {clicks} clicks",
+      "noSubject": "(no subject)",
+      "loadMore": "Load more ({shown} of {total})",
+      "matching": "Matched on {addresses}",
+      "noAddress": "No email address on record — only logged CRM emails are shown.",
+      "hiddenSources": "Not shown (no access): {sources}."
+    }
   },
   "plans": {
     "title": "AI schedules",
@@ -2496,10 +3624,12 @@
     },
     "providers": {
       "google": {
-        "description": "Gmail, Google Calendar and Drive for email, meetings and files."
+        "description": "Gmail, Google Calendar and Drive for email, meetings and files.",
+        "sync": "Meetings sync both ways with Google Calendar (7 days back, 60 days ahead)."
       },
       "microsoft": {
-        "description": "Outlook mail, calendar and Teams messages."
+        "description": "Outlook mail, calendar and Teams messages.",
+        "sync": "Meetings sync both ways with the Outlook calendar (7 days back, 60 days ahead) when Google Calendar is not connected."
       },
       "slack": {
         "description": "Post messages to Slack channels from workflows and alerts."
@@ -2532,10 +3662,12 @@
         "description": "Publish content to an Instagram business account."
       },
       "quickbooks": {
-        "description": "Connect QuickBooks Online accounting."
+        "description": "Connect QuickBooks Online accounting.",
+        "sync": "Customers become CRM accounts and contacts; invoices are imported once as Finance drafts in your base currency."
       },
       "xero": {
-        "description": "Connect Xero accounting (transactions and contacts)."
+        "description": "Connect Xero accounting (transactions and contacts).",
+        "sync": "Customer contacts become CRM accounts and contacts; sales invoices are imported once as Finance drafts in your base currency."
       },
       "webhook": {
         "description": "Receive signed HTTP callbacks from any system and trigger workflows."
@@ -2684,6 +3816,28 @@
       "response": "Response",
       "nextAttempt": "next attempt {date}",
       "redeliver": "Redeliver"
+    },
+    "calendarOk": "Calendar access OK: {count, plural, one {# calendar} other {# calendars}} (primary: {primary})",
+    "calendarFailed": "Calendar check failed: {error}",
+    "logs": {
+      "title": "Request log",
+      "cardHelp": "Every API call made through this connection, with status and timing.",
+      "open": "Open log",
+      "help": "API calls made through this connection and its sync runs.",
+      "requests": "API calls",
+      "privacy": "Only the method, host and path, status, timing and short summaries are kept for 30 days — never tokens, headers or bodies.",
+      "outcome": "Outcome",
+      "allOutcomes": "All calls",
+      "ok": "Successful",
+      "errors": "Errors",
+      "empty": "No API calls logged yet.",
+      "time": "Time",
+      "request": "Request",
+      "status": "Status",
+      "duration": "Duration",
+      "summary": "Response",
+      "noResponse": "no response",
+      "attempts": "{count, plural, one {# attempt} other {# attempts}}"
     }
   },
   "workflows": {
@@ -2785,28 +3939,29 @@
       "support": "Support",
       "hr": "People",
       "projects": "Projects",
-      "operations": "Operations"
+      "operations": "Operations",
+      "strategy": "Strategy"
     },
     "templates": {
       "new_lead_follow_up": {
-        "name": "New lead → assign + follow-up task",
-        "description": "Alerts sales when a new lead has no owner and creates a follow-up task due tomorrow."
+        "name": "New lead → auto-assign + follow-up",
+        "description": "Assigns an owner with your CRM rules or a round robin of sales managers, creates a follow-up task due tomorrow and notifies the team."
       },
       "invoice_overdue_reminder": {
-        "name": "Invoice overdue → notify + reminder task",
-        "description": "Tells finance about an overdue invoice and creates a task to send a payment reminder today."
+        "name": "Invoice overdue → reminder + Slack",
+        "description": "Gives the account owner a payment reminder task, posts to #finance on Slack (when connected) and notifies finance."
       },
       "ticket_created_notify": {
         "name": "Ticket created → notify support",
         "description": "Urgent and high-priority tickets go to support managers, everything else to the support team."
       },
       "employee_onboarding": {
-        "name": "Employee joined → onboarding tasks",
-        "description": "Creates accounts, buddy and 30-60-90 plan tasks, then a first-week check-in after seven days."
+        "name": "Employee joined → onboarding + IT setup",
+        "description": "Starts the HR onboarding checklist, creates IT setup tasks and a buddy task for the manager, then a first-week check-in."
       },
       "deal_won_project": {
-        "name": "Deal won → create project",
-        "description": "Creates a kickoff task, asks the AI operations assistant for a delivery plan and celebrates with the team."
+        "name": "Deal won → client project",
+        "description": "Creates a client onboarding project named after the account with the deal owner as owner, adds onboarding tasks and asks finance to invoice."
       },
       "weekly_pipeline_review": {
         "name": "Weekly pipeline review",
@@ -2815,6 +3970,22 @@
       "form_submitted_lead": {
         "name": "Form submitted → new lead",
         "description": "Turns form submissions with an email into CRM leads and notifies sales."
+      },
+      "objective_decompose": {
+        "name": "Objective created → AI plan",
+        "description": "The AI CEO decomposes a new company objective into milestones, projects and tasks, and the owner is asked to review the plan."
+      },
+      "ticket_urgent_on_call": {
+        "name": "Urgent ticket → on-call assignment",
+        "description": "Assigns urgent tickets to the next support manager in rotation (unless already assigned) and notifies them and the team."
+      },
+      "candidate_hired_onboarding": {
+        "name": "Candidate hired → onboarding project",
+        "description": "Creates an onboarding project with contract, equipment and first-week tasks, starts the HR checklist and notifies HR."
+      },
+      "deal_approval_gate": {
+        "name": "Large deal → approval gate",
+        "description": "Deals above 50,000 need approval from a sales manager within 48 hours before the owner is told to proceed."
       }
     },
     "runs": {
@@ -2845,7 +4016,32 @@
       "waiting_approval": "Waiting for approval",
       "waiting_agent_task": "Waiting for an AI task",
       "resumesAt": "resumes {date}",
-      "aiTasks": "AI tasks started by this run"
+      "aiTasks": "AI tasks started by this run",
+      "views": {
+        "all": "All runs",
+        "dead": "Dead letters"
+      },
+      "deadTitle": "Dead-letter runs",
+      "deadHelp": "Real runs that failed permanently. Retry them from the failed step once the cause is fixed, or dismiss them.",
+      "deadEmpty": "No permanently failed runs.",
+      "failedAt": "failed {date}",
+      "from": "From",
+      "to": "To",
+      "kind": "Kind",
+      "kinds": {
+        "all": "Real and test runs",
+        "real": "Real runs",
+        "test": "Test runs"
+      },
+      "duration": "Duration",
+      "stepCount": "{count, plural, one {# step} other {# steps}}",
+      "deadBadge": "Dead letter",
+      "dismiss": "Dismiss",
+      "rerunFrom": "Re-run from step",
+      "rerunConfirm": "The chosen step and every later step run again, including their actions (records, messages). Continue?",
+      "rerunHelp": "Re-run this run from any step; earlier steps keep their results.",
+      "deadNotice": "This run failed permanently and is on the dead-letter list. The workflow owner was notified.",
+      "deadSummary": "{count, plural, one {# run failed permanently.} other {# runs failed permanently.}}"
     },
     "approvals": {
       "pending": "Waiting for a decision",
@@ -2868,7 +4064,11 @@
         "APPROVED": "Approved",
         "REJECTED": "Rejected",
         "CANCELLED": "Cancelled"
-      }
+      },
+      "expires": "Decide by {date}",
+      "escalated": "Escalated",
+      "panelTitle": "{count, plural, one {# workflow approval waiting for you} other {# workflow approvals waiting for you}}",
+      "panelHelp": "Approval steps of automated workflows. The workflow continues when you decide."
     },
     "builder": {
       "trigger": "When",
@@ -2936,7 +4136,20 @@
         "send_email": "Send email",
         "send_slack": "Send Slack message",
         "http_webhook": "HTTP webhook (POST)",
-        "custom_api": "Call custom API"
+        "custom_api": "Call custom API",
+        "create_account": "Create account",
+        "assign_round_robin": "Auto-assign (round robin)",
+        "load_record": "Look up a record",
+        "create_deal": "Create deal",
+        "move_deal_stage": "Move deal stage",
+        "create_project": "Create project from template",
+        "add_project_members": "Add project members",
+        "start_onboarding": "Start onboarding checklist",
+        "create_invoice": "Create invoice draft",
+        "create_meeting": "Schedule meeting",
+        "ai_employee_task": "Task for an AI employee",
+        "decompose_goal": "Decompose goal with AI",
+        "send_teams": "Post to Microsoft Teams"
       },
       "match": "Match",
       "matchAll": "all conditions",
@@ -2983,7 +4196,9 @@
       "connectProvider": "Connect it",
       "entities": {
         "lead": "Lead",
-        "work_task": "Task"
+        "work_task": "Task",
+        "deal": "Deal",
+        "ticket": "Support ticket"
       },
       "recordFields": {
         "stage": "Stage",
@@ -3002,7 +4217,8 @@
       "recipientOptions": {
         "owner": "The workflow owner",
         "users": "Specific people",
-        "permission": "Everyone with a permission"
+        "permission": "Everyone with a permission",
+        "field": "A person from a variable"
       },
       "priorities": {
         "LOW": "Low",
@@ -3055,8 +4271,105 @@
         "text": "Message",
         "url": "URL",
         "method": "Method",
-        "path": "Path"
-      }
+        "path": "Path",
+        "type": "Type",
+        "website": "Website",
+        "accountId": "Account ID",
+        "contactId": "Contact ID",
+        "pool": "Assign from",
+        "fallbackPermission": "If no rule matches, rotate through everyone with",
+        "stageId": "Stage",
+        "amount": "Amount",
+        "closeInDays": "Expected close in (days)",
+        "dealId": "Deal ID",
+        "lostReason": "Lost reason",
+        "template": "Project template",
+        "startInDays": "Starts in (days)",
+        "extraMemberIds": "More members (user ids from variables)",
+        "memberIds": "Team members",
+        "projectId": "Project ID",
+        "role": "Role",
+        "extraUserIds": "More people (user ids from variables)",
+        "employeeId": "Employee ID",
+        "checklist": "Checklist",
+        "templateId": "Checklist template",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price",
+        "startsAt": "Starts at (date-time from a variable)",
+        "startInHours": "Otherwise starts in (hours)",
+        "durationMinutes": "Duration (minutes)",
+        "extraAttendeeIds": "More attendees (user ids from variables)",
+        "attendeeIds": "Attendees",
+        "location": "Location",
+        "agenda": "Agenda",
+        "aiEmployeeId": "AI employee",
+        "objectiveId": "Objective ID",
+        "guidance": "Guidance for the AI",
+        "userField": "Person (user id from a variable)",
+        "approverMode": "Who approves",
+        "ownerField": "Record owner (user id from a variable)",
+        "timeoutAction": "If nobody decides in time",
+        "timeoutHours": "Timeout (hours)",
+        "escalateToIds": "Escalate to",
+        "ifNotConnected": "Skip this step (instead of failing) when the provider is not connected",
+        "teamId": "Team ID",
+        "channelId": "Channel ID"
+      },
+      "actionGroups": {
+        "crm": "Sales & CRM",
+        "work": "Projects & tasks",
+        "people": "People, meetings & finance",
+        "ai": "AI workforce",
+        "messaging": "Notifications & messages",
+        "developer": "Developer"
+      },
+      "accountTypes": {
+        "PROSPECT": "Prospect",
+        "CUSTOMER": "Customer",
+        "PARTNER": "Partner",
+        "VENDOR": "Vendor",
+        "OTHER": "Other"
+      },
+      "pools": {
+        "users": "A rotation of chosen people",
+        "permission": "Everyone with a permission (rotation)",
+        "crm_rules": "CRM lead assignment rules"
+      },
+      "rotationHint": "Each run assigns the next person in this list.",
+      "loadEntities": {
+        "account": "Account",
+        "contact": "Contact",
+        "lead": "Lead",
+        "deal": "Deal",
+        "project": "Project",
+        "objective": "Objective",
+        "employee": "Employee",
+        "candidate": "Candidate",
+        "ticket": "Support ticket",
+        "invoice": "Invoice"
+      },
+      "loadHint": "Later steps can use steps.{step}.name, steps.{step}.ownerId and the record’s other fields as variables.",
+      "defaultStage": "First stage of the default pipeline",
+      "blankProject": "Blank project",
+      "checklists": {
+        "ONBOARDING": "Onboarding",
+        "OFFBOARDING": "Offboarding"
+      },
+      "defaultTemplate": "Default template",
+      "invoiceHint": "The invoice is created as a draft in Finance for review before it is sent.",
+      "noAiEmployees": "No AI employees yet. Hire one in Workforce first.",
+      "decomposeHint": "The AI CEO breaks the objective into milestones, projects and tasks for the owner to review.",
+      "approverModes": {
+        "users": "Specific people",
+        "permission": "Holders of a permission",
+        "record_owner": "The record owner"
+      },
+      "timeoutActions": {
+        "reject": "Reject automatically",
+        "escalate": "Escalate once, then reject"
+      },
+      "noTimeout": "Wait without a deadline",
+      "teamsHint": "Find the team and channel ids in Teams via “Get link to channel”. Uses the Microsoft 365 connection."
     },
     "events": {
       "lead_created": "New lead",
@@ -3095,7 +4408,18 @@
       "integration_synced": "Integration synced",
       "agent_task_completed": "AI task completed",
       "agent_task_failed": "AI task failed",
-      "milestone_completed": "Milestone completed"
+      "milestone_completed": "Milestone completed",
+      "objective_created": "Objective created"
+    },
+    "compare": {
+      "title": "Compare versions",
+      "help": "Two definitions side by side. Removed lines are red, added lines green.",
+      "changes": "{count, plural, one {# changed line} other {# changed lines}}",
+      "identical": "Identical",
+      "show": "Compare",
+      "left": "Left",
+      "right": "Right",
+      "draft": "Current draft"
     }
   },
   "marketplace": {
@@ -4027,7 +5351,13 @@
       "spent": "Spent",
       "timeCost": "Time cost",
       "title": "Budget",
-      "used": "Budget used"
+      "used": "Budget used",
+      "financeTitle": "Finance postings",
+      "financeOpen": "Open project costs report",
+      "financeBills": "Vendor bills",
+      "financeExpenses": "Expenses",
+      "financeTotal": "Total cost (finance)",
+      "financePending": "Pending claims"
     },
     "calendar": {
       "more": "+{count} more",
@@ -4635,7 +5965,8 @@
       "email": "Email",
       "audience": "Audience",
       "forms": "Forms",
-      "automation": "Automation"
+      "automation": "Automation",
+      "brand": "Brand"
     },
     "common": {
       "allStatuses": "All statuses",
@@ -4676,7 +6007,8 @@
       "conversionRate": "Conversion rate",
       "emailsSent": "Emails sent",
       "postsPublished": "Social posts published",
-      "activeCampaigns": "Active campaigns"
+      "activeCampaigns": "Active campaigns",
+      "emailOpenRate": "Email open rate"
     },
     "commandCenter": {
       "title": "Marketing Command Center",
@@ -4756,7 +6088,40 @@
         "ACTIVE": "Launch / resume",
         "PAUSED": "Pause",
         "COMPLETED": "Complete"
-      }
+      },
+      "views": "Campaign views",
+      "view": {
+        "overview": "Overview",
+        "leads": "Leads",
+        "pipeline": "Pipeline & won revenue"
+      },
+      "leadsHint": "CRM leads whose campaign code or source is this campaign's code (forms and UTM links set it).",
+      "searchLeads": "Search name, email or company",
+      "stage": "Stage",
+      "allStages": "All stages",
+      "noLeads": "No leads attributed to this campaign yet.",
+      "leadName": "Lead",
+      "owner": "Owner",
+      "value": "Value",
+      "created": "Created",
+      "openPipeline": "Open pipeline",
+      "weightedPipeline": "Weighted pipeline",
+      "wonRevenue": "Won revenue",
+      "lostRevenue": "Lost",
+      "dealsN": "{count, plural, one {# deal} other {# deals}}",
+      "pipelineHint": "CRM deals with this campaign code, or converted from its leads (read-only).",
+      "winRate": "Win rate",
+      "dealStatus": {
+        "OPEN": "Open",
+        "WON": "Won",
+        "LOST": "Lost"
+      },
+      "allDeals": "All deals",
+      "noDeals": "No CRM deals attributed to this campaign.",
+      "deal": "Deal",
+      "expectedClose": "Expected / closed",
+      "openRate": "Email open rate",
+      "clickRate": "Email click rate"
     },
     "channels": {
       "email": "Email",
@@ -5343,6 +6708,46 @@
       "doneBody": "{email} will no longer receive marketing emails from {company}.",
       "invalidTitle": "Link not valid",
       "invalidBody": "This unsubscribe link is invalid or incomplete. Use the link from the latest email."
+    },
+    "brand": {
+      "title": "Brand kit",
+      "subtitle": "Voice, messaging, personas and visual identity — used by every AI writer and in HTML emails.",
+      "kit": "Brand guidelines",
+      "updated": "Last updated {when}",
+      "empty": "No brand kit yet. Create one so AI content follows your brand.",
+      "emptyReadOnly": "No brand kit has been set up yet.",
+      "brandName": "Brand name",
+      "tagline": "Tagline",
+      "voiceTone": "Voice & tone",
+      "voiceToneHint": "How the brand sounds, e.g. “Confident and warm, plain language, no jargon.”",
+      "pillars": "Messaging pillars",
+      "pillarsHint": "One per line.",
+      "doWords": "Preferred words",
+      "dontWords": "Words to avoid",
+      "personas": "Audience personas",
+      "personaName": "Persona name",
+      "personaDescription": "Who they are, what they need",
+      "addPersona": "Add persona",
+      "colors": "Colors",
+      "colorsHint": "The first color is the primary color used in emails.",
+      "colorValue": "Color",
+      "colorName": "Name",
+      "primary": "Primary",
+      "addColor": "Add color",
+      "logoUrl": "Logo URL",
+      "logoHint": "Shown at the top of marketing emails.",
+      "logoDarkUrl": "Logo URL (dark backgrounds)",
+      "iconUrl": "Icon URL",
+      "headingFont": "Heading font",
+      "bodyFont": "Body font",
+      "save": "Save brand kit",
+      "create": "Create brand kit",
+      "saved": "Saved",
+      "delete": "Delete brand kit",
+      "confirmDelete": "Delete the brand kit? AI writers will no longer receive brand guidelines.",
+      "preview": "Preview",
+      "aiContext": "What AI writers receive",
+      "aiContextHint": "Appended to every AI content task (drafts, social posts, SEO briefs, emails, campaign plans)."
     }
   },
   "sales": {
@@ -5350,7 +6755,8 @@
       "overview": "Overview",
       "targets": "Targets",
       "commissions": "Commissions",
-      "reports": "Reports"
+      "reports": "Reports",
+      "team": "Team"
     },
     "subtitle": "Team performance, forecast and targets from your live CRM data.",
     "from": "From",
@@ -5438,7 +6844,19 @@
       "qualified": "Qualified",
       "subtitle": "Conversion, attribution and lost reasons for any date range, with CSV export.",
       "truncated": "Showing the first 500 deals. Export CSV for all of them.",
-      "won": "Won"
+      "won": "Won",
+      "funnelTitle": "Lead → opportunity → won",
+      "funnelHint": "Leads created in the period, how many became an opportunity (deal) and how many were won.",
+      "opportunities": "Opportunities",
+      "conversionByCampaign": "Conversion by campaign code",
+      "stageTitle": "Stage conversion · {pipeline}",
+      "stageHint": "{deals} deals with stage activity in the period · {won} won ({rate}).",
+      "reached": "Reached",
+      "nextStage": "Next",
+      "toNext": "To next",
+      "avgDays": "Avg. days in stage",
+      "wonStage": "Won",
+      "noStageData": "No stage changes in this period."
     },
     "targets": {
       "MONTH": "Monthly",
@@ -5459,6 +6877,38 @@
       "subtitle": "Revenue and deal targets per person, with attainment from won deals.",
       "teamTotal": "Team: {won} of {target}",
       "thisMonth": "Targets this month"
+    },
+    "myTasks": {
+      "title": "My sales tasks",
+      "summary": "{open} open · {overdue} overdue",
+      "none": "No sales tasks assigned to you."
+    },
+    "team": {
+      "title": "Sales team",
+      "subtitle": "Members with sales access: workload, capacity, targets and quota attainment.",
+      "hint": "Capacity limits are used by lead assignment rules: unavailable members and members at their open-lead limit are skipped.",
+      "members": "Members",
+      "unavailable": "{count} unavailable",
+      "monthQuota": "Quota this month",
+      "monthWon": "Won this month",
+      "openDeals": "Open deals",
+      "openLeads": "Open leads",
+      "openTasks": "Open tasks",
+      "followUps": "Open follow-ups",
+      "pipeline": "Open pipeline {amount}",
+      "role": "Role",
+      "maxOpenDeals": "Max open deals",
+      "maxOpenLeads": "Max open leads",
+      "available": "Available",
+      "away": "Unavailable",
+      "atCapacity": "At capacity",
+      "period": "Period",
+      "thisMonth": "This month",
+      "thisQuarter": "This quarter",
+      "targetAmount": "Target amount",
+      "setTarget": "Set target",
+      "noTarget": "no target",
+      "empty": "Nobody has sales access in this company yet."
     }
   },
   "finance": {
@@ -5477,7 +6927,11 @@
       "cashflow": "Cash flow",
       "accounting": "Accounting",
       "reports": "Reports",
-      "settings": "Settings"
+      "settings": "Settings",
+      "bills": "Bills",
+      "payables": "Payables",
+      "approvals": "Approvals",
+      "claims": "Expense claims"
     },
     "accounting": {
       "tabs": {
@@ -5497,7 +6951,10 @@
       "runwayMonths": "Runway (months)",
       "mrr": "MRR",
       "arr": "ARR",
-      "receivablesOverdue": "Overdue receivables"
+      "receivablesOverdue": "Overdue receivables",
+      "payablesOpen": "Accounts payable",
+      "payablesOverdue": "Overdue payables",
+      "budgetUtilization": "Budget utilization"
     },
     "range": {
       "from": "From",
@@ -5548,7 +7005,8 @@
       "email": "Email",
       "phone": "Phone",
       "website": "Website",
-      "address": "Address"
+      "address": "Address",
+      "project": "Project"
     },
     "dashboard": {
       "getStarted": "Add your first bank, cash or card account to start tracking money.",
@@ -5569,7 +7027,10 @@
       "insightsHint": "The AI CFO reads your real figures through its tools and writes a briefing with recommendations.",
       "insights": "Get AI CFO insights",
       "insightsFocus": "Optional focus, e.g. how to extend runway",
-      "insightsNoPermission": "You need permission to run AI tasks to request insights."
+      "insightsNoPermission": "You need permission to run AI tasks to request insights.",
+      "dueSoon": "Due in 30 days: {amount}",
+      "upcomingPayablesHint": "Approved bills due in the next 30 days and overdue ones.",
+      "yourApprovals": "{count, plural, one {# waiting for you} other {# waiting for you}}"
     },
     "anomalies": {
       "title": "Expense anomalies",
@@ -5601,7 +7062,8 @@
       "planHint": "Expected one-off payments or receipts that the forecast should include.",
       "addPlanned": "Add planned item",
       "plannedAmountHint": "Negative for an outflow, e.g. -2500",
-      "planEmpty": "No planned items."
+      "planEmpty": "No planned items.",
+      "billsDue": "Bills due"
     },
     "scenarios": {
       "title": "Scenario planning",
@@ -5659,7 +7121,9 @@
         "IMPORT": "Imported",
         "RECURRING": "Recurring",
         "PAYMENT": "Invoice payment",
-        "AI": "AI (approved)"
+        "AI": "AI (approved)",
+        "BILL_PAYMENT": "Bill payment",
+        "EXPENSE_CLAIM": "Expense claim"
       },
       "fromAccount": "From account",
       "toAccount": "To account",
@@ -5925,7 +7389,24 @@
       "currentBudget": "Current budgets",
       "currentActual": "Spent so far",
       "overBudget": "Over budget",
-      "confirmDelete": "Delete this budget?"
+      "confirmDelete": "Delete this budget?",
+      "hintAccrual": "Actual = expense transactions plus approved vendor bills in the budget's period, category and cost center.",
+      "departmentsTitle": "Departments · {period}",
+      "departmentsHint": "Budget vs actual per cost center. Budget owners (department heads) are notified at 80% and 100%.",
+      "departmentsEmpty": "No department budgets or spend in this period.",
+      "periods": {
+        "month": "Month",
+        "quarter": "Quarter"
+      },
+      "owner": "Owner",
+      "ownerIs": "Owner: {name}",
+      "expensesPart": "Expenses",
+      "billsPart": "Bills",
+      "totalLine": "{actual} of {budget}",
+      "openAll": "All transactions",
+      "noSpend": "No expenses in this period.",
+      "noBills": "No approved bills in this period.",
+      "noDepartmentBudget": "No budget covers this period."
     },
     "chart": {
       "add": "Add account",
@@ -5975,7 +7456,9 @@
         "CREDIT_NOTE": "Credit note",
         "TRANSACTION": "Transaction",
         "OPENING": "Opening balance",
-        "REVERSAL": "Reversal"
+        "REVERSAL": "Reversal",
+        "BILL": "Vendor bill",
+        "BILL_PAYMENT": "Bill payment"
       }
     },
     "ledger": {
@@ -6040,7 +7523,8 @@
         "cashflow": "Cash flow statement",
         "budget": "Budget vs actual",
         "revenue": "Revenue",
-        "expenses": "Expenses"
+        "expenses": "Expenses",
+        "projects": "Project costs"
       },
       "period": "{from} – {to}",
       "asOf": "As of {date}",
@@ -6092,6 +7576,169 @@
       "costCenterCode": "Code",
       "noCostCenters": "No cost centers yet.",
       "totalSpend": "Total spend"
+    },
+    "bills": {
+      "new": "New bill",
+      "newHint": "Record a vendor bill. Approval posts it to accounts payable; payments settle it.",
+      "edit": "Edit bill",
+      "editTitle": "Edit bill {number}",
+      "search": "Search number, vendor or line…",
+      "allVendors": "All vendors",
+      "empty": "No bills yet.",
+      "number": "Bill number",
+      "numberHint": "The vendor's invoice number.",
+      "billDate": "Bill date",
+      "newVendor": "New vendor…",
+      "newVendorHint": "Pick a vendor or type a new one.",
+      "attachment": "Bill scan",
+      "attachmentReplaceHint": "Choose a file to replace the current scan (PDF or image, up to 5 MB).",
+      "saveDraft": "Save draft",
+      "saveAndSubmit": "Save and submit",
+      "submitHint": "Submitting sends the bill for approval when an approval rule applies; otherwise it is approved and posted right away.",
+      "submit": "Submit",
+      "confirmSubmit": "Submit this bill? It is posted to accounts payable once approved.",
+      "submitFailed": "The bill was saved as a draft but could not be submitted. Check the details and submit it again.",
+      "recordPayment": "Record payment",
+      "payFrom": "Pay from",
+      "void": "Void",
+      "confirmVoid": "Void this bill? Its posting is reversed.",
+      "confirmDelete": "Delete this draft bill?",
+      "awaitingApproval": "Awaiting approval",
+      "overdue": "Overdue",
+      "showOverdue": "Show overdue bills",
+      "lines": "Line items",
+      "dates": "Bill date {issue} · due {due}",
+      "coding": "Category · cost center · project",
+      "paid": "Paid",
+      "netAmount": "Net amount",
+      "dueOn": "due {date}",
+      "viewBill": "View bill",
+      "submittedAt": "Submitted {date}",
+      "approvedAt": "Approved {date}",
+      "voidedAt": "Voided {date}",
+      "statuses": {
+        "DRAFT": "Draft",
+        "AWAITING_APPROVAL": "Awaiting approval",
+        "APPROVED": "Approved",
+        "PARTIALLY_PAID": "Partially paid",
+        "PAID": "Paid",
+        "VOID": "Void"
+      }
+    },
+    "payables": {
+      "total": "Total payables",
+      "byVendor": "Owed by vendor",
+      "empty": "No open payables.",
+      "overdue": "Overdue",
+      "agingTitle": "Accounts payable aging",
+      "agingHint": "Approved, unpaid bills by days past their due date.",
+      "upcomingTitle": "Upcoming payables",
+      "upcomingHint": "Due in the next 30 days: {amount}",
+      "noUpcoming": "Nothing is due in the next 30 days.",
+      "overdueTitle": "Overdue bills",
+      "overdueHint": "Finance managers are notified once when a bill becomes overdue.",
+      "noOverdue": "No bill is overdue."
+    },
+    "approvals": {
+      "queue": "Approval queue",
+      "waitingForYou": "Waiting for you",
+      "rulesActive": "Active rules",
+      "scopes": {
+        "mine": "For me to decide",
+        "requested": "Requested by me",
+        "all": "All requests"
+      },
+      "statuses": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled"
+      },
+      "kinds": {
+        "ANY": "Bills and expenses",
+        "BILL": "Bill",
+        "EXPENSE": "Expense claim"
+      },
+      "modes": {
+        "FINANCE_MANAGERS": "Finance managers",
+        "DEPARTMENT_HEAD": "Department head",
+        "USER": "A specific person"
+      },
+      "nothingPending": "Nothing is waiting for your approval.",
+      "decide": "Decide",
+      "approve": "Approve",
+      "reject": "Reject",
+      "note": "Note",
+      "notePlaceholder": "Note for the requester (optional)",
+      "rejectWithoutNote": "Reject without a note?",
+      "requestedBy": "Requested by {name}",
+      "decidedBy": "Decided by {name} on {date}",
+      "byRule": "rule: {name}",
+      "pendingTitle": "Waiting for approval",
+      "waitingFor": "Approvers: {names}",
+      "notYourDecision": "You are not an approver of this request.",
+      "history": "Approval history",
+      "noHistory": "No approvals yet.",
+      "rulesTitle": "Approval rules",
+      "rulesHint": "Bills and expense claims at or above the amount (optionally for a cost center or category) need approval. The most specific matching rule decides who approves. Expense claims always need approval.",
+      "newRule": "New rule",
+      "noRules": "No rules: bills are approved when submitted; expense claims go to finance managers.",
+      "appliesTo": "Applies to",
+      "minAmount": "From amount",
+      "minAmountHint": "Bill total or claim amount, in the company currency.",
+      "approverMode": "Approver",
+      "approverUser": "Approver (person)",
+      "approverUserHint": "Only for “A specific person”.",
+      "active": "Active",
+      "confirmDeleteRule": "Delete this approval rule?"
+    },
+    "claims": {
+      "submitTitle": "Submit an expense",
+      "submitHint": "Paid for something for the company? Submit it with the receipt; it is reimbursed and booked once approved.",
+      "submit": "Submit expense",
+      "submitShort": "Submit an expense →",
+      "merchant": "Merchant",
+      "receipt": "Receipt",
+      "descriptionPlaceholder": "e.g. Train ticket to the client workshop",
+      "mineTitle": "My expense claims",
+      "allTitle": "All expense claims",
+      "mine": "Mine",
+      "everyone": "Everyone",
+      "empty": "No expense claims yet.",
+      "requester": "Submitted by",
+      "payFrom": "Reimburse from",
+      "firstAccount": "The first bank or cash account is used to reimburse the claim.",
+      "withdraw": "Withdraw",
+      "confirmWithdraw": "Withdraw this expense claim?",
+      "viewTransaction": "View the booked transaction",
+      "statuses": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "decided": {
+        "APPROVED": "Approved and booked",
+        "REJECTED": "Rejected"
+      }
+    },
+    "projects": {
+      "all": "All projects",
+      "expenses": "Expenses",
+      "bills": "Bills",
+      "totalCost": "Total cost",
+      "income": "Income",
+      "empty": "No costs are tagged with a project in this period.",
+      "viewBills": "Bills",
+      "pendingClaims": "{amount} in pending claims",
+      "taggedWith": "Project: {name}"
+    },
+    "ask": {
+      "title": "Ask the AI CFO",
+      "hint": "Ask a question about your numbers; the AI CFO answers from your books.",
+      "placeholder": "e.g. Can we afford two new hires next quarter?",
+      "submit": "Ask",
+      "asking": "Asking…",
+      "thinking": "Working on the answer…"
     }
   },
   "hr": {
@@ -7233,7 +8880,50 @@
       "reviewItems": "Review the action items found in the summary, then create them.",
       "noItemsInSummary": "The summary has no action items list.",
       "confirmCreate": "{count, plural, one {Create # action item} other {Create # action items}}",
-      "itemsCreated": "Action items created."
+      "itemsCreated": "Action items created.",
+      "repeat": "Repeat",
+      "repeatNone": "Does not repeat",
+      "recurrence": {
+        "WEEKLY": "Weekly",
+        "BIWEEKLY": "Every 2 weeks"
+      },
+      "occurrences": "Number of meetings",
+      "occurrencesHint": "2–26, including this one.",
+      "applyTo": "Apply to",
+      "scopeThis": "This meeting only",
+      "scopeFollowing": "This and following meetings",
+      "scopeSeries": "All upcoming in the series",
+      "agendaTemplate": "Agenda template",
+      "replaceAgenda": "Replace the current agenda with this template?",
+      "useTemplate": "Use a template…",
+      "rsvpAction": {
+        "ACCEPTED": "Accept",
+        "TENTATIVE": "Maybe",
+        "DECLINED": "Decline"
+      },
+      "rsvp": {
+        "PENDING": "No response",
+        "ACCEPTED": "Accepted",
+        "TENTATIVE": "Tentative",
+        "DECLINED": "Declined"
+      },
+      "yourRsvp": "Your response",
+      "followUpTitle": "Follow-up email",
+      "followUpDescription": "Emails the summary (latest AI summary or decisions), action items and optionally the notes to all attendees.",
+      "followUpIncludeNotes": "Include meeting notes",
+      "followUpSend": "Send follow-up",
+      "followUpResend": "Send again",
+      "followUpSending": "Sending…",
+      "followUpNotConfigured": "Email delivery is not configured — nothing was sent.",
+      "followUpResult": "Sent {sent} · failed {failed} · not configured {notConfigured} · no email {skipped}",
+      "followUpLast": "Last attempt {when}",
+      "templates": "Agenda templates ({count})",
+      "noTemplates": "No agenda templates yet.",
+      "templateName": "Template name",
+      "newTemplate": "New template",
+      "deleteThis": "Delete this meeting",
+      "deleteFollowing": "Delete this and following",
+      "series": "Series"
     },
     "calendar": {
       "title": "Calendar",
@@ -7250,7 +8940,20 @@
       "syncNow": "Sync calendar",
       "notConnected": "Google Calendar / Outlook calendar is not connected, so meetings aren't synced.",
       "legendMeetings": "Meetings",
-      "legendEvents": "Company events"
+      "legendEvents": "Company events",
+      "onLeave": "{name} — on leave",
+      "you": "You",
+      "dealCloses": "Close: {name}",
+      "layers": "Layers",
+      "layer": {
+        "meetings": "Meetings",
+        "events": "Company events",
+        "leave": "Leave",
+        "holidays": "Holidays",
+        "crm": "CRM follow-ups & closes"
+      },
+      "leaveAll": "Showing approved leave for everyone",
+      "leaveOwn": "Showing your own approved leave"
     },
     "inbox": {
       "title": "Inbox",
@@ -7375,6 +9078,45 @@
       "announcementsPublished": "Announcements published",
       "meetingsHeld": "Meetings held",
       "openActionItems": "Open action items"
+    },
+    "tasks": {
+      "linkedTask": "Linked task",
+      "openDiscussion": "Discussion in #{channel}",
+      "privateDiscussion": "Discussed in a private channel",
+      "discuss": "Discuss in channel",
+      "discussHint": "Starts a thread linked to this task. Mention people with @ to notify them.",
+      "noChannels": "There is no channel you can post in yet.",
+      "createChannel": "Create a channel",
+      "channel": "Channel",
+      "note": "Opening message (optional)",
+      "start": "Start discussion"
+    },
+    "hub": {
+      "label": "Communication hub",
+      "feed": "Feed",
+      "conversations": "Conversations",
+      "mentions": "Mentions",
+      "announcements": "Announcements",
+      "meetings": "Meetings",
+      "conversationsHint": "{count, plural, =0 {All caught up} one {# unread message} other {# unread messages}}",
+      "searchConversations": "Search channels and people",
+      "unreadOnly": "Unread only",
+      "noConversations": "No conversations yet — join a channel or start a direct message.",
+      "direct": "Direct message",
+      "mentionsHint": "Messages, posts, comments and task comments that mention you.",
+      "mentionKind": {
+        "all": "All",
+        "message": "Messages",
+        "post": "Posts",
+        "comment": "Comments",
+        "task_comment": "Task comments"
+      },
+      "noMentions": "Nobody has mentioned you yet.",
+      "subject": {
+        "post": "on a post",
+        "announcement": "on an announcement",
+        "meeting": "on a meeting"
+      }
     }
   },
   "support": {
@@ -7753,5 +9495,95 @@
       "viewTicket": "View your request",
       "browseHelp": "Browse the help center"
     }
+  },
+  "strategy": {
+    "tabs": {
+      "profile": "Profile",
+      "strategy": "Strategy",
+      "operations": "Operations"
+    },
+    "title": "Strategy",
+    "subtitle": "Mission, vision, values and strategic pillars, and how every goal breaks down into objectives, milestones, projects and tasks.",
+    "foundations": "Foundations",
+    "foundationsHint": "What the company exists to do and how it works.",
+    "mission": "Mission",
+    "missionHint": "Why the company exists, in one or two sentences.",
+    "vision": "Vision",
+    "visionHint": "What the world looks like when you succeed.",
+    "values": "Values",
+    "addValue": "Add value",
+    "valuePlaceholder": "e.g. Customers first",
+    "removeValue": "Remove {value}",
+    "pillars": "Strategic pillars",
+    "noPillars": "No strategic pillars yet.",
+    "pillar": "Strategic pillar",
+    "noPillar": "No pillar",
+    "pillarTitle": "Pillar",
+    "pillarDescription": "Description",
+    "addPillar": "Add pillar",
+    "removePillar": "Remove pillar",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "saved": "Strategy saved.",
+    "tree": "Goals tree",
+    "treeHint": "Goal → objectives → milestones → linked projects, with progress.",
+    "taskCount": "{done}/{total} tasks",
+    "operations": {
+      "title": "Company operations",
+      "subtitle": "Every department at a glance: people, projects, budget use and how its key results are doing.",
+      "forbidden": "You need access to HR or objectives to see the operating dashboard.",
+      "partial": "Some columns are hidden because you don't have access to: {areas}.",
+      "areas": {
+        "hr": "HR",
+        "projects": "projects",
+        "finance": "finance",
+        "objectives": "objectives"
+      },
+      "tiles": {
+        "departments": "Departments",
+        "headcount": "Headcount",
+        "unassigned": "Without department",
+        "openProjects": "Open projects"
+      },
+      "departments": "Departments",
+      "departmentsHint": "Budgets of the current period, in {currency}. Projects count by their owner's department.",
+      "noDepartments": "No departments yet.",
+      "setupHr": "Set up departments in HR",
+      "noBudget": "No budget",
+      "atRisk": "({count} at risk)",
+      "columns": {
+        "department": "Department",
+        "headcount": "Headcount",
+        "openProjects": "Open projects",
+        "budget": "Budget used",
+        "objectives": "Objectives",
+        "keyResults": "Key results"
+      }
+    }
+  },
+  "shell": {
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "closeNavigation": "Close navigation",
+    "userMenu": "Account menu",
+    "signedInAs": "Signed in as",
+    "aiActivity": "AI activity",
+    "aiWorking": "{count, plural, one {# AI task running} other {# AI tasks running}}",
+    "aiQueued": "{count, plural, one {# queued} other {# queued}}",
+    "aiIdle": "AI idle",
+    "controlName": "Realy Control"
+  },
+  "authHero": {
+    "eyebrow": "AI operating system for companies",
+    "value1": "AI employees plan, execute and report — every sensitive step waits for your approval.",
+    "value2": "Sales, finance, HR and operations share one live company graph.",
+    "value3": "Enterprise-grade by default: roles, audit trail and two-factor sign-in.",
+    "adminEyebrow": "Platform operations",
+    "adminTitle": "Realy Control",
+    "adminPromise": "The control room for the whole platform.",
+    "adminValue1": "Restricted to platform administrators.",
+    "adminValue2": "Every change is permission-checked, scoped and audited.",
+    "adminValue3": "Administrative changes require recent two-factor verification.",
+    "secureConnection": "Secure session"
   }
 }

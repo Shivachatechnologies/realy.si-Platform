@@ -12,6 +12,7 @@ import { closestLocale } from "@/i18n/config";
 import { dummyHash, hashPassword, PASSWORD_MAX, PASSWORD_MIN, verifyPassword } from "./password";
 import { createSession, revokeAllSessions, type SessionInfo } from "./session";
 import { generateTotpSecret, otpauthUrl, verifyTotp } from "./totp";
+import { assertRegistrationAllowed } from "@/server/core/platform-controls";
 
 const TOTP_PURPOSE = "mfa.totp";
 const RECOVERY_CODE_COUNT = 10;
@@ -47,6 +48,8 @@ export interface AuthResult {
 
 export async function signUp(ctx: RequestContext, raw: z.input<typeof signUpInput>): Promise<AuthResult> {
   const input = signUpInput.parse(raw);
+  // Platform controls: registrations switch and sign-up domain allowlist (Admin → Platform Controls / Settings).
+  await assertRegistrationAllowed(input.email);
   if (input.countryCode) {
     const c = await db().country.findUnique({ where: { code: input.countryCode }, select: { code: true } });
     if (!c) throw invalid("Unknown country");

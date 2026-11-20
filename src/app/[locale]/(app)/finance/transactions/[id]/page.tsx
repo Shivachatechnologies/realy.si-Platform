@@ -27,7 +27,7 @@ export default async function TransactionPage({ params }: { params: Promise<{ id
     throw err;
   });
   const options = p.canManage ? await txnOptions(viewer.ctx, org.id, company.id) : null;
-  const fromPayment = !!txn.paymentId;
+  const fromPayment = !!txn.paymentId || !!txn.billPaymentId;
 
   return p.frame(
     <>
@@ -49,6 +49,16 @@ export default async function TransactionPage({ params }: { params: Promise<{ id
         {txn.invoiceId ? (
           <Link href={`/${locale}/finance/invoices/${txn.invoiceId}`} className="text-xs hover:underline">
             {t("finance.transactions.viewInvoice")}
+          </Link>
+        ) : null}
+        {txn.billId ? (
+          <Link href={`/${locale}/finance/bills/${txn.billId}`} className="text-xs hover:underline">
+            {t("finance.bills.viewBill")}
+          </Link>
+        ) : null}
+        {txn.project ? (
+          <Link href={`/${locale}/finance/transactions?project=${txn.project.id}`} className="text-xs hover:underline">
+            {t("finance.projects.taggedWith", { name: txn.project.name })}
           </Link>
         ) : null}
         {txn.recurring ? <span className="text-xs text-muted-foreground">{t("finance.transactions.fromRecurring", { name: txn.recurring.name })}</span> : null}
@@ -74,6 +84,7 @@ export default async function TransactionPage({ params }: { params: Promise<{ id
                   categoryId: txn.categoryId ?? "",
                   accountId: txn.accountId ?? "",
                   departmentId: txn.departmentId ?? "",
+                  projectId: txn.projectId ?? "",
                   description: txn.description,
                   reference: txn.reference ?? "",
                   notes: txn.notes ?? "",

@@ -1,24 +1,31 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
+import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { txnOptions } from "@/components/finance/options";
 import { financePage } from "@/components/finance/page-context";
 import { ActionButton, FormDialog, ResourceForm, type FieldSpec } from "@/components/finance/ui";
-import { Empty, Kpi } from "@/components/finance/widgets";
+import { Empty, Kpi, UsageBar } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
 import { addDays, addMonths, dayString, fromMinor, monthStart, todayUtc } from "@/server/modules/finance/common";
 import { budgetVsActual } from "@/server/modules/finance/transactions";
+import { departmentBudgets, parseBudgetWindow } from "@/server/modules/finance/budgets";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("finance.tabs.budgets") };
 }
 
-export default async function BudgetsPage() {
+export default async function BudgetsPage({ searchParams }: PageProps<"/[locale]/finance/budgets">) {
   const p = await financePage("budgets");
   if (p.blocked) return p.blocked;
-  const { t, viewer, org, company, money, base, day } = p;
-  const [budgets, options] = await Promise.all([budgetVsActual(viewer.ctx, org.id, company.id), txnOptions(viewer.ctx, org.id, company.id)]);
+  const { t, locale, viewer, org, company, money, base, day } = p;
+  const w = parseBudgetWindow(await searchParams);
+  const [budgets, options, deps] = await Promise.all([budgetVsActual(viewer.ctx, org.id, company.id), txnOptions(viewer.ctx, org.id, company.id), departmentBudgets(viewer.ctx, org.id, company.id, w)]);
+  const path = `/${locale}/finance/budgets`;
+  const windowQuery = `period=${w.period}&at=${w.at}`;
   const today = todayUtc();
   const current = budgets.filter((b) => b.periodStart <= today && b.periodEnd >= today);
   const fields: FieldSpec[] = [
@@ -37,6 +44,59 @@ export default async function BudgetsPage() {
         <Kpi label={t("finance.budgets.currentActual")} value={money(current.reduce((s, b) => s + b.actualMinor, 0n))} />
         <Kpi label={t("finance.budgets.overBudget")} value={current.filter((b) => b.actualMinor > b.amountMinor).length} tone={current.some((b) => b.actualMinor > b.amountMinor) ? "danger" : undefined} />
       </div>
+      <Card>
+        <CardHeader title={t("finance.budgets.departmentsTitle", { period: w.label })} description={t("finance.budgets.departmentsHint")} />
+        <form action={path} className="flex flex-wrap items-end gap-2 border-b p-3">
+          <Select name="period" defaultValue={w.period} aria-label={t("finance.budgets.period")} className="h-8 w-36">
+            <option value="month">{t("finance.budgets.periods.month")}</option>
+            <option value="quarter">{t("finance.budgets.periods.quarter")}</option>
+          </Select>
+          <Input name="at" type="month" defaultValue={w.at} aria-label={t("finance.budgets.period")} className="h-8 w-40" />
+          <Button type="submit" size="sm" variant="secondary">
+            {t("finance.apply")}
+          </Button>
+          <span className="ms-auto text-sm text-muted-foreground">
+            {t("finance.budgets.totalLine", { actual: money(deps.totalActual), budget: money(deps.totalBudget) })}
+            {deps.usedPct !== null ? ` · ${Math.round(deps.usedPct)}%` : ""}
+          </span>
+        </form>
+        {!deps.rows.length ? (
+          <Empty>{t("finance.budgets.departmentsEmpty")}</Empty>
+        ) : (
+          <Table>
+            <THead>
+              <Tr>
+                <Th>{t("finance.fields.costCenter")}</Th>
+                <Th>{t("finance.budgets.owner")}</Th>
+                <Th className="text-end">{t("finance.budgets.budget")}</Th>
+                <Th className="text-end">{t("finance.budgets.expensesPart")}</Th>
+                <Th className="text-end">{t("finance.budgets.billsPart")}</Th>
+                <Th className="text-end">{t("finance.budgets.actual")}</Th>
+                <Th className="min-w-40">{t("finance.budgets.used")}</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {deps.rows.map((d) => (
+                <Tr key={d.id}>
+                  <Td>
+                    <Link href={`${path}/${d.id}?${windowQuery}`} className="font-medium hover:underline">
+                      {d.costCenterCode ? `${d.costCenterCode} · ${d.name}` : d.name}
+                    </Link>
+                  </Td>
+                  <Td className="text-muted-foreground">{d.headName ?? "—"}</Td>
+                  <Td className="text-end tabular-nums">{d.budgetMinor ? money(d.budgetMinor) : "—"}</Td>
+                  <Td className="text-end tabular-nums">{money(d.transactionsMinor)}</Td>
+                  <Td className="text-end tabular-nums">{money(d.billsMinor)}</Td>
+                  <Td className={cn("text-end font-medium tabular-nums", d.usedPct !== null && d.usedPct > 100 && "text-danger")}>{money(d.totalMinor)}</Td>
+                  <Td>
+                    <UsageBar pct={d.usedPct} />
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </Card>
       {p.canManage ? (
         <Card>
           <details>
@@ -48,7 +108,7 @@ export default async function BudgetsPage() {
         </Card>
       ) : null}
       <Card>
-        <CardHeader title={t("finance.budgets.title")} description={t("finance.budgets.hint")} />
+        <CardHeader title={t("finance.budgets.title")} description={t("finance.budgets.hintAccrual")} />
         {!budgets.length ? (
           <Empty>{t("finance.budgets.empty")}</Empty>
         ) : (

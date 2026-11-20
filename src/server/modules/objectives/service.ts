@@ -1,22 +1,45 @@
 import { z } from "zod";
-import { db, transaction, type Tx } from "@/server/core/db";
+import type { Prisma } from "@/generated/prisma/client";
+import { db, transaction, type Db, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { conflict, notFound } from "@/server/core/errors";
+import { conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitEvent } from "@/server/modules/events/emit";
-import { requirePermission } from "@/server/modules/rbac/service";
-import { companyChain } from "@/server/modules/rbac/scope";
+import { grantsAllow, loadGrants, requirePermission } from "@/server/modules/rbac/service";
+import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
+import { keyResultInput, validateKeyResult, type KeyResultData } from "./key-results";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 const uuid = z.string().uuid();
-const isUuid = (v: string) => uuid.safeParse(v).success;
+const optUuid = uuid.or(z.literal("")).nullable().optional();
+const optDate = date.or(z.literal("")).nullable().optional();
+export const isUuid = (v: unknown): v is string => typeof v === "string" && uuid.safeParse(v).success;
+export const toDay = (v?: string | null) => (v ? new Date(`${v}T00:00:00Z`) : null);
+const blank = <T>(v: T | "" | null | undefined): T | null => (v === "" || v === undefined || v === null ? null : v);
+
+export const OBJECTIVE_STATUSES = ["ACTIVE", "ACHIEVED", "ABANDONED"] as const;
 
 export const createObjectiveInput = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
-  targetDate: date.optional(),
+  targetDate: optDate,
+  startDate: optDate,
+  goalId: optUuid,
+  ownerId: optUuid,
+  departmentId: optUuid,
+  /** Key results created with the objective (same transaction). */
+  keyResults: z.array(keyResultInput).max(10).default([]),
 });
-export const objectiveStatusInput = z.object({ status: z.enum(["ACTIVE", "ACHIEVED", "ABANDONED"]) });
+export const updateObjectiveInput = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().max(2000).nullable().optional(),
+  targetDate: optDate,
+  startDate: optDate,
+  goalId: optUuid,
+  ownerId: optUuid,
+  departmentId: optUuid,
+});
+export const objectiveStatusInput = z.object({ status: z.enum(OBJECTIVE_STATUSES) });
 export const createMilestoneInput = z.object({
   objectiveId: uuid,
   title: z.string().trim().min(1).max(200),
@@ -25,36 +48,124 @@ export const createMilestoneInput = z.object({
 });
 export const milestoneDoneInput = z.object({ done: z.boolean() });
 
-async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "objectives.read" | "objectives.manage", tx?: Tx) {
-  await requirePermission(ctx, permission, await companyChain(tx ?? db(), organizationId, companyId), tx);
+export interface ObjectiveFilters {
+  q?: string;
+  status?: (typeof OBJECTIVE_STATUSES)[number];
+  goalId?: string;
+  departmentId?: string;
+  sort?: "created" | "target" | "title";
 }
 
-/** Objectives of a company with their milestones (and each milestone's project and AI task counts). */
-export async function listObjectives(ctx: RequestContext, organizationId: string, companyId: string) {
-  await authorize(ctx, organizationId, companyId, "objectives.read");
-  return db().objective.findMany({
-    where: { organizationId, companyId },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    take: 200,
-    include: {
-      milestones: {
-        orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
-        include: { project: { select: { id: true, name: true } }, _count: { select: { tasks: true } } },
-      },
-    },
-  });
+export async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "objectives.read" | "objectives.manage", tx?: Tx) {
+  const chain = await companyChain(tx ?? db(), organizationId, companyId);
+  await requirePermission(ctx, permission, chain, tx);
+  return chain;
 }
+
+/** Active members (active users) who hold `permission` at the chain — owner pickers and owner checks. */
+export async function eligibleMembers(client: Tx | Db, organizationId: string, chain: ScopeChain, permission: string, candidates?: string[]) {
+  const members = await client.membership.findMany({
+    where: { organizationId, status: "ACTIVE", ...(candidates ? { userId: { in: candidates } } : {}), user: { status: "ACTIVE" } },
+    select: { userId: true },
+  });
+  const ok: string[] = [];
+  for (const m of members) if (grantsAllow(await loadGrants(client, "USER", m.userId), permission, chain)) ok.push(m.userId);
+  return ok;
+}
+
+/** Owner, department and goal references of an objective must belong to this company. */
+async function checkRefs(tx: Tx, organizationId: string, companyId: string, chain: ScopeChain, refs: { ownerId?: string | null; departmentId?: string | null; goalId?: string | null }) {
+  if (refs.ownerId && !(await eligibleMembers(tx, organizationId, chain, "objectives.read", [refs.ownerId])).length) {
+    throw invalid("This person has no access to objectives", { reason: "objectives_owner_ineligible" });
+  }
+  if (refs.departmentId && !(await tx.department.findFirst({ where: { id: refs.departmentId, organizationId, companyId, archivedAt: null }, select: { id: true } }))) throw notFound("Department");
+  if (refs.goalId && !(await tx.companyGoal.findFirst({ where: { id: refs.goalId, organizationId, companyId }, select: { id: true } }))) throw notFound("Goal");
+}
+
+const objectiveInclude = {
+  milestones: {
+    orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+    include: { project: { select: { id: true, name: true } }, _count: { select: { tasks: true } } },
+  },
+  keyResults: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
+  goal: { select: { id: true, title: true } },
+  owner: { select: { id: true, name: true } },
+  department: { select: { id: true, name: true } },
+} satisfies Prisma.ObjectiveInclude;
+
+/** Objectives of a company with milestones (and each milestone's project and AI task counts) and key results. */
+export async function listObjectives(ctx: RequestContext, organizationId: string, companyId: string, f: ObjectiveFilters = {}) {
+  await authorize(ctx, organizationId, companyId, "objectives.read");
+  const where: Prisma.ObjectiveWhereInput = { organizationId, companyId };
+  if (f.status) where.status = f.status;
+  if (f.goalId) where.goalId = f.goalId === "none" ? null : f.goalId;
+  if (f.departmentId) where.departmentId = f.departmentId;
+  if (f.q) where.OR = [{ title: { contains: f.q, mode: "insensitive" } }, { description: { contains: f.q, mode: "insensitive" } }];
+  const orderBy: Prisma.ObjectiveOrderByWithRelationInput[] =
+    f.sort === "target" ? [{ targetDate: { sort: "asc", nulls: "last" } }] : f.sort === "title" ? [{ title: "asc" }] : [{ status: "asc" }, { createdAt: "desc" }];
+  return db().objective.findMany({ where, orderBy, take: 200, include: objectiveInclude });
+}
+export type ObjectiveWithDetails = Awaited<ReturnType<typeof listObjectives>>[number];
 
 export async function createObjective(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createObjectiveInput>) {
   const input = createObjectiveInput.parse(raw);
+  const startDate = toDay(blank(input.startDate));
+  const targetDate = toDay(blank(input.targetDate));
+  if (startDate && targetDate && targetDate < startDate) throw invalid("The target date is before the start date", { reason: "objectives_dates_order" });
+  const keyResults: KeyResultData[] = [];
+  for (const kr of input.keyResults) keyResults.push(await validateKeyResult(ctx, organizationId, companyId, kr));
   return transaction(async (tx) => {
-    await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
+    const chain = await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
+    const refs = { ownerId: blank(input.ownerId), departmentId: blank(input.departmentId), goalId: blank(input.goalId) };
+    await checkRefs(tx, organizationId, companyId, chain, refs);
     const o = await tx.objective.create({
-      data: { organizationId, companyId, title: input.title, description: input.description || null, targetDate: input.targetDate ? new Date(input.targetDate) : null, createdById: ctx.actor.id ?? organizationId },
+      data: { organizationId, companyId, title: input.title, description: input.description || null, targetDate, startDate, ...refs, createdById: ctx.actor.id ?? organizationId },
     });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objective.created", resourceType: "objective", resourceId: o.id, newValue: o });
+    if (keyResults.length) await tx.objectiveKeyResult.createMany({ data: keyResults.map((kr, i) => ({ ...kr, organizationId, companyId, objectiveId: o.id, position: i })) });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objective.created", resourceType: "objective", resourceId: o.id, newValue: { ...o, keyResults: keyResults.length } });
     await emitEvent(tx, ctx, "objective.created", { objectiveId: o.id, companyId }, { organizationId, companyId, aggregateType: "objective", aggregateId: o.id });
     return o;
+  });
+}
+
+export async function updateObjective(ctx: RequestContext, organizationId: string, companyId: string, objectiveId: string, raw: z.input<typeof updateObjectiveInput>) {
+  const input = updateObjectiveInput.parse(raw);
+  return transaction(async (tx) => {
+    const chain = await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
+    if (!isUuid(objectiveId)) throw notFound("Objective");
+    const before = await tx.objective.findFirst({ where: { id: objectiveId, organizationId, companyId } });
+    if (!before) throw notFound("Objective");
+    const data: Prisma.ObjectiveUncheckedUpdateInput = {};
+    if (input.title !== undefined) data.title = input.title;
+    if (input.description !== undefined) data.description = input.description || null;
+    const startDate = input.startDate !== undefined ? toDay(blank(input.startDate)) : before.startDate;
+    const targetDate = input.targetDate !== undefined ? toDay(blank(input.targetDate)) : before.targetDate;
+    if (startDate && targetDate && targetDate < startDate) throw invalid("The target date is before the start date", { reason: "objectives_dates_order" });
+    data.startDate = startDate;
+    data.targetDate = targetDate;
+    const refs: { ownerId?: string | null; departmentId?: string | null; goalId?: string | null } = {};
+    for (const k of ["ownerId", "departmentId", "goalId"] as const) if (input[k] !== undefined) refs[k] = blank(input[k]);
+    await checkRefs(tx, organizationId, companyId, chain, refs);
+    Object.assign(data, refs);
+    const o = await tx.objective.update({ where: { id: objectiveId }, data });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objective.updated", resourceType: "objective", resourceId: objectiveId, oldValue: before, newValue: o });
+    return o;
+  });
+}
+
+/** Delete an objective with its milestones and key results. Refused while AI tasks reference its milestones. */
+export async function deleteObjective(ctx: RequestContext, organizationId: string, companyId: string, objectiveId: string) {
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
+    if (!isUuid(objectiveId)) throw notFound("Objective");
+    const before = await tx.objective.findFirst({ where: { id: objectiveId, organizationId, companyId }, select: { id: true, title: true } });
+    if (!before) throw notFound("Objective");
+    if (await tx.agentTask.count({ where: { companyId, milestone: { objectiveId } } })) {
+      throw conflict("AI tasks are linked to this objective's milestones; mark it abandoned instead", { reason: "objectives_has_ai_tasks" });
+    }
+    await tx.objective.delete({ where: { id: objectiveId } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objective.deleted", resourceType: "objective", resourceId: objectiveId, oldValue: before });
+    return { ok: true };
   });
 }
 
@@ -101,5 +212,19 @@ export async function setMilestoneDone(ctx: RequestContext, organizationId: stri
       await emitEvent(tx, ctx, "milestone.completed", { milestoneId, objectiveId: before.objectiveId, companyId }, { organizationId, companyId, aggregateType: "milestone", aggregateId: milestoneId });
     }
     return m;
+  });
+}
+
+/** Delete a milestone (the linked project stays). Refused while AI tasks reference it. */
+export async function deleteMilestone(ctx: RequestContext, organizationId: string, companyId: string, milestoneId: string) {
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
+    if (!isUuid(milestoneId)) throw notFound("Milestone");
+    const before = await tx.milestone.findFirst({ where: { id: milestoneId, organizationId, companyId }, include: { _count: { select: { tasks: true } } } });
+    if (!before) throw notFound("Milestone");
+    if (before._count.tasks) throw conflict("AI tasks are linked to this milestone", { reason: "objectives_has_ai_tasks" });
+    await tx.milestone.delete({ where: { id: milestoneId } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "milestone.deleted", resourceType: "milestone", resourceId: milestoneId, oldValue: { title: before.title } });
+    return { ok: true };
   });
 }

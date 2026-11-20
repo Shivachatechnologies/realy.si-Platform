@@ -1,6 +1,11 @@
 import type { ModuleJobs } from "@/server/core/module-jobs";
 import { db, transaction } from "@/server/core/db";
+import { systemContext } from "@/server/core/context";
+import type { OutboxEvent } from "@/server/modules/events/relay";
 import { notifyUsers } from "@/server/modules/notifications/service";
+import { companyChain } from "@/server/modules/rbac/scope";
+import { runLeadIntake } from "./automation";
+import { expireProposals } from "./proposals";
 
 /**
  * Background work of the crm module, run by the worker (src/worker/index.ts via src/worker/modules.ts).
@@ -8,6 +13,9 @@ import { notifyUsers } from "@/server/modules/notifications/service";
  *   company per day (remindedAt dedupes across runs and processes).
  * - Stale deals: open deals that sat in their stage longer than the pipeline's staleDays are flagged (staleSince) and
  *   their owner is notified once.
+ * - Proposals past their valid-until date are marked EXPIRED.
+ * - lead.created: leads created outside createLead (e.g. marketing forms) without an owner go through the same intake
+ *   workflow (assignment rule → follow-up → notify owner). Idempotent: only unowned leads are touched.
  */
 
 const HOUR = 3_600_000;
@@ -79,10 +87,24 @@ export async function markStaleDeals(now = new Date()): Promise<number> {
   return flagged;
 }
 
+export async function leadIntakeOnCreated(event: OutboxEvent) {
+  if (!event.organizationId || !event.companyId) return;
+  const lead = await db().lead.findFirst({
+    where: { id: event.aggregateId, organizationId: event.organizationId, companyId: event.companyId, ownerId: null, archivedAt: null, mergedIntoId: null },
+    select: { id: true, organizationId: true, companyId: true, name: true, source: true, territory: true, ownerId: true },
+  });
+  if (!lead) return;
+  await transaction(async (tx) => {
+    const chain = await companyChain(tx, lead.organizationId, lead.companyId);
+    await runLeadIntake(tx, systemContext(), chain, lead, { notify: true, emit: true });
+  });
+}
+
 export const CRM_JOBS: ModuleJobs = {
   periodic: [
     { name: "crm.follow_up_reminders", everyMs: HOUR, run: () => remindFollowUps() },
     { name: "crm.stale_deals", everyMs: 6 * HOUR, run: () => markStaleDeals() },
+    { name: "crm.expire_proposals", everyMs: 6 * HOUR, run: () => expireProposals() },
   ],
-  onEvent: [],
+  onEvent: [{ name: "crm.lead_intake", types: ["lead.created"], handle: (event) => leadIntakeOnCreated(event) }],
 };

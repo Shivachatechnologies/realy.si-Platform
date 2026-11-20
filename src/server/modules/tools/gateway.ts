@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
+import { toolPolicy } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitEvent } from "@/server/modules/events/emit";
 import { notifyApprovers } from "@/server/modules/notifications/service";
@@ -70,7 +71,11 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
     throw new ToolDenied("not_permitted", "Not permitted: the requesting user lacks the permission this action needs");
   }
 
-  if (tool.autonomy === "AUTONOMOUS") {
+  // Platform AI policy (Admin → AI & Workforce): a read-only ceiling refuses non-read tools; a supervised ceiling or
+  // "require approval for all writes" turns every non-read tool into an approval request.
+  const policy = await toolPolicy(tool);
+  if (policy === "denied") throw new ToolDenied("not_allowed", `${tool.name} is disabled by the platform's AI policy (read-only)`);
+  if (tool.autonomy === "AUTONOMOUS" && policy === "as_defined") {
     const out = await withTimeout(tool.execute(parsed.data, { ctx: run.ctx, organizationId: run.organizationId, companyId: run.companyId, cite: run.cite }), tool.timeoutMs);
     return { status: "executed", ...out };
   }
@@ -89,7 +94,7 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
         input: parsed.data as Prisma.InputJsonValue,
         summary,
         risk: tool.risk,
-        autonomy: tool.autonomy,
+        autonomy: tool.autonomy === "AUTONOMOUS" ? "SUPERVISED" : tool.autonomy,
         requiredPermissions: tool.permissions,
         expiresAt: new Date(Date.now() + APPROVAL_TTL_MS),
       },

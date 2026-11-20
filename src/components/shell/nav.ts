@@ -61,6 +61,7 @@ export const NAV: NavSection[] = [
   {
     label: "nav.sections.intelligence",
     items: [
+      item("modules.builder.title", "/builder", Rocket),
       item("modules.intelligence.title", "/intelligence", Sparkles),
       item("modules.analytics.title", "/analytics", BarChart3),
       item("modules.objectives.title", "/objectives", Target),

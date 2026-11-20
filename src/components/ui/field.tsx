@@ -18,12 +18,12 @@ export function Field({
 }) {
   return (
     <div className={cn("grid gap-1.5", className)}>
-      <label htmlFor={htmlFor} className="text-sm font-medium">
+      <label htmlFor={htmlFor} className="text-[13px] font-medium text-foreground/90">
         {label}
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="text-xs text-danger">
+        <p id={`${htmlFor}-error`} role="alert" className="text-xs text-danger animate-fade-in">
           {error}
         </p>
       ) : hint ? (

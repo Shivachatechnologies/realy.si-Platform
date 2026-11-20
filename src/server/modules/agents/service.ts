@@ -4,6 +4,7 @@ import { userContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, isAppError, notFound } from "@/server/core/errors";
 import { enqueueAgentTask } from "@/server/core/jobs";
 import { env } from "@/server/core/env";
+import { agentModel, aiRefusal, aiRefusalMessage, assertAiAllowed, assertProfileAllowed, isOrganizationSuspended } from "@/server/core/platform-controls";
 import { logger } from "@/server/core/logger";
 import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
@@ -101,7 +102,10 @@ export async function aiUsageToday(organizationId: string, companyId: string) {
   return { used, limit, exhausted: limit !== null && used >= limit };
 }
 
-async function requireBudget(organizationId: string, companyId: string) {
+async function requireBudget(organizationId: string, companyId: string, profile?: string | null) {
+  // Platform AI controls first (Admin → AI & Workforce): kill switch, org AI switch, disabled role/model, platform and
+  // per-organization token budgets and the plan's monthly AI tokens.
+  await assertAiAllowed(organizationId, { profile, model: await agentModel(env().AGENT_MODEL) });
   const usage = await aiUsageToday(organizationId, companyId);
   if (usage.exhausted) throw new AppError("not_available", "Today's AI allowance for this company is used up; try again tomorrow", { reason: "ai_budget_exhausted", ...usage });
   // Organization-wide daily AI token limit (Settings → Usage).
@@ -138,7 +142,7 @@ export async function createTask(
   const input = createTaskInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "agents.run");
   requireProvider();
-  await requireBudget(organizationId, companyId);
+  await requireBudget(organizationId, companyId, input.profile);
   const task = await transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "agents.run", tx);
     if (input.milestoneId && !(await tx.milestone.findFirst({ where: { id: input.milestoneId, organizationId, companyId }, select: { id: true } }))) {
@@ -162,6 +166,7 @@ export async function createTask(
       profile = employee.profileKey as typeof profile;
     }
     if (!profile || !profileByKey(profile)) throw notFound("Profile");
+    await assertProfileAllowed(profile);
     let depth = 0;
     if (opts.parentTaskId) {
       const parent = await tx.agentTask.findFirst({ where: { id: opts.parentTaskId, organizationId, companyId }, select: { depth: true } });
@@ -311,6 +316,10 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
   const eventData = { profile: task.profile, title: task.title, aiEmployeeId: task.aiEmployeeId, parentTaskId: task.parentTaskId, subjectType: task.subjectType, subjectId: task.subjectId };
 
   try {
+    // Platform AI controls may have changed since the task was queued (kill switch, disabled role/model, budgets).
+    const refusal = await aiRefusal(task.organizationId, { profile: task.profile, model: await agentModel(env().AGENT_MODEL) });
+    if (refusal) throw new TaskError(refusal, aiRefusalMessage(refusal));
+    if (await isOrganizationSuspended(task.organizationId)) throw new TaskError("organization_suspended", "This organization is suspended by the platform");
     // The requester must still be allowed to run tasks in this company when the task executes.
     await authorize(requester, task.organizationId, task.companyId, "agents.run");
     if ((await aiUsageToday(task.organizationId, task.companyId)).exhausted) {

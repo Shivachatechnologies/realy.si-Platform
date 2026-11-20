@@ -52,7 +52,8 @@ export const PROVIDERS: ProviderInfo[] = [
     ],
     envVars: ["OAUTH_GOOGLE_CLIENT_ID", "OAUTH_GOOGLE_CLIENT_SECRET"],
     docsUrl: "https://developers.google.com/identity/protocols/oauth2/web-server",
-    capabilities: ["email", "calendar", "files"],
+    syncKinds: ["google.calendar"],
+    capabilities: ["email", "calendar", "files", "sync"],
   },
   {
     key: "microsoft",
@@ -62,7 +63,8 @@ export const PROVIDERS: ProviderInfo[] = [
     scopes: ["openid", "email", "profile", "offline_access", "User.Read", "Mail.Send", "Mail.Read", "Calendars.ReadWrite", "Team.ReadBasic.All", "ChannelMessage.Send"],
     envVars: ["OAUTH_MICROSOFT_CLIENT_ID", "OAUTH_MICROSOFT_CLIENT_SECRET"],
     docsUrl: "https://learn.microsoft.com/entra/identity-platform/v2-oauth2-auth-code-flow",
-    capabilities: ["email", "calendar", "chat"],
+    syncKinds: ["microsoft.calendar"],
+    capabilities: ["email", "calendar", "chat", "workflow_actions", "sync"],
   },
   {
     key: "slack",
@@ -171,7 +173,8 @@ export const PROVIDERS: ProviderInfo[] = [
     scopes: ["com.intuit.quickbooks.accounting"],
     envVars: ["QUICKBOOKS_CLIENT_ID", "QUICKBOOKS_CLIENT_SECRET"],
     docsUrl: "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/oauth-2.0",
-    capabilities: ["accounting"],
+    syncKinds: ["quickbooks.customers", "quickbooks.invoices"],
+    capabilities: ["accounting", "sync"],
   },
   {
     key: "xero",
@@ -181,7 +184,8 @@ export const PROVIDERS: ProviderInfo[] = [
     scopes: ["openid", "profile", "email", "offline_access", "accounting.transactions", "accounting.contacts"],
     envVars: ["XERO_CLIENT_ID", "XERO_CLIENT_SECRET"],
     docsUrl: "https://developer.xero.com/documentation/guides/oauth2/auth-flow",
-    capabilities: ["accounting"],
+    syncKinds: ["xero.contacts", "xero.invoices"],
+    capabilities: ["accounting", "sync"],
   },
   {
     key: "webhook",

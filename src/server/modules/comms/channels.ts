@@ -33,11 +33,30 @@ export const updateChannelInput = z.object({
   archived: z.boolean().optional(),
 });
 export const membersInput = z.object({ userIds: z.array(uuid).min(1).max(200) });
-export const messageInput = z.object({ body: z.string().trim().min(1).max(5000), parentId: uuid.optional() });
+export const messageInput = z.object({ body: z.string().trim().min(1).max(5000), parentId: uuid.optional(), taskIds: z.array(uuid).max(10).default([]) });
 export const editMessageInput = z.object({ body: z.string().trim().min(1).max(5000) });
 export const directInput = z.object({ userId: uuid });
 
 const NO_USER = "00000000-0000-0000-0000-000000000000";
+
+/** Task references in a message: explicit ids plus links to /projects/tasks/<uuid>; only this company's live tasks. */
+export async function resolveTaskRefs(client: Tx | Db, organizationId: string, companyId: string, body: string, explicit: string[] = []) {
+  const ids = new Set(explicit.filter(isUuid).map((i) => i.toLowerCase()));
+  for (const m of body.matchAll(/\/projects\/tasks\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi)) ids.add(m[1]!.toLowerCase());
+  if (!ids.size) return [];
+  const rows = await client.workTask.findMany({ where: { id: { in: [...ids].slice(0, 20) }, organizationId, companyId, archivedAt: null }, select: { id: true } });
+  return rows.map((r) => r.id).slice(0, 10);
+}
+
+/** Task chips for messages: title and status only when the viewer may read projects. */
+export async function taskChips(ctx: RequestContext, organizationId: string, companyId: string, chain: ScopeChain, taskIds: string[]) {
+  const unique = [...new Set(taskIds)];
+  if (!unique.length) return new Map<string, { id: string; title: string | null; status: string | null }>();
+  const visible = await can(ctx, "projects.read", chain);
+  const rows = visible ? await db().workTask.findMany({ where: { id: { in: unique }, organizationId, companyId }, select: { id: true, title: true, status: true } }) : [];
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return new Map(unique.map((id) => [id, { id, title: byId.get(id)?.title ?? null, status: byId.get(id)?.status ?? null }]));
+}
 
 /** Channels the viewer can see: public channels and private / direct ones they belong to. */
 export async function listChannels(ctx: RequestContext, organizationId: string, companyId: string, opts: { q?: string; direct?: boolean; archived?: boolean } = {}) {
@@ -212,7 +231,7 @@ const MESSAGE_PAGE = 50;
 
 /** Top-level messages (newest page, oldest first in the result) or one thread's replies. */
 export async function listMessages(ctx: RequestContext, organizationId: string, companyId: string, channelId: string, opts: { parentId?: string; before?: string } = {}) {
-  await authorize(ctx, organizationId, companyId, "communication.read");
+  const chain = await authorize(ctx, organizationId, companyId, "communication.read");
   await loadChannel(db(), ctx, organizationId, companyId, channelId);
   const parentId = opts.parentId && isUuid(opts.parentId) ? opts.parentId : null;
   const before = opts.before && isUuid(opts.before) ? await db().commsMessage.findFirst({ where: { id: opts.before, channelId }, select: { createdAt: true } }) : null;
@@ -228,7 +247,14 @@ export async function listMessages(ctx: RequestContext, organizationId: string, 
     ? await db().commsMessage.findFirst({ where: { id: parentId, channelId, companyId }, include: { _count: { select: { replies: { where: { deletedAt: null } } } } } })
     : null;
   const names = await userNames(db(), [...page.map((m) => m.authorId), parent?.authorId]);
-  const shape = ({ _count, ...m }: (typeof rows)[number]) => ({ ...m, body: m.deletedAt ? "" : m.body, authorName: names.get(m.authorId) ?? null, replyCount: _count.replies });
+  const chips = await taskChips(ctx, organizationId, companyId, chain, [...page, ...(parent ? [parent] : [])].flatMap((m) => (m.deletedAt ? [] : m.taskIds)));
+  const shape = ({ _count, ...m }: (typeof rows)[number]) => ({
+    ...m,
+    body: m.deletedAt ? "" : m.body,
+    authorName: names.get(m.authorId) ?? null,
+    replyCount: _count.replies,
+    tasks: m.deletedAt ? [] : m.taskIds.map((id) => chips.get(id)!).filter(Boolean),
+  });
   return { data: page.map(shape), parent: parent ? shape(parent) : null, olderCursor: hasMore ? page[0]!.id : null };
 }
 
@@ -247,8 +273,9 @@ export async function postMessage(ctx: RequestContext, organizationId: string, c
       parentAuthor = parent.authorId;
     }
     const mentions = await resolveMentions(tx, organizationId, chain, input.body);
+    const taskIds = await resolveTaskRefs(tx, organizationId, companyId, input.body, input.taskIds);
     const now = new Date();
-    const m = await tx.commsMessage.create({ data: { companyId, channelId, parentId: input.parentId ?? null, authorId: me, body: input.body, mentions, createdAt: now } });
+    const m = await tx.commsMessage.create({ data: { companyId, channelId, parentId: input.parentId ?? null, authorId: me, body: input.body, mentions, taskIds, createdAt: now } });
     await tx.commsChannel.update({ where: { id: channelId }, data: { lastMessageAt: now } });
     await tx.commsChannelMember.update({ where: { channelId_userId: { channelId, userId: me } }, data: { lastReadAt: now } });
     const href = channel.isDirect ? `/communication/messages/${channelId}` : `/communication/channels/${channelId}${input.parentId ? `?thread=${input.parentId}` : ""}`;
@@ -277,9 +304,11 @@ async function ownMessage(tx: Tx, ctx: RequestContext, organizationId: string, c
 export async function editMessage(ctx: RequestContext, organizationId: string, companyId: string, messageId: string, raw: z.input<typeof editMessageInput>) {
   const input = editMessageInput.parse(raw);
   return transaction(async (tx) => {
-    const { chain } = await ownMessage(tx, ctx, organizationId, companyId, messageId, false);
+    const { m, chain } = await ownMessage(tx, ctx, organizationId, companyId, messageId, false);
     const mentions = await resolveMentions(tx, organizationId, chain, input.body);
-    return tx.commsMessage.update({ where: { id: messageId }, data: { body: input.body, mentions, editedAt: new Date() } });
+    // Keep explicitly linked tasks (e.g. a task discussion root) and add newly linked ones.
+    const taskIds = [...new Set([...m.taskIds, ...(await resolveTaskRefs(tx, organizationId, companyId, input.body))])].slice(0, 10);
+    return tx.commsMessage.update({ where: { id: messageId }, data: { body: input.body, mentions, taskIds, editedAt: new Date() } });
   });
 }
 

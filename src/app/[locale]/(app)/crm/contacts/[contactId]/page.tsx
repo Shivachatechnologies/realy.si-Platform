@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SubjectActivity } from "@/components/crm/activity-cards";
+import { EmailHistoryPanel } from "@/components/crm/record-panels";
 import { ActionButton } from "@/components/crm/kit";
 import { MergeRecordButton } from "@/components/crm/merge-button";
 import { ContactForm } from "@/components/crm/record-forms";
@@ -104,6 +105,7 @@ export default async function ContactPage({ params }: { params: Promise<{ contac
             </CardBody>
           </Card>
           <SubjectActivity subjectType="contact" subjectId={contact.id} owners={owners} active={active} defaultAssignee={contact.ownerId} />
+          <EmailHistoryPanel subjectType="contact" subjectId={contact.id} />
         </div>
         <div className="grid min-w-0 content-start gap-4">
           <Card>

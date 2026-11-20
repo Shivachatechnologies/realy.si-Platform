@@ -14,6 +14,7 @@ import {
 } from "@/components/crm/lead-forms";
 import { SCORE_TONE } from "@/components/crm/score";
 import { AttachmentList } from "@/components/crm/activity-cards";
+import { EmailHistoryPanel, SalesTasksPanel } from "@/components/crm/record-panels";
 import { ConvertLeadForm, LeadDetailsForm, QualificationForm } from "@/components/crm/lead-extras";
 import { CrmTabs } from "@/components/crm/crm-tabs";
 import { TagList } from "@/components/crm/shell";
@@ -318,6 +319,11 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
           )}
         </CardBody>
       </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <SalesTasksPanel subjectType="lead" subjectId={lead.id} active={active} defaultAssignee={lead.ownerId} />
+        <EmailHistoryPanel subjectType="lead" subjectId={lead.id} />
+      </div>
 
       <AttachmentList subjectType="lead" subjectId={lead.id} active={active} />
 

@@ -10,13 +10,17 @@ export default async function SignInPage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">{t("auth.signInTitle")}</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("auth.signInTitle")}</h1>
         <p className="text-muted-foreground">{t("auth.signInSubtitle")}</p>
       </div>
       <OAuthErrorNotice />
       <SignInForm />
-      <div className="grid gap-2">
-        <p className="text-center text-xs text-muted-foreground">{t("auth.orContinueWith")}</p>
+      <div className="grid gap-3">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span aria-hidden className="h-px flex-1 bg-border" />
+          <span>{t("auth.orContinueWith")}</span>
+          <span aria-hidden className="h-px flex-1 bg-border" />
+        </div>
         <OAuthButtons providers={oauthStatus()} />
         <Link href={`/${locale}/sso`} className="text-center text-xs text-primary hover:underline">
           {t("auth.ssoSignIn")}

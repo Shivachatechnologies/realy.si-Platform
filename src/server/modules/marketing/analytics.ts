@@ -1,7 +1,8 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { notFound } from "@/server/core/errors";
-import { authorize, CHANNELS, isUuid } from "./common";
+import { authorize, CHANNELS, isUuid, PAGE_SIZE } from "./common";
 
 /**
  * Marketing analytics from real rows. Attribution: a lead belongs to a campaign when Lead.source equals the campaign's
@@ -197,8 +198,8 @@ export async function campaignAnalytics(ctx: RequestContext, organizationId: str
   const c = await db().marketingCampaign.findFirst({ where: { id: campaignId, organizationId, companyId } });
   if (!c) throw notFound("Campaign");
   const client = db();
-  const codeMatch = { source: { equals: c.code, mode: "insensitive" as const } };
-  const [spend, spendByChannel, leads, won, leadRows, submissions, emailStats, posts, content] = await Promise.all([
+  const codeMatch = leadCodeMatch(c.code);
+  const [spend, spendByChannel, leads, won, leadRows, submissions, emailStats, posts, content, emailOpened, emailClicked] = await Promise.all([
     client.marketingSpend.aggregate({ where: { companyId, campaignId }, _sum: { amountMinor: true } }),
     client.marketingSpend.groupBy({ by: ["channel"], where: { companyId, campaignId }, _sum: { amountMinor: true } }),
     client.lead.count({ where: { organizationId, companyId, ...codeMatch } }),
@@ -208,7 +209,10 @@ export async function campaignAnalytics(ctx: RequestContext, organizationId: str
     client.marketingEmailSend.groupBy({ by: ["status"], where: { companyId, emailCampaign: { campaignId } }, _count: { _all: true } }),
     client.marketingSocialPostTarget.findMany({ where: { companyId, post: { campaignId }, status: "PUBLISHED" }, select: { likes: true, comments: true, shares: true, impressions: true } }),
     client.marketingContent.groupBy({ by: ["status"], where: { companyId, campaignId, archivedAt: null }, _count: { _all: true } }),
+    client.marketingEmailSend.count({ where: { companyId, emailCampaign: { campaignId }, status: "SENT", openedAt: { not: null } } }),
+    client.marketingEmailSend.count({ where: { companyId, emailCampaign: { campaignId }, status: "SENT", clickedAt: { not: null } } }),
   ]);
+  const emailSent = emailStats.find((e) => e.status === "SENT")?._count._all ?? 0;
   const spentMinor = spend._sum.amountMinor ?? 0n;
   const revenueMinor = won._sum.valueMinor ?? 0n;
   const wonCount = won._count._all;
@@ -237,6 +241,11 @@ export async function campaignAnalytics(ctx: RequestContext, organizationId: str
     recentLeads: leadRows.slice(0, 10),
     submissions,
     emails: Object.fromEntries(emailStats.map((e) => [e.status, e._count._all])) as Partial<Record<string, number>>,
+    emailOpened,
+    emailClicked,
+    /** Unique opens / delivered (provider-accepted) sends; opens are recorded by the signed tracking pixel. */
+    openRate: emailSent ? (emailOpened / emailSent) * 100 : null,
+    clickRate: emailSent ? (emailClicked / emailSent) * 100 : null,
     social: {
       published: posts.length,
       engagement: posts.reduce((s, p) => s + (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0), 0),
@@ -244,5 +253,110 @@ export async function campaignAnalytics(ctx: RequestContext, organizationId: str
     },
     content: Object.fromEntries(content.map((x) => [x.status, x._count._all])) as Partial<Record<string, number>>,
     series,
+  };
+}
+
+/** A lead belongs to a campaign when its campaignCode or (legacy) source equals the campaign code. */
+function leadCodeMatch(code: string): Prisma.LeadWhereInput {
+  return { OR: [{ campaignCode: { equals: code, mode: "insensitive" } }, { source: { equals: code, mode: "insensitive" } }] };
+}
+
+async function campaignOf(organizationId: string, companyId: string, campaignId: string) {
+  if (!isUuid(campaignId)) throw notFound("Campaign");
+  const c = await db().marketingCampaign.findFirst({ where: { id: campaignId, organizationId, companyId }, select: { id: true, code: true, currency: true } });
+  if (!c) throw notFound("Campaign");
+  return c;
+}
+
+export const LEAD_STAGES = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"] as const;
+
+/** Leads attributed to a campaign (read-only CRM view), with search, stage filter and paging. */
+export async function campaignLeads(ctx: RequestContext, organizationId: string, companyId: string, campaignId: string, f: { q?: string; stage?: (typeof LEAD_STAGES)[number]; page: number }) {
+  await authorize(ctx, organizationId, companyId, "marketing.read");
+  const c = await campaignOf(organizationId, companyId, campaignId);
+  const where: Prisma.LeadWhereInput = {
+    organizationId,
+    companyId,
+    archivedAt: null,
+    mergedIntoId: null,
+    AND: [leadCodeMatch(c.code), ...(f.q ? [{ OR: [{ name: { contains: f.q, mode: "insensitive" as const } }, { email: { contains: f.q, mode: "insensitive" as const } }, { account: { contains: f.q, mode: "insensitive" as const } }] }] : [])],
+    ...(f.stage ? { stage: f.stage } : {}),
+  };
+  const [total, data, byStage] = await Promise.all([
+    db().lead.count({ where }),
+    db().lead.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (f.page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: { id: true, name: true, email: true, account: true, stage: true, score: true, scoreLabel: true, valueMinor: true, currency: true, createdAt: true, owner: { select: { name: true } } },
+    }),
+    db().lead.groupBy({ by: ["stage"], where: { organizationId, companyId, archivedAt: null, mergedIntoId: null, ...leadCodeMatch(c.code) }, _count: { _all: true } }),
+  ]);
+  return { total, pageSize: PAGE_SIZE, data, byStage: Object.fromEntries(byStage.map((b) => [b.stage, b._count._all])) as Partial<Record<string, number>> };
+}
+
+/**
+ * CRM deals attributed to a campaign: deals whose campaignCode/source is the code, or that were converted from a lead
+ * of the campaign. Open pipeline (and stage-weighted), won and lost revenue per currency.
+ */
+export async function campaignPipeline(ctx: RequestContext, organizationId: string, companyId: string, campaignId: string, f: { status?: "OPEN" | "WON" | "LOST"; page: number }) {
+  await authorize(ctx, organizationId, companyId, "marketing.read");
+  const c = await campaignOf(organizationId, companyId, campaignId);
+  const match: Prisma.CrmDealWhereInput = {
+    organizationId,
+    companyId,
+    archivedAt: null,
+    OR: [{ campaignCode: { equals: c.code, mode: "insensitive" } }, { source: { equals: c.code, mode: "insensitive" } }, { lead: leadCodeMatch(c.code) }],
+  };
+  const where: Prisma.CrmDealWhereInput = { ...match, ...(f.status ? { status: f.status } : {}) };
+  const [total, data, all] = await Promise.all([
+    db().crmDeal.count({ where }),
+    db().crmDeal.findMany({
+      where,
+      orderBy: [{ status: "asc" }, { expectedCloseDate: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
+      skip: (f.page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: {
+        id: true,
+        name: true,
+        amountMinor: true,
+        currency: true,
+        status: true,
+        probability: true,
+        expectedCloseDate: true,
+        closedAt: true,
+        stage: { select: { name: true, probability: true } },
+        account: { select: { id: true, name: true } },
+        ownerId: true,
+      },
+    }),
+    db().crmDeal.findMany({ where: match, select: { amountMinor: true, currency: true, status: true, probability: true, stage: { select: { probability: true } } }, take: 5000 }),
+  ]);
+  const totals = new Map<string, { open: bigint; weighted: bigint; won: bigint; lost: bigint; openCount: number; wonCount: number; lostCount: number }>();
+  for (const d of all) {
+    const t = totals.get(d.currency) ?? { open: 0n, weighted: 0n, won: 0n, lost: 0n, openCount: 0, wonCount: 0, lostCount: 0 };
+    if (d.status === "OPEN") {
+      t.open += d.amountMinor;
+      t.weighted += (d.amountMinor * BigInt(d.probability ?? d.stage.probability)) / 100n;
+      t.openCount++;
+    } else if (d.status === "WON") {
+      t.won += d.amountMinor;
+      t.wonCount++;
+    } else {
+      t.lost += d.amountMinor;
+      t.lostCount++;
+    }
+    totals.set(d.currency, t);
+  }
+  const closed = all.filter((d) => d.status !== "OPEN").length;
+  const ownerIds = [...new Set(data.map((d) => d.ownerId).filter((x): x is string => !!x))];
+  const owners = new Map((ownerIds.length ? await db().user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, name: true } }) : []).map((u) => [u.id, u.name]));
+  return {
+    total,
+    pageSize: PAGE_SIZE,
+    data: data.map((d) => ({ ...d, ownerName: d.ownerId ? (owners.get(d.ownerId) ?? null) : null })),
+    totals: [...totals.entries()].map(([currency, t]) => ({ currency, ...t })),
+    winRate: closed ? (all.filter((d) => d.status === "WON").length / closed) * 100 : null,
   };
 }

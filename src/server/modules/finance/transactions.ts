@@ -9,6 +9,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import {
   actorId,
+  addDays,
   advance,
   amount,
   authorize,
@@ -32,11 +33,12 @@ import {
 } from "./common";
 import { ensureFinanceSetup, postEntry, removeSourcePostings, systemAccount } from "./ledger";
 import { accountBalances, createCounterparty } from "./setup";
+import { spendActual } from "./spend";
 
 export const TXN_TYPES = ["INCOME", "EXPENSE", "TRANSFER"] as const;
 export const FREQUENCIES = ["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
 export const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
-const ATTACHMENT_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "text/plain", "text/csv"]);
+export const ATTACHMENT_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "text/plain", "text/csv"]);
 
 export const transactionInput = z.object({
   type: z.enum(TXN_TYPES),
@@ -47,6 +49,7 @@ export const transactionInput = z.object({
   categoryId: optionalUuid,
   accountId: optionalUuid,
   departmentId: optionalUuid,
+  projectId: optionalUuid,
   description: z.string().trim().min(1).max(300),
   reference: optionalText(120),
   notes: optionalText(5000),
@@ -62,6 +65,7 @@ export interface TxnFilters {
   categoryId?: string;
   accountId?: string;
   departmentId?: string;
+  projectId?: string;
   from?: string;
   to?: string;
   sort: "date" | "amount" | "description";
@@ -87,6 +91,7 @@ export function parseTxnFilters(raw: Record<string, string | string[] | undefine
     categoryId: id("category"),
     accountId: id("counterparty"),
     departmentId: id("costCenter"),
+    projectId: id("project"),
     from: d("from"),
     to: d("to"),
     sort: sort === "amount" || sort === "description" ? sort : "date",
@@ -102,6 +107,7 @@ function txnWhere(organizationId: string, companyId: string, f: Partial<TxnFilte
   if (f.categoryId) where.categoryId = f.categoryId;
   if (f.accountId) where.accountId = f.accountId;
   if (f.departmentId) where.departmentId = f.departmentId;
+  if (f.projectId) where.projectId = f.projectId;
   if (f.from || f.to) where.date = { ...(f.from ? { gte: toDay(f.from) } : {}), ...(f.to ? { lte: toDay(f.to) } : {}) };
   if (f.q) {
     const contains = { contains: f.q, mode: "insensitive" as const };
@@ -116,6 +122,7 @@ const listInclude = {
   category: { select: { id: true, name: true } },
   account: { select: { id: true, name: true } },
   department: { select: { id: true, name: true } },
+  project: { select: { id: true, name: true } },
   attachment: { select: { id: true, fileName: true, sizeBytes: true } },
 } satisfies Prisma.FinanceTransactionInclude;
 
@@ -137,8 +144,11 @@ export async function getTransaction(ctx: RequestContext, organizationId: string
   await authorize(ctx, organizationId, companyId, "finance.read");
   const t = isUuid(id) ? await db().financeTransaction.findFirst({ where: { id, organizationId, companyId }, include: { ...listInclude, recurring: { select: { id: true, name: true } } } }) : null;
   if (!t) throw notFound("Transaction");
-  const payment = t.paymentId ? await db().invoicePayment.findFirst({ where: { id: t.paymentId, companyId }, select: { invoiceId: true } }) : null;
-  return { ...t, invoiceId: payment?.invoiceId ?? null };
+  const [payment, billPayment] = await Promise.all([
+    t.paymentId ? db().invoicePayment.findFirst({ where: { id: t.paymentId, companyId }, select: { invoiceId: true } }) : null,
+    t.billPaymentId ? db().financeBillPayment.findFirst({ where: { id: t.billPaymentId, companyId }, select: { billId: true } }) : null,
+  ]);
+  return { ...t, invoiceId: payment?.invoiceId ?? null, billId: billPayment?.billId ?? null };
 }
 
 /** Validate references (all inside the company) and the type-specific rules. */
@@ -159,6 +169,7 @@ async function checkRefs(tx: Tx, organizationId: string, companyId: string, d: T
   }
   if (d.accountId && !(await tx.account.findFirst({ where: { id: d.accountId, organizationId, companyId }, select: { id: true } }))) throw notFound("Vendor or customer");
   if (d.departmentId && !(await tx.department.findFirst({ where: { id: d.departmentId, organizationId, companyId }, select: { id: true } }))) throw notFound("Cost center");
+  if (d.projectId && !(await tx.project.findFirst({ where: { id: d.projectId, organizationId, companyId }, select: { id: true } }))) throw notFound("Project");
   return { acct, to, category };
 }
 
@@ -201,6 +212,7 @@ export async function createTransactionTx(tx: Tx, ctx: RequestContext, organizat
       categoryId: d.type === "TRANSFER" ? null : (d.categoryId ?? null),
       accountId: d.accountId ?? null,
       departmentId: d.departmentId ?? null,
+      projectId: d.type === "TRANSFER" ? null : (d.projectId ?? null),
       description: d.description,
       reference: d.reference ?? null,
       notes: d.notes ?? null,
@@ -218,7 +230,7 @@ export async function createTransactionTx(tx: Tx, ctx: RequestContext, organizat
       companyId,
       entityType: "finance_transaction",
       entityId: t.id,
-      data: { amountMinor: t.amountMinor, currency: t.currency, description: t.description, categoryId: t.categoryId, vendorId: t.accountId, departmentId: t.departmentId, date: t.date },
+      data: { amountMinor: t.amountMinor, currency: t.currency, description: t.description, categoryId: t.categoryId, vendorId: t.accountId, departmentId: t.departmentId, projectId: t.projectId, source: t.source, date: t.date },
     });
   }
   return t;
@@ -239,7 +251,7 @@ export async function updateTransaction(ctx: RequestContext, organizationId: str
     await authorize(ctx, organizationId, companyId, "finance.manage", tx);
     const before = isUuid(id) ? await tx.financeTransaction.findFirst({ where: { id, organizationId, companyId } }) : null;
     if (!before) throw notFound("Transaction");
-    if (before.paymentId) throw conflict("This transaction belongs to an invoice payment; change the payment instead", { reason: "finance_txn_from_payment" });
+    if (before.paymentId || before.billPaymentId) throw conflict("This transaction belongs to a payment; change the payment instead", { reason: "finance_txn_from_payment" });
     const merged: TxnData = {
       type: input.type ?? before.type,
       date: input.date ?? dayString(before.date),
@@ -249,6 +261,7 @@ export async function updateTransaction(ctx: RequestContext, organizationId: str
       categoryId: input.categoryId !== undefined ? input.categoryId : before.categoryId,
       accountId: input.accountId !== undefined ? input.accountId : before.accountId,
       departmentId: input.departmentId !== undefined ? input.departmentId : before.departmentId,
+      projectId: input.projectId !== undefined ? input.projectId : before.projectId,
       description: input.description ?? before.description,
       reference: input.reference !== undefined ? input.reference : before.reference,
       notes: input.notes !== undefined ? input.notes : before.notes,
@@ -269,6 +282,7 @@ export async function updateTransaction(ctx: RequestContext, organizationId: str
         categoryId: merged.type === "TRANSFER" ? null : (merged.categoryId ?? null),
         accountId: merged.accountId ?? null,
         departmentId: merged.departmentId ?? null,
+        projectId: merged.type === "TRANSFER" ? null : (merged.projectId ?? null),
         description: merged.description,
         reference: merged.reference ?? null,
         notes: merged.notes ?? null,
@@ -290,7 +304,7 @@ export async function deleteTransaction(ctx: RequestContext, organizationId: str
     await authorize(ctx, organizationId, companyId, "finance.manage", tx);
     const before = isUuid(id) ? await tx.financeTransaction.findFirst({ where: { id, organizationId, companyId } }) : null;
     if (!before) throw notFound("Transaction");
-    if (before.paymentId) throw conflict("This transaction belongs to an invoice payment; delete the payment instead", { reason: "finance_txn_from_payment" });
+    if (before.paymentId || before.billPaymentId) throw conflict("This transaction belongs to a payment; delete the payment instead", { reason: "finance_txn_from_payment" });
     if (before.reconciledAt) throw conflict("Reconciled transactions can't be deleted", { reason: "finance_txn_reconciled" });
     await removeSourcePostings(tx, ctx, organizationId, companyId, "TRANSACTION", id, `Transaction deleted: ${before.description}`);
     await tx.financeTransaction.delete({ where: { id } });
@@ -720,11 +734,7 @@ export async function budgetVsActual(ctx: RequestContext, organizationId: string
   });
   const out = [];
   for (const b of budgets) {
-    const agg = await db().financeTransaction.aggregate({
-      where: { companyId, type: "EXPENSE", date: { gte: b.periodStart, lte: b.periodEnd }, ...(b.categoryId ? { categoryId: b.categoryId } : {}), ...(b.departmentId ? { departmentId: b.departmentId } : {}) },
-      _sum: { amountMinor: true },
-    });
-    const actual = agg._sum.amountMinor ?? 0n;
+    const actual = (await spendActual(db(), companyId, { from: b.periodStart, to: addDays(b.periodEnd, 1), categoryId: b.categoryId, departmentId: b.departmentId })).totalMinor;
     out.push({ ...b, actualMinor: actual, remainingMinor: b.amountMinor - actual, usedPct: b.amountMinor > 0n ? Number((actual * 10_000n) / b.amountMinor) / 100 : 0 });
   }
   return out;

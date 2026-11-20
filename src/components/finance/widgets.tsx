@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 
 export const INVOICE_TONE = { DRAFT: "neutral", SENT: "accent", PARTIALLY_PAID: "warning", PAID: "success", OVERDUE: "danger", VOID: "neutral" } as const;
 export const ESTIMATE_TONE = { DRAFT: "neutral", SENT: "accent", ACCEPTED: "success", DECLINED: "danger", CONVERTED: "success" } as const;
+export const BILL_TONE = { DRAFT: "neutral", AWAITING_APPROVAL: "warning", APPROVED: "accent", PARTIALLY_PAID: "warning", PAID: "success", VOID: "neutral" } as const;
+export const APPROVAL_TONE = { PENDING: "warning", APPROVED: "success", REJECTED: "danger", CANCELLED: "neutral" } as const;
+export const CLAIM_TONE = { PENDING: "warning", APPROVED: "success", REJECTED: "danger" } as const;
 export const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
 
 export function Kpi({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "danger" | "success" | "warning" }) {
@@ -155,4 +158,17 @@ export function Empty({ children }: { children: ReactNode }) {
 
 export function StatusBadge({ tone, children }: { tone: "neutral" | "accent" | "success" | "warning" | "danger"; children: ReactNode }) {
   return <Badge tone={tone}>{children}</Badge>;
+}
+
+/** Horizontal utilization bar (green → amber at 80% → red over 100%). */
+export function UsageBar({ pct }: { pct: number | null }) {
+  if (pct === null) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+        <div className={cn("h-full", pct > 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min(pct, 100)}%` }} />
+      </div>
+      <span className="w-12 text-end text-xs tabular-nums">{Math.round(pct)}%</span>
+    </div>
+  );
 }

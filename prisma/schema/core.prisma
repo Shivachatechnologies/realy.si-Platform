@@ -191,21 +191,23 @@ model User {
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions       Session[]
-  mfaFactors     MfaFactor[]
-  recoveryCodes  MfaRecoveryCode[]
-  oauthAccounts  OAuthAccount[]
-  memberships    Membership[]
-  ownedLeads     Lead[]                   @relation("LeadOwner")
-  emailTokens    EmailVerificationToken[]
-  resetTokens    PasswordResetToken[]
-  ownedAccounts  Account[]                @relation("AccountOwner")
-  ownedContacts  Contact[]                @relation("ContactOwner")
-  employments    Employee[]               @relation("EmployeeUser")
-  workTasks      WorkTask[]               @relation("WorkTaskAssignee")
-  aiEmployees    AiEmployee[]             @relation("AiEmployeeRunsAs")
-  ownedProjects  Project[]                @relation("ProjectOwner")
-  projectMembers ProjectMember[]          @relation("ProjectMemberUser")
+  sessions          Session[]
+  mfaFactors        MfaFactor[]
+  recoveryCodes     MfaRecoveryCode[]
+  oauthAccounts     OAuthAccount[]
+  memberships       Membership[]
+  ownedLeads        Lead[]                   @relation("LeadOwner")
+  emailTokens       EmailVerificationToken[]
+  resetTokens       PasswordResetToken[]
+  ownedAccounts     Account[]                @relation("AccountOwner")
+  ownedContacts     Contact[]                @relation("ContactOwner")
+  employments       Employee[]               @relation("EmployeeUser")
+  workTasks         WorkTask[]               @relation("WorkTaskAssignee")
+  aiEmployees       AiEmployee[]             @relation("AiEmployeeRunsAs")
+  ownedProjects     Project[]                @relation("ProjectOwner")
+  ownedObjectives   Objective[]              @relation("ObjectiveOwner")
+  ownedCompanyGoals CompanyGoal[]            @relation("CompanyGoalOwner")
+  projectMembers    ProjectMember[]          @relation("ProjectMemberUser")
 
   @@map("users")
 }
@@ -408,6 +410,8 @@ model Company {
   graphEntities                   GraphEntity[]
   graphEdges                      GraphEdge[]
   brainDocuments                  BrainDocument[]
+  brainLinks                      BrainLink[]
+  companyMemories                 CompanyMemory[]
   agentTasks                      AgentTask[]
   approvals                       Approval[]
   objectives                      Objective[]
@@ -586,6 +590,30 @@ model Company {
   supportEscalationRules          SupportEscalationRule[]
   supportKbCategories             SupportKbCategory[]
   supportKbArticles               SupportKbArticle[]
+  commsTaskDiscussions            CommsTaskDiscussion[]
+  commsAgendaTemplates            CommsAgendaTemplate[]
+  marketingBrandKits              MarketingBrandKit[]
+  financeBills                    FinanceBill[]
+  financeBillLines                FinanceBillLine[]
+  financeBillPayments             FinanceBillPayment[]
+  financeDocAttachments           FinanceDocAttachment[]
+  financeApprovalRules            FinanceApprovalRule[]
+  financeApprovalRequests         FinanceApprovalRequest[]
+  financeExpenseClaims            FinanceExpenseClaim[]
+  financeBudgetAlerts             FinanceBudgetAlert[]
+  crmSequences                    CrmSequence[]
+  crmProposals                    CrmProposal[]
+  crmProposalLines                CrmProposalLine[]
+  crmProposalRevisions            CrmProposalRevision[]
+  crmProposalSends                CrmProposalSend[]
+  crmSalesReps                    CrmSalesRep[]
+  workflowCounters                WorkflowCounter[]
+  integrationRequestLogs          IntegrationRequestLog[]
+  integrationExternalRefs         IntegrationExternalRef[]
+  companyStrategies               CompanyStrategy[]
+  strategyPillars                 StrategyPillar[]
+  companyGoals                    CompanyGoal[]
+  objectiveKeyResults             ObjectiveKeyResult[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -636,20 +664,23 @@ model Project {
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company           Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  workspace         Workspace          @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  owner             User?              @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  milestones        Milestone[]
-  workTasks         WorkTask[]
-  members           ProjectMember[]
-  projectMilestones ProjectMilestone[]
-  risks             ProjectRisk[]
-  expenses          ProjectExpense[]
-  timeEntries       WorkTimeEntry[]
-  sprints           Sprint[]
-  features          ProductFeature[]
-  incidents         OpsIncident[]
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company              Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  workspace            Workspace             @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  owner                User?                 @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  milestones           Milestone[]
+  workTasks            WorkTask[]
+  members              ProjectMember[]
+  projectMilestones    ProjectMilestone[]
+  risks                ProjectRisk[]
+  expenses             ProjectExpense[]
+  timeEntries          WorkTimeEntry[]
+  sprints              Sprint[]
+  features             ProductFeature[]
+  incidents            OpsIncident[]
+  financeTransactions  FinanceTransaction[]
+  financeBillLines     FinanceBillLine[]
+  financeExpenseClaims FinanceExpenseClaim[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, workspaceId])
@@ -733,26 +764,39 @@ enum BrainDocumentStatus {
 }
 
 model BrainDocument {
-  id             String              @id @default(uuid(7)) @db.Uuid
-  organizationId String              @map("organization_id") @db.Uuid
-  companyId      String              @map("company_id") @db.Uuid
-  title          String
-  filename       String?
-  mimeType       String              @map("mime_type")
-  sizeBytes      Int                 @map("size_bytes")
-  contentSha256  String              @map("content_sha256") @db.Char(64)
-  status         BrainDocumentStatus @default(PROCESSING)
-  createdById    String              @map("created_by_id") @db.Uuid
-  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id              String              @id @default(uuid(7)) @db.Uuid
+  organizationId  String              @map("organization_id") @db.Uuid
+  companyId       String              @map("company_id") @db.Uuid
+  title           String
+  filename        String?
+  mimeType        String              @map("mime_type")
+  sizeBytes       Int                 @map("size_bytes")
+  contentSha256   String              @map("content_sha256") @db.Char(64)
+  status          BrainDocumentStatus @default(PROCESSING)
+  /// Department knowledge: the department the document belongs to (any brain.read holder of the company may read it).
+  departmentId    String?             @map("department_id") @db.Uuid
+  /// Module/area tags (lowercase), e.g. "sales", "onboarding".
+  tags            String[]            @default([])
+  /// Set when indexed from another module (brain/sources.ts): support_kb_article, hr_policy, ops_process, product_release, product_feature.
+  sourceType      String?             @map("source_type")
+  sourceId        String?             @map("source_id") @db.Uuid
+  /// The source record's updatedAt when it was last indexed (re-indexed when the source changes).
+  sourceUpdatedAt DateTime?           @map("source_updated_at") @db.Timestamptz(3)
+  createdById     String              @map("created_by_id") @db.Uuid
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  chunks  BrainChunk[]
+  company    Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department Department?  @relation("BrainDocumentDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  chunks     BrainChunk[]
+  links      BrainLink[]
 
   @@unique([id, companyId])
   // The same content is ingested once per company.
   @@unique([companyId, contentSha256])
+  @@unique([companyId, sourceType, sourceId])
   @@index([organizationId, companyId, createdAt])
+  @@index([companyId, departmentId])
   @@map("brain_documents")
 }
 
@@ -927,15 +971,27 @@ model Objective {
   description    String?
   status         ObjectiveStatus @default(ACTIVE)
   targetDate     DateTime?       @map("target_date") @db.Date
+  /// Start of the objective period (key-result metrics are computed from here to the target date); defaults to creation.
+  startDate      DateTime?       @map("start_date") @db.Date
+  /// Company goal this objective serves (strategy.prisma).
+  goalId         String?         @map("goal_id") @db.Uuid
+  ownerId        String?         @map("owner_id") @db.Uuid
+  /// Owning department (HR), for the company operating dashboard.
+  departmentId   String?         @map("department_id") @db.Uuid
   createdById    String          @map("created_by_id") @db.Uuid
   createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  company    Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  goal       CompanyGoal?         @relation(fields: [goalId, companyId], references: [id, companyId], onDelete: NoAction)
+  owner      User?                @relation("ObjectiveOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  department Department?          @relation("ObjectiveDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
   milestones Milestone[]
+  keyResults ObjectiveKeyResult[]
 
   @@unique([id, companyId])
   @@index([organizationId, companyId, status])
+  @@index([goalId])
   @@map("objectives")
 }
 

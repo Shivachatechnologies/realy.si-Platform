@@ -17,6 +17,7 @@ import { listSubjectTasks } from "@/server/modules/agents/service";
 import { getWorkflow, listRuns } from "@/server/modules/automation/service";
 import { emailConfigured } from "@/server/modules/email/service";
 import { can } from "@/server/modules/rbac/service";
+import { BUILT_IN_TEMPLATES } from "@/server/modules/work/templates";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.workflows.title") };
@@ -50,12 +51,17 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
     throw err;
   });
   const canRunAgents = await can(viewer.ctx, "agents.read", chain);
-  const [members, hooks, connections, runs, aiTasks] = await Promise.all([
+  const scope = { organizationId: org.id, companyId: company.id };
+  const [members, hooks, connections, runs, aiTasks, stages, projectTemplates, hrTemplates, aiEmployees] = await Promise.all([
     db().membership.findMany({ where: { organizationId: org.id, status: "ACTIVE", user: { status: "ACTIVE" } }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }),
-    db().integrationHook.findMany({ where: { organizationId: org.id, companyId: company.id }, select: { id: true, name: true }, orderBy: { createdAt: "desc" } }),
-    db().integrationConnection.findMany({ where: { organizationId: org.id, companyId: company.id, status: { in: ["CONNECTED", "ERROR"] }, provider: { in: ["slack", "custom_api"] } }, select: { provider: true } }),
+    db().integrationHook.findMany({ where: scope, select: { id: true, name: true }, orderBy: { createdAt: "desc" } }),
+    db().integrationConnection.findMany({ where: { ...scope, status: { in: ["CONNECTED", "ERROR"] }, provider: { in: ["slack", "custom_api", "microsoft"] } }, select: { provider: true } }),
     listRuns(viewer.ctx, org.id, company.id, { workflowId: wf.id }, 10),
     canRunAgents ? listSubjectTasks(viewer.ctx, org.id, company.id, "workflow", wf.id, 5) : Promise.resolve([]),
+    db().crmPipelineStage.findMany({ where: { ...scope, archivedAt: null }, select: { id: true, name: true, pipeline: { select: { name: true } } }, orderBy: [{ pipelineId: "asc" }, { position: "asc" }], take: 200 }),
+    db().projectTemplate.findMany({ where: scope, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 100 }),
+    db().hrChecklistTemplate.findMany({ where: { ...scope, archivedAt: null }, select: { id: true, name: true, kind: true }, orderBy: { name: "asc" }, take: 100 }),
+    db().aiEmployee.findMany({ where: { ...scope, archivedAt: null }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 200 }),
   ]);
   const label = (key: string, fallback: string) => {
     const v = t(key);
@@ -66,7 +72,14 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
     profiles: AGENT_PROFILES.map((x) => ({ key: x.key, name: label(`profiles.${x.key}.name`, x.key) })),
     hooks,
     permissions: NOTIFY_PERMISSIONS,
-    connected: { slack: connections.some((c) => c.provider === "slack"), custom_api: connections.some((c) => c.provider === "custom_api"), email: emailConfigured() },
+    connected: { slack: connections.some((c) => c.provider === "slack"), custom_api: connections.some((c) => c.provider === "custom_api"), microsoft: connections.some((c) => c.provider === "microsoft"), email: emailConfigured() },
+    stages: stages.map((s) => ({ id: s.id, name: `${s.pipeline.name} · ${s.name}` })),
+    projectTemplates: [
+      ...BUILT_IN_TEMPLATES.filter((b) => b.key !== "blank").map((b) => ({ key: b.key, name: label(`work.templates.builtIn.${b.key}.name`, b.key) })),
+      ...projectTemplates.map((x) => ({ key: x.id, name: x.name })),
+    ],
+    hrTemplates: hrTemplates.map((x) => ({ id: x.id, name: `${x.name} (${t(`workflows.builder.checklists.${x.kind}`)})` })),
+    aiEmployees,
   };
   const sampleKeys = wf.draft.trigger.type === "event" && wf.draft.trigger.event.startsWith("lead.") ? ["name", "email", "ownerId", "stage", "source"] : ["name", "email"];
   const archived = wf.status === "ARCHIVED";
@@ -138,7 +151,10 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
             )}
           </Card>
           <Card>
-            <CardHeader title={t("workflows.versions")} />
+            <CardHeader
+              title={t("workflows.versions")}
+              actions={wf.versions.length ? <Link href={`/${locale}/workflows/${wf.id}/versions`} className="text-xs text-primary hover:underline">{t("workflows.compare.title")}</Link> : null}
+            />
             {wf.versions.length ? (
               <ul className="divide-y">
                 {wf.versions.map((v) => (

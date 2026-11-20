@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Trash2 } from "lucide-react";
 import type { GraphEntityKind, GraphRelation } from "@/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { FormError } from "@/components/form-error";
-import { useT } from "@/i18n/client";
+import { useI18n, useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { ENTITY_KINDS, RELATION_KEYS, RELATIONS, relationAllowed } from "@/server/modules/graph/relations";
 
@@ -29,6 +30,7 @@ interface Edge {
 
 export function GraphEditor({ organizationId, companyId, canManage, entities, edges }: { organizationId: string; companyId: string; canManage: boolean; entities: Entity[]; edges: Edge[] }) {
   const t = useT();
+  const { locale } = useI18n();
   const router = useRouter();
   const base = `/api/v1/organizations/${organizationId}/companies/${companyId}/graph`;
   const byId = useMemo(() => new Map(entities.map((e) => [e.id, e])), [entities]);
@@ -135,12 +137,20 @@ export function GraphEditor({ organizationId, companyId, canManage, entities, ed
                 </span>
               }
               actions={
-                canManage ? (
-                  <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => run(() => api(`${base}/entities/${selected.id}`, { method: "DELETE" }))}>
-                    <Trash2 aria-hidden />
-                    {t("graph.deleteEntity")}
+                <>
+                  <Button asChild size="sm" variant="secondary">
+                    <Link href={`/${locale}/graph/${selected.id}`}>
+                      <BookOpen aria-hidden />
+                      {t("graph.details")}
+                    </Link>
                   </Button>
-                ) : null
+                  {canManage ? (
+                    <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => run(() => api(`${base}/entities/${selected.id}`, { method: "DELETE" }))}>
+                      <Trash2 aria-hidden />
+                      {t("graph.deleteEntity")}
+                    </Button>
+                  ) : null}
+                </>
               }
             />
             <CardBody className="grid gap-4">

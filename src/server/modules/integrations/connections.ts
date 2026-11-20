@@ -1,4 +1,5 @@
 import "server-only";
+import { isIntegrationEnabled } from "@/server/core/platform-controls";
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { decryptSecret, encryptSecret } from "@/server/core/crypto";
@@ -21,6 +22,9 @@ export interface Connection {
   /** Non-secret settings: phoneNumberId (whatsapp), baseUrl/headerName/headerPrefix (custom_api), instanceUrl (salesforce), realmId (quickbooks), tenantId (xero), teamName (slack)... */
   config: Record<string, unknown>;
   status: ConnectionStatus;
+  /** Tenant of the connection (set by getConnection; used for the request log). */
+  organizationId?: string;
+  companyId?: string;
 }
 
 const REFRESH_WINDOW_MS = 2 * 60_000;
@@ -52,11 +56,13 @@ const asConfig = (v: Prisma.JsonValue): Record<string, unknown> => (v && typeof 
  */
 export async function getConnection(organizationId: string, companyId: string, providerKey: string): Promise<Connection | null> {
   if (!isUuid(organizationId) || !isUuid(companyId)) return null;
+  // A provider switched off platform-wide (Admin → Platform Controls) behaves as not connected.
+  if (!(await isIntegrationEnabled(providerKey))) return null;
   const row = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider: providerKey } });
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return null;
   const info = providerInfo(providerKey);
   const creds = decryptCredentials(companyId, providerKey, row.credentialsEnc);
-  const base = { id: row.id, provider: row.provider, config: asConfig(row.config), status: row.status as ConnectionStatus };
+  const base = { id: row.id, provider: row.provider, config: asConfig(row.config), status: row.status as ConnectionStatus, organizationId: row.organizationId, companyId: row.companyId };
   if (info?.authType !== "oauth2") return { ...base, accessToken: creds.apiKey ?? creds.accessToken ?? null };
 
   const expiring = row.tokenExpiresAt && row.tokenExpiresAt.getTime() - Date.now() < REFRESH_WINDOW_MS;

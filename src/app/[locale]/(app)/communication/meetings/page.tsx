@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
-import { MeetingForm } from "@/components/comms/meetings";
+import { AgendaTemplates, MeetingForm } from "@/components/comms/meetings";
 import { EmptyState, hrefWith, MEETING_TONE, Pager } from "@/components/comms/bits";
 import { areaPage } from "@/components/comms/context";
 import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { listPeople } from "@/server/modules/comms/common";
-import { listMeetings, MEETING_STATUSES, parseMeetingFilters } from "@/server/modules/comms/meetings";
+import { listAgendaTemplates, listMeetings, MEETING_STATUSES, parseMeetingFilters } from "@/server/modules/comms/meetings";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("communication.meetings.title") };
@@ -23,7 +23,7 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/[locale
   const { locale, t, viewer, org, company, tz, base, perms, wrap } = p;
   const sp = await searchParams;
   const filters = parseMeetingFilters(sp);
-  const [list, people] = await Promise.all([listMeetings(viewer.ctx, org.id, company.id, filters), listPeople(viewer.ctx, org.id, company.id)]);
+  const [list, people, templates] = await Promise.all([listMeetings(viewer.ctx, org.id, company.id, filters), listPeople(viewer.ctx, org.id, company.id), listAgendaTemplates(viewer.ctx, org.id, company.id)]);
   const path = `/${locale}/communication/meetings`;
   return wrap(
     <div className="grid gap-4">
@@ -31,7 +31,17 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/[locale
         <Card>
           <details>
             <summary className="cursor-pointer p-4 text-sm font-medium">{t("communication.meetings.new")}</summary>
-            <MeetingForm base={base} locale={locale} me={viewer.user.id} people={people.map((u) => ({ id: u.id, name: u.name }))} />
+            <MeetingForm base={base} locale={locale} me={viewer.user.id} people={people.map((u) => ({ id: u.id, name: u.name }))} templates={templates.map((x) => ({ id: x.id, name: x.name, body: x.body }))} />
+          </details>
+        </Card>
+      ) : null}
+      {perms.post ? (
+        <Card>
+          <details>
+            <summary className="cursor-pointer p-4 text-sm font-medium">{t("communication.meetings.templates", { count: templates.length })}</summary>
+            <div className="p-4 pt-0">
+              <AgendaTemplates base={base} me={viewer.user.id} canManage={perms.manage} templates={templates.map((x) => ({ id: x.id, name: x.name, body: x.body, createdById: x.createdById }))} />
+            </div>
           </details>
         </Card>
       ) : null}
@@ -79,6 +89,12 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/[locale
                     <Link href={`${path}/${m.id}`} className="font-medium hover:underline">
                       {m.title}
                     </Link>
+                    {m.recurrence ? <span className="ms-1.5 text-xs text-muted-foreground">· {t(`communication.meetings.recurrence.${m.recurrence}`)}</span> : null}
+                    {m.myRsvp && m.myRsvp !== "ACCEPTED" && m.organizerId !== viewer.user.id ? (
+                      <Badge className="ms-1.5" tone={m.myRsvp === "PENDING" ? "accent" : m.myRsvp === "DECLINED" ? "danger" : "warning"}>
+                        {t(`communication.meetings.rsvp.${m.myRsvp}`)}
+                      </Badge>
+                    ) : null}
                   </Td>
                   <Td className="whitespace-nowrap">{formatDateTime(m.startsAt, locale, tz)}</Td>
                   <Td className="hidden md:table-cell">{m.organizerName ?? "?"}</Td>

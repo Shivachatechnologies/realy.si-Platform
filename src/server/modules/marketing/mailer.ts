@@ -4,14 +4,15 @@ import type { MarketingSendStatus } from "@/generated/prisma/enums";
 import { db } from "@/server/core/db";
 import { closestLocale } from "@/i18n/config";
 import { createTranslator, type Messages } from "@/i18n/translate";
-import { sendPlainEmail } from "@/server/modules/email/service";
+import { escapeHtml, sendHtmlEmail } from "@/server/modules/email/service";
 import enUS from "@/i18n/messages/en-US.json";
 import hiIN from "@/i18n/messages/hi-IN.json";
 import arAE from "@/i18n/messages/ar-AE.json";
 import deDE from "@/i18n/messages/de-DE.json";
 import zhCN from "@/i18n/messages/zh-CN.json";
 import { normalizeEmail, renderMergeTags } from "./common";
-import { trackLinks, unsubscribeUrl } from "./tracking";
+import { clickUrl, openPixelUrl, trackLinks, unsubscribeUrl } from "./tracking";
+import { loadBrandKit, type BrandKit } from "./brand";
 
 const CATALOGS: Record<string, Messages> = { "en-US": enUS, "hi-IN": hiIN as Messages, "ar-AE": arAE as Messages, "de-DE": deDE as Messages, "zh-CN": zhCN as Messages };
 
@@ -70,11 +71,19 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
   const vars = { firstName: to.firstName ?? "", lastName: to.lastName ?? "", email: to.email, company: to.accountName ?? "", sender: msg.companyName };
   const subject = renderMergeTags(msg.subject, vars).slice(0, 300);
   const link = unsubscribeUrl({ o: msg.organizationId, c: msg.companyId, e: emailNormalized, s: id });
-  const text = `${trackLinks(renderMergeTags(msg.body, vars), id)}\n\n—\n${t("marketing.email.footer", { company: msg.companyName })}\n${t("marketing.email.unsubscribeLine")}: ${link}`;
-  const result = await sendPlainEmail({
+  const body = renderMergeTags(msg.body, vars);
+  const footer = t("marketing.email.footer", { company: msg.companyName });
+  const unsubLabel = t("marketing.email.unsubscribeLine");
+  const text = `${trackLinks(body, id)}\n\n—\n${footer}\n${unsubLabel}: ${link}`;
+  const brand = await loadBrandKit(db(), msg.companyId);
+  const html = renderMarketingHtml({ body, sendId: id, locale: l, footer, unsubLabel, unsubscribeLink: link, brand });
+  const result = await sendHtmlEmail({
     to: to.email,
     subject,
     text,
+    html,
+    // RFC 2369 / RFC 8058 one-click unsubscribe: mail clients POST to the signed link.
+    headers: { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
     template: msg.emailCampaignId ? "marketing_campaign" : "marketing_sequence",
     organizationId: msg.organizationId,
     userId: msg.userId ?? null,
@@ -86,4 +95,51 @@ export async function sendMarketingEmail(msg: MarketingMessage, to: Recipient): 
     data: { status, providerMessageId: result.messageId, error: status === "SENT" ? null : status === "NOT_CONFIGURED" ? "not_configured" : "delivery_failed" },
   });
   return status;
+}
+
+const URL_RE = /https?:\/\/[^\s<>()"']+/g;
+
+/** Escape a paragraph and turn its URLs into click-tracked anchors. */
+function linkify(text: string, sendId: string | null, color: string) {
+  let out = "";
+  let last = 0;
+  for (const m of text.matchAll(URL_RE)) {
+    const raw = m[0];
+    const clean = raw.replace(/[.,;:!?]+$/, "");
+    out += escapeHtml(text.slice(last, m.index));
+    out += `<a href="${escapeHtml(sendId ? clickUrl(sendId, clean) : clean)}" style="color:${color}">${escapeHtml(clean)}</a>`;
+    last = m.index! + clean.length;
+  }
+  return out + escapeHtml(text.slice(last));
+}
+
+/**
+ * HTML part of a marketing email: brand header (logo / name), paragraphs with tracked links, footer with the signed
+ * unsubscribe link, and the signed open-tracking pixel. Plain text stays the alternative part.
+ */
+export function renderMarketingHtml(a: { body: string; sendId: string | null; locale: string; footer: string; unsubLabel: string; unsubscribeLink: string; brand: BrandKit | null }) {
+  const color = a.brand?.colors[0]?.hex ?? "#2563eb";
+  const font = a.brand?.bodyFont ? `${escapeHtml(a.brand.bodyFont)},system-ui,sans-serif` : "system-ui,sans-serif";
+  const dir = a.locale.startsWith("ar") ? "rtl" : "ltr";
+  const header = a.brand?.logoUrl
+    ? `<img src="${escapeHtml(a.brand.logoUrl)}" alt="${escapeHtml(a.brand.brandName)}" style="max-height:40px;max-width:200px" />`
+    : a.brand
+      ? `<strong style="font-size:18px;color:${color}">${escapeHtml(a.brand.brandName)}</strong>`
+      : "";
+  const paragraphs = a.body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin:0 0 16px">${linkify(p, a.sendId, color).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+  return `<!doctype html><html lang="${a.locale}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;background:#f6f7f9;font-family:${font};line-height:1.55;color:#111">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:8px;border-top:4px solid ${color}">
+${header ? `<tr><td style="padding:20px 24px 0">${header}</td></tr>` : ""}
+<tr><td style="padding:20px 24px">${paragraphs}</td></tr>
+<tr><td style="padding:16px 24px;border-top:1px solid #eee;font-size:12px;color:#666">${escapeHtml(a.footer)}${a.unsubLabel ? `<br><a href="${escapeHtml(a.unsubscribeLink)}" style="color:#666">${escapeHtml(a.unsubLabel)}</a>` : ""}</td></tr>
+</table></td></tr></table>
+${a.sendId ? `<img src="${escapeHtml(openPixelUrl(a.sendId))}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px" />` : ""}
+</body></html>`;
 }

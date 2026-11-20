@@ -20,6 +20,8 @@ import { failStaleTasks, processAgentTask } from "@/server/modules/agents/servic
 import { expireApprovals } from "@/server/modules/approvals/service";
 import type { OutboxEvent } from "@/server/modules/events/relay";
 import { MODULE_JOBS } from "./modules";
+import { hostname } from "node:os";
+import { getControls, moduleForJobName } from "@/server/core/platform-controls";
 
 const POLL_MS = 500;
 let stopping = false;
@@ -31,7 +33,9 @@ async function maintenance(log: typeof logger) {
   try {
     const keys = await purgeExpiredIdempotencyKeys();
     const tokens = await purgeExpiredAuthTokens();
-    const staleTasks = await failStaleTasks();
+    // While AI execution or background jobs are paused, queued tasks wait on purpose: do not fail them as stale.
+    const controls = await getControls();
+    const staleTasks = controls.aiExecutionPaused || controls.backgroundJobsPaused ? 0 : await failStaleTasks();
     const expiredApprovals = await expireApprovals();
     if (keys || tokens || staleTasks || expiredApprovals) log.info({ idempotencyKeys: keys, authTokens: tokens, staleTasks, expiredApprovals }, "maintenance purge");
   } catch (err) {
@@ -79,8 +83,11 @@ async function main() {
     "events",
     async (job) => {
       const event: OutboxEvent = { ...job.data, occurredAt: new Date(job.data.occurredAt) };
+      const controls = await getControls();
       for (const h of handlers) {
         if (h.types !== "*" && !h.types.includes(event.type)) continue;
+        // Platform controls: automations off skips automation handlers (Admin → Platform Controls).
+        if (!controls.automationsEnabled && h.name.startsWith("automation")) continue;
         await withSpan("worker.event_handler", { handler: h.name, type: event.type }, () => h.handle(event));
       }
     },
@@ -93,10 +100,16 @@ async function main() {
 
   // Business-module periodic jobs (recurring invoices, scheduled posts, workflow schedules, AI schedules...).
   const periodic = MODULE_JOBS.flatMap((m) => m.periodic).map((j) => ({ job: j, next: 0, running: false }));
-  const runPeriodic = () => {
+  const runPeriodic = async () => {
     const now = Date.now();
+    // Platform controls: pause all background jobs, automations off, and modules disabled platform-wide.
+    const controls = await getControls();
+    if (controls.backgroundJobsPaused) return;
     for (const p of periodic) {
       if (p.running || now < p.next) continue;
+      if (!controls.automationsEnabled && p.job.name.startsWith("automation.")) continue;
+      const mod = moduleForJobName(p.job.name);
+      if (mod && controls.disabledModules.includes(mod)) continue;
       p.running = true;
       p.next = now + p.job.everyMs;
       withSpan("worker.periodic", { job: p.job.name }, () => p.job.run())
@@ -124,9 +137,57 @@ async function main() {
     );
   };
 
+  // Pausing a BullMQ worker stops it fetching jobs: AI tasks stay queued (execution paused) and published events wait
+  // in the events queue (background jobs paused) while the outbox relay keeps running.
+  const paused = { agents: false, events: false };
+  const applyPauses = async () => {
+    const c = await getControls();
+    const wantAgents = c.aiExecutionPaused || c.backgroundJobsPaused;
+    if (wantAgents !== paused.agents) {
+      paused.agents = wantAgents;
+      if (wantAgents) await agentTasks.pause(true);
+      else agentTasks.resume();
+      log.warn({ paused: wantAgents }, "agent task execution pause changed");
+    }
+    if (c.backgroundJobsPaused !== paused.events) {
+      paused.events = c.backgroundJobsPaused;
+      if (paused.events) await eventConsumer.pause(true);
+      else eventConsumer.resume();
+      log.warn({ paused: paused.events }, "event handlers pause changed");
+    }
+  };
+
+  // Heartbeat for Admin → System & Monitoring.
+  const startedAt = new Date();
+  const heartbeatId = `worker:${hostname()}:${process.pid}`;
+  const heartbeat = async () => {
+    try {
+      const now = new Date();
+      const info = { paused, periodicJobs: periodic.length, eventHandlers: handlers.length };
+      await db().platformHeartbeat.upsert({
+        where: { id: heartbeatId },
+        create: { id: heartbeatId, kind: "worker", hostname: hostname(), pid: process.pid, startedAt, lastSeenAt: now, info },
+        update: { lastSeenAt: now, info },
+      });
+    } catch (err) {
+      log.warn({ err: err instanceof Error ? err.message : String(err) }, "heartbeat failed");
+    }
+  };
+  const HEARTBEAT_MS = 60_000;
+  let nextHeartbeat = 0;
+
   let nextMaintenance = 0;
   while (!stopping) {
-    runPeriodic();
+    try {
+      await applyPauses();
+      await runPeriodic();
+    } catch (err) {
+      log.error({ err }, "platform controls check failed");
+    }
+    if (Date.now() >= nextHeartbeat) {
+      nextHeartbeat = Date.now() + HEARTBEAT_MS;
+      await heartbeat();
+    }
     if (Date.now() >= nextMaintenance) {
       nextMaintenance = Date.now() + MAINTENANCE_MS;
       await maintenance(log);

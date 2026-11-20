@@ -45,7 +45,7 @@ export async function ChannelView({ ctx, t, locale, tz, base, organizationId, co
   const peopleLite = people.map((u) => ({ id: u.id, name: u.name }));
   const path = `/${locale}/communication/${kind}/${channelId}`;
   const parent = replies?.parent;
-  const view = (m: (typeof messages.data)[number]) => ({ id: m.id, authorId: m.authorId, authorName: m.authorName, body: m.body, when: formatDateTime(m.createdAt, locale, tz), edited: !!m.editedAt, deleted: !!m.deletedAt, replyCount: m.replyCount });
+  const view = (m: (typeof messages.data)[number]) => ({ id: m.id, authorId: m.authorId, authorName: m.authorName, body: m.body, when: formatDateTime(m.createdAt, locale, tz), edited: !!m.editedAt, deleted: !!m.deletedAt, replyCount: m.replyCount, tasks: m.tasks });
   const archived = !!channel.archivedAt;
 
   return (
@@ -78,7 +78,7 @@ export async function ChannelView({ ctx, t, locale, tz, base, organizationId, co
           {messages.data.length ? (
             <ul className="grid py-2">
               {messages.data.map((m) => (
-                <MessageItem key={m.id} base={base} m={view(m)} people={peopleLite} me={me} canManage={canManage} threadHref={hrefWith(path, sp, { thread: m.id })} />
+                <MessageItem key={m.id} locale={locale} base={base} m={view(m)} people={peopleLite} me={me} canManage={canManage} threadHref={hrefWith(path, sp, { thread: m.id })} />
               ))}
             </ul>
           ) : (
@@ -101,12 +101,12 @@ export async function ChannelView({ ctx, t, locale, tz, base, organizationId, co
             <CardHeader title={t("communication.messages.thread")} actions={<Link href={hrefWith(path, sp, { thread: undefined })} className="text-xs hover:underline">{t("common.close")}</Link>} />
             {parent ? (
               <ul className="border-b">
-                <MessageItem base={base} m={view(parent)} people={peopleLite} me={me} canManage={canManage} />
+                <MessageItem locale={locale} base={base} m={view(parent)} people={peopleLite} me={me} canManage={canManage} />
               </ul>
             ) : null}
             <ul className="grid py-1">
               {replies.data.map((m) => (
-                <MessageItem key={m.id} base={base} m={view(m)} people={peopleLite} me={me} canManage={canManage} />
+                <MessageItem key={m.id} locale={locale} base={base} m={view(m)} people={peopleLite} me={me} canManage={canManage} />
               ))}
             </ul>
             {!archived && channel.canPost ? (

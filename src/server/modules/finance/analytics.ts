@@ -30,6 +30,9 @@ import { balanceOf, OPEN_STATUSES } from "./billing";
 import { ensureFinanceSetup, ledgerTotals } from "./ledger";
 import { accountBalances } from "./setup";
 import { budgetVsActual } from "./transactions";
+import { billBalance, upcomingPayables } from "./payables";
+import { projectCostsReport } from "./project-costs";
+import { OPEN_BILL_STATUSES, openPayables, POSTED_BILL_STATUSES } from "./spend";
 
 const months = (from: Date, to: Date) => {
   const out: string[] = [];
@@ -98,8 +101,8 @@ export async function openReceivables(client: Tx | Db, companyId: string) {
 
 /**
  * Cash forecast for the next `count` months (starting next month): open invoices by due date (overdue ones in the first
- * month), recurring invoices and expenses on their schedule, planned items, plus the 3-month trend of other income and
- * non-recurring expenses.
+ * month), approved vendor bills by due date (overdue ones in the first month), recurring invoices and expenses on their
+ * schedule, planned items, plus the 3-month trend of other income and non-recurring expenses.
  */
 export async function cashForecast(client: Tx | Db, companyId: string, count = 6, now = new Date()) {
   const today = todayUtc(now);
@@ -107,8 +110,9 @@ export async function cashForecast(client: Tx | Db, companyId: string, count = 6
   const end = addMonths(start, count);
   const histFrom = addMonths(monthStart(today), -3);
   const histTo = monthStart(today);
-  const [open, recInv, recExp, plan, hist, cash] = await Promise.all([
+  const [open, bills, recInv, recExp, plan, hist, cash] = await Promise.all([
     client.invoice.findMany({ where: { companyId, status: { in: OPEN_STATUSES } }, select: { dueDate: true, totalMinor: true, paidMinor: true, creditedMinor: true } }),
+    client.financeBill.findMany({ where: { companyId, status: { in: OPEN_BILL_STATUSES }, dueDate: { lt: end } }, select: { dueDate: true, totalMinor: true, paidMinor: true } }),
     client.recurringInvoice.findMany({ where: { companyId, active: true }, select: { nextIssueDate: true, frequency: true, netMinor: true, endDate: true, dueDays: true } }),
     client.recurringExpense.findMany({ where: { companyId, active: true }, select: { nextRunDate: true, frequency: true, amountMinor: true, endDate: true } }),
     client.cashPlanItem.findMany({ where: { companyId, date: { gte: today, lt: end } }, select: { date: true, amountMinor: true } }),
@@ -116,12 +120,16 @@ export async function cashForecast(client: Tx | Db, companyId: string, count = 6
     cashBalance(client, companyId),
   ]);
   const keys = months(start, end);
-  const rows = new Map(keys.map((k) => [k, { month: k, receivables: 0n, recurringIncome: 0n, recurringExpenses: 0n, planned: 0n, trendIncome: 0n, trendExpenses: 0n, inflow: 0n, outflow: 0n, net: 0n, balance: 0n }]));
+  const rows = new Map(keys.map((k) => [k, { month: k, receivables: 0n, payables: 0n, recurringIncome: 0n, recurringExpenses: 0n, planned: 0n, trendIncome: 0n, trendExpenses: 0n, inflow: 0n, outflow: 0n, net: 0n, balance: 0n }]));
   const first = keys[0]!;
   for (const i of open) {
     const k = i.dueDate < start ? first : monthKey(i.dueDate);
     const r = rows.get(k);
     if (r) r.receivables += balanceOf(i);
+  }
+  for (const b of bills) {
+    const r = rows.get(b.dueDate < start ? first : monthKey(b.dueDate));
+    if (r) r.payables += billBalance(b);
   }
   for (const t of recInv) {
     // Cash arrives at the due date of each generated invoice.
@@ -145,13 +153,14 @@ export async function cashForecast(client: Tx | Db, companyId: string, count = 6
     if (r) r.planned += p.amountMinor;
   }
   const otherIncome = hist.filter((h) => h.type === "INCOME" && h.source !== "PAYMENT").reduce((s, h) => s + h.amountMinor, 0n) / 3n;
-  const otherExpense = hist.filter((h) => h.type === "EXPENSE" && h.source !== "RECURRING").reduce((s, h) => s + h.amountMinor, 0n) / 3n;
+  // Bill payments are forecast from the open bills themselves, so they're left out of the trend.
+  const otherExpense = hist.filter((h) => h.type === "EXPENSE" && h.source !== "RECURRING" && h.source !== "BILL_PAYMENT").reduce((s, h) => s + h.amountMinor, 0n) / 3n;
   let balance = cash;
   const out = [...rows.values()].map((r) => {
     r.trendIncome = otherIncome;
     r.trendExpenses = otherExpense;
     r.inflow = r.receivables + r.recurringIncome + r.trendIncome + (r.planned > 0n ? r.planned : 0n);
-    r.outflow = r.recurringExpenses + r.trendExpenses + (r.planned < 0n ? -r.planned : 0n);
+    r.outflow = r.payables + r.recurringExpenses + r.trendExpenses + (r.planned < 0n ? -r.planned : 0n);
     r.net = r.inflow - r.outflow;
     balance += r.net;
     r.balance = balance;
@@ -166,7 +175,7 @@ export async function financeDashboard(ctx: RequestContext, organizationId: stri
   await authorize(ctx, organizationId, companyId, "finance.read");
   await ensureFinanceSetup(db(), organizationId, companyId);
   const client = db();
-  const [pnl, cashSeries, cash, burn, rr, overdue, receivables, forecast, monthly] = await Promise.all([
+  const [pnl, cashSeries, cash, burn, rr, overdue, receivables, forecast, monthly, payables, payablesOverdue, upcoming, awaitingBills] = await Promise.all([
     profitAndLossTotals(client, companyId, range),
     cashByMonth(client, companyId, range),
     cashBalance(client, companyId),
@@ -176,6 +185,10 @@ export async function financeDashboard(ctx: RequestContext, organizationId: stri
     openReceivables(client, companyId),
     cashForecast(client, companyId, 6, now),
     pnlByMonth(client, companyId, range),
+    openPayables(client, companyId),
+    openPayables(client, companyId, { dueBefore: todayUtc(now) }),
+    upcomingPayables(client, companyId, 30, todayUtc(now)),
+    client.financeBill.count({ where: { organizationId, companyId, status: "AWAITING_APPROVAL" } }),
   ]);
   const cashIn = cashSeries.reduce((s, m) => s + m.inflow, 0n);
   const cashOut = cashSeries.reduce((s, m) => s + m.outflow, 0n);
@@ -192,6 +205,11 @@ export async function financeDashboard(ctx: RequestContext, organizationId: stri
     arr: rr.arr,
     overdue,
     receivables,
+    payables,
+    payablesOverdue,
+    upcomingPayables: upcoming.slice(0, 8),
+    upcomingPayablesTotal: upcoming.reduce((s, b) => s + b.balanceMinor, 0n),
+    awaitingBills,
     monthly,
     cashSeries,
     forecast,
@@ -417,7 +435,7 @@ export async function cashFlowOverview(ctx: RequestContext, organizationId: stri
 
 // ───────────── Reports ─────────────
 
-export const REPORTS = ["pnl", "balance", "cashflow", "budget", "revenue", "expenses"] as const;
+export const REPORTS = ["pnl", "balance", "cashflow", "budget", "revenue", "expenses", "projects"] as const;
 export type ReportKey = (typeof REPORTS)[number];
 
 export async function profitAndLossReport(ctx: RequestContext, organizationId: string, companyId: string, range: DateRange) {
@@ -519,12 +537,31 @@ export async function revenueReport(ctx: RequestContext, organizationId: string,
 
 export async function expenseReport(ctx: RequestContext, organizationId: string, companyId: string, range: DateRange) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  const where = { organizationId, companyId, type: "EXPENSE" as const, date: { gte: range.from, lt: range.to } };
-  const [byCat, byVendor, byDep] = await Promise.all([
+  // Accrual view: expense transactions (bill-payment mirrors excluded) plus posted vendor bill lines (net of tax).
+  const where = { organizationId, companyId, type: "EXPENSE" as const, billPaymentId: null, date: { gte: range.from, lt: range.to } };
+  const lineWhere = { organizationId, companyId, bill: { status: { in: POSTED_BILL_STATUSES }, issueDate: { gte: range.from, lt: range.to } } };
+  const [txCat, txVendor, txDep, blCat, blDep, blBills] = await Promise.all([
     db().financeTransaction.groupBy({ by: ["categoryId"], where, _sum: { amountMinor: true }, _count: true }),
     db().financeTransaction.groupBy({ by: ["accountId"], where, _sum: { amountMinor: true }, _count: true }),
     db().financeTransaction.groupBy({ by: ["departmentId"], where, _sum: { amountMinor: true }, _count: true }),
+    db().financeBillLine.groupBy({ by: ["categoryId"], where: lineWhere, _sum: { netMinor: true }, _count: true }),
+    db().financeBillLine.groupBy({ by: ["departmentId"], where: lineWhere, _sum: { netMinor: true }, _count: true }),
+    db().financeBill.groupBy({ by: ["vendorId"], where: { organizationId, companyId, status: { in: POSTED_BILL_STATUSES }, issueDate: { gte: range.from, lt: range.to } }, _sum: { subtotalMinor: true }, _count: true }),
   ]);
+  type G = { key: string | null; _sum: { amountMinor: bigint | null }; _count: number };
+  const merge = (a: G[], b: G[]) => {
+    const m = new Map<string | null, G>();
+    for (const r of [...a, ...b]) {
+      const e = m.get(r.key) ?? { key: r.key, _sum: { amountMinor: 0n }, _count: 0 };
+      e._sum.amountMinor = (e._sum.amountMinor ?? 0n) + (r._sum.amountMinor ?? 0n);
+      e._count += r._count;
+      m.set(r.key, e);
+    }
+    return [...m.values()];
+  };
+  const byCat = merge(txCat.map((r) => ({ key: r.categoryId, _sum: r._sum, _count: r._count })), blCat.map((r) => ({ key: r.categoryId, _sum: { amountMinor: r._sum.netMinor }, _count: r._count }))).map((r) => ({ categoryId: r.key, _sum: r._sum, _count: r._count }));
+  const byVendor = merge(txVendor.map((r) => ({ key: r.accountId, _sum: r._sum, _count: r._count })), blBills.map((r) => ({ key: r.vendorId, _sum: { amountMinor: r._sum.subtotalMinor }, _count: r._count }))).map((r) => ({ accountId: r.key, _sum: r._sum, _count: r._count }));
+  const byDep = merge(txDep.map((r) => ({ key: r.departmentId, _sum: r._sum, _count: r._count })), blDep.map((r) => ({ key: r.departmentId, _sum: { amountMinor: r._sum.netMinor }, _count: r._count }))).map((r) => ({ departmentId: r.key, _sum: r._sum, _count: r._count }));
   const ids = (xs: (string | null)[]) => xs.filter((x): x is string => !!x);
   const [cats, vendors, deps] = await Promise.all([
     db().financeCategory.findMany({ where: { id: { in: ids(byCat.map((r) => r.categoryId)) } }, select: { id: true, name: true } }),
@@ -582,6 +619,10 @@ export async function reportCsv(ctx: RequestContext, organizationId: string, com
     case "revenue": {
       const r = await revenueReport(ctx, organizationId, companyId, range);
       return toCsv([["group", "key", "net_revenue", "paid", "invoices"], ...r.byMonth.map((x) => ["month", x.month, m(x.netMinor), "", ""]), ...r.byCustomer.map((x) => ["customer", x.name, m(x.netMinor), m(x.paidMinor), x.count])]);
+    }
+    case "projects": {
+      const r = await projectCostsReport(ctx, organizationId, companyId, range);
+      return toCsv([["project", "status", "expenses", "bills", "total_cost", "income", "budget", "used_pct", "pending_claims"], ...r.rows.map((x) => [x.name, x.status, m(x.expensesMinor), m(x.billsMinor), m(x.totalCostMinor), m(x.incomeMinor), x.budgetMinor !== null ? m(x.budgetMinor) : "", x.usedPct ?? "", m(x.pendingClaimsMinor)])]);
     }
     case "expenses": {
       const r = await expenseReport(ctx, organizationId, companyId, range);

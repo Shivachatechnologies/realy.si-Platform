@@ -9,7 +9,7 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
 
 /** Shared context of a Workflows page: header + tabs, "no company" and "forbidden" states, viewer capabilities. */
-export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: string; subtitle?: string; actions?: ReactNode } = {}) {
+export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: string; subtitle?: string; actions?: ReactNode; /** Let people without workflows.read in (the approvals tab shows them their own requests). */ allowWithoutRead?: boolean } = {}) {
   const locale = await getLocale();
   const t = await getT(locale);
   const { viewer, org, company } = await requireOrgContext(locale);
@@ -30,10 +30,10 @@ export async function workflowsPage(tab: WorkflowsTab | null, opts: { title?: st
   if (!company) return { page: wrap(<NoCompany message={t("company.empty")} />, false) } as const;
   const chain = await companyChain(db(), org.id, company.id);
   const [canRead, canManage, canExecute] = await Promise.all([can(viewer.ctx, "workflows.read", chain), can(viewer.ctx, "workflows.manage", chain), can(viewer.ctx, "workflows.execute", chain)]);
-  if (!canRead) return { page: wrap(<Forbidden message={t("errors.forbidden")} />, false) } as const;
+  if (!canRead && !opts.allowWithoutRead) return { page: wrap(<Forbidden message={t("errors.forbidden")} />, false) } as const;
   return {
     page: null,
-    ctx: { locale, t, viewer, org, company, chain, canManage, canExecute, tz: company.timezone ?? "UTC", base: `/api/v1/organizations/${org.id}/companies/${company.id}` },
+    ctx: { locale, t, viewer, org, company, chain, canRead, canManage, canExecute, tz: company.timezone ?? "UTC", base: `/api/v1/organizations/${org.id}/companies/${company.id}` },
     render: wrap,
   } as const;
 }

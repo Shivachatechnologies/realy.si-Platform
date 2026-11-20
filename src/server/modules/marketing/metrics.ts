@@ -27,6 +27,21 @@ export const MARKETING_METRICS: MetricDefinition[] = [
     },
   },
   { ...base, key: "marketing.emails_sent", labelKey: "marketing.metrics.emailsSent", unit: "count", kind: "flow", higherIsBetter: true, href: "/marketing/email", compute: async (s, r) => (await kpis(s, r)).emailsSent },
+  {
+    ...base,
+    key: "marketing.email_open_rate",
+    labelKey: "marketing.metrics.emailOpenRate",
+    unit: "percent",
+    kind: "flow",
+    higherIsBetter: true,
+    href: "/marketing/email",
+    compute: async (s, r) => {
+      // Unique opens (signed tracking pixel) over provider-accepted sends created in the range.
+      const where = { organizationId: s.organizationId, companyId: s.companyId, status: "SENT" as const, createdAt: { gte: r.from, lt: r.to } };
+      const [sent, opened] = await Promise.all([db().marketingEmailSend.count({ where }), db().marketingEmailSend.count({ where: { ...where, openedAt: { not: null } } })]);
+      return sent ? Math.round((opened / sent) * 1000) / 10 : 0;
+    },
+  },
   { ...base, key: "marketing.posts_published", labelKey: "marketing.metrics.postsPublished", unit: "count", kind: "flow", higherIsBetter: true, href: "/marketing/social", compute: async (s, r) => (await kpis(s, r)).postsPublished },
   { ...base, key: "marketing.conversion_rate", labelKey: "marketing.metrics.conversionRate", unit: "percent", kind: "flow", higherIsBetter: true, href: "/marketing", compute: async (s, r) => Math.round(((await kpis(s, r)).conversionRate ?? 0) * 10) / 10 },
   {

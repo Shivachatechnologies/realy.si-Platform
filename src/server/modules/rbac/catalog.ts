@@ -55,6 +55,9 @@ export const PERMISSIONS: PermissionDef[] = [
   ...platform("platform.support", ["read", "manage"], "support tooling"),
   ...platform("platform.content", ["manage"], "platform content and translations"),
   { key: "platform.audit.read", description: "read platform audit logs", platformOnly: true },
+  // Super Admin Control Center: global kill switches / platform settings, and the platform AI policy.
+  { key: "platform.controls.manage", description: "change platform kill switches, maintenance and platform settings", platformOnly: true },
+  ...platform("platform.ai", ["read", "manage"], "the platform AI workforce policy, models and budgets"),
 ];
 
 export const PERMISSION_KEYS = new Set(PERMISSIONS.map((p) => p.key));
@@ -73,6 +76,8 @@ export const MFA_GATED = new Set([
   "organizations.delete",
   "platform.security.manage",
   "platform.users.manage",
+  "platform.controls.manage",
+  "platform.ai.manage",
   "payroll.manage",
   "developer.manage",
 ]);
@@ -155,6 +160,7 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
       "platform.subscriptions.read",
       "platform.support.read",
       "platform.audit.read",
+      "platform.ai.read",
     ],
   },
   {

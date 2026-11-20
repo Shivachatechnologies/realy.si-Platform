@@ -12,7 +12,7 @@ import { formatDate, formatMoney, formatNumber } from "@/i18n/format";
 import { isoDay } from "@/server/modules/crm/common";
 import { sourceNames } from "@/server/modules/crm/config";
 import { listPipelines } from "@/server/modules/crm/pipelines";
-import { conversionMetrics, parseSalesRange, revenueAttribution, salesReportRows } from "@/server/modules/crm/sales";
+import { conversionMetrics, parseSalesRange, revenueAttribution, salesReportRows, stageAnalytics } from "@/server/modules/crm/sales";
 import { listOwners } from "@/server/modules/crm/service";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,13 +26,14 @@ export default async function SalesReportsPage({ searchParams }: { searchParams:
   const { t, locale, base, org, company, viewer, tz } = c;
   const range = parseSalesRange(query);
   const basis = query.basis === "created" ? "created" : "closed";
-  const [rows, conversion, attribution, owners, pipelines, sources] = await Promise.all([
+  const [rows, conversion, attribution, owners, pipelines, sources, stagesReport] = await Promise.all([
     salesReportRows(viewer.ctx, org.id, company.id, range, basis),
     conversionMetrics(viewer.ctx, org.id, company.id, range),
     revenueAttribution(viewer.ctx, org.id, company.id, range),
     listOwners(viewer.ctx, org.id, company.id),
     listPipelines(viewer.ctx, org.id, company.id),
     sourceNames(viewer.ctx, org.id, company.id),
+    stageAnalytics(viewer.ctx, org.id, company.id, range),
   ]);
   const from = isoDay(range.from)!;
   const to = isoDay(new Date(range.to.getTime() - 86_400_000))!;
@@ -134,10 +135,70 @@ export default async function SalesReportsPage({ searchParams }: { searchParams:
           {t("sales.reports.funnel", { leads: conversion.total.leads, deals: conversion.total.deals, won: conversion.total.won, rate: pct(conversion.total.leadToWon) })}
         </p>
       ) : null}
+      {conversion.total ? (
+        <Card>
+          <CardHeader title={t("sales.reports.funnelTitle")} description={t("sales.reports.funnelHint")} />
+          <div className="grid gap-2 p-4 sm:grid-cols-3">
+            {[
+              { label: t("sales.reports.leads"), value: conversion.total.leads, rate: null },
+              { label: t("sales.reports.opportunities"), value: conversion.total.deals, rate: conversion.total.leadToDeal },
+              { label: t("sales.reports.won"), value: conversion.total.won, rate: conversion.total.dealToWon },
+            ].map((step) => (
+              <div key={step.label} className="grid gap-1">
+                <div className="flex items-baseline justify-between gap-2 text-sm">
+                  <span>{step.label}</span>
+                  <span className="tabular-nums font-medium">
+                    {step.value}
+                    {step.rate != null ? <span className="ms-1 text-xs text-muted-foreground">({pct(step.rate)})</span> : null}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-sm bg-muted" aria-hidden>
+                  <div className="h-full bg-primary" style={{ width: `${conversion.total!.leads ? Math.max(2, (step.value / conversion.total!.leads) * 100) : 0}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         {conversionTable(t("sales.reports.conversionByOwner"), conversion.byOwner, (k, name) => (k ? (name ?? "—") : t("crm.unassigned")))}
         {conversionTable(t("sales.reports.conversionBySource"), conversion.bySource, (k) => k ?? none)}
+        {conversionTable(t("sales.reports.conversionByCampaign"), conversion.byCampaign, (k) => k ?? none)}
       </div>
+      <Card>
+        <CardHeader
+          title={t("sales.reports.stageTitle", { pipeline: stagesReport?.pipeline.name ?? "—" })}
+          description={stagesReport ? t("sales.reports.stageHint", { deals: stagesReport.deals, won: stagesReport.won, rate: pct(stagesReport.winShare) }) : undefined}
+        />
+        {stagesReport && stagesReport.rows.length && stagesReport.deals ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-muted-foreground">
+                <tr className="border-b">
+                  <th className="p-2 text-start font-medium">{t("crm.stage")}</th>
+                  <th className="p-2 text-end font-medium">{t("sales.reports.reached")}</th>
+                  <th className="p-2 text-start font-medium">{t("sales.reports.nextStage")}</th>
+                  <th className="p-2 text-end font-medium">{t("sales.reports.toNext")}</th>
+                  <th className="p-2 text-end font-medium">{t("sales.reports.avgDays")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {stagesReport.rows.map((r) => (
+                  <tr key={r.stageId}>
+                    <td className="p-2 font-medium">{r.name}</td>
+                    <td className="p-2 text-end tabular-nums">{r.reached}</td>
+                    <td className="p-2 text-xs text-muted-foreground">{r.nextName ?? t("sales.reports.wonStage")}</td>
+                    <td className="p-2 text-end tabular-nums">{pct(r.toNext)}</td>
+                    <td className="p-2 text-end tabular-nums">{r.avgDays == null ? "—" : formatNumber(r.avgDays, locale, { maximumFractionDigits: 1 })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="p-4 text-sm text-muted-foreground">{t("sales.reports.noStageData")}</p>
+        )}
+      </Card>
       <h2 className="text-sm font-semibold">{t("sales.reports.attribution", { total: money(attribution.totalMinor) })}</h2>
       <div className="grid gap-4 lg:grid-cols-3">
         {breakdown(t("sales.reports.bySource"), attribution.bySource, (k) => k ?? none)}

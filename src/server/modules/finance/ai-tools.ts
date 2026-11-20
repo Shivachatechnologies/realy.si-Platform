@@ -7,6 +7,9 @@ import { burnRate, cashBalance, cashForecast, detectExpenseAnomalies, openReceiv
 import { createInvoice, INVOICE_STATUSES, listInvoices } from "./billing";
 import { createTransaction, listTransactions } from "./transactions";
 import { createCounterparty } from "./setup";
+import { createBill, payablesAging, upcomingPayables } from "./payables";
+import { departmentBudgets, parseBudgetWindow } from "./budgets";
+import { budgetVsActual } from "./transactions";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const money = (v: bigint, currency: string) => `${fromMinor(v, currency)} ${currency}`;
@@ -280,6 +283,147 @@ export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
       );
       const notes = [input.categoryName && !category ? `category "${input.categoryName}" not found (left uncategorized)` : null, input.costCenterName && !department ? `cost center "${input.costCenterName}" not found` : null].filter(Boolean);
       return { content: `Recorded expense ${money(t.amountMinor, t.currency)} "${t.description}" on ${input.date}.${notes.length ? ` Note: ${notes.join("; ")}.` : ""}`, records: [`finance_transaction:${t.id}`] };
+    },
+  }),
+
+  read_payables: def({
+    name: "read_payables",
+    version: 1,
+    description:
+      "Accounts payable: open vendor bills with the aging (not yet due, 1–30, 31–60, 61–90, 90+ days past due), the largest vendors owed, bills due in the next N days (default 30) and the count of bills waiting for approval.",
+    input: z.object({ days: z.number().int().min(1).max(180).optional() }).strict(),
+    modelSchema: { type: "object", properties: { days: { type: "integer", description: "Look-ahead for upcoming bills in days (default 30)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ days }) => `Read accounts payable (next ${days ?? 30} days)`,
+    async execute({ days }, { ctx, organizationId, companyId }) {
+      const c = (await companyInfo(db(), organizationId, companyId)).baseCurrency;
+      const aging = await payablesAging(ctx, organizationId, companyId);
+      const [upcoming, awaiting] = await Promise.all([upcomingPayables(db(), companyId, days ?? 30), db().financeBill.count({ where: { organizationId, companyId, status: "AWAITING_APPROVAL" } })]);
+      const b = aging.totals;
+      const content = [
+        `Open payables ${money(aging.total, c)}, of which overdue ${money(aging.overdue, c)}. Aging: not yet due ${money(b.current, c)}; 1–30 days ${money(b.d1_30, c)}; 31–60 ${money(b.d31_60, c)}; 61–90 ${money(b.d61_90, c)}; 90+ ${money(b.d90_plus, c)}.`,
+        `Bills awaiting approval: ${awaiting}.`,
+        `Top vendors owed:\n${aging.vendors.slice(0, 10).map((v) => `- ${v.name}: ${money(v.total, c)}`).join("\n") || "- none"}`,
+        `Due in the next ${days ?? 30} days (incl. overdue):\n${upcoming.map((x) => `- ${x.vendor.name} bill ${x.number} (${x.id}) due ${dayString(x.dueDate)}${x.overdue ? " OVERDUE" : ""}: ${money(x.balanceMinor, c)}`).join("\n") || "- none"}`,
+      ].join("\n");
+      return { content, count: aging.bills.length, records: upcoming.map((x) => `finance_bill:${x.id}`) };
+    },
+  }),
+
+  read_budget_status: def({
+    name: "read_budget_status",
+    version: 1,
+    description: "Budget status: budget vs actual (expenses + approved vendor bills) per department for the current month or quarter, and every budget whose period includes today with its utilization.",
+    input: z.object({ period: z.enum(["month", "quarter"]).optional() }).strict(),
+    modelSchema: { type: "object", properties: { period: { type: "string", enum: ["month", "quarter"], description: "Department view period (default month)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ period }) => `Read budget status (${period ?? "month"})`,
+    async execute({ period }, { ctx, organizationId, companyId }) {
+      const c = (await companyInfo(db(), organizationId, companyId)).baseCurrency;
+      const w = parseBudgetWindow({ period: period ?? "month" });
+      const deps = await departmentBudgets(ctx, organizationId, companyId, w);
+      const today = todayUtc();
+      const active = (await budgetVsActual(ctx, organizationId, companyId, { from: today, to: addDays(today, 1) })).filter((x) => x.periodStart <= today && x.periodEnd >= today);
+      const content = [
+        `Departments, ${w.label}: budget ${money(deps.totalBudget, c)}, actual ${money(deps.totalActual, c)}${deps.usedPct !== null ? ` (${deps.usedPct}% used)` : ""}.`,
+        deps.rows.map((r) => `- ${r.name}${r.headName ? ` (head ${r.headName})` : ""}: budget ${money(r.budgetMinor, c)}, actual ${money(r.totalMinor, c)} (expenses ${money(r.transactionsMinor, c)}, bills ${money(r.billsMinor, c)})${r.usedPct !== null ? `, ${r.usedPct}% used` : ", no budget"}`).join("\n") || "- no department budgets or spend",
+        `Budgets active today:`,
+        active.map((x) => `- ${x.name} (${dayString(x.periodStart)} – ${dayString(x.periodEnd)}${x.category ? `, ${x.category.name}` : ""}${x.department ? `, ${x.department.name}` : ""}): ${money(x.actualMinor, c)} of ${money(x.amountMinor, c)} (${x.usedPct}%)`).join("\n") || "- none",
+      ].join("\n");
+      return { content, count: deps.rows.length + active.length };
+    },
+  }),
+
+  create_bill_draft: def({
+    name: "create_bill_draft",
+    version: 1,
+    description:
+      'Propose a DRAFT vendor bill (accounts payable) for a vendor (existing by name, or a new one) with line items, optional expense category and cost center per line (by name). A person must approve before it is created; drafts are not posted or paid. Unit prices in major units of the company currency (e.g. "1250.00").',
+    input: z
+      .object({
+        vendorName: z.string().trim().min(1).max(200),
+        number: z.string().trim().min(1).max(60),
+        issueDate: date.optional(),
+        dueDate: date.optional(),
+        notes: z.string().trim().max(2000).optional(),
+        lines: z
+          .array(
+            z
+              .object({
+                description: z.string().trim().min(1).max(500),
+                quantity: z.number().positive().max(1_000_000),
+                unitPrice: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/),
+                categoryName: z.string().trim().max(80).optional(),
+                costCenterName: z.string().trim().max(120).optional(),
+              })
+              .strict(),
+          )
+          .min(1)
+          .max(50),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        vendorName: { type: "string" },
+        number: { type: "string", description: "The vendor's bill/invoice number" },
+        issueDate: { type: "string", description: "YYYY-MM-DD, default today" },
+        dueDate: { type: "string", description: "YYYY-MM-DD, default per payment terms" },
+        notes: { type: "string" },
+        lines: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              description: { type: "string" },
+              quantity: { type: "number" },
+              unitPrice: { type: "string", description: "Major units, e.g. 99.50" },
+              categoryName: { type: "string", description: "Expense category name" },
+              costCenterName: { type: "string", description: "Department / cost center name" },
+            },
+            required: ["description", "quantity", "unitPrice"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["vendorName", "number", "lines"],
+      additionalProperties: false,
+    },
+    permissions: ["finance.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 20_000,
+    summarize: ({ vendorName, number, lines }) => `Create a draft bill ${number} from ${vendorName} (${lines.length} line${lines.length === 1 ? "" : "s"})`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const ci = { mode: "insensitive" as const };
+      const vendor = await db().account.findFirst({ where: { organizationId, companyId, archivedAt: null, name: { equals: input.vendorName, ...ci } }, select: { id: true } });
+      const missing: string[] = [];
+      const lines = [];
+      for (const l of input.lines) {
+        const category = l.categoryName ? await db().financeCategory.findFirst({ where: { organizationId, companyId, kind: "EXPENSE", archivedAt: null, name: { equals: l.categoryName, ...ci } }, select: { id: true } }) : null;
+        const department = l.costCenterName ? await db().department.findFirst({ where: { organizationId, companyId, archivedAt: null, name: { equals: l.costCenterName, ...ci } }, select: { id: true } }) : null;
+        if (l.categoryName && !category) missing.push(`category "${l.categoryName}"`);
+        if (l.costCenterName && !department) missing.push(`cost center "${l.costCenterName}"`);
+        lines.push({ description: l.description, quantity: String(Math.round(l.quantity * 1000) / 1000), unitPrice: l.unitPrice, categoryId: category?.id ?? null, departmentId: department?.id ?? null });
+      }
+      const bill = await createBill(ctx, organizationId, companyId, {
+        ...(vendor ? { vendorId: vendor.id } : { newVendor: { name: input.vendorName } }),
+        number: input.number,
+        issueDate: input.issueDate ?? dayString(todayUtc()),
+        dueDate: input.dueDate,
+        notes: input.notes ?? null,
+        lines,
+      });
+      return {
+        content: `Draft bill ${bill.number} from ${input.vendorName} created: total ${money(bill.totalMinor, bill.currency)}, due ${dayString(bill.dueDate)}. It is a draft: it must be submitted for approval before it is posted or paid.${missing.length ? ` Not found (left empty): ${[...new Set(missing)].join(", ")}.` : ""}`,
+        records: [`finance_bill:${bill.id}`],
+      };
     },
   }),
 };

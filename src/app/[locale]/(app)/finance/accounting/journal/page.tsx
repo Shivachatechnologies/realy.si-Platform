@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("finance.accounting.tabs.journal") };
 }
 
-const SOURCES = ["MANUAL", "INVOICE", "PAYMENT", "CREDIT_NOTE", "TRANSACTION", "OPENING", "REVERSAL"] as const;
+const SOURCES = ["MANUAL", "INVOICE", "PAYMENT", "CREDIT_NOTE", "BILL", "BILL_PAYMENT", "TRANSACTION", "OPENING", "REVERSAL"] as const;
 
 export default async function JournalPage({ searchParams }: PageProps<"/[locale]/finance/accounting/journal">) {
   const p = await financePage("accounting");

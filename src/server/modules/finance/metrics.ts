@@ -1,6 +1,8 @@
 import type { MetricDefinition, MetricRange, MetricScope } from "@/server/core/metrics";
 import { db } from "@/server/core/db";
 import { addDays } from "./common";
+import { budgetUtilization } from "./budgets";
+import { openPayables } from "./spend";
 import { burnRate, cashBalance, overdueReceivables, profitAndLossTotals, recurringRevenue } from "./analytics";
 
 const base = { department: "finance", permission: "finance.read" } as const;
@@ -32,4 +34,7 @@ export const FINANCE_METRICS: MetricDefinition[] = [
   { ...base, key: "finance.mrr", labelKey: "finance.metrics.mrr", unit: "money", kind: "stock", higherIsBetter: true, href: "/finance/recurring", compute: async (s) => (await recurringRevenue(db(), s.companyId)).mrr },
   { ...base, key: "finance.arr", labelKey: "finance.metrics.arr", unit: "money", kind: "stock", higherIsBetter: true, href: "/finance/recurring", compute: async (s) => (await recurringRevenue(db(), s.companyId)).arr },
   { ...base, key: "finance.receivables_overdue", labelKey: "finance.metrics.receivablesOverdue", unit: "money", kind: "stock", higherIsBetter: false, href: "/finance/receivables", compute: (s, r) => overdueReceivables(db(), s.companyId, addDays(asOf(r), 0)) },
+  { ...base, key: "finance.payables_open", labelKey: "finance.metrics.payablesOpen", unit: "money", kind: "stock", higherIsBetter: false, href: "/finance/payables", compute: (s) => openPayables(db(), s.companyId) },
+  { ...base, key: "finance.payables_overdue", labelKey: "finance.metrics.payablesOverdue", unit: "money", kind: "stock", higherIsBetter: false, href: "/finance/payables", compute: (s, r) => openPayables(db(), s.companyId, { dueBefore: asOf(r) }) },
+  { ...base, key: "finance.budget_utilization", labelKey: "finance.metrics.budgetUtilization", unit: "percent", kind: "stock", higherIsBetter: false, href: "/finance/budgets", compute: async (s, r) => (await budgetUtilization(s.companyId, addDays(asOf(r), -1)))?.pct ?? 0 },
 ];

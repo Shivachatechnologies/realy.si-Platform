@@ -64,7 +64,7 @@ export default async function CrmSettingsPage() {
             base={base}
             owners={owners}
             sources={src.map((s) => s.name)}
-            rules={assignment as { id: string; name: string; strategy: string; ownerIds: string[]; matchSource: string | null; matchTerritory: string | null; active: boolean; assignedCount: number }[]}
+            rules={assignment as { id: string; name: string; strategy: string; ownerIds: string[]; matchSource: string | null; matchTerritory: string | null; active: boolean; assignedCount: number; followUpDays: number | null }[]}
           />
         ) : null}
       </Card>

@@ -9,7 +9,8 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
-import { decryptCredentials, encryptCredentials, getConnection } from "./connections";
+import { decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
+import { logProviderCall, providerFetch } from "./client";
 import { buildAuthorizeUrl, type IntegrationOAuthState } from "./oauth";
 import { validateTargetUrl } from "./webhooks";
 import { exchangeCode, integrationRedirectUri, missingEnvVars, oauthClient, postConnectDetails, ProviderError, revokeToken, testConnection } from "./providers";
@@ -234,17 +235,40 @@ export async function testIntegration(ctx: RequestContext, organizationId: strin
     const fresh = await db().integrationConnection.findUnique({ where: { id: row.id }, select: { lastError: true } });
     return { ok: false as const, error: fresh?.lastError ?? "No usable credentials" };
   }
+  const started = Date.now();
+  const logTest = (status: number | null, responseSummary: string | null, error: string | null) =>
+    logProviderCall(conn, { method: "TEST", url: `${provider} · connection test`, status, durationMs: Date.now() - started, attempts: 1, requestSummary: "authenticated identity call", responseSummary, error });
   try {
     const r = await testConnection({ provider, token: conn.accessToken, config: conn.config });
+    await logTest(200, r.account ? "account verified" : "ok", null);
     await db().integrationConnection.update({
       where: { id: row.id },
       data: { status: "CONNECTED", lastError: null, lastErrorAt: null, lastTestedAt: new Date(), externalAccount: r.account ?? row.externalAccount, ...(r.extra ? { config: { ...conn.config, ...r.extra } as Prisma.InputJsonValue } : {}) },
     });
-    return { ok: true as const, account: r.account };
+    const calendar = provider === "google" || provider === "microsoft" ? await testCalendar(conn) : undefined;
+    return { ok: true as const, account: r.account, calendar };
   } catch (err) {
     const error = err instanceof ProviderError ? err.message : "Connection test failed";
+    await logTest(err instanceof ProviderError ? err.status : null, null, error);
     await db().integrationConnection.update({ where: { id: row.id }, data: { status: "ERROR", lastError: error.slice(0, 500), lastErrorAt: new Date(), lastTestedAt: new Date() } });
     return { ok: false as const, error };
+  }
+}
+
+/** Calendar access check for Google / Microsoft 365: lists the calendars the token can read (Google Calendar / Outlook). */
+export async function testCalendar(conn: Connection): Promise<{ ok: boolean; calendars?: number; primary?: string | null; error?: string }> {
+  const url = conn.provider === "google" ? "https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=50" : "https://graph.microsoft.com/v1.0/me/calendars?$top=50&$select=id,name,isDefaultCalendar";
+  try {
+    const res = await providerFetch<{ items?: { summary?: string; primary?: boolean }[]; value?: { name?: string; isDefaultCalendar?: boolean }[] }>(conn, url, { retries: 1 });
+    if (!res.ok) return { ok: false, error: res.status === 403 || res.status === 401 ? "The connection lacks calendar permission; reconnect and grant calendar access" : `Calendar API responded ${res.status}` };
+    if (conn.provider === "google") {
+      const items = res.data?.items ?? [];
+      return { ok: true, calendars: items.length, primary: items.find((c) => c.primary)?.summary ?? null };
+    }
+    const items = res.data?.value ?? [];
+    return { ok: true, calendars: items.length, primary: items.find((c) => c.isDefaultCalendar)?.name ?? null };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Calendar check failed" };
   }
 }
 
@@ -321,4 +345,27 @@ export async function integrationsHealth(ctx: RequestContext, organizationId: st
     db().integrationWebhookDelivery.count({ where: { organizationId, companyId, status: "FAILED", updatedAt: { gte: since } } }),
   ]);
   return { syncErrors, failedDeliveries };
+}
+
+// ───────────────────────────── Request logs ─────────────────────────────
+
+export const LOG_OUTCOMES = ["ok", "error"] as const;
+
+/** A connection's provider calls, newest first (summaries only: no headers, tokens or bodies are ever stored). */
+export async function listRequestLogs(ctx: RequestContext, organizationId: string, companyId: string, provider: string, filters: { outcome?: string; cursor?: string } = {}) {
+  await authorizeIntegrations(ctx, organizationId, companyId, "integrations.read");
+  requireInfo(provider);
+  const conn = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider }, select: { id: true } });
+  if (!conn) return { data: [] as Prisma.IntegrationRequestLogGetPayload<object>[], nextCursor: null };
+  const page = pageInput.parse({ limit: 50, cursor: filters.cursor && z.string().uuid().safeParse(filters.cursor).success ? filters.cursor : undefined });
+  const outcome =
+    filters.outcome === "error" ? { OR: [{ status: null }, { status: { gte: 400 } }] } : filters.outcome === "ok" ? { status: { gte: 200, lt: 400 } } : {};
+  const rows = await db().integrationRequestLog.findMany({ where: { connectionId: conn.id, companyId, ...outcome }, orderBy: { id: "desc" }, ...prismaPage(page) });
+  return toPage(rows, page);
+}
+
+/** Periodic job: keep 30 days of request logs. */
+export async function pruneRequestLogs(): Promise<number> {
+  const { count } = await db().integrationRequestLog.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 30 * 86_400_000) } } });
+  return count;
 }

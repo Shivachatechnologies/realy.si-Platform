@@ -14,8 +14,12 @@ import { useI18n, useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
-  ACTION_KINDS,
+  ACCOUNT_TYPE_VALUES,
+  ACTION_GROUPS,
+  APPROVER_MODES,
+  ASSIGN_ENTITIES,
   CONDITION_OPS,
+  LOAD_ENTITIES,
   LEAD_STAGE_VALUES,
   RECORD_FIELDS,
   STEP_TYPES,
@@ -39,28 +43,48 @@ export interface BuilderOptions {
   profiles: { key: string; name: string }[];
   hooks: { id: string; name: string }[];
   permissions: string[];
-  connected: { slack: boolean; custom_api: boolean; email: boolean };
+  connected: { slack: boolean; custom_api: boolean; email: boolean; microsoft: boolean };
+  /** Deal pipeline stages ("Pipeline · Stage"). */
+  stages: { id: string; name: string }[];
+  /** Project templates: built-in keys and saved template ids. */
+  projectTemplates: { key: string; name: string }[];
+  /** HR onboarding/offboarding checklist templates. */
+  hrTemplates: { id: string; name: string }[];
+  aiEmployees: { id: string; name: string }[];
 }
 
 const DEFAULT_ACTIONS: Record<ActionKind, Action> = {
   create_lead: { kind: "create_lead", name: "{{event.data.name}}", email: "{{event.data.email}}" },
   create_contact: { kind: "create_contact", firstName: "{{event.data.firstName}}", email: "{{event.data.email}}" },
+  create_account: { kind: "create_account", name: "{{event.data.account}}", type: "PROSPECT" },
   create_task: { kind: "create_task", title: "", priority: "MEDIUM", dueInDays: 1 },
   update_lead: { kind: "update_lead", leadId: "{{event.entityId}}" },
   update_record: { kind: "update_record", entity: "lead", recordId: "{{event.entityId}}", field: "stage", value: "" },
   assign_user: { kind: "assign_user", entity: "lead", recordId: "{{event.entityId}}", userId: "" },
+  assign_round_robin: { kind: "assign_round_robin", entity: "lead", recordId: "{{event.entityId}}", pool: "users", userIds: [] },
+  load_record: { kind: "load_record", entity: "account", recordId: "{{event.data.accountId}}" },
+  create_deal: { kind: "create_deal", name: "{{event.data.name}}", ownerId: "{{event.data.ownerId}}" },
+  move_deal_stage: { kind: "move_deal_stage", dealId: "{{event.entityId}}", stageId: "" },
+  create_project: { kind: "create_project", name: "{{event.data.name}}", template: "", memberIds: [], startInDays: 0 },
+  add_project_members: { kind: "add_project_members", projectId: "", userIds: [] },
+  start_onboarding: { kind: "start_onboarding", employeeId: "{{event.entityId}}", checklist: "ONBOARDING" },
+  create_invoice: { kind: "create_invoice", accountId: "{{event.data.accountId}}", description: "", quantity: "1", unitPrice: "", dueInDays: 14 },
+  create_meeting: { kind: "create_meeting", title: "", startInHours: 24, durationMinutes: 30, attendeeIds: [] },
   assign_ai_employee: { kind: "assign_ai_employee", profile: "research_analyst", title: "", instructions: "", wait: false },
+  ai_employee_task: { kind: "ai_employee_task", aiEmployeeId: "", title: "", instructions: "", wait: true },
+  decompose_goal: { kind: "decompose_goal", objectiveId: "{{event.entityId}}", wait: true },
   notify: { kind: "notify", recipients: "owner", userIds: [], title: "" },
-  request_approval: { kind: "request_approval", title: "", approverIds: [] },
+  request_approval: { kind: "request_approval", title: "", approverMode: "users", approverIds: [], escalateToIds: [] },
   generate_ai_content: { kind: "generate_ai_content", profile: "marketing_strategist", title: "", instructions: "", wait: true },
   send_email: { kind: "send_email", to: "{{event.data.email}}", subject: "", body: "" },
-  send_slack: { kind: "send_slack", channel: "general", text: "" },
+  send_slack: { kind: "send_slack", channel: "general", text: "", ifNotConnected: "fail" },
+  send_teams: { kind: "send_teams", teamId: "", channelId: "", text: "", ifNotConnected: "fail" },
   http_webhook: { kind: "http_webhook", url: "https://", body: "" },
   custom_api: { kind: "custom_api", method: "POST", path: "/", body: "" },
 };
 
 function newStep(type: (typeof STEP_TYPES)[number], ids: Set<string>, kind: ActionKind = "create_task"): Step {
-  const prefix = type === "action" ? kind.replace(/^(create|update|send|assign|generate|request)_/, "") : type;
+  const prefix = type === "action" ? kind.replace(/^(create|update|send|assign|generate|request|load|start|move|add)_/, "") : type;
   let n = 1;
   while (ids.has(`${prefix}_${n}`)) n++;
   const id = `${prefix}_${n}`.slice(0, 40);
@@ -321,13 +345,62 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
       </label>
     </>
   );
-  const entity = (a: Extract<Action, { kind: "update_record" | "assign_user" }>) => (
+  const entity = (a: Extract<Action, { kind: "update_record" | "assign_user" | "assign_round_robin" }>) => (
     <Field label={L("entity")} htmlFor={id("entity")}>
-      <Select id={id("entity")} value={a.entity} onChange={(e) => onChange({ ...a, entity: e.target.value as "lead" | "work_task", ...(a.kind === "update_record" ? { field: RECORD_FIELDS[e.target.value as "lead"][0] } : {}) } as Action)}>
-        <option value="lead">{t("workflows.builder.entities.lead")}</option>
-        <option value="work_task">{t("workflows.builder.entities.work_task")}</option>
+      <Select id={id("entity")} value={a.entity} onChange={(e) => onChange({ ...a, entity: e.target.value as "lead", ...(a.kind === "update_record" ? { field: RECORD_FIELDS[e.target.value as "lead"][0] } : {}) } as Action)}>
+        {(a.kind === "update_record" ? (["lead", "work_task"] as const) : ASSIGN_ENTITIES).map((x) => (
+          <option key={x} value={x}>
+            {t(`workflows.builder.entities.${x}`)}
+          </option>
+        ))}
       </Select>
     </Field>
+  );
+  const set = (patch: Record<string, unknown>) => onChange({ ...action, ...patch } as Action);
+  const val = (f: string) => (action as Record<string, unknown>)[f];
+  const choice = (f: string, options: { value: string; label: string }[], emptyLabel?: string) => (
+    <Field label={L(f)} htmlFor={id(f)}>
+      <Select id={id(f)} value={String(val(f) ?? "")} onChange={(e) => set({ [f]: e.target.value || undefined })}>
+        {emptyLabel !== undefined ? <option value="">{emptyLabel}</option> : null}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  );
+  const number = (f: string, min: number, max: number, optional = true) => (
+    <Field label={L(f)} htmlFor={id(f)}>
+      <Input
+        id={id(f)}
+        type="number"
+        min={min}
+        max={max}
+        value={val(f) === undefined ? "" : String(val(f))}
+        onChange={(e) => set({ [f]: e.target.value === "" ? (optional ? undefined : min) : Math.max(min, Math.min(max, Number(e.target.value))) })}
+      />
+    </Field>
+  );
+  const people = (f: string, hint?: string) => (
+    <div className="grid gap-1 sm:col-span-2">
+      <p className="text-sm font-medium">{L(f)}</p>
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      <UserChecklist value={(val(f) as string[] | undefined) ?? []} users={opts.users} onChange={(v) => set({ [f]: v })} />
+    </div>
+  );
+  const permission = (f: string) => choice(f, opts.permissions.map((p) => ({ value: p, label: p })), "—");
+  const toggle = (f: string) => (
+    <label className="flex items-center gap-2 text-sm sm:col-span-2">
+      <input type="checkbox" className="size-4" checked={!!val(f)} onChange={(e) => set({ [f]: e.target.checked })} />
+      {L(f)}
+    </label>
+  );
+  const skipToggle = (
+    <label className="flex items-center gap-2 text-sm sm:col-span-2">
+      <input type="checkbox" className="size-4" checked={val("ifNotConnected") === "skip"} onChange={(e) => set({ ifNotConnected: e.target.checked ? "skip" : "fail" })} />
+      {L("ifNotConnected")}
+    </label>
   );
   let body: ReactNode = null;
   switch (action.kind) {
@@ -351,6 +424,8 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
           {text("email")}
           {text("phone")}
           {text("title")}
+          {text("accountId")}
+          {user("ownerId")}
         </>
       );
       break;
@@ -359,6 +434,7 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
         <>
           {text("title", { required: true })}
           {user("assigneeId")}
+          {text("projectId", { placeholder: "{{steps.project.id}}" })}
           <Field label={L("priority")} htmlFor={id("priority")}>
             <Select id={id("priority")} value={action.priority} onChange={(e) => onChange({ ...action, priority: e.target.value as (typeof WORK_PRIORITIES)[number] })}>
               {WORK_PRIORITIES.map((p) => (
@@ -420,16 +496,155 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
         </>
       );
       break;
+    case "create_account":
+      body = (
+        <>
+          {text("name", { required: true })}
+          {choice("type", ACCOUNT_TYPE_VALUES.map((v) => ({ value: v, label: t(`workflows.builder.accountTypes.${v}`) })))}
+          {text("email")}
+          {text("phone")}
+          {text("website")}
+          {text("source")}
+          {user("ownerId")}
+        </>
+      );
+      break;
+    case "assign_round_robin":
+      body = (
+        <>
+          {entity(action)}
+          {text("recordId", { required: true })}
+          {choice("pool", (["users", "permission", "crm_rules"] as const).map((v) => ({ value: v, label: t(`workflows.builder.pools.${v}`) })))}
+          {action.pool === "permission" ? permission("permission") : null}
+          {action.pool === "crm_rules" ? permission("fallbackPermission") : null}
+          {action.pool === "users" ? people("userIds", t("workflows.builder.rotationHint")) : null}
+        </>
+      );
+      break;
+    case "load_record":
+      body = (
+        <>
+          {choice("entity", LOAD_ENTITIES.map((v) => ({ value: v, label: t(`workflows.builder.loadEntities.${v}`) })))}
+          {text("recordId", { required: true })}
+          <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.loadHint", { step })}</p>
+        </>
+      );
+      break;
+    case "create_deal":
+      body = (
+        <>
+          {text("name", { required: true })}
+          {text("accountId")}
+          {text("contactId")}
+          {user("ownerId")}
+          {choice("stageId", opts.stages.map((x) => ({ value: x.id, label: x.name })), t("workflows.builder.defaultStage"))}
+          {text("amount", { placeholder: "12000.00" })}
+          {number("closeInDays", 0, 730)}
+          {text("source")}
+          {text("description", { multiline: true })}
+        </>
+      );
+      break;
+    case "move_deal_stage":
+      body = (
+        <>
+          {text("dealId", { required: true })}
+          {choice("stageId", opts.stages.map((x) => ({ value: x.id, label: x.name })), "—")}
+          {text("lostReason")}
+        </>
+      );
+      break;
+    case "create_project":
+      body = (
+        <>
+          {text("name", { required: true })}
+          {choice("template", opts.projectTemplates.map((x) => ({ value: x.key, label: x.name })), t("workflows.builder.blankProject"))}
+          {user("ownerId")}
+          {number("startInDays", 0, 365)}
+          {number("dueInDays", 0, 730)}
+          {text("extraMemberIds", { placeholder: "{{event.data.ownerId}}" })}
+          {people("memberIds")}
+          {text("description", { multiline: true })}
+        </>
+      );
+      break;
+    case "add_project_members":
+      body = (
+        <>
+          {text("projectId", { required: true, placeholder: "{{steps.project.id}}" })}
+          {text("role")}
+          {text("extraUserIds", { placeholder: "{{event.data.ownerId}}" })}
+          {people("userIds")}
+        </>
+      );
+      break;
+    case "start_onboarding":
+      body = (
+        <>
+          {text("employeeId", { required: true })}
+          {choice("checklist", (["ONBOARDING", "OFFBOARDING"] as const).map((v) => ({ value: v, label: t(`workflows.builder.checklists.${v}`) })))}
+          {choice("templateId", opts.hrTemplates.map((x) => ({ value: x.id, label: x.name })), t("workflows.builder.defaultTemplate"))}
+        </>
+      );
+      break;
+    case "create_invoice":
+      body = (
+        <>
+          {text("accountId", { required: true })}
+          {text("description", { required: true })}
+          {text("quantity")}
+          {text("unitPrice", { required: true, placeholder: "1500.00" })}
+          {number("dueInDays", 0, 365)}
+          <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.invoiceHint")}</p>
+          {text("notes", { multiline: true })}
+        </>
+      );
+      break;
+    case "create_meeting":
+      body = (
+        <>
+          {text("title", { required: true })}
+          {text("location")}
+          {text("startsAt", { placeholder: "{{event.data.startDate}}" })}
+          {number("startInHours", 0, 2160, false)}
+          {number("durationMinutes", 5, 1440, false)}
+          {text("extraAttendeeIds", { placeholder: "{{event.data.ownerId}}" })}
+          {people("attendeeIds")}
+          {text("agenda", { multiline: true })}
+        </>
+      );
+      break;
     case "assign_ai_employee":
     case "generate_ai_content":
       body = profile(action);
+      break;
+    case "ai_employee_task":
+      body = (
+        <>
+          {opts.aiEmployees.length ? null : <Notice tone="warning" className="sm:col-span-2">{t("workflows.builder.noAiEmployees")}</Notice>}
+          {choice("aiEmployeeId", opts.aiEmployees.map((x) => ({ value: x.id, label: x.name })), "—")}
+          {text("title", { required: true })}
+          {text("instructions", { multiline: true })}
+          {toggle("wait")}
+        </>
+      );
+      break;
+    case "decompose_goal":
+      body = (
+        <>
+          {text("objectiveId", { required: true })}
+          <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.decomposeHint")}</p>
+          {text("guidance", { multiline: true })}
+          {toggle("wait")}
+        </>
+      );
       break;
     case "notify":
       body = (
         <>
           <Field label={L("recipients")} htmlFor={id("recipients")}>
-            <Select id={id("recipients")} value={action.recipients} onChange={(e) => onChange({ ...action, recipients: e.target.value as "owner" | "users" | "permission" })}>
-              {(["owner", "users", "permission"] as const).map((r) => (
+            <Select id={id("recipients")} value={action.recipients} onChange={(e) => onChange({ ...action, recipients: e.target.value as "owner" | "users" | "permission" | "field" })}>
+              {(["owner", "users", "permission", "field"] as const).map((r) => (
                 <option key={r} value={r}>
                   {t(`workflows.builder.recipientOptions.${r}`)}
                 </option>
@@ -454,6 +669,7 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
               <UserChecklist value={action.userIds} users={opts.users} onChange={(userIds) => onChange({ ...action, userIds })} />
             </div>
           ) : null}
+          {action.recipients === "field" ? text("userField", { placeholder: "{{event.data.ownerId}}" }) : null}
           {text("title", { required: true })}
           <Field label={L("href")} htmlFor={id("href")} hint={t("workflows.builder.hrefHint")}>
             <TemplateInput id={id("href")} value={action.href ?? ""} onChange={(v) => onChange({ ...action, href: v })} vars={vars} placeholder="/crm/{{event.entityId}}" />
@@ -465,12 +681,14 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
       body = (
         <>
           {text("title", { required: true })}
+          {choice("approverMode", APPROVER_MODES.map((v) => ({ value: v, label: t(`workflows.builder.approverModes.${v}`) })))}
+          {action.approverMode === "permission" ? permission("permission") : null}
+          {action.approverMode === "record_owner" ? text("ownerField", { placeholder: "{{event.data.ownerId}}" }) : null}
+          {action.approverMode === "users" ? people("approverIds", t("workflows.builder.approversHint")) : null}
           {text("message", { multiline: true })}
-          <div className="grid gap-1 sm:col-span-2">
-            <p className="text-sm font-medium">{L("approverIds")}</p>
-            <p className="text-xs text-muted-foreground">{t("workflows.builder.approversHint")}</p>
-            <UserChecklist value={action.approverIds} users={opts.users} onChange={(approverIds) => onChange({ ...action, approverIds })} />
-          </div>
+          {choice("timeoutAction", (["reject", "escalate"] as const).map((v) => ({ value: v, label: t(`workflows.builder.timeoutActions.${v}`) })), t("workflows.builder.noTimeout"))}
+          {action.timeoutAction ? number("timeoutHours", 1, 720) : null}
+          {action.timeoutAction === "escalate" ? people("escalateToIds") : null}
         </>
       );
       break;
@@ -490,6 +708,19 @@ function ActionEditor({ step, action, onChange, opts, vars }: { step: string; ac
           {!opts.connected.slack ? <ProviderMissing provider="slack" /> : null}
           {text("channel", { required: true, placeholder: "general" })}
           {text("text", { multiline: true })}
+          {skipToggle}
+        </>
+      );
+      break;
+    case "send_teams":
+      body = (
+        <>
+          {!opts.connected.microsoft ? <ProviderMissing provider="microsoft" /> : null}
+          {text("teamId", { required: true })}
+          {text("channelId", { required: true })}
+          <p className="text-xs text-muted-foreground sm:col-span-2">{t("workflows.builder.teamsHint")}</p>
+          {text("text", { multiline: true })}
+          {skipToggle}
         </>
       );
       break;
@@ -655,11 +886,15 @@ function AddStep({ onAdd, ids }: { onAdd: (s: Step) => void; ids: Set<string> })
         ))}
       </Select>
       {type === "action" ? (
-        <Select className="h-8 w-auto" value={kind} aria-label={t("workflows.builder.actionKind")} onChange={(e) => setKind(e.target.value as ActionKind)}>
-          {ACTION_KINDS.map((k) => (
-            <option key={k} value={k}>
-              {t(`workflows.builder.actions.${k}`)}
-            </option>
+        <Select className="h-8 w-auto max-w-full" value={kind} aria-label={t("workflows.builder.actionKind")} onChange={(e) => setKind(e.target.value as ActionKind)}>
+          {Object.entries(ACTION_GROUPS).map(([group, kinds]) => (
+            <optgroup key={group} label={t(`workflows.builder.actionGroups.${group}`)}>
+              {kinds.map((k) => (
+                <option key={k} value={k}>
+                  {t(`workflows.builder.actions.${k}`)}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </Select>
       ) : null}

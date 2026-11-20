@@ -58,8 +58,10 @@ model IntegrationConnection {
   createdAt           DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  syncRuns IntegrationSyncRun[]
+  company      Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  syncRuns     IntegrationSyncRun[]
+  requestLogs  IntegrationRequestLog[]
+  externalRefs IntegrationExternalRef[]
 
   @@unique([id, companyId])
   @@unique([companyId, provider])
@@ -189,4 +191,54 @@ model IntegrationWebhookDelivery {
   @@index([status, nextAttemptAt])
   @@index([subscriptionId, createdAt])
   @@map("integration_webhook_deliveries")
+}
+
+/// One provider API call made through a connection (request/response summaries only: no headers, tokens or bodies).
+model IntegrationRequestLog {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  connectionId    String   @map("connection_id") @db.Uuid
+  provider        String
+  method          String
+  /// Host and path; the query string is dropped (it may carry identifiers or filters).
+  url             String
+  /// HTTP status, null when the request never got a response.
+  status          Int?
+  durationMs      Int      @map("duration_ms")
+  attempts        Int      @default(1)
+  /// Short, secret-free summary of the request (e.g. "JSON body, 3 keys").
+  requestSummary  String?  @map("request_summary")
+  /// Short, secret-free summary of the response (size, content type, provider error code).
+  responseSummary String?  @map("response_summary")
+  error           String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company    Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([connectionId, createdAt])
+  @@index([organizationId, companyId, createdAt])
+  @@map("integration_request_logs")
+}
+
+/// Mapping of an imported external record (QuickBooks / Xero id) to the Realy record it created.
+model IntegrationExternalRef {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  connectionId   String   @map("connection_id") @db.Uuid
+  /// "customer" | "invoice".
+  kind           String
+  externalId     String   @map("external_id")
+  /// "account" | "contact" | "invoice".
+  internalType   String   @map("internal_type")
+  internalId     String   @map("internal_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company    Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([connectionId, kind, externalId])
+  @@map("integration_external_refs")
 }

@@ -7,11 +7,12 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { financePage } from "@/components/finance/page-context";
-import { Empty, RangeForm, rangePresets } from "@/components/finance/widgets";
+import { Empty, RangeForm, rangePresets, UsageBar } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
 import { addDays, param, parseRange } from "@/server/modules/finance/common";
 import { balanceSheetReport, cashFlowStatement, expenseReport, parseReport, profitAndLossReport, REPORTS, revenueReport } from "@/server/modules/finance/analytics";
 import { budgetVsActual } from "@/server/modules/finance/transactions";
+import { projectCostsReport } from "@/server/modules/finance/project-costs";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -200,6 +201,57 @@ export default async function ReportsPage({ searchParams }: PageProps<"/[locale]
           </TBody>
         </Table>
       </div>
+    );
+  } else if (report === "projects") {
+    const r = await projectCostsReport(ctx, org.id, company.id, range);
+    body = r.rows.length ? (
+      <Table>
+        <THead>
+          <Tr>
+            <Th>{t("finance.fields.project")}</Th>
+            <Th className="text-end">{t("finance.projects.expenses")}</Th>
+            <Th className="text-end">{t("finance.projects.bills")}</Th>
+            <Th className="text-end">{t("finance.projects.totalCost")}</Th>
+            <Th className="text-end">{t("finance.projects.income")}</Th>
+            <Th className="text-end">{t("finance.budgets.budget")}</Th>
+            <Th className="min-w-36">{t("finance.budgets.used")}</Th>
+          </Tr>
+        </THead>
+        <TBody>
+          {r.rows.map((x) => (
+            <Tr key={x.projectId}>
+              <Td>
+                <Link href={`/${locale}/finance/transactions?project=${x.projectId}&${qs}`} className="font-medium hover:underline">
+                  {x.name}
+                </Link>
+                <Link href={`/${locale}/finance/bills?project=${x.projectId}`} className="block text-xs text-muted-foreground hover:underline">
+                  {t("finance.projects.viewBills")}
+                </Link>
+                {x.pendingClaimsMinor > 0n ? <span className="block text-xs text-warning">{t("finance.projects.pendingClaims", { amount: money(x.pendingClaimsMinor) })}</span> : null}
+              </Td>
+              <Td className="text-end tabular-nums">{money(x.expensesMinor)}</Td>
+              <Td className="text-end tabular-nums">{money(x.billsMinor)}</Td>
+              <Td className="text-end font-medium tabular-nums">{money(x.totalCostMinor)}</Td>
+              <Td className="text-end tabular-nums">{money(x.incomeMinor)}</Td>
+              <Td className="text-end tabular-nums">{x.budgetMinor !== null ? money(x.budgetMinor) : "—"}</Td>
+              <Td>
+                <UsageBar pct={x.usedPct} />
+              </Td>
+            </Tr>
+          ))}
+          <Tr>
+            <Td className="font-semibold">{t("finance.billing.total")}</Td>
+            <Td />
+            <Td />
+            <Td className="text-end font-semibold tabular-nums">{money(r.totalCost)}</Td>
+            <Td className="text-end font-semibold tabular-nums">{money(r.totalIncome)}</Td>
+            <Td />
+            <Td />
+          </Tr>
+        </TBody>
+      </Table>
+    ) : (
+      <Empty>{t("finance.projects.empty")}</Empty>
     );
   } else {
     const r = await expenseReport(ctx, org.id, company.id, range);

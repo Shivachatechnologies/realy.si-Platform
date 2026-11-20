@@ -10,7 +10,7 @@ export type { AgentProfile } from "./profile-types";
 export type ToolName = string;
 
 /** Read tools every profile can use. */
-export const READ_TOOLS = ["search_company_brain", "read_company_graph", "read_objectives"] as const;
+export const READ_TOOLS = ["search_company_brain", "read_company_graph", "read_objectives", "read_company_memory"] as const;
 export const CORE_READ_TOOLS = READ_TOOLS;
 
 const CORE_PROFILES = [

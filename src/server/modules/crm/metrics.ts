@@ -137,4 +137,30 @@ export const CRM_METRICS: MetricDefinition[] = [
       return total ? Math.round((converted / total) * 1000) / 10 : 0;
     },
   },
+  {
+    key: "crm.proposals_sent",
+    labelKey: "crm.metrics.proposalsSent",
+    department: "sales",
+    unit: "count",
+    permission: "sales.read",
+    kind: "flow",
+    higherIsBetter: true,
+    href: "/crm/proposals",
+    compute: async (s, r) => (await db().crmProposalSend.groupBy({ by: ["proposalId"], where: { ...base(s), sentAt: { gte: r.from, lt: r.to } } })).length,
+  },
+  {
+    key: "crm.proposal_acceptance_rate",
+    labelKey: "crm.metrics.proposalAcceptance",
+    department: "sales",
+    unit: "percent",
+    permission: "sales.read",
+    kind: "flow",
+    higherIsBetter: true,
+    href: "/crm/proposals",
+    async compute(s, r) {
+      const where = { ...base(s), archivedAt: null, decidedAt: { gte: r.from, lt: r.to } };
+      const [decided, accepted] = await Promise.all([db().crmProposal.count({ where }), db().crmProposal.count({ where: { ...where, status: "ACCEPTED" } })]);
+      return decided ? Math.round((accepted / decided) * 1000) / 10 : 0;
+    },
+  },
 ];

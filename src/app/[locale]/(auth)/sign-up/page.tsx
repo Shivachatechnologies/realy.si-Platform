@@ -16,15 +16,19 @@ export default async function SignUpPage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">{t("auth.signUpTitle")}</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.025em]">{t("auth.signUpTitle")}</h1>
         <p className="text-muted-foreground">{t("common.promise")}</p>
       </div>
       <OAuthErrorNotice />
       <Suspense fallback={<Skeleton className="h-80" />}>
         <Form />
       </Suspense>
-      <div className="grid gap-2">
-        <p className="text-center text-xs text-muted-foreground">{t("auth.orContinueWith")}</p>
+      <div className="grid gap-3">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span aria-hidden className="h-px flex-1 bg-border" />
+          <span>{t("auth.orContinueWith")}</span>
+          <span aria-hidden className="h-px flex-1 bg-border" />
+        </div>
         <OAuthButtons providers={oauthStatus()} />
       </div>
     </div>

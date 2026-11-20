@@ -20,6 +20,10 @@ enum FinanceTxnSource {
   RECURRING
   PAYMENT
   AI
+  /// Mirror of a vendor bill payment (managed by the bill).
+  BILL_PAYMENT
+  /// Posted from an approved employee expense claim.
+  EXPENSE_CLAIM
 }
 
 enum FinanceCategoryKind {
@@ -55,6 +59,8 @@ enum JournalSource {
   TRANSACTION
   OPENING
   REVERSAL
+  BILL
+  BILL_PAYMENT
 }
 
 enum FinancialPeriodStatus {
@@ -258,9 +264,10 @@ model FinanceTaxRate {
   archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  company       Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  ledgerAccount LedgerAccount? @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
-  lines         BillingLine[]
+  company          Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount    LedgerAccount?    @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  lines            BillingLine[]
+  financeBillLines FinanceBillLine[]
 
   @@unique([id, companyId])
   @@unique([companyId, name])
@@ -285,13 +292,14 @@ model FinanceAccount {
   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company           Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  ledgerAccount     LedgerAccount        @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
-  transactions      FinanceTransaction[] @relation("TxnAccount")
-  transfersIn       FinanceTransaction[] @relation("TxnToAccount")
-  recurringExpenses RecurringExpense[]
-  reconciliations   Reconciliation[]
-  payments          InvoicePayment[]
+  company             Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount       LedgerAccount        @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions        FinanceTransaction[] @relation("TxnAccount")
+  transfersIn         FinanceTransaction[] @relation("TxnToAccount")
+  recurringExpenses   RecurringExpense[]
+  reconciliations     Reconciliation[]
+  payments            InvoicePayment[]
+  financeBillPayments FinanceBillPayment[]
 
   @@unique([id, companyId])
   @@unique([companyId, name])
@@ -308,11 +316,14 @@ model FinanceCategory {
   archivedAt      DateTime?           @map("archived_at") @db.Timestamptz(3)
   createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  company           Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  ledgerAccount     LedgerAccount?       @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
-  transactions      FinanceTransaction[]
-  recurringExpenses RecurringExpense[]
-  budgets           FinanceBudget[]
+  company              Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  ledgerAccount        LedgerAccount?        @relation(fields: [ledgerAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+  transactions         FinanceTransaction[]
+  recurringExpenses    RecurringExpense[]
+  budgets              FinanceBudget[]
+  financeBillLines     FinanceBillLine[]
+  financeApprovalRules FinanceApprovalRule[]
+  financeExpenseClaims FinanceExpenseClaim[]
 
   @@unique([id, companyId])
   @@unique([companyId, kind, name])
@@ -342,6 +353,10 @@ model FinanceTransaction {
   source           FinanceTxnSource @default(MANUAL)
   recurringId      String?          @map("recurring_id") @db.Uuid
   paymentId        String?          @unique @map("payment_id") @db.Uuid
+  /// Set when the transaction mirrors a vendor bill payment.
+  billPaymentId    String?          @unique @map("bill_payment_id") @db.Uuid
+  /// Optional project the money belongs to (project costing).
+  projectId        String?          @map("project_id") @db.Uuid
   journalEntryId   String?          @map("journal_entry_id") @db.Uuid
   reconciliationId String?          @map("reconciliation_id") @db.Uuid
   reconciledAt     DateTime?        @map("reconciled_at") @db.Timestamptz(3)
@@ -357,6 +372,7 @@ model FinanceTransaction {
   department     Department?           @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
   recurring      RecurringExpense?     @relation(fields: [recurringId, companyId], references: [id, companyId], onDelete: NoAction)
   reconciliation Reconciliation?       @relation(fields: [reconciliationId, companyId], references: [id, companyId], onDelete: NoAction)
+  project        Project?              @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
   attachment     FinanceTxnAttachment?
 
   @@unique([id, companyId])
@@ -364,6 +380,7 @@ model FinanceTransaction {
   @@index([companyId, type, date])
   @@index([financeAccountId, date])
   @@index([companyId, categoryId])
+  @@index([companyId, projectId])
   @@map("finance_transactions")
 }
 
@@ -434,9 +451,10 @@ model FinanceBudget {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company    Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  category   FinanceCategory? @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
-  department Department?      @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  company             Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  category            FinanceCategory?     @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  department          Department?          @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  financeBudgetAlerts FinanceBudgetAlert[]
 
   @@index([companyId, periodStart])
   @@map("finance_budgets")
@@ -739,4 +757,286 @@ model CashScenario {
 
   @@unique([companyId, name])
   @@map("cash_scenarios")
+}
+
+// ───────────── Accounts payable, approvals, expense claims, budget alerts ─────────────
+
+enum FinanceBillStatus {
+  DRAFT
+  AWAITING_APPROVAL
+  APPROVED
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+enum FinanceApprovalKind {
+  BILL
+  EXPENSE
+}
+
+enum FinanceApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+/// Who decides requests matched by a rule.
+enum FinanceApproverMode {
+  /// Every user holding finance.manage.
+  FINANCE_MANAGERS
+  /// The user of the head employee of the request's department (falls back to finance managers).
+  DEPARTMENT_HEAD
+  /// One named user.
+  USER
+}
+
+enum FinanceExpenseClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// A vendor bill (accounts payable). Approval posts Dr Expense / Cr AP; payments post Dr AP / Cr Cash.
+model FinanceBill {
+  id                String            @id @default(uuid(7)) @db.Uuid
+  organizationId    String            @map("organization_id") @db.Uuid
+  companyId         String            @map("company_id") @db.Uuid
+  /// Vendor Account (type VENDOR).
+  vendorId          String            @map("vendor_id") @db.Uuid
+  /// The vendor's bill / invoice number.
+  number            String
+  issueDate         DateTime          @map("issue_date") @db.Date
+  dueDate           DateTime          @map("due_date") @db.Date
+  currency          String            @db.Char(3)
+  status            FinanceBillStatus @default(DRAFT)
+  subtotalMinor     BigInt            @default(0) @map("subtotal_minor")
+  taxMinor          BigInt            @default(0) @map("tax_minor")
+  totalMinor        BigInt            @default(0) @map("total_minor")
+  paidMinor         BigInt            @default(0) @map("paid_minor")
+  notes             String?
+  submittedAt       DateTime?         @map("submitted_at") @db.Timestamptz(3)
+  approvedAt        DateTime?         @map("approved_at") @db.Timestamptz(3)
+  approvedById      String?           @map("approved_by_id") @db.Uuid
+  paidAt            DateTime?         @map("paid_at") @db.Timestamptz(3)
+  voidedAt          DateTime?         @map("voided_at") @db.Timestamptz(3)
+  /// Last time the overdue job notified finance about this bill.
+  overdueNotifiedAt DateTime?         @map("overdue_notified_at") @db.Timestamptz(3)
+  createdById       String            @map("created_by_id") @db.Uuid
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  vendor     Account                  @relation(fields: [vendorId, companyId], references: [id, companyId], onDelete: NoAction)
+  lines      FinanceBillLine[]
+  payments   FinanceBillPayment[]
+  attachment FinanceDocAttachment?
+  approvals  FinanceApprovalRequest[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, vendorId, number])
+  @@index([organizationId, companyId, status])
+  @@index([companyId, dueDate])
+  @@map("finance_bills")
+}
+
+model FinanceBillLine {
+  id             String  @id @default(uuid(7)) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  companyId      String  @map("company_id") @db.Uuid
+  billId         String  @map("bill_id") @db.Uuid
+  position       Int     @default(0)
+  description    String
+  /// Quantity × 1000 (three decimals).
+  quantityMilli  Int     @map("quantity_milli")
+  unitPriceMinor BigInt  @map("unit_price_minor")
+  categoryId     String? @map("category_id") @db.Uuid
+  /// Cost center.
+  departmentId   String? @map("department_id") @db.Uuid
+  projectId      String? @map("project_id") @db.Uuid
+  taxRateId      String? @map("tax_rate_id") @db.Uuid
+  taxBps         Int     @default(0) @map("tax_bps")
+  taxInclusive   Boolean @default(false) @map("tax_inclusive")
+  netMinor       BigInt  @map("net_minor")
+  taxMinor       BigInt  @map("tax_minor")
+  totalMinor     BigInt  @map("total_minor")
+
+  company    Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  bill       FinanceBill      @relation(fields: [billId, companyId], references: [id, companyId], onDelete: Cascade)
+  category   FinanceCategory? @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  department Department?      @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  project    Project?         @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
+  taxRate    FinanceTaxRate?  @relation(fields: [taxRateId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([billId])
+  @@index([companyId, departmentId])
+  @@index([companyId, projectId])
+  @@map("finance_bill_lines")
+}
+
+model FinanceBillPayment {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  companyId        String               @map("company_id") @db.Uuid
+  billId           String               @map("bill_id") @db.Uuid
+  date             DateTime             @db.Date
+  amountMinor      BigInt               @map("amount_minor")
+  method           InvoicePaymentMethod @default(BANK_TRANSFER)
+  reference        String?
+  financeAccountId String               @map("finance_account_id") @db.Uuid
+  journalEntryId   String?              @map("journal_entry_id") @db.Uuid
+  createdById      String               @map("created_by_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company        Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  bill           FinanceBill    @relation(fields: [billId, companyId], references: [id, companyId], onDelete: Cascade)
+  financeAccount FinanceAccount @relation(fields: [financeAccountId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([billId])
+  @@index([companyId, date])
+  @@map("finance_bill_payments")
+}
+
+/// Scan of a bill or an expense-claim receipt (≤ 5 MB), kept apart so lists never load the bytes.
+model FinanceDocAttachment {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  billId         String?  @unique @map("bill_id") @db.Uuid
+  expenseClaimId String?  @unique @map("expense_claim_id") @db.Uuid
+  fileName       String   @map("file_name")
+  contentType    String   @map("content_type")
+  sizeBytes      Int      @map("size_bytes")
+  data           Bytes
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  bill         FinanceBill?         @relation(fields: [billId, companyId], references: [id, companyId], onDelete: Cascade)
+  expenseClaim FinanceExpenseClaim? @relation(fields: [expenseClaimId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([billId, companyId])
+  @@unique([expenseClaimId, companyId])
+  @@map("finance_doc_attachments")
+}
+
+/// Approval rule: bills and/or expense claims at or above an amount (optionally per cost center / category) need approval.
+model FinanceApprovalRule {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  name           String
+  /// null = bills and expense claims.
+  kind           FinanceApprovalKind?
+  minAmountMinor BigInt               @default(0) @map("min_amount_minor")
+  departmentId   String?              @map("department_id") @db.Uuid
+  categoryId     String?              @map("category_id") @db.Uuid
+  approverMode   FinanceApproverMode  @default(FINANCE_MANAGERS) @map("approver_mode")
+  approverUserId String?              @map("approver_user_id") @db.Uuid
+  active         Boolean              @default(true)
+  createdById    String               @map("created_by_id") @db.Uuid
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department Department?              @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  category   FinanceCategory?         @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  requests   FinanceApprovalRequest[]
+
+  @@unique([id, companyId])
+  @@index([companyId, active])
+  @@map("finance_approval_rules")
+}
+
+/// A bill or an expense claim waiting for (or decided by) its approvers.
+model FinanceApprovalRequest {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  kind           FinanceApprovalKind
+  billId         String?               @map("bill_id") @db.Uuid
+  expenseClaimId String?               @map("expense_claim_id") @db.Uuid
+  ruleId         String?               @map("rule_id") @db.Uuid
+  title          String
+  amountMinor    BigInt                @map("amount_minor")
+  currency       String                @db.Char(3)
+  status         FinanceApprovalStatus @default(PENDING)
+  requestedById  String                @map("requested_by_id") @db.Uuid
+  /// Users who may decide (resolved from the rule when the request is created).
+  approverIds    String[]              @default([]) @map("approver_ids") @db.Uuid
+  decidedById    String?               @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?             @map("decided_at") @db.Timestamptz(3)
+  decisionNote   String?               @map("decision_note")
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company      Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  bill         FinanceBill?         @relation(fields: [billId, companyId], references: [id, companyId], onDelete: Cascade)
+  expenseClaim FinanceExpenseClaim? @relation(fields: [expenseClaimId, companyId], references: [id, companyId], onDelete: Cascade)
+  rule         FinanceApprovalRule? @relation(fields: [ruleId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([organizationId, companyId, status])
+  @@index([billId])
+  @@index([expenseClaimId])
+  @@map("finance_approval_requests")
+}
+
+/// An employee's out-of-pocket expense submitted for approval; approval posts it as an EXPENSE transaction.
+model FinanceExpenseClaim {
+  id               String                    @id @default(uuid(7)) @db.Uuid
+  organizationId   String                    @map("organization_id") @db.Uuid
+  companyId        String                    @map("company_id") @db.Uuid
+  /// User who submitted the claim.
+  requesterId      String                    @map("requester_id") @db.Uuid
+  date             DateTime                  @db.Date
+  amountMinor      BigInt                    @map("amount_minor")
+  currency         String                    @db.Char(3)
+  description      String
+  categoryId       String?                   @map("category_id") @db.Uuid
+  departmentId     String?                   @map("department_id") @db.Uuid
+  projectId        String?                   @map("project_id") @db.Uuid
+  /// Merchant / vendor (free text; matched to a vendor on posting).
+  merchant         String?
+  notes            String?
+  status           FinanceExpenseClaimStatus @default(PENDING)
+  /// Account the reimbursement is paid from (chosen on approval).
+  financeAccountId String?                   @map("finance_account_id") @db.Uuid
+  /// The EXPENSE transaction posted on approval.
+  transactionId    String?                   @unique @map("transaction_id") @db.Uuid
+  decidedById      String?                   @map("decided_by_id") @db.Uuid
+  decidedAt        DateTime?                 @map("decided_at") @db.Timestamptz(3)
+  decisionNote     String?                   @map("decision_note")
+  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  category   FinanceCategory?         @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  department Department?              @relation(fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  project    Project?                 @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: NoAction)
+  receipt    FinanceDocAttachment?
+  approvals  FinanceApprovalRequest[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([companyId, requesterId])
+  @@map("finance_expense_claims")
+}
+
+/// Budget threshold notifications already sent (one per budget, threshold and period).
+model FinanceBudgetAlert {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  budgetId       String   @map("budget_id") @db.Uuid
+  /// 80 or 100 (percent used).
+  threshold      Int
+  /// The budget period (YYYY-MM-DD of its start).
+  periodKey      String   @map("period_key")
+  sentAt         DateTime @default(now()) @map("sent_at") @db.Timestamptz(3)
+
+  company Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  budget  FinanceBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, threshold, periodKey])
+  @@map("finance_budget_alerts")
 }

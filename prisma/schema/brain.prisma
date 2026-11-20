@@ -1,0 +1,61 @@
+// ───────────────────────────── Company Brain: knowledge links & company memory ─────────────────────────────
+// BrainDocument / BrainChunk live in core.prisma.
+
+/// What a document is linked to. Subjects are validated inside the document's company when the link is made.
+enum BrainLinkSubject {
+  GRAPH_ENTITY
+  ACCOUNT
+  CONTACT
+  PROJECT
+}
+
+/// Knowledge relationship: a document ↔ a Company Graph entity, CRM account/contact or project.
+model BrainLink {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  documentId     String           @map("document_id") @db.Uuid
+  subjectType    BrainLinkSubject @map("subject_type")
+  subjectId      String           @map("subject_id") @db.Uuid
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  document BrainDocument @relation(fields: [documentId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([documentId, subjectType, subjectId])
+  @@index([companyId, subjectType, subjectId])
+  @@map("brain_links")
+}
+
+enum CompanyMemoryAuthor {
+  HUMAN
+  AI
+}
+
+/// A durable company fact injected into AI tasks' prompts (pinned first, then most relevant by keyword).
+model CompanyMemory {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  title          String
+  fact           String
+  /// Where the fact comes from (free text, e.g. "Board meeting 2026-10", a URL or a document title).
+  source         String?
+  departmentId   String?             @map("department_id") @db.Uuid
+  pinned         Boolean             @default(false)
+  /// AI-authored facts are created only after a person approved the remember_company_fact request.
+  authorKind     CompanyMemoryAuthor @default(HUMAN) @map("author_kind")
+  createdById    String              @map("created_by_id") @db.Uuid
+  /// For AI-authored facts: the person who approved it.
+  approvedById   String?             @map("approved_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department Department? @relation("CompanyMemoryDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([organizationId, companyId, pinned])
+  @@index([companyId, departmentId])
+  @@map("company_memories")
+}
