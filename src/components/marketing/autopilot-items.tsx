@@ -6,7 +6,7 @@ import type { Translate } from "@/i18n/translate";
 import { formatDateTime } from "@/i18n/format";
 import type { listItems } from "@/server/modules/marketing/autopilot";
 import { ActionButton } from "./ui";
-import { StatusBadge } from "./shell";
+import { StatusBadge } from "./status-badge";
 import { PlatformPreview } from "./studio";
 import { ItemEditor } from "./studio-forms";
 import { Pop } from "./studio-client";
