@@ -27,7 +27,7 @@ export function readTokens<K extends string>(el: Element, names: Record<K, strin
   const out = {} as Record<K, [number, number, number]>;
   for (const k of Object.keys(names) as K[]) {
     const raw = cs.getPropertyValue(names[k]).trim();
-    out[k] = toRgb(raw || "#8080a0");
+    out[k] = toRgb(raw || "#5a6478");
   }
   return out;
 }
@@ -71,7 +71,7 @@ export function rng(seed: number): () => number {
 /** The world's two accents (falling back to the brand primaries outside a <World>) plus foreground/muted ink. */
 export function accentColors(el: Element) {
   const cs = getComputedStyle(el);
-  const pick = (a: string, b: string) => toRgb(cs.getPropertyValue(a).trim() || cs.getPropertyValue(b).trim() || "#7070f0");
+  const pick = (a: string, b: string) => toRgb(cs.getPropertyValue(a).trim() || cs.getPropertyValue(b).trim() || "#1764ff");
   return {
     a: pick("--world-accent", "--primary"),
     b: pick("--world-accent-2", "--primary-2"),

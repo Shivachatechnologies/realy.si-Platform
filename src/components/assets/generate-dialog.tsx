@@ -32,14 +32,14 @@ export type ScopeOptions = Partial<Record<AssetScope, { id: string; name: string
 
 /** Small swatch per style preset so the choice is visual, not a word list. */
 const STYLE_SWATCH: Record<StylePreset, string> = {
-  cinematic: "linear-gradient(135deg, oklch(0.3 0.08 270), oklch(0.65 0.2 30))",
+  cinematic: "linear-gradient(135deg, oklch(0.3 0.08 263), oklch(0.65 0.2 30))",
   editorial: "linear-gradient(135deg, oklch(0.92 0.02 80), oklch(0.6 0.05 60))",
-  isometric: "linear-gradient(135deg, oklch(0.85 0.08 200), oklch(0.8 0.1 320))",
-  abstract: "conic-gradient(from 90deg, oklch(0.7 0.2 300), oklch(0.75 0.15 200), oklch(0.8 0.17 80), oklch(0.7 0.2 300))",
+  isometric: "linear-gradient(135deg, oklch(0.85 0.08 200), oklch(0.8 0.1 245))",
+  abstract: "conic-gradient(from 90deg, oklch(0.7 0.2 245), oklch(0.75 0.15 200), oklch(0.8 0.17 80), oklch(0.7 0.2 245))",
   blueprint: "repeating-linear-gradient(0deg, oklch(0.3 0.08 250) 0 6px, oklch(0.6 0.12 220) 6px 7px)",
   product: "radial-gradient(circle at 40% 35%, oklch(0.98 0 0), oklch(0.8 0.01 260))",
   illustration: "linear-gradient(135deg, oklch(0.8 0.17 140) 50%, oklch(0.75 0.18 30) 50%)",
-  portrait: "radial-gradient(circle at 50% 40%, oklch(0.8 0.08 50) 30%, oklch(0.35 0.1 280) 70%)",
+  portrait: "radial-gradient(circle at 50% 40%, oklch(0.8 0.08 50) 30%, oklch(0.35 0.1 263) 70%)",
 };
 const ASPECT_BOX: Record<AspectRatio, string> = { "3:2": "h-4 w-6", "1:1": "h-5 w-5", "2:3": "h-6 w-4" };
 
