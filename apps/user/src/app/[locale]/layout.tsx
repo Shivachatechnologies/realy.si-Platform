@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, IBM_Plex_Sans_Arabic, Inter, Noto_Sans_Devanagari, Sora } from "next/font/google";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { directionOf, type AppLocale } from "@/i18n/config";
 import { getLocale, getMessages, getT } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { Providers } from "@/components/providers";
 import { CookieNotice } from "@/components/legal/cookie-notice";
+import { parseTheme, THEME_COLOR, THEME_COOKIE, themeAttr } from "@/components/theme/theme";
 import "../globals.css";
 
 /** Brand typography (Realy brand guidelines v1.0): Inter for body and UI, Sora for display and the wordmark. */
@@ -28,14 +30,19 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: { default: t("meta.title"), template: `%s · ${t("meta.title")}` }, description: t("meta.description") };
 }
 
-export const viewport: Viewport = {
-  // Edge-to-edge on notched phones: the shell pads itself with env(safe-area-inset-*).
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
-  ],
-};
+export async function generateViewport(): Promise<Viewport> {
+  const attr = themeAttr(parseTheme((await cookies()).get(THEME_COOKIE)?.value));
+  return {
+    // Edge-to-edge on notched phones: the shell pads itself with env(safe-area-inset-*).
+    viewportFit: "cover",
+    themeColor: attr
+      ? THEME_COLOR[attr]
+      : [
+          { media: "(prefers-color-scheme: light)", color: THEME_COLOR.light },
+          { media: "(prefers-color-scheme: dark)", color: THEME_COLOR.dark },
+        ],
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/[locale]">) {
   // Render per request: required for the per-request CSP nonce (see next.config.ts).
@@ -43,10 +50,13 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
   const locale = await getLocale();
   const messages = await getMessages(locale);
   const font = LOCALE_FONT[locale];
+  // JARVIS (dark) is the default look; "light" and "system" are opt-in (components/theme/theme-switch.tsx).
+  const theme = themeAttr(parseTheme((await cookies()).get(THEME_COOKIE)?.value));
   return (
     <html
       lang={locale}
       dir={directionOf(locale)}
+      data-theme={theme}
       className={`${inter.variable} ${geistMono.variable} ${display.variable} ${arabic.variable} ${devanagari.variable} h-full`}
       style={font ? ({ "--font-locale": font } as React.CSSProperties) : undefined}
     >

@@ -16685,7 +16685,13 @@
     "mobileNavigation": "Hauptbereiche",
     "askAi": "KI fragen",
     "askAiTitle": "Steuern Sie Ihr Unternehmen",
-    "askAiHint": "Beschreiben Sie, was Sie brauchen – Ihr KI-Team plant es und fragt, bevor es etwas ändert."
+    "askAiHint": "Beschreiben Sie, was Sie brauchen – Ihr KI-Team plant es und fragt, bevor es etwas ändert.",
+    "theme": {
+      "label": "Design",
+      "jarvis": "JARVIS (dunkel)",
+      "light": "Hell",
+      "system": "System"
+    }
   },
   "authHero": {
     "eyebrow": "KI-Betriebssystem für Unternehmen",
@@ -20568,6 +20574,10 @@
         "title": "Bauen Sie das Unternehmen, das Sie vor Augen haben – mit einem Team, das nie schläft.",
         "lede": "Tragen Sie sich in die Warteliste ein, und wir melden uns, sobald Realy in Ihrem Markt startet – oder legen Sie Ihr Unternehmen heute an, wo die Registrierung bereits offen ist.",
         "orStart": "Schon bereit?"
+      },
+      "hud": {
+        "core": "KI-Kern",
+        "departments": "{count} Abteilungen im Orbit"
       }
     },
     "showcase": {

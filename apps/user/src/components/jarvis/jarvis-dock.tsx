@@ -11,10 +11,10 @@ import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { audioEngine } from "./audio-engine";
 import { deriveCoreState } from "./core-state";
-import { JarvisCoreSvg } from "./jarvis-core-svg";
+import { JarvisCore } from "./jarvis-core";
+import { setDockOpen, useDockOpen, useDockUsed } from "./dock-store";
 import { ApprovalConfirm, CoreStateLabel, MicIndicator, StopButton, TalkButton, TurnList, VoiceNotice } from "./parts";
 import { useVoiceOS, WAKE_KEY } from "./use-voice-os";
-import { useReducedMotion } from "@/components/motion/use-reduced-motion";
 
 const level = () => audioEngine.level();
 const noop = () => () => {};
@@ -63,7 +63,6 @@ function useCompanyBase(active: boolean): string | null {
 export function JarvisDock() {
   const { t, locale } = useI18n();
   const pathname = usePathname();
-  const reduced = useReducedMotion();
   const wakeArmed = useSyncExternalStore(
     noop,
     () => {
@@ -75,8 +74,9 @@ export function JarvisDock() {
     },
     () => false,
   );
-  const [open, setOpen] = useState(false);
-  const [used, setUsed] = useState(false);
+  const open = useDockOpen();
+  const used = useDockUsed();
+  const setOpen = setDockOpen;
   const [text, setText] = useState("");
   const onConsole = /^\/[^/]+\/realy(\/|$)/.test(pathname ?? "");
   const active = !onConsole && (used || wakeArmed);
@@ -94,11 +94,9 @@ export function JarvisDock() {
 
   // Open the panel while the person is talking to Realy (e.g. after "Hey Realy").
   const talking = voice.phase !== "idle" || voice.speaking || !!voice.pendingApproval;
-  const [prevTalking, setPrevTalking] = useState(false);
-  if (talking !== prevTalking) {
-    setPrevTalking(talking);
-    if (talking && !open) setOpen(true);
-  }
+  useEffect(() => {
+    if (talking) setDockOpen(true);
+  }, [talking]);
 
   if (onConsole) return null;
 
@@ -120,16 +118,16 @@ export function JarvisDock() {
   const lastAssistant = [...voice.turns].reverse().find((x) => x.role === "assistant");
 
   return (
-    <div className="pointer-events-none fixed end-4 bottom-[calc(8.75rem+env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 lg:end-5 lg:bottom-[5.5rem]">
+    <div className="pointer-events-none fixed end-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 lg:end-5 lg:bottom-[5.5rem]">
       {open ? (
         <section
           role="dialog"
           aria-label={t("jarvis.dock.title")}
-          className="glass-strong pointer-events-auto grid w-[min(22rem,calc(100vw-2rem))] gap-3 rounded-2xl border p-3 shadow-elev-4 animate-fade-in"
+          className="jv-glass pointer-events-auto grid w-[min(22rem,calc(100vw-2rem))] gap-3 rounded-2xl p-3 shadow-elev-4 animate-fade-in"
         >
           <header className="flex items-center gap-2">
-            <div className="size-9 shrink-0">
-              <JarvisCoreSvg state={state} level={level} pulses={{}} activity={0} reducedMotion={reduced} compact />
+            <div className="size-12 shrink-0">
+              <JarvisCore state={state} level={level} pulses={{}} activity={0} compact className="size-full" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{t("jarvis.dock.title")}</p>
@@ -184,25 +182,22 @@ export function JarvisDock() {
           {voice.error ? <FormError error={voice.error} /> : null}
         </section>
       ) : null}
+      {/* Phones and tablets open the dock from the tab bar's centre "Realy" button; this floating core is desktop-only
+          (the microphone indicator stays visible everywhere). */}
       <div className="pointer-events-auto flex items-center gap-2">
         {!open ? <MicIndicator voice={voice} className="glass-strong" /> : null}
         <button
           type="button"
-          onClick={() => {
-            setUsed(true);
-            setOpen((v) => !v);
-          }}
+          onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={open ? t("jarvis.dock.close") : t("jarvis.dock.open")}
           title={open ? t("jarvis.dock.close") : t("jarvis.dock.open")}
           className={cn(
-            "glass-strong grid size-14 place-items-center rounded-full border shadow-elev-3 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none",
+            "jv-glass relative hidden size-14 place-items-center lg:grid rounded-full shadow-elev-3 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none",
             voice.micLive && "ring-2 ring-danger/60",
           )}
         >
-          <span className="size-11">
-            <JarvisCoreSvg state={state} level={level} pulses={{}} activity={0} reducedMotion={reduced} compact />
-          </span>
+          <JarvisCore state={state} level={level} pulses={{}} activity={0} compact className="size-11" />
         </button>
       </div>
     </div>

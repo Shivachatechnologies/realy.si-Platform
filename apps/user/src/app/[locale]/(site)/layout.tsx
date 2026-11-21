@@ -9,13 +9,14 @@ import { PlatformBanner } from "@/components/cms/platform-banner";
 /**
  * Public website chrome (homepage, platform, AI workforce, pricing, journal, docs, help, waitlist). No session needed;
  * a session cookie only switches the header's call-to-action to "Open Realy" (the app re-checks the session itself).
+ * The public site always wears the JARVIS look (`data-jarvis`: deep-navy tokens, whatever the visitor's app theme).
  */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const t = await getT(locale);
   const signedIn = !!(await cookies()).get("realy_session")?.value;
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip" data-site>
+    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground" data-site data-jarvis>
       <a
         href="#site-main"
         className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow-elev-3"

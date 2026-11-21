@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandMark, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitch } from "@/components/theme/theme-switch";
 import { PlanLockBadge } from "@/components/billing/upgrade-prompt";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 
@@ -185,8 +186,13 @@ export function Sidebar({
           </div>
         </div>
         {touch ? (
-          <div className="flex min-h-14 shrink-0 items-center border-t px-4">
+          <div className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-5 border-t px-4">
             <LanguageSwitcher signedIn className="min-h-11 text-sm [&_select]:min-h-11 [&_select]:text-sm" />
+            <ThemeSwitch className="min-h-11 text-sm [&_select]:min-h-11 [&_select]:text-sm" />
+          </div>
+        ) : !collapsed ? (
+          <div className="flex min-h-11 shrink-0 items-center border-t px-4">
+            <ThemeSwitch />
           </div>
         ) : null}
         {onToggleCollapsed && collapsed ? (

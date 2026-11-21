@@ -16685,7 +16685,13 @@
     "mobileNavigation": "主要板块",
     "askAi": "问 AI",
     "askAiTitle": "指挥你的公司",
-    "askAiHint": "描述你的需求——AI 团队会制定计划，并在做出任何更改前征求你的同意。"
+    "askAiHint": "描述你的需求——AI 团队会制定计划，并在做出任何更改前征求你的同意。",
+    "theme": {
+      "label": "主题",
+      "jarvis": "JARVIS（深色）",
+      "light": "浅色",
+      "system": "跟随系统"
+    }
   },
   "authHero": {
     "eyebrow": "面向企业的 AI 操作系统",
@@ -20568,6 +20574,10 @@
         "title": "打造你心中的公司——和一支永不休息的团队一起。",
         "lede": "加入候补名单，Realy 在你的市场开放时我们会第一时间通知你；如果你所在地区已开放注册，今天就可以创建公司。",
         "orStart": "已经准备好了？"
+      },
+      "hud": {
+        "core": "AI 核心",
+        "departments": "{count} 个部门环绕运行"
       }
     },
     "showcase": {

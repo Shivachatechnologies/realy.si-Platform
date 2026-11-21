@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { DEPARTMENTS } from "@/server/modules/voiceos/catalog";
+import { TIER_SETTINGS } from "@/components/graphics/core-quality";
+import { AdaptiveDpr, FrameDriver } from "@/components/graphics/r3f-kit";
 import { STATE_TUNING, type CoreVisualProps } from "./core-state";
 
 type RGB = [number, number, number];
@@ -21,32 +23,13 @@ const NODE_RADIUS = 2.55;
 
 interface SceneProps extends CoreVisualProps {
   palette: CorePalette;
+  /** "lite" on phones: fewer particles, ≤1.5 DPR, 30 fps, no MSAA (components/graphics/core-quality.ts). */
+  quality?: "full" | "lite";
+  /** Decorative heartbeat (public site): a slow energy wave every few seconds while idle. Not a signal. */
+  ambient?: boolean;
 }
 
-/** Lowers the pixel ratio when frames run slow (and raises it again when there is headroom). */
-function AdaptiveDpr() {
-  const setDpr = useThree((s) => s.setDpr);
-  const stats = useRef({ acc: 0, n: 0, dpr: Math.min(1.75, typeof window === "undefined" ? 1 : window.devicePixelRatio || 1) });
-  useFrame((_, dt) => {
-    const s = stats.current;
-    s.acc += dt;
-    s.n++;
-    if (s.acc < 2) return;
-    const avg = s.acc / s.n;
-    s.acc = 0;
-    s.n = 0;
-    if (avg > 1 / 40 && s.dpr > 0.75) {
-      s.dpr = Math.max(0.75, s.dpr - 0.25);
-      setDpr(s.dpr);
-    } else if (avg < 1 / 58 && s.dpr < Math.min(1.75, window.devicePixelRatio || 1)) {
-      s.dpr = Math.min(1.75, s.dpr + 0.25);
-      setDpr(s.dpr);
-    }
-  });
-  return null;
-}
-
-function Scene({ state, level, pulses, activity, palette }: SceneProps) {
+function Scene({ state, level, pulses, activity, palette, quality = "full", ambient = false }: SceneProps) {
   const colA = useMemo(() => c3(palette.a), [palette.a]);
   const colB = useMemo(() => c3(palette.b), [palette.b]);
   const toneColor = useMemo(() => ({ accent: c3(palette.a), warning: c3(palette.warning), success: c3(palette.success), danger: c3(palette.danger) }), [palette]);
@@ -73,7 +56,7 @@ function Scene({ state, level, pulses, activity, palette }: SceneProps) {
   const lastPulseSeen = useRef<Record<string, number>>({});
 
   const particleGeo = useMemo(() => {
-    const n = 1100;
+    const n = Math.round(1100 * TIER_SETTINGS[quality].particles);
     const pos = new Float32Array(n * 3);
     const base = new Float32Array(n * 3);
     let s = 987654321;
@@ -92,7 +75,9 @@ function Scene({ state, level, pulses, activity, palette }: SceneProps) {
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     g.userData.base = base;
     return g;
-  }, []);
+  }, [quality]);
+  useEffect(() => () => particleGeo.dispose(), [particleGeo]);
+  useEffect(() => () => beamGeo.dispose(), [beamGeo]);
 
   const nodePositions = useMemo(
     () => DEPARTMENTS.map((_, i) => {
@@ -125,6 +110,13 @@ function Scene({ state, level, pulses, activity, palette }: SceneProps) {
       L.lastWave = now;
     }
     L.peak = Math.max(L.level, L.peak * 0.94);
+    if (ambient && state === "IDLE" && now - L.lastWave > 3.4) {
+      const w = waveState.current[L.waveIdx % 6]!;
+      w.born = now;
+      w.strength = 0.6;
+      L.waveIdx++;
+      L.lastWave = now;
+    }
 
     if (core.current) {
       core.current.rotation.y += dt * L.spin;
@@ -246,7 +238,7 @@ function Scene({ state, level, pulses, activity, palette }: SceneProps) {
         </mesh>
       ))}
       <points ref={points} geometry={particleGeo}>
-        <pointsMaterial color={colB} size={0.024} sizeAttenuation transparent opacity={0.65} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <pointsMaterial color={colB} size={quality === "lite" ? 0.034 : 0.024} sizeAttenuation transparent opacity={0.65} depthWrite={false} blending={THREE.AdditiveBlending} />
       </points>
       {DEPARTMENTS.map((d, i) => (
         <mesh key={d} ref={(m) => void (nodes.current[i] = m)}>
@@ -263,16 +255,18 @@ function Scene({ state, level, pulses, activity, palette }: SceneProps) {
 
 /** The Realy AI Core scene (React Three Fiber). Load only through <JarvisCore> (dynamic, client-only, with fallbacks). */
 export default function JarvisCore3D(props: SceneProps) {
+  const q = TIER_SETTINGS[props.quality ?? "full"];
   return (
     <Canvas
-      frameloop={props.paused ? "never" : "always"}
-      dpr={[0.75, 1.75]}
+      frameloop={props.paused ? "never" : "demand"}
+      dpr={q.dpr}
       camera={{ position: [0, 0.9, 6.2], fov: 45 }}
-      gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
+      gl={{ antialias: q.antialias, alpha: true, powerPreference: "low-power" }}
       style={{ background: "transparent" }}
       aria-hidden
     >
-      <AdaptiveDpr />
+      <FrameDriver fps={q.fps} paused={props.paused} />
+      <AdaptiveDpr min={q.dpr[0]} max={q.dpr[1]} fps={q.fps} />
       <ambientLight intensity={0.45} />
       <pointLight position={[3, 3, 4]} intensity={28} color={c3(props.palette.b)} />
       <pointLight position={[-4, -2, 2]} intensity={16} color={c3(props.palette.a)} />
