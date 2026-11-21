@@ -47,6 +47,8 @@ jobs:
           pnpm --filter @realy/database exec prisma migrate diff --from-config-datasource --to-schema prisma/schema --exit-code
       - name: App boundaries (user ⟷ admin isolation)
         run: pnpm check:boundaries
+      - name: Import cycle hazards
+        run: pnpm check:cycles
       - name: Admin message catalogs in sync with apps/user
         run: pnpm i18n:check
       - run: pnpm typecheck
