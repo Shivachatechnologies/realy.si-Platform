@@ -40,6 +40,11 @@ import { AUTONOMY_MODE, delegationMode } from "@/server/modules/workforce/autono
 import { budgetRefusal, employeeBudget } from "@/server/modules/workforce/budgets";
 import { workforcePerformance } from "@/server/modules/workforce/performance";
 import { requireOrgContext } from "@/server/workspace";
+import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
+import { DEPARTMENTS, listEmployees, workingHoursOf } from "@/server/modules/workforce/service";
+import { workHistory } from "@/server/modules/workforce/lifecycle";
+import { LifecyclePanel } from "@/components/workforce/lifecycle-panel";
+import type { Evaluation } from "@/server/modules/workforce/lifecycle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.workforce.title") };
@@ -95,6 +100,32 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
       : Promise.resolve(null),
   ]);
   const steps = setupSteps(e);
+  // Employee record + lifecycle (work history from the audit log; tools the viewer may grant).
+  const [workLog, colleagues, grantable] = await Promise.all([
+    workHistory(viewer.ctx, org.id, company.id, e.id, 30),
+    canManage ? listEmployees(viewer.ctx, org.id, company.id) : Promise.resolve([]),
+    canManage
+      ? (async () => {
+          await loadTools();
+          const cache = new Map<string, boolean>();
+          const out: { name: string; label: string; yours: boolean }[] = [];
+          for (const name of profileByKey(e.profileKey)?.tools ?? []) {
+            const d = getTool(name);
+            if (!d) continue;
+            let yours = true;
+            for (const perm of d.permissions) {
+              if (!cache.has(perm)) cache.set(perm, await can(viewer.ctx, perm, chain));
+              if (!cache.get(perm)) yours = false;
+            }
+            const label = t(`workforce.toolNames.${name}`);
+            out.push({ name, label: label === `workforce.toolNames.${name}` ? name.replace(/_/g, " ") : label, yours });
+          }
+          return out;
+        })()
+      : Promise.resolve([]),
+  ]);
+  const hours = workingHoursOf(e.workingHours);
+  const evaluation = (e.lastEvaluation as unknown as Evaluation | null) ?? null;
   const received = reportsTo.filter((r) => r.manager?.id === e.id);
   const written = reportsTo.filter((r) => r.aiEmployee.id === e.id);
   const logs = await db().agentTask.findMany({
@@ -147,7 +178,7 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
               {e.jobTitle ? `${e.jobTitle} · ` : ""}
               {t(`profiles.${e.profileKey}.name`)} · {t(`workforce.departments.${e.department}`)} · {t(`workforce.levels.${e.level}.name`)}
             </p>
-            <p className="text-xs italic text-muted-foreground">{t(`workforce.personality.${e.department}`)}</p>
+            <p className="text-xs italic text-muted-foreground">{e.personality ?? t(`workforce.personality.${e.department}`)}</p>
             <p className="text-xs text-muted-foreground">
               {t("workforce.profile.reportsTo")}:{" "}
               {e.manager ? (
@@ -198,6 +229,95 @@ export default async function EmployeePage({ params }: PageProps<"/[locale]/work
           {t("workforce.setup.pending", { done: steps.filter((s) => s.done).length, total: steps.length })}
         </Notice>
       ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader title={t("workforce.record.title")} description={t("workforce.record.hint")} />
+          <CardBody>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.personality")}</dt>
+                <dd>{e.personality ?? <span className="text-muted-foreground">{t("workforce.record.notSet")}</span>}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.communicationStyle")}</dt>
+                <dd>{e.communicationStyle ?? <span className="text-muted-foreground">{t("workforce.record.notSet")}</span>}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.schedule")}</dt>
+                <dd>
+                  {hours ? t("workforce.record.hoursLine", { days: hours.days.map((d) => t(`workforce.record.days.${d}`)).join(" "), start: hours.start, end: hours.end }) : t("workforce.record.anyTime")}
+                  <span className="block text-xs text-muted-foreground">{e.timezone ?? t("workforce.record.companyTimezone")}</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.permissions")}</dt>
+                <dd>
+                  {t(`workforce.autonomy.${e.autonomy}.name`)} · {t("workforce.record.toolsCount", { count: effective.size })}
+                  <span className="block text-xs text-muted-foreground">{e.runsAs ? t("workforce.record.runsAs", { name: e.runsAs.name }) : t("workforce.form.runsAsRequester")}</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.queue")}</dt>
+                <dd>{t("workforce.record.queueLine", { running: running.data.length, queued: queued.data.length, schedules: schedules.length })}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("workforce.record.evaluation")}</dt>
+                <dd>
+                  {evaluation ? t("workforce.lifecycle.evaluated", { verdict: t(`workforce.lifecycle.verdicts.${evaluation.verdict}`), score: evaluation.score === null ? "—" : formatNumber(evaluation.score, locale) }) : <span className="text-muted-foreground">{t("workforce.record.notEvaluated")}</span>}
+                  {e.lastEvaluatedAt ? <span className="block text-xs text-muted-foreground">{formatRelativeTime(e.lastEvaluatedAt, locale)}</span> : null}
+                </dd>
+              </div>
+            </dl>
+            <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("workforce.record.history")}</h3>
+            {workLog.length ? (
+              <ol className="mt-2 grid max-h-64 gap-1 overflow-y-auto text-sm">
+                {workLog.map((h) => (
+                  <li key={h.id} className="flex flex-wrap justify-between gap-2 border-b py-1 last:border-0">
+                    <span>{t(`workforce.record.events.${h.action}`) === `workforce.record.events.${h.action}` ? h.action.replace(/_/g, " ") : t(`workforce.record.events.${h.action}`)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {h.actor ?? t("workforce.record.system")} · {formatDateTime(h.at, locale, tz)}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">{t("workforce.record.noHistory")}</p>
+            )}
+          </CardBody>
+        </Card>
+        {canManage ? (
+          <Card>
+            <CardHeader title={t("workforce.lifecycle.title")} description={t("workforce.lifecycle.hint")} />
+            <CardBody>
+              <LifecyclePanel
+                apiBase={apiBase}
+                employee={{
+                  id: e.id,
+                  name: e.name,
+                  level: e.level,
+                  department: e.department,
+                  profileKey: e.profileKey,
+                  managerEmployeeId: e.managerEmployeeId,
+                  managerUserId: e.managerUserId,
+                  autonomy: e.autonomy,
+                  allowedTools: e.allowedTools,
+                  runsAsUserId: e.runsAsUserId,
+                  personality: e.personality,
+                  communicationStyle: e.communicationStyle,
+                  timezone: e.timezone,
+                  workingHours: hours,
+                }}
+                roles={AGENT_PROFILES.map((x) => ({ key: x.key, label: t(`profiles.${x.key}.name`) })).sort((a, b) => a.label.localeCompare(b.label))}
+                departments={DEPARTMENTS.map((d) => ({ key: d, label: t(`workforce.departments.${d}`) }))}
+                employees={colleagues.filter((x) => x.id !== e.id).map((x) => ({ id: x.id, name: x.name }))}
+                members={members}
+                tools={grantable}
+              />
+            </CardBody>
+          </Card>
+        ) : null}
+      </div>
       {e.status === "PAUSED" ? <Notice tone="warning">{t("workforce.employee.pausedNotice")}</Notice> : null}
       {overBudget ? (
         <Notice tone="warning" action={<Link className="text-sm text-primary hover:underline" href={`/${locale}/workforce/performance`}>{t("workforce.tabs.performance")}</Link>}>

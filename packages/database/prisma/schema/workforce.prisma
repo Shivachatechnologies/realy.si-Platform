@@ -103,6 +103,21 @@ model AiEmployee {
   model                  String?
   /// Set when the lifecycle setup (configure → role → goals → permissions → activate) was completed.
   setupCompletedAt       DateTime?        @map("setup_completed_at") @db.Timestamptz(3)
+  /// Employee record: how it thinks and how it writes (appended to its prompt).
+  personality            String?
+  communicationStyle     String?          @map("communication_style")
+  /// IANA timezone of its working hours; null = the company's timezone.
+  timezone               String?
+  /// { days: number[] (0 = Sunday), start: "HH:MM", end: "HH:MM" }; null = any time. Recurring schedules wait for these hours.
+  workingHours           Json?            @map("working_hours")
+  /// Provenance: the organization design (and its role key) that provisioned this employee — makes provisioning idempotent.
+  orgDesignId            String?          @map("org_design_id") @db.Uuid
+  designRoleKey          String?          @map("design_role_key")
+  /// Retired employees (archivedAt set) that were replaced: who took over their queue.
+  replacedByEmployeeId   String?          @map("replaced_by_employee_id") @db.Uuid
+  /// Last performance evaluation (lifecycle "evaluate").
+  lastEvaluation         Json?            @map("last_evaluation")
+  lastEvaluatedAt        DateTime?        @map("last_evaluated_at") @db.Timestamptz(3)
   createdById            String           @map("created_by_id") @db.Uuid
   createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt              DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -121,6 +136,7 @@ model AiEmployee {
   delegationsTo   AiDelegation[]     @relation("AiDelegationTo")
 
   @@unique([id, companyId])
+  @@unique([orgDesignId, designRoleKey])
   @@index([organizationId, companyId, status])
   @@index([managerEmployeeId])
   @@map("ai_employees")
@@ -250,6 +266,12 @@ model AiEmployeeReport {
   resolvedById      String?      @map("resolved_by_id") @db.Uuid
   /// Escalation ladder: when the founder was notified (immediately at the top of the chart, or after the AI manager did not resolve it).
   founderNotifiedAt DateTime?    @map("founder_notified_at") @db.Timestamptz(3)
+  /// Escalation hygiene (escalation-policy.ts): trivial | normal | important | critical.
+  severity          String       @default("normal")
+  /// How many levels an unresolved escalation has climbed (manager → executive → CEO → founder).
+  climbLevel        Int          @default(0) @map("climb_level")
+  /// When it was last raised to a new manager (the SLA runs from here).
+  raisedAt          DateTime?    @map("raised_at") @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
@@ -514,4 +536,85 @@ model AutonomyFeedback {
   @@index([companyId, department, actionClass, createdAt])
   @@index([organizationId, companyId, createdAt])
   @@map("autonomy_feedback")
+}
+
+// ───────────── Organization designer (workforce/org-designer.ts) ─────────────
+
+enum AiOrgDesignStatus {
+  DRAFT
+  APPLYING
+  APPLIED
+  FAILED
+}
+
+enum AiOrgProvisionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// A proposed AI organization: inputs (preset, industry, model, goals, workload, budget, revenue target), the
+/// deterministic proposal and an optional AI-refined proposal (an agent task). Applying it provisions AI employees.
+model AiOrgDesign {
+  id              String            @id @default(uuid(7)) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  companyId       String            @map("company_id") @db.Uuid
+  name            String
+  /// solo | 5 | 10 | 25 | 50 | 100 | 250 | 500 | 1000 | custom
+  preset          String
+  inputs          Json
+  /// Deterministic proposal (org-presets.ts designOrganization).
+  proposal        Json
+  /// AI refinement (validated and clamped to the deterministic roles' evidence); null until a refinement completed.
+  refinedProposal Json?             @map("refined_proposal")
+  refineTaskId    String?           @map("refine_task_id") @db.Uuid
+  /// none | running | completed | failed
+  refineStatus    String            @default("none") @map("refine_status")
+  refineError     String?           @map("refine_error")
+  /// Which proposal is applied: deterministic | refined
+  appliedVariant  String?           @map("applied_variant")
+  status          AiOrgDesignStatus @default(DRAFT)
+  createdById     String            @map("created_by_id") @db.Uuid
+  appliedAt       DateTime?         @map("applied_at") @db.Timestamptz(3)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  jobs    AiOrgProvisionJob[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@map("ai_org_designs")
+}
+
+/// Resumable, idempotent provisioning of a design: managers first, in batches (the worker continues large ones).
+model AiOrgProvisionJob {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  designId       String               @map("design_id") @db.Uuid
+  status         AiOrgProvisionStatus @default(QUEUED)
+  /// Ordered role keys still to provision (managers first); shrinks as batches complete.
+  total          Int
+  created        Int                  @default(0)
+  skipped        Int                  @default(0)
+  failed         Int                  @default(0)
+  /// Index of the next role in the design's ordered role list.
+  cursor         Int                  @default(0)
+  lastError      String?              @map("last_error")
+  startedById    String               @map("started_by_id") @db.Uuid
+  /// Lease: a worker holding the job sets this; stale leases are taken over (resume after a crash).
+  leaseUntil     DateTime?            @map("lease_until") @db.Timestamptz(3)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  finishedAt     DateTime?            @map("finished_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  design  AiOrgDesign @relation(fields: [designId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([status, leaseUntil])
+  @@index([designId])
+  @@map("ai_org_provision_jobs")
 }

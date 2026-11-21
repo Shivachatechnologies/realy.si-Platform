@@ -7,7 +7,8 @@ export const STATIC_SECURITY_HEADERS: { key: string; value: string }[] = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+  // microphone=(self): the Realy voice console (components/jarvis) records only on push-to-talk or the opt-in wake word.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 

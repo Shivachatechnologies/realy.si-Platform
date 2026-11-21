@@ -8,6 +8,7 @@ import { Aurora } from "@/components/motion/aurora";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Sidebar } from "./sidebar";
 import { MobileCommandEntry, MobileTabBar } from "./mobile-nav";
+import { JarvisDock } from "@/components/jarvis/jarvis-dock";
 
 export { Aurora };
 
@@ -136,6 +137,8 @@ export function AppFrame({ topbar, adminSlot, activity, lockedHrefs, children }:
       {/* Phones and tablets: bottom tab bar (+ "More" opens the drawer) and the sticky AI command entry. */}
       <MobileTabBar onMore={() => setOpen(true)} moreOpen={open} lockedHrefs={lockedHrefs} />
       <MobileCommandEntry />
+      {/* Realy voice dock (components/jarvis): idle until opened or the "Hey Realy" wake word is switched on. */}
+      <JarvisDock />
     </div>
   );
 }

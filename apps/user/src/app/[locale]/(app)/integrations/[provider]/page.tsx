@@ -5,6 +5,9 @@ import { AccountPicker, ApiKeyForm, ConnectionActions, ConnectionSettingsForm, D
 import { formatCostMicros } from "@/components/integrations/usage-format";
 import { CopyText, HookRowActions, NewHookForm } from "@/components/integrations/webhook-managers";
 import { SyncTable } from "@/components/integrations/sync-table";
+import { BankFeedCard, ProviderEventsCard, ProviderWebhookCard } from "@/components/integrations/provider-panels";
+import { listProviderEventsFor } from "@/server/modules/integrations/provider-webhooks";
+import { bankFeed } from "@/server/modules/integrations/services/banking";
 import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
 import { Forbidden, NoCompany, PageFrame } from "@/components/automation/page-frame";
 import { Badge, StatusDot } from "@/components/ui/badge";
@@ -59,10 +62,14 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   const conn = data.connection;
   const oauthError = typeof sp.oauthError === "string" && OAUTH_ERRORS.includes(sp.oauthError) ? sp.oauthError : null;
   const hooks = info.key === "webhook" ? await listHooks(viewer.ctx, org.id, company.id) : [];
-  const [usage, secretNames] = await Promise.all([
+  const isBankFeed = info.key === "plaid" || info.key === "wise";
+  const [usage, secretNames, events, feed] = await Promise.all([
     info.key === "webhook" ? null : usageSummary(viewer.ctx, org.id, company.id, { provider }),
     conn && info.configFields?.length && canManage ? storedSecretNames(org.id, company.id, provider) : Promise.resolve([] as string[]),
+    info.inboundWebhooks && (conn || data.previous) ? listProviderEventsFor(org.id, company.id, provider) : null,
+    conn && isBankFeed ? bankFeed(viewer.ctx, org.id, company.id, info.key as "plaid" | "wise", 20) : null,
   ]);
+  const awaitingDocs = info.availability === "awaiting_docs";
   const cfg = (conn?.config && typeof conn.config === "object" && !Array.isArray(conn.config) ? conn.config : {}) as Record<string, unknown>;
   const accounts = Array.isArray(cfg.accounts) ? (cfg.accounts as ConnectionAccount[]) : [];
   const activeAccountId = typeof cfg.activeAccountId === "string" ? cfg.activeAccountId : (accounts[0]?.id ?? null);
@@ -114,6 +121,9 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
       {tabs}
       {sp.connected === "1" ? <Notice tone="success">{t("integrations.connectedNotice")}</Notice> : null}
       {oauthError ? <Notice tone="danger">{t(`integrations.oauthErrors.${oauthError}`)}</Notice> : null}
+      {awaitingDocs ? <Notice tone="info">{t(`integrations.providers.${info.key}.awaiting`)}</Notice> : null}
+      {data.plan.locked && !conn ? <Notice tone="warning">{t("integrations.marketplace.planLockedNotice", { plan: t(`integrations.marketplace.plans.${data.plan.minPlan}`) })}</Notice> : null}
+      {info.verification === "config_only" && conn ? <Notice tone="info">{t("integrations.marketplace.configOnlyNotice")}</Notice> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid content-start gap-4">
           <Card>
@@ -200,7 +210,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               ) : null}
 
               {info.oauthAlternative && data.oauthAvailable && canManage ? <p className="text-xs text-muted-foreground">{t("integrations.orApiKey")}</p> : null}
-              {info.authType === "api_key" && canManage ? (
+              {info.authType === "api_key" && canManage && !awaitingDocs ? (
                 <div className="grid gap-2">
                   <h3 className="text-sm font-medium">{conn ? t("integrations.replaceCredentials") : t("integrations.enterCredentials")}</h3>
                   <ApiKeyForm base={base} provider={info.key} fields={info.fields ?? []} connected={!!conn} />
@@ -212,7 +222,11 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
             </CardBody>
           </Card>
 
-          {!conn ? (
+          {conn && data.webhookUrl && info.inboundWebhooks ? <ProviderWebhookCard t={t} info={info} url={data.webhookUrl} config={cfg} /> : null}
+          {feed && isBankFeed ? <BankFeedCard t={t} provider={info.key as "plaid" | "wise"} feed={feed} base={base} locale={locale} tz={tz} canManage={canManage} returned={sp.plaid === "return"} /> : null}
+          {events ? <ProviderEventsCard t={t} rows={events.data.slice(0, 15)} locale={locale} tz={tz} /> : null}
+
+          {!conn && !awaitingDocs ? (
             <Card>
               <CardHeader title={t("integrations.setup.title")} description={t("integrations.setup.help")} />
               <ol className="grid list-decimal gap-2 p-4 ps-8 text-sm">

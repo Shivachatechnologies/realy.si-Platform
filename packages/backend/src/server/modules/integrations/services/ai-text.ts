@@ -1,15 +1,18 @@
 import "server-only";
 import { providerFetch } from "../client";
+import { compatibleBase } from "../providers";
 import { estimateTokenCostMicros, recordUsage } from "../usage";
 import { ensureOk, errorText, str, withFallback, type ServiceResult } from "./common";
 
 /**
  * Quick text generation for module features (rewrites, summaries, translations) with provider fallback
- * OpenAI → Gemini. Anthropic stays the agent runtime (src/server/modules/agents); this never replaces it.
+ * OpenAI → Gemini → OpenRouter → any OpenAI-compatible endpoint. Anthropic stays the agent runtime (src/server/modules/agents); this never replaces it.
  */
 
-export const AI_TEXT_PROVIDERS = ["openai", "gemini"] as const;
-const DEFAULT_MODEL = { openai: "gpt-4.1-mini", gemini: "gemini-2.5-flash" } as const;
+export const AI_TEXT_PROVIDERS = ["openai", "gemini", "openrouter", "openai_compatible"] as const;
+type AiTextProvider = (typeof AI_TEXT_PROVIDERS)[number];
+const DEFAULT_MODEL: Record<AiTextProvider, string> = { openai: "gpt-4.1-mini", gemini: "gemini-2.5-flash", openrouter: "openai/gpt-4.1-mini", openai_compatible: "" };
+const MODEL_RE = /^[A-Za-z0-9.:_/-]{2,100}$/;
 
 export interface GenerateTextInput {
   system?: string;
@@ -29,11 +32,13 @@ export interface GeneratedText {
   estimatedCostMicros: number | null;
 }
 
-const modelFor = (provider: "openai" | "gemini", input: GenerateTextInput, config: Record<string, unknown>) => {
+const modelFor = (provider: AiTextProvider, input: GenerateTextInput, config: Record<string, unknown>) => {
   const m = input.model?.trim();
-  if (m && /^[A-Za-z0-9.:_-]{2,64}$/.test(m) && (provider === "gemini" ? m.startsWith("gemini") : !m.startsWith("gemini"))) return m;
+  // A model override applies to the provider it belongs to: gemini-* → Gemini, vendor/model → OpenRouter, others → OpenAI.
+  const belongs = m && MODEL_RE.test(m) && (provider === "gemini" ? m.startsWith("gemini") : provider === "openrouter" ? m.includes("/") : provider === "openai" ? !m.startsWith("gemini") && !m.includes("/") : false);
+  if (m && belongs) return m;
   const configured = str(config.model);
-  return configured && /^[A-Za-z0-9.:_-]{2,64}$/.test(configured) ? configured : DEFAULT_MODEL[provider];
+  return configured && MODEL_RE.test(configured) ? configured : DEFAULT_MODEL[provider];
 };
 
 export async function generateText(organizationId: string, companyId: string, input: GenerateTextInput): Promise<ServiceResult<GeneratedText>> {
@@ -44,20 +49,28 @@ export async function generateText(organizationId: string, companyId: string, in
   const temperature = input.temperature === undefined ? undefined : Math.min(Math.max(0, input.temperature), 2);
 
   return withFallback(organizationId, companyId, input.providers ?? AI_TEXT_PROVIDERS, async (conn) => {
-    const provider = conn.provider as "openai" | "gemini";
+    const provider = conn.provider as AiTextProvider;
     const model = modelFor(provider, input, conn.config);
     try {
       let out: Omit<GeneratedText, "estimatedCostMicros">;
-      if (provider === "openai") {
+      let reportedCostMicros: number | null = null;
+      if (provider !== "gemini") {
+        if (!model) throw new Error(`${provider} has no model configured`);
+        const base = compatibleBase(provider, conn.config);
+        if (!base) throw new Error(`${provider} has no base URL configured`);
         const messages = [...(input.system ? [{ role: "system", content: input.system }] : []), { role: "user", content: prompt }];
-        const res = await providerFetch<{ choices?: { message?: { content?: string } }[]; usage?: { prompt_tokens?: number; completion_tokens?: number }; model?: string }>(
+        // OpenAI uses max_completion_tokens; most OpenAI-compatible servers (and OpenRouter) still read max_tokens.
+        const limits = provider === "openai" ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens };
+        const res = await providerFetch<{ choices?: { message?: { content?: string } }[]; usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number }; model?: string }>(
           conn,
-          "https://api.openai.com/v1/chat/completions",
-          { json: { model, messages, max_completion_tokens: maxTokens, ...(temperature !== undefined ? { temperature } : {}) }, timeoutMs: 60_000, retries: 2 },
+          `${base}/chat/completions`,
+          { json: { model, messages, ...limits, ...(temperature !== undefined ? { temperature } : {}), ...(provider === "openrouter" ? { usage: { include: true } } : {}) }, timeoutMs: 60_000, retries: 2 },
         );
-        ensureOk(res, "OpenAI chat completion");
+        ensureOk(res, `${provider} chat completion`);
         const text = res.data?.choices?.[0]?.message?.content ?? "";
         out = { text, model: res.data?.model ?? model, inputTokens: res.data?.usage?.prompt_tokens ?? 0, outputTokens: res.data?.usage?.completion_tokens ?? 0 };
+        // OpenRouter reports the real charge (USD) of the request.
+        if (typeof res.data?.usage?.cost === "number") reportedCostMicros = Math.round(res.data.usage.cost * 1_000_000);
       } else {
         const res = await providerFetch<{ candidates?: { content?: { parts?: { text?: string }[] } }[]; usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }; modelVersion?: string }>(
           conn,
@@ -77,7 +90,7 @@ export async function generateText(organizationId: string, companyId: string, in
         out = { text, model: res.data?.modelVersion ?? model, inputTokens: res.data?.usageMetadata?.promptTokenCount ?? 0, outputTokens: res.data?.usageMetadata?.candidatesTokenCount ?? 0 };
       }
       if (!out.text.trim()) throw new Error(`${provider} returned no text`);
-      const cost = estimateTokenCostMicros(out.model, out.inputTokens, out.outputTokens);
+      const cost = reportedCostMicros ?? estimateTokenCostMicros(out.model.replace(/^openai\//, ""), out.inputTokens, out.outputTokens);
       await recordUsage({ organizationId, companyId, connectionId: conn.id, provider, operation: "ai.text", units: out.inputTokens + out.outputTokens, unit: "token", estimatedCostMicros: cost, status: "SUCCEEDED", meta: { model: out.model, inputTokens: out.inputTokens, outputTokens: out.outputTokens } });
       return { ...out, estimatedCostMicros: cost };
     } catch (err) {

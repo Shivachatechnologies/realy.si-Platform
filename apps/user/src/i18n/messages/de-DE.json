@@ -831,7 +831,95 @@
       "sites_unknown_asset": "Ein Bild ist nicht in Ihrer Asset-Bibliothek.",
       "sites_no_structure": "Ihr Founder Kit hat noch keine fertige Website-Struktur.",
       "sites_domain_taken": "Diese Domain ist bereits mit einer anderen Website verbunden.",
-      "sites_no_domain": "Fügen Sie zuerst eine Domain hinzu."
+      "sites_no_domain": "Fügen Sie zuerst eine Domain hinzu.",
+      "brain_memory_duplicate": "Dieser Fakt ist bereits im Unternehmensgedächtnis.",
+      "brain_memory_needs_approval": "KI kann unternehmensweites Wissen erst nach Freigabe durch eine Person speichern.",
+      "voiceos_provider_failed": "Der Sprachanbieter hat nicht geantwortet. Versuch es erneut oder wechsle in den Spracheinstellungen zur Browser-Stimme.",
+      "voiceos_provider_rejected": "Der Sprachanbieter hat die gespeicherten Zugangsdaten abgelehnt. Verbinde ihn unter Integrationen neu.",
+      "voiceos_session_ended": "Dieses Sprachgespräch ist beendet. Sprich erneut, um ein neues zu beginnen.",
+      "autopilot_off": "Der Autopilot ist für diese Abteilung aus, daher arbeitet die KI hier nicht.",
+      "autopilot_manual": "Diese Abteilung steht auf Manuell: Die KI arbeitet nur auf Anfrage einer Person.",
+      "autopilot_outside_window": "Außerhalb des Autopilot-Zeitfensters; proaktive Arbeit wartet.",
+      "autopilot_paused": "Alle KI in diesem Unternehmen ist pausiert.",
+      "autopilot_window": "Setzen Sie Start- und Endzeit oder keine von beiden.",
+      "autopilot_company_mode_required": "Das Unternehmen braucht immer einen Modus.",
+      "costs_budget_reached": "Ein Budget ist erreicht, daher wurde nichts mehr ausgegeben. Erhöhen Sie das Budget unter Kosten oder warten Sie auf den nächsten Zeitraum.",
+      "costs_unknown_department": "Wählen Sie eine gültige Abteilung.",
+      "workforce_permission_exceeds_own": "Du kannst einem KI-Mitarbeitenden nur Berechtigungen geben, die du selbst hast.",
+      "workforce_runs_as_not_self": "Ein KI-Mitarbeitender kann nur mit deinen eigenen Berechtigungen handeln.",
+      "workforce_promotion_not_higher": "Eine Beförderung muss die Ebene erhöhen.",
+      "workforce_role_unchanged": "Das ist bereits die Rolle dieses Mitarbeitenden.",
+      "workforce_manager_required": "Wähle eine KI-Führungskraft oder eine Person.",
+      "workforce_replace_self": "Ein KI-Mitarbeitender kann sich nicht selbst ersetzen.",
+      "workforce_design_applied": "Dieser Entwurf wurde bereits angewendet.",
+      "workforce_design_refining": "Die KI-Prüfung läuft noch.",
+      "workforce_design_not_refined": "Es gibt noch keine KI-geprüfte Version.",
+      "workforce_design_nothing_to_resume": "Es gibt nichts fortzusetzen.",
+      "creative_not_connected": "Verbinden Sie zuerst den benötigten Anbieter unter Integrationen.",
+      "creative_invalid_input": "Der Anbieter konnte diese Eingabe nicht annehmen. Prüfen Sie sie und versuchen Sie es erneut.",
+      "creative_rate_limited": "Der Anbieter ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_provider_failed": "Der Anbieter konnte die Anfrage nicht abschließen. Nichts wurde als fertig verbucht.",
+      "creative_image_not_connected": "Verbinden Sie zuerst einen Bildanbieter (OpenAI, Stability AI oder Replicate).",
+      "creative_image_invalid_input": "Die Bildanfrage wurde nicht angenommen. Passen Sie den Prompt an und versuchen Sie es erneut.",
+      "creative_image_rate_limited": "Der Bildanbieter ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_image_provider_failed": "Der Bildanbieter hat kein Bild zurückgegeben.",
+      "creative_edit_not_connected": "Die Bildbearbeitung benötigt OpenAI. Verbinden Sie es unter Integrationen.",
+      "creative_edit_invalid_input": "Die Bearbeitung wurde nicht angenommen. Beschreiben Sie die Änderung anders.",
+      "creative_edit_rate_limited": "Der Bearbeitungsanbieter ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_edit_provider_failed": "Der Bearbeitungsanbieter hat kein Bild zurückgegeben.",
+      "creative_upscale_not_connected": "Das Hochskalieren benötigt Stability AI. Verbinden Sie es unter Integrationen.",
+      "creative_upscale_invalid_input": "Dieses Bild kann nicht hochskaliert werden (zu groß oder nicht unterstützt).",
+      "creative_upscale_rate_limited": "Der Anbieter zum Hochskalieren ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_upscale_provider_failed": "Der Anbieter zum Hochskalieren hat kein Bild zurückgegeben.",
+      "creative_music_not_connected": "Keine lizenzierte Musikquelle verbunden. Verbinden Sie Jamendo oder laden Sie einen lizenzierten Titel hoch.",
+      "creative_music_invalid_input": "Die Musikquelle hat diese Anfrage nicht angenommen.",
+      "creative_music_rate_limited": "Die Musikquelle ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_music_provider_failed": "Die lizenzierte Musikquelle war nicht erreichbar.",
+      "creative_storage_not_connected": "Speicher ist nicht verfügbar. Verbinden Sie einen Speicher-Bucket unter Integrationen.",
+      "creative_storage_invalid_input": "Diese Datei konnte nicht gespeichert werden.",
+      "creative_storage_rate_limited": "Der Speicher ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
+      "creative_storage_provider_failed": "Die Datei konnte nicht gespeichert werden.",
+      "creative_storage_failed": "Die Datei konnte nicht gespeichert werden. Große Dateien benötigen einen Speicher-Bucket unter Integrationen.",
+      "creative_not_video": "Dieses Projekt hat keine Videopipeline.",
+      "creative_step_waiting": "Frühere Schritte müssen zuerst abgeschlossen sein.",
+      "creative_step_busy": "Dieser Schritt läuft bereits oder ist abgeschlossen.",
+      "creative_step_required": "Dieser Schritt kann nicht übersprungen werden.",
+      "creative_step_not_editable": "Das Ergebnis dieses Schritts kann nicht bearbeitet werden.",
+      "creative_use_review": "Geben Sie im Prüfschritt frei oder fordern Sie Änderungen an.",
+      "creative_scenes_busy": "Szenen werden generiert. Warten Sie, bis sie fertig sind.",
+      "creative_not_in_review": "Das Video wartet nicht auf eine Prüfung.",
+      "creative_music_size": "Musikdateien dürfen höchstens 20 MB groß sein.",
+      "creative_music_download_failed": "Der Titel konnte nicht von der lizenzierten Quelle heruntergeladen werden.",
+      "creative_music_license_required": "Bestätigen Sie vor dem Hochladen die Lizenz für diese Musik.",
+      "creative_not_approved": "Geben Sie das Video frei, bevor Sie es übergeben.",
+      "creative_no_render": "Es gibt noch kein fertiges Rendering. Übergeben Sie das Vorschaubild oder verbinden Sie einen Rendering-Anbieter.",
+      "creative_no_thumbnail": "Es gibt noch kein Vorschaubild.",
+      "creative_not_an_image": "Das funktioniert nur mit Bildern.",
+      "creative_upload_size": "Dateien dürfen höchstens 15 MB groß sein.",
+      "creative_asset_in_use": "Dieses Asset wird von einem geplanten Beitrag verwendet.",
+      "creative_folder_taken": "Ein Ordner mit diesem Namen existiert bereits.",
+      "creative_template_category": "Wählen Sie eine gültige Kategorie.",
+      "creative_no_brand_kit": "Richten Sie zuerst das Brand Kit unter Marketing → Marke ein.",
+      "voice_control_not_supported": "Dieser Anbieter kann das bei einem Live-Anruf nicht.",
+      "voice_control_failed": "Der Anbieter hat den Befehl nicht angenommen.",
+      "voice_call_not_live": "Dieser Anruf ist nicht mehr live.",
+      "voice_no_human_number": "Legen Sie zuerst in den Telefoneinstellungen eine Übernahme-Nummer fest.",
+      "voice_outcome_state": "Nur verbundene oder beendete Anrufe können ein Ergebnis haben.",
+      "voice_call_not_finished": "Warten Sie, bis dieser Anruf beendet ist.",
+      "voice_callback_time": "Wählen Sie eine Rückrufzeit innerhalb der nächsten 90 Tage.",
+      "voice_run_state": "Diese Anrufkampagne kann das in ihrem aktuellen Zustand nicht.",
+      "comms_intel_applied": "Diese Termin-Ergebnisse wurden bereits übernommen.",
+      "comms_intel_cancelled": "Dieser Termin wurde abgesagt.",
+      "comms_intel_closed": "Dieser Termin ist bereits abgeschlossen.",
+      "comms_intel_email_pending": "Die E-Mail wartet auf Freigabe.",
+      "comms_intel_email_state": "Die E-Mail wurde bereits gesendet oder wartet auf Freigabe.",
+      "comms_intel_future": "Der Termin hat noch nicht begonnen.",
+      "comms_intel_hours": "Die Arbeitszeit endet, bevor sie beginnt.",
+      "comms_intel_no_email": "Schreiben Sie zuerst die Follow-up-E-Mail.",
+      "comms_intel_no_recipient": "Dieser Termin hat keine Kunden-E-Mail-Adresse.",
+      "comms_intel_no_transcript": "Fügen Sie zuerst ein Transkript hinzu.",
+      "comms_intel_not_processed": "Fassen Sie zuerst das Transkript zusammen.",
+      "comms_intel_suppressed": "Diese Adresse hat E-Mails abbestellt."
     }
   },
   "onboarding": {
@@ -1959,7 +2047,113 @@
       "empty": "Noch keine Fakten. Fügen Sie Entscheidungen, Konventionen und Kennzahlen hinzu, die die KI immer kennen sollte.",
       "companyWide": "Unternehmensweit",
       "byAi": "Von KI vorgeschlagen, freigegeben",
-      "byHuman": "Von einer Person hinzugefügt"
+      "byHuman": "Von einer Person hinzugefügt",
+      "governance": "Governance: Ebene, Vertraulichkeit, Zugriff und Ablauf",
+      "layerLabel": "Gedächtnisebene",
+      "sensitivityLabel": "Vertraulichkeit",
+      "readPermissionLabel": "Wer darf es lesen",
+      "readPermissionHint": "Optionale zusätzliche Berechtigung, z. B. finance.read für Finanzfakten.",
+      "noExtraPermission": "Alle mit Zugriff auf Company Brain",
+      "expiresLabel": "Vergessen am",
+      "expiresHint": "Optional – der Fakt wird an diesem Tag automatisch gelöscht.",
+      "needsPermission": "Erfordert {permission}",
+      "expiresOn": "Vergessen am {date}",
+      "bySystem": "Von der Plattform erstellt",
+      "layersTitle": "Gedächtnisebenen",
+      "allLayers": "Alle Ebenen",
+      "searchLabel": "Gedächtnis durchsuchen",
+      "searchHint": "Durchsucht Fakten, Zusammenfassungen und Dokumente; jedes Ergebnis nennt seine Quelle.",
+      "searchPlaceholder": "z. B. Zahlungsbedingungen oder Markenstimme",
+      "scopeLabel": "Sichtbar für",
+      "allScopes": "Alle Bereiche",
+      "cited": "Zitierter Eintrag",
+      "resultsTitle": "Suchergebnisse",
+      "resultCount": "{count, plural, =0 {Nichts passt zu „{query}“.} one {# Ergebnis für „{query}“.} other {# Ergebnisse für „{query}“.}}",
+      "noResults": "Kein Eintrag und keine Dokumentpassage passt. Versuchen Sie andere Begriffe.",
+      "export": "JSON exportieren",
+      "exportHint": "Laden Sie alles im Unternehmensgedächtnis herunter, das Sie lesen dürfen – mit Governance-Einstellungen.",
+      "layers": {
+        "COMPANY": "Unternehmen",
+        "KNOWLEDGE": "Wissen",
+        "DOCUMENT": "Dokumente",
+        "PRODUCT": "Produkt",
+        "BRAND": "Marke",
+        "CUSTOMER": "Kunden",
+        "DEPARTMENT": "Abteilungen",
+        "EMPLOYEE": "KI-Mitarbeitende",
+        "TASK": "Aufgaben",
+        "CONVERSATION": "Gesprächszusammenfassungen"
+      },
+      "scopes": {
+        "COMPANY": "Ganzes Unternehmen",
+        "DEPARTMENT": "Abteilung",
+        "EMPLOYEE": "Ein KI-Mitarbeiter",
+        "TASK": "Eine Aufgabe"
+      },
+      "sensitivity": {
+        "PUBLIC": "Öffentlich",
+        "INTERNAL": "Intern",
+        "CONFIDENTIAL": "Vertraulich",
+        "RESTRICTED": "Eingeschränkt (nur Verwalter)"
+      },
+      "sourceKinds": {
+        "MANUAL": "Manuell hinzugefügt",
+        "AI_APPROVED": "KI-Vorschlag, genehmigt",
+        "AI_EMPLOYEE": "Notiz eines KI-Mitarbeiters",
+        "CONVERSATION": "Gesprächszusammenfassung",
+        "ROLLUP": "Wochenübersicht",
+        "IMPORT": "Importiert"
+      },
+      "matchedBy": {
+        "fts": "Stichworttreffer",
+        "semantic": "Ähnliche Bedeutung",
+        "both": "Stichwort + Bedeutung",
+        "pinned": "Angeheftet"
+      },
+      "status": {
+        "title": "Wie das Gedächtnis durchsucht wird",
+        "hybrid": "Stichwortsuche plus semantische Suche mit {provider} ({model}).",
+        "fts": "Nur Stichwortsuche (Volltext). Treffer passen zu Ihren Wörtern, nicht zu deren Bedeutung.",
+        "hybridBadge": "Semantisch + Stichwort",
+        "ftsBadge": "Nur Stichwort",
+        "noProvider": "Um Fakten auch nach Bedeutung zu finden, verbinden Sie OpenAI, Google Gemini oder Voyage AI – das Gedächtnis wird dann automatisch eingebettet.",
+        "connect": "Integrationen öffnen",
+        "noPgvector": "{provider} ist verbunden, aber die Datenbank dieser Plattform hat noch keine Vektor-Erweiterung (pgvector), daher bleibt die Suche stichwortbasiert. Bitten Sie den Plattformbetreiber, sie zu aktivieren.",
+        "coverage": "Bisher eingebettet",
+        "coverageCount": "{done} von {total}"
+      },
+      "stats": {
+        "facts": "Einträge",
+        "documents": "Dokumente",
+        "private": "KI-Mitarbeiter- & Aufgabengedächtnis",
+        "expiring": "Läuft in 7 Tagen ab"
+      },
+      "retention": {
+        "title": "Aufbewahrung",
+        "description": "Wie lange jede Ebene aufbewahrt wird. Ältere Einträge werden automatisch gelöscht (angeheftete Fakten bleiben).",
+        "forever": "Dauerhaft behalten",
+        "days": "{count, plural, one {# Tag} other {# Tage}}",
+        "custom": "Unternehmenseinstellung",
+        "default": "Plattform-Standard",
+        "for": "Aufbewahrung für {layer}"
+      },
+      "forget": {
+        "title": "Daten vergessen",
+        "description": "Löschen Sie alles, was das Gedächtnis über einen Kunden oder einen KI-Mitarbeiter enthält – Fakten, Zusammenfassungen, zugehörige Dokumente und Suchvektoren.",
+        "what": "Vergessen",
+        "customer": "Kunde",
+        "employee": "KI-Mitarbeiter",
+        "choose": "Auswählen…",
+        "submit": "Vergessen",
+        "confirm": "Alles, was das Unternehmensgedächtnis über {name} enthält, endgültig löschen? Das kann nicht rückgängig gemacht werden.",
+        "customerHint": "Entfernt Einträge über den Kunden, ihm zugeordnete Dokumente und Wissensverknüpfungen. CRM-Datensätze bleiben erhalten.",
+        "employeeHint": "Entfernt Gedächtnis und Notizen des KI-Mitarbeiters. Der KI-Mitarbeiter selbst bleibt.",
+        "done": "Vergessen: {memories} Einträge, {documents} Dokumente, {notes} Notizen.",
+        "managersOnly": "Nur Verwalter von Company Brain können das Gedächtnis löschen oder exportieren."
+      },
+      "documentGovernance": "Governance",
+      "documentGovernanceHint": "Gedächtnisebene, wer dieses Dokument lesen darf, wem es gehört und wann es vergessen wird.",
+      "documentExpiresHint": "Optional – das Dokument wird an diesem Tag automatisch gelöscht."
     },
     "ask": {
       "title": "Das Brain fragen",
@@ -2289,7 +2483,24 @@
       "propose_process_version": "SOP-Version vorschlagen",
       "triage_ticket": "Ticket einordnen",
       "read_site": "Website lesen",
-      "draft_site_pages": "Website-Seiten entwerfen"
+      "draft_site_pages": "Website-Seiten entwerfen",
+      "read_spending": "Ausgaben lesen",
+      "read_autopilot_status": "Autopilot-Status lesen",
+      "read_creative_projects": "Kreativprojekte lesen",
+      "read_creative_project": "Ein Kreativprojekt lesen",
+      "search_media_library": "Mediathek durchsuchen",
+      "read_creative_costs": "Kreativkosten lesen",
+      "generate_studio_images": "Studiobilder generieren",
+      "create_video_project": "Videoprojekt erstellen",
+      "run_pipeline_step": "Pipeline-Schritt ausführen",
+      "edit_pipeline_text": "Konzept, Skript oder Hook bearbeiten",
+      "update_storyboard": "Storyboard aktualisieren",
+      "check_brand_consistency": "Markenkonsistenz prüfen",
+      "read_publishing_accounts": "Social-Media-Konten lesen",
+      "handoff_video_to_publishing": "Video zur Veröffentlichung übergeben",
+      "start_calling_campaign": "KI-Anrufkampagne starten",
+      "read_calling_runs": "KI-Anrufkampagnen lesen",
+      "send_meeting_follow_up_email": "Follow-up-E-Mail zum Termin senden"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2301,7 +2512,9 @@
       "org": "Organigramm",
       "performance": "Leistung & Budgets",
       "escalations": "Eskalationen",
-      "autonomy": "Autonomie"
+      "autonomy": "Autonomie",
+      "network": "Live-Netzwerk",
+      "designer": "Organisationsdesigner"
     },
     "filters": {
       "search": "Suche",
@@ -2799,6 +3012,310 @@
       "departmentExhaustedNotice": "Die Abteilung {department} hat das KI-Budget dieses Monats aufgebraucht; neue Aufgaben werden abgelehnt, bis es erhöht wird oder der Monat endet.",
       "departmentLine": "Abteilung {department}",
       "runCap": "Die nächste Aufgabe darf höchstens etwa {tokens} Tokens verbrauchen, bevor ein Budget erreicht ist."
+    },
+    "designer": {
+      "title": "Organisationsdesigner",
+      "subtitle": "Wähle eine Unternehmensgröße und beschreibe das Geschäft: Realy schlägt Abteilungen, Rollen und Berichtslinien vor – jeweils mit Begründung – plus das monatliche KI-Budget.",
+      "strip": {
+        "what": "Eine vorgeschlagene KI-Organisation aus Größe, Branche, Geschäftsmodell, Zielen, Arbeitslast, Budget und Umsatzziel.",
+        "why": "Jede Rolle ist durch ein Ziel, echte Arbeitslast oder Führungsspanne begründet – die Größe ist eine Obergrenze, nie eine Quote.",
+        "can": "Vorschau ansehen, speichern, vom KI-CEO anhand deiner Daten prüfen lassen, beide Versionen vergleichen und eine anwenden.",
+        "next": "Wähle eine Größe, ergänze deine Ziele und klicke auf Vorschau."
+      },
+      "formTitle": "Dein Unternehmen",
+      "formHint": "Nur Größe und Geschäftsmodell sind Pflicht. Je mehr du angibst, desto besser der Vorschlag.",
+      "size": "Unternehmensgröße (KI-Mitarbeitende)",
+      "sizeHint": "Das ist eine Obergrenze. Rollen werden nur vorgeschlagen, wo ein Ziel oder Arbeitslast sie braucht.",
+      "presets": {
+        "solo": "Solo",
+        "custom": "Individuell"
+      },
+      "customHeadcount": "Maximale KI-Mitarbeitende",
+      "industry": "Branche",
+      "industryHint": "Zum Beispiel: Zahnarztpraxen, B2B-Logistiksoftware, Mode-E-Commerce.",
+      "industryPlaceholder": "Was macht dein Unternehmen?",
+      "industryDefault": "Allgemeines Unternehmen",
+      "businessModel": "Geschäftsmodell",
+      "models": {
+        "b2b_saas": "B2B-Software (SaaS)",
+        "b2c_app": "Verbraucher-App",
+        "marketplace": "Marktplatz",
+        "agency": "Agentur",
+        "ecommerce": "E-Commerce",
+        "services": "Professionelle Dienstleistungen",
+        "other": "Sonstiges"
+      },
+      "revenueTarget": "Monatliches Umsatzziel",
+      "revenueHint": "In deiner Währung. Dient nur zur Schätzung leer gelassener Arbeitslast.",
+      "budget": "Monatliches KI-Budget (USD)",
+      "budgetHint": "Optional. Kapazität mit niedrigerer Priorität wird zuerst gekürzt, um es einzuhalten.",
+      "goalsLabel": "Ziele",
+      "goals": {
+        "grow_revenue": "Umsatz steigern",
+        "generate_leads": "Leads gewinnen",
+        "brand_awareness": "Markenbekanntheit",
+        "customer_support": "Exzellenter Kundensupport",
+        "launch_product": "Produkt launchen",
+        "operational_efficiency": "Effizient arbeiten",
+        "hire_team": "Team aufbauen",
+        "manage_finances": "Finanzen steuern",
+        "fundraising": "Finanzierung aufnehmen",
+        "expand_markets": "Neue Märkte erschließen"
+      },
+      "workloadTitle": "Arbeitslast (optional)",
+      "workloadHint": "Monatliche Mengen machen die Teamgröße präzise. Leere Felder werden aus dem Umsatzziel geschätzt oder weggelassen.",
+      "workload": {
+        "leadsPerMonth": "Neue Leads pro Monat",
+        "openDeals": "Offene Deals",
+        "ticketsPerMonth": "Support-Tickets pro Monat",
+        "chatsPerMonth": "Website-Chats pro Monat",
+        "inboundCallsPerMonth": "Eingehende Anrufe pro Monat",
+        "outboundCallsPerMonth": "Ausgehende Anrufe pro Monat",
+        "contentPerMonth": "Inhalte pro Monat",
+        "socialPostsPerMonth": "Social-Posts pro Monat",
+        "invoicesPerMonth": "Rechnungen pro Monat",
+        "activeProjects": "Aktive Projekte",
+        "hiresPerQuarter": "Einstellungen pro Quartal",
+        "products": "Produkte",
+        "integrations": "Verbundene Systeme",
+        "humanEmployees": "Menschliche Mitarbeitende"
+      },
+      "preview": "Vorschau",
+      "save": "Vorschlag speichern",
+      "previewTitle": "Vorschau (nicht gespeichert)",
+      "proposal": "Vorschlag",
+      "startHint": "Sieh dir eine Vorschau mit Abteilungen, Rollen, Begründungen und monatlichem KI-Budget an, bevor etwas angelegt wird.",
+      "tiles": {
+        "roles": "KI-Mitarbeitende",
+        "cap": "Größenlimit",
+        "demand": "Arbeitslast begründet {demand}",
+        "cost": "Geschätzte KI-Kosten / Monat",
+        "costHint": "Durchschnittlich {perTask} pro Aufgabe",
+        "departments": "Abteilungen"
+      },
+      "notes": {
+        "below_preset": "{total} Rollen reichen für deine Angaben – weniger als das Limit von {cap}. Nichts wurde nur zum Auffüllen hinzugefügt.",
+        "trimmed_to_preset": "Die Arbeitslast begründet {demand} Rollen; der Vorschlag wurde auf das Limit von {cap} gekürzt, die wichtigste Kapazität bleibt.",
+        "trimmed_for_budget": "Ein Teil der Kapazität wurde gekürzt, um im monatlichen KI-Budget zu bleiben.",
+        "no_drivers": "Ohne Ziele oder Arbeitslast wird nur der KI-CEO vorgeschlagen. Ergänze Ziele oder Mengen für ein volleres Team.",
+        "solo": "Solo: Ein KI-CEO arbeitet an deiner Seite und delegiert nichts, bis du wächst."
+      },
+      "assumptionsTitle": "Aus deinem Umsatzziel geschätzt",
+      "assumption": "{what}: etwa {value}",
+      "reasons": {
+        "top": "Führt das Unternehmen, setzt Prioritäten und delegiert an die Führungskräfte.",
+        "solo": "Dein einziger KI-Partner, solange du das Unternehmen allein führst.",
+        "goal": "Nötig für dein Ziel: {goal}.",
+        "workload": "{volume} {driver} bei etwa {capacity} pro KI-Mitarbeitendem.",
+        "estimated": "Etwa {volume} {driver} (geschätzt) bei etwa {capacity} pro KI-Mitarbeitendem.",
+        "span": "{specialists} Fachkräfte brauchen eine Führungskraft je {span}.",
+        "department_head": "Die Abteilung hat {people} Mitglieder – sie braucht eine eigene Leitung.",
+        "coordination": "{heads} Abteilungsleitungen berichten an den CEO – ein COO koordiniert das Operative.",
+        "ai": "Durch die KI-Prüfung hinzugefügt."
+      },
+      "deptLine": "{count} KI-Mitarbeitende · {cost} / Monat",
+      "planFits": "Passt zu deinem Tarif: {create} neu, {adopt} bestehende Mitarbeitende übernommen ({used} von {limit} belegt).",
+      "planExceeds": "Dafür sind {create} neue KI-Mitarbeitende nötig, dein Tarif erlaubt {limit} ({used} belegt). Upgrade oder wähle eine kleinere Größe.",
+      "status": {
+        "DRAFT": "Entwurf",
+        "APPLYING": "Wird eingerichtet",
+        "APPLIED": "Angewendet",
+        "FAILED": "Angehalten"
+      },
+      "variant": "Version",
+      "variants": {
+        "deterministic": "Realy-Vorschlag",
+        "refined": "KI-geprüft"
+      },
+      "refine": "Vom KI-CEO prüfen lassen",
+      "refining": "Der KI-CEO prüft den Vorschlag anhand der Daten deines Unternehmens …",
+      "refineFailed": "Die KI-Prüfung hat keinen verwendbaren Vorschlag geliefert: {error}",
+      "apply": "Anwenden ({count} Rollen)",
+      "applying": "Wird angewendet …",
+      "confirmApply": "Organisation mit {count} Rollen anlegen? Führungskräfte werden zuerst eingerichtet; bestehende Mitarbeitende in denselben Rollen werden übernommen.",
+      "resume": "Einrichtung fortsetzen",
+      "job": {
+        "QUEUED": "Wartet auf Start",
+        "RUNNING": "KI-Mitarbeitende werden eingerichtet",
+        "COMPLETED": "Organisation eingerichtet",
+        "FAILED": "Einrichtung angehalten",
+        "CANCELLED": "Abgebrochen",
+        "counts": "{created} angelegt · {skipped} übernommen · {failed} fehlgeschlagen · {total} gesamt",
+        "progress": "Fortschritt der Einrichtung",
+        "lastError": "Letztes Problem: {error}",
+        "hint": "Große Organisationen werden im Hintergrund in Stapeln fortgesetzt. Du kannst die Seite verlassen; Fortsetzen erzeugt nie Duplikate."
+      },
+      "history": "Gespeicherte Entwürfe",
+      "historyLine": "{roles} Rollen · {cost} / Monat"
+    },
+    "network": {
+      "title": "Live-Unternehmensnetzwerk",
+      "subtitle": "Dein ganzes Unternehmen als lebendes Netzwerk: der KI-CEO in der Mitte, Führungskräfte, Manager, Fachkräfte und die Menschen, mit denen sie arbeiten.",
+      "strip": {
+        "what": "Alle KI-Mitarbeitenden und Menschen, angeordnet nach den echten Berichtslinien.",
+        "why": "Sieh auf einen Blick, wer arbeitet, wer pausiert ist und wie Arbeit durch das Unternehmen fließt.",
+        "can": "Drehen und zoomen, nach Personen suchen und einen Knoten anklicken, um das Profil zu öffnen.",
+        "next": "Klicke auf den CEO, um zu sehen, woran er arbeitet, oder suche eine Abteilungsleitung."
+      },
+      "live": {
+        "stream": "Live",
+        "poll": "Live · Aktualisierung alle 10 s",
+        "paused": "Pausiert, solange verborgen"
+      },
+      "counts": "{ai} KI · {humans} Menschen · {busy} arbeiten · {paused} pausiert",
+      "view": "Ansicht",
+      "signals": {
+        "task": "Aufgabe",
+        "done": "Erledigt",
+        "failed": "Fehlgeschlagen",
+        "delegation": "Delegation",
+        "approval": "Freigabe",
+        "call": "Anruf",
+        "escalation": "Eskalation",
+        "rollup": "Zusammenfassung"
+      },
+      "hint3d": "Ziehen zum Drehen, scrollen zum Zoomen. Impulse sind echte Ereignisse: neue Aufgaben, Ergebnisse, Delegationen, Freigaben, Anrufe und Eskalationen.",
+      "hint2d": "Ziehen zum Verschieben, scrollen zum Zoomen. Impulse sind echte Ereignisse aus deinem Unternehmen.",
+      "humansHidden": "Menschliche Mitarbeitende werden angezeigt, wenn du Zugriff auf HR-Daten hast.",
+      "find": "Person finden",
+      "findPlaceholder": "Name oder Titel",
+      "feed": "Live-Aktivität",
+      "feedEmpty": "Keine Aktivität in den letzten Minuten.",
+      "emptyTitle": "Noch niemand im Netzwerk",
+      "empty": "Stelle KI-Mitarbeitende ein oder entwirf deine Organisation, um sie lebendig zu sehen.",
+      "ceo": "CEO",
+      "human": "Mensch",
+      "profileUnavailable": "Dieses Profil ist für dich nicht verfügbar.",
+      "openProfile": "Vollständiges Profil öffnen",
+      "openHr": "HR-Datensatz öffnen",
+      "email": "E-Mail",
+      "aiReports": "KI-Mitarbeitende, die an sie berichten",
+      "humanReports": "Menschen, die an sie berichten"
+    },
+    "record": {
+      "title": "Mitarbeiterakte",
+      "hint": "Wer dieser KI-Mitarbeitende ist, wie er arbeitet und was passiert ist.",
+      "department": "Abteilung",
+      "level": "Ebene",
+      "status": "Status",
+      "skills": "Fähigkeiten",
+      "personality": "Persönlichkeit",
+      "personalityHint": "Wie er denkt und sich verhält, in ein, zwei Sätzen.",
+      "communicationStyle": "Kommunikationsstil",
+      "communicationStyleHint": "Ton, Länge und Format seiner Texte.",
+      "timezone": "Zeitzone",
+      "timezoneHint": "Eine IANA-Zeitzone. Leer = Zeitzone des Unternehmens.",
+      "workingHours": "Arbeitszeiten",
+      "limitHours": "Geplante Arbeit nur in diesen Zeiten ausführen",
+      "start": "Beginn",
+      "end": "Ende",
+      "days": {
+        "0": "So",
+        "1": "Mo",
+        "2": "Di",
+        "3": "Mi",
+        "4": "Do",
+        "5": "Fr",
+        "6": "Sa"
+      },
+      "schedule": "Zeitplan",
+      "hoursLine": "{days} · {start}–{end}",
+      "anyTime": "Jederzeit",
+      "companyTimezone": "Zeitzone des Unternehmens",
+      "permissions": "Berechtigungen",
+      "toolsCount": "{count} Werkzeuge verfügbar",
+      "runsAs": "Handelt mit den Berechtigungen von {name}",
+      "queue": "Aufgabenwarteschlange",
+      "queueLine": "{running} laufend · {queued} wartend · {schedules} Zeitpläne",
+      "evaluation": "Letzte Bewertung",
+      "notEvaluated": "Noch nicht bewertet",
+      "notSet": "Nicht festgelegt",
+      "history": "Arbeitsverlauf",
+      "noHistory": "Noch keine Änderungen erfasst.",
+      "system": "System",
+      "events": {
+        "created": "Eingerichtet",
+        "updated": "Profil aktualisiert",
+        "paused": "Pausiert",
+        "resumed": "Fortgesetzt",
+        "archived": "Archiviert",
+        "memory_added": "Erinnerung hinzugefügt",
+        "memory_deleted": "Erinnerung entfernt",
+        "assigned": "Zugeordnet",
+        "promoted": "Befördert",
+        "role_changed": "Rolle geändert",
+        "manager_changed": "Führungskraft geändert",
+        "permissions_changed": "Berechtigungen geändert",
+        "evaluated": "Bewertet",
+        "replaced": "Ersetzt",
+        "retired": "In den Ruhestand versetzt"
+      }
+    },
+    "lifecycle": {
+      "title": "Lebenszyklus",
+      "hint": "Jede Änderung wird im Arbeitsverlauf und im Audit-Log festgehalten.",
+      "actions": {
+        "record": "Akte",
+        "assign": "Zuordnen",
+        "promote": "Befördern",
+        "change_role": "Rolle ändern",
+        "change_manager": "Führungskraft ändern",
+        "change_permissions": "Berechtigungen",
+        "evaluate": "Bewerten",
+        "replace": "Ersetzen",
+        "retire": "Ruhestand"
+      },
+      "hints": {
+        "record": "Persönlichkeit, Kommunikationsstil, Zeitzone und Arbeitszeiten. Zeitpläne warten auf die Arbeitszeiten.",
+        "assign": "In eine Abteilung und ein Team verschieben.",
+        "promote": "Manager delegieren an ihre Berichtenden; Führungskräfte können an alle delegieren.",
+        "change_role": "Die Werkzeuge folgen der neuen Rolle; Werkzeuge, die die neue Rolle nicht hat, werden entfernt.",
+        "change_manager": "Berichtslinien können nie im Kreis laufen.",
+        "change_permissions": "Du kannst Berechtigungen nur auf das einschränken, was du selbst hast.",
+        "evaluate": "Bewertet Erfolgsquote, Freigaben und offene Eskalationen der letzten 30 Tage.",
+        "replace": "Ein Nachfolger übernimmt wartende Aufgaben, Berichtende und Zeitpläne; dieser Mitarbeitende geht in den Ruhestand.",
+        "retire": "Archiviert: Er arbeitet nicht mehr, der Verlauf bleibt."
+      },
+      "submit": {
+        "record": "Akte speichern",
+        "assign": "Zuordnen",
+        "promote": "Befördern",
+        "change_role": "Rolle ändern",
+        "change_manager": "Führungskraft ändern",
+        "change_permissions": "Berechtigungen speichern",
+        "evaluate": "Jetzt bewerten",
+        "replace": "Ersetzen",
+        "retire": "In den Ruhestand"
+      },
+      "manager": "Berichtet an",
+      "keepManager": "Aktuelle Führungskraft behalten",
+      "aiManagers": "KI-Mitarbeitende",
+      "people": "Menschen",
+      "role": "Neue Rolle",
+      "roleHint": "Name, Erinnerungen und Verlauf bleiben erhalten.",
+      "topLevel": "Bereits Führungskraft – die höchste Ebene.",
+      "tools": "Erlaubte Werkzeuge",
+      "notYours": "du hast diese Berechtigung nicht",
+      "narrowHint": "Werkzeuge, deren Berechtigungen du nicht hast, können nicht vergeben werden.",
+      "successor": "Nachfolger",
+      "hireSuccessor": "Neuen Nachfolger mit gleicher Rolle und gleichen Einstellungen einstellen",
+      "reason": "Grund (optional)",
+      "confirmRetire": "{name} in den Ruhestand versetzen? Die Arbeit endet; Aufgaben und Verlauf bleiben.",
+      "confirmReplace": "{name} ersetzen? Wartende Aufgaben, Berichtende und Zeitpläne gehen an den Nachfolger.",
+      "saved": "Gespeichert.",
+      "evaluated": "{verdict} · Punktzahl {score}",
+      "verdicts": {
+        "strong": "Stark",
+        "steady": "Solide",
+        "needs_attention": "Braucht Aufmerksamkeit",
+        "insufficient_data": "Noch zu wenig abgeschlossene Arbeit"
+      }
+    },
+    "hybrid": {
+      "title": "Hybride Teams",
+      "hint": "Menschen, die KI-Mitarbeitende direkt führen.",
+      "openNetwork": "Live-Netzwerk ansehen",
+      "counts": "{ai} KI-Berichtende · {humans} menschliche Berichtende"
     }
   },
   "profiles": {
@@ -3013,6 +3530,42 @@
     "web_designer": {
       "name": "Webdesigner",
       "summary": "Entwirft Ihre Website und Landingpages aus Marke, Produkten und Unternehmenswissen."
+    },
+    "ai_coo": {
+      "name": "KI-COO",
+      "summary": "Hält die Umsetzung abteilungsübergreifend auf Kurs: Engpässe, Fristen, Auslastung und Prozesse."
+    },
+    "ai_cto": {
+      "name": "KI-CTO",
+      "summary": "Verantwortet Systeme: Integrationen, Datensynchronisierung, Automatisierungen und technische Risiken."
+    },
+    "ai_cro": {
+      "name": "KI-Chief-Revenue-Officer",
+      "summary": "Verantwortet den Umsatz: Pipeline, Prognose und die entscheidenden Deals des Monats."
+    },
+    "ai_chro": {
+      "name": "KI-Chief-People-Officer",
+      "summary": "Personalbestand, Recruiting, Onboarding und Personalrichtlinien."
+    },
+    "cs_director": {
+      "name": "KI-Customer-Success-Director",
+      "summary": "Supportqualität, gefährdete Kunden und die Stimme des Kunden."
+    },
+    "product_director": {
+      "name": "KI-Produktdirektor",
+      "summary": "Entscheidet anhand von Kunden- und Markterkenntnissen, was als Nächstes gebaut wird."
+    },
+    "creative_director": {
+      "name": "Creative Director",
+      "summary": "Kreativkonzepte, Formate und markentreue Prüfung jedes Assets und Videos."
+    },
+    "graphic_designer": {
+      "name": "Grafikdesigner",
+      "summary": "Markengerechte Produktbilder, Social-Grafiken, Poster, Banner, Anzeigen und Vorschaubilder."
+    },
+    "studio_video_producer": {
+      "name": "Videoproduzent (Studio)",
+      "summary": "Führt Videoprojekte von Skript und Storyboard bis zu Voiceover, Untertiteln und finalem Schnitt."
     }
   },
   "projects": {
@@ -3440,7 +3993,9 @@
         "escalation": "Eskalation: {title}",
         "autonomyDemoted": "Automodus auf „Mich fragen“ zurückgestuft: {title}",
         "autonomyPaused": "Alle KI pausiert: {title}",
-        "autonomyResumed": "KI fortgesetzt: {title}"
+        "autonomyResumed": "KI fortgesetzt: {title}",
+        "orgProvisioned": "Organisation eingerichtet: {title}",
+        "rollup": "Team-Ergebnisse: {title}"
       },
       "growth": {
         "insight": "Kritisches Wachstumssignal: {title}"
@@ -3459,13 +4014,26 @@
       },
       "voice": {
         "call_completed": "KI-Anruf beendet – {title}",
-        "message": "Telefonnachricht – {title}"
+        "message": "Telefonnachricht – {title}",
+        "run_completed": "Anrufkampagne abgeschlossen — {title}"
       },
       "platform": {
         "announcement": "Ankündigung: {title}"
       },
       "sites": {
         "form_submission": "Neuer Website-Lead: {title}"
+      },
+      "costs": {
+        "budgetAlert": "Ausgabenwarnung: {title}",
+        "budgetReached": "Budget erreicht, Ausgaben gestoppt: {title}"
+      },
+      "autopilot": {
+        "modeChanged": "Autopilot geändert: {title}"
+      },
+      "creative": {
+        "review_requested": "Video bereit zur Prüfung: {title}",
+        "approved": "Video freigegeben: {title}",
+        "changes_requested": "Änderungen am Video angefordert: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -5641,7 +6209,13 @@
       "cms": "CMS & Commerce",
       "email": "E-Mail",
       "messaging": "Messaging",
-      "storage": "Speicher & Infrastruktur"
+      "storage": "Speicher & Infrastruktur",
+      "voice": "Stimme & Audio",
+      "video": "Video",
+      "telephony": "Telefonie",
+      "support": "Kundensupport",
+      "finance": "Banking & Finanzen",
+      "automation": "Automatisierungsplattformen"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (Anmeldung beim Anbieter)",
@@ -5679,7 +6253,24 @@
       "contact_data": "Kontaktdaten",
       "email_finder": "E-Mail-Suche",
       "email_verification": "E-Mail-Verifizierung",
-      "enrichment": "Personen- und Firmenanreicherung"
+      "enrichment": "Personen- und Firmenanreicherung",
+      "speech_synthesis": "Text zu Sprache",
+      "voice_library": "Stimmenbibliothek",
+      "speech_to_text": "Sprache zu Text",
+      "video_rendering": "Video-Rendering",
+      "phone_numbers": "Telefonnummern",
+      "call_recordings": "Anrufaufzeichnungen",
+      "sip_trunking": "SIP-Trunking",
+      "notes_docs": "Notizen & Dokumente",
+      "tasks": "Aufgaben",
+      "scheduling": "Terminbuchungslinks",
+      "meetings": "Meetings im CRM",
+      "support_tickets": "Support-Tickets",
+      "bank_feeds": "Bankdaten-Feeds",
+      "balances": "Kontostände",
+      "automation_triggers": "Automationen auslösen",
+      "text_to_speech": "Sprachausgabe",
+      "licensed_music": "Lizenzierte Musik"
     },
     "providers": {
       "google": {
@@ -5703,7 +6294,8 @@
       },
       "whatsapp": {
         "description": "WhatsApp Business Cloud API für Kundennachrichten.",
-        "setup": "Erstellen Sie in der Meta Business Suite ein System-User-Token mit whatsapp_business_messaging und kopieren Sie die Telefonnummer-ID aus dem WhatsApp Manager."
+        "setup": "Erstellen Sie in der Meta Business Suite ein System-User-Token mit whatsapp_business_messaging und kopieren Sie die Telefonnummer-ID aus dem WhatsApp Manager.",
+        "settingsHelp": "Optional: Ihr Meta-App-Geheimnis, damit Realy die Signatur von WhatsApp-Webhooks prüfen kann."
       },
       "hubspot": {
         "description": "HubSpot-Kontakte und -Firmen in Ihr CRM importieren.",
@@ -5873,6 +6465,110 @@
       "pdl": {
         "description": "People Data Labs: optionale zusätzliche Quelle für Personen- und Firmenanreicherung.",
         "setup": "Kopieren Sie Ihren API-Schlüssel im People-Data-Labs-Dashboard → API keys."
+      },
+      "openrouter": {
+        "description": "Ein Schlüssel für Hunderte KI-Modelle (OpenAI, Anthropic, Google, Meta, Mistral …) mit echten Kosten pro Anfrage.",
+        "setup": "Erstellen Sie einen Schlüssel unter openrouter.ai → Keys (optional mit Kreditlimit).\nWählen Sie optional ein Standardmodell wie openai/gpt-4.1-mini."
+      },
+      "openai_compatible": {
+        "description": "Jede API im OpenAI-Chatformat – Together, Groq, Fireworks, Mistral, DeepSeek oder Ihr eigenes Gateway.",
+        "setup": "Geben Sie die Basis-URL des Anbieters mit /v1 am Ende ein (öffentliches HTTPS).\nFügen Sie API-Schlüssel und exakten Modellnamen ein; Realy prüft, ob das Modell gelistet ist."
+      },
+      "elevenlabs": {
+        "description": "Natürliche Stimmen für Voiceovers und Anrufe, eine Stimmenbibliothek und Scribe-Transkription.",
+        "setup": "Erstellen Sie einen API-Schlüssel unter ElevenLabs → Developers → API keys (Text to Speech, Voices und Speech to Text aktivieren).\nOptional eine Standard-Stimmen-ID aus der Voice Library einfügen.",
+        "settingsHelp": "Optional: das Signaturgeheimnis eines ElevenLabs-Webhooks, der auf die Rückruf-URL oben zeigt."
+      },
+      "deepgram": {
+        "description": "Schnelle, genaue Spracherkennung für Anrufe, Meetings und Videos (Nova-Modelle).",
+        "setup": "Erstellen Sie einen API-Schlüssel in der Deepgram-Konsole → API Keys (Rolle Member reicht).\nOptional das Modell festlegen, z. B. nova-3."
+      },
+      "luma": {
+        "description": "Luma Dream Machine: kinoreife Text- und Bild-zu-Video-Generierung (Ray-Modelle).",
+        "setup": "Erstellen Sie einen API-Schlüssel unter lumalabs.ai → API (Abrechnung muss eingerichtet sein).\nOptional ein Standardmodell wie ray-2 wählen."
+      },
+      "kling": {
+        "description": "Offizielle Kling-AI-API: Text- und Bild-zu-Video mit starker Bewegung und Realismus.",
+        "setup": "Erstellen Sie in der Kling-Entwicklerkonsole ein Access-Key-/Secret-Key-Paar (Ressourcenpaket erforderlich).\nRealy signiert damit für jede Anfrage ein kurzlebiges Token; die Basis-URL ist standardmäßig der globale Endpunkt."
+      },
+      "shotstack": {
+        "description": "Videos aus Vorlagen und Zeitleisten rendern (Untertitel, Musik, Overlays) – in großem Umfang.",
+        "setup": "Kopieren Sie den API-Schlüssel aus dem Shotstack-Dashboard → API Keys.\nWählen Sie die Umgebung: stage (kostenlos, mit Wasserzeichen) oder v1 (Produktion)."
+      },
+      "creatomate": {
+        "description": "Vorlagenbasiertes Video- und Bild-Rendering für Anzeigen, Social Posts und personalisierte Clips.",
+        "setup": "Kopieren Sie den Projekt-API-Schlüssel unter Creatomate → Project settings → API key.\nGestalten Sie Vorlagen in Creatomate; Realy füllt beim Rendern ihre Elemente."
+      },
+      "twilio_voice": {
+        "description": "Telefonate über Ihre eigenen Twilio-Nummern: ausgehende Anrufe, Status-Rückmeldungen und Aufzeichnungen.",
+        "setup": "Kopieren Sie Account SID und Auth token von der Startseite der Twilio Console.\nOptional die Standard-Anrufernummer festlegen; Ihre Sprachnummern werden nach dem Verbinden aufgelistet."
+      },
+      "sip_trunk": {
+        "description": "Eigener Netzbetreiber: SIP-Trunk-Daten für Sprachplattformen, die über SIP wählen.",
+        "setup": "Fragen Sie Ihren Anbieter nach SIP-Domain, Benutzername und Passwort des Trunks.\nWählen Sie den Transport (UDP, TCP oder TLS) und die erlaubte Anrufer-ID."
+      },
+      "pipedrive": {
+        "description": "Personen aus Pipedrive ins CRM importieren und dort Deals anlegen.",
+        "setup": "Öffnen Sie in Pipedrive Ihr Profilbild → Persönliche Einstellungen → API und kopieren Sie Ihr persönliches API-Token.",
+        "sync": "Importiert Pipedrive-Personen als Kontakte (nach E-Mail dedupliziert) samt Organisationen."
+      },
+      "notion": {
+        "description": "Ihren Notion-Workspace durchsuchen und Seiten sowie Datenbankzeilen aus Realy anlegen.",
+        "setup": "Erstellen Sie unter notion.so/profile/integrations eine interne Integration und kopieren Sie das Geheimnis.\nTeilen Sie die Seiten oder Datenbanken, die Realy nutzen darf, mit der Integration (••• → Verbindungen)."
+      },
+      "clickup": {
+        "description": "ClickUp-Aufgaben aus Realy im gewählten Workspace und in der gewählten Liste anlegen.",
+        "setup": "Öffnen Sie in ClickUp Einstellungen → Apps und erzeugen Sie Ihr persönliches API-Token (pk_…)."
+      },
+      "calendly": {
+        "description": "Ereignistypen und einmalige Buchungslinks; neue Buchungen und Stornierungen werden zu CRM-Meetings.",
+        "setup": "Öffnen Sie in Calendly Integrations & apps → API and webhooks und erzeugen Sie ein persönliches Zugriffstoken.\nRealy registriert den Buchungs-Webhook für Sie (Webhooks erfordern einen kostenpflichtigen Calendly-Tarif; sonst importiert die geplante Synchronisierung die Meetings).",
+        "sync": "Importiert anstehende Buchungen (und Stornierungen) als CRM-Meetings – ein Sicherheitsnetz für verpasste Webhooks."
+      },
+      "google_drive": {
+        "description": "Dateien in Google Drive speichern und lesen (nur Dateien, die Realy erstellt oder Sie damit öffnen).",
+        "setup": "Mit Google anmelden und den Dateizugriff bestätigen.\nRealy erhält nur Zugriff auf Dateien, die es erstellt oder die Sie damit öffnen, sowie Dateinamen für die Suche."
+      },
+      "zendesk": {
+        "description": "Zendesk-Tickets lesen und anlegen, damit Agents und KI Kundenanliegen nachverfolgen.",
+        "setup": "Aktivieren Sie im Zendesk Admin Center → Apps und Integrationen → Zendesk API den Token-Zugriff und fügen Sie ein API-Token hinzu.\nGeben Sie Ihre Subdomain (yourcompany bei yourcompany.zendesk.com) und die Agent-E-Mail des Tokens ein.",
+        "settingsHelp": "Optional: das Signaturgeheimnis eines Zendesk-Webhooks, der auf die Rückruf-URL oben zeigt."
+      },
+      "intercom": {
+        "description": "Intercom-Konversationen lesen und aus Realy antworten oder Notizen hinzufügen.",
+        "setup": "Erstellen Sie im Intercom Developer Hub eine App für Ihren Workspace und kopieren Sie deren Zugriffstoken (Authentication).",
+        "settingsHelp": "Optional: das Client-Secret Ihrer Intercom-App zur Prüfung von Webhook-Signaturen."
+      },
+      "plaid": {
+        "description": "Nur lesende Bankdaten: Salden und Umsätze von über 12.000 Banken, bereitgestellt zum Abgleich.",
+        "setup": "Kopieren Sie Client-ID und Secret Ihrer Umgebung unter dashboard.plaid.com → Developers → Keys.\nWählen Sie sandbox zum Testen (user_good / pass_good) oder production für echte Banken und verknüpfen Sie dann Ihre Banken auf dieser Seite.",
+        "sync": "Ruft neue, geänderte und entfernte Umsätze jeder verknüpften Bank ab und aktualisiert die Salden."
+      },
+      "wise": {
+        "description": "Nur lesende Salden Ihres Wise-Business-Kontos in allen Währungen.",
+        "setup": "Öffnen Sie in Wise Einstellungen → Integrationen und Tools → API-Tokens und erstellen Sie ein Nur-Lese-Token.\nWählen Sie production (oder sandbox für ein Wise-Sandbox-Konto).",
+        "sync": "Aktualisiert die Salden jedes Wise-Profils."
+      },
+      "revolut_business": {
+        "description": "Nur lesende Salden und Umsätze Ihres Revolut-Business-Kontos.",
+        "setup": "Noch nicht verfügbar.",
+        "awaiting": "Revolut Business bietet keine einfachen API-Schlüssel: Die API verlangt pro Unternehmen einen zertifikatssignierten OAuth-Client. Realy ergänzt dies, sobald der Ablauf unterstützt wird – bis dahin Plaid nutzen (wo Revolut verfügbar ist) oder einen CSV-Auszug in Finanzen importieren."
+      },
+      "zapier": {
+        "description": "Jeden Zap aus Realy-Ereignissen und -Workflows per signiertem Webhook starten.",
+        "setup": "Erstellen Sie in Zapier einen Zap mit dem Trigger „Webhooks by Zapier → Catch Hook“ und kopieren Sie dessen URL.\nRealy sendet beim Verbinden ein gekennzeichnetes Testereignis. Damit ein Zap Realy aufrufen kann, legen Sie unter Integrationen → Webhooks einen eingehenden Webhook an."
+      },
+      "make": {
+        "description": "Make-Szenarien aus Realy-Ereignissen und -Workflows per signiertem Webhook ausführen.",
+        "setup": "Fügen Sie in Make einem Szenario das Modul „Webhooks → Custom webhook“ hinzu und kopieren Sie dessen Adresse.\nRealy sendet beim Verbinden ein gekennzeichnetes Testereignis, damit Make die Datenstruktur erkennt."
+      },
+      "n8n": {
+        "description": "n8n-Workflows (Cloud oder selbst gehostet) aus Realy per signiertem Webhook auslösen.",
+        "setup": "Fügen Sie Ihrem Workflow einen Webhook-Knoten (POST) hinzu, aktivieren Sie ihn und kopieren Sie die Produktions-URL (öffentliches HTTPS).\nOptional ein Signaturgeheimnis setzen und den Header x-realy-signature im Workflow prüfen."
+      },
+      "jamendo": {
+        "description": "Lizenzfreie Musik unter Creative-Commons-Lizenzen mit kommerzieller Nutzung, für Video-Soundtracks.",
+        "setup": "Erstellen Sie eine App auf devportal.jamendo.com und fügen Sie die Client-ID ein."
       }
     },
     "backToMarketplace": "Alle Integrationen",
@@ -5953,7 +6649,29 @@
       "accountId": "Konto-ID",
       "developerToken": "Entwickler-Token",
       "loginCustomerId": "Manager-Kundennummer (Login)",
-      "privateApiKey": "Private API Key"
+      "privateApiKey": "Private API Key",
+      "defaultVoiceId": "Standard-Stimmen-ID",
+      "webhookSecret": "Webhook-Signaturgeheimnis",
+      "accessKey": "Access Key",
+      "secretKey": "Secret Key",
+      "environment": "Umgebung",
+      "sipDomain": "SIP-Domain",
+      "sipPassword": "SIP-Passwort",
+      "transport": "Transport",
+      "callerId": "Anrufer-ID",
+      "integrationSecret": "Geheimnis der internen Integration",
+      "personalAccessToken": "Persönliches Zugriffstoken",
+      "subdomain": "Subdomain",
+      "email": "E-Mail",
+      "accessToken": "Zugriffstoken",
+      "clientId": "Client-ID",
+      "plaidSecret": "Secret",
+      "countryCodes": "Ländercodes",
+      "catchHookUrl": "Catch-Hook-URL",
+      "webhookUrl": "Webhook-URL",
+      "signingSecret": "Signaturgeheimnis",
+      "appSecret": "App-Geheimnis",
+      "voiceId": "Standard-Stimmen-ID"
     },
     "syncStatus": {
       "RUNNING": "Läuft",
@@ -6050,7 +6768,13 @@
       "signingSecret": "Signaturgeheimnis des Anbieters",
       "signingSecretHint": "Kopieren Sie es aus den Webhook-Einstellungen des Anbieters. Anfragen werden damit über den Header {header} geprüft; es wird verschlüsselt gespeichert und nie wieder angezeigt.",
       "presetSaved": "Endpunkt erstellt. Fügen Sie die URL in die Webhook-Einstellungen des Anbieters ein – mit Ihrem Geheimnis signierte Anfragen werden angenommen, alles andere abgelehnt und protokolliert.",
-      "presetHelp": "Fügen Sie diese URL in die Webhook-Einstellungen des Anbieters ein. Jede Anfrage muss eine gültige {provider} im Header {header} tragen; unsignierte, veränderte oder wiederholte Anfragen werden abgelehnt und unten protokolliert."
+      "presetHelp": "Fügen Sie diese URL in die Webhook-Einstellungen des Anbieters ein. Jede Anfrage muss eine gültige {provider} im Header {header} tragen; unsignierte, veränderte oder wiederholte Anfragen werden abgelehnt und unten protokolliert.",
+      "verificationTWILIO": "Twilio-Signatur",
+      "verificationCALENDLY": "Calendly-Signatur",
+      "verificationMETA": "Meta-/WhatsApp-Signatur",
+      "verificationELEVENLABS": "ElevenLabs-Signatur",
+      "verificationZENDESK": "Zendesk-Signatur",
+      "verificationINTERCOM": "Intercom-Signatur"
     },
     "calendarOk": "Kalenderzugriff OK: {count, plural, one {# Kalender} other {# Kalender}} (Hauptkalender: {primary})",
     "calendarFailed": "Kalenderprüfung fehlgeschlagen: {error}",
@@ -6158,7 +6882,20 @@
         "contacts_email_find": "E-Mail-Suche",
         "contacts_email_verify": "E-Mail-Verifizierung",
         "contacts_enrich_person": "Personenanreicherung",
-        "contacts_enrich_company": "Firmenanreicherung"
+        "contacts_enrich_company": "Firmenanreicherung",
+        "tts_speech": "Text zu Sprache",
+        "stt_transcribe": "Transkription",
+        "video_render": "Video-Rendering",
+        "voice_call": "Anrufminuten",
+        "voice_call_started": "Anruf gestartet",
+        "crm_deal_create": "Deal erstellt",
+        "docs_page_create": "Seite erstellt",
+        "tasks_create": "Aufgabe erstellt",
+        "support_ticket_create": "Ticket erstellt",
+        "support_reply": "Support-Antwort",
+        "support_note": "Interne Notiz",
+        "automation_trigger": "Automation ausgelöst",
+        "bank_sync": "Bank-Synchronisierung"
       }
     },
     "marketplace": {
@@ -6175,16 +6912,20 @@
         "verified": "Geprüft",
         "unverified": "Noch nicht geprüft",
         "failing": "Fehlerhaft",
-        "ready": "Bereit zum Verbinden",
-        "credentials_required": "Zugangsdaten erforderlich",
-        "platform_setup": "Admin-Einrichtung nötig"
+        "ready": "Nicht verbunden",
+        "credentials_required": "Zugangsdaten ausstehend",
+        "platform_setup": "Konfiguration erforderlich",
+        "configured": "Konfiguriert",
+        "awaiting_docs": "Demnächst"
       },
       "unlocks": "Ermöglicht",
       "powering": "Treibt an",
       "hints": {
         "ready": "Ein Klick – Sie bestätigen beim Anbieter",
         "credentials_required": "Eigenen API-Schlüssel verwenden",
-        "platform_setup": "Der Plattform-Admin muss zuerst die OAuth-App hinterlegen"
+        "platform_setup": "Der Plattform-Admin muss zuerst die OAuth-App hinterlegen",
+        "awaiting_docs": "Adapter wartet auf offiziellen API-Zugang",
+        "configured": "Gespeichert – bestätigt durch den ersten echten Anruf"
       },
       "cta": {
         "verified": "Verwalten",
@@ -6192,7 +6933,9 @@
         "failing": "Verbindung reparieren",
         "ready": "Verbinden",
         "credentials_required": "Zugangsdaten hinzufügen",
-        "platform_setup": "Voraussetzungen ansehen"
+        "platform_setup": "Voraussetzungen ansehen",
+        "configured": "Verwalten",
+        "awaiting_docs": "Details"
       },
       "verifiedAgo": "Geprüft {time}",
       "verifiedStat": "Verbunden & geprüft",
@@ -6207,7 +6950,17 @@
         "min1": "Minute",
         "min15": "15 Minuten",
         "hour1": "Stunde"
-      }
+      },
+      "plans": {
+        "starter": "Starter",
+        "growth": "Growth",
+        "scale": "Scale"
+      },
+      "planLocked": "Erfordert {plan}-Tarif",
+      "planIncluded": "Enthalten ab {plan}",
+      "planLockedHint": "Auf {plan} upgraden, um zu verbinden",
+      "planLockedNotice": "Ihr Tarif enthält diese Integrationskategorie nicht. Upgraden Sie auf {plan}, um sie zu verbinden.",
+      "configOnlyNotice": "Dieser Anbieter hat keine API, mit der sich die Zugangsdaten prüfen lassen. Realy hat die Konfiguration geprüft (der Host ist öffentlich auflösbar); der erste echte Anruf bestätigt die Funktion."
     },
     "guide": {
       "whatTitle": "Was ist das",
@@ -6234,6 +6987,65 @@
         "title": "Hintergrund-Worker wurde nicht gestartet",
         "body": "Es wurde noch kein Worker-Heartbeat erfasst. Starten Sie den Worker-Dienst (siehe docs/deployment.md), damit Synchronisierungen, Webhook-Zustellungen und Prüfungen laufen."
       }
+    },
+    "providerWebhook": {
+      "title": "Rückmeldungen des Anbieters",
+      "url": "Rückruf-URL dieser Verbindung",
+      "verifyToken": "Verifizierungstoken",
+      "events": "Ereignisse, auf die Realy hört",
+      "autoRegistered": "Realy hat diesen Webhook beim Anbieter für Sie registriert – keine Einrichtung nötig.",
+      "security": {
+        "token": "Nur die geheime URL dieser Verbindung wird akzeptiert; halten Sie sie privat.",
+        "signed": "Jede Rückmeldung muss zusätzlich die gültige Signatur des Anbieters tragen; unsignierte oder veränderte Anfragen werden abgelehnt."
+      },
+      "how": {
+        "token": "Realy übergibt diese URL bei jedem gestarteten Auftrag als Abschluss-Rückruf. Sie können sie auch im Dashboard des Anbieters eintragen.",
+        "TWILIO": "Realy setzt diese URL als Status- und Aufzeichnungs-Rückruf bei Anrufen, die es tätigt. Für eingehende Anrufe oder SMS-Status tragen Sie sie in den Nummerneinstellungen der Twilio Console ein.",
+        "CALENDLY": "Neue Buchungen und Stornierungen werden zu CRM-Meetings, verknüpft mit dem Kontakt mit der E-Mail des Gastes.",
+        "META": "Tragen Sie in Ihrer Meta-App → WhatsApp → Konfiguration diese Rückruf-URL und das Verifizierungstoken ein und speichern Sie das App-Geheimnis unten in den Einstellungen, damit Realy Signaturen prüfen kann.",
+        "ELEVENLABS": "Fügen Sie diese URL in ElevenLabs als Webhook hinzu (Settings → Webhooks) und speichern Sie das Signaturgeheimnis unten in den Einstellungen.",
+        "PLAID": "Realy registriert diese URL bei jeder verknüpften Bank, sodass neue Umsätze abgerufen werden, sobald Plaid sie hat. Plaids signiertes JWT wird bei jedem Aufruf geprüft.",
+        "ZENDESK": "Erstellen Sie im Zendesk Admin Center → Apps und Integrationen → Webhooks einen Webhook mit dieser URL und speichern Sie dessen Signaturgeheimnis unten in den Einstellungen.",
+        "INTERCOM": "Tragen Sie im Intercom Developer Hub → Ihre App → Webhooks diese URL ein und speichern Sie das Client-Secret der App unten in den Einstellungen."
+      }
+    },
+    "providerEvents": {
+      "title": "Empfangene Ereignisse",
+      "help": "Rückmeldungen dieses Anbieters nach der Signaturprüfung. Es werden nur Zusammenfassungen gespeichert.",
+      "empty": "Noch keine Ereignisse empfangen.",
+      "meeting": "CRM-Meeting aktualisiert",
+      "status": {
+        "processed": "Übernommen",
+        "stored": "Gespeichert",
+        "ignored": "Ignoriert",
+        "failed": "Fehlgeschlagen"
+      }
+    },
+    "bank": {
+      "title": "Bankdaten",
+      "help": {
+        "plaid": "Nur lesend: Realy liest Salden und Umsätze der verknüpften Banken und stellt sie zum Abgleich bereit. Es kann niemals Geld bewegen.",
+        "wise": "Nur lesende Salden Ihrer Wise-Profile, bei jeder Synchronisierung aktualisiert. Kontoauszüge erfordern Wises starke Kundenauthentifizierung und werden nicht abgerufen."
+      },
+      "link": "Bank verknüpfen",
+      "linkAnother": "Weitere Bank verknüpfen",
+      "opening": "Plaid wird geöffnet…",
+      "finishing": "Bankverknüpfung wird abgeschlossen…",
+      "linked": "{count, plural, one {# Bank verknüpft. Umsätze kommen mit der nächsten Synchronisierung.} other {# Banken verknüpft. Umsätze kommen mit der nächsten Synchronisierung.}}",
+      "nothingLinked": "In dieser Plaid-Sitzung wurde keine Bank verknüpft.",
+      "remove": "Trennen",
+      "removeConfirm": "{name} trennen? Der Zugriff wird bei Plaid widerrufen und die bereitgestellten Umsätze werden aus Realy gelöscht.",
+      "unknownBank": "Bank",
+      "linkedOn": "Verknüpft am {date}",
+      "noBanks": "Noch keine Bank verknüpft. Verknüpfen Sie eine, um ihre Umsätze für den Abgleich bereitzustellen.",
+      "accounts": "Konten",
+      "available": "Verfügbar {amount}",
+      "asOf": "Stand {time}",
+      "transactions": "Neueste Umsätze",
+      "pending": "vorgemerkt",
+      "noTransactions": "Noch keine Umsätze bereitgestellt. Sie erscheinen nach der ersten Synchronisierung.",
+      "reconcileHint": "Bereitgestellte Umsätze werden in Finanzen mit Ihrer Buchhaltung abgeglichen.",
+      "openFinance": "Umsätze öffnen"
     }
   },
   "workflows": {
@@ -6828,7 +7640,14 @@
       "livechat_lead_captured": "Lead aus Live-Chat erfasst",
       "briefing_delivered": "Briefing zugestellt",
       "site_published": "Website-Seite veröffentlicht",
-      "site_form_submitted": "Website-Formular gesendet"
+      "site_form_submitted": "Website-Formular gesendet",
+      "creative_project_created": "Kreativprojekt erstellt",
+      "creative_asset_created": "Kreativ-Asset erstellt",
+      "creative_video_approved": "Video freigegeben",
+      "creative_changes_requested": "Änderungen an Kreativ angefordert",
+      "creative_handed_off": "Kreativ an Marketing übergeben",
+      "autopilot_mode_changed": "Autopilot-Modus geändert",
+      "costs_budget_reached": "KI-Budget erreicht"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -15051,6 +15870,117 @@
       "remove": "Erinnerung löschen",
       "empty": "Keine anstehenden Erinnerungen.",
       "delivered": "Heute zugestellt"
+    },
+    "intel": {
+      "title": "Meeting-Intelligenz",
+      "working": "KI arbeitet…",
+      "failed": "KI-Aufgabe fehlgeschlagen",
+      "aiMissing": "KI ist auf dieser Plattform nicht eingerichtet, daher können keine Briefings und Zusammenfassungen erstellt werden.",
+      "prepTitle": "Vorbereitung & Agenda",
+      "prepHint": "Aus Ihren CRM-Daten und dem Company Brain erstellt – nichts erfunden.",
+      "generatePrep": "Termin vorbereiten",
+      "regenerate": "Neu schreiben",
+      "agenda": "Agenda",
+      "agendaPlaceholder": "Themen mit Zeitrahmen…",
+      "saveAgenda": "Agenda im Termin speichern",
+      "brief": "Vorbereitungs-Briefing",
+      "briefNote": "KI-Entwurf aus Ihren Daten – vor der Nutzung prüfen.",
+      "noBrief": "Noch kein Briefing.",
+      "transcriptTitle": "Transkript",
+      "transcriptHint": "Transkript einfügen oder hochladen (.txt, .vtt, .srt) oder einen aufgezeichneten Realy-Anruf verwenden.",
+      "transcriptAdded": "Hinzugefügt {when} · {source} · {chars} Zeichen",
+      "source": "Quelle des Transkripts",
+      "sources": {
+        "upload": "Einfügen oder hochladen",
+        "voice_call": "Realy-Telefonanruf"
+      },
+      "paste": "Transkripttext",
+      "pastePlaceholder": "Transkript hier einfügen…",
+      "uploadFile": "Datei hochladen",
+      "pickCall": "Telefonanruf",
+      "saveTranscript": "Transkript speichern",
+      "process": "Zusammenfassen & Aufgaben ableiten",
+      "resultsTitle": "Zusammenfassung & Aufgaben",
+      "resultsHint": "Prüfen und bearbeiten, dann übernehmen. Erst beim Übernehmen wird etwas angelegt.",
+      "appliedAt": "Übernommen {when}",
+      "summary": "Zusammenfassung",
+      "decisions": "Entscheidungen",
+      "actionItems": "Aufgaben",
+      "itemTitle": "Aufgabe",
+      "owner": "Verantwortlich",
+      "due": "Fällig",
+      "removeItem": "Entfernen",
+      "addItem": "Aufgabe hinzufügen",
+      "createFollowUps": "CRM-Nachfassaufgaben anlegen",
+      "createTasks": "Aufgaben für Teilnehmende anlegen",
+      "addCrmNote": "Zusammenfassung ins CRM übernehmen",
+      "addNotes": "Zusammenfassung zu den Termin-Notizen hinzufügen",
+      "saveEdits": "Änderungen speichern",
+      "apply": "Übernehmen",
+      "emailTitle": "Follow-up-E-Mail",
+      "emailTo": "An {email}",
+      "emailNoRecipient": "Der Termin hat keine Kunden-E-Mail-Adresse.",
+      "subject": "Betreff",
+      "emailBody": "E-Mail-Text",
+      "emailNote": "Eine Abmeldezeile wird ergänzt. Die E-Mail wird erst nach Freigabe gesendet.",
+      "saveDraft": "Entwurf speichern",
+      "requestSend": "Freigabe zum Senden anfragen",
+      "emailAwaiting": "Wartet auf Freigabe.",
+      "openApprovals": "Freigaben öffnen",
+      "followUp": {
+        "NONE": "Kein Entwurf",
+        "DRAFT": "Entwurf",
+        "AWAITING_APPROVAL": "Wartet auf Freigabe",
+        "SENT": "Gesendet",
+        "FAILED": "Nicht gesendet"
+      },
+      "outcomeTitle": "Ergebnis bestätigen",
+      "outcomeHint": "Der Termin wird erst als abgeschlossen markiert, wenn Sie bestätigen, was passiert ist.",
+      "notStarted": "Sie können bestätigen, sobald der Termin begonnen hat.",
+      "outcome": "Ergebnis",
+      "outcomePlaceholder": "Was wurde vereinbart?",
+      "proposed": "Vorschlag aus dem Transkript: {outcome}",
+      "markDone": "Bestätigen & abschließen",
+      "confirmDone": "Diesen Termin mit diesem Ergebnis als abgeschlossen markieren?",
+      "availabilityTitle": "Zeit finden",
+      "availabilityHint": "Freie Zeiten aus Ihrem verbundenen Kalender, Ihren Realy-Terminen und Calendly.",
+      "days": "Tage",
+      "duration": "Minuten",
+      "findSlots": "Freie Zeiten suchen",
+      "cal": {
+        "google": "Google Kalender",
+        "microsoft": "Microsoft 365",
+        "calendly": "Calendly",
+        "realy": "Realy-Termine"
+      },
+      "calState": {
+        "connected": "verbunden",
+        "not_connected": "nicht verbunden",
+        "error": "Fehler"
+      },
+      "connectCalendar": "Kalender verbinden",
+      "noCalendar": "Kein Kalender verbunden, daher werden nur Ihre Realy-Termine geprüft.",
+      "noSlots": "Keine freien Zeiten in diesem Zeitraum.",
+      "bookingLink": "Buchungslink",
+      "customerLink": "Kundentermine & Intelligenz",
+      "customerLinkHint": "Briefings, Transkripte, Zusammenfassungen und Follow-ups für CRM-Termine.",
+      "customerTitle": "Kundentermine",
+      "customerHint": "Termine mit Leads und Kontakten, gebucht im CRM oder vom KI-Telefonteam.",
+      "customerBack": "Kundentermine",
+      "noSales": "Sie benötigen Zugriff auf den Vertrieb, um Kundentermine zu sehen.",
+      "with": "Mit",
+      "state": "Intelligenz",
+      "states": {
+        "none": "Nicht vorbereitet",
+        "preparing": "Wird vorbereitet",
+        "prepared": "Vorbereitet",
+        "transcript": "Transkript hinzugefügt",
+        "summarized": "Zusammengefasst",
+        "applied": "Übernommen"
+      },
+      "emptyUpcoming": "Keine anstehenden Kundentermine.",
+      "emptyPast": "Keine vergangenen Kundentermine.",
+      "openCrm": "Im CRM öffnen"
     }
   },
   "support": {
@@ -18961,7 +19891,14 @@
       "livechat_lead_captured": "hat einen Lead aus dem Live-Chat erfasst",
       "briefing_delivered": "hat ein Briefing zugestellt",
       "site_published": "hat eine Website-Seite veröffentlicht",
-      "site_form_submitted": "hat einen Website-Lead erhalten"
+      "site_form_submitted": "hat einen Website-Lead erhalten",
+      "creative_project_created": "Kreativprojekt erstellt",
+      "creative_asset_created": "Kreativ-Asset erstellt",
+      "creative_video_approved": "Video freigegeben",
+      "creative_changes_requested": "Änderungen an Kreativ angefordert",
+      "creative_handed_off": "Kreativ an Marketing übergeben",
+      "autopilot_mode_changed": "Autopilot-Modus geändert",
+      "costs_budget_reached": "KI-Budget erreicht"
     }
   },
   "aiPlans": {
@@ -20952,7 +21889,8 @@
       "numbers": "Nummern",
       "campaigns": "Kampagnen",
       "analytics": "Auswertung",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "live": "Live"
     },
     "credentialRequired": "{provider} ist nicht verbunden, daher können keine Anrufe getätigt oder angenommen werden. Verbinden Sie es unter Integrationen.",
     "connection": {
@@ -21060,7 +21998,10 @@
       "cancelled": "Von einer Person abgebrochen.",
       "agent_archived": "Der Sprach-Agent wurde archiviert.",
       "campaign_cancelled": "Die Kampagne wurde abgebrochen.",
-      "approval_rejected": "Die Freigabe wurde abgelehnt oder ist abgelaufen."
+      "approval_rejected": "Die Freigabe wurde abgelehnt oder ist abgelaufen.",
+      "twilio_caller_id_missing": "Keine Twilio-Anrufer-ID festgelegt (Einstellungen → Telefonie).",
+      "bridge_not_configured": "Die Twilio-Brücke zum KI-Agenten ist nicht eingerichtet (Einstellungen → Telefonie).",
+      "plan_limit_reached": "Die Sprachminuten Ihres Tarifs sind aufgebraucht."
     },
     "stats": {
       "calls": "Anrufe",
@@ -21441,6 +22382,265 @@
       "meetingsBooked": "Durch KI-Anrufe gebuchte Termine",
       "connectRate": "Verbindungsrate der KI-Anrufe",
       "positiveSentiment": "Positive KI-Anrufe"
+    },
+    "live2": {
+      "windowOpen": "Anrufzeiten offen · {window} ({tz})",
+      "windowClosed": "Außerhalb der Anrufzeiten · {window} ({tz})",
+      "concurrency": "{live} von {max} Leitungen belegt",
+      "retries": "Wiederholungen: {attempts} × alle {minutes} Min.",
+      "telephony": {
+        "PROVIDER": "Nummern der Sprachplattform",
+        "TWILIO": "Twilio-Telefonie"
+      },
+      "reconnecting": "Verbindung wird wiederhergestellt…",
+      "updating": "Live · Aktualisierung alle 2 s",
+      "lanes": {
+        "active": "Im Gespräch",
+        "incoming": "Eingehend",
+        "outgoing": "Wird gewählt"
+      },
+      "empty": {
+        "active": "Gerade ist niemand im Gespräch.",
+        "incoming": "Keine eingehenden Anrufe.",
+        "outgoing": "Es werden keine Anrufe gewählt."
+      },
+      "customBridge": "Eigene Brücke",
+      "noneSelected": "Wählen Sie einen Anruf zum Mithören",
+      "noneSelectedHint": "Live-Anrufe erscheinen links, sobald der Anbieter sie meldet. Wählen Sie einen aus, um dem Transkript zu folgen und ihn zu steuern.",
+      "notSupported": "Von {provider} nicht unterstützt",
+      "thisProvider": "diesem Anbieter",
+      "layers": {
+        "vapi": "Vapi",
+        "retell": "Retell AI",
+        "twilio": "Twilio"
+      },
+      "aiMuted": "KI stumm",
+      "takenOver": "Übernommen",
+      "attempt": "Versuch {n}",
+      "openCall": "Anruf öffnen",
+      "provider": "Anbieter",
+      "liveCost": "Bisherige Kosten",
+      "costPending": "Der Anbieter meldet die Kosten am Ende des Anrufs.",
+      "costPendingShort": "nach dem Anruf",
+      "transcript": "Live-Transkript",
+      "transcriptPartial": "nur wenn Transkript-Events beim Agenten aktiviert sind",
+      "transcriptNone": "dieser Anbieter streamt es nicht",
+      "human": "Teammitglied",
+      "waitingTranscript": "Warten auf die ersten Worte…",
+      "controls": "Anrufsteuerung",
+      "end": "Auflegen",
+      "endConfirm": "Diesen Anruf jetzt beenden?",
+      "mute": "KI stummschalten",
+      "unmute": "KI wieder einschalten",
+      "takeover": "Übernehmen",
+      "hold": "Halten",
+      "takeoverConfirm": "Anrufer zu {number} durchstellen? Die KI verlässt das Gespräch.",
+      "noHumanNumber": "Legen Sie unter Einstellungen → Telefonie die Nummer der Person fest, die Anrufe übernimmt.",
+      "transferTo": "An eine Person durchstellen",
+      "transfer": "Durchstellen",
+      "outcome": "Ergebnis",
+      "pickOutcome": "Ergebnis wählen",
+      "saveOutcome": "Ergebnis speichern",
+      "done": "Erledigt.",
+      "queue": "Anrufwarteschlange",
+      "queueHint": "{queued} geplant · {awaiting} warten auf Freigabe",
+      "awaiting": "{count, plural, one {# Anruf wartet} other {# Anrufe warten}} auf Freigabe, bevor gewählt werden kann.",
+      "retryN": "Wiederholung {n}",
+      "dueNow": "Jetzt fällig",
+      "queueEmpty": "Nichts in der Warteschlange. Freigegebene Anrufe warten hier auf Anrufzeiten und eine freie Leitung.",
+      "justEnded": "Gerade beendet",
+      "callback": "Zurückrufen",
+      "callbackAt": "Rückruf um (optional)",
+      "scheduleCallback": "Rückruf planen",
+      "retryNow": "Jetzt erneut anrufen",
+      "callbackHint": "Ein neuer Anruf wird zur Freigabe eingereicht; Sperrliste und Anrufzeiten werden erneut geprüft.",
+      "callbackFiled": "Rückruf zur Freigabe eingereicht.",
+      "setupTitle": "Telefonteam fertig einrichten",
+      "setupBody": "Verbinden Sie einen Sprachanbieter und synchronisieren Sie einen Agenten, um hier Live-Anrufe zu sehen.",
+      "setupAction": "Einrichtung öffnen"
+    },
+    "runs": {
+      "title": "Autonome Anrufkampagnen",
+      "description": "Sagen Sie der KI, wen sie anrufen soll und warum. Sie prüft Einwilligung und Sperrliste, priorisiert, brieft jeden Anruf aus Ihrem CRM und fragt Sie einmal vor dem Anrufen.",
+      "new": "Neue Anrufkampagne planen",
+      "noAgent": "Synchronisieren Sie zuerst einen ausgehenden Sprachagenten (Sprachagenten).",
+      "goal": "Ziel",
+      "goalHint": "In einfachen Worten, z. B. „Rufe 100 qualifizierte Leads an und buche Demos“.",
+      "goalPlaceholder": "Unsere qualifizierten Leads anrufen und Demos buchen",
+      "purpose": "Was soll jeder Anruf erreichen?",
+      "purposeHint": "Der Agent nutzt dies plus ein Briefing zu jeder Person aus dem CRM.",
+      "purposePlaceholder": "Neuen Tarif vorstellen, Budget und Zeitplan klären und eine 30-minütige Demo anbieten.",
+      "stages": "Wer infrage kommt",
+      "labels": {
+        "HOT": "Heiß",
+        "WARM": "Warm",
+        "NURTURE": "Pflegen"
+      },
+      "minScore": "Mindest-Lead-Score",
+      "maxCalls": "Höchstens (Personen)",
+      "cooldown": "Überspringen, wenn angerufen in den letzten (Tagen)",
+      "concurrency": "Gleichzeitige Anrufe",
+      "agent": "Sprachagent",
+      "consent": "Einwilligung",
+      "consentHint": "Sperrliste, Unterdrückungsliste und Abmeldungen werden immer beachtet.",
+      "consentLawful": "Rechtsgrundlage (Standard)",
+      "consentRecorded": "Nur Leads mit dokumentierter Einwilligung",
+      "qualifiedOnly": "Nur im CRM als qualifiziert markierte Leads",
+      "planNote": "Beim Planen wird niemand angerufen. Sie prüfen, wer dabei ist und warum, und starten dann die Kampagne – dafür wird eine Freigabe für die ganze Liste angefragt.",
+      "plan": "Kampagne planen",
+      "start": "Kampagne starten · {count, plural, one {# Person} other {# Personen}}",
+      "cancel": "Kampagne abbrechen",
+      "cancelConfirm": "Diese Kampagne abbrechen? Noch nicht gewählte Anrufe werden storniert.",
+      "filed": "Freigabe angefragt. Die Anrufe beginnen nach der Freigabe.",
+      "startedNow": "Die Kampagne wurde gestartet.",
+      "status": {
+        "PLANNED": "Geplant",
+        "AWAITING_APPROVAL": "Wartet auf Freigabe",
+        "RUNNING": "Läuft",
+        "COMPLETED": "Abgeschlossen",
+        "CANCELLED": "Abgebrochen",
+        "FAILED": "Fehlgeschlagen"
+      },
+      "rowStats": "{called} angerufen · {qualified} qualifiziert · {meetings} Termine",
+      "back": "Alle Kampagnen",
+      "pipeline": "Ablauf der Kampagne",
+      "steps": {
+        "eligibility": "Eignung",
+        "prioritize": "Priorisieren",
+        "brief": "Briefing",
+        "execute": "Anrufen",
+        "qualify": "Qualifizieren",
+        "book": "Termin buchen",
+        "crm": "CRM aktualisieren",
+        "followups": "Nachfassen",
+        "report": "Bericht"
+      },
+      "awaiting": "Wartet auf Freigabe. Niemand wird angerufen, bis eine Person die Kampagne freigibt.",
+      "eligibility": "Eignung",
+      "eligibilityHint": "{considered} geprüft · {eligible} werden angerufen",
+      "noneSkipped": "Niemand wurde übersprungen.",
+      "skip": {
+        "no_number": "Keine Telefonnummer",
+        "invalid_number": "Nummer nicht im internationalen Format",
+        "do_not_call": "Sperrliste",
+        "suppressed": "E-Mail-Unterdrückung (abgemeldet)",
+        "unsubscribed": "Abgemeldet",
+        "no_consent_record": "Keine dokumentierte Einwilligung",
+        "recently_called": "Kürzlich angerufen",
+        "call_pending": "Ein Anruf ist bereits geplant",
+        "duplicate_number": "Doppelte Nummer",
+        "over_limit": "Über dem Limit der Kampagne"
+      },
+      "targets": "Personen in dieser Kampagne",
+      "targetsHint": "Nach Priorität sortiert. Jedes Briefing stammt ausschließlich aus CRM-Daten.",
+      "person": "Person",
+      "priority": "Priorität",
+      "brief": "Briefing",
+      "openCall": "Anruf öffnen",
+      "noTargets": "Keine passenden Leads.",
+      "targetStatus": {
+        "ELIGIBLE": "Bereit",
+        "SKIPPED": "Übersprungen",
+        "SCHEDULED": "In der Warteschlange",
+        "CALLING": "Wird angerufen",
+        "NO_ANSWER": "Keine Antwort",
+        "QUALIFIED": "Qualifiziert",
+        "NOT_QUALIFIED": "Nicht qualifiziert",
+        "MEETING_BOOKED": "Termin gebucht",
+        "FAILED": "Fehlgeschlagen"
+      }
+    },
+    "funnel": {
+      "title": "Trichter: Anruf → Termin",
+      "hint": "Vom Anbieter angenommene ausgehende Anrufe, nur aus gespeicherten Anrufdaten.",
+      "runHint": "Aus den Anrufen dieser Kampagne.",
+      "empty": "Keine ausgehenden Anrufe in diesem Zeitraum.",
+      "stages": {
+        "considered": "Geprüft",
+        "eligible": "Geeignet",
+        "placed": "Anrufe getätigt",
+        "connected": "Verbunden",
+        "conversations": "Gespräche",
+        "qualified": "Qualifiziert",
+        "meetings": "Termine gebucht"
+      },
+      "connectRate": "Verbindungsquote",
+      "connectedOf": "{connected} von {placed} Anrufen",
+      "qualified": "Qualifiziert",
+      "meetings": "Termine gebucht",
+      "followUps": "{count} Nachfass-Aufgaben erstellt",
+      "costPerMeeting": "Kosten pro Termin",
+      "totalCost": "Kosten KI-Anbieter + Telefonie",
+      "meetingsHeld": "Kundentermine",
+      "meetingsHeldValue": "{held} stattgefunden · {unconfirmed} unbestätigt · {cancelled} abgesagt",
+      "intel": "Meeting-Intelligenz",
+      "intelValue": "{prepared} vorbereitet · {summarized} zusammengefasst · {sent} Follow-ups gesendet"
+    },
+    "telephony": {
+      "title": "Telefonie",
+      "description": "Wie Anrufe ins Telefonnetz gelangen, wer Anrufe übernimmt und wie unbeantwortete Anrufe wiederholt werden.",
+      "layer": "Telefonnetz",
+      "layerHint": "Nutzen Sie die Nummern Ihrer Sprachplattform oder Ihr eigenes Twilio-Konto, verbunden mit dem KI-Agenten.",
+      "layers": {
+        "PROVIDER": "Nummern der Sprachplattform (Vapi / Retell)",
+        "TWILIO": "Mein Twilio-Konto (Programmable Voice)"
+      },
+      "twilioMissing": "Verbinden Sie Twilio unter Integrationen, um darüber Anrufe zu tätigen und anzunehmen.",
+      "bridge": "Brücke zum KI-Agenten",
+      "bridges": {
+        "PROVIDER_SIP": "Retell über SIP (automatisch)",
+        "CUSTOM_SIP": "SIP-Adresse",
+        "MEDIA_STREAM": "Media Stream (WebSocket)"
+      },
+      "bridgeHints": {
+        "PROVIDER_SIP": "Jeder Anruf wird bei Retell registriert und per SIP verbunden. Vollständiges Transkript und Analyse.",
+        "CUSTOM_SIP": "Beliebiger SIP-Endpunkt einer KI-Sprachplattform, z. B. eine Vapi-SIP-Nummer.",
+        "MEDIA_STREAM": "Twilio streamt Audio an eine WebSocket-Brücke, die Sie betreiben."
+      },
+      "providerSipRetell": "Automatisches SIP funktioniert mit Retell-Agenten. Für Vapi verwenden Sie eine SIP-Adresse.",
+      "sipUri": "SIP-Adresse",
+      "sipUser": "SIP-Benutzername (optional)",
+      "sipPassword": "SIP-Passwort (optional)",
+      "sipPasswordSet": "Ein Passwort ist gespeichert. Leer lassen, um es zu behalten.",
+      "streamUrl": "WebSocket-URL",
+      "streamHint": "Muss mit wss:// beginnen",
+      "callerId": "Anrufer-ID (Twilio-Nummer)",
+      "liveTranscription": "Live-Transkript",
+      "liveTranscriptionHint": "Echtzeit-Transkription beider Seiten durch Twilio.",
+      "webhooksHint": "Realy trägt diese bei einer Twilio-Nummer für Sie ein (Nummer verbinden), oder fügen Sie sie in der Twilio-Konsole ein.",
+      "voiceUrl": "Voice-URL (eingehende Anrufe)",
+      "statusUrl": "Status-Callback-URL",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "humanNumber": "Übernahme-Nummer",
+      "humanHint": "Eine Person, die antwortet, wenn Sie einen Anruf übernehmen oder durchstellen.",
+      "retries": "Wiederholungen bei unbeantworteten Anrufen",
+      "retryDelay": "Minuten zwischen Wiederholungen",
+      "save": "Telefonie speichern",
+      "saved": "Gespeichert.",
+      "connectNumber": "Nummer verbinden",
+      "numberConnected": "{number} leitet seine Anrufe jetzt an Realy.",
+      "matrix": "Was jeder Anbieter kann",
+      "matrixHint": "Live-Steuerungen erscheinen nur, wenn der Anbieter des Anrufs sie wirklich unterstützt.",
+      "capability": "Funktion",
+      "support": {
+        "yes": "Ja",
+        "partial": "Teilweise",
+        "no": "Nein"
+      },
+      "caps": {
+        "placeCall": "Anrufe tätigen",
+        "endCall": "Live-Anruf beenden",
+        "transfer": "An eine Person durchstellen",
+        "humanTakeover": "Übernahme durch Menschen",
+        "mute": "KI stummschalten",
+        "hold": "Halten",
+        "liveTranscript": "Live-Transkript",
+        "liveEvents": "Live-Statusereignisse",
+        "recording": "Aufzeichnung",
+        "cost": "Kosten pro Anruf"
+      },
+      "matrixNote": "Anrufe über Twilio nutzen Twilios Steuerung, unabhängig vom KI-Anbieter. Vapi-Steuerungen erfordern nach diesem Update eine erneute Synchronisierung des Agenten."
     }
   },
   "planCatalog": {
@@ -21536,7 +22736,10 @@
       "api_cost_month": "Kostenobergrenze externe APIs / Monat",
       "ads_spend_month": "Werbebudget-Obergrenze / Monat",
       "sites_pages_max": "Website-Seiten",
-      "sites_landing_pages_max": "Landingpages"
+      "sites_landing_pages_max": "Landingpages",
+      "voice_assistant_minutes_month": "Sprachassistent-Minuten / Monat",
+      "image_generations_month": "KI-Bilder / Monat",
+      "video_generations_month": "KI-Videoclips & Renderings / Monat"
     },
     "addons": {
       "ai_credits_10k": "10.000 KI-Credits",
@@ -22205,5 +23408,1062 @@
       "success": "Vielen Dank – wir haben Ihre Nachricht erhalten und melden uns bei Ihnen.",
       "consent": "Ich bin einverstanden, dass {name} meine Angaben zur Beantwortung meiner Anfrage speichert."
     }
+  },
+  "jarvis": {
+    "eyebrow": "Sprachkonsole",
+    "title": "Realy",
+    "aiNotConfigured": "KI ist auf dieser Plattform noch nicht eingerichtet, daher können Befehle nicht an KI-Mitarbeiter übergeben werden. Du kannst trotzdem mit Realy sprechen – es sagt dir, was fehlt.",
+    "cannotRun": "Deine Rolle darf in diesem Unternehmen keine KI-Arbeit starten. Bitte eine Inhaberin oder einen Inhaber um die Berechtigung „KI-Mitarbeiter ausführen“.",
+    "caption": {
+      "idle": "Halte den Button oder die Leertaste gedrückt und sprich mit {company}.",
+      "listening": "Ich höre zu …",
+      "thinking": "Ich arbeite daran …"
+    },
+    "state": {
+      "IDLE": "Bereit",
+      "LISTENING": "Hört zu",
+      "THINKING": "Denkt nach",
+      "EXECUTING": "Führt aus",
+      "SPEAKING": "Spricht",
+      "ALERT": "Achtung",
+      "SUCCESS": "Erledigt"
+    },
+    "mic": {
+      "recording": "Mikrofon an",
+      "wakeListening": "Wartet auf „Hey Realy“"
+    },
+    "talk": {
+      "hold": "Gedrückt halten zum Sprechen",
+      "release": "Loslassen zum Senden",
+      "busy": "Arbeitet …",
+      "spaceHint": "Leertaste halten zum Sprechen · Esc stoppt",
+      "stopSpeaking": "Sprechen stoppen",
+      "cancel": "Abbrechen"
+    },
+    "mute": "Gesprochene Antworten stummschalten",
+    "unmute": "Gesprochene Antworten einschalten",
+    "type": "Stattdessen tippen",
+    "typeLabel": "Befehl eingeben",
+    "typePlaceholder": "Frag Realy oder gib eine Anweisung …",
+    "send": "Senden",
+    "quick": "Schnellbefehle",
+    "conversation": "Gespräch",
+    "you": "Du",
+    "realy": "Realy",
+    "wake": {
+      "on": "„Hey Realy“ an",
+      "off": "„Hey Realy“ aus"
+    },
+    "privacy": {
+      "historyOn": "Verlauf ist an: Deine Transkripte werden in diesem Unternehmen gespeichert.",
+      "historyOff": "Verlauf ist aus: Transkripte werden nicht gespeichert (deine Befehle erscheinen weiterhin in AI Command).",
+      "provider": "Sprache wird von deinem verbundenen Sprachanbieter verarbeitet.",
+      "browser": "Sprache wird von der eingebauten Engine deines Browsers verarbeitet (browserabhängig)."
+    },
+    "confirm": {
+      "title": "Deine Freigabe wird benötigt",
+      "risk": "Auswirkung: {risk}",
+      "howTo": "Sag „genehmigen“ oder „ablehnen“, oder klicke.",
+      "noPermission": "Du kannst das nicht freigeben – jemand mit Freigaberechten muss unter Freigaben entscheiden.",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen"
+    },
+    "risk": {
+      "LOW": "gering",
+      "MEDIUM": "mittel",
+      "HIGH": "hoch",
+      "CRITICAL": "kritisch"
+    },
+    "reply": {
+      "delegated": "Mach ich. Ich habe das an {team} übergeben und melde mich, sobald es ein Ergebnis gibt.",
+      "blocked": "Ich konnte das nicht starten: {reason}",
+      "planned": "Ich habe das geplant und weise es jetzt zu.",
+      "failed": "Ich konnte diesen Befehl nicht starten. Bitte versuch es noch einmal.",
+      "reasonUnknown": "Es fehlt noch etwas, um es auszuführen.",
+      "approvalNeeded": "Bevor ich weitermache, brauche ich deine Freigabe: {summary}. Sag genehmigen oder ablehnen.",
+      "approvalNoPermission": "Dafür ist eine Freigabe nötig, die du nicht erteilen kannst: {summary}. Jemand mit Freigaberechten muss entscheiden.",
+      "approved": "Genehmigt. Ich führe es aus.",
+      "rejected": "Abgelehnt. Ich mache es nicht.",
+      "confirmUnclear": "Ich habe keine eindeutige Entscheidung verstanden. Bitte sag „genehmigen“ oder „ablehnen“.",
+      "doneNoAnswer": "Erledigt. Die Ergebnisse findest du in AI Command.",
+      "runFailed": "Das hat nicht geklappt: {reason}",
+      "runCancelled": "Dieser Befehl wurde abgebrochen."
+    },
+    "notice": {
+      "notHeard": "Ich habe nichts gehört. Halte den Button gedrückt, während du sprichst.",
+      "micDenied": "Der Mikrofonzugriff ist blockiert. Erlaube das Mikrofon für diese Seite in deinen Browser-Einstellungen.",
+      "micUnsupported": "Dieser Browser kann keinen Ton aufnehmen. Tippe deinen Befehl stattdessen.",
+      "noRecognizer": "Kein Sprachanbieter ist verbunden und dieser Browser hat keine Spracherkennung. Verbinde OpenAI, ElevenLabs oder Deepgram unter Integrationen, oder tippe.",
+      "sttFallback": "Der Sprachanbieter hat nicht geantwortet, daher nutze ich die Spracherkennung deines Browsers.",
+      "sttLimit": "Die Sprachminuten deines Tarifs sind aufgebraucht, daher nutze ich die Spracherkennung deines Browsers.",
+      "ttsFallback": "Der Stimmenanbieter hat nicht geantwortet, daher nutze ich die Stimme deines Browsers.",
+      "ttsLimit": "Die Sprachminuten deines Tarifs sind aufgebraucht, daher nutze ich die Stimme deines Browsers."
+    },
+    "feed": {
+      "title": "Live-Unternehmensstream",
+      "empty": "Noch ist nichts passiert. Neue Leads, Deals, Rechnungen, Tickets und KI-Arbeit erscheinen hier, sobald sie passieren.",
+      "status": {
+        "idle": "Pausiert",
+        "connecting": "Verbinde …",
+        "live": "Live",
+        "reconnecting": "Verbinde neu …",
+        "closed": "Getrennt",
+        "unsupported": "Nicht unterstützt"
+      }
+    },
+    "events": {
+      "task": "KI-Aufgabe „{title}“: {status}",
+      "run": "Befehl einer Kollegin oder eines Kollegen: {status}",
+      "runMine": "„{text}“: {status}",
+      "approval": "Freigabe „{summary}“: {status}",
+      "callIn": "Eingehender Anruf: {status}",
+      "callOut": "Ausgehender Anruf: {status}",
+      "types": {
+        "lead_created": "Neuer Lead",
+        "lead_updated": "Lead aktualisiert",
+        "lead_assigned": "Lead zugewiesen",
+        "deal_created": "Neuer Deal",
+        "deal_stage_changed": "Deal-Phase geändert",
+        "deal_won": "Deal gewonnen",
+        "deal_lost": "Deal verloren",
+        "customer_created": "Neuer Kunde",
+        "contact_created": "Neuer Kontakt",
+        "invoice_created": "Rechnung erstellt",
+        "invoice_sent": "Rechnung versendet",
+        "invoice_paid": "Rechnung bezahlt",
+        "invoice_overdue": "Rechnung überfällig",
+        "expense_created": "Ausgabe erfasst",
+        "payment_received": "Zahlung eingegangen",
+        "task_created": "Aufgabe erstellt",
+        "task_completed": "Aufgabe erledigt",
+        "project_created": "Projekt erstellt",
+        "employee_joined": "Mitarbeiter eingestellt",
+        "employee_left": "Mitarbeiter ausgeschieden",
+        "candidate_applied": "Neue Bewerbung",
+        "candidate_hired": "Bewerber eingestellt",
+        "leave_requested": "Urlaub beantragt",
+        "form_submitted": "Formular gesendet",
+        "campaign_launched": "Kampagne gestartet",
+        "content_published": "Inhalt veröffentlicht",
+        "ticket_created": "Neues Support-Ticket",
+        "ticket_updated": "Ticket aktualisiert",
+        "ticket_resolved": "Ticket gelöst",
+        "meeting_completed": "Meeting abgeschlossen",
+        "announcement_published": "Ankündigung veröffentlicht",
+        "webhook_received": "Webhook empfangen",
+        "integration_synced": "Integration synchronisiert",
+        "agent_task_completed": "KI-Aufgabe abgeschlossen",
+        "agent_task_failed": "KI-Aufgabe fehlgeschlagen",
+        "voice_call_placed": "Anruf gestartet",
+        "voice_call_completed": "Anruf beendet",
+        "autonomy_action_auto_approved": "Aktion automatisch genehmigt",
+        "autonomy_demoted": "KI-Autonomie verringert",
+        "marketing_run_completed": "Marketing-Lauf abgeschlossen",
+        "crm_prospect_found": "Interessent gefunden",
+        "crm_outreach_sent": "Ansprache versendet",
+        "livechat_lead_captured": "Lead im Live-Chat gewonnen",
+        "briefing_delivered": "Briefing zugestellt",
+        "site_published": "Website veröffentlicht",
+        "site_form_submitted": "Website-Formular gesendet",
+        "approval_requested": "Freigabe angefordert",
+        "approval_resolved": "Freigabe entschieden",
+        "objective_created": "Ziel erstellt",
+        "milestone_completed": "Meilenstein erreicht"
+      }
+    },
+    "runs": {
+      "title": "Befehlsläufe",
+      "current": "Dieses Gespräch",
+      "none": "Sprich mit Realy, um einen Befehl zu starten – Plan und Fortschritt erscheinen hier.",
+      "empty": "Gerade keine weiteren Befehlsläufe.",
+      "noAccess": "Deine Rolle kann die KI-Arbeit des Unternehmens nicht sehen.",
+      "teammate": "Befehl aus dem Team · {team}",
+      "approvals": "{count, plural, one {# Freigabe wartet} other {# Freigaben warten}}",
+      "next": "Nächster Schritt: {action}"
+    },
+    "stepStatus": {
+      "WAITING": "Wartet",
+      "DELEGATED": "Zugewiesen",
+      "BLOCKED": "Blockiert",
+      "SKIPPED": "Übersprungen"
+    },
+    "departments": {
+      "sales": "Vertrieb",
+      "marketing": "Marketing",
+      "finance": "Finanzen",
+      "people": "Personal",
+      "operations": "Betrieb",
+      "support": "Support",
+      "ai": "KI-Team",
+      "comms": "Kommunikation"
+    },
+    "languages": {
+      "en-US": "English",
+      "de-DE": "Deutsch",
+      "ar-AE": "العربية",
+      "hi-IN": "हिन्दी",
+      "zh-CN": "中文"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "elevenlabs": "ElevenLabs",
+      "deepgram": "Deepgram"
+    },
+    "personalities": {
+      "aria": {
+        "name": "Aria – warm und gelassen",
+        "summary": "Eine ruhige Stabschefin: freundlich, klar und souverän."
+      },
+      "atlas": {
+        "name": "Atlas – ruhiger Manager",
+        "summary": "Tiefe, gemessene Stimme mit kurzen, beruhigenden Sätzen."
+      },
+      "nova": {
+        "name": "Nova – hell und energisch",
+        "summary": "Schwungvoll und schnell, für Gründer, die Tempo mögen."
+      },
+      "sage": {
+        "name": "Sage – präzise Analystin",
+        "summary": "Neutral und klar; Zahlen werden sorgfältig ausgesprochen."
+      }
+    },
+    "settings": {
+      "open": "Spracheinstellungen",
+      "title": "Spracheinstellungen",
+      "description": "Deine persönlichen Einstellungen für Gespräche mit Realy in diesem Unternehmen.",
+      "privacy": "Datenschutz",
+      "history": "Gesprächsverlauf speichern",
+      "historyHint": "Standardmäßig aus. Wenn an, werden deine Worte und Realys Antworten gespeichert, damit du sie später nachlesen kannst.",
+      "wake": "Aktivierungswort „Hey Realy“",
+      "wakeHint": "Nur solange dieser Tab sichtbar ist. Die Mikrofonanzeige bleibt an, solange Realy zuhört. Funktioniert in Browsern mit Spracherkennung (z. B. Chrome, Edge, Safari) – dein Browseranbieter verarbeitet diesen Ton.",
+      "wakeUnsupported": "Dieser Browser hat keine Spracherkennung, daher ist das Aktivierungswort nicht verfügbar. Gedrückt halten zum Sprechen funktioniert.",
+      "speak": "Antworten vorlesen",
+      "voice": "Stimme",
+      "personality": "Persönlichkeit",
+      "language": "Sprache",
+      "providers": "Sprachanbieter",
+      "stt": "Spracherkennung",
+      "tts": "Stimme",
+      "sttStreaming": "Sätze werden in deinen Sprechpausen transkribiert, während du weitersprichst.",
+      "browserHint": "Nutzt die Spracherkennung deines Browsers (browserabhängig).",
+      "browserTtsHint": "Nutzt die eingebaute Stimme deines Geräts.",
+      "provider": {
+        "auto": "Automatisch (bester verbundener)",
+        "browser": "Browser (eingebaut)"
+      },
+      "notConnected": "nicht verbunden",
+      "connectHint": "Verbinde OpenAI, ElevenLabs oder Deepgram für genauere Erkennung und natürlichere Stimmen.",
+      "openIntegrations": "Integrationen öffnen",
+      "askAdmin": "Bitte eine Admin-Person, einen unter Integrationen zu verbinden.",
+      "minutes": "Sprachminuten in diesem Monat: {used} von {limit} (nur Anbieter-Sprache; Browser-Sprache ist kostenlos).",
+      "minutesUnlimited": "Sprachminuten in diesem Monat: {used}.",
+      "stored": "Gespeicherte Transkripte",
+      "storedHint": "{count, plural, =0 {Es sind keine Transkripte gespeichert.} one {# gespeicherter Beitrag.} other {# gespeicherte Beiträge.}}",
+      "clear": "Alle meine Transkripte löschen",
+      "cleared": "{count, plural, =0 {Nichts zu löschen.} one {# Beitrag gelöscht.} other {# Beiträge gelöscht.}}"
+    },
+    "dock": {
+      "title": "Realy",
+      "open": "Mit Realy sprechen",
+      "close": "Realy schließen",
+      "openConsole": "Realy-Konsole öffnen",
+      "loading": "Verbinde mit deinem Unternehmen …",
+      "hint": "Halte das Mikrofon gedrückt und sprich, oder tippe einen Befehl.",
+      "spaceHint": "Leertaste halten, solange geöffnet"
+    },
+    "nav": "Realy (Sprache)"
+  },
+  "autopilot": {
+    "title": "Unternehmens-Autopilot",
+    "eyebrow": "KI-Betrieb",
+    "subtitle": "Legen Sie fest, wie viel Ihr KI-Unternehmen selbst erledigt – für das ganze Unternehmen und für jede Abteilung. Ohne Aufgabe oder einen von Ihnen eingerichteten Auslöser läuft nichts.",
+    "modes": {
+      "OFF": "Aus",
+      "MANUAL": "Manuell",
+      "ASSISTED": "Assistiert",
+      "APPROVAL_REQUIRED": "Freigabe nötig",
+      "AUTONOMOUS": "Autonom"
+    },
+    "modeHelp": {
+      "OFF": "Die KI arbeitet hier überhaupt nicht, auch nicht auf Anfrage.",
+      "MANUAL": "Die KI arbeitet nur, wenn jemand sie beauftragt. Zeitpläne und Autopiloten warten. Jede Aktion braucht eine Freigabe.",
+      "ASSISTED": "Zeitpläne und Autopiloten laufen, aber die KI bereitet nur vor und schlägt vor. Jede Aktion führt ein Mensch aus.",
+      "APPROVAL_REQUIRED": "Zeitpläne und Autopiloten laufen. Jede Aktion der KI wartet auf Ihre Freigabe.",
+      "AUTONOMOUS": "Zeitpläne und Autopiloten laufen, und Ihre Autonomie-Regeln entscheiden, was die KI innerhalb von Grenzen selbst tun darf."
+    },
+    "inherit": "Wie das Unternehmen",
+    "inherited": "Wie das Unternehmen",
+    "derived": "Durch den Auto-Modus festgelegt",
+    "own": "Abteilungseinstellung",
+    "company": {
+      "title": "Unternehmensmodus",
+      "description": "Die Vorgabe für jede Abteilung ohne eigene Einstellung."
+    },
+    "window": {
+      "title": "Zeitfenster",
+      "hint": "Proaktive Arbeit (Zeitpläne, Autopiloten, Ereignisregeln) startet nur in diesem Fenster, in der Zeitzone des Unternehmens. Leer lassen für jederzeit.",
+      "days": "Tage",
+      "from": "Von",
+      "to": "Bis",
+      "anyTime": "Jederzeit",
+      "summary": "{days}, {from}–{to}",
+      "summaryDays": "{days}, ganztägig",
+      "inside": "Gerade im Zeitfenster",
+      "outside": "Gerade außerhalb des Fensters: proaktive Arbeit wartet"
+    },
+    "days": {
+      "0": "So",
+      "1": "Mo",
+      "2": "Di",
+      "3": "Mi",
+      "4": "Do",
+      "5": "Fr",
+      "6": "Sa"
+    },
+    "save": "Speichern",
+    "change": "Ändern",
+    "cancel": "Abbrechen",
+    "stats": {
+      "running": "Läuft gerade",
+      "runningHint": "KI-Aufgaben, die jetzt arbeiten",
+      "queued": "Wartend",
+      "queuedHint": "Aufgaben in der Warteschlange",
+      "started": "Durch Auslöser gestartet",
+      "startedHint": "Proaktive Starts in den letzten 24 h",
+      "blocked": "Zurückgehalten",
+      "blockedHint": "Vom Autopiloten gestoppt, letzte 24 h",
+      "auto": "Selbstständig erledigt",
+      "autoHint": "Aktionen nach Ihren Auto-Regeln, letzte 24 h"
+    },
+    "departments": {
+      "title": "Abteilungen",
+      "subtitle": "Modus jeder Abteilung und was sie gerade tut – aus echten Aufgaben und Jobs."
+    },
+    "dept": {
+      "running": "{count} laufen",
+      "queued": "{count} wartend",
+      "done": "{count} erledigt in 24 h",
+      "failed": "{count} fehlgeschlagen in 24 h",
+      "employees": "{count, plural, =0 {Keine KI-Mitarbeitenden} one {# KI-Mitarbeitende:r} other {# KI-Mitarbeitende}}",
+      "idle": "Ruhend: wartet auf eine Aufgabe oder einen Auslöser",
+      "lastActivity": "Zuletzt erledigt {date}"
+    },
+    "autopilots": {
+      "marketing_autopilot": "Marketing-Autopilot",
+      "prospecting": "Akquise-Autopilot",
+      "ceo_loop": "Tägliche Runde des KI-CEO",
+      "support_automation": "Support-Automatisierung",
+      "finance_alerts": "Finanz-Warnungen",
+      "ai_schedules": "KI-Zeitpläne",
+      "workflows": "Workflows",
+      "line": "{active} von {total} aktiv",
+      "lastRun": "zuletzt {date}",
+      "none": "Noch keine Abteilungs-Autopiloten eingerichtet.",
+      "states": {
+        "running": "An",
+        "off": "Aus",
+        "skipped": "Übersprungen",
+        "failed": "Fehlgeschlagen",
+        "idle": "Ruhend"
+      }
+    },
+    "ceiling": {
+      "deny": "KI-Aktionen sind aus",
+      "suggest": "KI schlägt vor, Menschen handeln",
+      "ask": "Jede Aktion braucht eine Freigabe",
+      "none": "Autonomie-Regeln entscheiden"
+    },
+    "log": {
+      "title": "Autopilot-Protokoll",
+      "description": "Jedes Mal, wenn ein Zeitplan, Autopilot oder Ereignis KI-Arbeit starten wollte – und ob sie lief.",
+      "empty": "Noch nichts wurde durch einen Auslöser gestartet. Die KI ruht, bis Sie ihr eine Aufgabe geben oder einen Zeitplan oder Autopiloten einrichten.",
+      "started": "Gestartet",
+      "blocked": "Zurückgehalten",
+      "task": "Aufgabe öffnen",
+      "triggers": {
+        "schedule": "Zeitplan",
+        "autopilot": "Autopilot",
+        "event": "Ereignisregel",
+        "system": "Automatisierung",
+        "person": "Person",
+        "delegation": "Delegation"
+      },
+      "reasons": {
+        "autopilot_off": "Autopilot ist hier aus",
+        "autopilot_manual": "Manuell: wartet auf einen Menschen",
+        "autopilot_outside_window": "Außerhalb des Zeitfensters",
+        "autopilot_paused": "Alle KI war pausiert"
+      }
+    },
+    "notices": {
+      "autoModeOff": "Im autonomen Modus entscheiden Ihre Autonomie-Regeln, aber der Auto-Modus ist aus – daher fragt jede Aktion weiterhin nach Freigabe.",
+      "openAutonomy": "Autonomie öffnen",
+      "platformDisabled": "Die Plattform hat KI-Arbeit abgeschaltet. Nichts läuft, bis sie wieder eingeschaltet ist.",
+      "platformPaused": "Die Plattform hat die KI-Ausführung vorerst pausiert.",
+      "backgroundPaused": "Hintergrund-Jobs sind von der Plattform pausiert, daher laufen Zeitpläne und Autopiloten nicht."
+    },
+    "idle": {
+      "title": "Standardmäßig ruhend",
+      "body": "Ihre KI-Mitarbeitenden arbeiten nie aus eigenem Antrieb. Sie starten nur durch eine Aufgabe einer Person oder durch einen von Ihnen eingerichteten Zeitplan, Autopiloten oder eine Ereignisregel – und nur, wenn der Modus hier es erlaubt."
+    },
+    "pause": {
+      "title": "Alles pausieren",
+      "explain": "Ein Schalter stoppt alle KI in diesem Unternehmen: Keine Aufgabe startet und keine Aktion läuft, bis Sie fortsetzen."
+    },
+    "links": {
+      "costs": "Kosten ansehen",
+      "autonomy": "Autonomie-Regeln"
+    },
+    "error": {
+      "title": "Autopilot konnte nicht geladen werden",
+      "body": "Bitte versuchen Sie es gleich noch einmal."
+    },
+    "readOnly": "Sie sehen den Autopiloten, ändern können ihn nur Verantwortliche der KI-Belegschaft.",
+    "nav": "Autopilot"
+  },
+  "costs": {
+    "title": "Kosten",
+    "eyebrow": "Ausgabenkontrolle",
+    "subtitle": "Alle echten Ausgaben Ihres KI-Unternehmens in einem Kassenbuch: KI, Bilder, Video, Sprache, Anrufe, Nachrichten und externe Dienste – mit Budgets, die Ausgaben stoppen, sobald sie erreicht sind.",
+    "range": {
+      "label": "Zeitraum",
+      "7": "7 Tage",
+      "30": "30 Tage",
+      "90": "90 Tage"
+    },
+    "stats": {
+      "month": "Dieser Monat",
+      "monthHint": "Erfasste Ausgaben seit dem 1.",
+      "today": "Heute",
+      "todayHint": "Seit Mitternacht (UTC)",
+      "forecast": "Monatsprognose",
+      "forecastHint": "Beim heutigen Tempo: {rate} pro Tag",
+      "cache": "Prompt-Cache-Treffer",
+      "cacheHint": "Anteil der KI-Eingabe aus dem Cache (günstiger)"
+    },
+    "chart": {
+      "title": "Ausgaben pro Tag",
+      "empty": "Keine Ausgaben in diesem Zeitraum.",
+      "day": "Tag",
+      "amount": "Ausgaben",
+      "max": "Höchster Tag {amount}"
+    },
+    "by": {
+      "department": "Nach Abteilung",
+      "agent": "Nach KI-Mitarbeitenden",
+      "provider": "Nach Anbieter",
+      "model": "Nach KI-Modell",
+      "category": "Nach Art der Ausgabe",
+      "empty": "Noch nichts erfasst.",
+      "unassigned": "Nicht zugeordnet",
+      "count": "{count, plural, one {# Ausgabe} other {# Ausgaben}}"
+    },
+    "categories": {
+      "AI_TOKENS": "KI (Tokens)",
+      "IMAGE": "Bilder",
+      "VIDEO": "Video",
+      "VOICE": "Sprache",
+      "STT": "Sprache zu Text",
+      "TTS": "Text zu Sprache",
+      "TELEPHONY": "Telefonate",
+      "EMAIL": "E-Mail",
+      "SMS": "SMS",
+      "MESSAGING": "Messaging",
+      "EXTERNAL_API": "Externe Dienste",
+      "OTHER": "Sonstiges"
+    },
+    "tokens": "{input} Eingabe · {output} Ausgabe · {cached} aus dem Cache",
+    "budgets": {
+      "title": "Budgets",
+      "description": "Setzen Sie Grenzen für das Unternehmen, eine Abteilung, KI-Mitarbeitende (pro Monat) oder jede einzelne Aufgabe. Mit hartem Stopp endet die Arbeit ehrlich, bevor die Grenze überschritten wird, und Sie werden benachrichtigt.",
+      "empty": "Noch keine Budgets. Legen Sie eines an, damit Ausgaben nie aus dem Ruder laufen.",
+      "scope": {
+        "COMPANY": "Ganzes Unternehmen",
+        "DEPARTMENT": "Abteilung",
+        "AGENT": "KI-Mitarbeitende",
+        "TASK": "Jede einzelne Aufgabe"
+      },
+      "used": "{spent} von {limit}",
+      "hardStop": "Harter Stopp",
+      "alertsOnly": "Nur Warnungen",
+      "reached": "Erreicht",
+      "projected": "Prognose: {pct} % dieses Budgets bis Monatsende",
+      "taskNote": "Teuerste Aufgabe in diesem Monat",
+      "remove": "Entfernen",
+      "removeConfirm": "Dieses Budget entfernen? Ausgaben in diesem Bereich sind dann nicht mehr begrenzt.",
+      "add": "Budget hinzufügen",
+      "form": {
+        "scope": "Gilt für",
+        "department": "Abteilung",
+        "agent": "KI-Mitarbeitende",
+        "limit": "Grenze in USD",
+        "hardStop": "Ausgaben stoppen, wenn die Grenze erreicht ist",
+        "save": "Budget speichern",
+        "monthHint": "Gezählt pro Kalendermonat (UTC).",
+        "taskHint": "Gilt für jede Aufgabe einzeln."
+      }
+    },
+    "alerts": {
+      "title": "Warnungen",
+      "empty": "Noch keine Warnungen. Sie werden bei 50 %, 80 % und 100 % jedes Budgets informiert.",
+      "line": "{scope} {key}: {threshold} % verbraucht ({spent} von {limit})"
+    },
+    "recent": {
+      "title": "Letzte Ausgaben",
+      "empty": "Noch nichts erfasst.",
+      "estimated": "Schätzung",
+      "exact": "Abgerechnet",
+      "when": "Wann",
+      "what": "Was",
+      "who": "Wer",
+      "amount": "Betrag",
+      "task": "Aufgabe"
+    },
+    "empty": {
+      "title": "Noch keine Ausgaben erfasst",
+      "body": "Kosten erscheinen hier, sobald Ihre KI-Mitarbeitenden arbeiten oder ein verbundener Anbieter genutzt wird. Die KI ruht, bis sie eine Aufgabe bekommt – bis dahin wird nichts ausgegeben."
+    },
+    "note": "Beträge sind Schätzungen nach Listenpreisen, sofern der Anbieter nicht den genauen Betrag gemeldet hat. Preise der KI-Modelle legt die Plattform fest.",
+    "links": {
+      "autopilot": "Autopilot",
+      "usage": "KI-Nutzung"
+    },
+    "error": {
+      "title": "Kosten konnten nicht geladen werden",
+      "body": "Bitte versuchen Sie es gleich noch einmal."
+    },
+    "readOnly": "Sie sehen die Kosten, Budgets ändern können nur Verantwortliche der KI-Belegschaft.",
+    "nav": "KI-Kosten"
+  },
+  "creative": {
+    "title": "Creative Studio",
+    "eyebrow": "Kreativproduktion",
+    "subtitle": "Markengerechte Bilder, Videos und alle Assets dahinter – mit Ihren eigenen Anbietern produziert, versioniert, mit Kosten erfasst und bereit für das Marketing.",
+    "tabs": {
+      "overview": "Überblick",
+      "images": "Bildstudio",
+      "library": "Mediathek"
+    },
+    "common": {
+      "campaign": "Kampagne",
+      "folder": "Ordner",
+      "name": "Name",
+      "none": "Keine",
+      "save": "Speichern",
+      "saved": "Gespeichert",
+      "working": "Wird bearbeitet…",
+      "connect": "Verbinden",
+      "delete": "Löschen",
+      "ready": "Bereit",
+      "notReady": "Nicht eingerichtet",
+      "readOnly": "Sie können das Studio ansehen. Zum Produzieren brauchen Sie Marketing-Verwaltungsrechte.",
+      "prev": "Zurück",
+      "next": "Weiter",
+      "page": "Seite {page} von {pages}"
+    },
+    "overview": {
+      "spend": "Kreativausgaben",
+      "spendHint": "Geschätzte Anbieterkosten, letzte {days} Tage",
+      "images": "Bilder diesen Monat",
+      "videos": "Videoclips & Renderings",
+      "thisMonth": "Genutzt / Planlimit diesen Monat",
+      "library": "Assets in der Mediathek",
+      "setupTitle": "Ihr Produktions-Setup",
+      "setupHint": "Das Studio nutzt die Anbieter, die Sie unter Integrationen verbinden. Jede Fähigkeit wird aktiv, sobald einer verbunden ist."
+    },
+    "capabilities": {
+      "text": {
+        "title": "Konzepte & Skripte",
+        "ready": "KI-Textanbieter verbunden.",
+        "missing": "Verbinden Sie OpenAI oder Gemini, um Konzepte, Skripte und Storyboards zu schreiben."
+      },
+      "image": {
+        "title": "Bilder",
+        "ready": "Bildgenerierung verbunden.",
+        "missing": "Verbinden Sie OpenAI, Stability AI oder Replicate, um Bilder zu generieren."
+      },
+      "video": {
+        "title": "Videoclips",
+        "ready": "Videogenerierung verbunden.",
+        "missing": "Optional: Verbinden Sie Runway, Luma, Kling oder Replicate für bewegte Szenen. Ohne sie nutzen Szenen Standbilder."
+      },
+      "voice": {
+        "title": "Sprecherstimme",
+        "ready": "Text-to-Speech verbunden.",
+        "missing": "Verbinden Sie ElevenLabs oder OpenAI, um Voiceovers aufzunehmen."
+      },
+      "music": {
+        "title": "Lizenzierte Musik",
+        "ready": "Lizenzierte Musikquelle verbunden.",
+        "missing": "Verbinden Sie Jamendo für lizenzierte Titel oder laden Sie Musik hoch, für die Sie eine Lizenz besitzen."
+      },
+      "render": {
+        "title": "Finales Rendering",
+        "ready": "Rendering-Anbieter verbunden – fertige MP4s werden erstellt.",
+        "missing": "Verbinden Sie Shotstack oder Creatomate, um fertige Videos zu rendern. Ohne sie erhalten Sie eine bearbeitbare Timeline."
+      }
+    },
+    "projects": {
+      "title": "Videoprojekte",
+      "description": "Jedes Projekt durchläuft eine fortsetzbare Produktionspipeline, die Sie Schritt für Schritt verfolgen.",
+      "new": "Neues Video",
+      "newTitle": "Videoprojekt starten",
+      "newHint": "Beschreiben Sie die Idee. Die Pipeline macht daraus Konzept, Skript, Storyboard, Szenen, Voiceover, Untertitel und einen fertigen Schnitt.",
+      "name": "Projektname",
+      "brief": "Idee / Briefing",
+      "briefHint": "Worum geht es im Video, für wen ist es und was sollen Zuschauer danach tun?",
+      "audience": "Zielgruppe",
+      "objective": "Ziel",
+      "template": "Vorlage",
+      "noTemplate": "Keine Vorlage",
+      "aspect": "Hauptformat",
+      "seconds": "Ziellänge (Sekunden)",
+      "platforms": "Plattformen",
+      "sceneMedia": "Szenenmedien",
+      "sceneMediaHint": "Videoclips kosten mehr und brauchen Minuten pro Szene; Standbilder werden im Schnitt animiert.",
+      "sceneMediaNoVideo": "Noch kein Videoanbieter verbunden – Standbilder funktionieren überall.",
+      "media_image": "Standbild",
+      "media_video": "Videoclip",
+      "research": "Zuerst recherchieren",
+      "researchHint": "Vor dem Konzept mit Ihrem Rechercheanbieter im Web suchen.",
+      "autoAdvance": "Automatisch ausführen",
+      "autoAdvanceHint": "Realy führt den nächsten Schritt selbst aus, bis etwas Sie braucht. Die Freigabe bleibt immer bei Ihnen.",
+      "create": "Projekt erstellen",
+      "empty": "Noch keine Videoprojekte. Starten Sie mit einer Idee – Sie geben jeden wichtigen Schritt frei.",
+      "emptyReadOnly": "Noch keine Videoprojekte.",
+      "attention": "{count, plural, one {# braucht Sie} other {# brauchen Sie}}",
+      "working": "In Arbeit",
+      "progress": "{done} von {total} Schritten erledigt",
+      "next": "Als Nächstes: {step}",
+      "complete": "Alle Schritte erledigt",
+      "cost": "Kosten {cost}"
+    },
+    "project": {
+      "title": "Videoprojekt",
+      "back": "Alle Projekte",
+      "pipeline": "Produktionspipeline",
+      "pipelineHint": "Live-Status jedes Schritts. Schritte laufen nacheinander; wo sinnvoll, können Sie bearbeiten, neu ausführen oder überspringen.",
+      "autoOn": "Läuft automatisch",
+      "archive": "Projekt archivieren",
+      "archiveConfirm": "Dieses Projekt archivieren? Seine Assets bleiben in der Mediathek.",
+      "assets": "Erstellte Assets",
+      "assetsHint": "Alles, was dieses Projekt erstellt hat.",
+      "noAssets": "Noch nichts erstellt."
+    },
+    "status": {
+      "DRAFT": "Entwurf",
+      "IN_PROGRESS": "In Produktion",
+      "IN_REVIEW": "In Prüfung",
+      "APPROVED": "Freigegeben",
+      "EXPORTED": "Exportiert",
+      "ARCHIVED": "Archiviert"
+    },
+    "stepStatus": {
+      "PENDING": "Ausstehend",
+      "RUNNING": "Läuft",
+      "WAITING_PROVIDER": "Beim Anbieter",
+      "NEEDS_INPUT": "Braucht Sie",
+      "BLOCKED": "Blockiert",
+      "SUCCEEDED": "Erledigt",
+      "FAILED": "Fehlgeschlagen",
+      "SKIPPED": "Übersprungen"
+    },
+    "steps": {
+      "run": "Ausführen",
+      "rerun": "Neu ausführen",
+      "retry": "Erneut versuchen",
+      "skip": "Überspringen",
+      "requestReview": "Prüfung anfordern",
+      "edited": "Bearbeitet",
+      "hookOptions": "Hook-Optionen",
+      "words": "{count} Wörter · ca. {seconds} s gesprochen",
+      "savedStale": "Gespeichert – spätere Schritte sind zur erneuten Ausführung markiert.",
+      "names": {
+        "idea": "Idee",
+        "research": "Recherche",
+        "concept": "Konzept",
+        "script": "Skript",
+        "hook": "Hook",
+        "storyboard": "Storyboard",
+        "scene_assets": "Szenen-Assets",
+        "voiceover": "Voiceover",
+        "music": "Musik",
+        "captions": "Untertitel",
+        "assembly": "Schnitt",
+        "thumbnail": "Vorschaubild",
+        "variants": "Plattformvarianten",
+        "review": "Prüfung & Freigabe",
+        "export": "Export",
+        "handoff": "Übergabe an Veröffentlichung"
+      },
+      "desc": {
+        "idea": "Das Briefing, mit dem alles beginnt.",
+        "research": "Aktuelle Fakten aus dem Web, im Konzept zitiert.",
+        "concept": "Die große Idee, der Blickwinkel und der visuelle Stil.",
+        "script": "Der gesprochene Text, abgestimmt auf die Ziellänge.",
+        "hook": "Eröffnungssätze, die beim Scrollen stoppen.",
+        "storyboard": "Szenen mit präzisen Einstellungsbeschreibungen, Sprechertext und Timing.",
+        "scene_assets": "Ein Bild oder Videoclip für jede Szene.",
+        "voiceover": "Das Skript mit natürlicher Stimme aufgenommen.",
+        "music": "Nur lizenzierte Musik – aus Ihrer verbundenen Quelle oder Ihrem eigenen Upload.",
+        "captions": "Untertitel aus dem Voiceover-Timing (SRT und VTT).",
+        "assembly": "Der Schnitt: Szenen, Stimme, Musik und Untertitel auf einer Timeline – gerendert, wenn ein Rendering-Anbieter verbunden ist.",
+        "thumbnail": "Ein Titelbild für das Video.",
+        "variants": "Die anderen Formate (9:16, 1:1, 16:9).",
+        "review": "Eine Person gibt das Video frei, bevor es veröffentlicht werden kann.",
+        "export": "Ein Paket mit allen Dateien und Lizenzen.",
+        "handoff": "Ein Beitragsentwurf im Marketing mit angehängtem Video."
+      }
+    },
+    "storyboard": {
+      "title": "Storyboard",
+      "description": "Bearbeiten Sie Einstellungen, Sprechertext und Timing. Eine geänderte Einstellung verliert ihr generiertes Medium, damit es neu erstellt werden kann.",
+      "summary": "{count, plural, one {# Szene} other {# Szenen}} · {seconds} s",
+      "locked": "Szenen werden generiert – Bearbeiten ist danach wieder möglich.",
+      "generating": "Wird generiert…",
+      "failed": "Generierung fehlgeschlagen",
+      "noMedia": "Noch kein Medium",
+      "sceneTitle": "Szenentitel",
+      "shot": "Einstellungsbeschreibung",
+      "narration": "Sprechertext",
+      "onScreen": "Text im Bild",
+      "seconds": "Sekunden",
+      "media": "Medium",
+      "up": "Nach oben",
+      "down": "Nach unten",
+      "remove": "Szene entfernen",
+      "add": "Szene hinzufügen",
+      "newScene": "Neue Szene",
+      "save": "Storyboard speichern",
+      "unsaved": "Ungespeicherte Änderungen",
+      "open": "Storyboard öffnen",
+      "empty": "Das Storyboard erscheint hier, sobald der Storyboard-Schritt gelaufen ist."
+    },
+    "scenes": {
+      "progress": "{ready} von {total} Szenen haben Medien",
+      "failed": "Szene {n}: {error}"
+    },
+    "voiceover": {
+      "meta": "{seconds} s · Stimme {voice}",
+      "timingExact": "Exaktes Wort-Timing",
+      "timingEstimated": "Geschätztes Timing"
+    },
+    "captions": {
+      "cues": "{count, plural, one {# Untertitel} other {# Untertitel}}"
+    },
+    "music": {
+      "searchTitle": "Lizenzierte Titel",
+      "search": "Suchen",
+      "searchPlaceholder": "Stimmung oder Genre, z. B. fröhlich akustisch",
+      "notConnected": "Keine lizenzierte Musikquelle verbunden. Verbinden Sie Jamendo oder laden Sie einen Titel hoch, für den Sie eine Lizenz besitzen.",
+      "noResults": "Keine Titel mit kommerzieller Nutzungslizenz gefunden.",
+      "license": "Lizenz",
+      "attributionRequired": "die Namensnennung wird dem Export hinzugefügt",
+      "use": "Diesen Titel verwenden",
+      "uploadTitle": "Eigenen Titel hochladen",
+      "licenseNote": "Lizenzangaben",
+      "licenseHint": "Woher die Lizenz stammt, z. B. „Gekauft bei …, Lizenz-Nr. …“.",
+      "attest": "Ich bestätige, dass ich eine Lizenz zur kommerziellen Nutzung dieser Musik in Videos besitze.",
+      "upload": "Musik hochladen",
+      "never": "Realy lädt niemals Musik aus nicht lizenzierten Quellen.",
+      "licensed": "Lizenz: {license}"
+    },
+    "assembly": {
+      "render": "Gerendertes Video",
+      "rendering": "Der Rendering-Anbieter erstellt das Video…",
+      "timeline": "Timeline (JSON)",
+      "edl": "Schnittliste (EDL)",
+      "mp4": "MP4",
+      "notes": {
+        "render_requires_provider": "Bearbeitbare Timeline bereit. Ein fertiges Video erfordert einen Rendering-Anbieter (Shotstack oder Creatomate).",
+        "media_missing": "Einige Szenen haben noch keine Medien – generieren Sie zuerst die Szenen-Assets.",
+        "render_limit_reached": "Das Videolimit Ihres Plans für diesen Monat ist erreicht; die Timeline ist bereit.",
+        "render_failed": "Der Rendering-Anbieter konnte dieses Format nicht rendern; die Timeline ist bereit."
+      }
+    },
+    "review": {
+      "approve": "Video freigeben",
+      "changes": "Änderungen anfordern",
+      "note": "Prüfnotiz",
+      "notePlaceholder": "Was soll sich ändern? (für Änderungen erforderlich)",
+      "lastNote": "Letzte Prüfnotiz: {note}"
+    },
+    "export": {
+      "withVideo": "Das Paket enthält das fertige Video.",
+      "timelineOnly": "Das Paket enthält die bearbeitbare Timeline und alle Medien (ohne Rendering).",
+      "manifest": "Export-Manifest"
+    },
+    "handoff": {
+      "postTitle": "Beitragstitel",
+      "text": "Beitragstext",
+      "accounts": "Social-Media-Konten",
+      "media": "Medium",
+      "render": "Fertiges Video",
+      "thumbnail": "Vorschaubild",
+      "noRender": "Es gibt noch kein fertiges Rendering – übergeben Sie das Vorschaubild oder verbinden Sie einen Rendering-Anbieter.",
+      "submit": "Beitragsentwurf erstellen",
+      "done": "Beitragsentwurf im Marketing erstellt.",
+      "open": "Social-Beiträge öffnen",
+      "noAccounts": "Fügen Sie im Marketing ein Social-Media-Konto hinzu, um Videos zur Veröffentlichung zu übergeben.",
+      "setupSocial": "Social einrichten"
+    },
+    "settings": {
+      "title": "Produktionseinstellungen",
+      "auto": "Automatisch (erster verbundener)",
+      "voiceProvider": "Sprachanbieter",
+      "voice": "Stimme",
+      "voiceHint": "OpenAI-Stimmenname oder ElevenLabs-Stimmen-ID.",
+      "voiceStyle": "Vortragsweise",
+      "voiceStylePlaceholder": "z. B. warm, fröhlich, selbstbewusst",
+      "videoProvider": "Anbieter für Videoclips",
+      "renderProvider": "Rendering-Anbieter"
+    },
+    "costs": {
+      "title": "Kostenübersicht",
+      "description": "Geschätzte Anbieterkosten nach Listenpreisen.",
+      "projectTitle": "Projektkosten",
+      "assets": "{count, plural, one {# Asset} other {# Assets}}",
+      "total": "Gesamt (Schätzung)",
+      "empty": "Keine kostenpflichtigen Generierungen in diesem Zeitraum.",
+      "meterImages": "Bilder: {value}",
+      "meterVideos": "Videoclips & Renderings: {value}",
+      "meterContent": "KI-Inhaltsgenerierungen: {value}",
+      "estimates": "Schätzungen – maßgeblich sind die Rechnungen Ihrer Anbieter."
+    },
+    "usage": {
+      "title": "Nutzung pro Kampagne",
+      "description": "Für jede Kampagne erstellte Assets und die Beiträge, die sie nutzen.",
+      "row": "{assets} Assets · {posts} Beiträge · {cost}",
+      "empty": "Verknüpfen Sie Assets mit einer Kampagne, um hier die Nutzung zu sehen."
+    },
+    "images": {
+      "title": "Bildstudio",
+      "description": "Produktbilder, Social-Grafiken, Poster, Banner, Anzeigen, Vorschaubilder, Infografiken, Illustrationen und Marken-Assets – auf Basis Ihres Brand Kits.",
+      "category": "Was erstellen Sie?",
+      "prompt": "Bild beschreiben",
+      "promptHint": "Motiv, Umgebung, Stimmung. Text wird nie gerendert – lassen Sie stattdessen Platz dafür.",
+      "promptPlaceholder": "z. B. Unsere Keramiktasse auf einer sonnigen Küchenarbeitsplatte, Morgenkaffee-Stimmung",
+      "preset": "Plattformgröße",
+      "style": "Stil",
+      "styleAuto": "Automatisch",
+      "variants": "Varianten",
+      "variantsHint": "Jede Variante ist eine kostenpflichtige Generierung.",
+      "textSpace": "Platz für Text",
+      "textNone": "Kein Textbereich",
+      "text_top": "Oben",
+      "text_center": "Mitte",
+      "text_bottom": "Unten",
+      "useBrand": "Brand Kit anwenden",
+      "useBrandHint": "Farben, Schriften und Tonalität aus Ihrem Brand Kit werden dem Prompt hinzugefügt.",
+      "noBrandHint": "Noch kein Brand Kit – richten Sie es unter Marketing → Marke ein, für markengerechte Ergebnisse.",
+      "generate": "{count, plural, one {Bild generieren} other {# Bilder generieren}}",
+      "generating": "Wird generiert…",
+      "done": "{count, plural, one {# Bild erstellt} other {# Bilder erstellt}} – siehe unten.",
+      "costHint": "Nutzt Ihren verbundenen Anbieter und zählt zum Bildlimit dieses Monats.",
+      "notConnected": "Verbinden Sie einen Bildanbieter (OpenAI, Stability AI oder Replicate), um Bilder zu generieren.",
+      "recent": "Neueste Bilder",
+      "allInLibrary": "Alle in der Mediathek",
+      "empty": "Noch keine Bilder. Beschreiben Sie oben eines, um Ihr erstes zu erstellen."
+    },
+    "actions": {
+      "download": "Herunterladen",
+      "regenerate": "Neu generieren",
+      "edit": "Bearbeiten",
+      "editTitle": "Dieses Bild bearbeiten",
+      "editHint": "Beschreiben Sie die Änderung. Eine neue Version wird erstellt (OpenAI-Bildbearbeitung).",
+      "editPlaceholder": "z. B. Hintergrund in tiefem Marineblau und sanftes Morgenlicht",
+      "applyEdit": "Bearbeitete Version erstellen",
+      "upscale": "4× hochskalieren",
+      "brandCheck": "Markenprüfung"
+    },
+    "brand": {
+      "title": "Brand Kit",
+      "edit": "Bearbeiten",
+      "fonts": "Schriften: {heading} / {body}",
+      "missing": "Noch kein Brand Kit. Fügen Sie Farben, Schriften, Logo und Tonalität unter Marketing → Marke hinzu.",
+      "score": "Marke {score}",
+      "noScore": "Keine Bewertung",
+      "checkTitle": "Markenkonsistenz",
+      "checkHint": "Farbpalette aus den Pixeln gemessen; Logo und Text von einem Vision-Modell geprüft, wenn verfügbar.",
+      "coverage": "{percent} % der farbigen Flächen nutzen die Markenpalette",
+      "dominant": "Dominante Farben",
+      "offPalette": "Farben außerhalb der Palette: {colors}",
+      "logoOk": "Logo sichtbar und entspricht dem offiziellen Logo.",
+      "logoWrong": "Ein Logo ist sichtbar, entspricht aber nicht dem offiziellen Logo.",
+      "logoAbsent": "Das offizielle Logo ist nicht sichtbar.",
+      "textIssue": "Textproblem: {issue}",
+      "offBrand": "Nicht markengerechtes Element: {issue}",
+      "notChecked": "Noch nicht geprüft. Starten Sie eine Markenprüfung über die Aktionen.",
+      "paletteNote": {
+        "no_brand_colors": "Fügen Sie dem Brand Kit Markenfarben hinzu, um die Palette zu messen.",
+        "format_not_supported": "Die Palettenmessung funktioniert mit PNG-Bildern."
+      },
+      "logoNote": {
+        "no_logo": "Fügen Sie dem Brand Kit eine Logo-URL hinzu, um die Logonutzung zu prüfen.",
+        "vision_not_connected": "Verbinden Sie OpenAI, um Logo und Text zu prüfen.",
+        "vision_failed": "Die Logoprüfung konnte diesmal nicht ausgeführt werden."
+      }
+    },
+    "library": {
+      "title": "Mediathek",
+      "description": "Jedes Studio-Asset mit Versionen, Kosten, Lizenzen und Verwendung.",
+      "folders": "Ordner",
+      "all": "Alle Assets",
+      "newFolder": "Neuer Ordner",
+      "deleteFolderConfirm": "Diesen Ordner löschen? Seine Assets bleiben in der Mediathek.",
+      "uploadTitle": "Hochladen",
+      "uploadHint": "Bilder, Videos oder lizenzierte Musik (bis 15 MB).",
+      "file": "Datei",
+      "fileHint": "PNG, JPEG, WebP, MP4, WebM, MOV, MP3, WAV, AAC, OGG.",
+      "upload": "Hochladen",
+      "tooLarge": "Die Datei ist größer als 15 MB.",
+      "search": "Namen, Prompts, Tags durchsuchen",
+      "kind": "Typ",
+      "allKinds": "Alle Typen",
+      "allCategories": "Alle Kategorien",
+      "filter": "Filtern",
+      "noMatches": "Keine Assets entsprechen diesen Filtern.",
+      "empty": "Die Mediathek ist leer. Generieren Sie Bilder oder starten Sie ein Videoprojekt.",
+      "noPreview": "Keine Vorschau",
+      "tags": "Tags",
+      "tagsHint": "Durch Kommas getrennt."
+    },
+    "asset": {
+      "title": "Asset",
+      "back": "Mediathek",
+      "archived": "Dieses Asset ist archiviert.",
+      "prompt": "Prompt",
+      "provider": "Erstellt mit",
+      "uploaded": "Hochgeladen",
+      "cost": "Geschätzte Kosten",
+      "created": "Erstellt",
+      "usage": "Verwendet in",
+      "posts": "{count, plural, =0 {Keine Social-Beiträge} one {# Social-Beitrag} other {# Social-Beiträge}}",
+      "project": "Projekt",
+      "openProject": "Projekt öffnen",
+      "license": "Lizenz",
+      "versions": "Versionsverlauf",
+      "details": "Details",
+      "archive": "Asset archivieren",
+      "archiveConfirm": "Dieses Asset archivieren? Es wird aus der Mediathek und den Marketing-Medien entfernt."
+    },
+    "templates": {
+      "title": "Vorlagen",
+      "description": "Wiederverwendbare Bildrezepte für Ihr Team.",
+      "empty": "Noch keine Vorlagen.",
+      "new": "Neue Vorlage",
+      "save": "Vorlage speichern",
+      "use": "Generieren"
+    },
+    "kinds": {
+      "IMAGE": "Bild",
+      "VIDEO": "Video",
+      "AUDIO": "Audio",
+      "CAPTIONS": "Untertitel",
+      "TIMELINE": "Timeline",
+      "DOCUMENT": "Dokument"
+    },
+    "roles": {
+      "scene": "Szene",
+      "voiceover": "Voiceover",
+      "music": "Musik",
+      "captions_srt": "Untertitel (SRT)",
+      "captions_vtt": "Untertitel (VTT)",
+      "timeline": "Timeline",
+      "edl": "Schnittliste",
+      "variant_timeline": "Varianten-Timeline",
+      "variant_edl": "Varianten-Schnittliste",
+      "render": "Gerendertes Video",
+      "thumbnail": "Vorschaubild",
+      "export": "Export-Manifest"
+    },
+    "operations": {
+      "generate": "Generiert",
+      "variant": "Variante",
+      "regenerate": "Neu generiert",
+      "edit": "Bearbeitet",
+      "upscale": "Hochskaliert",
+      "upload": "Hochgeladen",
+      "render": "Gerendert",
+      "license": "Lizenziert"
+    },
+    "categories": {
+      "product": "Produktbild",
+      "social": "Social-Grafik",
+      "poster": "Poster",
+      "banner": "Banner",
+      "ad": "Anzeige",
+      "thumbnail": "Vorschaubild",
+      "infographic": "Infografik",
+      "illustration": "Illustration",
+      "brand": "Marken-Asset",
+      "scene": "Videoszene",
+      "render": "Gerendertes Video",
+      "music": "Musik"
+    },
+    "styles": {
+      "photo": "Foto",
+      "minimal": "Minimal",
+      "illustration": "Illustration",
+      "bold": "Kräftig",
+      "3d": "3D",
+      "lifestyle": "Lifestyle",
+      "editorial": "Editorial",
+      "flat": "Flach"
+    },
+    "presets": {
+      "instagram_square": "Instagram quadratisch",
+      "instagram_portrait": "Instagram Hochformat",
+      "story_reel": "Story / Reel",
+      "tiktok": "TikTok",
+      "youtube_thumbnail": "YouTube-Vorschaubild",
+      "youtube_video": "YouTube-Video",
+      "linkedin_post": "LinkedIn-Beitrag",
+      "x_post": "X-Beitrag",
+      "facebook_post": "Facebook-Beitrag",
+      "pinterest_pin": "Pinterest-Pin",
+      "web_banner": "Web-Banner",
+      "leaderboard_ad": "Leaderboard-Anzeige",
+      "display_ad": "Display-Anzeige",
+      "poster_a": "Poster (A-Format)",
+      "blog_featured": "Blog-Beitragsbild"
+    },
+    "aspects": {
+      "9x16": "Hochformat 9:16",
+      "1x1": "Quadrat 1:1",
+      "16x9": "Querformat 16:9"
+    },
+    "platforms": {
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook",
+      "x": "X",
+      "pinterest": "Pinterest",
+      "web": "Website"
+    },
+    "videoTemplates": {
+      "product_teaser": "Produkt-Teaser",
+      "explainer": "Erklärvideo",
+      "ugc_ad": "Anzeige im UGC-Stil",
+      "announcement": "Ankündigung"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "gemini": "Gemini",
+      "stability": "Stability AI",
+      "replicate": "Replicate",
+      "runway": "Runway",
+      "luma": "Luma",
+      "kling": "Kling",
+      "elevenlabs": "ElevenLabs",
+      "shotstack": "Shotstack",
+      "creatomate": "Creatomate",
+      "jamendo": "Jamendo",
+      "upload": "Uploads",
+      "notConnected": "nicht verbunden"
+    },
+    "nav": "Kreativstudio"
   }
 }

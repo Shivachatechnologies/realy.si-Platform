@@ -831,7 +831,95 @@
       "sites_unknown_asset": "An image is not in your asset library.",
       "sites_no_structure": "Your Founder Kit has no ready website structure yet.",
       "sites_domain_taken": "This domain is already connected to another site.",
-      "sites_no_domain": "Add a domain first."
+      "sites_no_domain": "Add a domain first.",
+      "brain_memory_duplicate": "This fact is already in company memory.",
+      "brain_memory_needs_approval": "AI can save company-wide memory only after a person approves it.",
+      "voiceos_provider_failed": "The speech provider didn’t respond. Try again, or switch to the browser voice in voice settings.",
+      "voiceos_provider_rejected": "The speech provider rejected the saved credentials. Reconnect it in Integrations.",
+      "voiceos_session_ended": "This voice conversation has ended. Start talking again to begin a new one.",
+      "autopilot_off": "Autopilot is off for this department, so the AI does no work here.",
+      "autopilot_manual": "This department is on Manual: the AI only works when a person asks.",
+      "autopilot_outside_window": "Outside the Autopilot schedule window; proactive work waits.",
+      "autopilot_paused": "All AI in this company is paused.",
+      "autopilot_window": "Set both a start and an end time, or neither.",
+      "autopilot_company_mode_required": "The company always needs a mode.",
+      "costs_budget_reached": "A spending budget is reached, so nothing more was spent. Raise the budget in Costs or wait for the next period.",
+      "costs_unknown_department": "Choose a valid department.",
+      "workforce_permission_exceeds_own": "You can only give an AI employee permissions you hold yourself.",
+      "workforce_runs_as_not_self": "An AI employee can only run with your own permissions.",
+      "workforce_promotion_not_higher": "A promotion must raise the level.",
+      "workforce_role_unchanged": "This is already the employee's role.",
+      "workforce_manager_required": "Choose an AI manager or a person.",
+      "workforce_replace_self": "An AI employee cannot replace itself.",
+      "workforce_design_applied": "This design was already applied.",
+      "workforce_design_refining": "The AI review is still running.",
+      "workforce_design_not_refined": "There is no AI-reviewed version yet.",
+      "workforce_design_nothing_to_resume": "There is nothing to resume.",
+      "creative_not_connected": "Connect the required provider in Integrations first.",
+      "creative_invalid_input": "The provider could not accept this input. Check it and try again.",
+      "creative_rate_limited": "The provider is busy. Try again in a minute.",
+      "creative_provider_failed": "The provider could not complete the request. Nothing was charged as finished.",
+      "creative_image_not_connected": "Connect an image provider (OpenAI, Stability AI or Replicate) first.",
+      "creative_image_invalid_input": "The image request was not accepted. Adjust the prompt and try again.",
+      "creative_image_rate_limited": "The image provider is busy. Try again in a minute.",
+      "creative_image_provider_failed": "The image provider did not return an image.",
+      "creative_edit_not_connected": "Image editing needs OpenAI. Connect it in Integrations.",
+      "creative_edit_invalid_input": "The edit was not accepted. Describe the change differently.",
+      "creative_edit_rate_limited": "The editing provider is busy. Try again in a minute.",
+      "creative_edit_provider_failed": "The editing provider did not return an image.",
+      "creative_upscale_not_connected": "Upscaling needs Stability AI. Connect it in Integrations.",
+      "creative_upscale_invalid_input": "This image cannot be upscaled (too large or unsupported).",
+      "creative_upscale_rate_limited": "The upscaling provider is busy. Try again in a minute.",
+      "creative_upscale_provider_failed": "The upscaling provider did not return an image.",
+      "creative_music_not_connected": "No licensed music source is connected. Connect Jamendo or upload a licensed track.",
+      "creative_music_invalid_input": "The music source did not accept this request.",
+      "creative_music_rate_limited": "The music source is busy. Try again in a minute.",
+      "creative_music_provider_failed": "The licensed music source could not be reached.",
+      "creative_storage_not_connected": "Storage is not available. Connect a storage bucket in Integrations.",
+      "creative_storage_invalid_input": "This file could not be stored.",
+      "creative_storage_rate_limited": "Storage is busy. Try again in a minute.",
+      "creative_storage_provider_failed": "The file could not be stored.",
+      "creative_storage_failed": "The file could not be stored. Large files need a storage bucket in Integrations.",
+      "creative_not_video": "This project has no video pipeline.",
+      "creative_step_waiting": "Earlier steps must finish first.",
+      "creative_step_busy": "This step is already running or finished.",
+      "creative_step_required": "This step cannot be skipped.",
+      "creative_step_not_editable": "This step's result cannot be edited.",
+      "creative_use_review": "Approve or request changes in the review step.",
+      "creative_scenes_busy": "Scenes are being generated. Wait until they finish.",
+      "creative_not_in_review": "The video is not waiting for review.",
+      "creative_music_size": "Music files must be up to 20 MB.",
+      "creative_music_download_failed": "The track could not be downloaded from the licensed source.",
+      "creative_music_license_required": "Confirm the license for this music before uploading.",
+      "creative_not_approved": "Approve the video before handing it off.",
+      "creative_no_render": "There is no finished render yet. Hand off the thumbnail or connect a rendering provider.",
+      "creative_no_thumbnail": "There is no thumbnail yet.",
+      "creative_not_an_image": "This works on images only.",
+      "creative_upload_size": "Files must be up to 15 MB.",
+      "creative_asset_in_use": "This asset is used by a scheduled post.",
+      "creative_folder_taken": "A folder with this name already exists.",
+      "creative_template_category": "Choose a valid category.",
+      "creative_no_brand_kit": "Set up the brand kit in Marketing → Brand first.",
+      "voice_control_not_supported": "This provider can't do that on a live call.",
+      "voice_control_failed": "The provider did not accept the command.",
+      "voice_call_not_live": "This call is no longer live.",
+      "voice_no_human_number": "Set a take-over number in phone settings first.",
+      "voice_outcome_state": "Only calls that connected or ended can have an outcome.",
+      "voice_call_not_finished": "Wait until this call is over.",
+      "voice_callback_time": "Pick a callback time within the next 90 days.",
+      "voice_run_state": "This calling run can't do that in its current state.",
+      "comms_intel_applied": "These meeting results were already applied.",
+      "comms_intel_cancelled": "This meeting was cancelled.",
+      "comms_intel_closed": "This meeting is already closed.",
+      "comms_intel_email_pending": "The email is waiting for approval.",
+      "comms_intel_email_state": "The email was already sent or is waiting for approval.",
+      "comms_intel_future": "The meeting hasn't started yet.",
+      "comms_intel_hours": "Working hours end before they start.",
+      "comms_intel_no_email": "Write the follow-up email first.",
+      "comms_intel_no_recipient": "This meeting has no customer email address.",
+      "comms_intel_no_transcript": "Add a transcript first.",
+      "comms_intel_not_processed": "Summarise the transcript first.",
+      "comms_intel_suppressed": "This address opted out of emails."
     }
   },
   "onboarding": {
@@ -1959,7 +2047,113 @@
       "empty": "No facts yet. Add decisions, conventions and key numbers the AI should always know.",
       "companyWide": "Company-wide",
       "byAi": "Proposed by AI, approved",
-      "byHuman": "Added by a person"
+      "byHuman": "Added by a person",
+      "governance": "Governance: layer, sensitivity, access and expiry",
+      "layerLabel": "Memory layer",
+      "sensitivityLabel": "Sensitivity",
+      "readPermissionLabel": "Who may read it",
+      "readPermissionHint": "Optional extra permission, e.g. finance.read for finance facts.",
+      "noExtraPermission": "Everyone with Company Brain access",
+      "expiresLabel": "Forget on",
+      "expiresHint": "Optional — the fact is deleted automatically on this day.",
+      "needsPermission": "Needs {permission}",
+      "expiresOn": "Forgotten on {date}",
+      "bySystem": "Written by the platform",
+      "layersTitle": "Memory layers",
+      "allLayers": "All layers",
+      "searchLabel": "Search memory",
+      "searchHint": "Searches facts, summaries and documents; every result cites its source.",
+      "searchPlaceholder": "e.g. payment terms or brand voice",
+      "scopeLabel": "Visible to",
+      "allScopes": "All scopes",
+      "cited": "Cited memory",
+      "resultsTitle": "Search results",
+      "resultCount": "{count, plural, =0 {Nothing matches “{query}”.} one {# result for “{query}”.} other {# results for “{query}”.}}",
+      "noResults": "No memory or document passage matches. Try other words.",
+      "export": "Export JSON",
+      "exportHint": "Download everything in company memory you may read, with governance settings.",
+      "layers": {
+        "COMPANY": "Company",
+        "KNOWLEDGE": "Knowledge",
+        "DOCUMENT": "Documents",
+        "PRODUCT": "Product",
+        "BRAND": "Brand",
+        "CUSTOMER": "Customers",
+        "DEPARTMENT": "Departments",
+        "EMPLOYEE": "AI employees",
+        "TASK": "Tasks",
+        "CONVERSATION": "Conversation summaries"
+      },
+      "scopes": {
+        "COMPANY": "Whole company",
+        "DEPARTMENT": "Department",
+        "EMPLOYEE": "One AI employee",
+        "TASK": "One task"
+      },
+      "sensitivity": {
+        "PUBLIC": "Public",
+        "INTERNAL": "Internal",
+        "CONFIDENTIAL": "Confidential",
+        "RESTRICTED": "Restricted (managers only)"
+      },
+      "sourceKinds": {
+        "MANUAL": "Added by hand",
+        "AI_APPROVED": "AI proposal, approved",
+        "AI_EMPLOYEE": "AI employee note",
+        "CONVERSATION": "Conversation summary",
+        "ROLLUP": "Weekly digest",
+        "IMPORT": "Imported"
+      },
+      "matchedBy": {
+        "fts": "Keyword match",
+        "semantic": "Similar meaning",
+        "both": "Keyword + meaning",
+        "pinned": "Pinned"
+      },
+      "status": {
+        "title": "How memory is searched",
+        "hybrid": "Keyword search plus semantic search with {provider} ({model}).",
+        "fts": "Keyword (full-text) search only. Results match the words you use, not their meaning.",
+        "hybridBadge": "Semantic + keyword",
+        "ftsBadge": "Keyword only",
+        "noProvider": "To also find facts by meaning, connect OpenAI, Google Gemini or Voyage AI — memory is then embedded automatically.",
+        "connect": "Open Integrations",
+        "noPgvector": "{provider} is connected, but this platform's database has no vector extension (pgvector) yet, so search stays keyword-only. Ask the platform operator to enable it.",
+        "coverage": "Embedded so far",
+        "coverageCount": "{done} of {total}"
+      },
+      "stats": {
+        "facts": "Memories",
+        "documents": "Documents",
+        "private": "AI employee & task memory",
+        "expiring": "Expiring within 7 days"
+      },
+      "retention": {
+        "title": "Retention",
+        "description": "How long each layer is kept. Older entries are deleted automatically (pinned facts are kept).",
+        "forever": "Keep forever",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "custom": "Company setting",
+        "default": "Platform default",
+        "for": "Retention for {layer}"
+      },
+      "forget": {
+        "title": "Forget data",
+        "description": "Delete everything memory holds about a customer or an AI employee — facts, summaries, their documents and search vectors.",
+        "what": "Forget",
+        "customer": "Customer",
+        "employee": "AI employee",
+        "choose": "Choose…",
+        "submit": "Forget",
+        "confirm": "Permanently delete everything company memory holds about {name}? This cannot be undone.",
+        "customerHint": "Removes memories about the customer, documents marked as theirs and knowledge links. CRM records stay.",
+        "employeeHint": "Removes the AI employee's memory and notes. The AI employee itself stays.",
+        "done": "Forgotten: {memories} memories, {documents} documents, {notes} notes.",
+        "managersOnly": "Only Company Brain managers can delete or export memory."
+      },
+      "documentGovernance": "Governance",
+      "documentGovernanceHint": "Memory layer, who may read this document, whom it belongs to and when it is forgotten.",
+      "documentExpiresHint": "Optional — the document is deleted automatically on this day."
     },
     "ask": {
       "title": "Ask the Brain",
@@ -2289,7 +2483,24 @@
       "propose_process_version": "Propose SOP version",
       "triage_ticket": "Triage a ticket",
       "read_site": "Read website",
-      "draft_site_pages": "Draft website pages"
+      "draft_site_pages": "Draft website pages",
+      "read_spending": "Read spending",
+      "read_autopilot_status": "Read Autopilot status",
+      "read_creative_projects": "Read creative projects",
+      "read_creative_project": "Read a creative project",
+      "search_media_library": "Search the media library",
+      "read_creative_costs": "Read creative costs",
+      "generate_studio_images": "Generate studio images",
+      "create_video_project": "Create a video project",
+      "run_pipeline_step": "Run a pipeline step",
+      "edit_pipeline_text": "Edit concept, script or hook",
+      "update_storyboard": "Update the storyboard",
+      "check_brand_consistency": "Check brand consistency",
+      "read_publishing_accounts": "Read social accounts",
+      "handoff_video_to_publishing": "Hand a video to publishing",
+      "start_calling_campaign": "Start an AI calling run",
+      "read_calling_runs": "Read AI calling runs",
+      "send_meeting_follow_up_email": "Send a meeting follow-up email"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -2301,7 +2512,9 @@
       "org": "Org chart",
       "performance": "Performance & budgets",
       "escalations": "Escalations",
-      "autonomy": "Autonomy"
+      "autonomy": "Autonomy",
+      "network": "Live network",
+      "designer": "Organization designer"
     },
     "filters": {
       "search": "Search",
@@ -2799,6 +3012,310 @@
       "departmentExhaustedNotice": "The {department} department has used this month's AI budget, so new tasks are refused until it is raised or the month ends.",
       "departmentLine": "{department} department",
       "runCap": "The next task may spend at most about {tokens} tokens before a budget is reached."
+    },
+    "designer": {
+      "title": "Organization designer",
+      "subtitle": "Pick a company size and tell us about the business: Realy proposes departments, roles and reporting lines — each with the reason it exists — plus the monthly AI budget.",
+      "strip": {
+        "what": "A proposed AI organization built from your size, industry, business model, goals, workload, budget and revenue target.",
+        "why": "Every role is justified by a goal, real workload or span of control — the size is a ceiling, never a quota.",
+        "can": "Preview, save, ask the AI CEO to review it against your data, compare both versions and apply one.",
+        "next": "Choose a size, add your goals and press Preview."
+      },
+      "formTitle": "Your company",
+      "formHint": "Only the size and business model are required. The more you tell, the better the proposal.",
+      "size": "Company size (AI employees)",
+      "sizeHint": "This is an upper limit. Roles are only proposed where a goal or workload needs them.",
+      "presets": {
+        "solo": "Solo",
+        "custom": "Custom"
+      },
+      "customHeadcount": "Maximum AI employees",
+      "industry": "Industry",
+      "industryHint": "For example: dental clinics, B2B logistics software, fashion e-commerce.",
+      "industryPlaceholder": "What does your company do?",
+      "industryDefault": "General business",
+      "businessModel": "Business model",
+      "models": {
+        "b2b_saas": "B2B software (SaaS)",
+        "b2c_app": "Consumer app",
+        "marketplace": "Marketplace",
+        "agency": "Agency",
+        "ecommerce": "E-commerce",
+        "services": "Professional services",
+        "other": "Other"
+      },
+      "revenueTarget": "Monthly revenue target",
+      "revenueHint": "In your currency. Used only to estimate workload you leave empty.",
+      "budget": "Monthly AI budget (USD)",
+      "budgetHint": "Optional. Lower-priority capacity is trimmed first to stay within it.",
+      "goalsLabel": "Goals",
+      "goals": {
+        "grow_revenue": "Grow revenue",
+        "generate_leads": "Generate leads",
+        "brand_awareness": "Brand awareness",
+        "customer_support": "Great customer support",
+        "launch_product": "Launch a product",
+        "operational_efficiency": "Run efficiently",
+        "hire_team": "Hire a team",
+        "manage_finances": "Manage finances",
+        "fundraising": "Raise funding",
+        "expand_markets": "Enter new markets"
+      },
+      "workloadTitle": "Workload (optional)",
+      "workloadHint": "Add monthly volumes to size teams precisely. Empty fields are estimated from the revenue target, or left out.",
+      "workload": {
+        "leadsPerMonth": "New leads per month",
+        "openDeals": "Open deals",
+        "ticketsPerMonth": "Support tickets per month",
+        "chatsPerMonth": "Website chats per month",
+        "inboundCallsPerMonth": "Inbound calls per month",
+        "outboundCallsPerMonth": "Outbound calls per month",
+        "contentPerMonth": "Content pieces per month",
+        "socialPostsPerMonth": "Social posts per month",
+        "invoicesPerMonth": "Invoices per month",
+        "activeProjects": "Active projects",
+        "hiresPerQuarter": "Hires per quarter",
+        "products": "Products",
+        "integrations": "Connected systems",
+        "humanEmployees": "Human employees"
+      },
+      "preview": "Preview",
+      "save": "Save proposal",
+      "previewTitle": "Preview (not saved)",
+      "proposal": "Proposal",
+      "startHint": "Preview a proposal to see departments, roles, reasons and the monthly AI budget before anything is created.",
+      "tiles": {
+        "roles": "AI employees",
+        "cap": "Size limit",
+        "demand": "Workload justifies {demand}",
+        "cost": "Estimated AI cost / month",
+        "costHint": "{perTask} per task on average",
+        "departments": "Departments"
+      },
+      "notes": {
+        "below_preset": "{total} roles are enough for what you described — fewer than the limit of {cap}. Nothing was added just to reach the number.",
+        "trimmed_to_preset": "The workload justifies {demand} roles; the proposal was trimmed to the limit of {cap}, keeping the most important capacity.",
+        "trimmed_for_budget": "Some capacity was trimmed to stay within your monthly AI budget.",
+        "no_drivers": "No goals or workload were given, so only the AI CEO is proposed. Add goals or volumes for a fuller team.",
+        "solo": "Solo: one AI CEO works alongside you and delegates nothing until you grow."
+      },
+      "assumptionsTitle": "Estimated from your revenue target",
+      "assumption": "{what}: about {value}",
+      "reasons": {
+        "top": "Leads the company, sets priorities and delegates to the executives.",
+        "solo": "Your single AI partner while you run the company alone.",
+        "goal": "Needed for your goal: {goal}.",
+        "workload": "{volume} {driver} at about {capacity} per AI employee.",
+        "estimated": "About {volume} {driver} (estimated) at about {capacity} per AI employee.",
+        "span": "{specialists} specialists need a manager for every {span}.",
+        "department_head": "The department has {people} people — it needs its own head.",
+        "coordination": "{heads} department heads report to the CEO — a COO coordinates operations.",
+        "ai": "Added by the AI review."
+      },
+      "deptLine": "{count} AI employees · {cost} / month",
+      "planFits": "Fits your plan: {create} new, {adopt} existing employees reused ({used} of {limit} in use).",
+      "planExceeds": "This needs {create} new AI employees but your plan allows {limit} ({used} in use). Upgrade or choose a smaller size.",
+      "status": {
+        "DRAFT": "Draft",
+        "APPLYING": "Provisioning",
+        "APPLIED": "Applied",
+        "FAILED": "Stopped"
+      },
+      "variant": "Version",
+      "variants": {
+        "deterministic": "Realy proposal",
+        "refined": "AI-reviewed"
+      },
+      "refine": "Review with the AI CEO",
+      "refining": "The AI CEO is reviewing the proposal against your company's data…",
+      "refineFailed": "The AI review did not produce a usable proposal: {error}",
+      "apply": "Apply ({count} roles)",
+      "applying": "Applying…",
+      "confirmApply": "Create the organization with {count} roles? Managers are provisioned first; existing employees in the same roles are reused.",
+      "resume": "Resume provisioning",
+      "job": {
+        "QUEUED": "Waiting to start",
+        "RUNNING": "Provisioning AI employees",
+        "COMPLETED": "Organization provisioned",
+        "FAILED": "Provisioning stopped",
+        "CANCELLED": "Cancelled",
+        "counts": "{created} created · {skipped} reused · {failed} failed · {total} total",
+        "progress": "Provisioning progress",
+        "lastError": "Last problem: {error}",
+        "hint": "Large organizations continue in the background in batches. It is safe to leave this page; resuming never creates duplicates."
+      },
+      "history": "Saved designs",
+      "historyLine": "{roles} roles · {cost} / month"
+    },
+    "network": {
+      "title": "Live company network",
+      "subtitle": "Your whole company as one living network: the AI CEO at the centre, executives, managers, specialists and the people they work with.",
+      "strip": {
+        "what": "Every AI employee and person, placed by the real reporting lines.",
+        "why": "See at a glance who is working, who is paused and how work moves through the company.",
+        "can": "Rotate and zoom, search for anyone and click a node to open their profile.",
+        "next": "Click the CEO to see what it is working on, or search for a department lead."
+      },
+      "live": {
+        "stream": "Live",
+        "poll": "Live · updates every 10 s",
+        "paused": "Paused while hidden"
+      },
+      "counts": "{ai} AI · {humans} people · {busy} working · {paused} paused",
+      "view": "View",
+      "signals": {
+        "task": "Task",
+        "done": "Done",
+        "failed": "Failed",
+        "delegation": "Delegation",
+        "approval": "Approval",
+        "call": "Call",
+        "escalation": "Escalation",
+        "rollup": "Roll-up"
+      },
+      "hint3d": "Drag to rotate, scroll to zoom. Pulses are real events: new tasks, results, delegations, approvals, calls and escalations.",
+      "hint2d": "Drag to move, scroll to zoom. Pulses are real events from your company.",
+      "humansHidden": "Human employees are shown when you have access to HR records.",
+      "find": "Find someone",
+      "findPlaceholder": "Name or title",
+      "feed": "Live activity",
+      "feedEmpty": "No activity in the last few minutes.",
+      "emptyTitle": "No one in the network yet",
+      "empty": "Hire AI employees or design your organization to see it come alive.",
+      "ceo": "CEO",
+      "human": "Person",
+      "profileUnavailable": "This profile is not available to you.",
+      "openProfile": "Open full profile",
+      "openHr": "Open HR record",
+      "email": "Email",
+      "aiReports": "AI employees reporting to them",
+      "humanReports": "People reporting to them"
+    },
+    "record": {
+      "title": "Employee record",
+      "hint": "Who this AI employee is, how it works and what happened to it.",
+      "department": "Department",
+      "level": "Level",
+      "status": "Status",
+      "skills": "Skills",
+      "personality": "Personality",
+      "personalityHint": "How it thinks and behaves, in a sentence or two.",
+      "communicationStyle": "Communication style",
+      "communicationStyleHint": "Tone, length and format of what it writes.",
+      "timezone": "Timezone",
+      "timezoneHint": "An IANA timezone. Empty = the company's timezone.",
+      "workingHours": "Working hours",
+      "limitHours": "Only run scheduled work in these hours",
+      "start": "Start",
+      "end": "End",
+      "days": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      },
+      "schedule": "Schedule",
+      "hoursLine": "{days} · {start}–{end}",
+      "anyTime": "Any time",
+      "companyTimezone": "Company timezone",
+      "permissions": "Permissions",
+      "toolsCount": "{count} tools offered",
+      "runsAs": "Acts with {name}'s permissions",
+      "queue": "Task queue",
+      "queueLine": "{running} running · {queued} queued · {schedules} schedules",
+      "evaluation": "Last evaluation",
+      "notEvaluated": "Not evaluated yet",
+      "notSet": "Not set",
+      "history": "Work history",
+      "noHistory": "No changes recorded yet.",
+      "system": "System",
+      "events": {
+        "created": "Provisioned",
+        "updated": "Profile updated",
+        "paused": "Paused",
+        "resumed": "Resumed",
+        "archived": "Archived",
+        "memory_added": "Memory added",
+        "memory_deleted": "Memory removed",
+        "assigned": "Assigned",
+        "promoted": "Promoted",
+        "role_changed": "Role changed",
+        "manager_changed": "Manager changed",
+        "permissions_changed": "Permissions changed",
+        "evaluated": "Evaluated",
+        "replaced": "Replaced",
+        "retired": "Retired"
+      }
+    },
+    "lifecycle": {
+      "title": "Lifecycle",
+      "hint": "Every change is recorded in the work history and the audit log.",
+      "actions": {
+        "record": "Record",
+        "assign": "Assign",
+        "promote": "Promote",
+        "change_role": "Change role",
+        "change_manager": "Change manager",
+        "change_permissions": "Permissions",
+        "evaluate": "Evaluate",
+        "replace": "Replace",
+        "retire": "Retire"
+      },
+      "hints": {
+        "record": "Personality, communication style, timezone and working hours. Schedulers wait for its working hours.",
+        "assign": "Move it to a department and team.",
+        "promote": "Managers delegate to their reports; executives can delegate to anyone.",
+        "change_role": "Its tools follow the new role; tools the new role does not have are removed.",
+        "change_manager": "Reporting lines can never loop.",
+        "change_permissions": "You can only narrow permissions to what you hold yourself.",
+        "evaluate": "Scores success rate, approvals and open escalations from the last 30 days.",
+        "replace": "A successor takes over its queued tasks, reports and schedules; this employee is retired.",
+        "retire": "Archived: it stops working, its history stays."
+      },
+      "submit": {
+        "record": "Save record",
+        "assign": "Assign",
+        "promote": "Promote",
+        "change_role": "Change role",
+        "change_manager": "Change manager",
+        "change_permissions": "Save permissions",
+        "evaluate": "Evaluate now",
+        "replace": "Replace",
+        "retire": "Retire"
+      },
+      "manager": "Reports to",
+      "keepManager": "Keep current manager",
+      "aiManagers": "AI employees",
+      "people": "People",
+      "role": "New role",
+      "roleHint": "The employee keeps its name, memory and history.",
+      "topLevel": "Already an executive — the highest level.",
+      "tools": "Tools it may use",
+      "notYours": "you do not have this permission",
+      "narrowHint": "Tools whose permissions you do not hold cannot be granted.",
+      "successor": "Successor",
+      "hireSuccessor": "Hire a new successor with the same role and settings",
+      "reason": "Reason (optional)",
+      "confirmRetire": "Retire {name}? It stops working; its tasks and history stay.",
+      "confirmReplace": "Replace {name}? Its queued tasks, reports and schedules move to the successor.",
+      "saved": "Saved.",
+      "evaluated": "{verdict} · score {score}",
+      "verdicts": {
+        "strong": "Strong",
+        "steady": "Steady",
+        "needs_attention": "Needs attention",
+        "insufficient_data": "Not enough finished work yet"
+      }
+    },
+    "hybrid": {
+      "title": "Hybrid teams",
+      "hint": "People who manage AI employees directly.",
+      "openNetwork": "See the live network",
+      "counts": "{ai} AI reports · {humans} human reports"
     }
   },
   "profiles": {
@@ -3013,6 +3530,42 @@
     "web_designer": {
       "name": "Web Designer",
       "summary": "Drafts your website and landing pages from your brand, products and company knowledge."
+    },
+    "ai_coo": {
+      "name": "AI COO",
+      "summary": "Keeps delivery on track across departments: bottlenecks, deadlines, workload and processes."
+    },
+    "ai_cto": {
+      "name": "AI CTO",
+      "summary": "Owns systems: integrations, data syncs, automations and technical risks."
+    },
+    "ai_cro": {
+      "name": "AI Chief Revenue Officer",
+      "summary": "Owns the revenue number: pipeline, forecast, deals that decide the month."
+    },
+    "ai_chro": {
+      "name": "AI Chief People Officer",
+      "summary": "Headcount, hiring, onboarding and people policies."
+    },
+    "cs_director": {
+      "name": "AI Customer Success Director",
+      "summary": "Support quality, at-risk customers and the voice of the customer."
+    },
+    "product_director": {
+      "name": "AI Product Director",
+      "summary": "Decides what to build next from customer and market evidence."
+    },
+    "creative_director": {
+      "name": "Creative Director",
+      "summary": "Creative concepts, formats and brand-true review of every asset and video."
+    },
+    "graphic_designer": {
+      "name": "Graphic Designer",
+      "summary": "On-brand product images, social graphics, posters, banners, ads and thumbnails."
+    },
+    "studio_video_producer": {
+      "name": "Video Producer (Studio)",
+      "summary": "Runs video projects from script and storyboard to voiceover, captions and the final edit."
     }
   },
   "projects": {
@@ -3440,7 +3993,9 @@
         "escalation": "Escalation: {title}",
         "autonomyDemoted": "Auto mode reduced to Ask me: {title}",
         "autonomyPaused": "All AI paused: {title}",
-        "autonomyResumed": "AI resumed: {title}"
+        "autonomyResumed": "AI resumed: {title}",
+        "orgProvisioned": "Organization provisioned: {title}",
+        "rollup": "Team results: {title}"
       },
       "growth": {
         "insight": "Critical growth signal: {title}"
@@ -3459,13 +4014,26 @@
       },
       "voice": {
         "call_completed": "AI call finished — {title}",
-        "message": "Phone message — {title}"
+        "message": "Phone message — {title}",
+        "run_completed": "Calling run finished — {title}"
       },
       "platform": {
         "announcement": "Announcement: {title}"
       },
       "sites": {
         "form_submission": "New website lead: {title}"
+      },
+      "costs": {
+        "budgetAlert": "Spending alert: {title}",
+        "budgetReached": "Budget reached, spending stopped: {title}"
+      },
+      "autopilot": {
+        "modeChanged": "Autopilot changed: {title}"
+      },
+      "creative": {
+        "review_requested": "Video ready for review: {title}",
+        "approved": "Video approved: {title}",
+        "changes_requested": "Changes requested on video: {title}"
       }
     },
     "viewAll": "View all"
@@ -5641,7 +6209,13 @@
       "cms": "CMS & commerce",
       "email": "Email",
       "messaging": "Messaging",
-      "storage": "Storage & infrastructure"
+      "storage": "Storage & infrastructure",
+      "voice": "Voice & audio",
+      "video": "Video",
+      "telephony": "Telephony",
+      "support": "Customer support",
+      "finance": "Banking & finance",
+      "automation": "Automation platforms"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0 (sign in with the provider)",
@@ -5679,7 +6253,24 @@
       "contact_data": "Contact data",
       "email_finder": "Email finder",
       "email_verification": "Email verification",
-      "enrichment": "Person & company enrichment"
+      "enrichment": "Person & company enrichment",
+      "speech_synthesis": "Text to speech",
+      "voice_library": "Voice library",
+      "speech_to_text": "Speech to text",
+      "video_rendering": "Video rendering",
+      "phone_numbers": "Phone numbers",
+      "call_recordings": "Call recordings",
+      "sip_trunking": "SIP trunking",
+      "notes_docs": "Notes & docs",
+      "tasks": "Tasks",
+      "scheduling": "Scheduling links",
+      "meetings": "Meetings in CRM",
+      "support_tickets": "Support tickets",
+      "bank_feeds": "Bank feeds",
+      "balances": "Account balances",
+      "automation_triggers": "Trigger automations",
+      "text_to_speech": "Spoken voice",
+      "licensed_music": "Licensed music"
     },
     "providers": {
       "google": {
@@ -5703,7 +6294,8 @@
       },
       "whatsapp": {
         "description": "WhatsApp Business Cloud API for customer messaging.",
-        "setup": "In Meta Business Suite create a system user token with whatsapp_business_messaging and copy the phone number ID from WhatsApp Manager."
+        "setup": "In Meta Business Suite create a system user token with whatsapp_business_messaging and copy the phone number ID from WhatsApp Manager.",
+        "settingsHelp": "Optional: your Meta app secret, so Realy can verify the signature of WhatsApp webhooks."
       },
       "hubspot": {
         "description": "Import HubSpot contacts and companies into your CRM.",
@@ -5873,6 +6465,110 @@
       "pdl": {
         "description": "People Data Labs: optional extra source for people and company enrichment.",
         "setup": "Copy your API key from the People Data Labs dashboard → API keys."
+      },
+      "openrouter": {
+        "description": "One key for hundreds of AI models (OpenAI, Anthropic, Google, Meta, Mistral…) with real per-request cost.",
+        "setup": "Create a key at openrouter.ai → Keys (set a credit limit if you like).\nOptionally choose a default model such as openai/gpt-4.1-mini."
+      },
+      "openai_compatible": {
+        "description": "Any API that speaks the OpenAI chat format — Together, Groq, Fireworks, Mistral, DeepSeek or your own gateway.",
+        "setup": "Enter the provider's base URL ending in /v1 (it must be public HTTPS).\nPaste an API key and the exact model name; Realy checks the model is listed."
+      },
+      "elevenlabs": {
+        "description": "Natural voices for voiceovers and calls, a voice library and Scribe transcription.",
+        "setup": "Create an API key in ElevenLabs → Developers → API keys (enable Text to Speech, Voices and Speech to Text).\nOptionally paste a default voice ID from the Voice Library.",
+        "settingsHelp": "Optional: the signing secret of an ElevenLabs webhook pointing to the callback URL above."
+      },
+      "deepgram": {
+        "description": "Fast, accurate speech to text for calls, meetings and videos (Nova models).",
+        "setup": "Create an API key in the Deepgram console → API Keys (Member role is enough).\nOptionally set the model, e.g. nova-3."
+      },
+      "luma": {
+        "description": "Luma Dream Machine: cinematic text- and image-to-video generation (Ray models).",
+        "setup": "Create an API key at lumalabs.ai → API (billing must be set up).\nOptionally choose a default model such as ray-2."
+      },
+      "kling": {
+        "description": "Kling AI official API: text- and image-to-video with strong motion and realism.",
+        "setup": "In the Kling developer console create an Access Key / Secret Key pair (resource package required).\nRealy signs a short-lived token with them for every request; the base URL defaults to the global endpoint."
+      },
+      "shotstack": {
+        "description": "Render videos from templates and timelines (captions, music, overlays) at scale.",
+        "setup": "Copy the API key from the Shotstack dashboard → API Keys.\nChoose the environment: stage (free, watermarked) or v1 (production)."
+      },
+      "creatomate": {
+        "description": "Template-based video and image rendering for ads, social posts and personalised clips.",
+        "setup": "Copy the project API key from Creatomate → Project settings → API key.\nDesign templates in Creatomate; Realy fills their elements when rendering."
+      },
+      "twilio_voice": {
+        "description": "Phone calls on your own Twilio numbers: outbound calls, status callbacks and call recordings.",
+        "setup": "Copy the Account SID and Auth token from the Twilio Console home page.\nOptionally set the default caller number; your voice numbers are listed after connecting."
+      },
+      "sip_trunk": {
+        "description": "Bring your own carrier: SIP trunk details for voice platforms that dial over SIP.",
+        "setup": "Ask your carrier for the SIP domain, username and password of the trunk.\nChoose the transport (UDP, TCP or TLS) and the caller ID the carrier allows."
+      },
+      "pipedrive": {
+        "description": "Import people from Pipedrive into your CRM and create deals there.",
+        "setup": "In Pipedrive open your avatar → Personal preferences → API and copy your personal API token.",
+        "sync": "Imports Pipedrive people as contacts (deduplicated by email) with their organisations."
+      },
+      "notion": {
+        "description": "Search your Notion workspace and create pages and database rows from Realy.",
+        "setup": "Create an internal integration at notion.so/profile/integrations and copy its secret.\nShare the pages or databases Realy may use with the integration (••• → Connections)."
+      },
+      "clickup": {
+        "description": "Create ClickUp tasks from Realy in the workspace and list you choose.",
+        "setup": "In ClickUp open Settings → Apps and generate your personal API token (pk_…)."
+      },
+      "calendly": {
+        "description": "Event types and one-time booking links; new bookings and cancellations become CRM meetings.",
+        "setup": "In Calendly open Integrations & apps → API and webhooks and generate a personal access token.\nRealy registers the booking webhook for you (webhooks need a paid Calendly plan; otherwise meetings are imported by the scheduled sync).",
+        "sync": "Imports upcoming bookings (and cancellations) as CRM meetings — a safety net for missed webhooks."
+      },
+      "google_drive": {
+        "description": "Save and read files in Google Drive (only files Realy creates or you open with it).",
+        "setup": "Sign in with Google and approve file access.\nRealy only gets access to files it creates or that you open with it, plus file names for search."
+      },
+      "zendesk": {
+        "description": "Read and create Zendesk tickets so agents and AI can follow up on customer issues.",
+        "setup": "In Zendesk Admin Center → Apps and integrations → Zendesk API, enable token access and add an API token.\nEnter your subdomain (yourcompany for yourcompany.zendesk.com) and the agent email the token belongs to.",
+        "settingsHelp": "Optional: the signing secret of a Zendesk webhook pointing to the callback URL above."
+      },
+      "intercom": {
+        "description": "Read Intercom conversations and reply or add notes from Realy.",
+        "setup": "In the Intercom Developer Hub create an app for your workspace and copy its access token (Authentication).",
+        "settingsHelp": "Optional: your Intercom app's client secret, used to verify webhook signatures."
+      },
+      "plaid": {
+        "description": "Read-only bank feeds: balances and transactions from 12,000+ banks, staged for reconciliation.",
+        "setup": "Copy the client ID and the secret for your environment from dashboard.plaid.com → Developers → Keys.\nChoose sandbox to try it (user_good / pass_good) or production for real banks, then link your banks on this page.",
+        "sync": "Pulls new, changed and removed transactions of every linked bank and refreshes balances."
+      },
+      "wise": {
+        "description": "Read-only balances of your Wise Business account in every currency.",
+        "setup": "In Wise open Settings → Integrations and tools → API tokens and create a read-only token.\nChoose production (or sandbox for a Wise sandbox account).",
+        "sync": "Refreshes the balances of each Wise profile."
+      },
+      "revolut_business": {
+        "description": "Read-only balances and transactions of your Revolut Business account.",
+        "setup": "Not available yet.",
+        "awaiting": "Revolut Business offers no simple API keys: its API requires a certificate-signed OAuth client per company. Realy will add it once that flow is supported — until then use Plaid (where Revolut is available) or import a CSV statement in Finance."
+      },
+      "zapier": {
+        "description": "Start any Zap from Realy events and workflows with a signed webhook.",
+        "setup": "In Zapier create a Zap with the trigger \"Webhooks by Zapier → Catch Hook\" and copy its URL.\nRealy sends one labelled test event when you connect. To let a Zap call Realy, create an incoming webhook under Integrations → Webhooks."
+      },
+      "make": {
+        "description": "Run Make scenarios from Realy events and workflows with a signed webhook.",
+        "setup": "In Make add a \"Webhooks → Custom webhook\" module to a scenario and copy its address.\nRealy sends one labelled test event when you connect so Make can learn the data structure."
+      },
+      "n8n": {
+        "description": "Trigger n8n workflows (cloud or self-hosted) from Realy with a signed webhook.",
+        "setup": "Add a Webhook node (POST) to your workflow, activate it and copy the production URL (it must be public HTTPS).\nOptionally set a signing secret and verify the x-realy-signature header in the workflow."
+      },
+      "jamendo": {
+        "description": "Royalty-free music under Creative Commons licenses that allow commercial use, for video soundtracks.",
+        "setup": "Create an app at devportal.jamendo.com and paste its Client ID."
       }
     },
     "backToMarketplace": "All integrations",
@@ -5953,7 +6649,29 @@
       "accountId": "Account ID",
       "developerToken": "Developer token",
       "loginCustomerId": "Manager (login) customer ID",
-      "privateApiKey": "Private API key"
+      "privateApiKey": "Private API key",
+      "defaultVoiceId": "Default voice ID",
+      "webhookSecret": "Webhook signing secret",
+      "accessKey": "Access key",
+      "secretKey": "Secret key",
+      "environment": "Environment",
+      "sipDomain": "SIP domain",
+      "sipPassword": "SIP password",
+      "transport": "Transport",
+      "callerId": "Caller ID",
+      "integrationSecret": "Internal integration secret",
+      "personalAccessToken": "Personal access token",
+      "subdomain": "Subdomain",
+      "email": "Email",
+      "accessToken": "Access token",
+      "clientId": "Client ID",
+      "plaidSecret": "Secret",
+      "countryCodes": "Country codes",
+      "catchHookUrl": "Catch Hook URL",
+      "webhookUrl": "Webhook URL",
+      "signingSecret": "Signing secret",
+      "appSecret": "App secret",
+      "voiceId": "Default voice ID"
     },
     "syncStatus": {
       "RUNNING": "Running",
@@ -6050,7 +6768,13 @@
       "signingSecret": "Provider signing secret",
       "signingSecretHint": "Copy it from the provider's webhook settings. Requests are verified with it via the {header} header; it is stored encrypted and never shown again.",
       "presetSaved": "Endpoint created. Paste its URL into the provider's webhook settings — requests signed with your secret are accepted, everything else is rejected and logged.",
-      "presetHelp": "Paste this URL into the provider's webhook settings. Each request must carry a valid {provider} in the {header} header; unsigned, tampered or replayed requests are rejected and logged below."
+      "presetHelp": "Paste this URL into the provider's webhook settings. Each request must carry a valid {provider} in the {header} header; unsigned, tampered or replayed requests are rejected and logged below.",
+      "verificationTWILIO": "Twilio signature",
+      "verificationCALENDLY": "Calendly signature",
+      "verificationMETA": "Meta / WhatsApp signature",
+      "verificationELEVENLABS": "ElevenLabs signature",
+      "verificationZENDESK": "Zendesk signature",
+      "verificationINTERCOM": "Intercom signature"
     },
     "calendarOk": "Calendar access OK: {count, plural, one {# calendar} other {# calendars}} (primary: {primary})",
     "calendarFailed": "Calendar check failed: {error}",
@@ -6158,7 +6882,20 @@
         "contacts_email_find": "Email finder",
         "contacts_email_verify": "Email verification",
         "contacts_enrich_person": "Person enrichment",
-        "contacts_enrich_company": "Company enrichment"
+        "contacts_enrich_company": "Company enrichment",
+        "tts_speech": "Text to speech",
+        "stt_transcribe": "Transcription",
+        "video_render": "Video render",
+        "voice_call": "Phone call minutes",
+        "voice_call_started": "Call placed",
+        "crm_deal_create": "Deal created",
+        "docs_page_create": "Page created",
+        "tasks_create": "Task created",
+        "support_ticket_create": "Ticket created",
+        "support_reply": "Support reply",
+        "support_note": "Internal note",
+        "automation_trigger": "Automation triggered",
+        "bank_sync": "Bank sync"
       }
     },
     "marketplace": {
@@ -6175,16 +6912,20 @@
         "verified": "Verified",
         "unverified": "Not verified yet",
         "failing": "Failing",
-        "ready": "Ready to connect",
-        "credentials_required": "Credentials required",
-        "platform_setup": "Admin setup needed"
+        "ready": "Not connected",
+        "credentials_required": "Awaiting credentials",
+        "platform_setup": "Configuration required",
+        "configured": "Configured",
+        "awaiting_docs": "Coming soon"
       },
       "unlocks": "Unlocks",
       "powering": "Powering",
       "hints": {
         "ready": "One click — you approve at the provider",
         "credentials_required": "Bring your own API key",
-        "platform_setup": "The platform admin must add the OAuth app first"
+        "platform_setup": "The platform admin must add the OAuth app first",
+        "awaiting_docs": "Adapter waiting for official API access",
+        "configured": "Saved — proven by the first real call"
       },
       "cta": {
         "verified": "Manage",
@@ -6192,7 +6933,9 @@
         "failing": "Fix connection",
         "ready": "Connect",
         "credentials_required": "Add credentials",
-        "platform_setup": "See requirements"
+        "platform_setup": "See requirements",
+        "configured": "Manage",
+        "awaiting_docs": "Details"
       },
       "verifiedAgo": "Verified {time}",
       "verifiedStat": "Connected & verified",
@@ -6207,7 +6950,17 @@
         "min1": "minute",
         "min15": "15 minutes",
         "hour1": "hour"
-      }
+      },
+      "plans": {
+        "starter": "Starter",
+        "growth": "Growth",
+        "scale": "Scale"
+      },
+      "planLocked": "Needs {plan} plan",
+      "planIncluded": "Included in {plan}+",
+      "planLockedHint": "Upgrade to {plan} to connect",
+      "planLockedNotice": "Your plan does not include this integration category. Upgrade to {plan} to connect it.",
+      "configOnlyNotice": "This provider has no API that can prove the credentials. Realy checked the configuration (the host resolves publicly); the first real call confirms it works."
     },
     "guide": {
       "whatTitle": "What is this",
@@ -6234,6 +6987,65 @@
         "title": "Background worker has not started",
         "body": "No worker heartbeat has been recorded yet. Start the worker service (see docs/deployment.md) to run scheduled syncs, webhook deliveries and health checks."
       }
+    },
+    "providerWebhook": {
+      "title": "Provider callbacks",
+      "url": "Callback URL for this connection",
+      "verifyToken": "Verify token",
+      "events": "Events Realy listens for",
+      "autoRegistered": "Realy registered this webhook at the provider for you — nothing to set up.",
+      "security": {
+        "token": "Only this connection's secret URL is accepted; keep it private.",
+        "signed": "Every callback must also carry the provider's valid signature; unsigned or altered requests are rejected."
+      },
+      "how": {
+        "token": "Realy passes this URL to the provider as the completion callback of each job it starts. You can also paste it in the provider's dashboard.",
+        "TWILIO": "Realy sets this as the status and recording callback on calls it places. For inbound calls or SMS status, paste it in the number's settings in the Twilio Console.",
+        "CALENDLY": "New bookings and cancellations become CRM meetings, linked to the contact with the invitee's email.",
+        "META": "In your Meta app → WhatsApp → Configuration, set this callback URL and verify token, and save the app secret in the settings below so Realy can verify signatures.",
+        "ELEVENLABS": "Add this URL as a webhook in ElevenLabs (Settings → Webhooks) and save its signing secret in the settings below.",
+        "PLAID": "Realy registers this URL on every bank you link, so new transactions are pulled as soon as Plaid has them. Plaid's signed JWT is verified on each call.",
+        "ZENDESK": "Create a webhook in Zendesk Admin Center → Apps and integrations → Webhooks with this URL, then save its signing secret in the settings below.",
+        "INTERCOM": "In the Intercom Developer Hub → your app → Webhooks, set this URL and save the app's client secret in the settings below."
+      }
+    },
+    "providerEvents": {
+      "title": "Received events",
+      "help": "Callbacks this provider sent, after signature verification. Only summaries are stored.",
+      "empty": "No events received yet.",
+      "meeting": "CRM meeting updated",
+      "status": {
+        "processed": "Applied",
+        "stored": "Stored",
+        "ignored": "Ignored",
+        "failed": "Failed"
+      }
+    },
+    "bank": {
+      "title": "Bank feed",
+      "help": {
+        "plaid": "Read-only: Realy reads balances and transactions of the banks you link and stages them for reconciliation. It can never move money.",
+        "wise": "Read-only balances of your Wise profiles, refreshed with each sync. Statements need Wise's strong customer authentication and are not pulled."
+      },
+      "link": "Link a bank",
+      "linkAnother": "Link another bank",
+      "opening": "Opening Plaid…",
+      "finishing": "Finishing the bank link…",
+      "linked": "{count, plural, one {# bank linked. Transactions arrive with the next sync.} other {# banks linked. Transactions arrive with the next sync.}}",
+      "nothingLinked": "No bank was linked in that Plaid session.",
+      "remove": "Unlink",
+      "removeConfirm": "Unlink {name}? Its access is revoked at Plaid and its staged transactions are deleted from Realy.",
+      "unknownBank": "Bank",
+      "linkedOn": "Linked {date}",
+      "noBanks": "No bank linked yet. Link one to stage its transactions for reconciliation.",
+      "accounts": "Accounts",
+      "available": "Available {amount}",
+      "asOf": "As of {time}",
+      "transactions": "Latest transactions",
+      "pending": "pending",
+      "noTransactions": "No transactions staged yet. They appear after the first sync.",
+      "reconcileHint": "Staged transactions are matched against your books in Finance.",
+      "openFinance": "Open transactions"
     }
   },
   "workflows": {
@@ -6828,7 +7640,14 @@
       "livechat_lead_captured": "Live chat lead captured",
       "briefing_delivered": "Briefing delivered",
       "site_published": "Website page published",
-      "site_form_submitted": "Website form submitted"
+      "site_form_submitted": "Website form submitted",
+      "creative_project_created": "Creative project created",
+      "creative_asset_created": "Creative asset created",
+      "creative_video_approved": "Video approved",
+      "creative_changes_requested": "Changes requested on a creative",
+      "creative_handed_off": "Creative handed to marketing",
+      "autopilot_mode_changed": "Autopilot mode changed",
+      "costs_budget_reached": "AI budget reached"
     },
     "compare": {
       "title": "Compare versions",
@@ -15051,6 +15870,117 @@
       "remove": "Delete reminder",
       "empty": "No upcoming reminders.",
       "delivered": "Delivered today"
+    },
+    "intel": {
+      "title": "Meeting intelligence",
+      "working": "AI working…",
+      "failed": "AI task failed",
+      "aiMissing": "AI is not configured on this platform, so briefs and summaries can't be written.",
+      "prepTitle": "Prep brief & agenda",
+      "prepHint": "Written from your CRM records and Company Brain — nothing invented.",
+      "generatePrep": "Prepare meeting",
+      "regenerate": "Write again",
+      "agenda": "Agenda",
+      "agendaPlaceholder": "Topics with time boxes…",
+      "saveAgenda": "Save agenda to the meeting",
+      "brief": "Prep brief",
+      "briefNote": "AI draft from your records — check before relying on it.",
+      "noBrief": "No brief yet.",
+      "transcriptTitle": "Transcript",
+      "transcriptHint": "Paste or upload a transcript (.txt, .vtt, .srt), or use a recorded Realy phone call.",
+      "transcriptAdded": "Added {when} · {source} · {chars} characters",
+      "source": "Transcript source",
+      "sources": {
+        "upload": "Paste or upload",
+        "voice_call": "Realy phone call"
+      },
+      "paste": "Transcript text",
+      "pastePlaceholder": "Paste the transcript here…",
+      "uploadFile": "Upload a file",
+      "pickCall": "Phone call",
+      "saveTranscript": "Save transcript",
+      "process": "Summarise & extract actions",
+      "resultsTitle": "Summary & action items",
+      "resultsHint": "Review and edit, then apply. Nothing is created until you apply.",
+      "appliedAt": "Applied {when}",
+      "summary": "Summary",
+      "decisions": "Decisions",
+      "actionItems": "Action items",
+      "itemTitle": "Action",
+      "owner": "Owner",
+      "due": "Due",
+      "removeItem": "Remove",
+      "addItem": "Add action item",
+      "createFollowUps": "Create CRM follow-ups",
+      "createTasks": "Create tasks for attendees",
+      "addCrmNote": "Add the summary to the CRM",
+      "addNotes": "Add the summary to the meeting notes",
+      "saveEdits": "Save edits",
+      "apply": "Apply",
+      "emailTitle": "Follow-up email",
+      "emailTo": "To {email}",
+      "emailNoRecipient": "The meeting has no customer email address.",
+      "subject": "Subject",
+      "emailBody": "Email text",
+      "emailNote": "An unsubscribe line is added. The email is sent only after approval.",
+      "saveDraft": "Save draft",
+      "requestSend": "Request approval to send",
+      "emailAwaiting": "Waiting for approval.",
+      "openApprovals": "Open approvals",
+      "followUp": {
+        "NONE": "No draft",
+        "DRAFT": "Draft",
+        "AWAITING_APPROVAL": "Awaiting approval",
+        "SENT": "Sent",
+        "FAILED": "Not sent"
+      },
+      "outcomeTitle": "Confirm the outcome",
+      "outcomeHint": "The meeting is marked completed only when you confirm what happened.",
+      "notStarted": "You can confirm once the meeting has started.",
+      "outcome": "Outcome",
+      "outcomePlaceholder": "What was agreed?",
+      "proposed": "Suggested from the transcript: {outcome}",
+      "markDone": "Confirm & mark completed",
+      "confirmDone": "Mark this meeting as completed with this outcome?",
+      "availabilityTitle": "Find a time",
+      "availabilityHint": "Free slots from your connected calendar, your Realy meetings and Calendly.",
+      "days": "Days",
+      "duration": "Minutes",
+      "findSlots": "Find free slots",
+      "cal": {
+        "google": "Google Calendar",
+        "microsoft": "Microsoft 365",
+        "calendly": "Calendly",
+        "realy": "Realy meetings"
+      },
+      "calState": {
+        "connected": "connected",
+        "not_connected": "not connected",
+        "error": "error"
+      },
+      "connectCalendar": "Connect a calendar",
+      "noCalendar": "No calendar is connected, so only your Realy meetings are checked.",
+      "noSlots": "No free slots in this window.",
+      "bookingLink": "booking link",
+      "customerLink": "Customer meetings & intelligence",
+      "customerLinkHint": "Prep briefs, transcripts, summaries and follow-ups for CRM meetings.",
+      "customerTitle": "Customer meetings",
+      "customerHint": "Meetings with leads and contacts booked from the CRM or by the AI phone team.",
+      "customerBack": "Customer meetings",
+      "noSales": "You need access to Sales to see customer meetings.",
+      "with": "With",
+      "state": "Intelligence",
+      "states": {
+        "none": "Not prepared",
+        "preparing": "Preparing",
+        "prepared": "Prepared",
+        "transcript": "Transcript added",
+        "summarized": "Summarised",
+        "applied": "Applied"
+      },
+      "emptyUpcoming": "No upcoming customer meetings.",
+      "emptyPast": "No past customer meetings.",
+      "openCrm": "Open in CRM"
     }
   },
   "support": {
@@ -18961,7 +19891,14 @@
       "livechat_lead_captured": "captured a lead from live chat",
       "briefing_delivered": "delivered a briefing",
       "site_published": "published a website page",
-      "site_form_submitted": "received a website lead"
+      "site_form_submitted": "received a website lead",
+      "creative_project_created": "Creative project created",
+      "creative_asset_created": "Creative asset created",
+      "creative_video_approved": "Video approved",
+      "creative_changes_requested": "Changes requested on a creative",
+      "creative_handed_off": "Creative handed to marketing",
+      "autopilot_mode_changed": "Autopilot mode changed",
+      "costs_budget_reached": "AI budget reached"
     }
   },
   "aiPlans": {
@@ -20952,7 +21889,8 @@
       "numbers": "Numbers",
       "campaigns": "Campaigns",
       "analytics": "Analytics",
-      "settings": "Settings"
+      "settings": "Settings",
+      "live": "Live"
     },
     "credentialRequired": "{provider} is not connected, so no calls can be placed or received. Connect it in Integrations.",
     "connection": {
@@ -21060,7 +21998,10 @@
       "cancelled": "Cancelled by a person.",
       "agent_archived": "The voice agent was archived.",
       "campaign_cancelled": "The campaign was cancelled.",
-      "approval_rejected": "The approval was rejected or expired."
+      "approval_rejected": "The approval was rejected or expired.",
+      "twilio_caller_id_missing": "No Twilio caller ID is set (Settings → Telephony).",
+      "bridge_not_configured": "The Twilio bridge to the AI agent is not set up (Settings → Telephony).",
+      "plan_limit_reached": "Your plan's voice minutes are used up."
     },
     "stats": {
       "calls": "Calls",
@@ -21441,6 +22382,265 @@
       "meetingsBooked": "Meetings booked by AI calls",
       "connectRate": "AI call connect rate",
       "positiveSentiment": "Positive AI calls"
+    },
+    "live2": {
+      "windowOpen": "Calling hours open · {window} ({tz})",
+      "windowClosed": "Outside calling hours · {window} ({tz})",
+      "concurrency": "{live} of {max} lines in use",
+      "retries": "Retries: {attempts} × every {minutes} min",
+      "telephony": {
+        "PROVIDER": "Voice platform numbers",
+        "TWILIO": "Twilio telephony"
+      },
+      "reconnecting": "Reconnecting…",
+      "updating": "Live · updates every 2 s",
+      "lanes": {
+        "active": "On the call",
+        "incoming": "Incoming",
+        "outgoing": "Dialling"
+      },
+      "empty": {
+        "active": "Nobody is on a call right now.",
+        "incoming": "No incoming calls.",
+        "outgoing": "No calls being dialled."
+      },
+      "customBridge": "Custom bridge",
+      "noneSelected": "Pick a call to listen in",
+      "noneSelectedHint": "Live calls appear on the left as soon as the provider reports them. Select one to follow its transcript and control it.",
+      "notSupported": "Not supported by {provider}",
+      "thisProvider": "this provider",
+      "layers": {
+        "vapi": "Vapi",
+        "retell": "Retell AI",
+        "twilio": "Twilio"
+      },
+      "aiMuted": "AI muted",
+      "takenOver": "Taken over",
+      "attempt": "Attempt {n}",
+      "openCall": "Open call",
+      "provider": "Provider",
+      "liveCost": "Cost so far",
+      "costPending": "The provider reports the cost when the call ends.",
+      "costPendingShort": "after the call",
+      "transcript": "Live transcript",
+      "transcriptPartial": "only if transcript events are enabled on the agent",
+      "transcriptNone": "this provider does not stream it",
+      "human": "Team member",
+      "waitingTranscript": "Waiting for the first words…",
+      "controls": "Call controls",
+      "end": "End call",
+      "endConfirm": "End this call now?",
+      "mute": "Mute AI",
+      "unmute": "Unmute AI",
+      "takeover": "Take over",
+      "hold": "Hold",
+      "takeoverConfirm": "Transfer the caller to {number}? The AI leaves the call.",
+      "noHumanNumber": "Set the number of the person who takes calls over in Settings → Telephony.",
+      "transferTo": "Transfer to a person",
+      "transfer": "Transfer",
+      "outcome": "Outcome",
+      "pickOutcome": "Choose an outcome",
+      "saveOutcome": "Save outcome",
+      "done": "Done.",
+      "queue": "Call queue",
+      "queueHint": "{queued} scheduled · {awaiting} waiting for approval",
+      "awaiting": "{count, plural, one {# call waits} other {# calls wait}} for approval before it can be dialled.",
+      "retryN": "Retry {n}",
+      "dueNow": "Due now",
+      "queueEmpty": "Nothing queued. Approved calls wait here for calling hours and a free line.",
+      "justEnded": "Just ended",
+      "callback": "Call back",
+      "callbackAt": "Call back at (optional)",
+      "scheduleCallback": "Schedule callback",
+      "retryNow": "Retry now",
+      "callbackHint": "A new call is filed for approval; do-not-call and calling hours are checked again.",
+      "callbackFiled": "Callback filed for approval.",
+      "setupTitle": "Finish setting up the phone team",
+      "setupBody": "Connect a voice provider and sync an agent to see live calls here.",
+      "setupAction": "Open setup"
+    },
+    "runs": {
+      "title": "Autonomous calling runs",
+      "description": "Tell the AI who to call and why. It checks consent and do-not-call, prioritises, briefs every call from your CRM and asks you once before calling.",
+      "new": "Plan a new calling run",
+      "noAgent": "Sync an outbound voice agent first (Voice agents).",
+      "goal": "Goal",
+      "goalHint": "In plain words, e.g. “Call 100 qualified leads and book demos”.",
+      "goalPlaceholder": "Call our qualified leads and book demos",
+      "purpose": "What should each call achieve?",
+      "purposeHint": "The agent uses this plus a brief about each person from the CRM.",
+      "purposePlaceholder": "Introduce our new plan, qualify budget and timing, and offer a 30-minute demo.",
+      "stages": "Who to consider",
+      "labels": {
+        "HOT": "Hot",
+        "WARM": "Warm",
+        "NURTURE": "Nurture"
+      },
+      "minScore": "Minimum lead score",
+      "maxCalls": "At most (people)",
+      "cooldown": "Skip if called in the last (days)",
+      "concurrency": "Calls at once",
+      "agent": "Voice agent",
+      "consent": "Consent",
+      "consentHint": "Do-not-call, suppression and unsubscribes are always respected.",
+      "consentLawful": "Lawful basis (default)",
+      "consentRecorded": "Only leads with recorded consent",
+      "qualifiedOnly": "Only leads marked qualified in the CRM",
+      "planNote": "Planning calls nobody. You review who is in and why, then start the run — that files one approval for the whole list.",
+      "plan": "Plan run",
+      "start": "Start run · {count, plural, one {# person} other {# people}}",
+      "cancel": "Cancel run",
+      "cancelConfirm": "Cancel this run? Calls not dialled yet are cancelled.",
+      "filed": "Approval requested. Calls start once it is approved.",
+      "startedNow": "The run started.",
+      "status": {
+        "PLANNED": "Planned",
+        "AWAITING_APPROVAL": "Awaiting approval",
+        "RUNNING": "Running",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "FAILED": "Failed"
+      },
+      "rowStats": "{called} called · {qualified} qualified · {meetings} meetings",
+      "back": "All campaigns",
+      "pipeline": "Run pipeline",
+      "steps": {
+        "eligibility": "Eligibility",
+        "prioritize": "Prioritise",
+        "brief": "Brief",
+        "execute": "Call",
+        "qualify": "Qualify",
+        "book": "Book meeting",
+        "crm": "Update CRM",
+        "followups": "Follow-ups",
+        "report": "Report"
+      },
+      "awaiting": "Waiting for approval. Nobody is called until a person approves the run.",
+      "eligibility": "Eligibility",
+      "eligibilityHint": "{considered} considered · {eligible} will be called",
+      "noneSkipped": "Nobody was skipped.",
+      "skip": {
+        "no_number": "No phone number",
+        "invalid_number": "Number not in international format",
+        "do_not_call": "Do-not-call",
+        "suppressed": "Email suppression (opted out)",
+        "unsubscribed": "Unsubscribed",
+        "no_consent_record": "No recorded consent",
+        "recently_called": "Called recently",
+        "call_pending": "A call is already queued",
+        "duplicate_number": "Duplicate number",
+        "over_limit": "Over the run's limit"
+      },
+      "targets": "People in this run",
+      "targetsHint": "Ordered by priority. Each brief is compiled from CRM records only.",
+      "person": "Person",
+      "priority": "Priority",
+      "brief": "Brief",
+      "openCall": "Open call",
+      "noTargets": "No matching leads.",
+      "targetStatus": {
+        "ELIGIBLE": "Ready",
+        "SKIPPED": "Skipped",
+        "SCHEDULED": "Queued",
+        "CALLING": "Calling",
+        "NO_ANSWER": "No answer",
+        "QUALIFIED": "Qualified",
+        "NOT_QUALIFIED": "Not qualified",
+        "MEETING_BOOKED": "Meeting booked",
+        "FAILED": "Failed"
+      }
+    },
+    "funnel": {
+      "title": "Call → meeting funnel",
+      "hint": "Outbound calls the provider accepted, from stored call records only.",
+      "runHint": "From this run's calls.",
+      "empty": "No outbound calls in this period.",
+      "stages": {
+        "considered": "Considered",
+        "eligible": "Eligible",
+        "placed": "Calls placed",
+        "connected": "Connected",
+        "conversations": "Conversations",
+        "qualified": "Qualified",
+        "meetings": "Meetings booked"
+      },
+      "connectRate": "Connect rate",
+      "connectedOf": "{connected} of {placed} calls",
+      "qualified": "Qualified",
+      "meetings": "Meetings booked",
+      "followUps": "{count} follow-ups created",
+      "costPerMeeting": "Cost per meeting",
+      "totalCost": "AI provider + telephony cost",
+      "meetingsHeld": "Customer meetings",
+      "meetingsHeldValue": "{held} held · {unconfirmed} unconfirmed · {cancelled} cancelled",
+      "intel": "Meeting intelligence",
+      "intelValue": "{prepared} prepared · {summarized} summarised · {sent} follow-ups sent"
+    },
+    "telephony": {
+      "title": "Telephony",
+      "description": "How calls reach the phone network, who takes calls over, and how unanswered calls are retried.",
+      "layer": "Phone network",
+      "layerHint": "Use your voice platform's numbers, or your own Twilio account bridged to the AI agent.",
+      "layers": {
+        "PROVIDER": "Voice platform numbers (Vapi / Retell)",
+        "TWILIO": "My Twilio account (Programmable Voice)"
+      },
+      "twilioMissing": "Connect Twilio in Integrations to place and receive calls through it.",
+      "bridge": "Bridge to the AI agent",
+      "bridges": {
+        "PROVIDER_SIP": "Retell over SIP (automatic)",
+        "CUSTOM_SIP": "SIP address",
+        "MEDIA_STREAM": "Media stream (websocket)"
+      },
+      "bridgeHints": {
+        "PROVIDER_SIP": "Each call is registered on Retell and connected over SIP. Full transcript and analysis.",
+        "CUSTOM_SIP": "Any SIP endpoint of an AI voice platform, e.g. a Vapi SIP number.",
+        "MEDIA_STREAM": "Twilio streams audio to a websocket bridge you operate."
+      },
+      "providerSipRetell": "Automatic SIP works with Retell agents. For Vapi, use a SIP address.",
+      "sipUri": "SIP address",
+      "sipUser": "SIP username (optional)",
+      "sipPassword": "SIP password (optional)",
+      "sipPasswordSet": "A password is saved. Leave empty to keep it.",
+      "streamUrl": "Websocket URL",
+      "streamHint": "Must start with wss://",
+      "callerId": "Caller ID (Twilio number)",
+      "liveTranscription": "Live transcript",
+      "liveTranscriptionHint": "Twilio real-time transcription of both sides.",
+      "webhooksHint": "Realy sets these on a Twilio number for you (Connect number), or paste them in the Twilio console.",
+      "voiceUrl": "Voice URL (incoming calls)",
+      "statusUrl": "Status callback URL",
+      "copy": "Copy",
+      "copied": "Copied",
+      "humanNumber": "Take-over number",
+      "humanHint": "A person who answers when you take over or transfer a call.",
+      "retries": "Retries for unanswered calls",
+      "retryDelay": "Minutes between retries",
+      "save": "Save telephony",
+      "saved": "Saved.",
+      "connectNumber": "Connect number",
+      "numberConnected": "{number} now sends its calls to Realy.",
+      "matrix": "What each provider can do",
+      "matrixHint": "Live controls only appear when the call's provider really supports them.",
+      "capability": "Capability",
+      "support": {
+        "yes": "Yes",
+        "partial": "Partly",
+        "no": "No"
+      },
+      "caps": {
+        "placeCall": "Place calls",
+        "endCall": "End a live call",
+        "transfer": "Transfer to a person",
+        "humanTakeover": "Human take-over",
+        "mute": "Mute the AI",
+        "hold": "Hold",
+        "liveTranscript": "Live transcript",
+        "liveEvents": "Live status events",
+        "recording": "Recording",
+        "cost": "Cost per call"
+      },
+      "matrixNote": "Calls through Twilio use Twilio's controls whatever the AI provider. Vapi controls need the agent synced again after this update."
     }
   },
   "planCatalog": {
@@ -21536,7 +22736,10 @@
       "api_cost_month": "External API spend cap / month",
       "ads_spend_month": "Ad spend cap / month",
       "sites_pages_max": "Website pages",
-      "sites_landing_pages_max": "Landing pages"
+      "sites_landing_pages_max": "Landing pages",
+      "voice_assistant_minutes_month": "Voice assistant minutes / month",
+      "image_generations_month": "AI images / month",
+      "video_generations_month": "AI video clips & renders / month"
     },
     "addons": {
       "ai_credits_10k": "10,000 AI credits",
@@ -22205,5 +23408,1062 @@
       "success": "Thank you — we received your message and will get back to you.",
       "consent": "I agree that {name} stores my details to answer my request."
     }
+  },
+  "jarvis": {
+    "eyebrow": "Voice console",
+    "title": "Realy",
+    "aiNotConfigured": "AI is not configured on this platform yet, so commands cannot be handed to AI employees. You can still talk to Realy; it will tell you what is missing.",
+    "cannotRun": "Your role cannot start AI work in this company. Ask an owner for the “run AI employees” permission.",
+    "caption": {
+      "idle": "Hold the button or Space and talk to {company}.",
+      "listening": "Listening…",
+      "thinking": "Working on it…"
+    },
+    "state": {
+      "IDLE": "Ready",
+      "LISTENING": "Listening",
+      "THINKING": "Thinking",
+      "EXECUTING": "Executing",
+      "SPEAKING": "Speaking",
+      "ALERT": "Attention",
+      "SUCCESS": "Done"
+    },
+    "mic": {
+      "recording": "Microphone on",
+      "wakeListening": "Listening for “Hey Realy”"
+    },
+    "talk": {
+      "hold": "Hold to talk",
+      "release": "Release to send",
+      "busy": "Working…",
+      "spaceHint": "Hold Space to talk · Esc stops",
+      "stopSpeaking": "Stop speaking",
+      "cancel": "Cancel"
+    },
+    "mute": "Mute spoken replies",
+    "unmute": "Unmute spoken replies",
+    "type": "Type instead",
+    "typeLabel": "Type a command",
+    "typePlaceholder": "Ask or tell Realy anything…",
+    "send": "Send",
+    "quick": "Quick commands",
+    "conversation": "Conversation",
+    "you": "You",
+    "realy": "Realy",
+    "wake": {
+      "on": "“Hey Realy” on",
+      "off": "“Hey Realy” off"
+    },
+    "privacy": {
+      "historyOn": "History is on: your transcripts are saved to this company.",
+      "historyOff": "History is off: transcripts are not saved (commands you give still appear in AI Command).",
+      "provider": "Speech is processed by your connected speech provider.",
+      "browser": "Speech is processed by your browser’s built-in engine (browser-dependent)."
+    },
+    "confirm": {
+      "title": "Your approval is needed",
+      "risk": "Impact: {risk}",
+      "howTo": "Say “approve” or “reject”, or click.",
+      "noPermission": "You can’t approve this — someone with approval rights must decide in Approvals.",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "risk": {
+      "LOW": "low",
+      "MEDIUM": "medium",
+      "HIGH": "high",
+      "CRITICAL": "critical"
+    },
+    "reply": {
+      "delegated": "On it. I’ve handed this to {team}. I’ll tell you when there’s a result.",
+      "blocked": "I couldn’t start this: {reason}",
+      "planned": "I’ve planned this and I’m assigning it now.",
+      "failed": "I couldn’t start that command. Please try again.",
+      "reasonUnknown": "something is missing to run it.",
+      "approvalNeeded": "Before I continue, I need your approval: {summary}. Say approve or reject.",
+      "approvalNoPermission": "This needs an approval you can’t give: {summary}. Someone with approval rights must decide.",
+      "approved": "Approved. I’m carrying it out.",
+      "rejected": "Rejected. I won’t do it.",
+      "confirmUnclear": "I didn’t catch a clear decision. Please say “approve” or “reject”.",
+      "doneNoAnswer": "That’s done. The results are in AI Command.",
+      "runFailed": "That didn’t work out: {reason}",
+      "runCancelled": "That command was cancelled."
+    },
+    "notice": {
+      "notHeard": "I didn’t hear anything. Hold the button while you speak.",
+      "micDenied": "Microphone access is blocked. Allow the microphone for this site in your browser settings.",
+      "micUnsupported": "This browser can’t record audio. Type your command instead.",
+      "noRecognizer": "No speech provider is connected and this browser has no speech recognition. Connect OpenAI, ElevenLabs or Deepgram in Integrations, or type.",
+      "sttFallback": "The speech provider didn’t respond, so I switched to your browser’s speech recognition.",
+      "sttLimit": "Your plan’s voice minutes are used up, so I switched to your browser’s speech recognition.",
+      "ttsFallback": "The voice provider didn’t respond, so I’m using your browser’s voice.",
+      "ttsLimit": "Your plan’s voice minutes are used up, so I’m using your browser’s voice."
+    },
+    "feed": {
+      "title": "Live company stream",
+      "empty": "Nothing has happened yet. New leads, deals, invoices, tickets and AI work appear here the moment they happen.",
+      "status": {
+        "idle": "Paused",
+        "connecting": "Connecting…",
+        "live": "Live",
+        "reconnecting": "Reconnecting…",
+        "closed": "Disconnected",
+        "unsupported": "Not supported"
+      }
+    },
+    "events": {
+      "task": "AI task “{title}”: {status}",
+      "run": "A teammate’s command: {status}",
+      "runMine": "“{text}”: {status}",
+      "approval": "Approval “{summary}”: {status}",
+      "callIn": "Incoming phone call: {status}",
+      "callOut": "Outgoing phone call: {status}",
+      "types": {
+        "lead_created": "New lead",
+        "lead_updated": "Lead updated",
+        "lead_assigned": "Lead assigned",
+        "deal_created": "New deal",
+        "deal_stage_changed": "Deal moved stage",
+        "deal_won": "Deal won",
+        "deal_lost": "Deal lost",
+        "customer_created": "New customer",
+        "contact_created": "New contact",
+        "invoice_created": "Invoice created",
+        "invoice_sent": "Invoice sent",
+        "invoice_paid": "Invoice paid",
+        "invoice_overdue": "Invoice overdue",
+        "expense_created": "Expense recorded",
+        "payment_received": "Payment received",
+        "task_created": "Task created",
+        "task_completed": "Task completed",
+        "project_created": "Project created",
+        "employee_joined": "Employee joined",
+        "employee_left": "Employee left",
+        "candidate_applied": "New applicant",
+        "candidate_hired": "Candidate hired",
+        "leave_requested": "Leave requested",
+        "form_submitted": "Form submitted",
+        "campaign_launched": "Campaign launched",
+        "content_published": "Content published",
+        "ticket_created": "New support ticket",
+        "ticket_updated": "Ticket updated",
+        "ticket_resolved": "Ticket resolved",
+        "meeting_completed": "Meeting completed",
+        "announcement_published": "Announcement published",
+        "webhook_received": "Webhook received",
+        "integration_synced": "Integration synced",
+        "agent_task_completed": "AI task completed",
+        "agent_task_failed": "AI task failed",
+        "voice_call_placed": "Phone call placed",
+        "voice_call_completed": "Phone call completed",
+        "autonomy_action_auto_approved": "Action approved automatically",
+        "autonomy_demoted": "AI autonomy lowered",
+        "marketing_run_completed": "Marketing run completed",
+        "crm_prospect_found": "Prospect found",
+        "crm_outreach_sent": "Outreach sent",
+        "livechat_lead_captured": "Lead captured in live chat",
+        "briefing_delivered": "Briefing delivered",
+        "site_published": "Website published",
+        "site_form_submitted": "Website form submitted",
+        "approval_requested": "Approval requested",
+        "approval_resolved": "Approval decided",
+        "objective_created": "Objective created",
+        "milestone_completed": "Milestone completed"
+      }
+    },
+    "runs": {
+      "title": "Command runs",
+      "current": "This conversation",
+      "none": "Talk to Realy to start a command — its plan and progress appear here.",
+      "empty": "No other command runs right now.",
+      "noAccess": "Your role can’t see the company’s AI work.",
+      "teammate": "Teammate’s command · {team}",
+      "approvals": "{count, plural, one {# approval waiting} other {# approvals waiting}}",
+      "next": "Next step: {action}"
+    },
+    "stepStatus": {
+      "WAITING": "Waiting",
+      "DELEGATED": "Assigned",
+      "BLOCKED": "Blocked",
+      "SKIPPED": "Skipped"
+    },
+    "departments": {
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "people": "People",
+      "operations": "Operations",
+      "support": "Support",
+      "ai": "AI workforce",
+      "comms": "Communication"
+    },
+    "languages": {
+      "en-US": "English",
+      "de-DE": "Deutsch",
+      "ar-AE": "العربية",
+      "hi-IN": "हिन्दी",
+      "zh-CN": "中文"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "elevenlabs": "ElevenLabs",
+      "deepgram": "Deepgram"
+    },
+    "personalities": {
+      "aria": {
+        "name": "Aria — warm and composed",
+        "summary": "A calm chief of staff: friendly, clear and confident."
+      },
+      "atlas": {
+        "name": "Atlas — calm executive",
+        "summary": "Deep, measured voice with short, reassuring sentences."
+      },
+      "nova": {
+        "name": "Nova — bright and energetic",
+        "summary": "Upbeat and quick, for founders who like momentum."
+      },
+      "sage": {
+        "name": "Sage — precise analyst",
+        "summary": "Neutral and crisp; numbers are spoken carefully."
+      }
+    },
+    "settings": {
+      "open": "Voice settings",
+      "title": "Voice settings",
+      "description": "Your personal settings for talking to Realy in this company.",
+      "privacy": "Privacy",
+      "history": "Save conversation history",
+      "historyHint": "Off by default. When on, what you say and Realy’s answers are stored so you can read them later.",
+      "wake": "“Hey Realy” wake word",
+      "wakeHint": "Only while this tab is visible. The microphone indicator stays on while Realy listens. Works in browsers with speech recognition (e.g. Chrome, Edge, Safari) — your browser vendor processes that audio.",
+      "wakeUnsupported": "This browser has no speech recognition, so the wake word isn’t available. Hold to talk works.",
+      "speak": "Read answers aloud",
+      "voice": "Voice",
+      "personality": "Personality",
+      "language": "Language",
+      "providers": "Speech providers",
+      "stt": "Speech recognition",
+      "tts": "Voice",
+      "sttStreaming": "Phrases are transcribed as you pause, while you keep talking.",
+      "browserHint": "Uses your browser’s speech recognition (browser-dependent).",
+      "browserTtsHint": "Uses your device’s built-in voice.",
+      "provider": {
+        "auto": "Automatic (best connected)",
+        "browser": "Browser (built-in)"
+      },
+      "notConnected": "not connected",
+      "connectHint": "Connect OpenAI, ElevenLabs or Deepgram for more accurate recognition and natural voices.",
+      "openIntegrations": "Open Integrations",
+      "askAdmin": "Ask an admin to connect one in Integrations.",
+      "minutes": "Voice minutes this month: {used} of {limit} (provider speech only; browser speech is free).",
+      "minutesUnlimited": "Voice minutes this month: {used}.",
+      "stored": "Stored transcripts",
+      "storedHint": "{count, plural, =0 {No transcripts are stored.} one {# stored turn.} other {# stored turns.}}",
+      "clear": "Delete all my transcripts",
+      "cleared": "{count, plural, =0 {Nothing to delete.} one {# turn deleted.} other {# turns deleted.}}"
+    },
+    "dock": {
+      "title": "Realy",
+      "open": "Talk to Realy",
+      "close": "Close Realy",
+      "openConsole": "Open the Realy console",
+      "loading": "Connecting to your company…",
+      "hint": "Hold the mic and speak, or type a command.",
+      "spaceHint": "Hold Space while open"
+    },
+    "nav": "Realy (voice)"
+  },
+  "autopilot": {
+    "title": "Company Autopilot",
+    "eyebrow": "AI operations",
+    "subtitle": "Decide how much your AI company does on its own — for the whole company and for each department. Nothing runs without a task or a business trigger you set up.",
+    "modes": {
+      "OFF": "Off",
+      "MANUAL": "Manual",
+      "ASSISTED": "Assisted",
+      "APPROVAL_REQUIRED": "Approval required",
+      "AUTONOMOUS": "Autonomous"
+    },
+    "modeHelp": {
+      "OFF": "The AI does no work here at all, not even when asked.",
+      "MANUAL": "The AI only works when a person asks. Schedules and autopilots wait. Every action needs approval.",
+      "ASSISTED": "Schedules and autopilots run, but the AI only prepares and suggests. A person takes every action.",
+      "APPROVAL_REQUIRED": "Schedules and autopilots run. Every action the AI wants to take waits for your approval.",
+      "AUTONOMOUS": "Schedules and autopilots run, and your Autonomy rules decide what the AI may do on its own, within limits."
+    },
+    "inherit": "Same as company",
+    "inherited": "Same as company",
+    "derived": "Set by Auto mode",
+    "own": "Department setting",
+    "company": {
+      "title": "Company mode",
+      "description": "The default for every department that has no setting of its own."
+    },
+    "window": {
+      "title": "Schedule window",
+      "hint": "Proactive work (schedules, autopilots, event rules) only starts inside this window, in the company's time zone. Leave empty for any time.",
+      "days": "Days",
+      "from": "From",
+      "to": "Until",
+      "anyTime": "Any time",
+      "summary": "{days}, {from}–{to}",
+      "summaryDays": "{days}, all day",
+      "inside": "Inside the window now",
+      "outside": "Outside the window now: proactive work waits"
+    },
+    "days": {
+      "0": "Sun",
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat"
+    },
+    "save": "Save",
+    "change": "Change",
+    "cancel": "Cancel",
+    "stats": {
+      "running": "Running now",
+      "runningHint": "AI tasks working at this moment",
+      "queued": "Waiting",
+      "queuedHint": "Tasks queued to start",
+      "started": "Started by triggers",
+      "startedHint": "Proactive starts in the last 24 h",
+      "blocked": "Held back",
+      "blockedHint": "Stopped by Autopilot in the last 24 h",
+      "auto": "Done on its own",
+      "autoHint": "Actions under your Auto rules, last 24 h"
+    },
+    "departments": {
+      "title": "Departments",
+      "subtitle": "Each department's mode and what it is doing right now, from real tasks and jobs."
+    },
+    "dept": {
+      "running": "{count} running",
+      "queued": "{count} waiting",
+      "done": "{count} done in 24 h",
+      "failed": "{count} failed in 24 h",
+      "employees": "{count, plural, =0 {No AI employees} one {# AI employee} other {# AI employees}}",
+      "idle": "Idle: waiting for a task or a trigger",
+      "lastActivity": "Last finished {date}"
+    },
+    "autopilots": {
+      "marketing_autopilot": "Marketing autopilot",
+      "prospecting": "Prospecting autopilot",
+      "ceo_loop": "AI CEO daily loop",
+      "support_automation": "Support automation",
+      "finance_alerts": "Finance alerts",
+      "ai_schedules": "AI schedules",
+      "workflows": "Workflows",
+      "line": "{active} of {total} on",
+      "lastRun": "last run {date}",
+      "none": "No department autopilots set up yet.",
+      "states": {
+        "running": "On",
+        "off": "Off",
+        "skipped": "Skipped",
+        "failed": "Failed",
+        "idle": "Idle"
+      }
+    },
+    "ceiling": {
+      "deny": "AI actions are off",
+      "suggest": "AI suggests, people act",
+      "ask": "Every action needs approval",
+      "none": "Autonomy rules decide"
+    },
+    "log": {
+      "title": "Autopilot log",
+      "description": "Every time a schedule, autopilot or event tried to start AI work, and whether it ran.",
+      "empty": "Nothing has been started by a trigger yet. The AI stays idle until you give it a task or set up a schedule or autopilot.",
+      "started": "Started",
+      "blocked": "Held back",
+      "task": "Open task",
+      "triggers": {
+        "schedule": "Schedule",
+        "autopilot": "Autopilot",
+        "event": "Event rule",
+        "system": "Automation",
+        "person": "Person",
+        "delegation": "Delegation"
+      },
+      "reasons": {
+        "autopilot_off": "Autopilot is off here",
+        "autopilot_manual": "Manual mode: waits for a person",
+        "autopilot_outside_window": "Outside the schedule window",
+        "autopilot_paused": "All AI was paused"
+      }
+    },
+    "notices": {
+      "autoModeOff": "Autonomous mode lets your Autonomy rules decide, but Auto mode is off, so every action still asks for approval.",
+      "openAutonomy": "Open Autonomy",
+      "platformDisabled": "The platform has switched AI work off. Nothing will run until it is switched back on.",
+      "platformPaused": "The platform has paused AI execution for now.",
+      "backgroundPaused": "Background jobs are paused by the platform, so schedules and autopilots are not running."
+    },
+    "idle": {
+      "title": "Idle by default",
+      "body": "Your AI employees never work on their own initiative. They start only from a task a person gives, or from a schedule, autopilot or event rule you set up — and only when the mode here allows it."
+    },
+    "pause": {
+      "title": "Pause everything",
+      "explain": "One switch stops all AI in this company: no task starts and no action runs until you resume."
+    },
+    "links": {
+      "costs": "See costs",
+      "autonomy": "Autonomy rules"
+    },
+    "error": {
+      "title": "Autopilot could not be loaded",
+      "body": "Please try again in a moment."
+    },
+    "readOnly": "You can see Autopilot, but only managers of the AI workforce can change it.",
+    "nav": "Autopilot"
+  },
+  "costs": {
+    "title": "Costs",
+    "eyebrow": "Spend control",
+    "subtitle": "Every real spend of your AI company in one ledger: AI, images, video, voice, calls, messages and external services — with budgets that stop spending when they are reached.",
+    "range": {
+      "label": "Period",
+      "7": "7 days",
+      "30": "30 days",
+      "90": "90 days"
+    },
+    "stats": {
+      "month": "This month",
+      "monthHint": "Recorded spend since the 1st",
+      "today": "Today",
+      "todayHint": "Since midnight (UTC)",
+      "forecast": "Month forecast",
+      "forecastHint": "At today's pace: {rate} per day",
+      "cache": "Prompt-cache hits",
+      "cacheHint": "Share of AI input served from cache (cheaper)"
+    },
+    "chart": {
+      "title": "Spend per day",
+      "empty": "No spend in this period.",
+      "day": "Day",
+      "amount": "Spend",
+      "max": "Highest day {amount}"
+    },
+    "by": {
+      "department": "By department",
+      "agent": "By AI employee",
+      "provider": "By provider",
+      "model": "By AI model",
+      "category": "By kind of spend",
+      "empty": "Nothing recorded yet.",
+      "unassigned": "Not assigned",
+      "count": "{count, plural, one {# spend} other {# spends}}"
+    },
+    "categories": {
+      "AI_TOKENS": "AI (tokens)",
+      "IMAGE": "Images",
+      "VIDEO": "Video",
+      "VOICE": "Voice",
+      "STT": "Speech to text",
+      "TTS": "Text to speech",
+      "TELEPHONY": "Phone calls",
+      "EMAIL": "Email",
+      "SMS": "SMS",
+      "MESSAGING": "Messaging",
+      "EXTERNAL_API": "External services",
+      "OTHER": "Other"
+    },
+    "tokens": "{input} input · {output} output · {cached} from cache",
+    "budgets": {
+      "title": "Budgets",
+      "description": "Set limits for the company, a department, an AI employee (per month) or any single task. With a hard stop, work stops honestly before the limit is passed and you are notified.",
+      "empty": "No budgets yet. Add one so spending can never run away.",
+      "scope": {
+        "COMPANY": "Whole company",
+        "DEPARTMENT": "Department",
+        "AGENT": "AI employee",
+        "TASK": "Every single task"
+      },
+      "used": "{spent} of {limit}",
+      "hardStop": "Hard stop",
+      "alertsOnly": "Alerts only",
+      "reached": "Reached",
+      "projected": "Forecast: {pct}% of this budget by month end",
+      "taskNote": "Most expensive task this month",
+      "remove": "Remove",
+      "removeConfirm": "Remove this budget? Spending in this scope will no longer be limited.",
+      "add": "Add a budget",
+      "form": {
+        "scope": "Applies to",
+        "department": "Department",
+        "agent": "AI employee",
+        "limit": "Limit in USD",
+        "hardStop": "Stop spending when the limit is reached",
+        "save": "Save budget",
+        "monthHint": "Counted per calendar month (UTC).",
+        "taskHint": "Applies to every task on its own."
+      }
+    },
+    "alerts": {
+      "title": "Alerts",
+      "empty": "No alerts yet. You are told at 50 %, 80 % and 100 % of every budget.",
+      "line": "{scope} {key}: {threshold}% used ({spent} of {limit})"
+    },
+    "recent": {
+      "title": "Latest spends",
+      "empty": "Nothing recorded yet.",
+      "estimated": "Estimate",
+      "exact": "Billed",
+      "when": "When",
+      "what": "What",
+      "who": "Who",
+      "amount": "Amount",
+      "task": "Task"
+    },
+    "empty": {
+      "title": "No spend recorded yet",
+      "body": "Costs appear here as soon as your AI employees work or a connected provider is used. The AI is idle until it gets a task, so nothing is spent until then."
+    },
+    "note": "Amounts are estimates from list prices unless the provider reported the exact charge. Prices of AI models are set by the platform.",
+    "links": {
+      "autopilot": "Autopilot",
+      "usage": "AI usage"
+    },
+    "error": {
+      "title": "Costs could not be loaded",
+      "body": "Please try again in a moment."
+    },
+    "readOnly": "You can see costs, but only managers of the AI workforce can change budgets.",
+    "nav": "AI costs"
+  },
+  "creative": {
+    "title": "Creative Studio",
+    "eyebrow": "Creative production",
+    "subtitle": "On-brand images, videos and every asset behind them — produced with your own providers, versioned, costed and ready for marketing.",
+    "tabs": {
+      "overview": "Overview",
+      "images": "Image studio",
+      "library": "Media library"
+    },
+    "common": {
+      "campaign": "Campaign",
+      "folder": "Folder",
+      "name": "Name",
+      "none": "None",
+      "save": "Save",
+      "saved": "Saved",
+      "working": "Working…",
+      "connect": "Connect",
+      "delete": "Delete",
+      "ready": "Ready",
+      "notReady": "Not set up",
+      "readOnly": "You can view the studio. Producing assets needs marketing management access.",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "overview": {
+      "spend": "Creative spend",
+      "spendHint": "Estimated provider cost, last {days} days",
+      "images": "Images this month",
+      "videos": "Video clips & renders",
+      "thisMonth": "Used / plan limit this month",
+      "library": "Assets in library",
+      "setupTitle": "Your production setup",
+      "setupHint": "The studio uses providers you connect in Integrations. Each capability lights up when one is connected."
+    },
+    "capabilities": {
+      "text": {
+        "title": "Concepts & scripts",
+        "ready": "AI text provider connected.",
+        "missing": "Connect OpenAI or Gemini to write concepts, scripts and storyboards."
+      },
+      "image": {
+        "title": "Images",
+        "ready": "Image generation connected.",
+        "missing": "Connect OpenAI, Stability AI or Replicate to generate images."
+      },
+      "video": {
+        "title": "Video clips",
+        "ready": "Video generation connected.",
+        "missing": "Optional: connect Runway, Luma, Kling or Replicate for moving scenes. Without it, scenes use stills."
+      },
+      "voice": {
+        "title": "Voiceover",
+        "ready": "Text-to-speech connected.",
+        "missing": "Connect ElevenLabs or OpenAI to record voiceovers."
+      },
+      "music": {
+        "title": "Licensed music",
+        "ready": "Licensed music source connected.",
+        "missing": "Connect Jamendo for licensed tracks, or upload music you hold a license for."
+      },
+      "render": {
+        "title": "Final render",
+        "ready": "Rendering provider connected — finished MP4s are produced.",
+        "missing": "Connect Shotstack or Creatomate to render finished videos. Without it you get an editable timeline."
+      }
+    },
+    "projects": {
+      "title": "Video projects",
+      "description": "Each project runs through a resumable production pipeline you can follow step by step.",
+      "new": "New video",
+      "newTitle": "Start a video project",
+      "newHint": "Describe the idea. The pipeline turns it into a concept, script, storyboard, scenes, voiceover, captions and a finished edit.",
+      "name": "Project name",
+      "brief": "Idea / brief",
+      "briefHint": "What is the video about, who is it for and what should viewers do afterwards?",
+      "audience": "Audience",
+      "objective": "Objective",
+      "template": "Template",
+      "noTemplate": "No template",
+      "aspect": "Main format",
+      "seconds": "Target length (seconds)",
+      "platforms": "Platforms",
+      "sceneMedia": "Scene media",
+      "sceneMediaHint": "Video clips cost more and take minutes per scene; stills are animated in the edit.",
+      "sceneMediaNoVideo": "No video provider connected yet — stills work everywhere.",
+      "media_image": "Still image",
+      "media_video": "Video clip",
+      "research": "Research first",
+      "researchHint": "Search the web with your research provider before writing the concept.",
+      "autoAdvance": "Run automatically",
+      "autoAdvanceHint": "Realy runs the next step on its own until something needs you. Approval is always yours.",
+      "create": "Create project",
+      "empty": "No video projects yet. Start one from an idea — you approve every step that matters.",
+      "emptyReadOnly": "No video projects yet.",
+      "attention": "{count, plural, one {# needs you} other {# need you}}",
+      "working": "Working",
+      "progress": "{done} of {total} steps done",
+      "next": "Next: {step}",
+      "complete": "All steps done",
+      "cost": "Cost {cost}"
+    },
+    "project": {
+      "title": "Video project",
+      "back": "All projects",
+      "pipeline": "Production pipeline",
+      "pipelineHint": "Live state of every step. Steps run one after another; you can edit, re-run or skip where it makes sense.",
+      "autoOn": "Running automatically",
+      "archive": "Archive project",
+      "archiveConfirm": "Archive this project? Its assets stay in the library.",
+      "assets": "Produced assets",
+      "assetsHint": "Everything this project created.",
+      "noAssets": "Nothing produced yet."
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "IN_PROGRESS": "In production",
+      "IN_REVIEW": "In review",
+      "APPROVED": "Approved",
+      "EXPORTED": "Exported",
+      "ARCHIVED": "Archived"
+    },
+    "stepStatus": {
+      "PENDING": "Pending",
+      "RUNNING": "Running",
+      "WAITING_PROVIDER": "At provider",
+      "NEEDS_INPUT": "Needs you",
+      "BLOCKED": "Blocked",
+      "SUCCEEDED": "Done",
+      "FAILED": "Failed",
+      "SKIPPED": "Skipped"
+    },
+    "steps": {
+      "run": "Run",
+      "rerun": "Re-run",
+      "retry": "Try again",
+      "skip": "Skip",
+      "requestReview": "Request review",
+      "edited": "Edited",
+      "hookOptions": "Hook options",
+      "words": "{count} words · about {seconds}s spoken",
+      "savedStale": "Saved — later steps are marked to run again.",
+      "names": {
+        "idea": "Idea",
+        "research": "Research",
+        "concept": "Concept",
+        "script": "Script",
+        "hook": "Hook",
+        "storyboard": "Storyboard",
+        "scene_assets": "Scene assets",
+        "voiceover": "Voiceover",
+        "music": "Music",
+        "captions": "Captions",
+        "assembly": "Assembly",
+        "thumbnail": "Thumbnail",
+        "variants": "Platform variants",
+        "review": "Review & approval",
+        "export": "Export",
+        "handoff": "Hand-off to publishing"
+      },
+      "desc": {
+        "idea": "The brief everything starts from.",
+        "research": "Current facts from the web, cited in the concept.",
+        "concept": "The big idea, angle and visual style.",
+        "script": "The words spoken in the video, timed to the target length.",
+        "hook": "Opening lines that stop the scroll.",
+        "storyboard": "Scenes with precise shot descriptions, narration and timing.",
+        "scene_assets": "An image or video clip generated for every scene.",
+        "voiceover": "The script recorded with a natural voice.",
+        "music": "Licensed music only — from your connected source or your own upload.",
+        "captions": "Subtitles from the voiceover timing (SRT and VTT).",
+        "assembly": "The edit: scenes, voice, music and captions on one timeline, rendered when a render provider is connected.",
+        "thumbnail": "A cover image for the video.",
+        "variants": "The other formats (9:16, 1:1, 16:9).",
+        "review": "A person approves the video before it can go out.",
+        "export": "A package with every file and license.",
+        "handoff": "A draft post in marketing with the video attached."
+      }
+    },
+    "storyboard": {
+      "title": "Storyboard",
+      "description": "Edit shots, narration and timing. Changing a shot clears its generated media so it can be made again.",
+      "summary": "{count, plural, one {# scene} other {# scenes}} · {seconds}s",
+      "locked": "Scenes are being generated — editing unlocks when they finish.",
+      "generating": "Generating…",
+      "failed": "Generation failed",
+      "noMedia": "No media yet",
+      "sceneTitle": "Scene title",
+      "shot": "Shot description",
+      "narration": "Narration",
+      "onScreen": "On-screen text",
+      "seconds": "Seconds",
+      "media": "Media",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove scene",
+      "add": "Add scene",
+      "newScene": "New scene",
+      "save": "Save storyboard",
+      "unsaved": "Unsaved changes",
+      "open": "Open storyboard",
+      "empty": "The storyboard appears here once the storyboard step has run."
+    },
+    "scenes": {
+      "progress": "{ready} of {total} scenes have media",
+      "failed": "Scene {n}: {error}"
+    },
+    "voiceover": {
+      "meta": "{seconds}s · voice {voice}",
+      "timingExact": "Exact word timing",
+      "timingEstimated": "Estimated timing"
+    },
+    "captions": {
+      "cues": "{count, plural, one {# caption} other {# captions}}"
+    },
+    "music": {
+      "searchTitle": "Licensed tracks",
+      "search": "Search",
+      "searchPlaceholder": "Mood or genre, e.g. upbeat acoustic",
+      "notConnected": "No licensed music source is connected. Connect Jamendo, or upload a track you hold a license for.",
+      "noResults": "No tracks with a commercial-use license matched.",
+      "license": "License",
+      "attributionRequired": "attribution is added to the export",
+      "use": "Use this track",
+      "uploadTitle": "Upload your own track",
+      "licenseNote": "License details",
+      "licenseHint": "Where the license comes from, e.g. “Purchased from … , license #…”.",
+      "attest": "I confirm I hold a license to use this music commercially in videos.",
+      "upload": "Upload music",
+      "never": "Realy never downloads music from unlicensed sources.",
+      "licensed": "License: {license}"
+    },
+    "assembly": {
+      "render": "Rendered video",
+      "rendering": "The render provider is producing the video…",
+      "timeline": "Timeline (JSON)",
+      "edl": "Edit list (EDL)",
+      "mp4": "MP4",
+      "notes": {
+        "render_requires_provider": "Editable timeline ready. A finished video requires a rendering provider (Shotstack or Creatomate).",
+        "media_missing": "Some scenes have no media yet — generate scene assets first.",
+        "render_limit_reached": "Your plan's video limit for this month is reached; the timeline is ready.",
+        "render_failed": "The render provider could not render this format; the timeline is ready."
+      }
+    },
+    "review": {
+      "approve": "Approve video",
+      "changes": "Request changes",
+      "note": "Review note",
+      "notePlaceholder": "What should change? (required for changes)",
+      "lastNote": "Last review note: {note}"
+    },
+    "export": {
+      "withVideo": "Package includes the finished video.",
+      "timelineOnly": "Package includes the editable timeline and all media (no render).",
+      "manifest": "Export manifest"
+    },
+    "handoff": {
+      "postTitle": "Post title",
+      "text": "Post text",
+      "accounts": "Social accounts",
+      "media": "Media",
+      "render": "Finished video",
+      "thumbnail": "Thumbnail image",
+      "noRender": "There is no finished render yet — hand off the thumbnail or connect a rendering provider.",
+      "submit": "Create draft post",
+      "done": "Draft post created in marketing.",
+      "open": "Open social posts",
+      "noAccounts": "Add a social account in marketing to hand videos off for publishing.",
+      "setupSocial": "Set up social"
+    },
+    "settings": {
+      "title": "Production settings",
+      "auto": "Automatic (first connected)",
+      "voiceProvider": "Voice provider",
+      "voice": "Voice",
+      "voiceHint": "OpenAI voice name or ElevenLabs voice id.",
+      "voiceStyle": "Delivery",
+      "voiceStylePlaceholder": "e.g. warm, upbeat, confident",
+      "videoProvider": "Video clip provider",
+      "renderProvider": "Render provider"
+    },
+    "costs": {
+      "title": "Cost panel",
+      "description": "Estimated provider costs from list prices.",
+      "projectTitle": "Project cost",
+      "assets": "{count, plural, one {# asset} other {# assets}}",
+      "total": "Total (estimate)",
+      "empty": "No paid generations in this period.",
+      "meterImages": "Images: {value}",
+      "meterVideos": "Video clips & renders: {value}",
+      "meterContent": "AI content generations: {value}",
+      "estimates": "Estimates — your provider invoices are authoritative."
+    },
+    "usage": {
+      "title": "Usage per campaign",
+      "description": "Assets made for each campaign and the posts using them.",
+      "row": "{assets} assets · {posts} posts · {cost}",
+      "empty": "Link assets to a campaign to see usage here."
+    },
+    "images": {
+      "title": "Image studio",
+      "description": "Product images, social graphics, posters, banners, ads, thumbnails, infographics, illustrations and brand assets — built from your brand kit.",
+      "category": "What are you making?",
+      "prompt": "Describe the image",
+      "promptHint": "Subject, setting, mood. Text is never rendered — leave space for it instead.",
+      "promptPlaceholder": "e.g. Our ceramic mug on a sunlit kitchen counter, morning coffee mood",
+      "preset": "Platform size",
+      "style": "Style",
+      "styleAuto": "Automatic",
+      "variants": "Variants",
+      "variantsHint": "Each variant is one paid generation.",
+      "textSpace": "Space for text",
+      "textNone": "No text space",
+      "text_top": "Top",
+      "text_center": "Center",
+      "text_bottom": "Bottom",
+      "useBrand": "Apply brand kit",
+      "useBrandHint": "Colors, fonts and tone from your brand kit are added to the prompt.",
+      "noBrandHint": "No brand kit yet — set it up in Marketing → Brand for on-brand results.",
+      "generate": "{count, plural, one {Generate image} other {Generate # images}}",
+      "generating": "Generating…",
+      "done": "{count, plural, one {# image created} other {# images created}} — see them below.",
+      "costHint": "Uses your connected provider and counts toward this month's image limit.",
+      "notConnected": "Connect an image provider (OpenAI, Stability AI or Replicate) to generate images.",
+      "recent": "Recent images",
+      "allInLibrary": "All in library",
+      "empty": "No images yet. Describe one above to create your first."
+    },
+    "actions": {
+      "download": "Download",
+      "regenerate": "Regenerate",
+      "edit": "Edit",
+      "editTitle": "Edit this image",
+      "editHint": "Describe the change. A new version is created (OpenAI image editing).",
+      "editPlaceholder": "e.g. make the background deep navy and add soft morning light",
+      "applyEdit": "Create edited version",
+      "upscale": "Upscale 4×",
+      "brandCheck": "Brand check"
+    },
+    "brand": {
+      "title": "Brand kit",
+      "edit": "Edit",
+      "fonts": "Fonts: {heading} / {body}",
+      "missing": "No brand kit yet. Add colors, fonts, logo and tone in Marketing → Brand.",
+      "score": "Brand {score}",
+      "noScore": "No score",
+      "checkTitle": "Brand consistency",
+      "checkHint": "Palette measured from the pixels; logo and text checked by a vision model when available.",
+      "coverage": "{percent}% of colored areas use the brand palette",
+      "dominant": "Dominant colors",
+      "offPalette": "Off-palette colors: {colors}",
+      "logoOk": "Logo visible and matches the official logo.",
+      "logoWrong": "A logo is visible but does not match the official logo.",
+      "logoAbsent": "The official logo is not visible.",
+      "textIssue": "Text issue: {issue}",
+      "offBrand": "Off-brand element: {issue}",
+      "notChecked": "Not checked yet. Run a brand check from the actions.",
+      "paletteNote": {
+        "no_brand_colors": "Add brand colors to the brand kit to measure the palette.",
+        "format_not_supported": "Palette measurement works on PNG images."
+      },
+      "logoNote": {
+        "no_logo": "Add a logo URL to the brand kit to check logo usage.",
+        "vision_not_connected": "Connect OpenAI to check logo and text.",
+        "vision_failed": "The logo check could not run this time."
+      }
+    },
+    "library": {
+      "title": "Media library",
+      "description": "Every studio asset with versions, costs, licenses and where it is used.",
+      "folders": "Folders",
+      "all": "All assets",
+      "newFolder": "New folder",
+      "deleteFolderConfirm": "Delete this folder? Its assets stay in the library.",
+      "uploadTitle": "Upload",
+      "uploadHint": "Images, videos or licensed music (up to 15 MB).",
+      "file": "File",
+      "fileHint": "PNG, JPEG, WebP, MP4, WebM, MOV, MP3, WAV, AAC, OGG.",
+      "upload": "Upload",
+      "tooLarge": "The file is larger than 15 MB.",
+      "search": "Search names, prompts, tags",
+      "kind": "Type",
+      "allKinds": "All types",
+      "allCategories": "All categories",
+      "filter": "Filter",
+      "noMatches": "No assets match these filters.",
+      "empty": "The library is empty. Generate images or run a video project to fill it.",
+      "noPreview": "No preview",
+      "tags": "Tags",
+      "tagsHint": "Comma separated."
+    },
+    "asset": {
+      "title": "Asset",
+      "back": "Media library",
+      "archived": "This asset is archived.",
+      "prompt": "Prompt",
+      "provider": "Made with",
+      "uploaded": "Uploaded",
+      "cost": "Estimated cost",
+      "created": "Created",
+      "usage": "Used in",
+      "posts": "{count, plural, =0 {No social posts} one {# social post} other {# social posts}}",
+      "project": "Project",
+      "openProject": "Open project",
+      "license": "License",
+      "versions": "Version history",
+      "details": "Details",
+      "archive": "Archive asset",
+      "archiveConfirm": "Archive this asset? It is removed from the library and from marketing's media."
+    },
+    "templates": {
+      "title": "Templates",
+      "description": "Reusable image recipes for your team.",
+      "empty": "No templates yet.",
+      "new": "New template",
+      "save": "Save template",
+      "use": "Generate"
+    },
+    "kinds": {
+      "IMAGE": "Image",
+      "VIDEO": "Video",
+      "AUDIO": "Audio",
+      "CAPTIONS": "Captions",
+      "TIMELINE": "Timeline",
+      "DOCUMENT": "Document"
+    },
+    "roles": {
+      "scene": "Scene",
+      "voiceover": "Voiceover",
+      "music": "Music",
+      "captions_srt": "Captions (SRT)",
+      "captions_vtt": "Captions (VTT)",
+      "timeline": "Timeline",
+      "edl": "Edit list",
+      "variant_timeline": "Variant timeline",
+      "variant_edl": "Variant edit list",
+      "render": "Rendered video",
+      "thumbnail": "Thumbnail",
+      "export": "Export manifest"
+    },
+    "operations": {
+      "generate": "Generated",
+      "variant": "Variant",
+      "regenerate": "Regenerated",
+      "edit": "Edited",
+      "upscale": "Upscaled",
+      "upload": "Uploaded",
+      "render": "Rendered",
+      "license": "Licensed"
+    },
+    "categories": {
+      "product": "Product image",
+      "social": "Social graphic",
+      "poster": "Poster",
+      "banner": "Banner",
+      "ad": "Ad",
+      "thumbnail": "Thumbnail",
+      "infographic": "Infographic",
+      "illustration": "Illustration",
+      "brand": "Brand asset",
+      "scene": "Video scene",
+      "render": "Rendered video",
+      "music": "Music"
+    },
+    "styles": {
+      "photo": "Photo",
+      "minimal": "Minimal",
+      "illustration": "Illustration",
+      "bold": "Bold",
+      "3d": "3D",
+      "lifestyle": "Lifestyle",
+      "editorial": "Editorial",
+      "flat": "Flat"
+    },
+    "presets": {
+      "instagram_square": "Instagram square",
+      "instagram_portrait": "Instagram portrait",
+      "story_reel": "Story / Reel",
+      "tiktok": "TikTok",
+      "youtube_thumbnail": "YouTube thumbnail",
+      "youtube_video": "YouTube video",
+      "linkedin_post": "LinkedIn post",
+      "x_post": "X post",
+      "facebook_post": "Facebook post",
+      "pinterest_pin": "Pinterest pin",
+      "web_banner": "Web banner",
+      "leaderboard_ad": "Leaderboard ad",
+      "display_ad": "Display ad",
+      "poster_a": "Poster (A-series)",
+      "blog_featured": "Blog featured image"
+    },
+    "aspects": {
+      "9x16": "Vertical 9:16",
+      "1x1": "Square 1:1",
+      "16x9": "Landscape 16:9"
+    },
+    "platforms": {
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook",
+      "x": "X",
+      "pinterest": "Pinterest",
+      "web": "Website"
+    },
+    "videoTemplates": {
+      "product_teaser": "Product teaser",
+      "explainer": "Explainer",
+      "ugc_ad": "UGC-style ad",
+      "announcement": "Announcement"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "gemini": "Gemini",
+      "stability": "Stability AI",
+      "replicate": "Replicate",
+      "runway": "Runway",
+      "luma": "Luma",
+      "kling": "Kling",
+      "elevenlabs": "ElevenLabs",
+      "shotstack": "Shotstack",
+      "creatomate": "Creatomate",
+      "jamendo": "Jamendo",
+      "upload": "Uploads",
+      "notConnected": "not connected"
+    },
+    "nav": "Creative Studio"
   }
 }

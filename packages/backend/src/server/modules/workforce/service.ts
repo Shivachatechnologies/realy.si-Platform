@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { db, transaction, type Prisma, type Tx } from "@/server/core/db";
+import { db, Prisma, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
@@ -15,7 +15,7 @@ import { assertFeature, assertLimit } from "@/server/modules/entitlements/servic
 
 export const ORG_LEVELS = ["EXECUTIVE", "MANAGER", "SPECIALIST"] as const;
 /** Default org level of a role: the AI CEO is an executive, department leads are managers. */
-const EXECUTIVE_PROFILES = new Set(["ai_ceo"]);
+const EXECUTIVE_PROFILES = new Set(["ai_ceo", "ai_coo", "ai_cto", "ai_cro", "ai_chro", "cs_director", "product_director"]);
 const MANAGER_PROFILES = new Set(["cmo", "ai_cfo", "sales_manager", "ai_project_manager", "support_lead", "people_analyst"]);
 export const defaultLevelFor = (profileKey: string): (typeof ORG_LEVELS)[number] => (EXECUTIVE_PROFILES.has(profileKey) ? "EXECUTIVE" : MANAGER_PROFILES.has(profileKey) ? "MANAGER" : "SPECIALIST");
 
@@ -39,6 +39,23 @@ export function rolesByDepartment() {
 }
 
 const isUuid = (v: string) => z.string().uuid().safeParse(v).success;
+
+export function isTimeZone(tz: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+/** Working hours: weekdays (0 = Sunday) and a local time window; recurring schedules wait for these hours. */
+export const workingHoursSchema = z.object({ days: z.array(z.number().int().min(0).max(6)).min(1).max(7), start: hhmm, end: hhmm }).refine((v) => v.start !== v.end, { message: "Start and end must differ", path: ["end"] });
+export type WorkingHours = z.infer<typeof workingHoursSchema>;
+export const workingHoursOf = (raw: unknown): WorkingHours | null => {
+  const r = workingHoursSchema.safeParse(raw);
+  return r.success ? r.data : null;
+};
 const initialsOf = (name: string) =>
   name
     .split(/\s+/)
@@ -67,6 +84,10 @@ const employeeFields = {
   goals: z.array(z.string().trim().min(1).max(300)).max(20).optional(),
   kpis: z.array(z.object({ key: z.string().regex(/^[a-z_]+\.[a-z0-9_]+$/).max(100), target: z.number().finite() })).max(20).optional(),
   model: z.string().regex(/^[a-z0-9.-]{3,64}$/).nullable().optional(),
+  personality: z.string().trim().max(500).nullable().optional(),
+  communicationStyle: z.string().trim().max(500).nullable().optional(),
+  timezone: z.string().trim().max(64).refine(isTimeZone, "Unknown timezone").nullable().optional(),
+  workingHours: workingHoursSchema.nullable().optional(),
 };
 export const createEmployeeInput = z.object({
   profileKey: z.string().regex(/^[a-z_]{2,60}$/),
@@ -74,7 +95,13 @@ export const createEmployeeInput = z.object({
   /** false = start paused and go through the setup steps (activate at the end). */
   activate: z.boolean().optional(),
 });
-export const updateEmployeeInput = z.object({ ...employeeFields, name: employeeFields.name.optional() });
+export const updateEmployeeInput = z.object({
+  ...employeeFields,
+  name: employeeFields.name.optional(),
+  /** Change of role: tools outside the new role are dropped; the department follows the role unless given. */
+  profileKey: z.string().regex(/^[a-z_]{2,60}$/).optional(),
+  department: z.enum(DEPARTMENTS).optional(),
+});
 export const employeeStatusInput = z.object({ status: z.enum(["ACTIVE", "PAUSED"]) });
 export const memoryInput = z.object({ content: z.string().trim().min(1).max(1000), pinned: z.boolean().optional() });
 export const memoryUpdateInput = z.object({ pinned: z.boolean() });
@@ -143,6 +170,16 @@ const employeeSelect = {
   goals: true,
   kpis: true,
   model: true,
+  personality: true,
+  communicationStyle: true,
+  timezone: true,
+  workingHours: true,
+  orgDesignId: true,
+  designRoleKey: true,
+  replacedByEmployeeId: true,
+  lastEvaluation: true,
+  lastEvaluatedAt: true,
+  archivedAt: true,
   setupCompletedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -180,7 +217,14 @@ export async function getEmployee(ctx: RequestContext, organizationId: string, c
   return e;
 }
 
-export async function createEmployee(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createEmployeeInput>) {
+/** Internal provisioning fields (organization designer): never accepted from request bodies. */
+export interface ProvisioningFields {
+  department?: Department;
+  orgDesignId?: string;
+  designRoleKey?: string;
+}
+
+export async function createEmployee(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createEmployeeInput>, internal: ProvisioningFields = {}) {
   const input = createEmployeeInput.parse(raw);
   const profile = profileByKey(input.profileKey);
   if (!profile) throw notFound("Profile");
@@ -202,7 +246,13 @@ export async function createEmployee(ctx: RequestContext, organizationId: string
         name: input.name,
         initials: (input.initials ?? initialsOf(input.name)).toUpperCase(),
         profileKey: profile.key,
-        department: departmentOf(profile.key),
+        department: internal.department ?? departmentOf(profile.key),
+        orgDesignId: internal.orgDesignId ?? null,
+        designRoleKey: internal.designRoleKey ?? null,
+        personality: input.personality ?? null,
+        communicationStyle: input.communicationStyle ?? null,
+        timezone: input.timezone ?? null,
+        ...(input.workingHours ? { workingHours: input.workingHours } : {}),
         instructions: input.instructions ?? null,
         skills: [...new Set(input.skills ?? [])],
         allowedTools: [...new Set(input.allowedTools ?? [])],
@@ -240,7 +290,13 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     const before = await tx.aiEmployee.findFirst({ where: { id: employeeId, organizationId, companyId, archivedAt: null }, select: employeeSelect });
     if (!before) throw notFound("AI employee");
-    checkTools(before.profileKey, input.allowedTools);
+    const nextProfile = input.profileKey && input.profileKey !== before.profileKey ? profileByKey(input.profileKey) : null;
+    if (input.profileKey && input.profileKey !== before.profileKey && !nextProfile) throw notFound("Profile");
+    const profileKey = nextProfile?.key ?? before.profileKey;
+    checkTools(profileKey, input.allowedTools);
+    // A role change keeps only the tools the new role has (empty = all of the new role's tools).
+    const keptTools = nextProfile && input.allowedTools === undefined ? before.allowedTools.filter((t) => nextProfile.tools.includes(t)) : undefined;
+    if (nextProfile && (input.level ?? before.level) !== "SPECIALIST") await assertFeature(ctx, organizationId, "feature.executive_team");
     await checkRunsAs(tx, organizationId, input.runsAsUserId);
     await checkRunsAs(tx, organizationId, input.managerUserId);
     await checkManager(tx, organizationId, companyId, employeeId, input.managerEmployeeId);
@@ -266,6 +322,12 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
         ...(input.goals !== undefined ? { goals: input.goals } : {}),
         ...(input.kpis !== undefined ? { kpis: input.kpis } : {}),
         ...(input.model !== undefined ? { model: input.model } : {}),
+        ...(nextProfile ? { profileKey: nextProfile.key, department: input.department ?? departmentOf(nextProfile.key) } : input.department ? { department: input.department } : {}),
+        ...(keptTools ? { allowedTools: keptTools } : {}),
+        ...(input.personality !== undefined ? { personality: input.personality || null } : {}),
+        ...(input.communicationStyle !== undefined ? { communicationStyle: input.communicationStyle || null } : {}),
+        ...(input.timezone !== undefined ? { timezone: input.timezone || null } : {}),
+        ...(input.workingHours !== undefined ? { workingHours: input.workingHours === null ? Prisma.DbNull : input.workingHours } : {}),
       },
       select: employeeSelect,
     });
@@ -275,8 +337,8 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
       action: "ai_employee.updated",
       resourceType: "ai_employee",
       resourceId: e.id,
-      oldValue: { autonomy: before.autonomy, runsAsUserId: before.runsAsUserId, monthlyTokenBudget: before.monthlyTokenBudget, monthlyCostBudgetCents: before.monthlyCostBudgetCents === null ? null : Number(before.monthlyCostBudgetCents), allowedTools: before.allowedTools, managerEmployeeId: before.managerEmployeeId, managerUserId: before.managerUserId, level: before.level, model: before.model },
-      newValue: { companyId, name: e.name, autonomy: e.autonomy, runsAsUserId: e.runsAsUserId, monthlyTokenBudget: e.monthlyTokenBudget, monthlyCostBudgetCents: e.monthlyCostBudgetCents === null ? null : Number(e.monthlyCostBudgetCents), allowedTools: e.allowedTools, managerEmployeeId: e.managerEmployeeId, managerUserId: e.managerUserId, level: e.level, model: e.model },
+      oldValue: { profileKey: before.profileKey, department: before.department, autonomy: before.autonomy, runsAsUserId: before.runsAsUserId, monthlyTokenBudget: before.monthlyTokenBudget, monthlyCostBudgetCents: before.monthlyCostBudgetCents === null ? null : Number(before.monthlyCostBudgetCents), allowedTools: before.allowedTools, managerEmployeeId: before.managerEmployeeId, managerUserId: before.managerUserId, level: before.level, model: before.model },
+      newValue: { companyId, name: e.name, profileKey: e.profileKey, department: e.department, autonomy: e.autonomy, runsAsUserId: e.runsAsUserId, monthlyTokenBudget: e.monthlyTokenBudget, monthlyCostBudgetCents: e.monthlyCostBudgetCents === null ? null : Number(e.monthlyCostBudgetCents), allowedTools: e.allowedTools, managerEmployeeId: e.managerEmployeeId, managerUserId: e.managerUserId, level: e.level, model: e.model },
     });
     return e;
   });

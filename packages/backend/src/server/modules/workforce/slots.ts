@@ -55,3 +55,26 @@ export function fillTemplate(template: string, vars: { date: string; event?: str
     return all;
   });
 }
+
+export interface WorkingHoursSpec {
+  days: number[];
+  start: string;
+  end: string;
+}
+
+/** Inside the working hours at `now` in `timeZone` (null = always). Overnight windows (start > end) are supported. */
+export function withinWorkingHours(h: WorkingHoursSpec | null, now: Date, timeZone: string): boolean {
+  if (!h) return true;
+  const p = localParts(now, timeZone);
+  const toMin = (s: string) => {
+    const [hh, mm] = s.split(":").map(Number) as [number, number];
+    return hh * 60 + mm;
+  };
+  const m = p.hour * 60 + p.minute;
+  const start = toMin(h.start);
+  const end = toMin(h.end);
+  if (start < end) return h.days.includes(p.weekday) && m >= start && m < end;
+  // Overnight: the window belongs to the day it started.
+  if (m >= start) return h.days.includes(p.weekday);
+  return m < end && h.days.includes((p.weekday + 6) % 7);
+}

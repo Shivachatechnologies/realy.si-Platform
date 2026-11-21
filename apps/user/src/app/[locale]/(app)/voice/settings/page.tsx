@@ -9,6 +9,8 @@ import { getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { listDoNotCall, voiceOverview } from "@/server/modules/voice/service";
+import { CAPABILITIES, CAPABILITY_KEYS, TELEPHONY_KEYS } from "@/server/modules/voice/telephony";
+import { TelephonyForm } from "@/components/voice/telephony";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("voice.tabs.settings") };
@@ -37,6 +39,38 @@ export default async function VoiceSettingsPage() {
           <CardBody>
             <SettingsForm base={base} value={o.settings} members={members.map((m) => ({ id: m.user.id, name: m.user.name }))} canManage={perms.manage} />
           </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title={t("voice.telephony.title")} description={t("voice.telephony.description")} />
+          <CardBody>
+            <TelephonyForm base={base} value={o.settings} canManage={perms.manage} twilioConnected={o.connections.twilio === "connected"} retellSelected={o.settings.provider === "RETELL"} />
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title={t("voice.telephony.matrix")} description={t("voice.telephony.matrixHint")} />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[34rem] text-sm">
+              <caption className="sr-only">{t("voice.telephony.matrix")}</caption>
+              <thead>
+                <tr className="border-b text-xs text-muted-foreground">
+                  <th scope="col" className="px-4 py-2 text-start font-medium">{t("voice.telephony.capability")}</th>
+                  {TELEPHONY_KEYS.map((k) => <th key={k} scope="col" className="px-3 py-2 text-start font-medium">{t(`voice.live2.layers.${k}`)}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {CAPABILITY_KEYS.map((c) => (
+                  <tr key={c} className="border-b last:border-0">
+                    <th scope="row" className="px-4 py-2 text-start font-normal">{t(`voice.telephony.caps.${c}`)}</th>
+                    {TELEPHONY_KEYS.map((k) => {
+                      const v = CAPABILITIES[k][c];
+                      return <td key={k} className="px-3 py-2"><Badge tone={v === "yes" ? "success" : v === "partial" ? "warning" : "neutral"}>{t(`voice.telephony.support.${v}`)}</Badge></td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="border-t px-4 py-3 text-xs text-muted-foreground">{t("voice.telephony.matrixNote")}</p>
         </Card>
       </div>
       <Card className="content-start">

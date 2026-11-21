@@ -11,6 +11,7 @@ import { providerJson } from "./client";
 import { ProviderError } from "./providers";
 import { authorizeIntegrations } from "./service";
 import { ACCOUNTING_SYNCERS } from "./accounting-sync";
+import { PROVIDER_SYNCERS } from "./provider-sync";
 import { dispatchJob, MODULE_JOBS_QUEUE } from "@/server/core/jobs";
 
 /**
@@ -246,11 +247,42 @@ async function syncSalesforceContacts(ctx: RequestContext, conn: ConnRow, api: C
   return { since: last };
 }
 
+/** Pipedrive persons → shared Contacts (+ Accounts from the organization name), paged with Pipedrive's start offset. */
+async function syncPipedrivePersons(ctx: RequestContext, conn: ConnRow, api: Connection, counts: SyncCounts) {
+  const cursor = cursorOf(conn.syncCursor);
+  let start = typeof cursor.start === "number" ? cursor.start : 0;
+  for (let pages = 0; pages < MAX_ITEMS / 100; pages++) {
+    const page = await providerJson<{ data: Record<string, unknown>[] | null; additional_data?: { pagination?: { more_items_in_collection?: boolean; next_start?: number } } }>(api, `https://api.pipedrive.com/v1/persons?start=${start}&limit=100`);
+    for (const p of page.data ?? []) {
+      counts.read++;
+      const primary = (list: unknown) => {
+        const arr = Array.isArray(list) ? (list as { value?: string; primary?: boolean }[]) : [];
+        return str((arr.find((x) => x.primary) ?? arr[0])?.value);
+      };
+      const org = (p.org_id ?? null) as { name?: string } | null;
+      try {
+        await upsertContact(ctx, conn, { ref: String(p.id), firstName: str(p.first_name), lastName: str(p.last_name), email: primary(p.email), phone: primary(p.phone), title: str(p.job_title), accountName: str(org?.name) ?? str(p.org_name), accountWebsite: null }, counts);
+      } catch (err) {
+        counts.errors.push({ message: err instanceof Error ? err.message.slice(0, 200) : "import failed", ref: `pipedrive:${String(p.id)}` });
+      }
+    }
+    const pg = page.additional_data?.pagination;
+    if (!pg?.more_items_in_collection || typeof pg.next_start !== "number") {
+      start = 0;
+      break;
+    }
+    start = pg.next_start;
+  }
+  return { start };
+}
+
 const SYNCERS: Record<string, (ctx: RequestContext, conn: ConnRow, api: Connection, counts: SyncCounts) => Promise<Record<string, unknown>>> = {
   "stripe.payments": syncStripePayments,
   "hubspot.contacts": syncHubspotContacts,
   "salesforce.contacts": syncSalesforceContacts,
+  "pipedrive.persons": syncPipedrivePersons,
   ...ACCOUNTING_SYNCERS,
+  ...PROVIDER_SYNCERS,
 };
 
 /** Run every sync kind of one connection; records one IntegrationSyncRun per kind and emits integration.synced. */

@@ -831,7 +831,95 @@
       "sites_unknown_asset": "某张图片不在您的素材库中。",
       "sites_no_structure": "您的 Founder Kit 中还没有已完成的网站结构。",
       "sites_domain_taken": "该域名已连接到其他网站。",
-      "sites_no_domain": "请先添加域名。"
+      "sites_no_domain": "请先添加域名。",
+      "brain_memory_duplicate": "该事实已在公司记忆中。",
+      "brain_memory_needs_approval": "AI 只有在人工批准后才能保存全公司范围的记忆。",
+      "voiceos_provider_failed": "语音服务商没有响应。请重试，或在语音设置中改用浏览器声音。",
+      "voiceos_provider_rejected": "语音服务商拒绝了已保存的凭据。请在集成中重新连接。",
+      "voiceos_session_ended": "此语音对话已结束。再次说话即可开始新的对话。",
+      "autopilot_off": "此部门的自动驾驶已关闭，因此 AI 不在这里工作。",
+      "autopilot_manual": "此部门处于手动模式：只有在有人要求时 AI 才工作。",
+      "autopilot_outside_window": "在自动驾驶时间窗口之外；主动工作等待中。",
+      "autopilot_paused": "本公司所有 AI 已暂停。",
+      "autopilot_window": "请同时设置开始和结束时间，或都不设置。",
+      "autopilot_company_mode_required": "公司始终需要一个模式。",
+      "costs_budget_reached": "已达到支出预算，因此没有产生更多支出。请在成本中提高预算或等待下一个周期。",
+      "costs_unknown_department": "请选择有效的部门。",
+      "workforce_permission_exceeds_own": "你只能授予 AI 员工你自己拥有的权限。",
+      "workforce_runs_as_not_self": "AI 员工只能以你自己的权限执行。",
+      "workforce_promotion_not_higher": "晋升必须提高级别。",
+      "workforce_role_unchanged": "这已经是该员工的岗位。",
+      "workforce_manager_required": "请选择一位 AI 经理或一个人。",
+      "workforce_replace_self": "AI 员工不能替换自己。",
+      "workforce_design_applied": "该设计已应用。",
+      "workforce_design_refining": "AI 审阅仍在进行中。",
+      "workforce_design_not_refined": "还没有 AI 审阅版本。",
+      "workforce_design_nothing_to_resume": "没有可继续的内容。",
+      "creative_not_connected": "请先在集成中连接所需的服务商。",
+      "creative_invalid_input": "服务商无法接受此输入。请检查后重试。",
+      "creative_rate_limited": "服务商繁忙，请一分钟后重试。",
+      "creative_provider_failed": "服务商未能完成请求。没有任何内容被记为已完成。",
+      "creative_image_not_connected": "请先连接图片服务商（OpenAI、Stability AI 或 Replicate）。",
+      "creative_image_invalid_input": "图片请求未被接受。请调整提示词后重试。",
+      "creative_image_rate_limited": "图片服务商繁忙，请一分钟后重试。",
+      "creative_image_provider_failed": "图片服务商未返回图片。",
+      "creative_edit_not_connected": "图片编辑需要 OpenAI。请在集成中连接。",
+      "creative_edit_invalid_input": "编辑请求未被接受。请换一种方式描述修改。",
+      "creative_edit_rate_limited": "编辑服务商繁忙，请一分钟后重试。",
+      "creative_edit_provider_failed": "编辑服务商未返回图片。",
+      "creative_upscale_not_connected": "放大需要 Stability AI。请在集成中连接。",
+      "creative_upscale_invalid_input": "此图片无法放大（过大或不受支持）。",
+      "creative_upscale_rate_limited": "放大服务商繁忙，请一分钟后重试。",
+      "creative_upscale_provider_failed": "放大服务商未返回图片。",
+      "creative_music_not_connected": "未连接授权音乐来源。请连接 Jamendo 或上传授权曲目。",
+      "creative_music_invalid_input": "音乐来源未接受此请求。",
+      "creative_music_rate_limited": "音乐来源繁忙，请一分钟后重试。",
+      "creative_music_provider_failed": "无法访问授权音乐来源。",
+      "creative_storage_not_connected": "存储不可用。请在集成中连接存储桶。",
+      "creative_storage_invalid_input": "无法保存此文件。",
+      "creative_storage_rate_limited": "存储繁忙，请一分钟后重试。",
+      "creative_storage_provider_failed": "无法保存文件。",
+      "creative_storage_failed": "无法保存文件。大文件需要在集成中连接存储桶。",
+      "creative_not_video": "此项目没有视频流程。",
+      "creative_step_waiting": "需先完成前面的步骤。",
+      "creative_step_busy": "此步骤正在运行或已完成。",
+      "creative_step_required": "此步骤不能跳过。",
+      "creative_step_not_editable": "此步骤的结果不可编辑。",
+      "creative_use_review": "请在审核步骤中批准或要求修改。",
+      "creative_scenes_busy": "镜头正在生成，请等待完成。",
+      "creative_not_in_review": "视频当前不在待审核状态。",
+      "creative_music_size": "音乐文件不能超过 20 MB。",
+      "creative_music_download_failed": "无法从授权来源下载该曲目。",
+      "creative_music_license_required": "上传前请确认此音乐的授权。",
+      "creative_not_approved": "请先批准视频再交付。",
+      "creative_no_render": "尚无成品渲染。可交付封面图，或连接渲染服务商。",
+      "creative_no_thumbnail": "尚无封面图。",
+      "creative_not_an_image": "仅适用于图片。",
+      "creative_upload_size": "文件不能超过 15 MB。",
+      "creative_asset_in_use": "此素材正被已排程的帖子使用。",
+      "creative_folder_taken": "已存在同名文件夹。",
+      "creative_template_category": "请选择有效的类别。",
+      "creative_no_brand_kit": "请先在“营销 → 品牌”中设置品牌套件。",
+      "voice_control_not_supported": "此提供商无法在实时通话中执行该操作。",
+      "voice_control_failed": "提供商未接受该指令。",
+      "voice_call_not_live": "此通话已不再进行。",
+      "voice_no_human_number": "请先在电话设置中设置接管号码。",
+      "voice_outcome_state": "只有已接通或已结束的通话才能设置结果。",
+      "voice_call_not_finished": "请等待此通话结束。",
+      "voice_callback_time": "请选择未来 90 天内的回拨时间。",
+      "voice_run_state": "此外呼活动在当前状态下无法执行该操作。",
+      "comms_intel_applied": "该会议结果已应用。",
+      "comms_intel_cancelled": "该会议已取消。",
+      "comms_intel_closed": "该会议已关闭。",
+      "comms_intel_email_pending": "邮件正在等待审批。",
+      "comms_intel_email_state": "邮件已发送或正在等待审批。",
+      "comms_intel_future": "会议尚未开始。",
+      "comms_intel_hours": "工作时间的结束早于开始。",
+      "comms_intel_no_email": "请先撰写跟进邮件。",
+      "comms_intel_no_recipient": "此会议没有客户邮箱。",
+      "comms_intel_no_transcript": "请先添加转录。",
+      "comms_intel_not_processed": "请先总结转录内容。",
+      "comms_intel_suppressed": "该地址已退订邮件。"
     }
   },
   "onboarding": {
@@ -1959,7 +2047,113 @@
       "empty": "暂无事实。请添加 AI 应始终了解的决策、惯例和关键数字。",
       "companyWide": "全公司",
       "byAi": "由 AI 提议并已批准",
-      "byHuman": "由人员添加"
+      "byHuman": "由人员添加",
+      "governance": "治理：层级、敏感度、访问权限与到期",
+      "layerLabel": "记忆层级",
+      "sensitivityLabel": "敏感度",
+      "readPermissionLabel": "谁可以读取",
+      "readPermissionHint": "可选的额外权限，例如财务事实需要 finance.read。",
+      "noExtraPermission": "所有可访问 Company Brain 的人",
+      "expiresLabel": "遗忘日期",
+      "expiresHint": "可选——该事实将在这一天自动删除。",
+      "needsPermission": "需要 {permission}",
+      "expiresOn": "将于 {date} 遗忘",
+      "bySystem": "由平台生成",
+      "layersTitle": "记忆层级",
+      "allLayers": "所有层级",
+      "searchLabel": "搜索记忆",
+      "searchHint": "搜索事实、摘要和文档；每条结果都注明来源。",
+      "searchPlaceholder": "例如付款条款或品牌语调",
+      "scopeLabel": "可见范围",
+      "allScopes": "所有范围",
+      "cited": "被引用的记忆",
+      "resultsTitle": "搜索结果",
+      "resultCount": "{count, plural, =0 {没有与“{query}”匹配的内容。} other {“{query}”共 # 条结果。}}",
+      "noResults": "没有匹配的记忆或文档段落。请换个说法试试。",
+      "export": "导出 JSON",
+      "exportHint": "下载您可读取的全部公司记忆及其治理设置。",
+      "layers": {
+        "COMPANY": "公司",
+        "KNOWLEDGE": "知识",
+        "DOCUMENT": "文档",
+        "PRODUCT": "产品",
+        "BRAND": "品牌",
+        "CUSTOMER": "客户",
+        "DEPARTMENT": "部门",
+        "EMPLOYEE": "AI 员工",
+        "TASK": "任务",
+        "CONVERSATION": "对话摘要"
+      },
+      "scopes": {
+        "COMPANY": "全公司",
+        "DEPARTMENT": "部门",
+        "EMPLOYEE": "单个 AI 员工",
+        "TASK": "单个任务"
+      },
+      "sensitivity": {
+        "PUBLIC": "公开",
+        "INTERNAL": "内部",
+        "CONFIDENTIAL": "机密",
+        "RESTRICTED": "受限（仅管理员）"
+      },
+      "sourceKinds": {
+        "MANUAL": "手动添加",
+        "AI_APPROVED": "AI 提议，已批准",
+        "AI_EMPLOYEE": "AI 员工笔记",
+        "CONVERSATION": "对话摘要",
+        "ROLLUP": "每周摘要",
+        "IMPORT": "已导入"
+      },
+      "matchedBy": {
+        "fts": "关键词匹配",
+        "semantic": "语义相近",
+        "both": "关键词 + 语义",
+        "pinned": "已置顶"
+      },
+      "status": {
+        "title": "记忆的搜索方式",
+        "hybrid": "关键词搜索加上 {provider}（{model}）语义搜索。",
+        "fts": "仅关键词（全文）搜索。结果匹配您使用的词语，而非其含义。",
+        "hybridBadge": "语义 + 关键词",
+        "ftsBadge": "仅关键词",
+        "noProvider": "如需按含义查找事实，请连接 OpenAI、Google Gemini 或 Voyage AI——记忆将自动生成向量。",
+        "connect": "打开集成",
+        "noPgvector": "{provider} 已连接，但本平台数据库尚未启用向量扩展（pgvector），因此搜索仍仅限关键词。请联系平台运营方启用。",
+        "coverage": "已生成向量",
+        "coverageCount": "{done} / {total}"
+      },
+      "stats": {
+        "facts": "记忆条目",
+        "documents": "文档",
+        "private": "AI 员工与任务记忆",
+        "expiring": "7 天内到期"
+      },
+      "retention": {
+        "title": "保留期限",
+        "description": "每个层级保留多久。较旧的条目会被自动删除（置顶事实除外）。",
+        "forever": "永久保留",
+        "days": "{count} 天",
+        "custom": "公司设置",
+        "default": "平台默认",
+        "for": "{layer} 的保留期限"
+      },
+      "forget": {
+        "title": "遗忘数据",
+        "description": "删除记忆中关于某位客户或某个 AI 员工的全部内容——事实、摘要、相关文档及搜索向量。",
+        "what": "遗忘对象",
+        "customer": "客户",
+        "employee": "AI 员工",
+        "choose": "请选择…",
+        "submit": "遗忘",
+        "confirm": "永久删除公司记忆中关于 {name} 的全部内容？此操作无法撤销。",
+        "customerHint": "删除关于该客户的记忆、标记为其所有的文档及知识关联。CRM 记录保留。",
+        "employeeHint": "删除该 AI 员工的记忆和笔记。AI 员工本身保留。",
+        "done": "已遗忘：{memories} 条记忆、{documents} 份文档、{notes} 条笔记。",
+        "managersOnly": "只有 Company Brain 管理员可以删除或导出记忆。"
+      },
+      "documentGovernance": "治理",
+      "documentGovernanceHint": "记忆层级、谁可以阅读此文档、它属于谁以及何时遗忘。",
+      "documentExpiresHint": "可选——文档将在这一天自动删除。"
     },
     "ask": {
       "title": "询问大脑",
@@ -2289,7 +2483,24 @@
       "propose_process_version": "提议 SOP 版本",
       "triage_ticket": "分拣工单",
       "read_site": "读取网站",
-      "draft_site_pages": "起草网站页面"
+      "draft_site_pages": "起草网站页面",
+      "read_spending": "读取支出",
+      "read_autopilot_status": "读取自动驾驶状态",
+      "read_creative_projects": "读取创意项目",
+      "read_creative_project": "读取单个创意项目",
+      "search_media_library": "搜索媒体库",
+      "read_creative_costs": "读取创意成本",
+      "generate_studio_images": "生成工作室图片",
+      "create_video_project": "创建视频项目",
+      "run_pipeline_step": "运行流程步骤",
+      "edit_pipeline_text": "编辑概念、脚本或开场钩子",
+      "update_storyboard": "更新分镜",
+      "check_brand_consistency": "检查品牌一致性",
+      "read_publishing_accounts": "读取社交账号",
+      "handoff_video_to_publishing": "将视频交付发布",
+      "start_calling_campaign": "启动 AI 外呼活动",
+      "read_calling_runs": "查看 AI 外呼活动",
+      "send_meeting_follow_up_email": "发送会议跟进邮件"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -2301,7 +2512,9 @@
       "org": "组织架构",
       "performance": "绩效与预算",
       "escalations": "升级事项",
-      "autonomy": "自主权"
+      "autonomy": "自主权",
+      "network": "实时网络",
+      "designer": "组织设计器"
     },
     "filters": {
       "search": "搜索",
@@ -2799,6 +3012,310 @@
       "departmentExhaustedNotice": "{department}部门本月的 AI 预算已用完，在提高预算或本月结束前，新任务将被拒绝。",
       "departmentLine": "{department}部门",
       "runCap": "在达到预算前，下一个任务最多约可使用 {tokens} 令牌。"
+    },
+    "designer": {
+      "title": "组织设计器",
+      "subtitle": "选择公司规模并介绍业务：Realy 会提出部门、岗位和汇报关系——每个都附上存在的理由——以及每月的 AI 预算。",
+      "strip": {
+        "what": "根据规模、行业、商业模式、目标、工作量、预算和收入目标生成的 AI 组织方案。",
+        "why": "每个岗位都有目标、真实工作量或管理幅度作为依据——规模是上限，而不是必须填满的配额。",
+        "can": "预览、保存、让 AI CEO 结合你的数据审阅、比较两个版本并应用其一。",
+        "next": "选择规模，添加目标，然后点击预览。"
+      },
+      "formTitle": "你的公司",
+      "formHint": "只有规模和商业模式是必填项。提供的信息越多，方案越好。",
+      "size": "公司规模（AI 员工）",
+      "sizeHint": "这是上限。只有目标或工作量需要时才会提出岗位。",
+      "presets": {
+        "solo": "单人",
+        "custom": "自定义"
+      },
+      "customHeadcount": "AI 员工上限",
+      "industry": "行业",
+      "industryHint": "例如：牙科诊所、B2B 物流软件、时尚电商。",
+      "industryPlaceholder": "你的公司做什么？",
+      "industryDefault": "一般业务",
+      "businessModel": "商业模式",
+      "models": {
+        "b2b_saas": "B2B 软件（SaaS）",
+        "b2c_app": "消费者应用",
+        "marketplace": "交易平台",
+        "agency": "代理机构",
+        "ecommerce": "电商",
+        "services": "专业服务",
+        "other": "其他"
+      },
+      "revenueTarget": "月度收入目标",
+      "revenueHint": "以你的货币计。仅用于估算你留空的工作量。",
+      "budget": "月度 AI 预算（美元）",
+      "budgetHint": "可选。为控制在预算内，会先削减优先级较低的产能。",
+      "goalsLabel": "目标",
+      "goals": {
+        "grow_revenue": "增长收入",
+        "generate_leads": "获取线索",
+        "brand_awareness": "品牌知名度",
+        "customer_support": "优质客户支持",
+        "launch_product": "发布产品",
+        "operational_efficiency": "高效运营",
+        "hire_team": "组建团队",
+        "manage_finances": "管理财务",
+        "fundraising": "融资",
+        "expand_markets": "开拓新市场"
+      },
+      "workloadTitle": "工作量（可选）",
+      "workloadHint": "填写每月数量可以精确确定团队规模。空白字段会根据收入目标估算，或不计入。",
+      "workload": {
+        "leadsPerMonth": "每月新线索",
+        "openDeals": "进行中的商机",
+        "ticketsPerMonth": "每月支持工单",
+        "chatsPerMonth": "每月网站聊天",
+        "inboundCallsPerMonth": "每月呼入电话",
+        "outboundCallsPerMonth": "每月呼出电话",
+        "contentPerMonth": "每月内容数量",
+        "socialPostsPerMonth": "每月社交帖子",
+        "invoicesPerMonth": "每月发票",
+        "activeProjects": "进行中的项目",
+        "hiresPerQuarter": "每季度招聘",
+        "products": "产品",
+        "integrations": "已连接系统",
+        "humanEmployees": "人类员工"
+      },
+      "preview": "预览",
+      "save": "保存方案",
+      "previewTitle": "预览（未保存）",
+      "proposal": "方案",
+      "startHint": "在创建任何内容之前，先预览方案，查看部门、岗位、理由和每月 AI 预算。",
+      "tiles": {
+        "roles": "AI 员工",
+        "cap": "规模上限",
+        "demand": "工作量支持 {demand} 个",
+        "cost": "预计 AI 成本 / 月",
+        "costHint": "平均每项任务 {perTask}",
+        "departments": "部门"
+      },
+      "notes": {
+        "below_preset": "按你的描述，{total} 个岗位就足够了——少于上限 {cap}。没有为了凑数而添加任何岗位。",
+        "trimmed_to_preset": "工作量支持 {demand} 个岗位；方案已削减至上限 {cap}，保留最重要的产能。",
+        "trimmed_for_budget": "为控制在月度 AI 预算内，削减了部分产能。",
+        "no_drivers": "未提供目标或工作量，因此只建议 AI CEO。添加目标或数量可获得更完整的团队。",
+        "solo": "单人：一位 AI CEO 与你并肩工作，在你成长之前不委派任何工作。"
+      },
+      "assumptionsTitle": "根据你的收入目标估算",
+      "assumption": "{what}：约 {value}",
+      "reasons": {
+        "top": "领导公司、设定优先级并委派给高管。",
+        "solo": "在你独自经营公司期间，你唯一的 AI 伙伴。",
+        "goal": "你的目标所需：{goal}。",
+        "workload": "{volume} {driver}，每位 AI 员工约处理 {capacity}。",
+        "estimated": "约 {volume} {driver}（估算），每位 AI 员工约处理 {capacity}。",
+        "span": "{specialists} 名专员每 {span} 名需要一位经理。",
+        "department_head": "该部门有 {people} 人——需要自己的负责人。",
+        "coordination": "{heads} 位部门负责人向 CEO 汇报——由 COO 协调运营。",
+        "ai": "由 AI 审阅添加。"
+      },
+      "deptLine": "{count} 名 AI 员工 · {cost} / 月",
+      "planFits": "符合你的套餐：新建 {create} 名，复用 {adopt} 名现有员工（已用 {used} / {limit}）。",
+      "planExceeds": "需要新建 {create} 名 AI 员工，但你的套餐允许 {limit} 名（已用 {used}）。请升级或选择更小的规模。",
+      "status": {
+        "DRAFT": "草稿",
+        "APPLYING": "正在配置",
+        "APPLIED": "已应用",
+        "FAILED": "已停止"
+      },
+      "variant": "版本",
+      "variants": {
+        "deterministic": "Realy 方案",
+        "refined": "AI 审阅版"
+      },
+      "refine": "让 AI CEO 审阅",
+      "refining": "AI CEO 正在结合公司数据审阅方案…",
+      "refineFailed": "AI 审阅未能给出可用方案：{error}",
+      "apply": "应用（{count} 个岗位）",
+      "applying": "正在应用…",
+      "confirmApply": "以 {count} 个岗位创建组织？先配置经理；相同岗位的现有员工会被复用。",
+      "resume": "继续配置",
+      "job": {
+        "QUEUED": "等待开始",
+        "RUNNING": "正在配置 AI 员工",
+        "COMPLETED": "组织已配置完成",
+        "FAILED": "配置已停止",
+        "CANCELLED": "已取消",
+        "counts": "已创建 {created} · 已复用 {skipped} · 失败 {failed} · 共 {total}",
+        "progress": "配置进度",
+        "lastError": "最近的问题：{error}",
+        "hint": "大型组织会在后台分批继续配置。可以放心离开此页面；继续配置绝不会产生重复。"
+      },
+      "history": "已保存的设计",
+      "historyLine": "{roles} 个岗位 · {cost} / 月"
+    },
+    "network": {
+      "title": "实时公司网络",
+      "subtitle": "把整个公司看作一个鲜活的网络：AI CEO 居中，周围是高管、经理、专员以及与他们共事的人。",
+      "strip": {
+        "what": "每位 AI 员工和每个人，都按真实的汇报关系排布。",
+        "why": "一眼看清谁在工作、谁已暂停，以及工作如何在公司中流动。",
+        "can": "旋转和缩放，搜索任何人，点击节点打开其档案。",
+        "next": "点击 CEO 查看它正在处理什么，或搜索某位部门负责人。"
+      },
+      "live": {
+        "stream": "实时",
+        "poll": "实时 · 每 10 秒更新",
+        "paused": "隐藏时已暂停"
+      },
+      "counts": "{ai} 名 AI · {humans} 人 · {busy} 名工作中 · {paused} 名已暂停",
+      "view": "视图",
+      "signals": {
+        "task": "任务",
+        "done": "完成",
+        "failed": "失败",
+        "delegation": "委派",
+        "approval": "审批",
+        "call": "通话",
+        "escalation": "升级",
+        "rollup": "汇总"
+      },
+      "hint3d": "拖动旋转，滚动缩放。脉冲都是真实事件：新任务、结果、委派、审批、通话和升级。",
+      "hint2d": "拖动移动，滚动缩放。脉冲都是公司中的真实事件。",
+      "humansHidden": "当你有权查看人事记录时，会显示人类员工。",
+      "find": "查找某人",
+      "findPlaceholder": "姓名或职位",
+      "feed": "实时动态",
+      "feedEmpty": "最近几分钟没有动态。",
+      "emptyTitle": "网络中还没有人",
+      "empty": "招聘 AI 员工或设计你的组织，让它活起来。",
+      "ceo": "CEO",
+      "human": "人员",
+      "profileUnavailable": "你无权查看此档案。",
+      "openProfile": "打开完整档案",
+      "openHr": "打开人事记录",
+      "email": "邮箱",
+      "aiReports": "向其汇报的 AI 员工",
+      "humanReports": "向其汇报的人员"
+    },
+    "record": {
+      "title": "员工档案",
+      "hint": "这位 AI 员工是谁、如何工作以及经历了什么。",
+      "department": "部门",
+      "level": "级别",
+      "status": "状态",
+      "skills": "技能",
+      "personality": "性格",
+      "personalityHint": "用一两句话描述它如何思考和行事。",
+      "communicationStyle": "沟通风格",
+      "communicationStyleHint": "它所写内容的语气、篇幅和格式。",
+      "timezone": "时区",
+      "timezoneHint": "IANA 时区。留空 = 公司时区。",
+      "workingHours": "工作时间",
+      "limitHours": "仅在这些时间运行计划任务",
+      "start": "开始",
+      "end": "结束",
+      "days": {
+        "0": "周日",
+        "1": "周一",
+        "2": "周二",
+        "3": "周三",
+        "4": "周四",
+        "5": "周五",
+        "6": "周六"
+      },
+      "schedule": "日程",
+      "hoursLine": "{days} · {start}–{end}",
+      "anyTime": "任何时间",
+      "companyTimezone": "公司时区",
+      "permissions": "权限",
+      "toolsCount": "可用工具 {count} 个",
+      "runsAs": "以 {name} 的权限执行",
+      "queue": "任务队列",
+      "queueLine": "运行中 {running} · 排队 {queued} · 日程 {schedules}",
+      "evaluation": "最近评估",
+      "notEvaluated": "尚未评估",
+      "notSet": "未设置",
+      "history": "工作记录",
+      "noHistory": "尚无变更记录。",
+      "system": "系统",
+      "events": {
+        "created": "已配置",
+        "updated": "档案已更新",
+        "paused": "已暂停",
+        "resumed": "已恢复",
+        "archived": "已归档",
+        "memory_added": "已添加记忆",
+        "memory_deleted": "已删除记忆",
+        "assigned": "已分配",
+        "promoted": "已晋升",
+        "role_changed": "岗位已变更",
+        "manager_changed": "经理已变更",
+        "permissions_changed": "权限已变更",
+        "evaluated": "已评估",
+        "replaced": "已替换",
+        "retired": "已退役"
+      }
+    },
+    "lifecycle": {
+      "title": "生命周期",
+      "hint": "每项变更都会记录在工作记录和审计日志中。",
+      "actions": {
+        "record": "档案",
+        "assign": "分配",
+        "promote": "晋升",
+        "change_role": "变更岗位",
+        "change_manager": "变更经理",
+        "change_permissions": "权限",
+        "evaluate": "评估",
+        "replace": "替换",
+        "retire": "退役"
+      },
+      "hints": {
+        "record": "性格、沟通风格、时区和工作时间。计划任务会等待其工作时间。",
+        "assign": "将其调到某个部门和团队。",
+        "promote": "经理可委派给下属；高管可委派给任何人。",
+        "change_role": "工具随新岗位变化；新岗位没有的工具会被移除。",
+        "change_manager": "汇报关系不能形成循环。",
+        "change_permissions": "你只能把权限收窄到你自己拥有的范围内。",
+        "evaluate": "根据最近 30 天的成功率、审批和未解决的升级打分。",
+        "replace": "继任者接手其排队任务、下属和日程；该员工退役。",
+        "retire": "归档：停止工作，记录保留。"
+      },
+      "submit": {
+        "record": "保存档案",
+        "assign": "分配",
+        "promote": "晋升",
+        "change_role": "变更岗位",
+        "change_manager": "变更经理",
+        "change_permissions": "保存权限",
+        "evaluate": "立即评估",
+        "replace": "替换",
+        "retire": "退役"
+      },
+      "manager": "汇报给",
+      "keepManager": "保留当前经理",
+      "aiManagers": "AI 员工",
+      "people": "人员",
+      "role": "新岗位",
+      "roleHint": "员工保留其名称、记忆和记录。",
+      "topLevel": "已是高管——最高级别。",
+      "tools": "可使用的工具",
+      "notYours": "你没有此权限",
+      "narrowHint": "你不具备其权限的工具无法授予。",
+      "successor": "继任者",
+      "hireSuccessor": "招聘一位岗位和设置相同的新继任者",
+      "reason": "原因（可选）",
+      "confirmRetire": "让 {name} 退役？它将停止工作；任务和记录保留。",
+      "confirmReplace": "替换 {name}？其排队任务、下属和日程将转给继任者。",
+      "saved": "已保存。",
+      "evaluated": "{verdict} · 得分 {score}",
+      "verdicts": {
+        "strong": "优秀",
+        "steady": "稳定",
+        "needs_attention": "需要关注",
+        "insufficient_data": "已完成的工作还不够"
+      }
+    },
+    "hybrid": {
+      "title": "混合团队",
+      "hint": "直接管理 AI 员工的人员。",
+      "openNetwork": "查看实时网络",
+      "counts": "{ai} 名 AI 下属 · {humans} 名人类下属"
     }
   },
   "profiles": {
@@ -3013,6 +3530,42 @@
     "web_designer": {
       "name": "网页设计师",
       "summary": "根据品牌、产品和公司知识起草网站与落地页。"
+    },
+    "ai_coo": {
+      "name": "AI 首席运营官",
+      "summary": "跨部门把控交付：瓶颈、截止日期、工作负荷和流程。"
+    },
+    "ai_cto": {
+      "name": "AI 首席技术官",
+      "summary": "负责系统：集成、数据同步、自动化和技术风险。"
+    },
+    "ai_cro": {
+      "name": "AI 首席营收官",
+      "summary": "对营收负责：销售管道、预测和决定当月业绩的商机。"
+    },
+    "ai_chro": {
+      "name": "AI 首席人才官",
+      "summary": "人员编制、招聘、入职和人事制度。"
+    },
+    "cs_director": {
+      "name": "AI 客户成功总监",
+      "summary": "支持质量、流失风险客户和客户之声。"
+    },
+    "product_director": {
+      "name": "AI 产品总监",
+      "summary": "依据客户和市场证据决定下一步构建什么。"
+    },
+    "creative_director": {
+      "name": "创意总监",
+      "summary": "负责创意概念、形式选择，并按品牌标准审核每个素材和视频。"
+    },
+    "graphic_designer": {
+      "name": "平面设计师",
+      "summary": "制作符合品牌的产品图、社交图、海报、横幅、广告和封面图。"
+    },
+    "studio_video_producer": {
+      "name": "视频制作人（工作室）",
+      "summary": "从脚本、分镜到配音、字幕和成片剪辑，全程推进视频项目。"
     }
   },
   "projects": {
@@ -3440,7 +3993,9 @@
         "escalation": "升级：{title}",
         "autonomyDemoted": "自动模式已降为“问我”：{title}",
         "autonomyPaused": "所有 AI 已暂停：{title}",
-        "autonomyResumed": "AI 已恢复：{title}"
+        "autonomyResumed": "AI 已恢复：{title}",
+        "orgProvisioned": "组织已配置：{title}",
+        "rollup": "团队成果：{title}"
       },
       "growth": {
         "insight": "严重增长信号：{title}"
@@ -3459,13 +4014,26 @@
       },
       "voice": {
         "call_completed": "AI 通话已结束 — {title}",
-        "message": "电话留言 — {title}"
+        "message": "电话留言 — {title}",
+        "run_completed": "外呼活动已完成 — {title}"
       },
       "platform": {
         "announcement": "公告：{title}"
       },
       "sites": {
         "form_submission": "新的网站线索：{title}"
+      },
+      "costs": {
+        "budgetAlert": "支出提醒：{title}",
+        "budgetReached": "预算已达到，支出已停止：{title}"
+      },
+      "autopilot": {
+        "modeChanged": "自动驾驶已更改：{title}"
+      },
+      "creative": {
+        "review_requested": "视频待审核：{title}",
+        "approved": "视频已批准：{title}",
+        "changes_requested": "视频需修改：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -5641,7 +6209,13 @@
       "cms": "内容管理与电商",
       "email": "电子邮件",
       "messaging": "消息",
-      "storage": "存储与基础设施"
+      "storage": "存储与基础设施",
+      "voice": "语音与音频",
+      "video": "视频",
+      "telephony": "电话",
+      "support": "客户支持",
+      "finance": "银行与财务",
+      "automation": "自动化平台"
     },
     "authTypes": {
       "oauth2": "OAuth 2.0（通过服务商登录）",
@@ -5679,7 +6253,24 @@
       "contact_data": "联系人数据",
       "email_finder": "邮箱查找",
       "email_verification": "邮箱验证",
-      "enrichment": "人员与公司信息补充"
+      "enrichment": "人员与公司信息补充",
+      "speech_synthesis": "文本转语音",
+      "voice_library": "声音库",
+      "speech_to_text": "语音转文本",
+      "video_rendering": "视频渲染",
+      "phone_numbers": "电话号码",
+      "call_recordings": "通话录音",
+      "sip_trunking": "SIP 中继",
+      "notes_docs": "笔记与文档",
+      "tasks": "任务",
+      "scheduling": "预约链接",
+      "meetings": "CRM 会议",
+      "support_tickets": "支持工单",
+      "bank_feeds": "银行流水",
+      "balances": "账户余额",
+      "automation_triggers": "触发自动化",
+      "text_to_speech": "语音播报",
+      "licensed_music": "授权音乐"
     },
     "providers": {
       "google": {
@@ -5703,7 +6294,8 @@
       },
       "whatsapp": {
         "description": "用于客户沟通的 WhatsApp Business 云 API。",
-        "setup": "在 Meta Business Suite 创建具有 whatsapp_business_messaging 权限的系统用户令牌，并从 WhatsApp Manager 复制电话号码 ID。"
+        "setup": "在 Meta Business Suite 创建具有 whatsapp_business_messaging 权限的系统用户令牌，并从 WhatsApp Manager 复制电话号码 ID。",
+        "settingsHelp": "可选：您的 Meta 应用密钥，便于 Realy 验证 WhatsApp Webhook 签名。"
       },
       "hubspot": {
         "description": "将 HubSpot 联系人和公司导入您的 CRM。",
@@ -5873,6 +6465,110 @@
       "pdl": {
         "description": "People Data Labs：可选的人员与公司信息补充来源。",
         "setup": "从 People Data Labs 控制台 → API keys 复制您的 API 密钥。"
+      },
+      "openrouter": {
+        "description": "一个密钥即可使用数百个 AI 模型（OpenAI、Anthropic、Google、Meta、Mistral…），并显示每次请求的真实费用。",
+        "setup": "在 openrouter.ai → Keys 创建密钥（可设置额度上限）。\n可选择默认模型，例如 openai/gpt-4.1-mini。"
+      },
+      "openai_compatible": {
+        "description": "任何兼容 OpenAI 聊天格式的 API——Together、Groq、Fireworks、Mistral、DeepSeek 或您自己的网关。",
+        "setup": "输入以 /v1 结尾的服务商基础网址（必须是公网 HTTPS）。\n粘贴 API 密钥和准确的模型名称；Realy 会检查该模型是否在列表中。"
+      },
+      "elevenlabs": {
+        "description": "用于配音和通话的自然声音、声音库以及 Scribe 转写。",
+        "setup": "在 ElevenLabs → Developers → API keys 创建 API 密钥（启用 Text to Speech、Voices 和 Speech to Text）。\n可从 Voice Library 粘贴默认声音 ID。",
+        "settingsHelp": "可选：指向上方回调网址的 ElevenLabs Webhook 的签名密钥。"
+      },
+      "deepgram": {
+        "description": "适用于通话、会议和视频的快速精准语音转文本（Nova 模型）。",
+        "setup": "在 Deepgram 控制台 → API Keys 创建 API 密钥（Member 角色即可）。\n可设置模型，例如 nova-3。"
+      },
+      "luma": {
+        "description": "Luma Dream Machine：电影级文本/图像生成视频（Ray 模型）。",
+        "setup": "在 lumalabs.ai → API 创建 API 密钥（需先设置账单）。\n可选择默认模型，例如 ray-2。"
+      },
+      "kling": {
+        "description": "Kling AI 官方 API：动作流畅、写实度高的文本/图像生成视频。",
+        "setup": "在 Kling 开发者控制台创建 Access Key / Secret Key（需资源包）。\nRealy 会为每次请求用它们签发短期令牌；基础网址默认为全球端点。"
+      },
+      "shotstack": {
+        "description": "基于模板和时间线批量渲染视频（字幕、音乐、叠加层）。",
+        "setup": "从 Shotstack 控制台 → API Keys 复制 API 密钥。\n选择环境：stage（免费，带水印）或 v1（生产）。"
+      },
+      "creatomate": {
+        "description": "基于模板的视频和图片渲染，适用于广告、社交帖子和个性化短片。",
+        "setup": "从 Creatomate → Project settings → API key 复制项目 API 密钥。\n在 Creatomate 中设计模板；渲染时 Realy 会填充其元素。"
+      },
+      "twilio_voice": {
+        "description": "使用您自己的 Twilio 号码通话：外呼、状态回调和通话录音。",
+        "setup": "从 Twilio Console 首页复制 Account SID 和 Auth token。\n可设置默认主叫号码；连接后会列出您的语音号码。"
+      },
+      "sip_trunk": {
+        "description": "自带运营商：供通过 SIP 拨号的语音平台使用的 SIP 中继信息。",
+        "setup": "向运营商索取中继的 SIP 域名、用户名和密码。\n选择传输协议（UDP、TCP 或 TLS）以及运营商允许的主叫号码。"
+      },
+      "pipedrive": {
+        "description": "将 Pipedrive 中的联系人导入 CRM，并在 Pipedrive 创建交易。",
+        "setup": "在 Pipedrive 中点击头像 → 个人偏好 → API，复制您的个人 API 令牌。",
+        "sync": "将 Pipedrive 联系人及其组织导入为联系人（按邮箱去重）。"
+      },
+      "notion": {
+        "description": "搜索您的 Notion 工作区，并从 Realy 创建页面和数据库条目。",
+        "setup": "在 notion.so/profile/integrations 创建内部集成并复制其密钥。\n将允许 Realy 使用的页面或数据库共享给该集成（••• → Connections）。"
+      },
+      "clickup": {
+        "description": "从 Realy 在您选择的工作区和列表中创建 ClickUp 任务。",
+        "setup": "在 ClickUp 中打开 设置 → Apps，生成您的个人 API 令牌（pk_…）。"
+      },
+      "calendly": {
+        "description": "活动类型与一次性预约链接；新的预约和取消会成为 CRM 会议。",
+        "setup": "在 Calendly 中打开 Integrations & apps → API and webhooks，生成个人访问令牌。\nRealy 会为您注册预约 Webhook（Webhook 需付费版 Calendly；否则由定时同步导入会议）。",
+        "sync": "将即将到来的预约（及取消）导入为 CRM 会议——作为遗漏 Webhook 的兜底。"
+      },
+      "google_drive": {
+        "description": "在 Google Drive 中保存和读取文件（仅限 Realy 创建或您通过它打开的文件）。",
+        "setup": "使用 Google 登录并授权文件访问。\nRealy 只能访问它创建或您通过它打开的文件，以及用于搜索的文件名。"
+      },
+      "zendesk": {
+        "description": "读取和创建 Zendesk 工单，便于客服和 AI 跟进客户问题。",
+        "setup": "在 Zendesk 管理中心 → 应用和集成 → Zendesk API 中启用令牌访问并添加 API 令牌。\n输入您的子域名（yourcompany.zendesk.com 中的 yourcompany）以及该令牌所属的客服邮箱。",
+        "settingsHelp": "可选：指向上方回调网址的 Zendesk Webhook 的签名密钥。"
+      },
+      "intercom": {
+        "description": "读取 Intercom 对话，并从 Realy 回复或添加备注。",
+        "setup": "在 Intercom 开发者中心为您的工作区创建应用，并复制其访问令牌（Authentication）。",
+        "settingsHelp": "可选：您的 Intercom 应用客户端密钥，用于验证 Webhook 签名。"
+      },
+      "plaid": {
+        "description": "只读银行流水：来自 12,000 多家银行的余额与交易，备好以供对账。",
+        "setup": "从 dashboard.plaid.com → Developers → Keys 复制对应环境的客户端 ID 和密钥。\n选择 sandbox 试用（user_good / pass_good）或 production 连接真实银行，然后在本页关联银行。",
+        "sync": "拉取每家已关联银行的新增、变更和删除交易，并刷新余额。"
+      },
+      "wise": {
+        "description": "Wise Business 账户各币种的只读余额。",
+        "setup": "在 Wise 中打开 设置 → 集成与工具 → API 令牌，创建只读令牌。\n选择 production（或 Wise 沙盒账户选择 sandbox）。",
+        "sync": "刷新每个 Wise 账户的余额。"
+      },
+      "revolut_business": {
+        "description": "Revolut Business 账户的只读余额与交易。",
+        "setup": "暂不可用。",
+        "awaiting": "Revolut Business 不提供简单的 API 密钥：其 API 要求每家公司使用证书签名的 OAuth 客户端。待支持该流程后 Realy 会添加——在此之前请使用 Plaid（如支持 Revolut）或在财务中导入 CSV 对账单。"
+      },
+      "zapier": {
+        "description": "通过签名 Webhook 从 Realy 事件和工作流启动任何 Zap。",
+        "setup": "在 Zapier 中创建触发器为“Webhooks by Zapier → Catch Hook”的 Zap，并复制其网址。\n连接时 Realy 会发送一个带标记的测试事件。若要让 Zap 调用 Realy，请在 集成 → Webhooks 中创建传入 Webhook。"
+      },
+      "make": {
+        "description": "通过签名 Webhook 从 Realy 事件和工作流运行 Make 场景。",
+        "setup": "在 Make 的场景中添加“Webhooks → Custom webhook”模块并复制其地址。\n连接时 Realy 会发送一个带标记的测试事件，以便 Make 识别数据结构。"
+      },
+      "n8n": {
+        "description": "通过签名 Webhook 从 Realy 触发 n8n 工作流（云端或自托管）。",
+        "setup": "在工作流中添加 Webhook 节点（POST），激活后复制生产网址（必须是公网 HTTPS）。\n可设置签名密钥，并在工作流中校验 x-realy-signature 请求头。"
+      },
+      "jamendo": {
+        "description": "采用允许商业使用的知识共享许可的音乐，用于视频配乐。",
+        "setup": "在 devportal.jamendo.com 创建应用并粘贴其 Client ID。"
       }
     },
     "backToMarketplace": "全部集成",
@@ -5953,7 +6649,29 @@
       "accountId": "账户 ID",
       "developerToken": "开发者令牌",
       "loginCustomerId": "经理（登录）客户 ID",
-      "privateApiKey": "Private API Key"
+      "privateApiKey": "Private API Key",
+      "defaultVoiceId": "默认声音 ID",
+      "webhookSecret": "Webhook 签名密钥",
+      "accessKey": "访问密钥",
+      "secretKey": "秘密密钥",
+      "environment": "环境",
+      "sipDomain": "SIP 域名",
+      "sipPassword": "SIP 密码",
+      "transport": "传输协议",
+      "callerId": "主叫号码",
+      "integrationSecret": "内部集成密钥",
+      "personalAccessToken": "个人访问令牌",
+      "subdomain": "子域名",
+      "email": "邮箱",
+      "accessToken": "访问令牌",
+      "clientId": "客户端 ID",
+      "plaidSecret": "密钥",
+      "countryCodes": "国家代码",
+      "catchHookUrl": "Catch Hook 网址",
+      "webhookUrl": "Webhook 网址",
+      "signingSecret": "签名密钥",
+      "appSecret": "应用密钥",
+      "voiceId": "默认声音 ID"
     },
     "syncStatus": {
       "RUNNING": "运行中",
@@ -6050,7 +6768,13 @@
       "signingSecret": "服务商签名密钥",
       "signingSecretHint": "从服务商的 Webhook 设置中复制。请求将通过 {header} 请求头用它验证；密钥加密存储，不会再次显示。",
       "presetSaved": "端点已创建。请将其 URL 粘贴到服务商的 Webhook 设置中——使用您的密钥签名的请求会被接受，其余请求将被拒绝并记录。",
-      "presetHelp": "请将此 URL 粘贴到服务商的 Webhook 设置中。每个请求都必须在 {header} 请求头中携带有效的{provider}；未签名、被篡改或重放的请求将被拒绝并记录在下方。"
+      "presetHelp": "请将此 URL 粘贴到服务商的 Webhook 设置中。每个请求都必须在 {header} 请求头中携带有效的{provider}；未签名、被篡改或重放的请求将被拒绝并记录在下方。",
+      "verificationTWILIO": "Twilio 签名",
+      "verificationCALENDLY": "Calendly 签名",
+      "verificationMETA": "Meta / WhatsApp 签名",
+      "verificationELEVENLABS": "ElevenLabs 签名",
+      "verificationZENDESK": "Zendesk 签名",
+      "verificationINTERCOM": "Intercom 签名"
     },
     "calendarOk": "日历访问正常：{count, plural, other {# 个日历}}（主日历：{primary}）",
     "calendarFailed": "日历检查失败：{error}",
@@ -6158,7 +6882,20 @@
         "contacts_email_find": "邮箱查找",
         "contacts_email_verify": "邮箱验证",
         "contacts_enrich_person": "人员信息补充",
-        "contacts_enrich_company": "公司信息补充"
+        "contacts_enrich_company": "公司信息补充",
+        "tts_speech": "文本转语音",
+        "stt_transcribe": "转写",
+        "video_render": "视频渲染",
+        "voice_call": "通话时长",
+        "voice_call_started": "已发起通话",
+        "crm_deal_create": "已创建交易",
+        "docs_page_create": "已创建页面",
+        "tasks_create": "已创建任务",
+        "support_ticket_create": "已创建工单",
+        "support_reply": "支持回复",
+        "support_note": "内部备注",
+        "automation_trigger": "已触发自动化",
+        "bank_sync": "银行同步"
       }
     },
     "marketplace": {
@@ -6175,16 +6912,20 @@
         "verified": "已验证",
         "unverified": "尚未验证",
         "failing": "故障",
-        "ready": "可立即连接",
-        "credentials_required": "需要凭据",
-        "platform_setup": "需管理员配置"
+        "ready": "未连接",
+        "credentials_required": "等待凭据",
+        "platform_setup": "需要配置",
+        "configured": "已配置",
+        "awaiting_docs": "即将推出"
       },
       "unlocks": "可解锁",
       "powering": "正在驱动",
       "hints": {
         "ready": "一键连接——在服务商处授权",
         "credentials_required": "使用您自己的 API 密钥",
-        "platform_setup": "平台管理员需先添加 OAuth 应用"
+        "platform_setup": "平台管理员需先添加 OAuth 应用",
+        "awaiting_docs": "适配器正在等待官方 API 访问",
+        "configured": "已保存——首次真实通话后确认"
       },
       "cta": {
         "verified": "管理",
@@ -6192,7 +6933,9 @@
         "failing": "修复连接",
         "ready": "连接",
         "credentials_required": "添加凭据",
-        "platform_setup": "查看要求"
+        "platform_setup": "查看要求",
+        "configured": "管理",
+        "awaiting_docs": "详情"
       },
       "verifiedAgo": "{time}已验证",
       "verifiedStat": "已连接并验证",
@@ -6207,7 +6950,17 @@
         "min1": "分钟",
         "min15": "15 分钟",
         "hour1": "小时"
-      }
+      },
+      "plans": {
+        "starter": "入门版",
+        "growth": "成长版",
+        "scale": "规模版"
+      },
+      "planLocked": "需要{plan}套餐",
+      "planIncluded": "{plan}及以上套餐包含",
+      "planLockedHint": "升级到{plan}即可连接",
+      "planLockedNotice": "您的套餐不包含此类集成。升级到{plan}即可连接。",
+      "configOnlyNotice": "该服务商没有可验证凭据的 API。Realy 已检查配置（主机可公开解析）；首次真实通话将确认其可用。"
     },
     "guide": {
       "whatTitle": "这是什么",
@@ -6234,6 +6987,65 @@
         "title": "后台 Worker 尚未启动",
         "body": "尚未记录到任何 Worker 心跳。请启动 Worker 服务（见 docs/deployment.md）以运行同步、Webhook 投递和健康检查。"
       }
+    },
+    "providerWebhook": {
+      "title": "服务商回调",
+      "url": "此连接的回调网址",
+      "verifyToken": "验证令牌",
+      "events": "Realy 监听的事件",
+      "autoRegistered": "Realy 已在服务商处为您注册此 Webhook——无需任何设置。",
+      "security": {
+        "token": "仅接受此连接的私密网址，请妥善保管。",
+        "signed": "每个回调还必须带有服务商的有效签名；未签名或被篡改的请求会被拒绝。"
+      },
+      "how": {
+        "token": "Realy 启动每个任务时都会把此网址作为完成回调传给服务商。您也可以将其粘贴到服务商的控制台。",
+        "TWILIO": "Realy 在其发起的通话中将此网址设为状态和录音回调。对于来电或短信状态，请在 Twilio Console 的号码设置中粘贴该网址。",
+        "CALENDLY": "新的预约和取消会变成 CRM 会议，并关联到与受邀者邮箱一致的联系人。",
+        "META": "在您的 Meta 应用 → WhatsApp → 配置中设置此回调网址和验证令牌，并在下方设置中保存应用密钥，以便 Realy 验证签名。",
+        "ELEVENLABS": "在 ElevenLabs（Settings → Webhooks）中将此网址添加为 Webhook，并在下方设置中保存签名密钥。",
+        "PLAID": "Realy 会在您关联的每家银行上注册此网址，Plaid 一有新交易便会拉取。每次调用都会验证 Plaid 签名的 JWT。",
+        "ZENDESK": "在 Zendesk 管理中心 → 应用和集成 → Webhooks 中用此网址创建 Webhook，然后在下方设置中保存其签名密钥。",
+        "INTERCOM": "在 Intercom 开发者中心 → 您的应用 → Webhooks 中设置此网址，并在下方设置中保存应用的客户端密钥。"
+      }
+    },
+    "providerEvents": {
+      "title": "已接收事件",
+      "help": "该服务商发送并通过签名验证的回调。仅存储摘要。",
+      "empty": "尚未收到任何事件。",
+      "meeting": "CRM 会议已更新",
+      "status": {
+        "processed": "已应用",
+        "stored": "已存储",
+        "ignored": "已忽略",
+        "failed": "失败"
+      }
+    },
+    "bank": {
+      "title": "银行流水",
+      "help": {
+        "plaid": "只读：Realy 读取您关联银行的余额和交易，并备好以供对账。它永远无法转移资金。",
+        "wise": "Wise 账户的只读余额，每次同步时刷新。对账单需要 Wise 的强客户认证，因此不会拉取。"
+      },
+      "link": "关联银行",
+      "linkAnother": "关联其他银行",
+      "opening": "正在打开 Plaid…",
+      "finishing": "正在完成银行关联…",
+      "linked": "{count, plural, other {已关联 # 家银行。交易将在下次同步时到达。}}",
+      "nothingLinked": "该 Plaid 会话中未关联任何银行。",
+      "remove": "解除关联",
+      "removeConfirm": "解除关联 {name}？将在 Plaid 撤销访问权限，并从 Realy 删除其待处理交易。",
+      "unknownBank": "银行",
+      "linkedOn": "关联于 {date}",
+      "noBanks": "尚未关联银行。关联后即可备好其交易以供对账。",
+      "accounts": "账户",
+      "available": "可用 {amount}",
+      "asOf": "截至 {time}",
+      "transactions": "最新交易",
+      "pending": "待处理",
+      "noTransactions": "尚无待处理交易。首次同步后将显示。",
+      "reconcileHint": "待处理交易会在财务模块中与您的账簿进行匹配。",
+      "openFinance": "打开交易"
     }
   },
   "workflows": {
@@ -6828,7 +7640,14 @@
       "livechat_lead_captured": "在线聊天获取了线索",
       "briefing_delivered": "简报已送达",
       "site_published": "网站页面已发布",
-      "site_form_submitted": "网站表单已提交"
+      "site_form_submitted": "网站表单已提交",
+      "creative_project_created": "已创建创意项目",
+      "creative_asset_created": "已创建创意素材",
+      "creative_video_approved": "视频已批准",
+      "creative_changes_requested": "创意已要求修改",
+      "creative_handed_off": "创意已交给市场部",
+      "autopilot_mode_changed": "自动驾驶模式已更改",
+      "costs_budget_reached": "已达到 AI 预算"
     },
     "compare": {
       "title": "比较版本",
@@ -15051,6 +15870,117 @@
       "remove": "删除提醒",
       "empty": "没有即将到来的提醒。",
       "delivered": "今天已送达"
+    },
+    "intel": {
+      "title": "会议智能",
+      "working": "AI 处理中…",
+      "failed": "AI 任务失败",
+      "aiMissing": "此平台未配置 AI，因此无法生成简报和总结。",
+      "prepTitle": "会前简报与议程",
+      "prepHint": "根据您的 CRM 记录和公司知识库撰写——不编造任何内容。",
+      "generatePrep": "准备会议",
+      "regenerate": "重新生成",
+      "agenda": "议程",
+      "agendaPlaceholder": "议题及时间安排…",
+      "saveAgenda": "将议程保存到会议",
+      "brief": "会前简报",
+      "briefNote": "基于您记录的 AI 草稿——使用前请核对。",
+      "noBrief": "暂无简报。",
+      "transcriptTitle": "转录",
+      "transcriptHint": "粘贴或上传转录（.txt、.vtt、.srt），或使用已录制的 Realy 电话。",
+      "transcriptAdded": "添加于 {when} · {source} · {chars} 个字符",
+      "source": "转录来源",
+      "sources": {
+        "upload": "粘贴或上传",
+        "voice_call": "Realy 电话"
+      },
+      "paste": "转录文本",
+      "pastePlaceholder": "在此粘贴转录…",
+      "uploadFile": "上传文件",
+      "pickCall": "电话",
+      "saveTranscript": "保存转录",
+      "process": "总结并提取行动项",
+      "resultsTitle": "总结与行动项",
+      "resultsHint": "检查并修改后再应用。应用前不会创建任何内容。",
+      "appliedAt": "应用于 {when}",
+      "summary": "总结",
+      "decisions": "决定",
+      "actionItems": "行动项",
+      "itemTitle": "行动",
+      "owner": "负责人",
+      "due": "截止",
+      "removeItem": "移除",
+      "addItem": "添加行动项",
+      "createFollowUps": "创建 CRM 跟进",
+      "createTasks": "为参会者创建任务",
+      "addCrmNote": "将总结添加到 CRM",
+      "addNotes": "将总结添加到会议纪要",
+      "saveEdits": "保存修改",
+      "apply": "应用",
+      "emailTitle": "跟进邮件",
+      "emailTo": "收件人 {email}",
+      "emailNoRecipient": "该会议没有客户邮箱。",
+      "subject": "主题",
+      "emailBody": "邮件正文",
+      "emailNote": "会附加退订说明。邮件仅在审批后发送。",
+      "saveDraft": "保存草稿",
+      "requestSend": "申请审批发送",
+      "emailAwaiting": "等待审批。",
+      "openApprovals": "打开审批",
+      "followUp": {
+        "NONE": "无草稿",
+        "DRAFT": "草稿",
+        "AWAITING_APPROVAL": "待审批",
+        "SENT": "已发送",
+        "FAILED": "未发送"
+      },
+      "outcomeTitle": "确认结果",
+      "outcomeHint": "只有在您确认发生了什么之后，会议才会标记为已完成。",
+      "notStarted": "会议开始后即可确认。",
+      "outcome": "结果",
+      "outcomePlaceholder": "达成了什么共识？",
+      "proposed": "转录中的建议：{outcome}",
+      "markDone": "确认并标记完成",
+      "confirmDone": "以此结果将该会议标记为已完成？",
+      "availabilityTitle": "查找时间",
+      "availabilityHint": "来自已连接日历、Realy 会议和 Calendly 的空闲时段。",
+      "days": "天数",
+      "duration": "分钟",
+      "findSlots": "查找空闲时段",
+      "cal": {
+        "google": "Google 日历",
+        "microsoft": "Microsoft 365",
+        "calendly": "Calendly",
+        "realy": "Realy 会议"
+      },
+      "calState": {
+        "connected": "已连接",
+        "not_connected": "未连接",
+        "error": "错误"
+      },
+      "connectCalendar": "连接日历",
+      "noCalendar": "未连接日历，因此只检查您的 Realy 会议。",
+      "noSlots": "此时间段内没有空闲时段。",
+      "bookingLink": "预约链接",
+      "customerLink": "客户会议与智能",
+      "customerLinkHint": "CRM 会议的会前简报、转录、总结和跟进。",
+      "customerTitle": "客户会议",
+      "customerHint": "通过 CRM 或 AI 电话团队预约的与线索和联系人的会议。",
+      "customerBack": "客户会议",
+      "noSales": "您需要销售权限才能查看客户会议。",
+      "with": "与会方",
+      "state": "智能",
+      "states": {
+        "none": "未准备",
+        "preparing": "准备中",
+        "prepared": "已准备",
+        "transcript": "已添加转录",
+        "summarized": "已总结",
+        "applied": "已应用"
+      },
+      "emptyUpcoming": "没有即将进行的客户会议。",
+      "emptyPast": "没有过去的客户会议。",
+      "openCrm": "在 CRM 中打开"
     }
   },
   "support": {
@@ -18961,7 +19891,14 @@
       "livechat_lead_captured": "从在线聊天获取了一条线索",
       "briefing_delivered": "送达了一份简报",
       "site_published": "发布了一个网站页面",
-      "site_form_submitted": "收到一条网站线索"
+      "site_form_submitted": "收到一条网站线索",
+      "creative_project_created": "已创建创意项目",
+      "creative_asset_created": "已创建创意素材",
+      "creative_video_approved": "视频已批准",
+      "creative_changes_requested": "创意已要求修改",
+      "creative_handed_off": "创意已交给市场部",
+      "autopilot_mode_changed": "自动驾驶模式已更改",
+      "costs_budget_reached": "已达到 AI 预算"
     }
   },
   "aiPlans": {
@@ -20952,7 +21889,8 @@
       "numbers": "号码",
       "campaigns": "外呼活动",
       "analytics": "分析",
-      "settings": "设置"
+      "settings": "设置",
+      "live": "实时"
     },
     "credentialRequired": "{provider} 未连接，因此无法拨打或接听电话。请在“集成”中连接。",
     "connection": {
@@ -21060,7 +21998,10 @@
       "cancelled": "已被人工取消。",
       "agent_archived": "语音助手已归档。",
       "campaign_cancelled": "外呼活动已取消。",
-      "approval_rejected": "审批被拒绝或已过期。"
+      "approval_rejected": "审批被拒绝或已过期。",
+      "twilio_caller_id_missing": "未设置 Twilio 主叫号码（设置 → 电话）。",
+      "bridge_not_configured": "尚未设置到 AI 代理的 Twilio 桥接（设置 → 电话）。",
+      "plan_limit_reached": "您套餐的语音分钟数已用完。"
     },
     "stats": {
       "calls": "通话",
@@ -21441,6 +22382,265 @@
       "meetingsBooked": "AI 通话约成的会议",
       "connectRate": "AI 通话接通率",
       "positiveSentiment": "积极的 AI 通话"
+    },
+    "live2": {
+      "windowOpen": "呼叫时段开放 · {window}（{tz}）",
+      "windowClosed": "不在呼叫时段 · {window}（{tz}）",
+      "concurrency": "已占用 {live}/{max} 条线路",
+      "retries": "重拨：{attempts} 次 × 每 {minutes} 分钟",
+      "telephony": {
+        "PROVIDER": "语音平台号码",
+        "TWILIO": "Twilio 电话"
+      },
+      "reconnecting": "正在重新连接…",
+      "updating": "实时 · 每 2 秒更新",
+      "lanes": {
+        "active": "通话中",
+        "incoming": "来电",
+        "outgoing": "拨号中"
+      },
+      "empty": {
+        "active": "目前没有人在通话。",
+        "incoming": "没有来电。",
+        "outgoing": "没有正在拨出的电话。"
+      },
+      "customBridge": "自定义桥接",
+      "noneSelected": "选择一个通话进行旁听",
+      "noneSelectedHint": "提供商一报告，实时通话就会出现在左侧。选择一个以查看实时转录并进行控制。",
+      "notSupported": "{provider}不支持",
+      "thisProvider": "此提供商",
+      "layers": {
+        "vapi": "Vapi",
+        "retell": "Retell AI",
+        "twilio": "Twilio"
+      },
+      "aiMuted": "AI 已静音",
+      "takenOver": "已接管",
+      "attempt": "第 {n} 次",
+      "openCall": "打开通话",
+      "provider": "提供商",
+      "liveCost": "当前费用",
+      "costPending": "提供商会在通话结束时报告费用。",
+      "costPendingShort": "通话后",
+      "transcript": "实时转录",
+      "transcriptPartial": "仅当代理启用了转录事件时",
+      "transcriptNone": "此提供商不推送实时转录",
+      "human": "团队成员",
+      "waitingTranscript": "等待第一句话…",
+      "controls": "通话控制",
+      "end": "结束通话",
+      "endConfirm": "现在结束此通话？",
+      "mute": "静音 AI",
+      "unmute": "取消 AI 静音",
+      "takeover": "人工接管",
+      "hold": "保持",
+      "takeoverConfirm": "将来电者转接到 {number}？AI 将离开通话。",
+      "noHumanNumber": "请在 设置 → 电话 中设置接管通话的人员号码。",
+      "transferTo": "转接给真人",
+      "transfer": "转接",
+      "outcome": "结果",
+      "pickOutcome": "选择结果",
+      "saveOutcome": "保存结果",
+      "done": "完成。",
+      "queue": "呼叫队列",
+      "queueHint": "{queued} 个已排期 · {awaiting} 个待审批",
+      "awaiting": "{count, plural, other {# 个通话}}在拨打前等待审批。",
+      "retryN": "重拨 {n}",
+      "dueNow": "现在到期",
+      "queueEmpty": "队列为空。已批准的通话会在此等待呼叫时段和空闲线路。",
+      "justEnded": "刚结束",
+      "callback": "回拨",
+      "callbackAt": "回拨时间（可选）",
+      "scheduleCallback": "安排回拨",
+      "retryNow": "立即重拨",
+      "callbackHint": "将提交一个新通话等待审批，并重新检查免打扰名单和呼叫时段。",
+      "callbackFiled": "回拨已提交审批。",
+      "setupTitle": "完成电话团队设置",
+      "setupBody": "连接语音提供商并同步代理后，即可在此查看实时通话。",
+      "setupAction": "打开设置"
+    },
+    "runs": {
+      "title": "自主外呼活动",
+      "description": "告诉 AI 要给谁打电话以及原因。它会检查同意和免打扰名单、排定优先级、根据 CRM 为每通电话准备简报，并在拨打前征求您一次同意。",
+      "new": "规划新的外呼活动",
+      "noAgent": "请先同步一个外呼语音代理（语音代理）。",
+      "goal": "目标",
+      "goalHint": "用简单的话描述，例如“给 100 个合格线索打电话并预约演示”。",
+      "goalPlaceholder": "给合格线索打电话并预约演示",
+      "purpose": "每通电话要达成什么？",
+      "purposeHint": "代理会结合 CRM 中每个人的简报使用这段说明。",
+      "purposePlaceholder": "介绍我们的新方案，确认预算和时间，并提供 30 分钟演示。",
+      "stages": "考虑哪些人",
+      "labels": {
+        "HOT": "热",
+        "WARM": "温",
+        "NURTURE": "培育"
+      },
+      "minScore": "最低线索评分",
+      "maxCalls": "最多（人）",
+      "cooldown": "跳过最近（天）内已拨打的",
+      "concurrency": "同时通话数",
+      "agent": "语音代理",
+      "consent": "同意",
+      "consentHint": "始终遵守免打扰名单、屏蔽名单和退订。",
+      "consentLawful": "合法依据（默认）",
+      "consentRecorded": "仅限有同意记录的线索",
+      "qualifiedOnly": "仅限 CRM 中标记为合格的线索",
+      "planNote": "规划不会拨打任何电话。您先查看谁在名单中以及原因，再启动活动——整个名单只需一次审批。",
+      "plan": "规划活动",
+      "start": "启动活动 · {count, plural, other {# 人}}",
+      "cancel": "取消活动",
+      "cancelConfirm": "取消此活动？尚未拨出的通话将被取消。",
+      "filed": "已申请审批。批准后开始拨打。",
+      "startedNow": "活动已启动。",
+      "status": {
+        "PLANNED": "已规划",
+        "AWAITING_APPROVAL": "待审批",
+        "RUNNING": "进行中",
+        "COMPLETED": "已完成",
+        "CANCELLED": "已取消",
+        "FAILED": "失败"
+      },
+      "rowStats": "已拨 {called} · 合格 {qualified} · 会议 {meetings}",
+      "back": "所有活动",
+      "pipeline": "活动流程",
+      "steps": {
+        "eligibility": "资格",
+        "prioritize": "排序",
+        "brief": "简报",
+        "execute": "拨打",
+        "qualify": "资格判定",
+        "book": "预约会议",
+        "crm": "更新 CRM",
+        "followups": "跟进",
+        "report": "报告"
+      },
+      "awaiting": "等待审批。在有人批准活动之前不会拨打任何电话。",
+      "eligibility": "资格",
+      "eligibilityHint": "已评估 {considered} · 将拨打 {eligible}",
+      "noneSkipped": "没有跳过任何人。",
+      "skip": {
+        "no_number": "无电话号码",
+        "invalid_number": "号码不是国际格式",
+        "do_not_call": "免打扰",
+        "suppressed": "邮件屏蔽（已退订）",
+        "unsubscribed": "已退订",
+        "no_consent_record": "无同意记录",
+        "recently_called": "最近已拨打",
+        "call_pending": "已有通话在排队",
+        "duplicate_number": "号码重复",
+        "over_limit": "超出活动上限"
+      },
+      "targets": "本活动中的人员",
+      "targetsHint": "按优先级排序。每份简报仅来自 CRM 记录。",
+      "person": "人员",
+      "priority": "优先级",
+      "brief": "简报",
+      "openCall": "打开通话",
+      "noTargets": "没有匹配的线索。",
+      "targetStatus": {
+        "ELIGIBLE": "就绪",
+        "SKIPPED": "已跳过",
+        "SCHEDULED": "排队中",
+        "CALLING": "拨打中",
+        "NO_ANSWER": "无人接听",
+        "QUALIFIED": "合格",
+        "NOT_QUALIFIED": "不合格",
+        "MEETING_BOOKED": "已约会议",
+        "FAILED": "失败"
+      }
+    },
+    "funnel": {
+      "title": "通话 → 会议漏斗",
+      "hint": "提供商已受理的外呼，仅来自已存储的通话记录。",
+      "runHint": "来自本活动的通话。",
+      "empty": "此期间没有外呼。",
+      "stages": {
+        "considered": "已评估",
+        "eligible": "符合条件",
+        "placed": "已拨出",
+        "connected": "已接通",
+        "conversations": "有效对话",
+        "qualified": "合格",
+        "meetings": "已约会议"
+      },
+      "connectRate": "接通率",
+      "connectedOf": "{placed} 通中接通 {connected} 通",
+      "qualified": "合格",
+      "meetings": "已约会议",
+      "followUps": "已创建 {count} 个跟进",
+      "costPerMeeting": "每次会议成本",
+      "totalCost": "AI 提供商 + 电话费用",
+      "meetingsHeld": "客户会议",
+      "meetingsHeldValue": "已举行 {held} · 未确认 {unconfirmed} · 已取消 {cancelled}",
+      "intel": "会议智能",
+      "intelValue": "已准备 {prepared} · 已总结 {summarized} · 已发跟进 {sent}"
+    },
+    "telephony": {
+      "title": "电话",
+      "description": "通话如何接入电话网络、谁来接管通话，以及未接通话如何重拨。",
+      "layer": "电话网络",
+      "layerHint": "使用语音平台的号码，或将您自己的 Twilio 账户桥接到 AI 代理。",
+      "layers": {
+        "PROVIDER": "语音平台号码（Vapi / Retell）",
+        "TWILIO": "我的 Twilio 账户（Programmable Voice）"
+      },
+      "twilioMissing": "请在集成中连接 Twilio，以通过它拨打和接听电话。",
+      "bridge": "桥接到 AI 代理",
+      "bridges": {
+        "PROVIDER_SIP": "通过 SIP 连接 Retell（自动）",
+        "CUSTOM_SIP": "SIP 地址",
+        "MEDIA_STREAM": "媒体流（WebSocket）"
+      },
+      "bridgeHints": {
+        "PROVIDER_SIP": "每通电话都会在 Retell 注册并通过 SIP 接通。提供完整转录和分析。",
+        "CUSTOM_SIP": "任意 AI 语音平台的 SIP 端点，例如 Vapi SIP 号码。",
+        "MEDIA_STREAM": "Twilio 将音频推送到您运营的 WebSocket 桥接服务。"
+      },
+      "providerSipRetell": "自动 SIP 适用于 Retell 代理。Vapi 请使用 SIP 地址。",
+      "sipUri": "SIP 地址",
+      "sipUser": "SIP 用户名（可选）",
+      "sipPassword": "SIP 密码（可选）",
+      "sipPasswordSet": "已保存密码。留空即保留。",
+      "streamUrl": "WebSocket 地址",
+      "streamHint": "必须以 wss:// 开头",
+      "callerId": "主叫号码（Twilio 号码）",
+      "liveTranscription": "实时转录",
+      "liveTranscriptionHint": "Twilio 对双方进行实时转录。",
+      "webhooksHint": "Realy 可以为您在 Twilio 号码上设置这些地址（连接号码），也可以粘贴到 Twilio 控制台。",
+      "voiceUrl": "语音 URL（来电）",
+      "statusUrl": "状态回调 URL",
+      "copy": "复制",
+      "copied": "已复制",
+      "humanNumber": "接管号码",
+      "humanHint": "当您接管或转接通话时接听的人员。",
+      "retries": "未接通话重拨次数",
+      "retryDelay": "重拨间隔（分钟）",
+      "save": "保存电话设置",
+      "saved": "已保存。",
+      "connectNumber": "连接号码",
+      "numberConnected": "{number} 现在会将来电发送到 Realy。",
+      "matrix": "各提供商的能力",
+      "matrixHint": "只有当通话的提供商真正支持时才会显示实时控制。",
+      "capability": "能力",
+      "support": {
+        "yes": "是",
+        "partial": "部分",
+        "no": "否"
+      },
+      "caps": {
+        "placeCall": "拨打电话",
+        "endCall": "结束实时通话",
+        "transfer": "转接给真人",
+        "humanTakeover": "人工接管",
+        "mute": "静音 AI",
+        "hold": "保持",
+        "liveTranscript": "实时转录",
+        "liveEvents": "实时状态事件",
+        "recording": "录音",
+        "cost": "每通费用"
+      },
+      "matrixNote": "经由 Twilio 的通话无论使用哪个 AI 提供商，都使用 Twilio 的控制。此次更新后，需要重新同步代理才能使用 Vapi 控制。"
     }
   },
   "planCatalog": {
@@ -21536,7 +22736,10 @@
       "api_cost_month": "外部 API 支出上限 / 月",
       "ads_spend_month": "广告支出上限 / 月",
       "sites_pages_max": "网站页面",
-      "sites_landing_pages_max": "落地页"
+      "sites_landing_pages_max": "落地页",
+      "voice_assistant_minutes_month": "语音助手分钟数 / 月",
+      "image_generations_month": "AI 图片 / 月",
+      "video_generations_month": "AI 视频片段与渲染 / 月"
     },
     "addons": {
       "ai_credits_10k": "10,000 AI 点数",
@@ -22205,5 +23408,1062 @@
       "success": "谢谢——我们已收到您的留言，会尽快回复您。",
       "consent": "我同意 {name} 保存我的信息以回复我的请求。"
     }
+  },
+  "jarvis": {
+    "eyebrow": "语音控制台",
+    "title": "Realy",
+    "aiNotConfigured": "此平台尚未配置 AI，因此命令无法交给 AI 员工。你仍可以与 Realy 对话——它会告诉你缺少什么。",
+    "cannotRun": "你的角色无法在此公司启动 AI 工作。请向所有者申请“运行 AI 员工”权限。",
+    "caption": {
+      "idle": "按住按钮或空格键，与 {company} 对话。",
+      "listening": "正在聆听…",
+      "thinking": "正在处理…"
+    },
+    "state": {
+      "IDLE": "就绪",
+      "LISTENING": "聆听中",
+      "THINKING": "思考中",
+      "EXECUTING": "执行中",
+      "SPEAKING": "播报中",
+      "ALERT": "注意",
+      "SUCCESS": "完成"
+    },
+    "mic": {
+      "recording": "麦克风已开启",
+      "wakeListening": "正在等待“嘿 Realy”"
+    },
+    "talk": {
+      "hold": "按住说话",
+      "release": "松开发送",
+      "busy": "处理中…",
+      "spaceHint": "按住空格键说话 · Esc 停止",
+      "stopSpeaking": "停止播报",
+      "cancel": "取消"
+    },
+    "mute": "静音语音回复",
+    "unmute": "开启语音回复",
+    "type": "改为输入",
+    "typeLabel": "输入命令",
+    "typePlaceholder": "向 Realy 提问或下达指令…",
+    "send": "发送",
+    "quick": "快捷命令",
+    "conversation": "对话",
+    "you": "你",
+    "realy": "Realy",
+    "wake": {
+      "on": "“嘿 Realy”已开启",
+      "off": "“嘿 Realy”已关闭"
+    },
+    "privacy": {
+      "historyOn": "历史记录已开启：你的转写内容会保存在此公司中。",
+      "historyOff": "历史记录已关闭：不保存转写内容（你下达的命令仍会显示在 AI Command 中）。",
+      "provider": "语音由你已连接的语音服务商处理。",
+      "browser": "语音由浏览器内置引擎处理（取决于浏览器）。"
+    },
+    "confirm": {
+      "title": "需要你的批准",
+      "risk": "影响：{risk}",
+      "howTo": "说“批准”或“拒绝”，或点击按钮。",
+      "noPermission": "你无法批准此操作——需由具有审批权限的人在审批中决定。",
+      "approve": "批准",
+      "reject": "拒绝"
+    },
+    "risk": {
+      "LOW": "低",
+      "MEDIUM": "中",
+      "HIGH": "高",
+      "CRITICAL": "严重"
+    },
+    "reply": {
+      "delegated": "好的。我已把这项工作交给 {team}，有结果时会告诉你。",
+      "blocked": "我无法开始：{reason}",
+      "planned": "我已制定计划，正在分配。",
+      "failed": "我无法启动该命令，请重试。",
+      "reasonUnknown": "执行它还缺少一些条件。",
+      "approvalNeeded": "继续之前需要你的批准：{summary}。请说批准或拒绝。",
+      "approvalNoPermission": "这需要你无法给出的批准：{summary}。需由具有审批权限的人决定。",
+      "approved": "已批准，我正在执行。",
+      "rejected": "已拒绝，我不会执行。",
+      "confirmUnclear": "我没有听清明确的决定。请说“批准”或“拒绝”。",
+      "doneNoAnswer": "已完成。结果在 AI Command 中。",
+      "runFailed": "没有成功：{reason}",
+      "runCancelled": "该命令已取消。"
+    },
+    "notice": {
+      "notHeard": "我没有听到声音。说话时请按住按钮。",
+      "micDenied": "麦克风访问被阻止。请在浏览器设置中允许此网站使用麦克风。",
+      "micUnsupported": "此浏览器无法录音，请改为输入命令。",
+      "noRecognizer": "未连接语音服务商，且此浏览器不支持语音识别。请在集成中连接 OpenAI、ElevenLabs 或 Deepgram，或改为输入。",
+      "sttFallback": "语音服务商没有响应，已切换为浏览器语音识别。",
+      "sttLimit": "你的套餐语音分钟数已用完，已切换为浏览器语音识别。",
+      "ttsFallback": "语音合成服务商没有响应，正在使用浏览器的声音。",
+      "ttsLimit": "你的套餐语音分钟数已用完，正在使用浏览器的声音。"
+    },
+    "feed": {
+      "title": "公司实时动态",
+      "empty": "暂时还没有动态。新的线索、交易、发票、工单和 AI 工作发生时会立即显示在这里。",
+      "status": {
+        "idle": "已暂停",
+        "connecting": "连接中…",
+        "live": "实时",
+        "reconnecting": "重新连接中…",
+        "closed": "已断开",
+        "unsupported": "不支持"
+      }
+    },
+    "events": {
+      "task": "AI 任务“{title}”：{status}",
+      "run": "同事的命令：{status}",
+      "runMine": "“{text}”：{status}",
+      "approval": "审批“{summary}”：{status}",
+      "callIn": "来电：{status}",
+      "callOut": "外呼：{status}",
+      "types": {
+        "lead_created": "新线索",
+        "lead_updated": "线索已更新",
+        "lead_assigned": "线索已分配",
+        "deal_created": "新交易",
+        "deal_stage_changed": "交易阶段变更",
+        "deal_won": "交易赢单",
+        "deal_lost": "交易丢单",
+        "customer_created": "新客户",
+        "contact_created": "新联系人",
+        "invoice_created": "发票已创建",
+        "invoice_sent": "发票已发送",
+        "invoice_paid": "发票已付款",
+        "invoice_overdue": "发票逾期",
+        "expense_created": "已记录支出",
+        "payment_received": "已收到付款",
+        "task_created": "任务已创建",
+        "task_completed": "任务已完成",
+        "project_created": "项目已创建",
+        "employee_joined": "员工入职",
+        "employee_left": "员工离职",
+        "candidate_applied": "新的求职者",
+        "candidate_hired": "候选人已录用",
+        "leave_requested": "请假申请",
+        "form_submitted": "表单已提交",
+        "campaign_launched": "活动已上线",
+        "content_published": "内容已发布",
+        "ticket_created": "新的支持工单",
+        "ticket_updated": "工单已更新",
+        "ticket_resolved": "工单已解决",
+        "meeting_completed": "会议已结束",
+        "announcement_published": "公告已发布",
+        "webhook_received": "收到 Webhook",
+        "integration_synced": "集成已同步",
+        "agent_task_completed": "AI 任务已完成",
+        "agent_task_failed": "AI 任务失败",
+        "voice_call_placed": "已拨出电话",
+        "voice_call_completed": "通话已结束",
+        "autonomy_action_auto_approved": "操作已自动批准",
+        "autonomy_demoted": "AI 自主权已降低",
+        "marketing_run_completed": "营销运行已完成",
+        "crm_prospect_found": "发现潜在客户",
+        "crm_outreach_sent": "已发送触达",
+        "livechat_lead_captured": "在线聊天获得线索",
+        "briefing_delivered": "简报已送达",
+        "site_published": "网站已发布",
+        "site_form_submitted": "网站表单已提交",
+        "approval_requested": "已请求审批",
+        "approval_resolved": "审批已决定",
+        "objective_created": "目标已创建",
+        "milestone_completed": "里程碑已达成"
+      }
+    },
+    "runs": {
+      "title": "命令运行",
+      "current": "本次对话",
+      "none": "与 Realy 对话即可启动命令——计划和进度会显示在这里。",
+      "empty": "目前没有其他命令运行。",
+      "noAccess": "你的角色无法查看公司的 AI 工作。",
+      "teammate": "团队成员的命令 · {team}",
+      "approvals": "{count, plural, other {# 项审批待处理}}",
+      "next": "下一步：{action}"
+    },
+    "stepStatus": {
+      "WAITING": "等待中",
+      "DELEGATED": "已分配",
+      "BLOCKED": "受阻",
+      "SKIPPED": "已跳过"
+    },
+    "departments": {
+      "sales": "销售",
+      "marketing": "营销",
+      "finance": "财务",
+      "people": "人事",
+      "operations": "运营",
+      "support": "客服",
+      "ai": "AI 团队",
+      "comms": "沟通"
+    },
+    "languages": {
+      "en-US": "English",
+      "de-DE": "Deutsch",
+      "ar-AE": "العربية",
+      "hi-IN": "हिन्दी",
+      "zh-CN": "中文"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "elevenlabs": "ElevenLabs",
+      "deepgram": "Deepgram"
+    },
+    "personalities": {
+      "aria": {
+        "name": "Aria——温暖沉稳",
+        "summary": "沉着的幕僚长：友好、清晰、自信。"
+      },
+      "atlas": {
+        "name": "Atlas——冷静的高管",
+        "summary": "低沉稳重的声音，句子简短令人安心。"
+      },
+      "nova": {
+        "name": "Nova——明亮有活力",
+        "summary": "积极明快，适合喜欢节奏感的创始人。"
+      },
+      "sage": {
+        "name": "Sage——精准的分析师",
+        "summary": "语气中立、干脆；数字读得清清楚楚。"
+      }
+    },
+    "settings": {
+      "open": "语音设置",
+      "title": "语音设置",
+      "description": "你在此公司与 Realy 对话的个人设置。",
+      "privacy": "隐私",
+      "history": "保存对话历史",
+      "historyHint": "默认关闭。开启后，你说的话和 Realy 的回答会被保存，方便日后查看。",
+      "wake": "“嘿 Realy”唤醒词",
+      "wakeHint": "仅在此标签页可见时生效。Realy 聆听期间麦克风指示一直显示。适用于支持语音识别的浏览器（如 Chrome、Edge、Safari）——该音频由浏览器厂商处理。",
+      "wakeUnsupported": "此浏览器不支持语音识别，因此无法使用唤醒词。按住说话仍可使用。",
+      "speak": "朗读回答",
+      "voice": "声音",
+      "personality": "性格",
+      "language": "语言",
+      "providers": "语音服务商",
+      "stt": "语音识别",
+      "tts": "语音合成",
+      "sttStreaming": "你一停顿，句子就会被转写，而你可以继续说话。",
+      "browserHint": "使用浏览器的语音识别（取决于浏览器）。",
+      "browserTtsHint": "使用设备内置的声音。",
+      "provider": {
+        "auto": "自动（最佳已连接服务）",
+        "browser": "浏览器（内置）"
+      },
+      "notConnected": "未连接",
+      "connectHint": "连接 OpenAI、ElevenLabs 或 Deepgram，可获得更准确的识别和更自然的声音。",
+      "openIntegrations": "打开集成",
+      "askAdmin": "请管理员在集成中连接一个服务。",
+      "minutes": "本月语音分钟数：{used} / {limit}（仅计服务商语音；浏览器语音免费）。",
+      "minutesUnlimited": "本月语音分钟数：{used}。",
+      "stored": "已保存的转写",
+      "storedHint": "{count, plural, =0 {没有保存任何转写。} other {已保存 # 条对话记录。}}",
+      "clear": "删除我的全部转写",
+      "cleared": "{count, plural, =0 {没有可删除的内容。} other {已删除 # 条记录。}}"
+    },
+    "dock": {
+      "title": "Realy",
+      "open": "与 Realy 对话",
+      "close": "关闭 Realy",
+      "openConsole": "打开 Realy 控制台",
+      "loading": "正在连接你的公司…",
+      "hint": "按住麦克风说话，或输入命令。",
+      "spaceHint": "打开时按住空格键"
+    },
+    "nav": "Realy（语音）"
+  },
+  "autopilot": {
+    "title": "公司自动驾驶",
+    "eyebrow": "AI 运营",
+    "subtitle": "决定您的 AI 公司自主完成多少工作——针对整个公司和每个部门。没有任务或您设置的业务触发器，什么都不会运行。",
+    "modes": {
+      "OFF": "关闭",
+      "MANUAL": "手动",
+      "ASSISTED": "辅助",
+      "APPROVAL_REQUIRED": "需要审批",
+      "AUTONOMOUS": "自主"
+    },
+    "modeHelp": {
+      "OFF": "AI 在这里完全不工作，即使被要求也不会。",
+      "MANUAL": "只有在有人要求时 AI 才工作。计划和自动驾驶会等待。每个操作都需要审批。",
+      "ASSISTED": "计划和自动驾驶会运行，但 AI 只做准备和建议。每个操作都由人来执行。",
+      "APPROVAL_REQUIRED": "计划和自动驾驶会运行。AI 想执行的每个操作都会等待您的审批。",
+      "AUTONOMOUS": "计划和自动驾驶会运行，由您的自主规则决定 AI 在限额内可以自行做什么。"
+    },
+    "inherit": "与公司相同",
+    "inherited": "与公司相同",
+    "derived": "由自动模式决定",
+    "own": "部门设置",
+    "company": {
+      "title": "公司模式",
+      "description": "所有没有单独设置的部门的默认模式。"
+    },
+    "window": {
+      "title": "时间窗口",
+      "hint": "主动工作（计划、自动驾驶、事件规则）只会在此窗口内按公司时区启动。留空表示任何时间。",
+      "days": "日期",
+      "from": "从",
+      "to": "到",
+      "anyTime": "任何时间",
+      "summary": "{days}，{from}–{to}",
+      "summaryDays": "{days}，全天",
+      "inside": "当前在窗口内",
+      "outside": "当前在窗口外：主动工作等待中"
+    },
+    "days": {
+      "0": "周日",
+      "1": "周一",
+      "2": "周二",
+      "3": "周三",
+      "4": "周四",
+      "5": "周五",
+      "6": "周六"
+    },
+    "save": "保存",
+    "change": "更改",
+    "cancel": "取消",
+    "stats": {
+      "running": "正在运行",
+      "runningHint": "此刻正在工作的 AI 任务",
+      "queued": "等待中",
+      "queuedHint": "排队等待启动的任务",
+      "started": "由触发器启动",
+      "startedHint": "过去 24 小时的主动启动",
+      "blocked": "被拦下",
+      "blockedHint": "过去 24 小时被自动驾驶阻止",
+      "auto": "自主完成",
+      "autoHint": "按您的自动规则执行的操作，过去 24 小时"
+    },
+    "departments": {
+      "title": "部门",
+      "subtitle": "每个部门的模式及其当前工作，来自真实的任务和作业。"
+    },
+    "dept": {
+      "running": "{count} 个运行中",
+      "queued": "{count} 个等待中",
+      "done": "24 小时内完成 {count} 个",
+      "failed": "24 小时内失败 {count} 个",
+      "employees": "{count, plural, =0 {没有 AI 员工} other {# 名 AI 员工}}",
+      "idle": "空闲：等待任务或触发器",
+      "lastActivity": "最近完成于 {date}"
+    },
+    "autopilots": {
+      "marketing_autopilot": "营销自动驾驶",
+      "prospecting": "潜客开发自动驾驶",
+      "ceo_loop": "AI CEO 每日循环",
+      "support_automation": "客服自动化",
+      "finance_alerts": "财务提醒",
+      "ai_schedules": "AI 计划",
+      "workflows": "工作流",
+      "line": "{total} 个中 {active} 个开启",
+      "lastRun": "上次运行 {date}",
+      "none": "尚未设置部门自动驾驶。",
+      "states": {
+        "running": "开启",
+        "off": "关闭",
+        "skipped": "已跳过",
+        "failed": "失败",
+        "idle": "空闲"
+      }
+    },
+    "ceiling": {
+      "deny": "AI 操作已关闭",
+      "suggest": "AI 建议，人来执行",
+      "ask": "每个操作都需要审批",
+      "none": "由自主规则决定"
+    },
+    "log": {
+      "title": "自动驾驶日志",
+      "description": "每次计划、自动驾驶或事件尝试启动 AI 工作的记录，以及是否运行。",
+      "empty": "还没有任何由触发器启动的工作。在您给出任务或设置计划或自动驾驶之前，AI 保持空闲。",
+      "started": "已启动",
+      "blocked": "被拦下",
+      "task": "打开任务",
+      "triggers": {
+        "schedule": "计划",
+        "autopilot": "自动驾驶",
+        "event": "事件规则",
+        "system": "自动化",
+        "person": "人员",
+        "delegation": "委派"
+      },
+      "reasons": {
+        "autopilot_off": "此处自动驾驶已关闭",
+        "autopilot_manual": "手动模式：等待人员",
+        "autopilot_outside_window": "在时间窗口之外",
+        "autopilot_paused": "所有 AI 已暂停"
+      }
+    },
+    "notices": {
+      "autoModeOff": "自主模式由您的自主规则决定，但自动模式已关闭，因此每个操作仍需审批。",
+      "openAutonomy": "打开自主设置",
+      "platformDisabled": "平台已关闭 AI 工作。重新开启前不会运行任何内容。",
+      "platformPaused": "平台暂时暂停了 AI 执行。",
+      "backgroundPaused": "平台暂停了后台作业，因此计划和自动驾驶未在运行。"
+    },
+    "idle": {
+      "title": "默认空闲",
+      "body": "您的 AI 员工从不主动工作。它们只会因某人分配的任务，或您设置的计划、自动驾驶或事件规则而启动——并且仅在此处的模式允许时。"
+    },
+    "pause": {
+      "title": "全部暂停",
+      "explain": "一个开关即可停止本公司所有 AI：在您恢复之前，不会启动任何任务，也不会执行任何操作。"
+    },
+    "links": {
+      "costs": "查看成本",
+      "autonomy": "自主规则"
+    },
+    "error": {
+      "title": "无法加载自动驾驶",
+      "body": "请稍后再试。"
+    },
+    "readOnly": "您可以查看自动驾驶，但只有 AI 团队的管理者可以更改。",
+    "nav": "自动驾驶"
+  },
+  "costs": {
+    "title": "成本",
+    "eyebrow": "支出控制",
+    "subtitle": "您的 AI 公司的每一笔真实支出都记录在一个账本中：AI、图片、视频、语音、通话、消息和外部服务——预算一旦达到就会停止支出。",
+    "range": {
+      "label": "时间段",
+      "7": "7 天",
+      "30": "30 天",
+      "90": "90 天"
+    },
+    "stats": {
+      "month": "本月",
+      "monthHint": "自 1 日以来记录的支出",
+      "today": "今天",
+      "todayHint": "自午夜 (UTC) 起",
+      "forecast": "本月预测",
+      "forecastHint": "按今天的速度：每天 {rate}",
+      "cache": "提示缓存命中",
+      "cacheHint": "来自缓存的 AI 输入占比（更便宜）"
+    },
+    "chart": {
+      "title": "每日支出",
+      "empty": "此时间段内没有支出。",
+      "day": "日期",
+      "amount": "支出",
+      "max": "最高单日 {amount}"
+    },
+    "by": {
+      "department": "按部门",
+      "agent": "按 AI 员工",
+      "provider": "按服务商",
+      "model": "按 AI 模型",
+      "category": "按支出类型",
+      "empty": "尚无记录。",
+      "unassigned": "未分配",
+      "count": "{count, plural, other {# 笔支出}}"
+    },
+    "categories": {
+      "AI_TOKENS": "AI（令牌）",
+      "IMAGE": "图片",
+      "VIDEO": "视频",
+      "VOICE": "语音",
+      "STT": "语音转文字",
+      "TTS": "文字转语音",
+      "TELEPHONY": "电话",
+      "EMAIL": "电子邮件",
+      "SMS": "短信",
+      "MESSAGING": "即时消息",
+      "EXTERNAL_API": "外部服务",
+      "OTHER": "其他"
+    },
+    "tokens": "{input} 输入 · {output} 输出 · {cached} 来自缓存",
+    "budgets": {
+      "title": "预算",
+      "description": "为公司、部门、AI 员工（每月）或每个单独任务设置限额。启用硬性停止后，工作会在超出限额前如实停止，并通知您。",
+      "empty": "还没有预算。添加一个，让支出永不失控。",
+      "scope": {
+        "COMPANY": "整个公司",
+        "DEPARTMENT": "部门",
+        "AGENT": "AI 员工",
+        "TASK": "每个单独任务"
+      },
+      "used": "{spent} / {limit}",
+      "hardStop": "硬性停止",
+      "alertsOnly": "仅提醒",
+      "reached": "已达到",
+      "projected": "预测：月底将用到此预算的 {pct}%",
+      "taskNote": "本月最贵的任务",
+      "remove": "移除",
+      "removeConfirm": "移除此预算？此范围内的支出将不再受限。",
+      "add": "添加预算",
+      "form": {
+        "scope": "适用于",
+        "department": "部门",
+        "agent": "AI 员工",
+        "limit": "限额（美元）",
+        "hardStop": "达到限额时停止支出",
+        "save": "保存预算",
+        "monthHint": "按日历月 (UTC) 计算。",
+        "taskHint": "分别适用于每个任务。"
+      }
+    },
+    "alerts": {
+      "title": "提醒",
+      "empty": "还没有提醒。每个预算达到 50%、80% 和 100% 时都会通知您。",
+      "line": "{scope} {key}：已用 {threshold}%（{spent} / {limit}）"
+    },
+    "recent": {
+      "title": "最近支出",
+      "empty": "尚无记录。",
+      "estimated": "估算",
+      "exact": "已计费",
+      "when": "时间",
+      "what": "内容",
+      "who": "执行者",
+      "amount": "金额",
+      "task": "任务"
+    },
+    "empty": {
+      "title": "尚未记录任何支出",
+      "body": "一旦您的 AI 员工开始工作或使用了已连接的服务商，成本就会显示在这里。AI 在获得任务前保持空闲，因此在此之前不会产生支出。"
+    },
+    "note": "除非服务商报告了确切费用，金额均为按标价估算。AI 模型的价格由平台设定。",
+    "links": {
+      "autopilot": "自动驾驶",
+      "usage": "AI 使用情况"
+    },
+    "error": {
+      "title": "无法加载成本",
+      "body": "请稍后再试。"
+    },
+    "readOnly": "您可以查看成本，但只有 AI 团队的管理者可以更改预算。",
+    "nav": "AI 成本"
+  },
+  "creative": {
+    "title": "创意工作室",
+    "eyebrow": "创意制作",
+    "subtitle": "符合品牌的图片、视频及其背后的所有素材——由您自己的服务商生成，带版本与成本记录，随时交给营销使用。",
+    "tabs": {
+      "overview": "概览",
+      "images": "图片工作室",
+      "library": "媒体库"
+    },
+    "common": {
+      "campaign": "营销活动",
+      "folder": "文件夹",
+      "name": "名称",
+      "none": "无",
+      "save": "保存",
+      "saved": "已保存",
+      "working": "处理中…",
+      "connect": "连接",
+      "delete": "删除",
+      "ready": "就绪",
+      "notReady": "未设置",
+      "readOnly": "您可以查看工作室。制作素材需要营销管理权限。",
+      "prev": "上一页",
+      "next": "下一页",
+      "page": "第 {page} 页，共 {pages} 页"
+    },
+    "overview": {
+      "spend": "创意支出",
+      "spendHint": "预估服务商成本，近 {days} 天",
+      "images": "本月图片",
+      "videos": "视频片段与渲染",
+      "thisMonth": "本月已用 / 套餐上限",
+      "library": "媒体库素材",
+      "setupTitle": "您的制作配置",
+      "setupHint": "工作室使用您在集成中连接的服务商。连接后，对应能力即会启用。"
+    },
+    "capabilities": {
+      "text": {
+        "title": "创意概念与脚本",
+        "ready": "已连接 AI 文本服务商。",
+        "missing": "连接 OpenAI 或 Gemini，以撰写概念、脚本和分镜。"
+      },
+      "image": {
+        "title": "图片",
+        "ready": "已连接图片生成。",
+        "missing": "连接 OpenAI、Stability AI 或 Replicate 以生成图片。"
+      },
+      "video": {
+        "title": "视频片段",
+        "ready": "已连接视频生成。",
+        "missing": "可选：连接 Runway、Luma、Kling 或 Replicate 以生成动态镜头。未连接时镜头使用静态图片。"
+      },
+      "voice": {
+        "title": "配音",
+        "ready": "已连接文字转语音。",
+        "missing": "连接 ElevenLabs 或 OpenAI 以录制配音。"
+      },
+      "music": {
+        "title": "授权音乐",
+        "ready": "已连接授权音乐来源。",
+        "missing": "连接 Jamendo 获取授权曲目，或上传您已获授权的音乐。"
+      },
+      "render": {
+        "title": "最终渲染",
+        "ready": "已连接渲染服务商——将生成成品 MP4。",
+        "missing": "连接 Shotstack 或 Creatomate 以渲染成品视频。未连接时您将获得可编辑的时间线。"
+      }
+    },
+    "projects": {
+      "title": "视频项目",
+      "description": "每个项目都运行在可恢复的制作流程中，您可以逐步跟进。",
+      "new": "新建视频",
+      "newTitle": "开始视频项目",
+      "newHint": "描述您的想法。流程会将其变为概念、脚本、分镜、镜头、配音、字幕和成片剪辑。",
+      "name": "项目名称",
+      "brief": "想法 / 简报",
+      "briefHint": "视频讲什么、面向谁、观众看完后应该做什么？",
+      "audience": "受众",
+      "objective": "目标",
+      "template": "模板",
+      "noTemplate": "不使用模板",
+      "aspect": "主要画幅",
+      "seconds": "目标时长（秒）",
+      "platforms": "平台",
+      "sceneMedia": "镜头素材",
+      "sceneMediaHint": "视频片段成本更高，每个镜头需数分钟；静态图片会在剪辑中加入动效。",
+      "sceneMediaNoVideo": "尚未连接视频服务商——静态图片在任何情况下都可用。",
+      "media_image": "静态图片",
+      "media_video": "视频片段",
+      "research": "先做调研",
+      "researchHint": "撰写概念前，先用您的调研服务商搜索网络。",
+      "autoAdvance": "自动运行",
+      "autoAdvanceHint": "Realy 会自动执行下一步，直到需要您介入。审批始终由您决定。",
+      "create": "创建项目",
+      "empty": "还没有视频项目。从一个想法开始——每个关键步骤都由您批准。",
+      "emptyReadOnly": "还没有视频项目。",
+      "attention": "{count, plural, other {# 项需要您处理}}",
+      "working": "进行中",
+      "progress": "已完成 {done}/{total} 步",
+      "next": "下一步：{step}",
+      "complete": "全部步骤已完成",
+      "cost": "成本 {cost}"
+    },
+    "project": {
+      "title": "视频项目",
+      "back": "全部项目",
+      "pipeline": "制作流程",
+      "pipelineHint": "每一步的实时状态。步骤依次运行；在合适的地方您可以编辑、重新运行或跳过。",
+      "autoOn": "正在自动运行",
+      "archive": "归档项目",
+      "archiveConfirm": "归档此项目？其素材将保留在媒体库中。",
+      "assets": "已产出素材",
+      "assetsHint": "该项目创建的全部内容。",
+      "noAssets": "尚无产出。"
+    },
+    "status": {
+      "DRAFT": "草稿",
+      "IN_PROGRESS": "制作中",
+      "IN_REVIEW": "审核中",
+      "APPROVED": "已批准",
+      "EXPORTED": "已导出",
+      "ARCHIVED": "已归档"
+    },
+    "stepStatus": {
+      "PENDING": "待处理",
+      "RUNNING": "运行中",
+      "WAITING_PROVIDER": "服务商处理中",
+      "NEEDS_INPUT": "需要您处理",
+      "BLOCKED": "受阻",
+      "SUCCEEDED": "已完成",
+      "FAILED": "失败",
+      "SKIPPED": "已跳过"
+    },
+    "steps": {
+      "run": "运行",
+      "rerun": "重新运行",
+      "retry": "重试",
+      "skip": "跳过",
+      "requestReview": "提交审核",
+      "edited": "已编辑",
+      "hookOptions": "开场钩子选项",
+      "words": "{count} 个词 · 约 {seconds} 秒朗读",
+      "savedStale": "已保存——后续步骤已标记为需重新运行。",
+      "names": {
+        "idea": "想法",
+        "research": "调研",
+        "concept": "概念",
+        "script": "脚本",
+        "hook": "开场钩子",
+        "storyboard": "分镜",
+        "scene_assets": "镜头素材",
+        "voiceover": "配音",
+        "music": "音乐",
+        "captions": "字幕",
+        "assembly": "剪辑合成",
+        "thumbnail": "封面图",
+        "variants": "平台版本",
+        "review": "审核与批准",
+        "export": "导出",
+        "handoff": "交付发布"
+      },
+      "desc": {
+        "idea": "一切的起点简报。",
+        "research": "来自网络的最新事实，在概念中注明出处。",
+        "concept": "核心创意、切入角度和视觉风格。",
+        "script": "视频中的旁白，按目标时长控制。",
+        "hook": "让人停止滑动的开场句。",
+        "storyboard": "包含精确镜头描述、旁白和时长的分镜。",
+        "scene_assets": "为每个镜头生成一张图片或一段视频。",
+        "voiceover": "以自然声音录制的脚本。",
+        "music": "仅限授权音乐——来自您连接的来源或您自己上传。",
+        "captions": "根据配音时间生成的字幕（SRT 与 VTT）。",
+        "assembly": "剪辑：镜头、配音、音乐和字幕置于同一时间线，连接渲染服务商后即可渲染。",
+        "thumbnail": "视频封面图。",
+        "variants": "其他画幅（9:16、1:1、16:9）。",
+        "review": "视频发布前需由人工批准。",
+        "export": "包含所有文件和授权的打包文件。",
+        "handoff": "在营销中创建附带视频的草稿帖子。"
+      }
+    },
+    "storyboard": {
+      "title": "分镜",
+      "description": "编辑镜头、旁白和时长。修改镜头会清除其已生成的素材，以便重新生成。",
+      "summary": "{count, plural, other {# 个镜头}} · {seconds} 秒",
+      "locked": "镜头生成中——完成后即可编辑。",
+      "generating": "生成中…",
+      "failed": "生成失败",
+      "noMedia": "暂无素材",
+      "sceneTitle": "镜头标题",
+      "shot": "镜头描述",
+      "narration": "旁白",
+      "onScreen": "画面文字",
+      "seconds": "秒",
+      "media": "素材",
+      "up": "上移",
+      "down": "下移",
+      "remove": "删除镜头",
+      "add": "添加镜头",
+      "newScene": "新镜头",
+      "save": "保存分镜",
+      "unsaved": "有未保存的更改",
+      "open": "打开分镜",
+      "empty": "运行分镜步骤后，分镜将显示在这里。"
+    },
+    "scenes": {
+      "progress": "{total} 个镜头中有 {ready} 个已有素材",
+      "failed": "镜头 {n}：{error}"
+    },
+    "voiceover": {
+      "meta": "{seconds} 秒 · 声音 {voice}",
+      "timingExact": "精确词级时间",
+      "timingEstimated": "估算时间"
+    },
+    "captions": {
+      "cues": "{count, plural, other {# 条字幕}}"
+    },
+    "music": {
+      "searchTitle": "授权曲目",
+      "search": "搜索",
+      "searchPlaceholder": "情绪或风格，例如：轻快原声",
+      "notConnected": "未连接授权音乐来源。请连接 Jamendo，或上传您已获授权的曲目。",
+      "noResults": "没有匹配的可商用授权曲目。",
+      "license": "授权协议",
+      "attributionRequired": "署名信息会加入导出文件",
+      "use": "使用此曲目",
+      "uploadTitle": "上传自己的曲目",
+      "licenseNote": "授权详情",
+      "licenseHint": "授权来源，例如“购自……，授权编号……”。",
+      "attest": "我确认拥有在视频中商业使用此音乐的授权。",
+      "upload": "上传音乐",
+      "never": "Realy 绝不会从未授权来源下载音乐。",
+      "licensed": "授权：{license}"
+    },
+    "assembly": {
+      "render": "渲染视频",
+      "rendering": "渲染服务商正在制作视频…",
+      "timeline": "时间线（JSON）",
+      "edl": "剪辑列表（EDL）",
+      "mp4": "MP4",
+      "notes": {
+        "render_requires_provider": "可编辑时间线已就绪。成品视频需要渲染服务商（Shotstack 或 Creatomate）。",
+        "media_missing": "部分镜头尚无素材——请先生成镜头素材。",
+        "render_limit_reached": "本月套餐的视频额度已用完；时间线已就绪。",
+        "render_failed": "渲染服务商无法渲染此画幅；时间线已就绪。"
+      }
+    },
+    "review": {
+      "approve": "批准视频",
+      "changes": "要求修改",
+      "note": "审核备注",
+      "notePlaceholder": "需要修改什么？（要求修改时必填）",
+      "lastNote": "最近的审核备注：{note}"
+    },
+    "export": {
+      "withVideo": "打包文件包含成品视频。",
+      "timelineOnly": "打包文件包含可编辑时间线和所有素材（未渲染）。",
+      "manifest": "导出清单"
+    },
+    "handoff": {
+      "postTitle": "帖子标题",
+      "text": "帖子正文",
+      "accounts": "社交账号",
+      "media": "素材",
+      "render": "成品视频",
+      "thumbnail": "封面图",
+      "noRender": "尚无成品渲染——可交付封面图，或连接渲染服务商。",
+      "submit": "创建草稿帖子",
+      "done": "已在营销中创建草稿帖子。",
+      "open": "打开社交帖子",
+      "noAccounts": "请先在营销中添加社交账号，才能交付视频发布。",
+      "setupSocial": "设置社交账号"
+    },
+    "settings": {
+      "title": "制作设置",
+      "auto": "自动（首个已连接）",
+      "voiceProvider": "配音服务商",
+      "voice": "声音",
+      "voiceHint": "OpenAI 声音名称或 ElevenLabs 声音 ID。",
+      "voiceStyle": "演绎风格",
+      "voiceStylePlaceholder": "例如：温暖、轻快、自信",
+      "videoProvider": "视频片段服务商",
+      "renderProvider": "渲染服务商"
+    },
+    "costs": {
+      "title": "成本面板",
+      "description": "按公开价格估算的服务商成本。",
+      "projectTitle": "项目成本",
+      "assets": "{count, plural, other {# 个素材}}",
+      "total": "合计（估算）",
+      "empty": "此期间没有付费生成。",
+      "meterImages": "图片：{value}",
+      "meterVideos": "视频片段与渲染：{value}",
+      "meterContent": "AI 内容生成：{value}",
+      "estimates": "仅为估算——以服务商账单为准。"
+    },
+    "usage": {
+      "title": "按营销活动的使用情况",
+      "description": "为每个营销活动制作的素材及使用它们的帖子。",
+      "row": "{assets} 个素材 · {posts} 条帖子 · {cost}",
+      "empty": "将素材关联到营销活动后，即可在此查看使用情况。"
+    },
+    "images": {
+      "title": "图片工作室",
+      "description": "产品图、社交图、海报、横幅、广告、封面图、信息图、插画和品牌素材——基于您的品牌套件生成。",
+      "category": "您要制作什么？",
+      "prompt": "描述图片",
+      "promptHint": "主体、场景、氛围。图片中从不渲染文字——请预留文字区域。",
+      "promptPlaceholder": "例如：我们的陶瓷杯放在阳光照耀的厨房台面上，清晨咖啡氛围",
+      "preset": "平台尺寸",
+      "style": "风格",
+      "styleAuto": "自动",
+      "variants": "版本数",
+      "variantsHint": "每个版本都是一次付费生成。",
+      "textSpace": "文字区域",
+      "textNone": "不预留文字区域",
+      "text_top": "顶部",
+      "text_center": "中间",
+      "text_bottom": "底部",
+      "useBrand": "应用品牌套件",
+      "useBrandHint": "品牌套件中的颜色、字体和语气会加入提示词。",
+      "noBrandHint": "尚无品牌套件——请在“营销 → 品牌”中设置，以获得符合品牌的效果。",
+      "generate": "{count, plural, other {生成 # 张图片}}",
+      "generating": "生成中…",
+      "done": "{count, plural, other {已创建 # 张图片}}——请在下方查看。",
+      "costHint": "使用您已连接的服务商，并计入本月图片额度。",
+      "notConnected": "请连接图片服务商（OpenAI、Stability AI 或 Replicate）以生成图片。",
+      "recent": "最近的图片",
+      "allInLibrary": "在媒体库查看全部",
+      "empty": "还没有图片。在上方描述一张，创建您的第一张图片。"
+    },
+    "actions": {
+      "download": "下载",
+      "regenerate": "重新生成",
+      "edit": "编辑",
+      "editTitle": "编辑此图片",
+      "editHint": "描述要修改的内容。将创建一个新版本（OpenAI 图片编辑）。",
+      "editPlaceholder": "例如：把背景改为深海军蓝，并加入柔和的晨光",
+      "applyEdit": "创建编辑后的版本",
+      "upscale": "放大 4 倍",
+      "brandCheck": "品牌检查"
+    },
+    "brand": {
+      "title": "品牌套件",
+      "edit": "编辑",
+      "fonts": "字体：{heading} / {body}",
+      "missing": "尚无品牌套件。请在“营销 → 品牌”中添加颜色、字体、标志和语气。",
+      "score": "品牌 {score}",
+      "noScore": "无评分",
+      "checkTitle": "品牌一致性",
+      "checkHint": "调色板根据像素测量；如可用，标志和文字由视觉模型检查。",
+      "coverage": "{percent}% 的彩色区域使用了品牌色",
+      "dominant": "主色",
+      "offPalette": "品牌色以外的颜色：{colors}",
+      "logoOk": "标志可见，且与官方标志一致。",
+      "logoWrong": "图中有标志，但与官方标志不一致。",
+      "logoAbsent": "官方标志不可见。",
+      "textIssue": "文字问题：{issue}",
+      "offBrand": "不符合品牌的元素：{issue}",
+      "notChecked": "尚未检查。请在操作中运行品牌检查。",
+      "paletteNote": {
+        "no_brand_colors": "请在品牌套件中添加品牌色以测量调色板。",
+        "format_not_supported": "调色板测量仅适用于 PNG 图片。"
+      },
+      "logoNote": {
+        "no_logo": "请在品牌套件中添加标志 URL，以检查标志使用。",
+        "vision_not_connected": "连接 OpenAI 以检查标志和文字。",
+        "vision_failed": "本次标志检查未能运行。"
+      }
+    },
+    "library": {
+      "title": "媒体库",
+      "description": "所有工作室素材，含版本、成本、授权和使用位置。",
+      "folders": "文件夹",
+      "all": "全部素材",
+      "newFolder": "新建文件夹",
+      "deleteFolderConfirm": "删除此文件夹？其中的素材会保留在媒体库中。",
+      "uploadTitle": "上传",
+      "uploadHint": "图片、视频或授权音乐（最大 15 MB）。",
+      "file": "文件",
+      "fileHint": "PNG、JPEG、WebP、MP4、WebM、MOV、MP3、WAV、AAC、OGG。",
+      "upload": "上传",
+      "tooLarge": "文件超过 15 MB。",
+      "search": "搜索名称、提示词、标签",
+      "kind": "类型",
+      "allKinds": "全部类型",
+      "allCategories": "全部类别",
+      "filter": "筛选",
+      "noMatches": "没有符合筛选条件的素材。",
+      "empty": "媒体库为空。生成图片或运行视频项目来填充它。",
+      "noPreview": "无预览",
+      "tags": "标签",
+      "tagsHint": "用逗号分隔。"
+    },
+    "asset": {
+      "title": "素材",
+      "back": "媒体库",
+      "archived": "此素材已归档。",
+      "prompt": "提示词",
+      "provider": "生成方式",
+      "uploaded": "上传",
+      "cost": "预估成本",
+      "created": "创建时间",
+      "usage": "使用位置",
+      "posts": "{count, plural, =0 {无社交帖子} other {# 条社交帖子}}",
+      "project": "项目",
+      "openProject": "打开项目",
+      "license": "授权",
+      "versions": "版本历史",
+      "details": "详情",
+      "archive": "归档素材",
+      "archiveConfirm": "归档此素材？它将从媒体库和营销素材中移除。"
+    },
+    "templates": {
+      "title": "模板",
+      "description": "供团队复用的图片配方。",
+      "empty": "还没有模板。",
+      "new": "新建模板",
+      "save": "保存模板",
+      "use": "生成"
+    },
+    "kinds": {
+      "IMAGE": "图片",
+      "VIDEO": "视频",
+      "AUDIO": "音频",
+      "CAPTIONS": "字幕",
+      "TIMELINE": "时间线",
+      "DOCUMENT": "文档"
+    },
+    "roles": {
+      "scene": "镜头",
+      "voiceover": "配音",
+      "music": "音乐",
+      "captions_srt": "字幕（SRT）",
+      "captions_vtt": "字幕（VTT）",
+      "timeline": "时间线",
+      "edl": "剪辑列表",
+      "variant_timeline": "版本时间线",
+      "variant_edl": "版本剪辑列表",
+      "render": "渲染视频",
+      "thumbnail": "封面图",
+      "export": "导出清单"
+    },
+    "operations": {
+      "generate": "生成",
+      "variant": "版本",
+      "regenerate": "重新生成",
+      "edit": "编辑",
+      "upscale": "放大",
+      "upload": "上传",
+      "render": "渲染",
+      "license": "授权"
+    },
+    "categories": {
+      "product": "产品图",
+      "social": "社交图",
+      "poster": "海报",
+      "banner": "横幅",
+      "ad": "广告",
+      "thumbnail": "封面图",
+      "infographic": "信息图",
+      "illustration": "插画",
+      "brand": "品牌素材",
+      "scene": "视频镜头",
+      "render": "渲染视频",
+      "music": "音乐"
+    },
+    "styles": {
+      "photo": "摄影",
+      "minimal": "极简",
+      "illustration": "插画",
+      "bold": "醒目",
+      "3d": "3D",
+      "lifestyle": "生活方式",
+      "editorial": "杂志风",
+      "flat": "扁平"
+    },
+    "presets": {
+      "instagram_square": "Instagram 方形",
+      "instagram_portrait": "Instagram 竖版",
+      "story_reel": "快拍 / Reel",
+      "tiktok": "TikTok",
+      "youtube_thumbnail": "YouTube 封面图",
+      "youtube_video": "YouTube 视频",
+      "linkedin_post": "LinkedIn 帖子",
+      "x_post": "X 帖子",
+      "facebook_post": "Facebook 帖子",
+      "pinterest_pin": "Pinterest 图钉",
+      "web_banner": "网页横幅",
+      "leaderboard_ad": "通栏广告",
+      "display_ad": "展示广告",
+      "poster_a": "海报（A 系列）",
+      "blog_featured": "博客特色图片"
+    },
+    "aspects": {
+      "9x16": "竖屏 9:16",
+      "1x1": "方形 1:1",
+      "16x9": "横屏 16:9"
+    },
+    "platforms": {
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook",
+      "x": "X",
+      "pinterest": "Pinterest",
+      "web": "网站"
+    },
+    "videoTemplates": {
+      "product_teaser": "产品预告",
+      "explainer": "讲解视频",
+      "ugc_ad": "UGC 风格广告",
+      "announcement": "公告"
+    },
+    "providers": {
+      "openai": "OpenAI",
+      "gemini": "Gemini",
+      "stability": "Stability AI",
+      "replicate": "Replicate",
+      "runway": "Runway",
+      "luma": "Luma",
+      "kling": "可灵 Kling",
+      "elevenlabs": "ElevenLabs",
+      "shotstack": "Shotstack",
+      "creatomate": "Creatomate",
+      "jamendo": "Jamendo",
+      "upload": "上传",
+      "notConnected": "未连接"
+    },
+    "nav": "创意工作室"
   }
 }

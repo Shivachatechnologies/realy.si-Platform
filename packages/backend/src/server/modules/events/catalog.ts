@@ -48,6 +48,13 @@ export const DOMAIN_EVENTS = [
   "agent.task.completed",
   "agent.task.failed",
   // Launch modules (voice, autonomy, marketing engine, CRM prospecting/outreach, live chat, briefings).
+  "creative.project_created",
+  "creative.asset_created",
+  "creative.video_approved",
+  "creative.changes_requested",
+  "creative.handed_off",
+  "autopilot.mode_changed",
+  "costs.budget_reached",
   "voice.call_placed",
   "voice.call_completed",
   "autonomy.action_auto_approved",

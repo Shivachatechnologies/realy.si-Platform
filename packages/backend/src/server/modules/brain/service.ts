@@ -10,6 +10,8 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { assertLimit } from "@/server/modules/entitlements/service";
 import { chunkText, extractText, ExtractionError, MAX_DOCUMENT_BYTES, MAX_PDF_BYTES, mimeTypeFor } from "./extract";
 import { extractPdfText } from "./pdf";
+import { deleteEmbeddings } from "./embeddings";
+import { canReadRow, documentReadSql, readAccess } from "./memory-policy";
 
 /** Source types of documents indexed from other modules (brain/sources.ts); "upload" = added in Company Brain. */
 export const SOURCE_TYPES = ["support_kb_article", "hr_policy", "ops_process", "product_release", "product_feature", "product_doc"] as const;
@@ -223,6 +225,10 @@ export async function getDocument(ctx: RequestContext, organizationId: string, c
     select: { ...documentFields, _count: false, chunks: { orderBy: { ordinal: "asc" }, select: { id: true, ordinal: true, startOffset: true, text: true } } },
   });
   if (!doc) throw notFound("Document");
+  // Governance (brain/memory-policy.ts): restricted, permission-gated or expired documents read as not found.
+  const policy = await db().brainDocumentPolicy.findFirst({ where: { documentId, companyId }, select: { readPermission: true, sensitivity: true, expiresAt: true } });
+  const a = await readAccess(ctx, organizationId, companyId);
+  if (!a || !canReadRow(a, { readPermission: policy?.readPermission ?? null, sensitivity: policy?.sensitivity ?? null, departmentId: doc.departmentId, expiresAt: policy?.expiresAt ?? null })) throw notFound("Document");
   const { chunks, ...meta } = doc;
   return { ...meta, passages: chunks.map((c) => ({ id: c.id, number: c.ordinal + 1, startOffset: c.startOffset, text: c.text })) };
 }
@@ -234,7 +240,9 @@ export async function deleteDocument(ctx: RequestContext, organizationId: string
     const doc = await tx.brainDocument.findFirst({ where: { id: documentId, organizationId, companyId }, select: documentFields });
     if (!doc) throw notFound("Document");
     if (doc.sourceType) throw conflict("This document is indexed from another module; unpublish or archive it there to remove it", { reason: "brain_source_managed" });
+    const chunkIds = (await tx.brainChunk.findMany({ where: { documentId, companyId }, select: { id: true } })).map((c) => c.id);
     await tx.brainDocument.delete({ where: { id: documentId } });
+    await deleteEmbeddings(tx, companyId, "CHUNK", chunkIds);
     const { _count, ...meta } = doc;
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "brain.document.deleted", resourceType: "brain_document", resourceId: documentId, oldValue: { ...meta, passages: _count.chunks } });
     return { ok: true };
@@ -269,6 +277,7 @@ export async function searchDocuments(ctx: RequestContext, organizationId: strin
   const { q, limit, departmentId, tag } = searchInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "brain.read");
   if (!q) return { query: q, results: [] };
+  const a = (await readAccess(ctx, organizationId, companyId))!;
   // All values are bound parameters; the GIN index is on to_tsvector('english', text).
   const rows = await db().$queryRaw<
     { chunk_id: string; document_id: string; ordinal: number; title: string; filename: string | null; mime_type: string; rank: number; headline: string }[]
@@ -277,11 +286,11 @@ export async function searchDocuments(ctx: RequestContext, organizationId: strin
            ts_rank(to_tsvector('english', c.text), query) AS rank,
            ts_headline('english', c.text, query, ${HEADLINE_OPTIONS}) AS headline
       FROM brain_chunks c
-      JOIN brain_documents d ON d.id = c.document_id AND d.company_id = c.company_id,
-           websearch_to_tsquery('english', ${q}) AS query
+      JOIN brain_documents d ON d.id = c.document_id AND d.company_id = c.company_id
+      LEFT JOIN brain_document_policies p ON p.document_id = d.id AND p.company_id = d.company_id
+     CROSS JOIN websearch_to_tsquery('english', ${q}) AS query
      WHERE c.company_id = ${companyId}::uuid
-       AND d.organization_id = ${organizationId}::uuid
-       AND d.status = 'READY'
+       AND ${documentReadSql(a)}
        AND (${departmentId ?? null}::uuid IS NULL OR d.department_id = ${departmentId ?? null}::uuid)
        AND (${tag ?? null}::text IS NULL OR ${tag ?? null}::text = ANY(d.tags))
        AND to_tsvector('english', c.text) @@ query

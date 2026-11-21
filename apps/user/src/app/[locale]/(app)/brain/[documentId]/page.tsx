@@ -6,6 +6,7 @@ import { TaskStatusBadge } from "@/components/agents/status-badge";
 import { DeleteDocumentButton } from "@/components/brain/delete-document-button";
 import { DocumentLinks } from "@/components/brain/document-links";
 import { DocumentMetaForm } from "@/components/brain/document-meta-form";
+import { DocumentPolicyForm } from "@/components/brain/document-policy-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { getLocale, getT } from "@/i18n/server";
@@ -15,6 +16,8 @@ import { isAppError } from "@/server/core/errors";
 import { documentCitations } from "@/server/modules/brain/citations";
 import { listDocumentLinks, type LinkSubjectType } from "@/server/modules/brain/links";
 import { getDocument, listDepartments } from "@/server/modules/brain/service";
+import { READ_PERMISSIONS } from "@/server/modules/brain/memory-policy";
+import { getDocumentPolicy } from "@/server/modules/brain/memory-store";
 import { sourceHref } from "@/server/modules/brain/sources";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
@@ -48,6 +51,13 @@ export default async function BrainDocumentPage({ params }: PageProps<"/[locale]
     documentCitations(viewer.ctx, org.id, company.id, doc.id),
     listDepartments(viewer.ctx, org.id, company.id),
     Promise.all(SUBJECT_PERMISSIONS.map(async ([type, p]) => ((await can(viewer.ctx, p, chain)) ? type : null))),
+  ]);
+  // Governance (layer, sensitivity, access, owner, expiry) — editable by Company Brain managers.
+  const scope = { organizationId: org.id, companyId: company.id };
+  const [policy, employees, accounts] = await Promise.all([
+    canManage ? getDocumentPolicy(viewer.ctx, org.id, company.id, doc.id) : null,
+    canManage ? db().aiEmployee.findMany({ where: scope, orderBy: { name: "asc" }, take: 200, select: { id: true, name: true } }) : [],
+    canManage && linkable.includes("account") ? db().account.findMany({ where: { ...scope, archivedAt: null }, orderBy: { name: "asc" }, take: 300, select: { id: true, name: true } }) : [],
   ]);
   const tz = viewer.user.timezone;
   const origin = sourceHref(doc.sourceType, doc.sourceId);
@@ -102,6 +112,23 @@ export default async function BrainDocumentPage({ params }: PageProps<"/[locale]
           </CardBody>
         ) : null}
       </Card>
+
+      {canManage ? (
+        <Card>
+          <CardHeader title={t("brain.memory.documentGovernance")} description={t("brain.memory.documentGovernanceHint")} />
+          <CardBody>
+            <DocumentPolicyForm
+              organizationId={org.id}
+              companyId={company.id}
+              documentId={doc.id}
+              policy={policy ? { ...policy, expiresOn: policy.expiresAt ? policy.expiresAt.toISOString().slice(0, 10) : null } : null}
+              readPermissions={READ_PERMISSIONS.filter((p) => p !== "brain.read")}
+              accounts={accounts}
+              employees={employees}
+            />
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title={t("brain.links.title")} description={t("brain.links.description")} />

@@ -31,6 +31,8 @@ model BrainLink {
 enum CompanyMemoryAuthor {
   HUMAN
   AI
+  /// Written by the platform itself (e.g. the weekly department digest when no AI provider is connected).
+  SYSTEM
 }
 
 /// A durable company fact injected into AI tasks' prompts (pinned first, then most relevant by keyword).
@@ -52,10 +54,156 @@ model CompanyMemory {
   createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  // ── Shared company memory (brain/memory-store.ts): one store for every memory layer ──
+  /// What kind of knowledge the fact is (company, product, brand, customer, department, employee, task, conversation…).
+  layer          MemoryLayer       @default(COMPANY)
+  /// Who sees it: the whole company, one department, one AI employee or one task.
+  scope          MemoryScope       @default(COMPANY)
+  /// EMPLOYEE scope: the AI employee (validated in the company when written; no FK so workforce keeps its schema).
+  aiEmployeeId   String?           @map("ai_employee_id") @db.Uuid
+  /// TASK scope / conversation summaries: the AI task the memory belongs to.
+  taskId         String?           @map("task_id") @db.Uuid
+  /// Customer context: the record it is about ("account" | "contact"), for per-customer deletion.
+  subjectType    String?           @map("subject_type")
+  subjectId      String?           @map("subject_id") @db.Uuid
+  /// How it was captured (manual, AI approved, AI employee note, conversation summary, weekly rollup, import).
+  sourceKind     MemorySourceKind  @default(MANUAL) @map("source_kind")
+  sensitivity    MemorySensitivity @default(INTERNAL)
+  /// Extra permission needed to read it (e.g. "finance.read", "hr.read"); null = derived from department/sensitivity.
+  readPermission String?           @map("read_permission")
+  /// Auto-expiry (retention job). Null = kept until deleted or until the layer's retention policy removes it.
+  expiresAt      DateTime?         @map("expires_at") @db.Timestamptz(3)
+  /// sha256 of scope + owner + normalized text: the same fact is stored once per scope.
+  dedupKey       String?           @map("dedup_key") @db.Char(64)
+  /// Last time it was selected into an AI task's context.
+  lastUsedAt     DateTime?         @map("last_used_at") @db.Timestamptz(3)
+
   company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   department Department? @relation("CompanyMemoryDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
 
+  @@unique([companyId, dedupKey])
   @@index([organizationId, companyId, pinned])
   @@index([companyId, departmentId])
+  @@index([companyId, layer, scope])
+  @@index([companyId, aiEmployeeId])
+  @@index([companyId, taskId])
+  @@index([companyId, subjectType, subjectId])
+  @@index([expiresAt])
   @@map("company_memories")
+}
+
+// ───────────────────────────── Shared company memory: layers, governance, embeddings ─────────────────────────────
+// Full-text search (always on) uses expression GIN indexes created by the migration (docs/brain-memory.md):
+//   CREATE INDEX company_memories_fts ON company_memories USING gin (to_tsvector('simple', title || ' ' || fact));
+//   brain_chunks already has GIN on to_tsvector('english', text).
+// Semantic search additionally needs pgvector: `CREATE EXTENSION IF NOT EXISTS vector;` must run before the
+// brain_embeddings migration. Without the extension, drop the `embedding` column from that migration: the runtime
+// checks for the extension and the column (brain/embeddings.ts) and falls back to full-text search only.
+
+enum MemoryLayer {
+  COMPANY
+  KNOWLEDGE
+  DOCUMENT
+  PRODUCT
+  BRAND
+  CUSTOMER
+  DEPARTMENT
+  EMPLOYEE
+  TASK
+  CONVERSATION
+}
+
+enum MemoryScope {
+  COMPANY
+  DEPARTMENT
+  EMPLOYEE
+  TASK
+}
+
+enum MemorySourceKind {
+  MANUAL
+  AI_APPROVED
+  AI_EMPLOYEE
+  CONVERSATION
+  ROLLUP
+  IMPORT
+}
+
+enum MemorySensitivity {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  /// Readable only by Company Brain managers (brain.manage) — never offered to AI tasks of other principals.
+  RESTRICTED
+}
+
+/// Governance of one Brain document: sensitivity, extra read permission, owner (customer / AI employee) and expiry.
+model BrainDocumentPolicy {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  documentId     String            @unique @map("document_id") @db.Uuid
+  layer          MemoryLayer       @default(DOCUMENT)
+  sensitivity    MemorySensitivity @default(INTERNAL)
+  readPermission String?           @map("read_permission")
+  subjectType    String?           @map("subject_type")
+  subjectId      String?           @map("subject_id") @db.Uuid
+  aiEmployeeId   String?           @map("ai_employee_id") @db.Uuid
+  expiresAt      DateTime?         @map("expires_at") @db.Timestamptz(3)
+  updatedById    String            @map("updated_by_id") @db.Uuid
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  document BrainDocument @relation(fields: [documentId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([companyId, subjectType, subjectId])
+  @@index([companyId, aiEmployeeId])
+  @@index([expiresAt])
+  @@map("brain_document_policies")
+}
+
+/// Retention per memory layer: rows older than `retentionDays` (not pinned) are removed by brain.memory_retention.
+model BrainRetentionPolicy {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  companyId      String      @map("company_id") @db.Uuid
+  layer          MemoryLayer
+  /// Null = keep forever.
+  retentionDays  Int?        @map("retention_days")
+  updatedById    String      @map("updated_by_id") @db.Uuid
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, layer])
+  @@map("brain_retention_policies")
+}
+
+enum BrainEmbeddingTarget {
+  CHUNK
+  MEMORY
+}
+
+/// A vector of one document passage or memory, from the company's own embedding provider (OpenAI / Gemini / Voyage).
+/// Vectors shorter than 1536 dimensions are zero-padded (cosine distance is unchanged); only rows of the same `model`
+/// are compared. Targets are polymorphic: rows of deleted targets are swept by brain.embeddings_reindex.
+model BrainEmbedding {
+  id             String                       @id @default(uuid(7)) @db.Uuid
+  organizationId String                       @map("organization_id") @db.Uuid
+  companyId      String                       @map("company_id") @db.Uuid
+  targetType     BrainEmbeddingTarget         @map("target_type")
+  targetId       String                       @map("target_id") @db.Uuid
+  provider       String
+  model          String
+  dimensions     Int
+  /// sha256 of the embedded text (a changed memory is re-embedded).
+  contentSha256  String                       @map("content_sha256") @db.Char(64)
+  /// Requires the pgvector extension (see the note above).
+  embedding      Unsupported("vector(1536)")?
+  createdAt      DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([targetType, targetId, model])
+  @@index([companyId, model, targetType])
+  @@map("brain_embeddings")
 }

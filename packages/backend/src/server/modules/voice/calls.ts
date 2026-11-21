@@ -14,6 +14,7 @@ import { ProviderError } from "@/server/modules/integrations/providers";
 import { requestTool } from "@/server/modules/tools/gateway";
 import { actorId, authorize, calleeTimeZone, inWindow, isUuid, LIVE_STATUSES, maskNumber, nextWindowStart, OUTCOMES, PROVIDER_KEY, toE164, uuid } from "./common";
 import { placeCall } from "./providers";
+import { sealControlUrl, twilioCallerId, twilioPlaceCall } from "./telephony";
 import { emitVoiceEvent, ensureSettings, isDoNotCall, providerLabel } from "./service";
 import { assertFeature, assertLimit, checkLimit, hasFeature } from "@/server/modules/entitlements/service";
 
@@ -180,7 +181,10 @@ export async function approveAndDial(organizationId: string, companyId: string, 
   if (!call) throw notFound("Call");
   if (call.status === "CANCELLED" || call.status === "BLOCKED" || call.status === "REJECTED") return { status: call.status, detail: `The call was ${call.status.toLowerCase()} before it was approved; nothing was dialled.` };
   if (call.status !== "AWAITING_APPROVAL" && call.status !== "SCHEDULED") return { status: call.status, detail: `The call is already ${call.status.toLowerCase()}.` };
-  if (call.status === "AWAITING_APPROVAL") await db().voiceCall.updateMany({ where: { id: callId, status: "AWAITING_APPROVAL" }, data: { status: "SCHEDULED", scheduledFor: new Date() } });
+  // A callback approved ahead of its time waits for it (the dialer job picks it up then).
+  const later = call.scheduledFor && call.scheduledFor.getTime() > Date.now() + 60_000 ? call.scheduledFor : null;
+  if (call.status === "AWAITING_APPROVAL") await db().voiceCall.updateMany({ where: { id: callId, status: "AWAITING_APPROVAL" }, data: { status: "SCHEDULED", scheduledFor: later ?? new Date() } });
+  if (later) return { status: "SCHEDULED", detail: `Approved; the call is scheduled for ${later.toISOString()}.` };
   return dialCall(callId);
 }
 
@@ -191,7 +195,7 @@ const block = async (callId: string, reason: string, status: VoiceCallStatus = "
 
 /** Dial one SCHEDULED call if every rule allows it right now. Claims the call first so it is dialled once. */
 export async function dialCall(callId: string): Promise<{ status: VoiceCallStatus; detail: string }> {
-  const call = await db().voiceCall.findUnique({ where: { id: callId }, include: { agent: true, number: true, campaign: { select: { status: true } } } });
+  const call = await db().voiceCall.findUnique({ where: { id: callId }, include: { agent: true, number: true, campaign: { select: { status: true, maxConcurrent: true } } } });
   if (!call || call.status !== "SCHEDULED") return { status: call?.status ?? "CANCELLED", detail: "Nothing to dial." };
   const { organizationId, companyId } = call;
   if (call.campaign && call.campaign.status !== "RUNNING") return { status: "SCHEDULED", detail: "The campaign is not running." };
@@ -200,7 +204,9 @@ export async function dialCall(callId: string): Promise<{ status: VoiceCallStatu
   // Plan (background dialer, no user ctx): never throw; the call is blocked with the reason instead.
   if (!(await hasFeature(organizationId, "feature.voice_agent")) || !(await checkLimit(organizationId, "voice.minutes.month", 1)).allowed) return block(callId, "plan_limit_reached");
   if (!call.agent || call.agent.archivedAt || !call.agent.externalAgentId || call.agent.syncStatus !== "SYNCED") return block(callId, "agent_not_ready");
-  if (!call.number || call.number.releasedAt) return block(callId, "number_released");
+  const settingsRow = await ensureSettings(db(), organizationId, companyId);
+  const viaTwilio = settingsRow.telephony === "TWILIO";
+  if (!viaTwilio && (!call.number || call.number.releasedAt)) return block(callId, "number_released");
   const lead = call.leadId ? await db().lead.findFirst({ where: { id: call.leadId, companyId }, select: { tags: true } }) : null;
   const contact = call.contactId ? await db().contact.findFirst({ where: { id: call.contactId, companyId }, select: { tags: true } }) : null;
   if (await isDoNotCall(db(), companyId, call.toNumber, lead ?? contact ?? undefined)) return block(callId, "do_not_call");
@@ -216,12 +222,15 @@ export async function dialCall(callId: string): Promise<{ status: VoiceCallStatu
     return { status: "SCHEDULED", detail: `Outside calling hours in ${tz}; scheduled for ${next.toISOString()}.` };
   }
   const live = await db().voiceCall.count({ where: { companyId, status: { in: [...LIVE_STATUSES] } } });
-  if (live >= settings.maxConcurrent) {
+  const campaignLive = call.campaignId && call.campaign?.maxConcurrent ? await db().voiceCall.count({ where: { campaignId: call.campaignId, status: { in: [...LIVE_STATUSES] } } }) : 0;
+  if (live >= settings.maxConcurrent || (call.campaign?.maxConcurrent && campaignLive >= call.campaign.maxConcurrent)) {
     await db().voiceCall.update({ where: { id: callId }, data: { scheduledFor: new Date(now.getTime() + 2 * 60_000) } });
     return { status: "SCHEDULED", detail: "Other calls are in progress; retrying in two minutes." };
   }
+  if (viaTwilio) return dialViaTwilio(call, settings, company?.name ?? "");
   const conn = await getConnection(organizationId, companyId, PROVIDER_KEY[call.agent.provider]);
   if (!conn?.accessToken) return block(callId, "credential_required");
+  if (!call.number) return block(callId, "number_released");
 
   // Claim: only one dialer places this call.
   const claimed = await db().voiceCall.updateMany({ where: { id: callId, status: "SCHEDULED" }, data: { status: "QUEUED", blockedReason: null } });
@@ -236,7 +245,7 @@ export async function dialCall(callId: string): Promise<{ status: VoiceCallStatu
       metadata: { realyCallId: call.id, realyCompanyId: companyId },
     });
     await transaction(async (tx) => {
-      await tx.voiceCall.update({ where: { id: callId }, data: { externalCallId: placed.externalCallId, status: "QUEUED", error: null } });
+      await tx.voiceCall.update({ where: { id: callId }, data: { externalCallId: placed.externalCallId, status: "QUEUED", error: null, telephony: "PROVIDER", ...(placed.controlUrl ? { controlUrlEnc: sealControlUrl(companyId, placed.controlUrl) } : {}) } });
       await writeAudit(tx, systemContext(), { category: "TENANT", organizationId, action: "voice.call.placed", resourceType: "voice_call", resourceId: callId, newValue: { provider: call.agent!.provider, to: maskNumber(call.toNumber) } });
       await emitVoiceEvent(tx, systemContext(), "voice.call_placed", { organizationId, companyId, entityType: "voice_call", entityId: callId, data: { direction: "OUTBOUND", leadId: call.leadId, contactId: call.contactId } });
     });
@@ -246,6 +255,39 @@ export async function dialCall(callId: string): Promise<{ status: VoiceCallStatu
     await db().voiceCall.update({ where: { id: callId }, data: { status: "FAILED", error: message } });
     logger.warn({ callId, err: message }, "voice call was not placed");
     return { status: "FAILED", detail: `The provider did not accept the call: ${message}` };
+  }
+}
+
+type DialableCall = Prisma.VoiceCallGetPayload<{ include: { agent: true; number: true; campaign: { select: { status: true; maxConcurrent: true } } } }>;
+
+/**
+ * Place a call through the company's Twilio account; the TwiML fetched on answer bridges it to the AI agent
+ * (twilio.ts). The call record carries Twilio's CallSid until the AI provider (Retell) registers its own id.
+ */
+async function dialViaTwilio(call: DialableCall, settings: Awaited<ReturnType<typeof ensureSettings>>, companyName: string): Promise<{ status: VoiceCallStatus; detail: string }> {
+  void companyName;
+  const { organizationId, companyId } = call;
+  const conn = await getConnection(organizationId, companyId, "twilio");
+  if (!conn?.accessToken) return block(call.id, "credential_required");
+  const from = call.number && !call.number.releasedAt && call.number.source === "TWILIO" ? call.number.number : twilioCallerId(conn, settings.twilioFromNumber);
+  if (!from) return block(call.id, "twilio_caller_id_missing");
+  const ready = settings.bridgeMode === "PROVIDER_SIP" ? call.agent?.provider === "RETELL" || !!settings.bridgeSipUri : settings.bridgeMode === "CUSTOM_SIP" ? !!settings.bridgeSipUri : !!settings.mediaStreamUrl;
+  if (!ready) return block(call.id, "bridge_not_configured");
+  const claimed = await db().voiceCall.updateMany({ where: { id: call.id, status: "SCHEDULED" }, data: { status: "QUEUED", blockedReason: null } });
+  if (!claimed.count) return { status: "QUEUED", detail: "Already being dialled." };
+  try {
+    const placed = await twilioPlaceCall(conn, { to: call.toNumber, from, webhookKey: settings.webhookKey, callId: call.id, maxDurationSec: settings.maxDurationSec });
+    await transaction(async (tx) => {
+      await tx.voiceCall.update({ where: { id: call.id }, data: { telephony: "TWILIO", telephonySid: placed.sid, externalCallId: placed.sid, fromNumber: from, status: "QUEUED", error: null } });
+      await writeAudit(tx, systemContext(), { category: "TENANT", organizationId, action: "voice.call.placed", resourceType: "voice_call", resourceId: call.id, newValue: { provider: "TWILIO", ai: call.agent?.provider ?? null, to: maskNumber(call.toNumber) } });
+      await emitVoiceEvent(tx, systemContext(), "voice.call_placed", { organizationId, companyId, entityType: "voice_call", entityId: call.id, data: { direction: "OUTBOUND", leadId: call.leadId, contactId: call.contactId } });
+    });
+    return { status: "QUEUED", detail: `Twilio accepted the call to ${maskNumber(call.toNumber)}.` };
+  } catch (err) {
+    const message = (err instanceof Error ? err.message : "call failed").slice(0, 300);
+    await db().voiceCall.update({ where: { id: call.id }, data: { status: "FAILED", error: message } });
+    logger.warn({ callId: call.id, err: message }, "voice call was not placed through Twilio");
+    return { status: "FAILED", detail: `Twilio did not accept the call: ${message}` };
   }
 }
 
@@ -421,7 +463,15 @@ export async function recordingResponse(ctx: RequestContext, organizationId: str
   if (!c.recordingUrl) throw notFound("Recording");
   const u = new URL(c.recordingUrl);
   if (u.protocol !== "https:" || /^(localhost|\d+\.\d+\.\d+\.\d+|\[.*\])$/i.test(u.hostname) || u.hostname.endsWith(".internal") || u.hostname.endsWith(".local")) throw notFound("Recording");
-  const res = await fetch(u, { headers: range && /^bytes=\d*-\d*$/.test(range) ? { range } : {}, signal: AbortSignal.timeout(30_000), redirect: "follow" });
+  const reqHeaders: Record<string, string> = range && /^bytes=\d*-\d*$/.test(range) ? { range } : {};
+  // Twilio recordings may require the account's credentials (HTTP Basic) when media authentication is on.
+  if (u.hostname === "api.twilio.com") {
+    const tw = await getConnection(organizationId, companyId, "twilio");
+    const sid = typeof tw?.config.accountSid === "string" ? tw.config.accountSid : null;
+    if (tw?.accessToken && sid && u.pathname.startsWith(`/2010-04-01/Accounts/${sid}/`)) reqHeaders.authorization = `Basic ${Buffer.from(`${sid}:${tw.accessToken}`).toString("base64")}`;
+    else throw notFound("Recording");
+  }
+  const res = await fetch(u, { headers: reqHeaders, signal: AbortSignal.timeout(30_000), redirect: "follow" });
   if (!res.ok && res.status !== 206) throw new AppError("service_unavailable", "The provider did not return the recording", { reason: "voice_recording_unavailable" });
   const type = res.headers.get("content-type") ?? "audio/wav";
   const headers: Record<string, string> = { "content-type": /^audio\/|^application\/octet-stream/.test(type) ? type : "audio/wav", "cache-control": "private, no-store", "x-content-type-options": "nosniff" };

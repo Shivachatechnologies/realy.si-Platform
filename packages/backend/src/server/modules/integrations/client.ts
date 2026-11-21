@@ -28,6 +28,8 @@ export interface ProviderRequest {
   skipHealth?: boolean;
   /** Known cost of this call in USD cents (paid providers): checked against and metered on the plan's API spend cap. */
   costCents?: number;
+  /** Read the response body as bytes (audio, video, files) into `bytes`; `text`/`data` stay empty. */
+  binary?: boolean;
 }
 
 /** Per-call cost (USD cents, rounded up) of paid research providers whose every call is a billed search. */
@@ -40,6 +42,8 @@ export interface ProviderResponse<T = unknown> {
   text: string;
   /** Response headers (ids returned only in headers, e.g. LinkedIn x-restli-id, upload session Location). */
   headers?: Headers;
+  /** Response body bytes when the request set `binary` (successful responses only). */
+  bytes?: Uint8Array;
 }
 
 const PER_CONNECTION = { name: "integration-api", limit: 120, windowMs: 60_000 };
@@ -85,6 +89,27 @@ export const PROVIDER_RATE_LIMITS: Record<string, { limit: number; windowMs: num
   stability: { limit: 140, windowMs: 10_000 },
   replicate: { limit: 500, windowMs: 60_000 },
   runway: { limit: 20, windowMs: 60_000 },
+  openrouter: { limit: 300, windowMs: 60_000 },
+  openai_compatible: { limit: 120, windowMs: 60_000 },
+  elevenlabs: { limit: 100, windowMs: 60_000 },
+  deepgram: { limit: 90, windowMs: 60_000 },
+  luma: { limit: 20, windowMs: 60_000 },
+  kling: { limit: 20, windowMs: 60_000 },
+  shotstack: { limit: 9, windowMs: 1_000 },
+  creatomate: { limit: 25, windowMs: 10_000 },
+  twilio_voice: { limit: 90, windowMs: 1_000 },
+  pipedrive: { limit: 70, windowMs: 2_000 },
+  notion: { limit: 3, windowMs: 1_000 },
+  clickup: { limit: 90, windowMs: 60_000 },
+  calendly: { limit: 100, windowMs: 60_000 },
+  google_drive: { limit: 500, windowMs: 60_000 },
+  zendesk: { limit: 180, windowMs: 60_000 },
+  intercom: { limit: 160, windowMs: 10_000 },
+  plaid: { limit: 50, windowMs: 60_000 },
+  wise: { limit: 50, windowMs: 60_000 },
+  zapier: { limit: 30, windowMs: 60_000 },
+  make: { limit: 30, windowMs: 60_000 },
+  n8n: { limit: 60, windowMs: 60_000 },
 };
 
 /** The effective limits of a provider's connections (per-connection rule + provider rule when listed). */
@@ -207,8 +232,8 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
     if (costCents > 0 && conn.organizationId && res.ok) {
       await recordPlanUsage(conn.organizationId, "api.cost_cents", costCents, { companyId: conn.companyId }).catch((e) => logger.warn({ provider: conn.provider, err: e instanceof Error ? e.message : String(e) }, "API spend not metered"));
     }
-    const type = res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
-    await log(res.status, `${res.status} · ${type} · ${res.text.length} chars${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
+    const type = res.bytes ? "binary" : res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
+    await log(res.status, `${res.status} · ${type} · ${res.bytes ? `${res.bytes.byteLength} bytes` : `${res.text.length} chars`}${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
     if (!req.skipHealth) await recordCallOutcome(conn, res.status, errorCode(res.data) ? `${new URL(url).host} responded ${res.status} (${errorCode(res.data)})` : null);
     return res;
   } catch (err) {
@@ -244,6 +269,10 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
         await sleep(retryAfterMs(res, attempt));
         continue;
+      }
+      if (req.binary && res.ok) {
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        return { status: res.status, ok: true, data: null as T, text: "", headers: res.headers, bytes };
       }
       const text = await res.text();
       let data: unknown = text;

@@ -8,7 +8,9 @@ import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pag
 import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
+import { isConnectable, PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
+import { afterConnect, beforeDisconnect } from "./lifecycle";
+import { providerWebhookUrl } from "./provider-webhooks";
 import { asConfig, assertConnectionEntitled, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
 import { logProviderCall, providerFetch } from "./client";
 import { buildAuthorizeUrl, type IntegrationOAuthState } from "./oauth";
@@ -63,10 +65,19 @@ export async function listIntegrations(ctx: RequestContext, organizationId: stri
     db().integrationHook.count({ where: { organizationId, companyId, active: true } }),
   ]);
   const byProvider = new Map(rows.map((r) => [r.provider, r]));
+  const access = await planAccessByCategory(organizationId);
   return PROVIDERS.map((info) => {
     const connection = byProvider.get(info.key) ?? null;
     const status = info.key === "webhook" ? (hookCount > 0 ? "CONNECTED" : null) : connection && connection.status !== "DISCONNECTED" ? connection.status : null;
-    return { info, connection, status, configured: info.authType !== "oauth2" || oauthClient(info.key) !== null, oauthAvailable: (info.authType === "oauth2" || !!info.oauthAlternative) && oauthClient(info.key) !== null };
+    return {
+      info,
+      connection,
+      status,
+      configured: info.authType !== "oauth2" || oauthClient(info.key) !== null,
+      oauthAvailable: (info.authType === "oauth2" || !!info.oauthAlternative) && oauthClient(info.key) !== null,
+      /** Plan restriction of the provider's category (docs/entitlements.md): the cheapest plan and whether this org has it. */
+      plan: access.get(info.category) ?? { minPlan: "starter", locked: false },
+    };
   });
 }
 
@@ -85,7 +96,22 @@ export async function getIntegration(ctx: RequestContext, organizationId: string
     missingEnv: info.authType === "oauth2" || info.oauthAlternative ? missingEnvVars(info) : [],
     redirectUri: info.authType === "oauth2" || info.oauthAlternative ? integrationRedirectUri(provider) : null,
     oauthAvailable: (info.authType === "oauth2" || !!info.oauthAlternative) && oauthClient(provider) !== null,
+    /** The connection's provider-webhook URL (providers that call Realy back), to paste at the provider when it is not registered automatically. */
+    webhookUrl: info.inboundWebhooks && connection && connection.status !== "DISCONNECTED" ? providerWebhookUrl(provider, connection.id) : null,
+    plan: (await planAccessByCategory(organizationId)).get(info.category) ?? { minPlan: "starter", locked: false },
   };
+}
+
+/** Plan access per provider category: the cheapest plan that unlocks it and whether the organization's plan does. */
+export async function planAccessByCategory(organizationId: string): Promise<Map<string, { minPlan: string; locked: boolean }>> {
+  const { integrationCategoryAccess } = await import("@/server/modules/entitlements/catalog");
+  const { hasFeature } = await import("@/server/modules/entitlements/service");
+  const out = new Map<string, { minPlan: string; locked: boolean }>();
+  for (const category of new Set(PROVIDERS.map((p) => p.category))) {
+    const a = integrationCategoryAccess(category);
+    out.set(category, { minPlan: a.minPlan, locked: a.feature ? !(await hasFeature(organizationId, a.feature).catch(() => false)) : false });
+  }
+  return out;
 }
 
 /** Number of connected (or erroring) integrations at the company. */
@@ -134,6 +160,7 @@ function validateUrlFields(provider: string, config: Record<string, string>) {
   if (provider === "custom_api") validateTargetUrl(config.baseUrl ?? "");
   if (provider === "wordpress") config.siteUrl = validateTargetUrl(config.siteUrl ?? "").toString().replace(/\/+$/, "");
   if (provider === "s3" && config.endpoint) config.endpoint = validateTargetUrl(config.endpoint).origin;
+  if (provider === "openai_compatible") config.baseUrl = validateTargetUrl(config.baseUrl ?? "").toString().replace(/\/+$/, "");
 }
 
 export const apiKeyInput = z.record(z.string().max(64), z.string().max(MAX_FIELD));
@@ -143,11 +170,21 @@ export async function saveApiKeyConnection(ctx: RequestContext, organizationId: 
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
   const info = requireInfo(provider);
   if (info.authType !== "api_key") throw invalid("This integration does not use an API key");
+  if (!isConnectable(info)) throw invalid("This integration is not available yet", { reason: "integrations_awaiting_docs" });
   await assertConnectionEntitled(ctx, organizationId, companyId, provider);
   const { apiKey, config, secrets } = parseFields(info, apiKeyInput.parse(raw));
   validateUrlFields(provider, config);
+  // Automation catch-hook URLs are the credential: n8n is self-hosted, so it must be a public HTTPS target (SSRF).
+  if (provider === "n8n") validateTargetUrl(apiKey);
   if (provider === "mailchimp") (config as Record<string, string>).authMode = "key";
-  const existing = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider }, select: { config: true } });
+  const existing = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider }, select: { config: true, credentialsEnc: true, status: true } });
+  // Replacing Plaid keys of the same Plaid client keeps the linked banks (their tokens belong to that client).
+  if (provider === "plaid" && existing && existing.status !== "DISCONNECTED" && asConfig(existing.config).clientId === config.clientId) {
+    const prev = decryptCredentials(companyId, provider, existing.credentialsEnc).secrets ?? {};
+    for (const [k, v] of Object.entries(prev)) if (k.startsWith("plaidItem:")) secrets[k] = v;
+    const items = asConfig(existing.config).plaidItems;
+    if (Array.isArray(items)) (config as Record<string, unknown>).plaidItems = items;
+  }
   let account: string | null = null;
   let extra: Record<string, unknown> = {};
   try {
@@ -181,6 +218,10 @@ export async function saveApiKeyConnection(ctx: RequestContext, organizationId: 
       select: safeSelect,
     });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "integration.connected", resourceType: "integration_connection", resourceId: row.id, newValue: { provider, account } });
+    return row;
+  }).then(async (row) => {
+    // Provider-side setup that needs the stored connection (e.g. registering Calendly's webhook subscription).
+    await afterConnect(row.id).catch((err) => logger.warn({ provider, err: err instanceof Error ? err.message : "after-connect failed" }, "integration after-connect step failed"));
     return row;
   });
 }
@@ -318,6 +359,11 @@ export async function disconnectIntegration(ctx: RequestContext, organizationId:
   const info = requireInfo(provider);
   const row = await loadRow(organizationId, companyId, provider);
   let revoked = false;
+  // Provider-side cleanup with the credentials still in place (Calendly webhook subscription, Plaid linked banks).
+  revoked = await beforeDisconnect(row.id).catch((err) => {
+    logger.warn({ provider, err: err instanceof Error ? err.message : "cleanup failed" }, "integration disconnect cleanup failed");
+    return false;
+  });
   if (info.authType === "oauth2") {
     const creds = decryptCredentials(companyId, provider, row.credentialsEnc);
     const token = creds.refreshToken ?? creds.accessToken;

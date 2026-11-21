@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
+import { selectContext } from "./context";
 import { searchKnowledge } from "./knowledge";
+import { MEMORY_LAYERS } from "./memory-policy";
 import { createMemory, searchMemories } from "./memory";
 
 /** AI tools of the Company Brain module. Register BRAIN_TOOLS in src/server/modules/tools/modules.ts. */
@@ -46,6 +48,42 @@ export const BRAIN_TOOLS: Record<string, ToolDefinition> = {
       }
       if (!lines.length) return { content: `Nothing in the company's knowledge matches "${query}".`, count: 0 };
       return { content: lines.join("\n"), count: lines.length, records };
+    },
+  }),
+
+  recall_company_context: def({
+    name: "recall_company_context",
+    version: 1,
+    description:
+      "Recall the most relevant shared company memory for a question: company, product, brand, customer and department facts, conversation summaries and document passages — ranked (full-text plus semantic search when the company configured embeddings), filtered to what the requester may read, compressed to the relevant sentences. Each snippet has a reference to cite.",
+    input: z.object({ query: z.string().trim().min(2).max(300), layers: z.array(z.enum(MEMORY_LAYERS)).max(10).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "What you need to know, e.g. brand tone of voice or Acme contract terms" },
+        layers: { type: "array", items: { type: "string", enum: [...MEMORY_LAYERS] }, description: "Optional: only these memory layers (DOCUMENT = document passages)" },
+      },
+      required: ["query"],
+      additionalProperties: false,
+    },
+    permissions: ["brain.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ query }) => `Recall company memory for "${query}"`,
+    async execute({ query, layers }, { ctx, organizationId, companyId, cite }) {
+      const r = await selectContext(ctx, organizationId, companyId, { query, layers, tokenBudget: 2500, maxSnippets: 14 });
+      if (!r.snippets.length) return { content: `Nothing in the company memory matches "${query}".`, count: 0 };
+      const lines = r.snippets.map((x) => {
+        const ref = x.kind === "passage" && cite && x.citation.documentId ? cite({ passageId: x.citation.id, documentId: x.citation.documentId, title: x.title, passage: x.citation.passage ?? 1 }) : x.ref;
+        const head = x.kind === "passage" ? `Document "${x.title}", passage ${x.citation.passage}` : `${x.layer.toLowerCase()} memory "${x.title}"`;
+        return `[${ref}] ${head}: ${x.text.replace(/\s+/g, " ")}${x.citation.source ? ` (source: ${x.citation.source})` : ""}`;
+      });
+      return {
+        content: `${lines.join("\n")}\n(search mode: ${r.mode === "hybrid" ? "full-text + semantic" : "full-text"})`,
+        count: lines.length,
+        records: r.snippets.map((x) => (x.kind === "passage" ? `brain_document:${x.citation.documentId}` : x.kind === "employee_note" ? `ai_employee_memory:${x.citation.id}` : `company_memory:${x.citation.id}`)),
+      };
     },
   }),
 

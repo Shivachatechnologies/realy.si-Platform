@@ -22,6 +22,12 @@ enum IntegrationHookVerification {
   GITHUB
   SHOPIFY
   SLACK
+  TWILIO
+  CALENDLY
+  META
+  ELEVENLABS
+  ZENDESK
+  INTERCOM
 }
 
 enum IntegrationHookDeliveryStatus {
@@ -68,10 +74,13 @@ model IntegrationConnection {
   createdAt           DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company      Company                  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  syncRuns     IntegrationSyncRun[]
-  requestLogs  IntegrationRequestLog[]
-  externalRefs IntegrationExternalRef[]
+  company          Company                      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  syncRuns         IntegrationSyncRun[]
+  requestLogs      IntegrationRequestLog[]
+  externalRefs     IntegrationExternalRef[]
+  providerEvents   IntegrationProviderEvent[]
+  bankAccounts     IntegrationBankAccount[]
+  bankTransactions IntegrationBankTransaction[]
 
   @@unique([id, companyId])
   @@unique([companyId, provider])
@@ -301,4 +310,96 @@ model IntegrationStoredObject {
   @@unique([companyId, key])
   @@index([organizationId, companyId, createdAt])
   @@map("integration_stored_objects")
+}
+
+/// A webhook / status callback a provider sent for a connection (Calendly invitee, Twilio call status and recordings,
+/// Plaid item updates, WhatsApp statuses, render / generation callbacks). Signature-verified before it is stored;
+/// payloads are reduced to a secret-free summary. Deduplicated per connection by the provider's event key.
+model IntegrationProviderEvent {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  connectionId   String    @map("connection_id") @db.Uuid
+  provider       String
+  /// Provider event type, e.g. "invitee.created", "call.completed", "TRANSACTIONS:SYNC_UPDATES_AVAILABLE".
+  eventType      String    @map("event_type")
+  /// Provider-side id used for idempotency (invitee URI, CallSid + status, webhook id...).
+  dedupeKey      String    @map("dedupe_key")
+  /// "processed" | "stored" | "ignored" | "failed".
+  status         String
+  /// Short secret-free summary (ids, statuses, durations), never raw bodies with personal data beyond what is needed.
+  summary        Json      @default("{}")
+  /// Realy record the event created or updated ("crm_meeting:<id>"), when any.
+  resultRef      String?   @map("result_ref")
+  error          String?
+  receivedAt     DateTime  @default(now()) @map("received_at") @db.Timestamptz(3)
+  processedAt    DateTime? @map("processed_at") @db.Timestamptz(3)
+
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([connectionId, dedupeKey])
+  @@index([organizationId, companyId, receivedAt])
+  @@index([connectionId, receivedAt])
+  @@map("integration_provider_events")
+}
+
+/// A bank / money account read from a bank-feed provider (Plaid item account, Wise balance). Read-only mirror.
+model IntegrationBankAccount {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  companyId         String    @map("company_id") @db.Uuid
+  connectionId      String    @map("connection_id") @db.Uuid
+  provider          String
+  /// Plaid item id / Wise profile id the account belongs to.
+  itemId            String    @map("item_id")
+  externalAccountId String    @map("external_account_id")
+  name              String
+  institution       String?
+  mask              String?
+  type              String?
+  currency          String    @default("USD")
+  /// Balances in minor units of `currency` (null when the provider does not report them).
+  currentMinor      BigInt?   @map("current_minor")
+  availableMinor    BigInt?   @map("available_minor")
+  balanceAt         DateTime? @map("balance_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([connectionId, externalAccountId])
+  @@index([organizationId, companyId])
+  @@map("integration_bank_accounts")
+}
+
+/// A bank transaction staged from a bank feed (Plaid /transactions/sync), awaiting reconciliation in Finance.
+/// amountMinor is signed from the company's point of view: positive = money in, negative = money out.
+model IntegrationBankTransaction {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  companyId            String    @map("company_id") @db.Uuid
+  connectionId         String    @map("connection_id") @db.Uuid
+  provider             String
+  externalAccountId    String    @map("external_account_id")
+  externalId           String    @map("external_id")
+  bookedOn             DateTime  @map("booked_on") @db.Date
+  amountMinor          BigInt    @map("amount_minor")
+  currency             String
+  description          String
+  merchantName         String?   @map("merchant_name")
+  category             String?
+  pending              Boolean   @default(false)
+  /// Set when the provider reported the transaction as removed (kept for the audit trail).
+  removedAt            DateTime? @map("removed_at") @db.Timestamptz(3)
+  /// Finance transaction this row was reconciled / imported into, when any.
+  financeTransactionId String?   @map("finance_transaction_id") @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  connection IntegrationConnection @relation(fields: [connectionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([connectionId, externalId])
+  @@index([organizationId, companyId, bookedOn])
+  @@index([connectionId, externalAccountId, bookedOn])
+  @@map("integration_bank_transactions")
 }

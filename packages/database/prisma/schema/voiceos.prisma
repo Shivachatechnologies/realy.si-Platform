@@ -1,0 +1,118 @@
+// Voice OS ("Realy" voice console, modules/voiceos): a founder talks to the company. Every utterance is routed into
+// the real AI Command pipeline (guide/command.ts); answers are read from the command runs. Transcripts (turns) are
+// stored only while the person has enabled history; session counters (speech seconds) are always kept for metering.
+
+enum VoiceosSessionStatus {
+  ACTIVE
+  ENDED
+}
+
+enum VoiceosTurnRole {
+  USER
+  ASSISTANT
+}
+
+enum VoiceosTurnKind {
+  /// What the person said (or typed in the console).
+  UTTERANCE
+  /// Spoken acknowledgement of a command (reply key + params from the real run).
+  ACK
+  /// The command run's answer (review step output).
+  ANSWER
+  /// An approval confirmed or rejected by voice or click.
+  DECISION
+  /// Something could not be done (reason key).
+  NOTICE
+}
+
+/// Per-person Voice OS preferences for one company.
+model VoiceosSettings {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  /// Store transcripts (turns). Off by default: nothing said is kept unless the person turns this on.
+  historyEnabled  Boolean  @default(false) @map("history_enabled")
+  /// "Hey Realy" wake word (browser speech recognition, only while the tab is visible).
+  wakeWordEnabled Boolean  @default(false) @map("wake_word_enabled")
+  /// Read answers aloud.
+  speakReplies    Boolean  @default(true) @map("speak_replies")
+  /// Voice personality key (voiceos/catalog.ts PERSONALITIES).
+  personality     String   @default("aria")
+  /// App locale used for recognition and speech (one of the five shipped languages).
+  language        String   @default("en-US")
+  /// auto | openai | elevenlabs | deepgram | browser
+  sttProvider     String   @default("auto") @map("stt_provider")
+  /// auto | elevenlabs | openai | browser
+  ttsProvider     String   @default("auto") @map("tts_provider")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@map("voiceos_settings")
+}
+
+/// One voice conversation. Linked to the AI Command session its utterances run in.
+model VoiceosSession {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  companyId        String               @map("company_id") @db.Uuid
+  userId           String               @map("user_id") @db.Uuid
+  status           VoiceosSessionStatus @default(ACTIVE)
+  /// AI Command session (guide CommandSession) the utterances are run in; set on the first command.
+  commandSessionId String?              @map("command_session_id") @db.Uuid
+  language         String               @default("en-US")
+  personality      String               @default("aria")
+  /// History setting when the session started (turns are written only while true).
+  historyEnabled   Boolean              @default(false) @map("history_enabled")
+  /// Provider speech processed in this session (browser speech is not metered).
+  sttSeconds       Int                  @default(0) @map("stt_seconds")
+  ttsSeconds       Int                  @default(0) @map("tts_seconds")
+  /// Whole minutes already recorded on the plan meter voice.assistant.minutes.
+  meteredMinutes   Int                  @default(0) @map("metered_minutes")
+  utterances       Int                  @default(0)
+  title            String?
+  lastActivityAt   DateTime             @default(now()) @map("last_activity_at") @db.Timestamptz(3)
+  endedAt          DateTime?            @map("ended_at") @db.Timestamptz(3)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turns   VoiceosTurn[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, userId, lastActivityAt])
+  @@map("voiceos_sessions")
+}
+
+/// One turn of a voice conversation (written only while history is enabled).
+model VoiceosTurn {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  companyId      String          @map("company_id") @db.Uuid
+  sessionId      String          @map("session_id") @db.Uuid
+  role           VoiceosTurnRole
+  kind           VoiceosTurnKind
+  /// Transcript / answer text (plain).
+  text           String?
+  /// Localized reply key (jarvis.reply.*) and its params, for ACK / DECISION / NOTICE turns.
+  replyKey       String?         @map("reply_key")
+  params         Json            @default("{}")
+  /// voice | text | wake
+  inputMode      String?         @map("input_mode")
+  /// Speech provider that produced or voiced it (openai, elevenlabs, deepgram, browser).
+  provider       String?
+  commandRunId   String?         @map("command_run_id") @db.Uuid
+  approvalId     String?         @map("approval_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company        @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  session VoiceosSession @relation(fields: [sessionId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([sessionId, commandRunId, kind])
+  @@index([sessionId, createdAt])
+  @@map("voiceos_turns")
+}

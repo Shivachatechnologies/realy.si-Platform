@@ -1,17 +1,23 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { db, Prisma, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { notFound } from "@/server/core/errors";
+import { conflict, notFound } from "@/server/core/errors";
 import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
-import { can, requirePermission } from "@/server/modules/rbac/service";
+import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireDepartment } from "./service";
+import { deleteEmbeddings } from "./embeddings";
+import { canReadRow, MEMORY_LAYERS, MEMORY_SCOPES, MEMORY_SENSITIVITIES, MEMORY_SOURCE_KINDS, memoryReadSql, memoryReadWhere, READ_PERMISSIONS, readAccess, type ReadAccess } from "./memory-policy";
 
 /**
  * Company memory: short, durable facts about the company (decisions, conventions, numbers) that every AI task sees
  * in its system prompt — pinned facts first, then the facts most relevant to the task by keyword.
  */
+
+/** Layers a person picks when adding a fact by hand (employee/task/conversation memory is written by AI tasks). */
+export const HUMAN_LAYERS = ["COMPANY", "KNOWLEDGE", "PRODUCT", "BRAND", "CUSTOMER", "DEPARTMENT"] as const;
 
 export const memoryInput = z.object({
   title: z.string().trim().min(1).max(160),
@@ -19,6 +25,12 @@ export const memoryInput = z.object({
   source: z.string().trim().max(300).nullish(),
   departmentId: z.string().uuid().nullish(),
   pinned: z.boolean().optional(),
+  layer: z.enum(HUMAN_LAYERS).optional(),
+  sensitivity: z.enum(MEMORY_SENSITIVITIES).optional(),
+  /** Extra permission needed to read the fact, e.g. finance.read. */
+  readPermission: z.enum(READ_PERMISSIONS as [string, ...string[]]).nullish(),
+  /** Auto-expiry date (ISO); null = keep. */
+  expiresAt: z.coerce.date().nullish(),
 });
 export const updateMemoryInput = memoryInput.partial();
 
@@ -26,8 +38,21 @@ export const memoryFilters = z.object({
   q: z.string().trim().max(200).optional().catch(undefined),
   departmentId: z.string().uuid().optional().catch(undefined),
   pinned: z.enum(["1", "0"]).optional().catch(undefined),
-  author: z.enum(["HUMAN", "AI"]).optional().catch(undefined),
+  author: z.enum(["HUMAN", "AI", "SYSTEM"]).optional().catch(undefined),
+  layer: z.enum(MEMORY_LAYERS).optional().catch(undefined),
+  scope: z.enum(MEMORY_SCOPES).optional().catch(undefined),
+  sensitivity: z.enum(MEMORY_SENSITIVITIES).optional().catch(undefined),
+  sourceKind: z.enum(MEMORY_SOURCE_KINDS).optional().catch(undefined),
+  aiEmployeeId: z.string().uuid().optional().catch(undefined),
 });
+
+/** Same fact, same owner → one row (scope + owner + whitespace/case-normalized text). */
+export function dedupKeyFor(m: { scope: string; departmentId?: string | null; aiEmployeeId?: string | null; taskId?: string | null; subjectId?: string | null; title: string; fact: string }, salt = ""): string {
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  return createHash("sha256")
+    .update([m.scope, m.departmentId ?? "", m.aiEmployeeId ?? "", m.taskId ?? "", m.subjectId ?? "", norm(m.title), norm(m.fact), salt].join("\u0001"))
+    .digest("hex");
+}
 
 /** Pinned facts in every prompt, and relevant ones after them. */
 export const PINNED_IN_PROMPT = 10;
@@ -47,7 +72,25 @@ const fields = {
   approvedById: true,
   createdAt: true,
   updatedAt: true,
+  layer: true,
+  scope: true,
+  aiEmployeeId: true,
+  taskId: true,
+  subjectType: true,
+  subjectId: true,
+  sourceKind: true,
+  sensitivity: true,
+  readPermission: true,
+  expiresAt: true,
+  lastUsedAt: true,
 } satisfies Prisma.CompanyMemorySelect;
+export type MemoryRow = Prisma.CompanyMemoryGetPayload<{ select: typeof fields }>;
+export const memoryFields = fields;
+
+async function access(ctx: RequestContext, organizationId: string, companyId: string): Promise<ReadAccess> {
+  await authorize(ctx, organizationId, companyId, "brain.read");
+  return (await readAccess(ctx, organizationId, companyId))!;
+}
 
 async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "brain.read" | "brain.manage", tx?: Tx) {
   await requirePermission(ctx, permission, await companyChain(tx ?? db(), organizationId, companyId), tx);
@@ -56,11 +99,15 @@ async function authorize(ctx: RequestContext, organizationId: string, companyId:
 export async function listMemories(ctx: RequestContext, organizationId: string, companyId: string, raw: Partial<PageInput> & Record<string, unknown> = {}) {
   const page = pageInput.parse(raw);
   const f = memoryFilters.parse(raw);
-  await authorize(ctx, organizationId, companyId, "brain.read");
+  const a = await access(ctx, organizationId, companyId);
   const rows = await db().companyMemory.findMany({
     where: {
-      organizationId,
-      companyId,
+      ...memoryReadWhere(a),
+      ...(f.layer ? { layer: f.layer } : {}),
+      ...(f.scope ? { scope: f.scope } : {}),
+      ...(f.sensitivity ? { sensitivity: f.sensitivity } : {}),
+      ...(f.sourceKind ? { sourceKind: f.sourceKind } : {}),
+      ...(f.aiEmployeeId ? { aiEmployeeId: f.aiEmployeeId } : {}),
       ...(f.q ? { OR: [{ title: { contains: f.q, mode: "insensitive" } }, { fact: { contains: f.q, mode: "insensitive" } }, { source: { contains: f.q, mode: "insensitive" } }] } : {}),
       ...(f.departmentId ? { departmentId: f.departmentId } : {}),
       ...(f.pinned ? { pinned: f.pinned === "1" } : {}),
@@ -74,10 +121,10 @@ export async function listMemories(ctx: RequestContext, organizationId: string, 
 }
 
 export async function getMemory(ctx: RequestContext, organizationId: string, companyId: string, memoryId: string) {
-  await authorize(ctx, organizationId, companyId, "brain.read");
+  const a = await access(ctx, organizationId, companyId);
   if (!isUuid(memoryId)) throw notFound("Memory");
   const m = await db().companyMemory.findFirst({ where: { id: memoryId, organizationId, companyId }, select: fields });
-  if (!m) throw notFound("Memory");
+  if (!m || !canReadRow(a, m)) throw notFound("Memory");
   return m;
 }
 
@@ -88,6 +135,10 @@ export async function createMemory(ctx: RequestContext, organizationId: string, 
     await authorize(ctx, organizationId, companyId, "brain.manage", tx);
     if (input.departmentId) await requireDepartment(tx, organizationId, companyId, input.departmentId);
     const actor = ctx.actor.id ?? organizationId;
+    const scope = input.departmentId ? "DEPARTMENT" : "COMPANY";
+    const dedupKey = dedupKeyFor({ scope, departmentId: input.departmentId, title: input.title, fact: input.fact });
+    const dup = await tx.companyMemory.findFirst({ where: { organizationId, companyId, dedupKey }, select: { id: true, title: true } });
+    if (dup) throw conflict(`This fact is already in company memory as "${dup.title}"`, { reason: "brain_memory_duplicate", memoryId: dup.id });
     const m = await tx.companyMemory.create({
       data: {
         organizationId,
@@ -100,6 +151,13 @@ export async function createMemory(ctx: RequestContext, organizationId: string, 
         authorKind: opts.ai ? "AI" : "HUMAN",
         createdById: actor,
         approvedById: opts.ai ? actor : null,
+        layer: input.layer ?? (input.departmentId ? "DEPARTMENT" : "COMPANY"),
+        scope,
+        sourceKind: opts.ai ? "AI_APPROVED" : "MANUAL",
+        sensitivity: input.sensitivity ?? "INTERNAL",
+        readPermission: input.readPermission ?? null,
+        expiresAt: input.expiresAt ?? null,
+        dedupKey,
       },
       select: fields,
     });
@@ -116,6 +174,12 @@ export async function updateMemory(ctx: RequestContext, organizationId: string, 
     const before = await tx.companyMemory.findFirst({ where: { id: memoryId, organizationId, companyId }, select: fields });
     if (!before) throw notFound("Memory");
     if (input.departmentId) await requireDepartment(tx, organizationId, companyId, input.departmentId);
+    const next = { title: input.title ?? before.title, fact: input.fact ?? before.fact, departmentId: input.departmentId === undefined ? before.departmentId : input.departmentId };
+    // Department changes move company/department facts between scopes; employee/task scopes keep theirs.
+    const scope = before.scope === "COMPANY" || before.scope === "DEPARTMENT" ? (next.departmentId ? "DEPARTMENT" : "COMPANY") : before.scope;
+    const dedupKey = dedupKeyFor({ scope, departmentId: next.departmentId, aiEmployeeId: before.aiEmployeeId, taskId: before.taskId, subjectId: before.subjectId, title: next.title, fact: next.fact });
+    const dup = await tx.companyMemory.findFirst({ where: { organizationId, companyId, dedupKey, id: { not: memoryId } }, select: { id: true, title: true } });
+    if (dup) throw conflict(`This fact is already in company memory as "${dup.title}"`, { reason: "brain_memory_duplicate", memoryId: dup.id });
     const m = await tx.companyMemory.update({
       where: { id: memoryId },
       data: {
@@ -124,6 +188,12 @@ export async function updateMemory(ctx: RequestContext, organizationId: string, 
         source: input.source === undefined ? undefined : input.source || null,
         departmentId: input.departmentId === undefined ? undefined : input.departmentId,
         pinned: input.pinned,
+        layer: input.layer,
+        sensitivity: input.sensitivity,
+        readPermission: input.readPermission === undefined ? undefined : input.readPermission,
+        expiresAt: input.expiresAt === undefined ? undefined : input.expiresAt,
+        scope,
+        dedupKey,
       },
       select: fields,
     });
@@ -139,6 +209,7 @@ export async function deleteMemory(ctx: RequestContext, organizationId: string, 
     const before = await tx.companyMemory.findFirst({ where: { id: memoryId, organizationId, companyId }, select: fields });
     if (!before) throw notFound("Memory");
     await tx.companyMemory.delete({ where: { id: memoryId } });
+    await deleteEmbeddings(tx, companyId, "MEMORY", [memoryId]);
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "brain.memory.deleted", resourceType: "company_memory", resourceId: memoryId, oldValue: before });
     return { ok: true };
   });
@@ -168,14 +239,17 @@ export interface PromptMemory {
 }
 
 /** Facts relevant to `text`, best first (full-text rank over title + fact), excluding `exclude`. */
-async function relevantMemories(organizationId: string, companyId: string, text: string, limit: number, exclude: string[] = []): Promise<PromptMemory[]> {
+async function relevantMemories(a: ReadAccess, text: string, limit: number, exclude: string[] = []): Promise<PromptMemory[]> {
+  const { organizationId, companyId } = a;
   const words = keywords(text);
   if (!words.length) return [];
   // Every word is [\p{L}\p{N}]+ (no tsquery operators); the query is still passed as a bound parameter.
   const query = words.join(" | ");
+  // Shared (company / department) memory only: AI employee and task memory is selected by brain/context.ts.
   const rows = await db().$queryRaw<{ id: string }[]>`
     SELECT m.id FROM company_memories m, to_tsquery('simple', ${query}) AS q
-     WHERE m.organization_id = ${organizationId}::uuid AND m.company_id = ${companyId}::uuid
+     WHERE ${memoryReadSql(a)}
+       AND m.scope::text IN ('COMPANY', 'DEPARTMENT')
        AND NOT (m.id = ANY(${exclude}::uuid[]))
        AND to_tsvector('simple', m.title || ' ' || m.fact) @@ q
      ORDER BY ts_rank(to_tsvector('simple', m.title || ' ' || m.fact), q) DESC, m.id DESC
@@ -191,9 +265,9 @@ async function relevantMemories(organizationId: string, companyId: string, text:
 
 /** Search company memory (read_company_memory): relevant facts, or the newest when no query. */
 export async function searchMemories(ctx: RequestContext, organizationId: string, companyId: string, query: string | undefined, limit = 15): Promise<PromptMemory[]> {
-  await authorize(ctx, organizationId, companyId, "brain.read");
-  if (query?.trim()) return relevantMemories(organizationId, companyId, query, limit);
-  const rows = await db().companyMemory.findMany({ where: { organizationId, companyId }, orderBy: [{ pinned: "desc" }, { id: "desc" }], take: limit, select: fields });
+  const a = await access(ctx, organizationId, companyId);
+  if (query?.trim()) return relevantMemories(a, query, limit);
+  const rows = await db().companyMemory.findMany({ where: { ...memoryReadWhere(a), scope: { in: ["COMPANY", "DEPARTMENT"] } }, orderBy: [{ pinned: "desc" }, { id: "desc" }], take: limit, select: fields });
   return rows.map((m) => ({ id: m.id, title: m.title, fact: m.fact, source: m.source, pinned: m.pinned, department: m.department?.name ?? null }));
 }
 
@@ -203,9 +277,10 @@ export async function searchMemories(ctx: RequestContext, organizationId: string
  */
 export async function memoryForPrompt(ctx: RequestContext, organizationId: string, companyId: string, taskText: string): Promise<PromptMemory[]> {
   try {
-    if (!(await can(ctx, "brain.read", await companyChain(db(), organizationId, companyId)))) return [];
-    const pinned = await db().companyMemory.findMany({ where: { organizationId, companyId, pinned: true }, orderBy: { updatedAt: "desc" }, take: PINNED_IN_PROMPT, select: fields });
-    const relevant = await relevantMemories(organizationId, companyId, taskText, RELEVANT_IN_PROMPT, pinned.map((m) => m.id));
+    const a = await readAccess(ctx, organizationId, companyId);
+    if (!a) return [];
+    const pinned = await db().companyMemory.findMany({ where: { ...memoryReadWhere(a), scope: { in: ["COMPANY", "DEPARTMENT"] }, pinned: true }, orderBy: { updatedAt: "desc" }, take: PINNED_IN_PROMPT, select: fields });
+    const relevant = await relevantMemories(a, taskText, RELEVANT_IN_PROMPT, pinned.map((m) => m.id));
     return [...pinned.map((m) => ({ id: m.id, title: m.title, fact: m.fact, source: m.source, pinned: true, department: m.department?.name ?? null })), ...relevant];
   } catch {
     return [];

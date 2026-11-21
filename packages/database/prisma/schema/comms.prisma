@@ -452,3 +452,61 @@ model CommsReminder {
   @@index([organizationId, companyId, userId, remindAt])
   @@map("comms_reminders")
 }
+
+// ───────────── Meeting intelligence (crm/meeting-intel.ts) ─────────────
+
+enum MeetingIntelKind {
+  /// crm_meetings (customer meetings)
+  CRM
+  /// comms_meetings (internal meetings)
+  COMMS
+}
+
+enum MeetingFollowUpStatus {
+  NONE
+  DRAFT
+  AWAITING_APPROVAL
+  SENT
+  FAILED
+}
+
+/// Agenda, prep brief, transcript, summary, action items and follow-up draft of one meeting. AI output arrives through
+/// agent tasks (prepTaskId / processTaskId); nothing is applied to tasks, CRM or email until a person confirms.
+model MeetingIntel {
+  id                 String                @id @default(uuid(7)) @db.Uuid
+  organizationId     String                @map("organization_id") @db.Uuid
+  companyId          String                @map("company_id") @db.Uuid
+  kind               MeetingIntelKind
+  meetingId          String                @map("meeting_id") @db.Uuid
+  agenda             String?
+  prepBrief          String?               @map("prep_brief")
+  prepTaskId         String?               @map("prep_task_id") @db.Uuid
+  prepBuiltAt        DateTime?             @map("prep_built_at") @db.Timestamptz(3)
+  transcript         String?
+  /// upload | voice_call
+  transcriptSource   String?               @map("transcript_source")
+  transcriptCallId   String?               @map("transcript_call_id") @db.Uuid
+  transcriptAt       DateTime?             @map("transcript_at") @db.Timestamptz(3)
+  processTaskId      String?               @map("process_task_id") @db.Uuid
+  summary            String?
+  decisions          String[]              @default([])
+  /// [{ title, owner, dueDate }] proposed by the AI, confirmed by a person.
+  actionItems        Json                  @default("[]") @map("action_items")
+  proposedOutcome    String?               @map("proposed_outcome")
+  followUpSubject    String?               @map("follow_up_subject")
+  followUpBody       String?               @map("follow_up_body")
+  followUpStatus     MeetingFollowUpStatus @default(NONE) @map("follow_up_status")
+  followUpApprovalId String?               @map("follow_up_approval_id") @db.Uuid
+  appliedAt          DateTime?             @map("applied_at") @db.Timestamptz(3)
+  appliedById        String?               @map("applied_by_id") @db.Uuid
+  /// [{ type, id, label, href }] records created when a person applied the results.
+  results            Json                  @default("[]")
+  createdAt          DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, kind, meetingId])
+  @@index([organizationId, companyId, updatedAt])
+  @@map("meeting_intel")
+}
