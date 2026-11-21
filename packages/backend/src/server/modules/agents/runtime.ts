@@ -9,6 +9,7 @@ import type {
   MessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { env } from "@/server/core/env";
+import { keyFingerprint } from "@/server/core/platform-secrets";
 import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/admin/ai-models";
 import { fallbackModels } from "@/server/modules/admin/ops";
 import { db } from "@/server/core/db";
@@ -35,7 +36,7 @@ export class TaskError extends Error {
 
 type ModelCall = (params: MessageCreateParamsNonStreaming) => Promise<BetaMessage>;
 
-let client: Anthropic | null = null;
+let client: { c: Anthropic; fp: string } | null = null;
 let testModel: ModelCall | null = null;
 
 /** Test seam: replace the Claude API with a scripted model. Never set outside tests. */
@@ -49,8 +50,11 @@ export const aiConfigured = () => Boolean(testModel || env().ANTHROPIC_API_KEY);
 function callModel(params: MessageCreateParamsNonStreaming): Promise<BetaMessage> {
   if (testModel) return testModel(params);
   // SDK retries connection errors, 408/409/429 and 5xx twice per call; the queue retries the whole task after that.
-  client ??= new Anthropic({ apiKey: env().ANTHROPIC_API_KEY, timeout: 120_000, maxRetries: 2 });
-  return client.beta.messages.create(params);
+  // Rebuilt when the key changes (Admin → Platform keys rotates it at runtime).
+  const key = env().ANTHROPIC_API_KEY;
+  const fp = keyFingerprint(key);
+  if (client?.fp !== fp) client = { c: new Anthropic({ apiKey: key, timeout: 120_000, maxRetries: 2 }), fp };
+  return client.c.beta.messages.create(params);
 }
 
 const MAX_TOKENS = 16_000;

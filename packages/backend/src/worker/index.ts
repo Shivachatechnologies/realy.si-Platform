@@ -27,6 +27,7 @@ import { logger } from "@/server/core/logger";
 import { relayBatch, type OutboxEvent } from "@/server/modules/events/relay";
 import { db } from "@/server/core/db";
 import { initObservability } from "@/server/core/observability";
+import { ensurePlatformSecretsFresh } from "@/server/core/platform-secrets";
 import { captureException, withSpan } from "@/server/core/telemetry";
 import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
 import { processPasswordResetRequest, purgeExpiredAuthTokens } from "@/server/modules/auth/recovery";
@@ -100,6 +101,10 @@ const orgOf = (data: unknown) => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
+  // Platform keys set in the Control Center (docs/platform-keys.md): overlay before anything reads env(), then keep
+  // them fresh (~30 s) for long-running jobs. Never throws; falls back to the host env.
+  await ensurePlatformSecretsFresh();
+  setInterval(() => void ensurePlatformSecretsFresh(), 30_000).unref();
   await initObservability("realy-worker");
   if (!workerConfigured()) {
     // Production without REDIS_URL: the web app falls back (Postgres rate limits) and reports "worker not configured".

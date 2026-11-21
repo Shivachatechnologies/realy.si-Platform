@@ -32,6 +32,11 @@ export const LIMITS = {
     { name: "invite-accept:ip", limit: 30, windowMs: MIN, sensitive: true, by: "ip" },
   ],
   admin: [{ name: "admin:principal", limit: 60, windowMs: MIN, by: "principal" }],
+  /** Platform keys (set/clear/test): provider checks call third-party APIs, so far tighter than other admin writes. */
+  platformSecrets: [
+    { name: "admin:principal", limit: 60, windowMs: MIN, by: "principal" },
+    { name: "platform-secrets:principal", limit: 20, windowMs: QUARTER, sensitive: true, by: "principal" },
+  ],
   billing: [{ name: "billing:principal", limit: 20, windowMs: MIN, by: "principal" }],
   tenantWrite: [{ name: "tenant-write:principal", limit: 120, windowMs: MIN, by: "principal" }],
   publicRead: [{ name: "public:ip", limit: 120, windowMs: MIN, by: "ip" }],

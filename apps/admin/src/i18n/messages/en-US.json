@@ -1613,7 +1613,8 @@
       "viewAs": "View as (support)",
       "ops": "Platform ops",
       "securityAccess": "Logins & sessions",
-      "plans": "Plans & limits"
+      "plans": "Plans & limits",
+      "keys": "Platform keys"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -3404,6 +3405,86 @@
       "cacheMemory": "Cache memory",
       "s3Connections": "S3 connections by status",
       "dbObjects": "Database-stored files"
+    },
+    "keys": {
+      "title": "Platform keys",
+      "subtitle": "API keys and provider settings for the whole platform. Secret values are write-only.",
+      "why": "Enter provider keys here instead of the hosting environment. Every change is audited and other super admins are notified.",
+      "status": {
+        "admin": "Active from admin",
+        "host": "From hosting env",
+        "missing": "Missing"
+      },
+      "precedenceTitle": "How values are applied",
+      "precedence": "A value saved here overrides the hosting environment. Clearing it reverts to the hosting value. Running servers pick up changes within about 30 seconds; keys marked “restart” apply on the next deploy. Database, encryption key, Redis and app URLs stay in the hosting environment.",
+      "blockedTitle": "Blocked until configured",
+      "readOnly": "You can view the status of platform keys. Changing them requires the platform controls or security manage permission.",
+      "configured": "{set} of {total} set",
+      "overridesHost": "overrides hosting env",
+      "restart": "restart",
+      "updated": "Changed by {who}, {when}",
+      "whereToGet": "Where to get it",
+      "blocks": "Missing — blocks: {features}",
+      "test": "Test",
+      "set": "Set",
+      "replace": "Replace",
+      "clear": "Clear",
+      "clearTitle": "Clear {key}?",
+      "clearToHost": "The admin value is removed and the value from the hosting environment is used again.",
+      "clearToMissing": "The admin value is removed. There is no hosting value, so features using this key stop working.",
+      "webhookUrl": "Webhook URL to register",
+      "redirectUrl": "Redirect URL(s) to register",
+      "copy": "Copy",
+      "newValue": "New value",
+      "value": "Value",
+      "writeOnly": "Write-only: the saved value is never shown again. Only the last 4 characters are displayed.",
+      "show": "Show value",
+      "hide": "Hide value",
+      "testOk": "Check passed",
+      "testFailed": "Check failed",
+      "formatOnly": "(format check only — no provider call is available for this key)",
+      "features": {
+        "aiTasks": "AI tasks",
+        "liveChatAi": "AI website chat",
+        "email": "Transactional email",
+        "billing": "Billing and checkout",
+        "billingWebhooks": "Stripe webhooks",
+        "socialLogin": "Social sign-in",
+        "integrations": "Integration connections",
+        "errorTracking": "Error tracking",
+        "tracing": "Tracing",
+        "firstAdmin": "First super admin sign-up"
+      },
+      "groups": {
+        "ai": {
+          "title": "AI",
+          "hint": "Claude API key, default model and token limits."
+        },
+        "email": {
+          "title": "Email",
+          "hint": "Transactional email provider and sender."
+        },
+        "payments": {
+          "title": "Payments",
+          "hint": "Stripe keys and webhook signing secret."
+        },
+        "login": {
+          "title": "Sign-in with Google, GitHub, Microsoft",
+          "hint": "OAuth apps for social login (Google and Microsoft are also used by integrations)."
+        },
+        "integrations": {
+          "title": "Integration OAuth apps",
+          "hint": "Client credentials for the integrations companies connect."
+        },
+        "observability": {
+          "title": "Observability",
+          "hint": "Error tracking, tracing and log level."
+        },
+        "platform": {
+          "title": "Platform",
+          "hint": "First-run admin and plan enforcement."
+        }
+      }
     }
   },
   "platformModules": {

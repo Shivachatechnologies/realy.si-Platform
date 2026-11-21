@@ -1613,7 +1613,8 @@
       "viewAs": "以用户视角查看（支持）",
       "ops": "平台运维",
       "securityAccess": "登录与会话",
-      "plans": "套餐与限额"
+      "plans": "套餐与限额",
+      "keys": "平台密钥"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -3404,6 +3405,86 @@
       "cacheMemory": "缓存内存",
       "s3Connections": "按状态的 S3 连接",
       "dbObjects": "数据库存储的文件"
+    },
+    "keys": {
+      "title": "平台密钥",
+      "subtitle": "整个平台的 API 密钥和服务商设置。机密值只能写入。",
+      "why": "在此处输入服务商密钥，而不是在托管环境中设置。每次更改都会记入审计日志，并通知其他超级管理员。",
+      "status": {
+        "admin": "由管理员设置",
+        "host": "来自托管环境",
+        "missing": "缺失"
+      },
+      "precedenceTitle": "取值规则",
+      "precedence": "此处保存的值会覆盖托管环境中的值。清除后恢复使用托管环境的值。运行中的服务器约 30 秒内生效；标记为“需重启”的密钥在下次部署后生效。数据库、加密密钥、Redis 和应用 URL 仍保留在托管环境中。",
+      "blockedTitle": "配置前不可用",
+      "readOnly": "你可以查看平台密钥的状态。修改需要平台控制或安全管理权限。",
+      "configured": "已设置 {set}/{total}",
+      "overridesHost": "覆盖托管环境值",
+      "restart": "需重启",
+      "updated": "由 {who} 于 {when} 修改",
+      "whereToGet": "获取方式",
+      "blocks": "缺失 — 不可用：{features}",
+      "test": "测试",
+      "set": "设置",
+      "replace": "替换",
+      "clear": "清除",
+      "clearTitle": "清除 {key}？",
+      "clearToHost": "将删除管理员设置的值，并重新使用托管环境中的值。",
+      "clearToMissing": "将删除管理员设置的值。托管环境中没有该值，使用此密钥的功能将停止工作。",
+      "webhookUrl": "需注册的 Webhook URL",
+      "redirectUrl": "需注册的回调 URL",
+      "copy": "复制",
+      "newValue": "新值",
+      "value": "值",
+      "writeOnly": "只能写入：保存后的值不会再显示，仅显示最后 4 个字符。",
+      "show": "显示值",
+      "hide": "隐藏值",
+      "testOk": "检查通过",
+      "testFailed": "检查失败",
+      "formatOnly": "（仅检查格式 — 此密钥没有可用的服务商检查）",
+      "features": {
+        "aiTasks": "AI 任务",
+        "liveChatAi": "AI 网站聊天",
+        "email": "事务邮件",
+        "billing": "计费和结账",
+        "billingWebhooks": "Stripe Webhook",
+        "socialLogin": "社交登录",
+        "integrations": "集成连接",
+        "errorTracking": "错误跟踪",
+        "tracing": "链路追踪",
+        "firstAdmin": "首个超级管理员注册"
+      },
+      "groups": {
+        "ai": {
+          "title": "AI",
+          "hint": "Claude API 密钥、默认模型和令牌上限。"
+        },
+        "email": {
+          "title": "邮件",
+          "hint": "事务邮件服务商和发件人。"
+        },
+        "payments": {
+          "title": "支付",
+          "hint": "Stripe 密钥和 Webhook 签名密钥。"
+        },
+        "login": {
+          "title": "Google、GitHub、Microsoft 登录",
+          "hint": "社交登录的 OAuth 应用（Google 和 Microsoft 也用于集成）。"
+        },
+        "integrations": {
+          "title": "集成 OAuth 应用",
+          "hint": "企业连接的集成所用的客户端凭据。"
+        },
+        "observability": {
+          "title": "可观测性",
+          "hint": "错误跟踪、链路追踪和日志级别。"
+        },
+        "platform": {
+          "title": "平台",
+          "hint": "首个管理员和套餐限制执行。"
+        }
+      }
     }
   },
   "platformModules": {

@@ -77,7 +77,7 @@ export const ADMIN_SECTIONS: Item[] = [
     icon: ShieldCheck,
     children: [{ href: "/audit", label: "audit" }, { href: "/security", label: "security" }, { href: "/security/access", label: "securityAccess" }],
   },
-  { href: "/settings", label: "settings", icon: Settings },
+  { href: "/settings", label: "settings", icon: Settings, children: [{ href: "/settings", label: "settings" }, { href: "/keys", label: "keys" }] },
 ];
 
 function isActive(pathname: string | null, base: string, href: string) {
