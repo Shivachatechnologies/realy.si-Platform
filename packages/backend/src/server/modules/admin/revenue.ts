@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { env } from "@/server/core/env";
+import { keyFingerprint } from "@/server/core/platform-secrets";
 import { logger } from "@/server/core/logger";
 import { daysAgo, requireAnyPlatform } from "./access";
 import { mrrByCurrency } from "./overview";
@@ -28,14 +29,15 @@ const monthly = (i: ItemRow, interval: "MONTH" | "YEAR") => {
   return interval === "YEAR" ? a / 12n : a;
 };
 
-let stripe: Stripe | null = null;
+let stripe: { c: Stripe; fp: string } | null = null;
 
 async function stripeInvoices() {
   const key = env().STRIPE_SECRET_KEY;
   if (!key) return { connected: false as const, invoices: [], error: null };
   try {
-    stripe ??= new Stripe(key, { maxNetworkRetries: 1, timeout: 10_000, appInfo: { name: "Realy Control Center" } });
-    const res = await stripe.invoices.list({ limit: 25 });
+    const fp = keyFingerprint(key);
+    if (stripe?.fp !== fp) stripe = { c: new Stripe(key, { maxNetworkRetries: 1, timeout: 10_000, appInfo: { name: "Realy Control Center" } }), fp };
+    const res = await stripe.c.invoices.list({ limit: 25 });
     return {
       connected: true as const,
       livemode: res.data[0]?.livemode ?? !key.startsWith("sk_test"),

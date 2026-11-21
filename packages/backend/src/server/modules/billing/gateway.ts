@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { env } from "@/server/core/env";
+import { keyFingerprint } from "@/server/core/platform-secrets";
 
 /**
  * The subset of Stripe Realy uses, behind an interface so the billing logic is testable with a recording
@@ -99,15 +100,17 @@ export function setBillingConfigForTests(c: BillingConfig | null | undefined) {
   override = c;
 }
 
-let client: Stripe | null = null;
+let client: { c: Stripe; fp: string } | null = null;
 
 /** Billing configuration, or null when Stripe is NOT CONFIGURED. */
 export function billingConfig(): BillingConfig | null {
   if (override !== undefined) return override;
   const e = env();
   if (!e.STRIPE_SECRET_KEY) return null;
-  client ??= new Stripe(e.STRIPE_SECRET_KEY, { maxNetworkRetries: 2, timeout: 20_000, appInfo: { name: "Realy" } });
-  return { gateway: stripeGateway(client), webhookSecret: e.STRIPE_WEBHOOK_SECRET ?? null, automaticTax: e.STRIPE_AUTOMATIC_TAX };
+  // Rebuilt when the key changes (Admin → Platform keys rotates it at runtime).
+  const fp = keyFingerprint(e.STRIPE_SECRET_KEY);
+  if (client?.fp !== fp) client = { c: new Stripe(e.STRIPE_SECRET_KEY, { maxNetworkRetries: 2, timeout: 20_000, appInfo: { name: "Realy" } }), fp };
+  return { gateway: stripeGateway(client.c), webhookSecret: e.STRIPE_WEBHOOK_SECRET ?? null, automaticTax: e.STRIPE_AUTOMATIC_TAX };
 }
 
 /** Signature verification (no API key needed). Throws on an invalid or stale signature. */

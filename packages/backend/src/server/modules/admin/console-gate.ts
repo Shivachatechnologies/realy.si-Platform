@@ -34,6 +34,7 @@ const AUDIT = ["platform.audit.read", "platform.security.read"];
 const CONTENT = ["platform.content.manage"];
 const PRICING = ["pricing.read", "platform.subscriptions.read", "globalization.read"];
 const OPS = ["platform.controls.manage", "platform.security.read", "platform.audit.read"];
+const PLATFORM_KEYS = ["platform.controls.manage", "platform.security.manage", "platform.security.read"];
 const PEOPLE = ["platform.users.read", "platform.organizations.read", "platform.support.read"];
 
 /**
@@ -57,6 +58,9 @@ const SECTIONS: Record<string, string[]> = {
   regions: ["globalization.read", "pricing.read"],
   controls: ["platform.controls.manage", "platform.audit.read", "platform.ai.read"],
   settings: ["platform.controls.manage", "platform.audit.read"],
+  // Platform keys (docs/platform-keys.md): the page /keys and the API /api/v1/admin/platform-secrets.
+  keys: PLATFORM_KEYS,
+  "platform-secrets": PLATFORM_KEYS,
   system: OPS,
   jobs: OPS,
   ops: [...OPS, "platform.subscriptions.read"],

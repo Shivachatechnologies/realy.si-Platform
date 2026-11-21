@@ -1613,7 +1613,8 @@
       "viewAs": "Ansicht als (Support)",
       "ops": "Plattformbetrieb",
       "securityAccess": "Anmeldungen & Sitzungen",
-      "plans": "Pläne & Limits"
+      "plans": "Pläne & Limits",
+      "keys": "Plattformschlüssel"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -3404,6 +3405,86 @@
       "cacheMemory": "Cache-Speicher",
       "s3Connections": "S3-Verbindungen nach Status",
       "dbObjects": "In der Datenbank gespeicherte Dateien"
+    },
+    "keys": {
+      "title": "Plattformschlüssel",
+      "subtitle": "API-Schlüssel und Anbietereinstellungen für die gesamte Plattform. Geheime Werte sind nur schreibbar.",
+      "why": "Anbieterschlüssel hier statt in der Hosting-Umgebung eingeben. Jede Änderung wird protokolliert und andere Super-Admins werden benachrichtigt.",
+      "status": {
+        "admin": "Aktiv aus Admin",
+        "host": "Aus Hosting-Umgebung",
+        "missing": "Fehlt"
+      },
+      "precedenceTitle": "Wie Werte angewendet werden",
+      "precedence": "Ein hier gespeicherter Wert überschreibt die Hosting-Umgebung. Beim Löschen gilt wieder der Hosting-Wert. Laufende Server übernehmen Änderungen innerhalb von etwa 30 Sekunden; mit „Neustart“ markierte Schlüssel gelten ab dem nächsten Deployment. Datenbank, Verschlüsselungsschlüssel, Redis und App-URLs bleiben in der Hosting-Umgebung.",
+      "blockedTitle": "Blockiert bis zur Konfiguration",
+      "readOnly": "Sie können den Status der Plattformschlüssel sehen. Zum Ändern ist die Berechtigung für Plattform-Steuerung oder Sicherheitsverwaltung nötig.",
+      "configured": "{set} von {total} gesetzt",
+      "overridesHost": "überschreibt Hosting-Wert",
+      "restart": "Neustart",
+      "updated": "Geändert von {who}, {when}",
+      "whereToGet": "Wo erhältlich",
+      "blocks": "Fehlt — blockiert: {features}",
+      "test": "Testen",
+      "set": "Setzen",
+      "replace": "Ersetzen",
+      "clear": "Löschen",
+      "clearTitle": "{key} löschen?",
+      "clearToHost": "Der Admin-Wert wird entfernt und wieder der Wert aus der Hosting-Umgebung verwendet.",
+      "clearToMissing": "Der Admin-Wert wird entfernt. Es gibt keinen Hosting-Wert, daher funktionieren Funktionen mit diesem Schlüssel nicht mehr.",
+      "webhookUrl": "Zu registrierende Webhook-URL",
+      "redirectUrl": "Zu registrierende Redirect-URL(s)",
+      "copy": "Kopieren",
+      "newValue": "Neuer Wert",
+      "value": "Wert",
+      "writeOnly": "Nur schreibbar: Der gespeicherte Wert wird nie wieder angezeigt. Nur die letzten 4 Zeichen sind sichtbar.",
+      "show": "Wert anzeigen",
+      "hide": "Wert verbergen",
+      "testOk": "Prüfung bestanden",
+      "testFailed": "Prüfung fehlgeschlagen",
+      "formatOnly": "(nur Formatprüfung — für diesen Schlüssel gibt es keinen Anbieteraufruf)",
+      "features": {
+        "aiTasks": "KI-Aufgaben",
+        "liveChatAi": "KI-Website-Chat",
+        "email": "Transaktions-E-Mail",
+        "billing": "Abrechnung und Checkout",
+        "billingWebhooks": "Stripe-Webhooks",
+        "socialLogin": "Social Login",
+        "integrations": "Integrationsverbindungen",
+        "errorTracking": "Fehlerverfolgung",
+        "tracing": "Tracing",
+        "firstAdmin": "Registrierung des ersten Super-Admins"
+      },
+      "groups": {
+        "ai": {
+          "title": "KI",
+          "hint": "Claude-API-Schlüssel, Standardmodell und Token-Limits."
+        },
+        "email": {
+          "title": "E-Mail",
+          "hint": "Anbieter und Absender für Transaktions-E-Mails."
+        },
+        "payments": {
+          "title": "Zahlungen",
+          "hint": "Stripe-Schlüssel und Webhook-Signaturgeheimnis."
+        },
+        "login": {
+          "title": "Anmeldung mit Google, GitHub, Microsoft",
+          "hint": "OAuth-Apps für Social Login (Google und Microsoft werden auch von Integrationen genutzt)."
+        },
+        "integrations": {
+          "title": "OAuth-Apps für Integrationen",
+          "hint": "Client-Zugangsdaten für die Integrationen, die Unternehmen verbinden."
+        },
+        "observability": {
+          "title": "Beobachtbarkeit",
+          "hint": "Fehlerverfolgung, Tracing und Log-Level."
+        },
+        "platform": {
+          "title": "Plattform",
+          "hint": "Erster Admin und Durchsetzung der Tariflimits."
+        }
+      }
     }
   },
   "platformModules": {

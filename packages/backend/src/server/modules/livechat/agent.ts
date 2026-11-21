@@ -4,6 +4,7 @@ import { db, transaction } from "@/server/core/db";
 import { toJson } from "@/server/core/json";
 import { systemContext } from "@/server/core/context";
 import { env } from "@/server/core/env";
+import { keyFingerprint } from "@/server/core/platform-secrets";
 import { isAppError } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { agentModel, aiRefusal } from "@/server/core/platform-controls";
@@ -21,10 +22,13 @@ const MAX_TOKENS = 4000;
 const HISTORY = 30;
 const DEADLINE_MS = 45_000;
 
-let client: Anthropic | null = null;
+let client: { c: Anthropic; fp: string } | null = null;
 const model = () => {
-  client ??= new Anthropic({ apiKey: env().ANTHROPIC_API_KEY, timeout: 30_000, maxRetries: 1 });
-  return client;
+  // Rebuilt when the key changes (Admin → Platform keys rotates it at runtime).
+  const key = env().ANTHROPIC_API_KEY;
+  const fp = keyFingerprint(key);
+  if (client?.fp !== fp) client = { c: new Anthropic({ apiKey: key, timeout: 30_000, maxRetries: 1 }), fp };
+  return client.c;
 };
 
 export const chatAiConfigured = () => Boolean(env().ANTHROPIC_API_KEY);

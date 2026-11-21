@@ -11,6 +11,7 @@ import { consume, mostRestrictive, rateLimitHeaders, type RateLimitResult, type 
 import { claimIdempotencyKey, completeIdempotencyKey, releaseIdempotencyKey, requestHash } from "./idempotency";
 import { captureException, securityEvent, withSpan } from "./telemetry";
 import { requestGate } from "./platform-controls";
+import { ensurePlatformSecretsFresh } from "./platform-secrets";
 import { SESSION_COOKIE, validateSessionToken, type SessionInfo } from "@/server/modules/auth/session";
 
 export interface HandlerArgs {
@@ -159,6 +160,8 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         return res;
       };
       try {
+        // Admin-set platform keys (docs/platform-keys.md): no I/O unless the ~30 s TTL expired; never throws.
+        await ensurePlatformSecretsFresh();
         const mutating = MUTATING.has(req.method);
         // Developer API keys (Authorization: Bearer rly_…, docs/api.md): bearer credentials are not sent by browsers on
         // their own, so the cookie CSRF check does not apply; the key's service account carries exactly its scopes.

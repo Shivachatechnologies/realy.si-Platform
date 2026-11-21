@@ -1,6 +1,10 @@
 /** Next.js instrumentation hook: runs once per server process (docs/architecture.md §4). */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  // Platform keys set in the Control Center (docs/platform-keys.md) are overlaid onto process.env first, so
+  // observability and every env() reader see them. Never throws; falls back to the host env.
+  const { ensurePlatformSecretsFresh } = await import("@/server/core/platform-secrets");
+  await ensurePlatformSecretsFresh();
   const { initObservability } = await import("@/server/core/observability");
   await initObservability("realy-web");
 }

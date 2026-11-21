@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/server/core/db";
 import { newRequestId, userContext, type RequestContext } from "@/server/core/context";
 import { clientIpFrom } from "@/server/core/http";
+import { ensurePlatformSecretsFresh } from "@/server/core/platform-secrets";
 import { SESSION_COOKIE, validateSessionToken, type SessionInfo } from "@/server/modules/auth/session";
 import type { AppLocale } from "@/i18n/config";
 
@@ -13,6 +14,7 @@ export const COMPANY_COOKIE = "realy_company";
 
 /** Data Access Layer: the current session, read once per request. Never trust client-provided identity. */
 export const getSession = cache(async (): Promise<SessionInfo | null> => {
+  await ensurePlatformSecretsFresh(); // admin-set platform keys (cheap when fresh; never throws)
   const jar = await cookies();
   return validateSessionToken(jar.get(SESSION_COOKIE)?.value);
 });
