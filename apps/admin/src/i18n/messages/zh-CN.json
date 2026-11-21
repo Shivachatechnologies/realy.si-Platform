@@ -678,7 +678,20 @@
       "billing_no_subscription": "目前没有可更改的有效订阅。请在“账单与用量”中开始订阅。",
       "billing_same_plan": "这已经是您的当前套餐。",
       "billing_currency_change": "更换套餐会保留当前的计费货币。",
-      "plan_limit_unlimited_high_cost": "高成本用量需要有限配额，请通过附加包提供更多额度。"
+      "plan_limit_unlimited_high_cost": "高成本用量需要有限配额，请通过附加包提供更多额度。",
+      "sites_exists": "该公司已有网站。",
+      "sites_slug_taken": "该网址已被占用，请换一个。",
+      "sites_page_slug_taken": "已有其他页面使用此地址。",
+      "sites_stale_draft": "其他人刚刚保存了此页面。请刷新查看其修改。",
+      "sites_nothing_published": "让网站上线前请至少发布一个页面。",
+      "sites_page_empty": "发布前请至少添加一个区块。",
+      "sites_schedule_past": "请选择至少一分钟之后的发布时间。",
+      "sites_testimonial_not_customer": "客户评价只能引用真实客户（CRM 中类型为“客户”的账户）。",
+      "sites_unknown_product": "某个价格卡片指向的产品已不存在。",
+      "sites_unknown_asset": "某张图片不在您的素材库中。",
+      "sites_no_structure": "您的 Founder Kit 中还没有已完成的网站结构。",
+      "sites_domain_taken": "该域名已连接到其他网站。",
+      "sites_no_domain": "请先添加域名。"
     }
   },
   "onboarding": {
@@ -1599,7 +1612,8 @@
       "roles": "管理员角色",
       "viewAs": "以用户视角查看（支持）",
       "ops": "平台运维",
-      "securityAccess": "登录与会话"
+      "securityAccess": "登录与会话",
+      "plans": "套餐与限额"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -2628,7 +2642,9 @@
           "voice_minutes_month": "语音分钟 / 月",
           "email_sends_month": "邮件发送 / 月",
           "api_cost_month": "外部 API 支出上限 / 月",
-          "ads_spend_month": "广告支出上限 / 月"
+          "ads_spend_month": "广告支出上限 / 月",
+          "sites_pages_max": "网站页面",
+          "sites_landing_pages_max": "落地页"
         }
       }
     },
@@ -3820,7 +3836,9 @@
       "read_ops_bottlenecks": "读取运营瓶颈",
       "read_process": "读取流程",
       "propose_process_version": "提议 SOP 版本",
-      "triage_ticket": "分拣工单"
+      "triage_ticket": "分拣工单",
+      "read_site": "读取网站",
+      "draft_site_pages": "起草网站页面"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -4540,6 +4558,10 @@
     "operations_manager": {
       "name": "运营经理",
       "summary": "发现瓶颈、撰写 SOP，并把修复措施整理成任务。"
+    },
+    "web_designer": {
+      "name": "网页设计师",
+      "summary": "根据品牌、产品和公司知识起草网站与落地页。"
     }
   },
   "projects": {
@@ -4990,6 +5012,9 @@
       },
       "platform": {
         "announcement": "公告：{title}"
+      },
+      "sites": {
+        "form_submission": "新的网站线索：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -8198,7 +8223,9 @@
       "crm_prospect_found": "发现潜在客户",
       "crm_outreach_sent": "已发送外联邮件",
       "livechat_lead_captured": "在线聊天获取了线索",
-      "briefing_delivered": "简报已送达"
+      "briefing_delivered": "简报已送达",
+      "site_published": "网站页面已发布",
+      "site_form_submitted": "网站表单已提交"
     },
     "compare": {
       "title": "比较版本",
@@ -18107,7 +18134,9 @@
       "crm_prospect_found": "发现了一位新的潜在客户",
       "crm_outreach_sent": "发送了一封外联邮件",
       "livechat_lead_captured": "从在线聊天获取了一条线索",
-      "briefing_delivered": "送达了一份简报"
+      "briefing_delivered": "送达了一份简报",
+      "site_published": "发布了一个网站页面",
+      "site_form_submitted": "收到一条网站线索"
     }
   },
   "site": {

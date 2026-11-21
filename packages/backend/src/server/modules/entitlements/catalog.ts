@@ -161,6 +161,9 @@ export const LIMITS = {
   /** Ad spend the AI may commit on connected ad accounts, in USD cents (spend is paid to the ad platform). */
   "ads.spend.month": { group: "marketing", unit: "cents", meter: "ads.spend_cents", highCost: true, values: { starter: 0, growth: 200_000, scale: 2_000_000 } },
   "storage.mb": { group: "platform", unit: "mb", meter: null, values: { starter: 5 * 1024, growth: 25 * 1024, scale: 250 * 1024 } },
+  /** Website pages (sites module, kind PAGE) and standalone landing pages (kind LANDING), counted live. */
+  "sites.pages.max": { group: "company", unit: "count", meter: null, values: { starter: 10, growth: 50, scale: 250 } },
+  "sites.landing_pages.max": { group: "company", unit: "count", meter: null, values: { starter: 3, growth: 25, scale: null } },
 } as const satisfies Record<string, LimitDef>;
 
 export type LimitKey = keyof typeof LIMITS;

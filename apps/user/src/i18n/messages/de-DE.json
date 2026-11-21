@@ -818,7 +818,20 @@
       "billing_no_subscription": "Es gibt noch kein aktives Abonnement zum Ändern. Starten Sie eines unter Abrechnung & Nutzung.",
       "billing_same_plan": "Das ist bereits Ihr aktueller Plan.",
       "billing_currency_change": "Planwechsel behalten Ihre aktuelle Abrechnungswährung.",
-      "plan_limit_unlimited_high_cost": "Kostenintensive Nutzung braucht ein endliches Kontingent. Mehr über Zusatzpakete anbieten."
+      "plan_limit_unlimited_high_cost": "Kostenintensive Nutzung braucht ein endliches Kontingent. Mehr über Zusatzpakete anbieten.",
+      "sites_exists": "Dieses Unternehmen hat bereits eine Website.",
+      "sites_slug_taken": "Diese Webadresse ist bereits vergeben. Wählen Sie eine andere.",
+      "sites_page_slug_taken": "Eine andere Seite verwendet diese Adresse bereits.",
+      "sites_stale_draft": "Jemand anderes hat diese Seite inzwischen gespeichert. Laden Sie neu, um die Änderungen zu sehen.",
+      "sites_nothing_published": "Veröffentlichen Sie mindestens eine Seite, bevor Sie die Website online schalten.",
+      "sites_page_empty": "Fügen Sie vor dem Veröffentlichen mindestens einen Block hinzu.",
+      "sites_schedule_past": "Wählen Sie einen Zeitpunkt mindestens eine Minute in der Zukunft.",
+      "sites_testimonial_not_customer": "Kundenstimmen dürfen nur echte Kunden zitieren (CRM-Konten vom Typ Kunde).",
+      "sites_unknown_product": "Eine Preiskarte verweist auf ein Produkt, das nicht mehr existiert.",
+      "sites_unknown_asset": "Ein Bild ist nicht in Ihrer Asset-Bibliothek.",
+      "sites_no_structure": "Ihr Founder Kit hat noch keine fertige Website-Struktur.",
+      "sites_domain_taken": "Diese Domain ist bereits mit einer anderen Website verbunden.",
+      "sites_no_domain": "Fügen Sie zuerst eine Domain hinzu."
     }
   },
   "onboarding": {
@@ -2274,7 +2287,9 @@
       "read_ops_bottlenecks": "Betriebsengpässe lesen",
       "read_process": "Prozess lesen",
       "propose_process_version": "SOP-Version vorschlagen",
-      "triage_ticket": "Ticket einordnen"
+      "triage_ticket": "Ticket einordnen",
+      "read_site": "Website lesen",
+      "draft_site_pages": "Website-Seiten entwerfen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -2994,6 +3009,10 @@
     "operations_manager": {
       "name": "Operations-Manager",
       "summary": "Findet Engpässe, schreibt SOPs und organisiert Lösungen als Aufgaben."
+    },
+    "web_designer": {
+      "name": "Webdesigner",
+      "summary": "Entwirft Ihre Website und Landingpages aus Marke, Produkten und Unternehmenswissen."
     }
   },
   "projects": {
@@ -3444,6 +3463,9 @@
       },
       "platform": {
         "announcement": "Ankündigung: {title}"
+      },
+      "sites": {
+        "form_submission": "Neuer Website-Lead: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -6804,7 +6826,9 @@
       "crm_prospect_found": "Interessent gefunden",
       "crm_outreach_sent": "Outreach-E-Mail gesendet",
       "livechat_lead_captured": "Lead aus Live-Chat erfasst",
-      "briefing_delivered": "Briefing zugestellt"
+      "briefing_delivered": "Briefing zugestellt",
+      "site_published": "Website-Seite veröffentlicht",
+      "site_form_submitted": "Website-Formular gesendet"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -16277,7 +16301,8 @@
         "confirm": "Unternehmen in „{name}“ umbenennen?"
       },
       "website": {
-        "noBuilder": "Es ist kein Website-Baukasten verbunden, daher wird die Struktur als Dokument exportiert, das du einer Designerin geben oder in deinen Baukasten einfügen kannst."
+        "noBuilder": "Es ist kein Website-Baukasten verbunden, daher wird die Struktur als Dokument exportiert, das du einer Designerin geben oder in deinen Baukasten einfügen kannst.",
+        "createSite": "„Meine Website erstellen“ macht aus dieser Struktur Seitenentwürfe unter Website, im Design Ihrer Marke. Nichts wird veröffentlicht, bevor Sie es tun."
       },
       "forecast": {
         "projection": "Projektion — keine Garantie",
@@ -16332,8 +16357,10 @@
           "create_products": "Die Produkte wurden hinzugefügt.",
           "use_workforce": "Das KI-Team wurde deiner Belegschaft hinzugefügt.",
           "use_name": "Das Unternehmen wurde umbenannt.",
-          "pin_logo": "Das ist jetzt dein Markenlogo."
-        }
+          "pin_logo": "Das ist jetzt dein Markenlogo.",
+          "create_site": "Seitenentwürfe wurden unter Website angelegt – nichts ist veröffentlicht."
+        },
+        "create_site": "Meine Website erstellen"
       },
       "recordKinds": {
         "project": "Projekt",
@@ -16346,7 +16373,8 @@
         "workforce_draft": "Team-Schritt",
         "ai_employees": "Belegschaft",
         "company_name": "Unternehmen",
-        "brand_logo": "Marke"
+        "brand_logo": "Marke",
+        "site": "Website"
       },
       "items": {
         "idea_refinement": {
@@ -17623,7 +17651,9 @@
         "create_work_task": "Bereitet eine Aufgabe vor",
         "read_support_queue": "Liest die Support-Warteschlange",
         "draft_ticket_reply": "Entwirft eine Antwort",
-        "read_workflows": "Prüft Workflows"
+        "read_workflows": "Prüft Workflows",
+        "read_site": "Liest die Website",
+        "draft_site_pages": "Entwirft Website-Seiten"
       },
       "verbs": {
         "read": "Liest · {name}",
@@ -18929,7 +18959,9 @@
       "crm_prospect_found": "hat einen neuen Interessenten gefunden",
       "crm_outreach_sent": "hat eine Outreach-E-Mail gesendet",
       "livechat_lead_captured": "hat einen Lead aus dem Live-Chat erfasst",
-      "briefing_delivered": "hat ein Briefing zugestellt"
+      "briefing_delivered": "hat ein Briefing zugestellt",
+      "site_published": "hat eine Website-Seite veröffentlicht",
+      "site_form_submitted": "hat einen Website-Lead erhalten"
     }
   },
   "aiPlans": {
@@ -21502,7 +21534,9 @@
       "voice_minutes_month": "Sprachminuten / Monat",
       "email_sends_month": "E-Mail-Versand / Monat",
       "api_cost_month": "Kostenobergrenze externe APIs / Monat",
-      "ads_spend_month": "Werbebudget-Obergrenze / Monat"
+      "ads_spend_month": "Werbebudget-Obergrenze / Monat",
+      "sites_pages_max": "Website-Seiten",
+      "sites_landing_pages_max": "Landingpages"
     },
     "addons": {
       "ai_credits_10k": "10.000 KI-Credits",
@@ -21686,6 +21720,490 @@
       "text": "Realy verwendet nur technisch notwendige Cookies (Anmeldung, Sprache und gewähltes Unternehmen) — keine Analyse- oder Werbe-Cookies.",
       "link": "Cookie-Richtlinie",
       "ok": "OK"
+    }
+  },
+  "sites": {
+    "title": "Website",
+    "eyebrow": "Marketing · Website",
+    "subtitle": "Erstellen und veröffentlichen Sie Ihre Firmenwebsite und Landingpages – ohne Code, im Markendesign, mit Formularen, die direkt im CRM landen.",
+    "subtitleSite": "Ihre Firmenwebsite: Seiten, Landingpages, Leads aus Ihren Formularen und Ihre Domain.",
+    "viewSite": "Website ansehen",
+    "empty": "Dieses Unternehmen hat noch keine Website. Personen mit Marketing-Berechtigung können sie hier anlegen.",
+    "planLocked": "Ihr Tarif enthält den Website-Builder nicht. Sie können ihn einrichten, zum Veröffentlichen ist aber ein Upgrade nötig.",
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "tabs": {
+      "overview": "Übersicht",
+      "pages": "Seiten",
+      "submissions": "Leads",
+      "settings": "Design & Einstellungen",
+      "domain": "Domain"
+    },
+    "kinds": {
+      "PAGE": "Website-Seite",
+      "LANDING": "Landingpage"
+    },
+    "kindHints": {
+      "PAGE": "Teil Ihrer Website und ihrer Navigation (Start, Leistungen, Über uns, Kontakt …).",
+      "LANDING": "Eine fokussierte Seite für ein Angebot oder eine Kampagne, meist nicht in der Navigation."
+    },
+    "pageStatus": {
+      "DRAFT": "Entwurf",
+      "SCHEDULED": "Geplant",
+      "PUBLISHED": "Veröffentlicht"
+    },
+    "fonts": {
+      "modern": "Moderne Sans",
+      "display": "Kräftige Display-Schrift",
+      "classic": "Klassische Serif",
+      "mono": "Technische Mono"
+    },
+    "styles": {
+      "soft": "Sanfter Verlauf",
+      "bold": "Kräftige Farbe",
+      "minimal": "Minimal"
+    },
+    "radii": {
+      "rounded": "Abgerundet",
+      "square": "Eckig",
+      "pill": "Extra rund"
+    },
+    "templates": {
+      "services": "Dienstleistungsunternehmen",
+      "product": "Produkt oder Software",
+      "local": "Lokales Geschäft",
+      "landing": "Onepager"
+    },
+    "icons": {
+      "sparkles": "Funkeln",
+      "check": "Haken",
+      "shield": "Schild",
+      "zap": "Blitz",
+      "heart": "Herz",
+      "star": "Stern",
+      "clock": "Uhr",
+      "globe": "Globus",
+      "users": "Personen",
+      "chart": "Diagramm"
+    },
+    "fields": {
+      "name": "Name der Website",
+      "slug": "Webadresse",
+      "slugHint": "Ihre Website ist unter {path} erreichbar.",
+      "slugInvalid": "Verwenden Sie 3–48 Kleinbuchstaben, Ziffern und Bindestriche.",
+      "locale": "Sprache der Website",
+      "localeHint": "Besucher sehen Seiten, Formulare und Meldungen in dieser Sprache.",
+      "brandColor": "Markenfarbe",
+      "accentColor": "Akzentfarbe",
+      "font": "Typografie",
+      "style": "Stil",
+      "radius": "Ecken",
+      "logo": "Logo",
+      "noLogo": "Kein Logo",
+      "noLogos": "Noch keine Bilder. Fügen Sie Ihr Logo unter Assets (oder im Founder Kit) hinzu, um es hier zu verwenden."
+    },
+    "setup": {
+      "title": "Website erstellen",
+      "subtitle": "Vier kurze Schritte. Nichts wird öffentlich, bevor Sie veröffentlichen.",
+      "progress": "Fortschritt der Einrichtung",
+      "steps": {
+        "name": "Name",
+        "style": "Stil",
+        "content": "Inhalt",
+        "publish": "Veröffentlichen"
+      },
+      "fromBrand": "Aus Ihrem Brand Kit gestaltet",
+      "fromBrandBody": "Farben, Typografie und Logo stammen aus Ihrer Marke. Passen Sie alles nach Wunsch an.",
+      "noBrandKit": "Noch kein Brand Kit – wählen Sie eine Farbe und eine Schrift; Ihre Marke können Sie später im Marketing verfeinern.",
+      "sample": "Live-Vorschau des Stils",
+      "start": {
+        "ai": "Mit KI entwerfen",
+        "structure": "Aus meinem Founder Kit",
+        "template": "Mit einer Vorlage starten",
+        "blank": "Leere Website"
+      },
+      "startAiHint": "Ihr KI-Webdesigner entwirft jede Seite aus Ihrem Unternehmenswissen, Ihrer Marke und Ihren Produkten. Sie geben die Entwürfe frei.",
+      "startStructureHint": "Macht aus der Website-Struktur Ihres Founder Kits ({count} Seiten) Seitenentwürfe.",
+      "startTemplateHint": "Bewährte Seitenlayouts mit Platzhaltertext, den Sie ersetzen.",
+      "startBlankHint": "Nur eine Startseite – den Rest bauen Sie selbst.",
+      "noStructure": "Ihr Founder Kit hat noch keine fertige Website-Struktur.",
+      "aiMissing": "KI ist auf dieser Plattform noch nicht eingerichtet.",
+      "aiNoPermission": "Ihre Rolle darf keine KI-Aufgaben starten.",
+      "aiApproval": "Die KI schlägt Entwürfe vor; sie werden gespeichert, nachdem Sie sie unter Freigaben bestätigt haben. Die KI veröffentlicht nie.",
+      "template": "Vorlage",
+      "reviewNote": "Ihre Seiten werden als Entwürfe angelegt. Sie können alles bearbeiten, bevor Sie veröffentlichen.",
+      "create": "Website erstellen",
+      "createdTitle": "Ihre Website ist bereit zur Bearbeitung",
+      "createdBody": "Seitenentwürfe wurden angelegt. Veröffentlichen Sie die Startseite, um jetzt online zu gehen, oder prüfen Sie zuerst die Seiten.",
+      "createdAi": "Seitenentwürfe wurden angelegt und Ihr KI-Webdesigner schreibt die Inhalte. Geben Sie die Entwürfe unter Freigaben frei und veröffentlichen Sie dann.",
+      "aiFailed": "Der KI-Entwurf konnte nicht gestartet werden. Sie können ihn in der Übersicht erneut starten.",
+      "publishNow": "Startseite veröffentlichen & online gehen",
+      "reviewFirst": "Zuerst Seiten prüfen",
+      "publishHint": "Beim Veröffentlichen wird die Seite unter Ihrer Webadresse öffentlich. Sie können jederzeit zurückziehen oder eine frühere Version wiederherstellen.",
+      "firstPublishNote": "Erster Start",
+      "readOnly": "Sie können die Website ansehen, aber nicht ändern (Marketing-Berechtigung erforderlich).",
+      "back": "Zurück",
+      "next": "Weiter"
+    },
+    "overview": {
+      "published": "Veröffentlichte Seiten",
+      "ofPages": "von {count} Seiten",
+      "landing": "Landingpages",
+      "newLeads": "Neue Leads",
+      "totalLeads": "{count} insgesamt",
+      "domain": "Eigene Domain",
+      "noDomain": "Nicht verbunden",
+      "pagesTitle": "Seiten",
+      "allPages": "Alle Seiten",
+      "statusTitle": "Status der Website",
+      "onlineHint": "Ihre veröffentlichten Seiten sind öffentlich.",
+      "offlineHint": "Die Website ist offline: Niemand kann sie sehen, auch keine veröffentlichten Seiten.",
+      "goOnline": "Website online schalten",
+      "goOffline": "Website offline schalten",
+      "offlineConfirm": "Die gesamte Website offline schalten? Jede Seite meldet „nicht gefunden“, bis Sie sie wieder online schalten.",
+      "publishFirst": "Veröffentlichen Sie zuerst mindestens eine Seite.",
+      "checklist": "Start-Checkliste",
+      "steps": {
+        "theme": "Website im Markendesign gestalten",
+        "home": "Startseite veröffentlichen",
+        "online": "Website online schalten",
+        "form": "Den ersten Lead erhalten",
+        "domain": "Eigene Domain verbinden"
+      }
+    },
+    "ai": {
+      "generate": "Meine Website generieren",
+      "title": "Meine Website generieren",
+      "description": "Ihr KI-Webdesigner entwirft Seiten aus Company Brain, Brand Kit, Produkten und der Struktur aus dem Founder Kit.",
+      "brief": "Briefing (optional)",
+      "briefHint": "Alles, was die KI wissen sollte: Zielgruppe, Tonalität, Angebote, gewünschte Seiten.",
+      "focus": "Nur diese Seiten (optional)",
+      "focusHint": "Zum Beispiel „eine Landingpage für das Frühlingsangebot“. Leer lassen für die ganze Website.",
+      "approvalNote": "Entwürfe werden gespeichert, nachdem Sie sie freigegeben haben. Die KI veröffentlicht nichts und erfindet nie Kunden oder Ergebnisse.",
+      "start": "Entwurf starten",
+      "startedTitle": "Ihr Webdesigner arbeitet",
+      "started": "Sie erhalten eine Freigabeanfrage mit den vorgeschlagenen Seiten. Geben Sie sie frei, um sie als Entwürfe zu speichern.",
+      "openTask": "Aufgabe öffnen",
+      "openApprovals": "Freigaben öffnen",
+      "cardTitle": "KI-Webdesigner",
+      "cardHint": "Entwirft Seiten zur Prüfung – veröffentlicht nie."
+    },
+    "pages": {
+      "new": "Neue Seite",
+      "newTitle": "Seite erstellen",
+      "pathHint": "Leer lassen für die Startseite. Kleinbuchstaben, Ziffern, Bindestriche und / für Unterseiten.",
+      "startFrom": "Beginnen mit",
+      "from": {
+        "blank": "Leere Seite",
+        "landing": "Landingpage-Layout (mit Kontaktformular)",
+        "duplicate": "Kopie einer anderen Seite"
+      },
+      "create": "Erstellen und bearbeiten",
+      "group": {
+        "PAGE": "Website-Seiten",
+        "LANDING": "Landingpages"
+      },
+      "emptyGroup": {
+        "PAGE": "Noch keine Website-Seiten.",
+        "LANDING": "Noch keine Landingpages. Erstellen Sie eine für Ihr nächstes Angebot oder Ihre nächste Kampagne."
+      },
+      "empty": "Noch keine Seiten.",
+      "colPage": "Seite",
+      "colStatus": "Status",
+      "colUpdated": "Letzte Änderung",
+      "colActions": "Aktionen",
+      "unpublishedChanges": "Unveröffentlichte Änderungen",
+      "aiDraft": "KI-Entwurf",
+      "view": "{title} ansehen",
+      "edit": "{title} bearbeiten",
+      "delete": "{title} löschen",
+      "deleteConfirm": "„{title}“ mit allen Versionen löschen? Ist die Seite veröffentlicht, geht sie offline. Dies kann nicht rückgängig gemacht werden."
+    },
+    "editor": {
+      "title": "Seite bearbeiten",
+      "save": "Entwurf speichern",
+      "saved": "Entwurf gespeichert.",
+      "unsaved": "Ungespeicherte Änderungen",
+      "publish": "Veröffentlichen",
+      "publishChanges": "Änderungen veröffentlichen",
+      "unpublish": "Zurückziehen",
+      "unpublishConfirm": "Diese Seite zurückziehen? Besucher sehen „nicht gefunden“, bis Sie sie erneut veröffentlichen.",
+      "schedule": "Planen",
+      "scheduleTitle": "Veröffentlichung planen",
+      "scheduleHint": "Der aktuelle Entwurf geht zu dieser Zeit automatisch online (Ihre Ortszeit).",
+      "scheduleAt": "Veröffentlichen am",
+      "cancelSchedule": "Planung aufheben",
+      "done": {
+        "publish": "Veröffentlicht – die Seite ist live.",
+        "schedule": "Geplant.",
+        "unpublish": "Die Seite ist offline.",
+        "cancel_schedule": "Die Planung wurde aufgehoben."
+      },
+      "siteOffline": "Diese Seite ist veröffentlicht, aber die Website ist offline. Schalten Sie die Website in der Übersicht online, damit sie öffentlich wird.",
+      "view": "Ansicht",
+      "pane": {
+        "edit": "Bearbeiten",
+        "preview": "Vorschau"
+      },
+      "pageSettings": "Seiteneinstellungen & SEO",
+      "pageTitle": "Seitentitel",
+      "path": "Adresse",
+      "pathHint": "Öffentlich unter {path}",
+      "kind": "Typ",
+      "showInNav": "In der Navigation anzeigen",
+      "seoTitle": "Titel für Suchmaschinen",
+      "seoDescription": "Beschreibung für Suchmaschinen",
+      "ogImage": "Bild beim Teilen",
+      "noIndex": "Diese Seite vor Suchmaschinen verbergen",
+      "blocks": "Blöcke",
+      "addBlock": "Block hinzufügen",
+      "empty": "Diese Seite hat noch keine Blöcke. Fügen Sie unten einen hinzu.",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "duplicate": "Duplizieren",
+      "remove": "Entfernen",
+      "preview": "Live-Vorschau",
+      "device": "Vorschaugerät",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Mobil"
+      },
+      "mobileNote": "Mobile Vorschau mit 390 px – die Live-Website nutzt dasselbe Layout.",
+      "noAssets": "Fügen Sie Bilder unter Assets hinzu, um sie hier zu verwenden.",
+      "noImage": "Kein Bild"
+    },
+    "blocks": {
+      "hero": {
+        "name": "Hero"
+      },
+      "features": {
+        "name": "Vorteile"
+      },
+      "richText": {
+        "name": "Text"
+      },
+      "image": {
+        "name": "Bild"
+      },
+      "cta": {
+        "name": "Handlungsaufruf"
+      },
+      "faq": {
+        "name": "FAQ"
+      },
+      "testimonials": {
+        "name": "Kundenstimmen"
+      },
+      "pricing": {
+        "name": "Preise"
+      },
+      "contactForm": {
+        "name": "Kontaktformular"
+      },
+      "logoStrip": {
+        "name": "Logoleiste"
+      }
+    },
+    "blockFields": {
+      "eyebrow": "Kleine Überschrift",
+      "title": "Überschrift",
+      "subtitle": "Unterzeile",
+      "body": "Text",
+      "ctaLabel": "Button-Text",
+      "ctaHref": "Button-Link",
+      "secondaryLabel": "Text des zweiten Buttons",
+      "secondaryHref": "Link des zweiten Buttons",
+      "image": "Bild",
+      "layout": "Layout",
+      "layouts": {
+        "split": "Text und Bild nebeneinander",
+        "centered": "Zentriert"
+      },
+      "icon": "Symbol",
+      "itemTitle": "Titel",
+      "itemBody": "Beschreibung",
+      "addItem": "Eintrag hinzufügen",
+      "alt": "Bildbeschreibung (für Screenreader)",
+      "caption": "Bildunterschrift",
+      "width": "Breite",
+      "widths": {
+        "wide": "Breit",
+        "content": "Textbreite"
+      },
+      "question": "Frage",
+      "answer": "Antwort",
+      "addQuestion": "Frage hinzufügen",
+      "customer": "Kunde",
+      "quote": "Zitat",
+      "author": "Person",
+      "role": "Rolle",
+      "addTestimonial": "Kundenstimme hinzufügen",
+      "customersOnly": "Nur echte Kunden dürfen zitiert werden: Jede Kundenstimme ist mit einem CRM-Konto vom Typ Kunde verknüpft. Fragen Sie vor dem Veröffentlichen um Erlaubnis.",
+      "noCustomers": "Noch keine Kunden im CRM. Markieren Sie ein Konto als Kunde, um es hier zu zitieren.",
+      "product": "Produkt",
+      "price": "Preis (z. B. 49 €)",
+      "period": "Zeitraum (z. B. pro Monat)",
+      "features": "Enthalten (eine pro Zeile)",
+      "highlight": "Diese Karte hervorheben",
+      "addProduct": "Produkt hinzufügen",
+      "productsOnly": "Karten zeigen Ihre echten Produkte (Name und Beschreibung aus Produkte). Den angezeigten Preis geben Sie ein.",
+      "noProducts": "Noch keine Produkte. Legen Sie sie unter Produkte an, um Preise zu zeigen.",
+      "fields": "Felder",
+      "required": "Pflichtfeld",
+      "submitLabel": "Button-Text",
+      "successMessage": "Dankesnachricht",
+      "consentText": "Einwilligungstext",
+      "consentHint": "Besucher müssen dies vor dem Senden ankreuzen. Der genaue Text wird mit jeder Einsendung gespeichert.",
+      "formLeads": "Jede Einsendung wird ein CRM-Lead und erscheint unter Leads. Bots werden mit einem versteckten Feld und Ratenbegrenzung gefiltert.",
+      "logoName": "Name",
+      "logosHint": "Zeigen Sie nur Logos, die Sie verwenden dürfen.",
+      "addLogo": "Logo hinzufügen",
+      "linkHint": "Eine Seite wie /kontakt, ein Anker wie #kontakt oder ein vollständiger https://-Link.",
+      "richHint": "**fett**, *kursiv*, [Link](https://…), „## “ für Überschriften, „- “ für Listen. Lassen Sie zwischen Absätzen eine Leerzeile."
+    },
+    "versions": {
+      "title": "Versionen",
+      "hint": "Bei jedem Veröffentlichen oder Planen wird eine Version gespeichert.",
+      "empty": "Noch keine Versionen – veröffentlichen Sie die Seite, um die erste anzulegen.",
+      "live": "Live",
+      "restore": "Als Entwurf wiederherstellen",
+      "restorePublish": "Wiederherstellen & veröffentlichen",
+      "restoreConfirm": "Den aktuellen Entwurf durch Version {version} ersetzen?",
+      "publishConfirm": "Version {version} jetzt veröffentlichen? Sie ersetzt die Live-Seite."
+    },
+    "inbox": {
+      "filters": "Leads filtern",
+      "filter": {
+        "inbox": "Posteingang",
+        "NEW": "Neu",
+        "READ": "Gelesen",
+        "ARCHIVED": "Archiviert"
+      },
+      "new": "Neu",
+      "anonymous": "Besucher",
+      "consented": "Einwilligung erteilt {when}",
+      "openLead": "CRM-Lead öffnen",
+      "noLead": "Kein CRM-Lead (nur hier gespeichert)",
+      "markRead": "Als gelesen markieren",
+      "markNew": "Als neu markieren",
+      "archive": "Archivieren",
+      "empty": "Noch keine Formulareinsendungen. Fügen Sie einer veröffentlichten Seite einen Kontaktformular-Block hinzu, um Leads zu sammeln."
+    },
+    "settings": {
+      "general": "Allgemein",
+      "slugWarning": "Wenn Sie die Adresse ändern, funktionieren Links auf die alte nicht mehr.",
+      "theme": "Design",
+      "themeHint": "Gilt sofort für alle Seiten.",
+      "nav": "Navigation",
+      "navHint": "Links im Seitenkopf. Leer: Beim Anlegen der Website werden Ihre Seiten automatisch aufgeführt.",
+      "pagesAvailable": "Ihre Seiten:",
+      "linkLabel": "Bezeichnung",
+      "linkHref": "Link",
+      "addLink": "Link hinzufügen",
+      "footer": "Fußzeile",
+      "footerText": "Text der Fußzeile",
+      "poweredBy": "„Erstellt mit Realy“ anzeigen",
+      "seo": "Standards für Suche & Teilen",
+      "seoHint": "Wird verwendet, wenn eine Seite keinen eigenen Suchtitel, keine Beschreibung oder kein Teilen-Bild hat.",
+      "noIndex": "Die gesamte Website vor Suchmaschinen verbergen",
+      "save": "Einstellungen speichern",
+      "saved": "Einstellungen gespeichert. Veröffentlichte Seiten verwenden sie sofort."
+    },
+    "domain": {
+      "title": "Eigene Domain",
+      "description": "Ihre Website ist immer unter {path} erreichbar. Verbinden Sie Ihre eigene Domain in zwei Schritten.",
+      "domain": "Domain",
+      "domainHint": "Zum Beispiel www.ihrefirma.de",
+      "save": "Domain speichern",
+      "status": {
+        "NONE": "Nicht verbunden",
+        "PENDING": "Warten auf DNS",
+        "VERIFIED": "Inhaberschaft bestätigt",
+        "FAILED": "Nicht bestätigt"
+      },
+      "txtTitle": "Legen Sie diesen DNS-Eintrag bei Ihrem Domain-Anbieter an",
+      "recordType": "Typ",
+      "recordName": "Name / Host",
+      "recordValue": "Wert",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "txtHint": "DNS-Änderungen können wenige Minuten bis 48 Stunden dauern. Prüfen Sie danach erneut.",
+      "verify": "Jetzt prüfen",
+      "remove": "Domain entfernen",
+      "removeConfirm": "Diese Domain von Ihrer Website entfernen?",
+      "lastChecked": "Zuletzt geprüft {when}",
+      "errors": {
+        "record_not_found": "der TXT-Eintrag wurde nicht gefunden",
+        "record_mismatch": "ein TXT-Eintrag existiert, aber sein Wert stimmt nicht",
+        "dns_timeout": "die DNS-Abfrage hat zu lange gedauert",
+        "dns_error": "die DNS-Abfrage ist fehlgeschlagen"
+      },
+      "verifiedTitle": "Inhaberschaft bestätigt – als Nächstes das Routing",
+      "verifiedBody": "Ihre Domain ist bestätigt. Damit die Website darüber erreichbar ist, muss die Domain auf Realy zeigen (CNAME-Eintrag) und vom Realy-Team aktiviert werden; bis dahin bleibt Ihre Website unter {path}.",
+      "stepsTitle": "So funktioniert es",
+      "steps": {
+        "add": "Domain hinzufügen",
+        "addHint": "Geben Sie die Domain ein, die Sie nutzen möchten.",
+        "txt": "Inhaberschaft nachweisen",
+        "txtHint": "Legen Sie den TXT-Eintrag an und prüfen Sie ihn hier – eine echte DNS-Abfrage.",
+        "route": "Domain auf Ihre Website zeigen lassen",
+        "routeHint": "Legen Sie einen CNAME-Eintrag zu Realy an; das Team aktiviert ihn für Ihre Website. Wir sagen Ihnen, wenn sie live ist."
+      }
+    },
+    "public": {
+      "menu": "Menü",
+      "skip": "Zum Inhalt springen",
+      "poweredBy": "Erstellt mit Realy",
+      "contactUs": "Kontakt",
+      "customerOf": "Kunde",
+      "form": {
+        "name": "Name",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "company": "Unternehmen",
+        "message": "Nachricht",
+        "send": "Senden",
+        "sending": "Wird gesendet …",
+        "success": "Vielen Dank – Ihre Nachricht wurde gesendet.",
+        "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+        "rateLimited": "Zu viele Nachrichten. Bitte versuchen Sie es später erneut.",
+        "required": "Pflichtfeld",
+        "invalidEmail": "Geben Sie eine gültige E-Mail-Adresse ein",
+        "consentDefault": "Ich bin einverstanden, dass meine Angaben zur Beantwortung meiner Anfrage gespeichert werden."
+      }
+    },
+    "tpl": {
+      "pageHome": "Start",
+      "pageAbout": "Über uns",
+      "pageContact": "Kontakt",
+      "pageServices": "Leistungen",
+      "heroTitle": "Willkommen bei {name}",
+      "heroSubtitle": "Sagen Sie in einem Satz, was Sie tun und für wen.",
+      "ctaContact": "Kontakt aufnehmen",
+      "ctaLearn": "Mehr erfahren",
+      "featuresTitle": "Warum Kunden uns wählen",
+      "featuresSubtitle": "Ersetzen Sie diese durch die drei Dinge, die Sie besonders machen.",
+      "feature1": "Ihre erste Stärke",
+      "feature2": "Ihre zweite Stärke",
+      "feature3": "Ihre dritte Stärke",
+      "featureBody": "Erklären Sie den Nutzen für Ihre Kunden in ein bis zwei Sätzen.",
+      "faqTitle": "Häufige Fragen",
+      "faqQ1": "Was bieten Sie an?",
+      "faqQ2": "Wie fangen wir an?",
+      "faqA": "Beantworten Sie die Frage, die Ihre Kunden am häufigsten stellen.",
+      "ctaTitle": "Bereit für ein Gespräch?",
+      "ctaBody": "Sagen Sie uns, was Sie brauchen, und wir melden uns bei Ihnen.",
+      "aboutBody": "## Unsere Geschichte\n\nErzählen Sie, wer hinter {name} steht, warum Sie gestartet sind und was Ihnen wichtig ist.\n\n## Wofür wir stehen\n\n- Ihr erster Wert\n- Ihr zweiter Wert\n- Ihr dritter Wert",
+      "servicesBody": "## Was wir tun\n\nBeschreiben Sie Ihre Leistungen: was enthalten ist, für wen sie sind und wie die Zusammenarbeit aussieht.",
+      "pricingTitle": "Preise",
+      "pricingSubtitle": "Wählen Sie, was am besten zu Ihnen passt.",
+      "contactTitle": "Kontakt",
+      "contactBody": "Sagen Sie uns, was Sie brauchen, und wir melden uns bei Ihnen.",
+      "submit": "Nachricht senden",
+      "success": "Vielen Dank – wir haben Ihre Nachricht erhalten und melden uns bei Ihnen.",
+      "consent": "Ich bin einverstanden, dass {name} meine Angaben zur Beantwortung meiner Anfrage speichert."
     }
   }
 }

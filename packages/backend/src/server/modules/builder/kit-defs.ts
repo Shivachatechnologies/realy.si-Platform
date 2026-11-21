@@ -31,7 +31,7 @@ export const KIT_KEYS = [
 export type KitKey = (typeof KIT_KEYS)[number];
 export const isKitKey = (v: unknown): v is KitKey => typeof v === "string" && (KIT_KEYS as readonly string[]).includes(v);
 
-export const KIT_ACTIONS = ["create_project", "create_objectives", "create_campaigns", "save_icp", "save_strategy", "create_budgets", "create_products", "use_workforce", "use_name", "pin_logo"] as const;
+export const KIT_ACTIONS = ["create_project", "create_objectives", "create_campaigns", "save_icp", "save_strategy", "create_budgets", "create_products", "use_workforce", "use_name", "pin_logo", "create_site"] as const;
 export type KitAction = (typeof KIT_ACTIONS)[number];
 
 const s = (max: number) => z.string().trim().min(1).max(max);
@@ -255,7 +255,7 @@ export const KIT: KitDef[] = [
     prompt: "Design the website: the sitemap for launch (5 to 10 pages) and for every page its purpose and an outline of its sections with draft copy (headline and short body) in the brand's voice.",
     schema: websiteSchema,
     shape: `{"pages":[{"slug":"/","title":"Home","purpose":"...","sections":[{"heading":"...","content":"..."}]}]}`,
-    actions: [],
+    actions: ["create_site"],
   },
   {
     key: "marketing_strategy",

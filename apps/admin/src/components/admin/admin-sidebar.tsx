@@ -59,7 +59,7 @@ export const ADMIN_SECTIONS: Item[] = [
     href: "/pricing",
     label: "billing",
     icon: CreditCard,
-    children: [{ href: "/pricing", label: "pricing" }, { href: "/subscriptions", label: "subscriptions" }, { href: "/revenue", label: "revenue" }, { href: "/countries", label: "countries" }],
+    children: [{ href: "/pricing", label: "pricing" }, { href: "/plans", label: "plans" }, { href: "/subscriptions", label: "subscriptions" }, { href: "/revenue", label: "revenue" }, { href: "/countries", label: "countries" }],
   },
   {
     href: "/cms",

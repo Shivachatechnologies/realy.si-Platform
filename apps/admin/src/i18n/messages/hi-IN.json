@@ -678,7 +678,20 @@
       "billing_no_subscription": "बदलने के लिए अभी कोई सक्रिय सदस्यता नहीं है। बिलिंग और उपयोग से शुरू करें।",
       "billing_same_plan": "यह पहले से आपका वर्तमान प्लान है।",
       "billing_currency_change": "प्लान बदलने पर आपकी वर्तमान बिलिंग मुद्रा बनी रहती है।",
-      "plan_limit_unlimited_high_cost": "महँगे उपयोग के लिए सीमित कोटा ज़रूरी है। ज़्यादा ऐड-ऑन के ज़रिए दें।"
+      "plan_limit_unlimited_high_cost": "महँगे उपयोग के लिए सीमित कोटा ज़रूरी है। ज़्यादा ऐड-ऑन के ज़रिए दें।",
+      "sites_exists": "इस कंपनी की पहले से एक वेबसाइट है।",
+      "sites_slug_taken": "यह वेब पता पहले से लिया जा चुका है। कोई और चुनें।",
+      "sites_page_slug_taken": "कोई दूसरा पेज पहले से यह पता उपयोग कर रहा है।",
+      "sites_stale_draft": "इस बीच किसी और ने यह पेज सहेजा है। उनके बदलाव देखने के लिए रीलोड करें।",
+      "sites_nothing_published": "साइट ऑनलाइन करने से पहले कम से कम एक पेज प्रकाशित करें।",
+      "sites_page_empty": "प्रकाशित करने से पहले कम से कम एक ब्लॉक जोड़ें।",
+      "sites_schedule_past": "अभी से कम से कम एक मिनट बाद का समय चुनें।",
+      "sites_testimonial_not_customer": "प्रशंसापत्र केवल असली ग्राहकों के हो सकते हैं (Customer प्रकार के CRM खाते)।",
+      "sites_unknown_product": "एक मूल्य कार्ड ऐसे उत्पाद की ओर इंगित करता है जो अब मौजूद नहीं है।",
+      "sites_unknown_asset": "एक इमेज आपकी एसेट लाइब्रेरी में नहीं है।",
+      "sites_no_structure": "आपके Founder Kit में अभी कोई तैयार वेबसाइट संरचना नहीं है।",
+      "sites_domain_taken": "यह डोमेन पहले से किसी दूसरी साइट से जुड़ा है।",
+      "sites_no_domain": "पहले एक डोमेन जोड़ें।"
     }
   },
   "onboarding": {
@@ -1599,7 +1612,8 @@
       "roles": "एडमिन भूमिकाएँ",
       "viewAs": "उपयोगकर्ता की तरह देखें (सपोर्ट)",
       "ops": "प्लेटफ़ॉर्म संचालन",
-      "securityAccess": "लॉगिन और सत्र"
+      "securityAccess": "लॉगिन और सत्र",
+      "plans": "प्लान और सीमाएँ"
     },
     "overviewSubtitle": "प्लेटफ़ॉर्म कॉन्फ़िगरेशन। हर बदलाव की अनुमति जाँची जाती है, दायरा सीमित होता है और ऑडिट होता है।",
     "yourAccess": "आपकी प्लेटफ़ॉर्म पहुँच",
@@ -2628,7 +2642,9 @@
           "voice_minutes_month": "वॉइस मिनट / माह",
           "email_sends_month": "भेजे गए ईमेल / माह",
           "api_cost_month": "बाहरी API ख़र्च सीमा / माह",
-          "ads_spend_month": "विज्ञापन ख़र्च सीमा / माह"
+          "ads_spend_month": "विज्ञापन ख़र्च सीमा / माह",
+          "sites_pages_max": "वेबसाइट पेज",
+          "sites_landing_pages_max": "लैंडिंग पेज"
         }
       }
     },
@@ -3820,7 +3836,9 @@
       "read_ops_bottlenecks": "संचालन रुकावटें पढ़ें",
       "read_process": "प्रक्रिया पढ़ें",
       "propose_process_version": "SOP संस्करण प्रस्तावित करें",
-      "triage_ticket": "टिकट छाँटें"
+      "triage_ticket": "टिकट छाँटें",
+      "read_site": "वेबसाइट पढ़ें",
+      "draft_site_pages": "वेबसाइट पेज ड्राफ़्ट करें"
     },
     "needsApproval": "अनुमोदन आवश्यक",
     "tabs": {
@@ -4540,6 +4558,10 @@
     "operations_manager": {
       "name": "संचालन मैनेजर",
       "summary": "रुकावटें खोजता है, SOP लिखता है और समाधान कार्यों के रूप में व्यवस्थित करता है।"
+    },
+    "web_designer": {
+      "name": "वेब डिज़ाइनर",
+      "summary": "आपके ब्रांड, उत्पादों और कंपनी की जानकारी से वेबसाइट और लैंडिंग पेज ड्राफ़्ट करता है।"
     }
   },
   "projects": {
@@ -4990,6 +5012,9 @@
       },
       "platform": {
         "announcement": "घोषणा: {title}"
+      },
+      "sites": {
+        "form_submission": "वेबसाइट से नया लीड: {title}"
       }
     },
     "viewAll": "सभी देखें"
@@ -8198,7 +8223,9 @@
       "crm_prospect_found": "संभावित ग्राहक मिला",
       "crm_outreach_sent": "आउटरीच ईमेल भेजा गया",
       "livechat_lead_captured": "लाइव चैट से लीड मिली",
-      "briefing_delivered": "ब्रीफ़िंग भेजी गई"
+      "briefing_delivered": "ब्रीफ़िंग भेजी गई",
+      "site_published": "वेबसाइट पेज प्रकाशित हुआ",
+      "site_form_submitted": "वेबसाइट फ़ॉर्म सबमिट हुआ"
     },
     "compare": {
       "title": "संस्करणों की तुलना करें",
@@ -18107,7 +18134,9 @@
       "crm_prospect_found": "को एक नया संभावित ग्राहक मिला",
       "crm_outreach_sent": "ने एक आउटरीच ईमेल भेजा",
       "livechat_lead_captured": "ने लाइव चैट से एक लीड पाई",
-      "briefing_delivered": "ने एक ब्रीफ़िंग भेजी"
+      "briefing_delivered": "ने एक ब्रीफ़िंग भेजी",
+      "site_published": "ने एक वेबसाइट पेज प्रकाशित किया",
+      "site_form_submitted": "को वेबसाइट से एक लीड मिला"
     }
   },
   "site": {

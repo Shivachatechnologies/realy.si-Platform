@@ -47,6 +47,7 @@ const ACTION_PERMISSION: Record<string, string> = {
   use_workforce: "companies.manage",
   use_name: "companies.manage",
   pin_logo: "brain.manage",
+  create_site: "marketing.manage",
 };
 
 /** /builder/[runId]/kit — the Founder Kit: every deliverable with its progress, review (edit, regenerate, approve) and actions. */

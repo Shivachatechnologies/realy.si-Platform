@@ -16,6 +16,7 @@ import { CRM_PROFILES } from "@/server/modules/crm/ai-profiles";
 import { LIVECHAT_PROFILES } from "@/server/modules/livechat/ai-profiles";
 import { BRIEFING_PROFILES } from "@/server/modules/briefing/ai-profiles";
 import { VOICE_PROFILES } from "@/server/modules/voice/ai-profiles";
+import { SITES_PROFILES } from "@/server/modules/sites/ai-profiles";
 
 /** AI employee profiles contributed by business modules. */
-export const MODULE_PROFILES: AgentProfile[] = [...BRAIN_PROFILES, ...MARKETING_PROFILES, ...FINANCE_PROFILES, ...HR_PROFILES, ...WORK_PROFILES, ...COMMS_PROFILES, ...SUPPORT_PROFILES, ...AUTOMATION_PROFILES, ...INTEGRATIONS_PROFILES, ...WORKFORCE_PROFILES, ...BI_PROFILES, ...MARKETPLACE_PROFILES, ...ENTERPRISE_PROFILES, ...CRM_PROFILES, ...LIVECHAT_PROFILES, ...BRIEFING_PROFILES, ...VOICE_PROFILES];
+export const MODULE_PROFILES: AgentProfile[] = [...BRAIN_PROFILES, ...MARKETING_PROFILES, ...FINANCE_PROFILES, ...HR_PROFILES, ...WORK_PROFILES, ...COMMS_PROFILES, ...SUPPORT_PROFILES, ...AUTOMATION_PROFILES, ...INTEGRATIONS_PROFILES, ...WORKFORCE_PROFILES, ...BI_PROFILES, ...MARKETPLACE_PROFILES, ...ENTERPRISE_PROFILES, ...CRM_PROFILES, ...LIVECHAT_PROFILES, ...BRIEFING_PROFILES, ...VOICE_PROFILES, ...SITES_PROFILES];

@@ -13,6 +13,8 @@ import { buildCsp, newNonce } from "@/server/core/security-headers";
  *      get the Command Center.
  *   4. Per-request CSP nonce: Next.js reads the nonce from the request's CSP header and applies it to the scripts
  *      it renders (docs/security.md §4).
+ *   5. Published company websites live at /s/<slug>/… (outside [locale], clean URLs): no locale redirect, but the
+ *      same CSP nonce and trusted path.
  * The user session (cookie `realy_session`, @realy/auth-core) is only checked for presence here (public homepage);
  * it is validated by the data access layer (requireViewer / route()). The admin app's cookie is a different,
  * host-only cookie and never reaches this app.
@@ -20,19 +22,20 @@ import { buildCsp, newNonce } from "@/server/core/security-headers";
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const [, first = "", ...rest] = pathname.split("/");
-  if (!isAppLocale(first)) {
+  const companySite = first === "s" && rest.length > 0;
+  if (!companySite && !isAppLocale(first)) {
     const url = req.nextUrl.clone();
     const locale = negotiateLocale(req.cookies.get(LOCALE_COOKIE)?.value, req.headers.get("accept-language"));
     url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url);
   }
   const page = rest.filter(Boolean);
-  if (page[0] === "admin") {
+  if (!companySite && page[0] === "admin") {
     const adminUrl = process.env.ADMIN_URL;
     if (adminUrl) return NextResponse.redirect(new URL(`/${first}${page.length > 1 ? `/${page.slice(1).join("/")}` : ""}${req.nextUrl.search}`, adminUrl));
     return NextResponse.rewrite(new URL(`/${first}/not-found-admin`, req.url), { status: 404 });
   }
-  const publicHome = page.length === 0 && !req.cookies.get(SESSION_COOKIES.user)?.value ? new URL(`/${first}/home`, req.url) : null;
+  const publicHome = !companySite && page.length === 0 && !req.cookies.get(SESSION_COOKIES.user)?.value ? new URL(`/${first}/home`, req.url) : null;
   const forward = (init: { request: { headers: Headers } }) => (publicHome ? NextResponse.rewrite(publicHome, init) : NextResponse.next(init));
   const requestHeaders = new Headers(req.headers);
   // Trusted page path for server-side platform controls (module gate in requireOrgContext); never client-supplied.

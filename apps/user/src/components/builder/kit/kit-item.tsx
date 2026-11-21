@@ -352,7 +352,7 @@ export function KitItemPanel({
               </Button>
             ) : null}
           </div>
-          {item.key === "website_structure" ? <p className="text-xs text-muted-foreground">{t("builder.kit.website.noBuilder")}</p> : null}
+          {item.key === "website_structure" ? <p className="text-xs text-muted-foreground">{t("builder.kit.website.createSite")}</p> : null}
           {item.actions.some((a) => !gates[a] && !["use_name", "pin_logo"].includes(a)) ? <p className="text-xs text-muted-foreground">{t("builder.kit.actions.noPermission")}</p> : null}
           <RecordLinks records={item.records.filter((r) => !["brand_logo", "company_name"].includes(r.kind))} />
         </section>

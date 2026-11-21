@@ -678,7 +678,20 @@
       "billing_no_subscription": "Es gibt noch kein aktives Abonnement zum Ändern. Starten Sie eines unter Abrechnung & Nutzung.",
       "billing_same_plan": "Das ist bereits Ihr aktueller Plan.",
       "billing_currency_change": "Planwechsel behalten Ihre aktuelle Abrechnungswährung.",
-      "plan_limit_unlimited_high_cost": "Kostenintensive Nutzung braucht ein endliches Kontingent. Mehr über Zusatzpakete anbieten."
+      "plan_limit_unlimited_high_cost": "Kostenintensive Nutzung braucht ein endliches Kontingent. Mehr über Zusatzpakete anbieten.",
+      "sites_exists": "Dieses Unternehmen hat bereits eine Website.",
+      "sites_slug_taken": "Diese Webadresse ist bereits vergeben. Wählen Sie eine andere.",
+      "sites_page_slug_taken": "Eine andere Seite verwendet diese Adresse bereits.",
+      "sites_stale_draft": "Jemand anderes hat diese Seite inzwischen gespeichert. Laden Sie neu, um die Änderungen zu sehen.",
+      "sites_nothing_published": "Veröffentlichen Sie mindestens eine Seite, bevor Sie die Website online schalten.",
+      "sites_page_empty": "Fügen Sie vor dem Veröffentlichen mindestens einen Block hinzu.",
+      "sites_schedule_past": "Wählen Sie einen Zeitpunkt mindestens eine Minute in der Zukunft.",
+      "sites_testimonial_not_customer": "Kundenstimmen dürfen nur echte Kunden zitieren (CRM-Konten vom Typ Kunde).",
+      "sites_unknown_product": "Eine Preiskarte verweist auf ein Produkt, das nicht mehr existiert.",
+      "sites_unknown_asset": "Ein Bild ist nicht in Ihrer Asset-Bibliothek.",
+      "sites_no_structure": "Ihr Founder Kit hat noch keine fertige Website-Struktur.",
+      "sites_domain_taken": "Diese Domain ist bereits mit einer anderen Website verbunden.",
+      "sites_no_domain": "Fügen Sie zuerst eine Domain hinzu."
     }
   },
   "onboarding": {
@@ -1599,7 +1612,8 @@
       "roles": "Admin-Rollen",
       "viewAs": "Ansicht als (Support)",
       "ops": "Plattformbetrieb",
-      "securityAccess": "Anmeldungen & Sitzungen"
+      "securityAccess": "Anmeldungen & Sitzungen",
+      "plans": "Pläne & Limits"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -2628,7 +2642,9 @@
           "voice_minutes_month": "Sprachminuten / Monat",
           "email_sends_month": "E-Mail-Versand / Monat",
           "api_cost_month": "Kostenobergrenze externe APIs / Monat",
-          "ads_spend_month": "Werbebudget-Obergrenze / Monat"
+          "ads_spend_month": "Werbebudget-Obergrenze / Monat",
+          "sites_pages_max": "Website-Seiten",
+          "sites_landing_pages_max": "Landingpages"
         }
       }
     },
@@ -3820,7 +3836,9 @@
       "read_ops_bottlenecks": "Betriebsengpässe lesen",
       "read_process": "Prozess lesen",
       "propose_process_version": "SOP-Version vorschlagen",
-      "triage_ticket": "Ticket einordnen"
+      "triage_ticket": "Ticket einordnen",
+      "read_site": "Website lesen",
+      "draft_site_pages": "Website-Seiten entwerfen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -4540,6 +4558,10 @@
     "operations_manager": {
       "name": "Operations-Manager",
       "summary": "Findet Engpässe, schreibt SOPs und organisiert Lösungen als Aufgaben."
+    },
+    "web_designer": {
+      "name": "Webdesigner",
+      "summary": "Entwirft Ihre Website und Landingpages aus Marke, Produkten und Unternehmenswissen."
     }
   },
   "projects": {
@@ -4990,6 +5012,9 @@
       },
       "platform": {
         "announcement": "Ankündigung: {title}"
+      },
+      "sites": {
+        "form_submission": "Neuer Website-Lead: {title}"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -8198,7 +8223,9 @@
       "crm_prospect_found": "Interessent gefunden",
       "crm_outreach_sent": "Outreach-E-Mail gesendet",
       "livechat_lead_captured": "Lead aus Live-Chat erfasst",
-      "briefing_delivered": "Briefing zugestellt"
+      "briefing_delivered": "Briefing zugestellt",
+      "site_published": "Website-Seite veröffentlicht",
+      "site_form_submitted": "Website-Formular gesendet"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -18107,7 +18134,9 @@
       "crm_prospect_found": "hat einen neuen Interessenten gefunden",
       "crm_outreach_sent": "hat eine Outreach-E-Mail gesendet",
       "livechat_lead_captured": "hat einen Lead aus dem Live-Chat erfasst",
-      "briefing_delivered": "hat ein Briefing zugestellt"
+      "briefing_delivered": "hat ein Briefing zugestellt",
+      "site_published": "hat eine Website-Seite veröffentlicht",
+      "site_form_submitted": "hat einen Website-Lead erhalten"
     }
   },
   "site": {

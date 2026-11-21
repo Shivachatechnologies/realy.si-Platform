@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   FolderKanban,
   Gauge,
+  Globe,
   Handshake,
   Headphones,
   MessagesSquare,
@@ -95,6 +96,7 @@ export const NAV: NavSection[] = [
     label: "nav.sections.growth",
     items: [
       item("modules.marketing.title", "/marketing", Megaphone),
+      item("sites.title", "/website", Globe),
       item("modules.sales.title", "/sales", Handshake),
       item("modules.crm.title", "/crm", Layers),
       item("modules.support.title", "/support", Headphones),

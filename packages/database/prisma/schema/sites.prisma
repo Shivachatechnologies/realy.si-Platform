@@ -1,0 +1,172 @@
+// Company websites & landing pages (src/server/modules/sites): every company builds and publishes its own website
+// without code. Content is typed blocks (validated by modules/sites/schemas.ts) rendered as React elements — never raw
+// HTML. Public pages (apps/user /s/<slug>/…) render published snapshots only; drafts never leave the app.
+// User ids (authors) are plain uuids: no back-relations to User.
+
+enum SitePageKind {
+  PAGE
+  LANDING
+}
+
+enum SitePageStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+enum SiteDomainStatus {
+  /// No custom domain configured.
+  NONE
+  /// Domain saved; waiting for the DNS TXT record.
+  PENDING
+  /// TXT record found. Routing the domain to the site is a separate, documented step.
+  VERIFIED
+  /// The last check did not find the TXT record (see domainError).
+  FAILED
+}
+
+enum SiteSubmissionStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+/// One website per company. `slug` is unique across the platform (served at /s/<slug>). Theme, navigation, footer
+/// and SEO defaults are JSON validated by modules/sites/schemas.ts.
+model Site {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  organizationId   String           @map("organization_id") @db.Uuid
+  companyId        String           @map("company_id") @db.Uuid
+  name             String
+  slug             String           @unique
+  /// Content locale of the site (one of the app locales).
+  locale           String           @default("en-US")
+  /// { brandColor, accentColor, font, logoAssetId, radius, style }
+  theme            Json
+  /// [{ label, href }]
+  nav              Json             @default("[]")
+  /// { text, links: [{ label, href }], showPoweredBy }
+  footer           Json             @default("{}")
+  /// { title, description, ogAssetId, noIndex }
+  seo              Json             @default("{}")
+  /// The site is online: published pages are publicly reachable. Off = every page is offline.
+  online           Boolean          @default(false)
+  /// First time the site went online.
+  launchedAt       DateTime?        @map("launched_at") @db.Timestamptz(3)
+  /// Visual assets (company asset library) referenced by the published site; only these are served publicly.
+  publicAssetIds   String[]         @default([]) @map("public_asset_ids")
+  customDomain     String?          @unique @map("custom_domain")
+  domainStatus     SiteDomainStatus @default(NONE) @map("domain_status")
+  /// Value of the DNS TXT record proving domain ownership ("realy-site-verification=<token>").
+  domainToken      String?          @map("domain_token")
+  domainCheckedAt  DateTime?        @map("domain_checked_at") @db.Timestamptz(3)
+  domainVerifiedAt DateTime?        @map("domain_verified_at") @db.Timestamptz(3)
+  domainError      String?          @map("domain_error")
+  createdById      String           @map("created_by_id") @db.Uuid
+  updatedById      String           @map("updated_by_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company     Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  pages       SitePage[]
+  submissions SiteFormSubmission[]
+
+  @@unique([id, companyId])
+  @@unique([companyId])
+  @@index([organizationId])
+  @@map("sites")
+}
+
+/// A page of a site (kind PAGE) or a standalone landing page (kind LANDING). `slug` "" is the home page; otherwise
+/// lowercase path segments ("about", "offers/spring"). `draft` is the editable content; `published` the live snapshot;
+/// `pending` + `publishAt` a scheduled snapshot that goes live at that time. Content: { title, seo, blocks[] }.
+model SitePage {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  siteId         String         @map("site_id") @db.Uuid
+  kind           SitePageKind   @default(PAGE)
+  slug           String
+  title          String
+  status         SitePageStatus @default(DRAFT)
+  draft          Json
+  published      Json?
+  pending        Json?
+  publishAt      DateTime?      @map("publish_at") @db.Timestamptz(3)
+  publishedAt    DateTime?      @map("published_at") @db.Timestamptz(3)
+  /// Version number of the live snapshot (site_page_versions.version).
+  liveVersion    Int?           @map("live_version")
+  /// Order in the page list and the site navigation.
+  position       Int            @default(0)
+  /// Listed in the site's navigation (landing pages usually are not).
+  showInNav      Boolean        @default(true) @map("show_in_nav")
+  /// Drafted by an AI employee and not yet edited by a person.
+  aiDrafted      Boolean        @default(false) @map("ai_drafted")
+  createdById    String         @map("created_by_id") @db.Uuid
+  updatedById    String         @map("updated_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  site     Site              @relation(fields: [siteId, companyId], references: [id, companyId], onDelete: Cascade)
+  versions SitePageVersion[]
+
+  @@unique([id, companyId])
+  @@unique([siteId, slug])
+  @@index([companyId, siteId, kind])
+  @@index([status, publishAt])
+  @@map("site_pages")
+}
+
+/// Immutable snapshot taken on every publish / schedule (rollback restores one into the draft).
+model SitePageVersion {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  pageId         String   @map("page_id") @db.Uuid
+  version        Int
+  content        Json
+  note           String   @default("")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company  @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  page    SitePage @relation(fields: [pageId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([pageId, version])
+  @@map("site_page_versions")
+}
+
+/// A contact / lead form submission from a published page. Stored only with the visitor's consent; the CRM lead it
+/// created or updated is `leadId` (plain uuid). No IP address is stored (rate limiting happens in Redis).
+model SiteFormSubmission {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  siteId         String               @map("site_id") @db.Uuid
+  /// Page and block the form was on (plain ids: the page may be deleted later).
+  pageId         String?              @map("page_id") @db.Uuid
+  blockId        String?              @map("block_id")
+  pagePath       String               @default("") @map("page_path")
+  name           String?
+  email          String?
+  phone          String?
+  account        String?
+  message        String?
+  /// Exact consent text the visitor agreed to.
+  consentText    String               @map("consent_text")
+  consentAt      DateTime             @map("consent_at") @db.Timestamptz(3)
+  leadId         String?              @map("lead_id") @db.Uuid
+  status         SiteSubmissionStatus @default(NEW)
+  utmSource      String?              @map("utm_source")
+  utmMedium      String?              @map("utm_medium")
+  utmCampaign    String?              @map("utm_campaign")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  site    Site    @relation(fields: [siteId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([companyId, siteId, status, createdAt])
+  @@map("site_form_submissions")
+}

@@ -328,6 +328,10 @@ export async function usageOf(organizationId: string, key: LimitKey, ent?: Entit
       return c.workflow.count({ where: { organizationId, status: "ACTIVE" } });
     case "storage.mb":
       return Math.round(((await storageBytes(organizationId)) / MIB) * 10) / 10;
+    case "sites.pages.max":
+      return c.sitePage.count({ where: { organizationId, kind: "PAGE" } });
+    case "sites.landing_pages.max":
+      return c.sitePage.count({ where: { organizationId, kind: "LANDING" } });
     default:
       return 0;
   }

@@ -12,11 +12,13 @@ import { createObjective } from "@/server/modules/objectives/service";
 import { getStrategy, saveStrategy } from "@/server/modules/objectives/goals";
 import { createProjectMilestone, createWorkProject } from "@/server/modules/work/projects";
 import { createWorkTask } from "@/server/modules/work/tasks";
+import { createSite, setupDefaults, upsertDraftPages } from "@/server/modules/sites/service";
+import { pagesFromStructure, siteT } from "@/server/modules/sites/templates";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { installPart } from "./engine";
 import { saveProgress } from "./journey";
-import { forecastSchema, KIT_ACTIONS, kitDef, marketingSchema, namesSchema, personasSchema, positioningSchema, pricingSchema, roadmapSchema, salesSchema, type KitAction } from "./kit-defs";
+import { forecastSchema, KIT_ACTIONS, kitDef, marketingSchema, namesSchema, personasSchema, positioningSchema, pricingSchema, roadmapSchema, salesSchema, websiteSchema, type KitAction } from "./kit-defs";
 import type { KitActionRecord } from "./kit";
 import { chooseCompanyName } from "./service";
 import { workforcePlanSchema } from "./steps";
@@ -167,6 +169,23 @@ export async function runKitAction(ctx: RequestContext, organizationId: string, 
       if (!d.names.some((n) => n.name === name)) throw invalid("Choose one of the proposed names", { reason: "builder_kit_unknown_name" });
       await chooseCompanyName(ctx, org, co, runId, name);
       rec("company_name", co, name, "/company");
+      break;
+    }
+    case "create_site": {
+      // A real website (sites module, marketing.manage + plan feature): the structure becomes DRAFT pages — nothing is
+      // published. Without a site one is created first (brand colours, fonts and logo from the brand kit).
+      const d = parse(websiteSchema, item.data);
+      const existing = await db().site.findFirst({ where: { organizationId: org, companyId: co }, select: { id: true, name: true, locale: true } });
+      if (!existing) {
+        const defaults = await setupDefaults(ctx, org, co);
+        const created = await createSite(ctx, org, co, { name: defaults.name, slug: defaults.slug, locale: defaults.locale as "en-US", theme: defaults.theme, start: "structure" });
+        rec("site", created.id, defaults.name, "/website/pages");
+      } else {
+        const products = await db().product.findMany({ where: { organizationId: org, companyId: co, archivedAt: null }, take: 6, select: { id: true, name: true } });
+        const drafts = pagesFromStructure(await siteT(existing.locale), { companyName: existing.name, products }, d);
+        const r = await upsertDraftPages(ctx, org, co, drafts);
+        rec("site", existing.id, `${existing.name} (${r.pages.length})`, "/website/pages");
+      }
       break;
     }
     case "pin_logo": {

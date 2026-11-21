@@ -678,7 +678,20 @@
       "billing_no_subscription": "There's no active subscription to change yet. Start one from Billing & usage.",
       "billing_same_plan": "That's already your current plan.",
       "billing_currency_change": "Plan changes keep your current billing currency.",
-      "plan_limit_unlimited_high_cost": "High-cost usage needs a finite quota. Offer more through add-ons."
+      "plan_limit_unlimited_high_cost": "High-cost usage needs a finite quota. Offer more through add-ons.",
+      "sites_exists": "This company already has a website.",
+      "sites_slug_taken": "That web address is already taken. Choose another one.",
+      "sites_page_slug_taken": "Another page already uses this address.",
+      "sites_stale_draft": "Someone else saved this page in the meantime. Reload to see their changes.",
+      "sites_nothing_published": "Publish at least one page before taking the site online.",
+      "sites_page_empty": "Add at least one block before publishing.",
+      "sites_schedule_past": "Pick a publish time at least a minute from now.",
+      "sites_testimonial_not_customer": "Testimonials can only quote real customers (CRM accounts of type Customer).",
+      "sites_unknown_product": "A pricing card points at a product that no longer exists.",
+      "sites_unknown_asset": "An image is not in your asset library.",
+      "sites_no_structure": "Your Founder Kit has no ready website structure yet.",
+      "sites_domain_taken": "This domain is already connected to another site.",
+      "sites_no_domain": "Add a domain first."
     }
   },
   "onboarding": {
@@ -1599,7 +1612,8 @@
       "roles": "Admin roles",
       "viewAs": "View as (support)",
       "ops": "Platform ops",
-      "securityAccess": "Logins & sessions"
+      "securityAccess": "Logins & sessions",
+      "plans": "Plans & limits"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -2628,7 +2642,9 @@
           "voice_minutes_month": "Voice minutes / month",
           "email_sends_month": "Email sends / month",
           "api_cost_month": "External API spend cap / month",
-          "ads_spend_month": "Ad spend cap / month"
+          "ads_spend_month": "Ad spend cap / month",
+          "sites_pages_max": "Website pages",
+          "sites_landing_pages_max": "Landing pages"
         }
       }
     },
@@ -3820,7 +3836,9 @@
       "read_ops_bottlenecks": "Read operations bottlenecks",
       "read_process": "Read a process",
       "propose_process_version": "Propose SOP version",
-      "triage_ticket": "Triage a ticket"
+      "triage_ticket": "Triage a ticket",
+      "read_site": "Read website",
+      "draft_site_pages": "Draft website pages"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -4540,6 +4558,10 @@
     "operations_manager": {
       "name": "Operations manager",
       "summary": "Finds bottlenecks, writes SOPs and organises fixes as tasks."
+    },
+    "web_designer": {
+      "name": "Web Designer",
+      "summary": "Drafts your website and landing pages from your brand, products and company knowledge."
     }
   },
   "projects": {
@@ -4990,6 +5012,9 @@
       },
       "platform": {
         "announcement": "Announcement: {title}"
+      },
+      "sites": {
+        "form_submission": "New website lead: {title}"
       }
     },
     "viewAll": "View all"
@@ -8198,7 +8223,9 @@
       "crm_prospect_found": "Prospect found",
       "crm_outreach_sent": "Outreach email sent",
       "livechat_lead_captured": "Live chat lead captured",
-      "briefing_delivered": "Briefing delivered"
+      "briefing_delivered": "Briefing delivered",
+      "site_published": "Website page published",
+      "site_form_submitted": "Website form submitted"
     },
     "compare": {
       "title": "Compare versions",
@@ -18107,7 +18134,9 @@
       "crm_prospect_found": "found a new prospect",
       "crm_outreach_sent": "sent an outreach email",
       "livechat_lead_captured": "captured a lead from live chat",
-      "briefing_delivered": "delivered a briefing"
+      "briefing_delivered": "delivered a briefing",
+      "site_published": "published a website page",
+      "site_form_submitted": "received a website lead"
     }
   },
   "site": {

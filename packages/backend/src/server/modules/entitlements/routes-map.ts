@@ -27,6 +27,7 @@ const API_RULES: [RegExp, FeatureKey][] = [
   [/^growth(\/|$)/, "feature.growth_insights"],
   [/^intelligence(\/|$)/, "feature.executive_team"],
   [/^(crm|enterprise)\/export(\/|$)/, "feature.data_exports"],
+  [/^sites(\/|$)/, "feature.website_builder"],
 ];
 
 /** App page path after /:locale/. */
@@ -44,6 +45,7 @@ const PAGE_RULES: [RegExp, FeatureKey][] = [
   [/^crm\/discover(\/|$)/, "feature.lead_generation"],
   [/^analytics\/(dashboards|reports)(\/|$)/, "feature.advanced_analytics"],
   [/^intelligence(\/|$)/, "feature.executive_team"],
+  [/^website(\/|$)/, "feature.website_builder"],
 ];
 
 const ORG_API = /^\/api\/v1\/organizations\/([0-9a-f-]{36})(?:\/companies\/[0-9a-f-]{36})?\/(.+)$/;

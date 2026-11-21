@@ -678,7 +678,20 @@
       "billing_no_subscription": "لا يوجد اشتراك نشط لتغييره بعد. ابدأ اشتراكًا من الفوترة والاستخدام.",
       "billing_same_plan": "هذه هي خطتك الحالية بالفعل.",
       "billing_currency_change": "تحافظ تغييرات الخطة على عملة الفوترة الحالية.",
-      "plan_limit_unlimited_high_cost": "يحتاج الاستخدام عالي التكلفة إلى حصة محددة. قدّم المزيد عبر الحزم الإضافية."
+      "plan_limit_unlimited_high_cost": "يحتاج الاستخدام عالي التكلفة إلى حصة محددة. قدّم المزيد عبر الحزم الإضافية.",
+      "sites_exists": "لدى هذه الشركة موقع بالفعل.",
+      "sites_slug_taken": "عنوان الويب هذا مستخدم بالفعل. اختر عنوانًا آخر.",
+      "sites_page_slug_taken": "صفحة أخرى تستخدم هذا العنوان بالفعل.",
+      "sites_stale_draft": "حفظ شخص آخر هذه الصفحة في الأثناء. أعد التحميل لرؤية تغييراته.",
+      "sites_nothing_published": "انشر صفحة واحدة على الأقل قبل تشغيل الموقع.",
+      "sites_page_empty": "أضف كتلة واحدة على الأقل قبل النشر.",
+      "sites_schedule_past": "اختر وقت نشر بعد دقيقة على الأقل من الآن.",
+      "sites_testimonial_not_customer": "يمكن لآراء العملاء اقتباس العملاء الحقيقيين فقط (حسابات من نوع عميل).",
+      "sites_unknown_product": "تشير بطاقة سعر إلى منتج لم يعد موجودًا.",
+      "sites_unknown_asset": "صورة ليست في مكتبة أصولك.",
+      "sites_no_structure": "لا يوجد هيكل موقع جاهز في Founder Kit بعد.",
+      "sites_domain_taken": "هذا النطاق مرتبط بموقع آخر بالفعل.",
+      "sites_no_domain": "أضف نطاقًا أولًا."
     }
   },
   "onboarding": {
@@ -1599,7 +1612,8 @@
       "roles": "أدوار الإدارة",
       "viewAs": "العرض كمستخدم (الدعم)",
       "ops": "تشغيل المنصة",
-      "securityAccess": "تسجيلات الدخول والجلسات"
+      "securityAccess": "تسجيلات الدخول والجلسات",
+      "plans": "الخطط والحدود"
     },
     "overviewSubtitle": "إعدادات المنصة. يُتحقق من صلاحية كل تغيير ويُحدَّد نطاقه ويُدقَّق.",
     "yourAccess": "صلاحياتك على المنصة",
@@ -2628,7 +2642,9 @@
           "voice_minutes_month": "دقائق الصوت / شهريًا",
           "email_sends_month": "رسائل البريد المرسلة / شهريًا",
           "api_cost_month": "حد إنفاق الواجهات البرمجية الخارجية / شهريًا",
-          "ads_spend_month": "حد الإنفاق الإعلاني / شهريًا"
+          "ads_spend_month": "حد الإنفاق الإعلاني / شهريًا",
+          "sites_pages_max": "صفحات الموقع",
+          "sites_landing_pages_max": "صفحات الهبوط"
         }
       }
     },
@@ -3820,7 +3836,9 @@
       "read_ops_bottlenecks": "قراءة اختناقات العمليات",
       "read_process": "قراءة عملية",
       "propose_process_version": "اقتراح نسخة إجراء تشغيل",
-      "triage_ticket": "فرز تذكرة"
+      "triage_ticket": "فرز تذكرة",
+      "read_site": "قراءة الموقع",
+      "draft_site_pages": "صياغة صفحات الموقع"
     },
     "needsApproval": "يحتاج موافقة",
     "tabs": {
@@ -4540,6 +4558,10 @@
     "operations_manager": {
       "name": "مدير العمليات",
       "summary": "يكتشف الاختناقات ويكتب إجراءات التشغيل وينظم الحلول كمهام."
+    },
+    "web_designer": {
+      "name": "مصمم المواقع",
+      "summary": "يصوغ موقعك وصفحات الهبوط من علامتك ومنتجاتك ومعرفة شركتك."
     }
   },
   "projects": {
@@ -4990,6 +5012,9 @@
       },
       "platform": {
         "announcement": "إعلان: {title}"
+      },
+      "sites": {
+        "form_submission": "عميل محتمل جديد من الموقع: {title}"
       }
     },
     "viewAll": "عرض الكل"
@@ -8198,7 +8223,9 @@
       "crm_prospect_found": "العثور على عميل محتمل",
       "crm_outreach_sent": "إرسال بريد تواصل",
       "livechat_lead_captured": "التقاط عميل محتمل من الدردشة المباشرة",
-      "briefing_delivered": "تسليم الموجز"
+      "briefing_delivered": "تسليم الموجز",
+      "site_published": "نُشرت صفحة في الموقع",
+      "site_form_submitted": "أُرسل نموذج الموقع"
     },
     "compare": {
       "title": "مقارنة الإصدارات",
@@ -18107,7 +18134,9 @@
       "crm_prospect_found": "عثر على عميل محتمل جديد",
       "crm_outreach_sent": "أرسل بريد تواصل",
       "livechat_lead_captured": "التقط عميلًا محتملًا من الدردشة المباشرة",
-      "briefing_delivered": "سلّم موجزًا"
+      "briefing_delivered": "سلّم موجزًا",
+      "site_published": "نشر صفحة في الموقع",
+      "site_form_submitted": "تلقى عميلًا محتملًا من الموقع"
     }
   },
   "site": {

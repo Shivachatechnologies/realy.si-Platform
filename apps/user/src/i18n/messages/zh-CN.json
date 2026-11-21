@@ -818,7 +818,20 @@
       "billing_no_subscription": "目前没有可更改的有效订阅。请在“账单与用量”中开始订阅。",
       "billing_same_plan": "这已经是您的当前套餐。",
       "billing_currency_change": "更换套餐会保留当前的计费货币。",
-      "plan_limit_unlimited_high_cost": "高成本用量需要有限配额，请通过附加包提供更多额度。"
+      "plan_limit_unlimited_high_cost": "高成本用量需要有限配额，请通过附加包提供更多额度。",
+      "sites_exists": "该公司已有网站。",
+      "sites_slug_taken": "该网址已被占用，请换一个。",
+      "sites_page_slug_taken": "已有其他页面使用此地址。",
+      "sites_stale_draft": "其他人刚刚保存了此页面。请刷新查看其修改。",
+      "sites_nothing_published": "让网站上线前请至少发布一个页面。",
+      "sites_page_empty": "发布前请至少添加一个区块。",
+      "sites_schedule_past": "请选择至少一分钟之后的发布时间。",
+      "sites_testimonial_not_customer": "客户评价只能引用真实客户（CRM 中类型为“客户”的账户）。",
+      "sites_unknown_product": "某个价格卡片指向的产品已不存在。",
+      "sites_unknown_asset": "某张图片不在您的素材库中。",
+      "sites_no_structure": "您的 Founder Kit 中还没有已完成的网站结构。",
+      "sites_domain_taken": "该域名已连接到其他网站。",
+      "sites_no_domain": "请先添加域名。"
     }
   },
   "onboarding": {
@@ -2274,7 +2287,9 @@
       "read_ops_bottlenecks": "读取运营瓶颈",
       "read_process": "读取流程",
       "propose_process_version": "提议 SOP 版本",
-      "triage_ticket": "分拣工单"
+      "triage_ticket": "分拣工单",
+      "read_site": "读取网站",
+      "draft_site_pages": "起草网站页面"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -2994,6 +3009,10 @@
     "operations_manager": {
       "name": "运营经理",
       "summary": "发现瓶颈、撰写 SOP，并把修复措施整理成任务。"
+    },
+    "web_designer": {
+      "name": "网页设计师",
+      "summary": "根据品牌、产品和公司知识起草网站与落地页。"
     }
   },
   "projects": {
@@ -3444,6 +3463,9 @@
       },
       "platform": {
         "announcement": "公告：{title}"
+      },
+      "sites": {
+        "form_submission": "新的网站线索：{title}"
       }
     },
     "viewAll": "查看全部"
@@ -6804,7 +6826,9 @@
       "crm_prospect_found": "发现潜在客户",
       "crm_outreach_sent": "已发送外联邮件",
       "livechat_lead_captured": "在线聊天获取了线索",
-      "briefing_delivered": "简报已送达"
+      "briefing_delivered": "简报已送达",
+      "site_published": "网站页面已发布",
+      "site_form_submitted": "网站表单已提交"
     },
     "compare": {
       "title": "比较版本",
@@ -16277,7 +16301,8 @@
         "confirm": "将公司更名为“{name}”？"
       },
       "website": {
-        "noBuilder": "未连接网站构建工具，因此结构以文档形式导出，你可以交给设计师或粘贴到你的建站工具中。"
+        "noBuilder": "未连接网站构建工具，因此结构以文档形式导出，你可以交给设计师或粘贴到你的建站工具中。",
+        "createSite": "“创建我的网站”会把此结构按您的品牌风格转为“网站”中的草稿页面。在您发布之前不会公开任何内容。"
       },
       "forecast": {
         "projection": "预测——并非保证",
@@ -16332,8 +16357,10 @@
           "create_products": "已添加产品。",
           "use_workforce": "AI 团队已加入你的员工队伍。",
           "use_name": "公司已更名。",
-          "pin_logo": "这已成为你的品牌标志。"
-        }
+          "pin_logo": "这已成为你的品牌标志。",
+          "create_site": "已在“网站”中创建草稿页面——尚未发布任何内容。"
+        },
+        "create_site": "创建我的网站"
       },
       "recordKinds": {
         "project": "项目",
@@ -16346,7 +16373,8 @@
         "workforce_draft": "团队阶段",
         "ai_employees": "员工队伍",
         "company_name": "公司",
-        "brand_logo": "品牌"
+        "brand_logo": "品牌",
+        "site": "网站"
       },
       "items": {
         "idea_refinement": {
@@ -17623,7 +17651,9 @@
         "create_work_task": "正在准备任务",
         "read_support_queue": "正在读取客服队列",
         "draft_ticket_reply": "正在起草回复",
-        "read_workflows": "正在查看工作流"
+        "read_workflows": "正在查看工作流",
+        "read_site": "正在读取网站",
+        "draft_site_pages": "正在起草网站页面"
       },
       "verbs": {
         "read": "读取 · {name}",
@@ -18929,7 +18959,9 @@
       "crm_prospect_found": "发现了一位新的潜在客户",
       "crm_outreach_sent": "发送了一封外联邮件",
       "livechat_lead_captured": "从在线聊天获取了一条线索",
-      "briefing_delivered": "送达了一份简报"
+      "briefing_delivered": "送达了一份简报",
+      "site_published": "发布了一个网站页面",
+      "site_form_submitted": "收到一条网站线索"
     }
   },
   "aiPlans": {
@@ -21502,7 +21534,9 @@
       "voice_minutes_month": "语音分钟 / 月",
       "email_sends_month": "邮件发送 / 月",
       "api_cost_month": "外部 API 支出上限 / 月",
-      "ads_spend_month": "广告支出上限 / 月"
+      "ads_spend_month": "广告支出上限 / 月",
+      "sites_pages_max": "网站页面",
+      "sites_landing_pages_max": "落地页"
     },
     "addons": {
       "ai_credits_10k": "10,000 AI 点数",
@@ -21686,6 +21720,490 @@
       "text": "Realy 仅使用必要的 Cookie（登录、语言和所选公司）— 不使用分析或广告 Cookie。",
       "link": "Cookie 政策",
       "ok": "好的"
+    }
+  },
+  "sites": {
+    "title": "网站",
+    "eyebrow": "营销 · 网站",
+    "subtitle": "无需代码，按品牌风格搭建并发布公司网站和落地页，表单线索直接进入 CRM。",
+    "subtitleSite": "您的公司网站：页面、落地页、表单线索和您的域名。",
+    "viewSite": "查看网站",
+    "empty": "该公司还没有网站。拥有营销权限的成员可以在此创建。",
+    "planLocked": "您的套餐不包含网站搭建功能。您可以先搭建，但发布需要升级套餐。",
+    "status": {
+      "online": "已上线",
+      "offline": "已下线"
+    },
+    "tabs": {
+      "overview": "概览",
+      "pages": "页面",
+      "submissions": "线索",
+      "settings": "设计与设置",
+      "domain": "域名"
+    },
+    "kinds": {
+      "PAGE": "网站页面",
+      "LANDING": "落地页"
+    },
+    "kindHints": {
+      "PAGE": "网站及其导航的一部分（首页、服务、关于我们、联系…）。",
+      "LANDING": "为单个优惠或活动打造的专注页面，通常不在导航中。"
+    },
+    "pageStatus": {
+      "DRAFT": "草稿",
+      "SCHEDULED": "已排期",
+      "PUBLISHED": "已发布"
+    },
+    "fonts": {
+      "modern": "现代无衬线",
+      "display": "醒目展示体",
+      "classic": "经典衬线",
+      "mono": "技术等宽"
+    },
+    "styles": {
+      "soft": "柔和渐变",
+      "bold": "醒目色块",
+      "minimal": "极简"
+    },
+    "radii": {
+      "rounded": "圆角",
+      "square": "直角",
+      "pill": "大圆角"
+    },
+    "templates": {
+      "services": "服务型企业",
+      "product": "产品或软件",
+      "local": "本地商家",
+      "landing": "单页网站"
+    },
+    "icons": {
+      "sparkles": "闪光",
+      "check": "对勾",
+      "shield": "盾牌",
+      "zap": "闪电",
+      "heart": "爱心",
+      "star": "星星",
+      "clock": "时钟",
+      "globe": "地球",
+      "users": "人员",
+      "chart": "图表"
+    },
+    "fields": {
+      "name": "网站名称",
+      "slug": "网址",
+      "slugHint": "您的网站地址为 {path}。",
+      "slugInvalid": "请使用 3–48 个小写字母、数字和连字符。",
+      "locale": "网站语言",
+      "localeHint": "访客将以此语言看到页面、表单和提示。",
+      "brandColor": "品牌色",
+      "accentColor": "强调色",
+      "font": "字体",
+      "style": "风格",
+      "radius": "圆角",
+      "logo": "标志",
+      "noLogo": "不使用标志",
+      "noLogos": "还没有图片。请在素材库（或 Founder Kit）中添加标志后在此使用。"
+    },
+    "setup": {
+      "title": "创建您的网站",
+      "subtitle": "四个简单步骤。在您发布之前，任何内容都不会公开。",
+      "progress": "设置进度",
+      "steps": {
+        "name": "名称",
+        "style": "风格",
+        "content": "内容",
+        "publish": "发布"
+      },
+      "fromBrand": "已按您的品牌套件设计",
+      "fromBrandBody": "颜色、字体和标志来自您的品牌，可随意调整。",
+      "noBrandKit": "还没有品牌套件——选择一种颜色和字体即可，之后可在营销中完善品牌。",
+      "sample": "风格实时预览",
+      "start": {
+        "ai": "由 AI 起草",
+        "structure": "来自我的 Founder Kit",
+        "template": "从模板开始",
+        "blank": "空白网站"
+      },
+      "startAiHint": "AI 网页设计师根据公司知识、品牌和产品起草每个页面，由您审批草稿。",
+      "startStructureHint": "将 Founder Kit 中的网站结构（{count} 个页面）转换为草稿页面。",
+      "startTemplateHint": "经过验证的页面布局，附带待替换的占位文字。",
+      "startBlankHint": "只有一个首页——其余由您自己搭建。",
+      "noStructure": "您的 Founder Kit 中还没有已完成的网站结构。",
+      "aiMissing": "本平台尚未配置 AI。",
+      "aiNoPermission": "您的角色无法运行 AI 任务。",
+      "aiApproval": "AI 提出草稿，您在“审批”中批准后才会保存。AI 从不发布。",
+      "template": "模板",
+      "reviewNote": "页面将以草稿形式创建，发布前可修改任何内容。",
+      "create": "创建网站",
+      "createdTitle": "网站已可编辑",
+      "createdBody": "草稿页面已创建。发布首页即可立即上线，或先检查页面。",
+      "createdAi": "草稿页面已创建，AI 网页设计师正在撰写内容。请在“审批”中批准其草稿后再发布。",
+      "aiFailed": "无法启动 AI 起草。您可以在概览中重新启动。",
+      "publishNow": "发布首页并上线",
+      "reviewFirst": "先检查页面",
+      "publishHint": "发布后页面将在您的网址公开。您可以随时取消发布或回滚。",
+      "firstPublishNote": "首次上线",
+      "readOnly": "您可以查看网站，但不能修改（需要营销权限）。",
+      "back": "上一步",
+      "next": "继续"
+    },
+    "overview": {
+      "published": "已发布页面",
+      "ofPages": "共 {count} 个页面",
+      "landing": "落地页",
+      "newLeads": "新线索",
+      "totalLeads": "累计 {count} 条",
+      "domain": "自定义域名",
+      "noDomain": "未连接",
+      "pagesTitle": "页面",
+      "allPages": "全部页面",
+      "statusTitle": "网站状态",
+      "onlineHint": "已发布页面对公众可见。",
+      "offlineHint": "网站已下线：任何人都无法访问，包括已发布页面。",
+      "goOnline": "让网站上线",
+      "goOffline": "让网站下线",
+      "offlineConfirm": "确定让整个网站下线吗？在重新上线之前，每个页面都会显示“未找到”。",
+      "publishFirst": "请先至少发布一个页面。",
+      "checklist": "上线清单",
+      "steps": {
+        "theme": "按品牌设计网站",
+        "home": "发布首页",
+        "online": "让网站上线",
+        "form": "收到第一条线索",
+        "domain": "连接您自己的域名"
+      }
+    },
+    "ai": {
+      "generate": "生成我的网站",
+      "title": "生成我的网站",
+      "description": "AI 网页设计师根据公司大脑、品牌套件、产品和 Founder Kit 结构起草页面。",
+      "brief": "简报（可选）",
+      "briefHint": "AI 需要了解的信息：受众、语气、优惠、想要的页面。",
+      "focus": "仅这些页面（可选）",
+      "focusHint": "例如“春季优惠的落地页”。留空则生成整个网站。",
+      "approvalNote": "草稿在您批准后保存。AI 不会发布任何内容，也绝不编造客户或成果。",
+      "start": "开始起草",
+      "startedTitle": "网页设计师正在工作",
+      "started": "您将收到一条包含拟议页面的审批请求。批准后即保存为草稿。",
+      "openTask": "打开任务",
+      "openApprovals": "打开审批",
+      "cardTitle": "AI 网页设计师",
+      "cardHint": "起草页面供您审阅——从不发布。"
+    },
+    "pages": {
+      "new": "新建页面",
+      "newTitle": "创建页面",
+      "pathHint": "首页请留空。使用小写字母、数字、连字符，子页面用 /。",
+      "startFrom": "起始内容",
+      "from": {
+        "blank": "空白页面",
+        "landing": "落地页布局（含联系表单）",
+        "duplicate": "复制其他页面"
+      },
+      "create": "创建并编辑",
+      "group": {
+        "PAGE": "网站页面",
+        "LANDING": "落地页"
+      },
+      "emptyGroup": {
+        "PAGE": "还没有网站页面。",
+        "LANDING": "还没有落地页。为下一个优惠或活动创建一个吧。"
+      },
+      "empty": "还没有页面。",
+      "colPage": "页面",
+      "colStatus": "状态",
+      "colUpdated": "最近修改",
+      "colActions": "操作",
+      "unpublishedChanges": "有未发布的修改",
+      "aiDraft": "AI 草稿",
+      "view": "查看 {title}",
+      "edit": "编辑 {title}",
+      "delete": "删除 {title}",
+      "deleteConfirm": "删除“{title}”及其所有版本？如已发布将下线。此操作无法撤销。"
+    },
+    "editor": {
+      "title": "编辑页面",
+      "save": "保存草稿",
+      "saved": "草稿已保存。",
+      "unsaved": "有未保存的修改",
+      "publish": "发布",
+      "publishChanges": "发布修改",
+      "unpublish": "取消发布",
+      "unpublishConfirm": "取消发布此页面？在重新发布之前，访客会看到“未找到”。",
+      "schedule": "排期",
+      "scheduleTitle": "定时发布",
+      "scheduleHint": "当前草稿将在此时间自动上线（您的本地时间）。",
+      "scheduleAt": "发布时间",
+      "cancelSchedule": "取消排期",
+      "done": {
+        "publish": "已发布——页面已上线。",
+        "schedule": "已排期。",
+        "unpublish": "页面已下线。",
+        "cancel_schedule": "排期已取消。"
+      },
+      "siteOffline": "此页面已发布，但网站处于下线状态。请在概览中让网站上线后才会公开。",
+      "view": "视图",
+      "pane": {
+        "edit": "编辑",
+        "preview": "预览"
+      },
+      "pageSettings": "页面设置与 SEO",
+      "pageTitle": "页面标题",
+      "path": "地址",
+      "pathHint": "公开地址：{path}",
+      "kind": "类型",
+      "showInNav": "显示在导航中",
+      "seoTitle": "搜索标题",
+      "seoDescription": "搜索描述",
+      "ogImage": "分享图片",
+      "noIndex": "对搜索引擎隐藏此页面",
+      "blocks": "区块",
+      "addBlock": "添加区块",
+      "empty": "此页面还没有区块，请在下方添加。",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "duplicate": "复制",
+      "remove": "移除",
+      "preview": "实时预览",
+      "device": "预览设备",
+      "devices": {
+        "desktop": "桌面",
+        "mobile": "手机"
+      },
+      "mobileNote": "390 px 手机预览——线上网站使用相同布局。",
+      "noAssets": "请先在素材库中添加图片。",
+      "noImage": "无图片"
+    },
+    "blocks": {
+      "hero": {
+        "name": "首屏横幅"
+      },
+      "features": {
+        "name": "特色"
+      },
+      "richText": {
+        "name": "文本"
+      },
+      "image": {
+        "name": "图片"
+      },
+      "cta": {
+        "name": "行动号召"
+      },
+      "faq": {
+        "name": "常见问题"
+      },
+      "testimonials": {
+        "name": "客户评价"
+      },
+      "pricing": {
+        "name": "价格"
+      },
+      "contactForm": {
+        "name": "联系表单"
+      },
+      "logoStrip": {
+        "name": "标志墙"
+      }
+    },
+    "blockFields": {
+      "eyebrow": "小标题",
+      "title": "标题",
+      "subtitle": "副标题",
+      "body": "正文",
+      "ctaLabel": "按钮文字",
+      "ctaHref": "按钮链接",
+      "secondaryLabel": "第二个按钮文字",
+      "secondaryHref": "第二个按钮链接",
+      "image": "图片",
+      "layout": "布局",
+      "layouts": {
+        "split": "文字与图片并排",
+        "centered": "居中"
+      },
+      "icon": "图标",
+      "itemTitle": "标题",
+      "itemBody": "描述",
+      "addItem": "添加条目",
+      "alt": "图片描述（供屏幕阅读器使用）",
+      "caption": "图注",
+      "width": "宽度",
+      "widths": {
+        "wide": "宽",
+        "content": "正文宽度"
+      },
+      "question": "问题",
+      "answer": "回答",
+      "addQuestion": "添加问题",
+      "customer": "客户",
+      "quote": "评价内容",
+      "author": "评价人",
+      "role": "职位",
+      "addTestimonial": "添加评价",
+      "customersOnly": "只能引用真实客户：每条评价都关联到 CRM 中类型为“客户”的账户。发布前请征得对方同意。",
+      "noCustomers": "CRM 中还没有客户。将账户标记为“客户”后即可在此引用。",
+      "product": "产品",
+      "price": "价格（如 ¥99）",
+      "period": "周期（如 每月）",
+      "features": "包含内容（每行一项）",
+      "highlight": "突出显示此卡片",
+      "addProduct": "添加产品",
+      "productsOnly": "卡片展示您的真实产品（名称和描述来自“产品”），显示的价格由您填写。",
+      "noProducts": "还没有产品。请在“产品”中添加后展示价格。",
+      "fields": "字段",
+      "required": "必填",
+      "submitLabel": "按钮文字",
+      "successMessage": "感谢信息",
+      "consentText": "同意声明",
+      "consentHint": "访客提交前必须勾选此项。每次提交都会保存确切的声明文字。",
+      "formLeads": "每次提交都会成为 CRM 线索并显示在“线索”中。通过隐藏字段和频率限制过滤机器人。",
+      "logoName": "名称",
+      "logosHint": "仅展示您有权使用的标志。",
+      "addLogo": "添加标志",
+      "linkHint": "页面如 /contact、锚点如 #contact，或完整的 https:// 链接。",
+      "richHint": "**粗体**、*斜体*、[链接](https://…)，“## ”表示标题，“- ”表示列表。段落之间空一行。"
+    },
+    "versions": {
+      "title": "版本",
+      "hint": "每次发布或排期都会保存一个版本。",
+      "empty": "还没有版本——发布页面即可创建第一个版本。",
+      "live": "线上",
+      "restore": "恢复为草稿",
+      "restorePublish": "恢复并发布",
+      "restoreConfirm": "用版本 {version} 替换当前草稿？",
+      "publishConfirm": "立即发布版本 {version}？它将替换线上页面。"
+    },
+    "inbox": {
+      "filters": "筛选线索",
+      "filter": {
+        "inbox": "收件箱",
+        "NEW": "新",
+        "READ": "已读",
+        "ARCHIVED": "已归档"
+      },
+      "new": "新",
+      "anonymous": "访客",
+      "consented": "已于 {when} 同意",
+      "openLead": "打开 CRM 线索",
+      "noLead": "无 CRM 线索（仅保存在此）",
+      "markRead": "标为已读",
+      "markNew": "标为新",
+      "archive": "归档",
+      "empty": "还没有表单提交。在已发布页面中添加联系表单区块即可收集线索。"
+    },
+    "settings": {
+      "general": "常规",
+      "slugWarning": "修改地址会导致旧链接失效。",
+      "theme": "主题",
+      "themeHint": "立即应用到所有页面。",
+      "nav": "导航",
+      "navHint": "网站页头中的链接。留空时：创建网站时会自动列出您的页面。",
+      "pagesAvailable": "您的页面：",
+      "linkLabel": "名称",
+      "linkHref": "链接",
+      "addLink": "添加链接",
+      "footer": "页脚",
+      "footerText": "页脚文字",
+      "poweredBy": "显示“由 Realy 构建”",
+      "seo": "搜索与分享默认值",
+      "seoHint": "当页面没有自己的搜索标题、描述或分享图片时使用。",
+      "noIndex": "对搜索引擎隐藏整个网站",
+      "save": "保存设置",
+      "saved": "设置已保存，已发布页面会立即使用。"
+    },
+    "domain": {
+      "title": "自定义域名",
+      "description": "您的网站始终可通过 {path} 访问。两步即可连接您自己的域名。",
+      "domain": "域名",
+      "domainHint": "例如 www.yourcompany.com",
+      "save": "保存域名",
+      "status": {
+        "NONE": "未连接",
+        "PENDING": "等待 DNS",
+        "VERIFIED": "所有权已验证",
+        "FAILED": "未通过验证"
+      },
+      "txtTitle": "请在域名服务商处添加此 DNS 记录",
+      "recordType": "类型",
+      "recordName": "名称 / 主机",
+      "recordValue": "值",
+      "copy": "复制",
+      "copied": "已复制",
+      "txtHint": "DNS 变更可能需要几分钟到 48 小时，之后请重新检查。",
+      "verify": "立即检查",
+      "remove": "移除域名",
+      "removeConfirm": "从网站中移除此域名？",
+      "lastChecked": "上次检查：{when}",
+      "errors": {
+        "record_not_found": "未找到 TXT 记录",
+        "record_mismatch": "存在 TXT 记录但值不匹配",
+        "dns_timeout": "DNS 查询超时",
+        "dns_error": "DNS 查询失败"
+      },
+      "verifiedTitle": "所有权已验证——下一步是路由",
+      "verifiedBody": "您的域名已验证。要通过该域名访问网站，需将域名指向 Realy（CNAME 记录）并由 Realy 团队启用；在此之前网站仍位于 {path}。",
+      "stepsTitle": "工作原理",
+      "steps": {
+        "add": "添加域名",
+        "addHint": "输入您想使用的域名。",
+        "txt": "证明所有权",
+        "txtHint": "添加 TXT 记录并在此检查——真实的 DNS 查询。",
+        "route": "将域名指向网站",
+        "routeHint": "添加指向 Realy 的 CNAME 记录，由团队为您的网站启用。上线后我们会通知您。"
+      }
+    },
+    "public": {
+      "menu": "菜单",
+      "skip": "跳到内容",
+      "poweredBy": "由 Realy 构建",
+      "contactUs": "联系我们",
+      "customerOf": "客户",
+      "form": {
+        "name": "姓名",
+        "email": "邮箱",
+        "phone": "电话",
+        "company": "公司",
+        "message": "留言",
+        "send": "发送",
+        "sending": "发送中…",
+        "success": "谢谢——您的留言已发送。",
+        "error": "出了点问题，请重试。",
+        "rateLimited": "提交过于频繁，请稍后再试。",
+        "required": "必填",
+        "invalidEmail": "请输入有效的邮箱地址",
+        "consentDefault": "我同意保存我的信息以回复我的请求。"
+      }
+    },
+    "tpl": {
+      "pageHome": "首页",
+      "pageAbout": "关于我们",
+      "pageContact": "联系",
+      "pageServices": "服务",
+      "heroTitle": "欢迎来到 {name}",
+      "heroSubtitle": "用一句话说明您做什么、为谁服务。",
+      "ctaContact": "联系我们",
+      "ctaLearn": "了解更多",
+      "featuresTitle": "客户为何选择我们",
+      "featuresSubtitle": "替换为让您与众不同的三点。",
+      "feature1": "您的第一项优势",
+      "feature2": "您的第二项优势",
+      "feature3": "您的第三项优势",
+      "featureBody": "用一两句话说明能为客户带来的好处。",
+      "faqTitle": "常见问题",
+      "faqQ1": "你们提供什么？",
+      "faqQ2": "我们如何开始？",
+      "faqA": "回答客户最常问的问题。",
+      "ctaTitle": "准备好聊聊了吗？",
+      "ctaBody": "告诉我们您的需求，我们会尽快回复您。",
+      "aboutBody": "## 我们的故事\n\n告诉访客 {name} 背后是谁、为何创立以及您在乎什么。\n\n## 我们的理念\n\n- 您的第一条价值观\n- 您的第二条价值观\n- 您的第三条价值观",
+      "servicesBody": "## 我们做什么\n\n介绍您的服务：包含什么、面向谁，以及与您合作的方式。",
+      "pricingTitle": "价格",
+      "pricingSubtitle": "选择最适合您的方案。",
+      "contactTitle": "联系我们",
+      "contactBody": "告诉我们您的需求，我们会尽快回复您。",
+      "submit": "发送留言",
+      "success": "谢谢——我们已收到您的留言，会尽快回复您。",
+      "consent": "我同意 {name} 保存我的信息以回复我的请求。"
     }
   }
 }

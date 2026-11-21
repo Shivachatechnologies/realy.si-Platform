@@ -57,6 +57,9 @@ export const DOMAIN_EVENTS = [
   "crm.outreach_sent",
   "livechat.lead_captured",
   "briefing.delivered",
+  // Company websites & landing pages (modules/sites).
+  "site.published",
+  "site.form_submitted",
 ] as const;
 export type DomainEventType = (typeof DOMAIN_EVENTS)[number];
 const scalar = z.union([z.string(), z.number(), z.boolean(), z.null()]);

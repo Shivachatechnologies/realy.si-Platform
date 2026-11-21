@@ -818,7 +818,20 @@
       "billing_no_subscription": "There's no active subscription to change yet. Start one from Billing & usage.",
       "billing_same_plan": "That's already your current plan.",
       "billing_currency_change": "Plan changes keep your current billing currency.",
-      "plan_limit_unlimited_high_cost": "High-cost usage needs a finite quota. Offer more through add-ons."
+      "plan_limit_unlimited_high_cost": "High-cost usage needs a finite quota. Offer more through add-ons.",
+      "sites_exists": "This company already has a website.",
+      "sites_slug_taken": "That web address is already taken. Choose another one.",
+      "sites_page_slug_taken": "Another page already uses this address.",
+      "sites_stale_draft": "Someone else saved this page in the meantime. Reload to see their changes.",
+      "sites_nothing_published": "Publish at least one page before taking the site online.",
+      "sites_page_empty": "Add at least one block before publishing.",
+      "sites_schedule_past": "Pick a publish time at least a minute from now.",
+      "sites_testimonial_not_customer": "Testimonials can only quote real customers (CRM accounts of type Customer).",
+      "sites_unknown_product": "A pricing card points at a product that no longer exists.",
+      "sites_unknown_asset": "An image is not in your asset library.",
+      "sites_no_structure": "Your Founder Kit has no ready website structure yet.",
+      "sites_domain_taken": "This domain is already connected to another site.",
+      "sites_no_domain": "Add a domain first."
     }
   },
   "onboarding": {
@@ -2274,7 +2287,9 @@
       "read_ops_bottlenecks": "Read operations bottlenecks",
       "read_process": "Read a process",
       "propose_process_version": "Propose SOP version",
-      "triage_ticket": "Triage a ticket"
+      "triage_ticket": "Triage a ticket",
+      "read_site": "Read website",
+      "draft_site_pages": "Draft website pages"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -2994,6 +3009,10 @@
     "operations_manager": {
       "name": "Operations manager",
       "summary": "Finds bottlenecks, writes SOPs and organises fixes as tasks."
+    },
+    "web_designer": {
+      "name": "Web Designer",
+      "summary": "Drafts your website and landing pages from your brand, products and company knowledge."
     }
   },
   "projects": {
@@ -3444,6 +3463,9 @@
       },
       "platform": {
         "announcement": "Announcement: {title}"
+      },
+      "sites": {
+        "form_submission": "New website lead: {title}"
       }
     },
     "viewAll": "View all"
@@ -6804,7 +6826,9 @@
       "crm_prospect_found": "Prospect found",
       "crm_outreach_sent": "Outreach email sent",
       "livechat_lead_captured": "Live chat lead captured",
-      "briefing_delivered": "Briefing delivered"
+      "briefing_delivered": "Briefing delivered",
+      "site_published": "Website page published",
+      "site_form_submitted": "Website form submitted"
     },
     "compare": {
       "title": "Compare versions",
@@ -16277,7 +16301,8 @@
         "confirm": "Rename the company to “{name}”?"
       },
       "website": {
-        "noBuilder": "No website builder is connected, so the structure is exported as a document you can give to a designer or paste into your site builder."
+        "noBuilder": "No website builder is connected, so the structure is exported as a document you can give to a designer or paste into your site builder.",
+        "createSite": "“Create my website” turns this structure into draft pages under Website, styled from your brand. Nothing is published until you publish it."
       },
       "forecast": {
         "projection": "Projection — not a guarantee",
@@ -16332,8 +16357,10 @@
           "create_products": "The products were added.",
           "use_workforce": "The AI team was added to your workforce.",
           "use_name": "The company was renamed.",
-          "pin_logo": "This is now your brand logo."
-        }
+          "pin_logo": "This is now your brand logo.",
+          "create_site": "Draft pages were created in Website — nothing is published."
+        },
+        "create_site": "Create my website"
       },
       "recordKinds": {
         "project": "Project",
@@ -16346,7 +16373,8 @@
         "workforce_draft": "Workforce stage",
         "ai_employees": "Workforce",
         "company_name": "Company",
-        "brand_logo": "Brand"
+        "brand_logo": "Brand",
+        "site": "Website"
       },
       "items": {
         "idea_refinement": {
@@ -17623,7 +17651,9 @@
         "create_work_task": "Preparing a task",
         "read_support_queue": "Reading the support queue",
         "draft_ticket_reply": "Drafting a reply",
-        "read_workflows": "Reviewing workflows"
+        "read_workflows": "Reviewing workflows",
+        "read_site": "Reading the website",
+        "draft_site_pages": "Drafting website pages"
       },
       "verbs": {
         "read": "Reading · {name}",
@@ -18929,7 +18959,9 @@
       "crm_prospect_found": "found a new prospect",
       "crm_outreach_sent": "sent an outreach email",
       "livechat_lead_captured": "captured a lead from live chat",
-      "briefing_delivered": "delivered a briefing"
+      "briefing_delivered": "delivered a briefing",
+      "site_published": "published a website page",
+      "site_form_submitted": "received a website lead"
     }
   },
   "aiPlans": {
@@ -21502,7 +21534,9 @@
       "voice_minutes_month": "Voice minutes / month",
       "email_sends_month": "Email sends / month",
       "api_cost_month": "External API spend cap / month",
-      "ads_spend_month": "Ad spend cap / month"
+      "ads_spend_month": "Ad spend cap / month",
+      "sites_pages_max": "Website pages",
+      "sites_landing_pages_max": "Landing pages"
     },
     "addons": {
       "ai_credits_10k": "10,000 AI credits",
@@ -21686,6 +21720,490 @@
       "text": "Realy uses only strictly necessary cookies (sign-in, language and your selected company) — no analytics or advertising cookies.",
       "link": "Cookie Policy",
       "ok": "OK"
+    }
+  },
+  "sites": {
+    "title": "Website",
+    "eyebrow": "Marketing · Website",
+    "subtitle": "Build and publish your company website and landing pages — no code, on brand, with forms that land in your CRM.",
+    "subtitleSite": "Your company website: pages, landing pages, leads from your forms and your domain.",
+    "viewSite": "View site",
+    "empty": "This company has no website yet. Someone with marketing permissions can create it here.",
+    "planLocked": "Your plan does not include the website builder. You can set it up, but publishing needs an upgrade.",
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "pages": "Pages",
+      "submissions": "Leads",
+      "settings": "Design & settings",
+      "domain": "Domain"
+    },
+    "kinds": {
+      "PAGE": "Website page",
+      "LANDING": "Landing page"
+    },
+    "kindHints": {
+      "PAGE": "Part of your site and its navigation (home, services, about, contact…).",
+      "LANDING": "A focused page for one offer or campaign, usually not in the navigation."
+    },
+    "pageStatus": {
+      "DRAFT": "Draft",
+      "SCHEDULED": "Scheduled",
+      "PUBLISHED": "Published"
+    },
+    "fonts": {
+      "modern": "Modern sans",
+      "display": "Bold display",
+      "classic": "Classic serif",
+      "mono": "Technical mono"
+    },
+    "styles": {
+      "soft": "Soft gradient",
+      "bold": "Bold colour",
+      "minimal": "Minimal"
+    },
+    "radii": {
+      "rounded": "Rounded",
+      "square": "Square",
+      "pill": "Extra round"
+    },
+    "templates": {
+      "services": "Services business",
+      "product": "Product or software",
+      "local": "Local business",
+      "landing": "One-page site"
+    },
+    "icons": {
+      "sparkles": "Sparkles",
+      "check": "Check",
+      "shield": "Shield",
+      "zap": "Lightning",
+      "heart": "Heart",
+      "star": "Star",
+      "clock": "Clock",
+      "globe": "Globe",
+      "users": "People",
+      "chart": "Chart"
+    },
+    "fields": {
+      "name": "Site name",
+      "slug": "Web address",
+      "slugHint": "Your site will be at {path}.",
+      "slugInvalid": "Use 3–48 lowercase letters, digits and dashes.",
+      "locale": "Site language",
+      "localeHint": "Visitors see your pages, forms and messages in this language.",
+      "brandColor": "Brand colour",
+      "accentColor": "Accent colour",
+      "font": "Typography",
+      "style": "Style",
+      "radius": "Corners",
+      "logo": "Logo",
+      "noLogo": "No logo",
+      "noLogos": "No images yet. Add your logo in Assets (or the Founder Kit) to use it here."
+    },
+    "setup": {
+      "title": "Create your website",
+      "subtitle": "Four short steps. Nothing goes public until you publish.",
+      "progress": "Setup progress",
+      "steps": {
+        "name": "Name",
+        "style": "Style",
+        "content": "Content",
+        "publish": "Publish"
+      },
+      "fromBrand": "Styled from your brand kit",
+      "fromBrandBody": "Colours, typography and logo come from your brand. Adjust anything you like.",
+      "noBrandKit": "No brand kit yet — pick a colour and a font; you can refine your brand in Marketing later.",
+      "sample": "Live style preview",
+      "start": {
+        "ai": "Draft it with AI",
+        "structure": "From my Founder Kit",
+        "template": "Start from a template",
+        "blank": "Blank site"
+      },
+      "startAiHint": "Your web designer AI drafts every page from your company knowledge, brand and products. You approve the drafts.",
+      "startStructureHint": "Turns your Founder Kit website structure ({count} pages) into draft pages.",
+      "startTemplateHint": "Proven page layouts with placeholder text you replace.",
+      "startBlankHint": "Just a home page — build the rest yourself.",
+      "noStructure": "No ready website structure in your Founder Kit yet.",
+      "aiMissing": "AI is not configured on this platform yet.",
+      "aiNoPermission": "Your role cannot run AI tasks.",
+      "aiApproval": "The AI proposes drafts; they are saved after you approve them under Approvals. The AI never publishes.",
+      "template": "Template",
+      "reviewNote": "Your pages are created as drafts. You can edit everything before you publish.",
+      "create": "Create website",
+      "createdTitle": "Your website is ready to edit",
+      "createdBody": "Draft pages were created. Publish the home page to go online now, or review the pages first.",
+      "createdAi": "Draft pages were created and your web designer AI is writing the content. Approve its drafts under Approvals, then publish.",
+      "aiFailed": "The AI draft could not be started. You can start it again from the overview.",
+      "publishNow": "Publish home page & go online",
+      "reviewFirst": "Review pages first",
+      "publishHint": "Publishing makes the page public at your web address. You can unpublish or roll back at any time.",
+      "firstPublishNote": "First launch",
+      "readOnly": "You can view the website but not change it (marketing permission needed).",
+      "back": "Back",
+      "next": "Continue"
+    },
+    "overview": {
+      "published": "Published pages",
+      "ofPages": "of {count} pages",
+      "landing": "Landing pages",
+      "newLeads": "New leads",
+      "totalLeads": "{count} in total",
+      "domain": "Custom domain",
+      "noDomain": "Not connected",
+      "pagesTitle": "Pages",
+      "allPages": "All pages",
+      "statusTitle": "Site status",
+      "onlineHint": "Your published pages are public.",
+      "offlineHint": "The site is offline: nobody can see it, even published pages.",
+      "goOnline": "Take site online",
+      "goOffline": "Take site offline",
+      "offlineConfirm": "Take the whole site offline? Every page will return “not found” until you take it online again.",
+      "publishFirst": "Publish at least one page first.",
+      "checklist": "Launch checklist",
+      "steps": {
+        "theme": "Style the site from your brand",
+        "home": "Publish your home page",
+        "online": "Take the site online",
+        "form": "Receive your first lead",
+        "domain": "Connect your own domain"
+      }
+    },
+    "ai": {
+      "generate": "Generate my website",
+      "title": "Generate my website",
+      "description": "Your web designer AI drafts pages from your company brain, brand kit, products and Founder Kit structure.",
+      "brief": "Brief (optional)",
+      "briefHint": "Anything the AI should know: audience, tone, offers, pages you want.",
+      "focus": "Only these pages (optional)",
+      "focusHint": "For example “a landing page for the spring offer”. Leave empty for the whole site.",
+      "approvalNote": "Drafts are saved after you approve them. Nothing is published by the AI, and it never invents customers or results.",
+      "start": "Start drafting",
+      "startedTitle": "Your web designer is working",
+      "started": "You will get an approval request with the proposed pages. Approve it to save them as drafts.",
+      "openTask": "Open task",
+      "openApprovals": "Open approvals",
+      "cardTitle": "AI web designer",
+      "cardHint": "Drafts pages for your review — never publishes."
+    },
+    "pages": {
+      "new": "New page",
+      "newTitle": "Create a page",
+      "pathHint": "Leave empty for the home page. Lowercase letters, digits, dashes and / for sub-pages.",
+      "startFrom": "Start from",
+      "from": {
+        "blank": "Blank page",
+        "landing": "Landing page layout (with contact form)",
+        "duplicate": "Copy of another page"
+      },
+      "create": "Create and edit",
+      "group": {
+        "PAGE": "Website pages",
+        "LANDING": "Landing pages"
+      },
+      "emptyGroup": {
+        "PAGE": "No website pages yet.",
+        "LANDING": "No landing pages yet. Create one for your next offer or campaign."
+      },
+      "empty": "No pages yet.",
+      "colPage": "Page",
+      "colStatus": "Status",
+      "colUpdated": "Last change",
+      "colActions": "Actions",
+      "unpublishedChanges": "Unpublished changes",
+      "aiDraft": "AI draft",
+      "view": "View {title}",
+      "edit": "Edit {title}",
+      "delete": "Delete {title}",
+      "deleteConfirm": "Delete “{title}” with all its versions? If it is published it goes offline. This cannot be undone."
+    },
+    "editor": {
+      "title": "Edit page",
+      "save": "Save draft",
+      "saved": "Draft saved.",
+      "unsaved": "Unsaved changes",
+      "publish": "Publish",
+      "publishChanges": "Publish changes",
+      "unpublish": "Unpublish",
+      "unpublishConfirm": "Unpublish this page? Visitors will see “not found” until you publish it again.",
+      "schedule": "Schedule",
+      "scheduleTitle": "Schedule publishing",
+      "scheduleHint": "The current draft goes live automatically at this time (your local time).",
+      "scheduleAt": "Publish at",
+      "cancelSchedule": "Cancel schedule",
+      "done": {
+        "publish": "Published — the page is live.",
+        "schedule": "Scheduled.",
+        "unpublish": "The page is offline.",
+        "cancel_schedule": "The schedule was cancelled."
+      },
+      "siteOffline": "This page is published, but the site is offline. Take the site online on the overview to make it public.",
+      "view": "View",
+      "pane": {
+        "edit": "Edit",
+        "preview": "Preview"
+      },
+      "pageSettings": "Page settings & SEO",
+      "pageTitle": "Page title",
+      "path": "Address",
+      "pathHint": "Public at {path}",
+      "kind": "Type",
+      "showInNav": "Show in navigation",
+      "seoTitle": "Search title",
+      "seoDescription": "Search description",
+      "ogImage": "Share image",
+      "noIndex": "Hide this page from search engines",
+      "blocks": "Blocks",
+      "addBlock": "Add a block",
+      "empty": "This page has no blocks yet. Add one below.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "duplicate": "Duplicate",
+      "remove": "Remove",
+      "preview": "Live preview",
+      "device": "Preview device",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Mobile"
+      },
+      "mobileNote": "Mobile preview at 390 px — the live site uses the same layout.",
+      "noAssets": "Add images in Assets to use them here.",
+      "noImage": "No image"
+    },
+    "blocks": {
+      "hero": {
+        "name": "Hero"
+      },
+      "features": {
+        "name": "Features"
+      },
+      "richText": {
+        "name": "Text"
+      },
+      "image": {
+        "name": "Image"
+      },
+      "cta": {
+        "name": "Call to action"
+      },
+      "faq": {
+        "name": "FAQ"
+      },
+      "testimonials": {
+        "name": "Testimonials"
+      },
+      "pricing": {
+        "name": "Pricing"
+      },
+      "contactForm": {
+        "name": "Contact form"
+      },
+      "logoStrip": {
+        "name": "Logo strip"
+      }
+    },
+    "blockFields": {
+      "eyebrow": "Small heading",
+      "title": "Heading",
+      "subtitle": "Subheading",
+      "body": "Text",
+      "ctaLabel": "Button label",
+      "ctaHref": "Button link",
+      "secondaryLabel": "Second button label",
+      "secondaryHref": "Second button link",
+      "image": "Image",
+      "layout": "Layout",
+      "layouts": {
+        "split": "Text and image side by side",
+        "centered": "Centered"
+      },
+      "icon": "Icon",
+      "itemTitle": "Title",
+      "itemBody": "Description",
+      "addItem": "Add item",
+      "alt": "Image description (for screen readers)",
+      "caption": "Caption",
+      "width": "Width",
+      "widths": {
+        "wide": "Wide",
+        "content": "Text width"
+      },
+      "question": "Question",
+      "answer": "Answer",
+      "addQuestion": "Add question",
+      "customer": "Customer",
+      "quote": "Quote",
+      "author": "Person",
+      "role": "Role",
+      "addTestimonial": "Add testimonial",
+      "customersOnly": "Only real customers can be quoted: each testimonial is linked to a CRM account of type Customer. Ask them before you publish their words.",
+      "noCustomers": "No customers in your CRM yet. Mark an account as Customer to quote it here.",
+      "product": "Product",
+      "price": "Price (e.g. €49)",
+      "period": "Period (e.g. per month)",
+      "features": "Included (one per line)",
+      "highlight": "Highlight this card",
+      "addProduct": "Add product",
+      "productsOnly": "Cards show your real products (name and description from Products). You enter the price shown.",
+      "noProducts": "No products yet. Add them under Products to show pricing.",
+      "fields": "Fields",
+      "required": "Required",
+      "submitLabel": "Button label",
+      "successMessage": "Thank-you message",
+      "consentText": "Consent text",
+      "consentHint": "Visitors must tick this before sending. The exact text is stored with each submission.",
+      "formLeads": "Every submission becomes a CRM lead and appears under Leads. Bots are filtered with a hidden field and rate limits.",
+      "logoName": "Name",
+      "logosHint": "Only show logos you have permission to use.",
+      "addLogo": "Add logo",
+      "linkHint": "A page like /contact, an anchor like #contact, or a full https:// link.",
+      "richHint": "**bold**, *italic*, [link](https://…), “## ” for headings, “- ” for lists. Leave an empty line between paragraphs."
+    },
+    "versions": {
+      "title": "Versions",
+      "hint": "A version is saved every time you publish or schedule.",
+      "empty": "No versions yet — publish the page to create the first one.",
+      "live": "Live",
+      "restore": "Restore to draft",
+      "restorePublish": "Restore & publish",
+      "restoreConfirm": "Replace the current draft with version {version}?",
+      "publishConfirm": "Publish version {version} now? It replaces the live page."
+    },
+    "inbox": {
+      "filters": "Filter leads",
+      "filter": {
+        "inbox": "Inbox",
+        "NEW": "New",
+        "READ": "Read",
+        "ARCHIVED": "Archived"
+      },
+      "new": "New",
+      "anonymous": "Visitor",
+      "consented": "Consent given {when}",
+      "openLead": "Open CRM lead",
+      "noLead": "No CRM lead (saved here only)",
+      "markRead": "Mark read",
+      "markNew": "Mark new",
+      "archive": "Archive",
+      "empty": "No form submissions yet. Add a contact form block to a published page to collect leads."
+    },
+    "settings": {
+      "general": "General",
+      "slugWarning": "Changing the address breaks links to the old one.",
+      "theme": "Theme",
+      "themeHint": "Applies to every page right away.",
+      "nav": "Navigation",
+      "navHint": "Links in the site header. Empty: your website pages are listed automatically when the site is created.",
+      "pagesAvailable": "Your pages:",
+      "linkLabel": "Label",
+      "linkHref": "Link",
+      "addLink": "Add link",
+      "footer": "Footer",
+      "footerText": "Footer text",
+      "poweredBy": "Show “Made with Realy”",
+      "seo": "Search & sharing defaults",
+      "seoHint": "Used when a page has no search title, description or share image of its own.",
+      "noIndex": "Hide the whole site from search engines",
+      "save": "Save settings",
+      "saved": "Settings saved. Published pages use them right away."
+    },
+    "domain": {
+      "title": "Custom domain",
+      "description": "Your site is always available at {path}. Connect your own domain in two steps.",
+      "domain": "Domain",
+      "domainHint": "For example www.yourcompany.com",
+      "save": "Save domain",
+      "status": {
+        "NONE": "Not connected",
+        "PENDING": "Waiting for DNS",
+        "VERIFIED": "Ownership verified",
+        "FAILED": "Not verified"
+      },
+      "txtTitle": "Add this DNS record at your domain provider",
+      "recordType": "Type",
+      "recordName": "Name / host",
+      "recordValue": "Value",
+      "copy": "Copy",
+      "copied": "Copied",
+      "txtHint": "DNS changes can take from a few minutes to 48 hours. Then check again.",
+      "verify": "Check now",
+      "remove": "Remove domain",
+      "removeConfirm": "Remove this domain from your site?",
+      "lastChecked": "Last checked {when}",
+      "errors": {
+        "record_not_found": "the TXT record was not found",
+        "record_mismatch": "a TXT record exists but its value does not match",
+        "dns_timeout": "the DNS lookup timed out",
+        "dns_error": "the DNS lookup failed"
+      },
+      "verifiedTitle": "Ownership verified — routing is the next step",
+      "verifiedBody": "Your domain is verified. Serving the site on it requires pointing the domain at Realy (a CNAME record) and activation by the Realy team; until then your site stays at {path}.",
+      "stepsTitle": "How it works",
+      "steps": {
+        "add": "Add your domain",
+        "addHint": "Enter the domain you want to use.",
+        "txt": "Prove ownership",
+        "txtHint": "Add the TXT record and check it here — a real DNS lookup.",
+        "route": "Point the domain at your site",
+        "routeHint": "Add a CNAME record to Realy; the team activates it for your site. We tell you when it is live."
+      }
+    },
+    "public": {
+      "menu": "Menu",
+      "skip": "Skip to content",
+      "poweredBy": "Made with Realy",
+      "contactUs": "Contact us",
+      "customerOf": "Customer",
+      "form": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "company": "Company",
+        "message": "Message",
+        "send": "Send",
+        "sending": "Sending…",
+        "success": "Thank you — your message was sent.",
+        "error": "Something went wrong. Please try again.",
+        "rateLimited": "Too many messages. Please try again later.",
+        "required": "Required",
+        "invalidEmail": "Enter a valid email address",
+        "consentDefault": "I agree that my details are stored to answer my request."
+      }
+    },
+    "tpl": {
+      "pageHome": "Home",
+      "pageAbout": "About us",
+      "pageContact": "Contact",
+      "pageServices": "Services",
+      "heroTitle": "Welcome to {name}",
+      "heroSubtitle": "Say in one sentence what you do and for whom.",
+      "ctaContact": "Get in touch",
+      "ctaLearn": "Learn more",
+      "featuresTitle": "Why customers choose us",
+      "featuresSubtitle": "Replace these with the three things that make you different.",
+      "feature1": "Your first strength",
+      "feature2": "Your second strength",
+      "feature3": "Your third strength",
+      "featureBody": "Explain the benefit for your customer in one or two sentences.",
+      "faqTitle": "Frequently asked questions",
+      "faqQ1": "What do you offer?",
+      "faqQ2": "How do we get started?",
+      "faqA": "Answer the question your customers ask most often.",
+      "ctaTitle": "Ready to talk?",
+      "ctaBody": "Tell us what you need and we will get back to you.",
+      "aboutBody": "## Our story\n\nTell visitors who is behind {name}, why you started and what you care about.\n\n## What we stand for\n\n- Your first value\n- Your second value\n- Your third value",
+      "servicesBody": "## What we do\n\nDescribe your services: what is included, who they are for and how working with you looks.",
+      "pricingTitle": "Pricing",
+      "pricingSubtitle": "Choose what fits you best.",
+      "contactTitle": "Contact us",
+      "contactBody": "Tell us what you need and we will get back to you.",
+      "submit": "Send message",
+      "success": "Thank you — we received your message and will get back to you.",
+      "consent": "I agree that {name} stores my details to answer my request."
     }
   }
 }

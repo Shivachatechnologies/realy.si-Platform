@@ -723,6 +723,10 @@ model Company {
   crmAutopilotRuns                CrmAutopilotRun[]
   crmSuppressions                 CrmSuppression[]
   builderKitItems                 BuilderKitItem[]
+  sites                           Site[]
+  sitePages                       SitePage[]
+  sitePageVersions                SitePageVersion[]
+  siteFormSubmissions             SiteFormSubmission[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])

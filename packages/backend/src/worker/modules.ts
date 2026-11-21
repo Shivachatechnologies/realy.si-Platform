@@ -17,6 +17,7 @@ import { CRM_JOBS } from "@/server/modules/crm/jobs";
 import { LIVECHAT_JOBS } from "@/server/modules/livechat/jobs";
 import { BRIEFING_JOBS } from "@/server/modules/briefing/jobs";
 import { VOICE_JOBS } from "@/server/modules/voice/jobs";
+import { SITES_JOBS } from "@/server/modules/sites/jobs";
 
 /** Background work contributed by business modules. */
-export const MODULE_JOBS: ModuleJobs[] = [BUILDER_JOBS, BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS, LIVECHAT_JOBS, BRIEFING_JOBS, VOICE_JOBS];
+export const MODULE_JOBS: ModuleJobs[] = [BUILDER_JOBS, BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS, LIVECHAT_JOBS, BRIEFING_JOBS, VOICE_JOBS, SITES_JOBS];
