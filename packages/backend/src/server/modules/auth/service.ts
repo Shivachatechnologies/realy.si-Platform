@@ -134,6 +134,9 @@ export async function signIn(ctx: RequestContext, raw: z.input<typeof signInInpu
   if (await ssoEnforcedFor(user.email)) throw new AppError("forbidden", "Your organization requires single sign-on", { reason: "sso_required" });
   return transaction(async (tx) => {
     const actorCtx: RequestContext = { ...ctx, actor: { type: "USER", id: user.id } };
+    // First-run access also applies to an account that already existed before the bootstrap email was configured
+    // (same rules: only while no SUPER_ADMIN exists, only the designated email).
+    await maybeBootstrapPlatformAdmin(tx, actorCtx, user.id, user.email);
     const { token, session } = await createSession(tx, user.id, {
       mfaPending: user.mfaEnabled,
       ip: ctx.ip,
