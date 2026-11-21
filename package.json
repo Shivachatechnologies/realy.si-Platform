@@ -25,7 +25,8 @@
     "db:migrate": "pnpm --filter @realy/database migrate",
     "db:migrate:dev": "pnpm --filter @realy/database migrate:dev",
     "db:seed": "pnpm --filter @realy/database seed",
-    "realy:grant-role": "tsx scripts/grant-role.ts"
+    "realy:grant-role": "tsx scripts/grant-role.ts",
+    "check:cycles": "node scripts/check-import-cycles.cjs"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "0.135.0",

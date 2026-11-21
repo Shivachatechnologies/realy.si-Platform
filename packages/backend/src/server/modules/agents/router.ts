@@ -1,5 +1,4 @@
 import { providerOf, resolveTierModel, type RoutingTier } from "@/server/modules/admin/ai-models";
-import { fallbackModels } from "@/server/modules/admin/ops";
 import type { AgentProfile } from "./profiles";
 
 /**
@@ -65,6 +64,8 @@ const NEXT_TIER: Record<ComplexityTier, ComplexityTier | null> = { simple: "stan
 /** Ordered alternatives after `model` fails: the admin fallback chain, then the next tier's model. Distinct, max 3. */
 export async function fallbackChain(organizationId: string, profileKey: string, model: string, tier: ComplexityTier): Promise<string[]> {
   const out: string[] = [];
+  // Lazy import: admin/ops → workforce/service → agents/service → runtime → router would otherwise be a load-time cycle.
+  const { fallbackModels } = await import("@/server/modules/admin/ops");
   for (const m of await fallbackModels(model).catch(() => [] as string[])) if (!out.includes(m) && m !== model) out.push(m);
   let t = NEXT_TIER[tier];
   while (t && out.length < 3) {
