@@ -138,8 +138,10 @@ export function JarvisConsole({ base, companyName, initialEvents }: { base: stri
         {voice.boot && !voice.boot.ai.configured ? <Notice tone="warning">{t("jarvis.aiNotConfigured")}</Notice> : null}
         {voice.boot && voice.boot.ai.configured && !voice.boot.ai.canRun ? <Notice tone="warning">{t("jarvis.cannotRun")}</Notice> : null}
 
-        <div className="relative aspect-square w-full max-w-[min(34rem,62vh)]">
-          <JarvisCore state={state} level={level} pulses={stream.pulses} activity={Math.min(1, openRuns / 4)} className="absolute inset-0" />
+        <div className="relative isolate aspect-square w-full max-w-[min(34rem,62vh)]">
+          <div aria-hidden className="jv-grid rounded-full [mask-image:radial-gradient(circle,#000_30%,transparent_70%)]" />
+          <div aria-hidden className="absolute inset-[4%] -z-10 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--jarvis-cyan)_14%,transparent),transparent_68%)]" />
+          <JarvisCore state={state} level={level} pulses={stream.pulses} activity={Math.min(1, openRuns / 4)} priority={4} className="absolute inset-0" />
           <ul className="sr-only">
             {DEPARTMENTS.map((d) => (
               <li key={d}>{t(`jarvis.departments.${d}`)}</li>

@@ -84,7 +84,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
           )}
           <Link
             href={primary.href}
-            className="press hidden min-h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background shadow-elev-2 transition-transform hover:scale-[1.02] sm:inline-flex"
+            className="jv-cta press hidden min-h-10 items-center gap-1.5 rounded-full px-4 text-[13.5px] font-medium transition-transform hover:scale-[1.02] sm:inline-flex"
           >
             {primary.label}
             <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />

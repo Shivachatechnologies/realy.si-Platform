@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { TIER_SETTINGS } from "./core-quality";
+import { AdaptiveDpr, FrameDriver } from "./r3f-kit";
 
 export interface AiCore3DProps {
   /** 0–1: real AI workload (running/queued tasks normalised). Drives rotation speed, pulse and signal traffic. */
@@ -10,16 +12,18 @@ export interface AiCore3DProps {
   /** Orbiting nodes (e.g. active AI employees), clamped to 3–24. */
   nodes: number;
   colors: { a: [number, number, number]; b: [number, number, number] };
-  /** Pause rendering (off-screen). */
+  /** Pause rendering (off-screen / tab hidden). */
   paused?: boolean;
+  /** "lite" on phones: fewer particles, ≤1.5 DPR, 30 fps, no MSAA. */
+  quality?: "full" | "lite";
 }
 
 const c3 = ([r, g, b]: [number, number, number]) => new THREE.Color(r / 255, g / 255, b / 255);
 
-function Particles({ color, activity }: { color: THREE.Color; activity: number }) {
+function Particles({ color, activity, density }: { color: THREE.Color; activity: number; density: number }) {
   const ref = useRef<THREE.Points>(null);
   const geo = useMemo(() => {
-    const n = 900;
+    const n = Math.round(900 * density);
     const pos = new Float32Array(n * 3);
     let s = 1234567;
     const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
@@ -35,13 +39,14 @@ function Particles({ color, activity }: { color: THREE.Color; activity: number }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return g;
-  }, []);
+  }, [density]);
+  useEffect(() => () => geo.dispose(), [geo]);
   useFrame((_, dt) => {
     if (ref.current) ref.current.rotation.y += dt * (0.02 + activity * 0.06);
   });
   return (
     <points ref={ref} geometry={geo}>
-      <pointsMaterial color={color} size={0.025} sizeAttenuation transparent opacity={0.7} depthWrite={false} blending={THREE.AdditiveBlending} />
+      <pointsMaterial color={color} size={density < 1 ? 0.034 : 0.025} sizeAttenuation transparent opacity={0.7} depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
@@ -54,6 +59,7 @@ function Orbits({ count, colorA, colorB, activity }: { count: number; colorA: TH
     g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 6), 3));
     return g;
   }, [count]);
+  useEffect(() => () => lineGeo.dispose(), [lineGeo]);
   const specs = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => {
@@ -79,6 +85,7 @@ function Orbits({ count, colorA, colorB, activity }: { count: number; colorA: TH
       }),
     [],
   );
+  useEffect(() => () => rings.forEach((g) => g.dispose()), [rings]);
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -155,26 +162,29 @@ function Core({ colorA, colorB, activity }: { colorA: THREE.Color; colorB: THREE
 }
 
 /** Procedural intelligence core (Three.js). Load only through <AiCoreStage> (dynamic, client-only, with fallbacks). */
-export default function AiCore3D({ activity, nodes, colors, paused }: AiCore3DProps) {
+export default function AiCore3D({ activity, nodes, colors, paused, quality = "full" }: AiCore3DProps) {
+  const q = TIER_SETTINGS[quality];
   const a = c3(colors.a);
   const b = c3(colors.b);
   const n = Math.max(3, Math.min(24, Math.round(nodes)));
   const act = Math.max(0, Math.min(1, activity));
   return (
     <Canvas
-      frameloop={paused ? "never" : "always"}
-      dpr={[1, 1.75]}
+      frameloop={paused ? "never" : "demand"}
+      dpr={q.dpr}
       camera={{ position: [0, 0.4, 5.4], fov: 45 }}
-      gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
+      gl={{ antialias: q.antialias, alpha: true, powerPreference: "low-power" }}
       style={{ background: "transparent" }}
       aria-hidden
     >
+      <FrameDriver fps={q.fps} paused={paused} />
+      <AdaptiveDpr min={q.dpr[0]} max={q.dpr[1]} fps={q.fps} />
       <ambientLight intensity={0.5} />
       <pointLight position={[3, 3, 4]} intensity={30} color={b} />
       <pointLight position={[-4, -2, 2]} intensity={18} color={a} />
       <Core colorA={a} colorB={b} activity={act} />
       <Orbits count={n} colorA={a} colorB={b} activity={act} />
-      <Particles color={b} activity={act} />
+      <Particles color={b} activity={act} density={q.particles} />
     </Canvas>
   );
 }

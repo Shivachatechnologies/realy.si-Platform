@@ -7,6 +7,8 @@ import { ArrowUp, CheckSquare, ClipboardCheck, LayoutDashboard, Menu, Sparkles, 
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { PlanLockBadge } from "@/components/billing/upgrade-prompt";
+import { JarvisCore } from "@/components/jarvis/jarvis-core";
+import { setDockOpen, useDockOpen } from "@/components/jarvis/dock-store";
 
 interface Tab {
   /** i18n key */
@@ -59,11 +61,47 @@ function TabLink({ tab, pathname, locked = false }: { tab: Tab; pathname: string
   );
 }
 
+const silent = () => 0;
+
+/**
+ * The tab bar's centre "Realy" voice button: the animated AI Core (CSS — the page's one WebGL context stays with the
+ * page's own core). Opens the voice dock (push-to-talk); on the console itself it is the current page.
+ */
+function RealyTab({ pathname }: { pathname: string | null }) {
+  const { t, locale } = useI18n();
+  const open = useDockOpen();
+  const onConsole = pathname !== null && isActive(pathname, locale, "/realy");
+  const body = (
+    <>
+      <span className={cn("jv-glass jv-talk-glow relative -mt-7 grid size-[3.75rem] place-items-center rounded-full shadow-elev-3", (open || onConsole) && "border-[var(--jarvis-cyan)]")}>
+        <JarvisCore state="IDLE" level={silent} pulses={{}} activity={0} compact className="size-12" />
+      </span>
+      <span className={cn("max-w-full truncate leading-none", (open || onConsole) && "text-foreground")}>{t("jarvis.dock.title")}</span>
+    </>
+  );
+  const cls = "press relative flex min-h-14 min-w-0 flex-col items-center justify-end gap-1 px-1 pb-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  if (onConsole)
+    return (
+      <Link href={`/${locale}/realy`} aria-current="page" aria-label={t("jarvis.dock.title")} className={cls}>
+        {body}
+      </Link>
+    );
+  return (
+    <button type="button" onClick={() => setDockOpen((v) => !v)} aria-expanded={open} aria-label={open ? t("jarvis.dock.close") : t("jarvis.dock.open")} className={cls}>
+      {body}
+    </button>
+  );
+}
+
 function Tabs({ pathname, onMore, moreOpen, lockedHrefs = [] }: { pathname: string | null; onMore: () => void; moreOpen: boolean; lockedHrefs?: string[] }) {
   const { t } = useI18n();
   return (
-    <div className="mx-auto grid max-w-xl grid-cols-5 gap-1 px-2">
-      {MOBILE_TABS.map((tab) => (
+    <div className="mx-auto grid max-w-xl grid-cols-[repeat(2,minmax(0,1fr))_4.25rem_repeat(3,minmax(0,1fr))] gap-0.5 px-1.5">
+      {MOBILE_TABS.slice(0, 2).map((tab) => (
+        <TabLink key={tab.href} tab={tab} pathname={pathname} locked={lockedHrefs.includes(tab.href)} />
+      ))}
+      <RealyTab pathname={pathname} />
+      {MOBILE_TABS.slice(2).map((tab) => (
         <TabLink key={tab.href} tab={tab} pathname={pathname} locked={lockedHrefs.includes(tab.href)} />
       ))}
       <button
@@ -90,7 +128,8 @@ function TabsWithPath(props: { onMore: () => void; moreOpen: boolean; lockedHref
 }
 
 /**
- * Bottom tab bar (below lg): the four places a founder returns to most, plus "More" for the full navigation drawer.
+ * Bottom tab bar (below lg): the four places a founder returns to most, the centre "Realy" voice button, and "More"
+ * for the full navigation drawer.
  * Respects the home-indicator safe area; every target is at least 56px tall.
  */
 export function MobileTabBar({ onMore, moreOpen, lockedHrefs }: { onMore: () => void; moreOpen: boolean; lockedHrefs?: string[] }) {

@@ -19280,6 +19280,10 @@
         "title": "Build the company you have in mind — with a team that never sleeps.",
         "lede": "Join the waitlist and we'll let you know as soon as Realy opens in your market, or create your company today where sign-up is already open.",
         "orStart": "Ready now?"
+      },
+      "hud": {
+        "core": "AI Core",
+        "departments": "{count} departments in orbit"
       }
     },
     "showcase": {

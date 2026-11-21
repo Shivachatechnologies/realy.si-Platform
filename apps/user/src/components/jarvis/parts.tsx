@@ -71,6 +71,7 @@ export function TalkButton({ voice, size = "lg", className }: { voice: VoiceOS; 
       className={cn(
         "relative grid shrink-0 touch-none select-none place-items-center rounded-full border text-primary-foreground shadow-glow transition-[transform,box-shadow,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:opacity-60",
         "bg-[linear-gradient(135deg,var(--primary),var(--primary-2))]",
+        !listening && !busy && "jv-talk-glow",
         listening && "scale-105 bg-danger [background-image:none] shadow-[0_0_0_8px_color-mix(in_oklch,var(--danger)_20%,transparent)]",
         size === "lg" ? "size-20" : "size-12",
         className,
