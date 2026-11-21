@@ -103,7 +103,7 @@ async function lockedHrefsForViewer(): Promise<string[]> {
     if (!org) return [];
     return await lockedNavHrefs(org.id, NAV.flatMap((s) => s.items.map((i) => i.href)));
   } catch {
-    // Signed-out viewers are redirected by the pages themselves; never fail the shell over a badge.
+    // Never fail the shell over a badge (the viewer is already authenticated by the layout).
     return [];
   }
 }
@@ -123,6 +123,9 @@ function PageFallback() {
 }
 
 export default async function AppLayout({ children }: LayoutProps<"/[locale]">) {
+  // Authenticate before anything streams: a signed-out visitor (or an expired session cookie) is redirected to
+  // sign-in by the server, instead of briefly seeing the app shell before a page-level redirect.
+  await requireViewer(await getLocale());
   const lockedHrefs = await lockedHrefsForViewer();
   return (
     <>
