@@ -21,7 +21,7 @@ const LOOKBACK_MS = 5_000;
 const HEARTBEAT_MS = 15_000;
 const RECHECK_MS = 60_000;
 /** Connections close after this long; EventSource reconnects with Last-Event-ID. */
-export const STREAM_MAX_MS = 5 * 60_000;
+export const STREAM_MAX_MS = 4.5 * 60_000; // under the 300 s function limit (Vercel Hobby); clients reconnect with Last-Event-ID
 /** A reconnect never replays more than this. */
 const MAX_REPLAY_MS = 10 * 60_000;
 const BATCH = 100;

@@ -4,7 +4,7 @@ import { companyEventStream, parseCursor, STREAM_MAX_MS, streamAccess } from "@/
 type P = { orgId: string; companyId: string };
 
 /** The stream closes itself after five minutes (the browser reconnects with Last-Event-ID). */
-export const maxDuration = 320;
+export const maxDuration = 300;
 
 /**
  * GET — Server-Sent Events: the active company's domain events and AI work / approval / call state changes, scoped to
