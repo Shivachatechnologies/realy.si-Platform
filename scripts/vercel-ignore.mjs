@@ -12,6 +12,11 @@ if (app !== "user" && app !== "admin") {
   console.error("usage: node scripts/vercel-ignore.mjs user|admin");
   process.exit(1);
 }
+// Set FORCE_BUILD=1 on the Vercel project (e.g. after changing environment variables) to always build.
+if (process.env.FORCE_BUILD === "1") {
+  console.log(`vercel-ignore(${app}): FORCE_BUILD=1 — building`);
+  process.exit(1);
+}
 const watched = [`apps/${app}/`, "packages/", "pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json", "scripts/deploy-db.mjs", "scripts/vercel-ignore.mjs"];
 const previous = process.env.VERCEL_GIT_PREVIOUS_SHA;
 if (!previous) {
