@@ -5,7 +5,7 @@
   "description": "Realy founder product (app.realy.si): company app, user auth, public site and the /api/v1 user API.",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm --filter @realy/database run generate && node ../../scripts/deploy-db.mjs && NODE_OPTIONS=--max-old-space-size=6144 next build",
+    "build": "pnpm --filter @realy/database run generate && node ../../scripts/deploy-db.mjs && NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit"
   },
