@@ -123,7 +123,7 @@ export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId
     { key: "overview", href: base, label: t("admin.people.tabs.overview") },
     { key: "members", href: `${base}/members`, label: t("admin.people.tabs.members") },
     { key: "activity", href: `${base}/activity`, label: t("admin.people.tabs.activity") },
-    { key: "entitlements", href: `/${locale}/plans/orgs/${orgId}`, label: t("admin.people.tabs.entitlements") },
+    { key: "entitlements", href: `/${locale}/plans/organizations/${orgId}`, label: t("admin.people.tabs.entitlements") },
   ];
   return (
     <nav aria-label={t("admin.people.tabs.label")} className="flex gap-1 overflow-x-auto border-b">
