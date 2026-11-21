@@ -92,6 +92,18 @@ export default async function OrgChartPage() {
     };
   };
   const roots = chart.roots.map(toNode);
+  // Hybrid teams: people (members, with their HR record when there is one) and the AI employees reporting to them.
+  const humanManagers = [...new Set(employees.flatMap((e) => (!e.managerEmployeeId && e.managerUserId ? [e.managerUserId] : [])))];
+  const [humanUsers, humanRecords] = humanManagers.length
+    ? await Promise.all([
+        db().user.findMany({ where: { id: { in: humanManagers } }, select: { id: true, name: true } }),
+        (await can(viewer.ctx, "hr.read", chain)) ? db().employee.findMany({ where: { organizationId: org.id, companyId: company.id, userId: { in: humanManagers }, archivedAt: null }, select: { userId: true, title: true, _count: { select: { reports: true } } } }) : Promise.resolve([]),
+      ])
+    : [[], []];
+  const hybrid = humanUsers.map((u) => {
+    const rec = humanRecords.find((r) => r.userId === u.id);
+    return { id: u.id, name: u.name, title: rec?.title ?? null, humanReports: rec?._count.reports ?? 0, ai: employees.filter((e) => !e.managerEmployeeId && e.managerUserId === u.id) };
+  });
   const founderName = chart.founders.length ? chart.founders.map((f) => f.name).join(", ") : t("workforce.org.founder");
   const levels = { EXECUTIVE: 0, MANAGER: 0, SPECIALIST: 0 };
   for (const e of employees) levels[e.level]++;
@@ -183,6 +195,36 @@ export default async function OrgChartPage() {
             }}
           />
           <p className="text-xs text-muted-foreground">{t("workforce.org.hint")}</p>
+          {hybrid.length ? (
+            <Card>
+              <CardBody className="grid gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-sm font-semibold">{t("workforce.hybrid.title")}</h2>
+                    <p className="text-xs text-muted-foreground">{t("workforce.hybrid.hint")}</p>
+                  </div>
+                  <Link className="text-sm text-primary hover:underline" href={`/${locale}/workforce/network`}>
+                    {t("workforce.hybrid.openNetwork")}
+                  </Link>
+                </div>
+                <ul className="grid gap-2 md:grid-cols-2">
+                  {hybrid.map((h) => (
+                    <li key={h.id} className="rounded-md border p-3">
+                      <p className="font-medium">{h.name}</p>
+                      <p className="text-xs text-muted-foreground">{[h.title, t("workforce.hybrid.counts", { ai: h.ai.length, humans: h.humanReports })].filter(Boolean).join(" · ")}</p>
+                      <p className="mt-1 flex flex-wrap gap-1">
+                        {h.ai.map((e) => (
+                          <Link key={e.id} href={`/${locale}/workforce/${e.id}`} className="rounded-sm border px-1.5 py-0.5 text-xs hover:bg-muted">
+                            {e.name}
+                          </Link>
+                        ))}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card>
+          ) : null}
         </>
       )}
     </div>

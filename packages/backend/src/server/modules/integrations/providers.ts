@@ -1,4 +1,7 @@
 import "server-only";
+import { createHmac } from "node:crypto";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import { env } from "@/server/core/env";
 import { providerInfo, type ConnectionAccount, type ProviderInfo } from "./catalog";
 import { objectUrl, s3TargetOf, signS3Request } from "./sigv4";
@@ -85,6 +88,7 @@ export function oauthClient(provider: string): OAuthClient | null {
     youtube: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
     google_search_console: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
     google_ads: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
+    google_drive: [e.OAUTH_GOOGLE_CLIENT_ID, e.OAUTH_GOOGLE_CLIENT_SECRET],
     meta_ads: [e.FACEBOOK_APP_ID, e.FACEBOOK_APP_SECRET],
     linkedin_ads: [e.LINKEDIN_CLIENT_ID, e.LINKEDIN_CLIENT_SECRET],
     tiktok: [e.TIKTOK_CLIENT_KEY, e.TIKTOK_CLIENT_SECRET],
@@ -230,6 +234,7 @@ export function oauthDef(provider: string): OAuthDef | null {
   defs.youtube = { ...defs.google! };
   defs.google_search_console = { ...defs.google! };
   defs.google_ads = { ...defs.google! };
+  defs.google_drive = { ...defs.google! };
   defs.linkedin_ads = { ...defs.linkedin! };
   defs.tiktok = {
     authorizeUrl: "https://www.tiktok.com/v2/auth/authorize/",
@@ -400,6 +405,53 @@ const b64 = (v: string) => Buffer.from(v).toString("base64");
 export const LINKEDIN_API_VERSION = "202605";
 export const RUNWAY_API_VERSION = "2024-11-06";
 export const SHOPIFY_API_VERSION = "2025-07";
+export const NOTION_API_VERSION = "2022-06-28";
+export const INTERCOM_API_VERSION = "2.11";
+export const PLAID_API_VERSION = "2020-09-14";
+
+const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
+
+/** Kling API token: an HS256 JWT (iss = access key, 30 minutes) signed with the secret key, minted per request. */
+export function klingJwt(accessKey: string, secretKey: string, nowSeconds = Math.floor(Date.now() / 1000)): string {
+  const head = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const body = b64url(JSON.stringify({ iss: accessKey, exp: nowSeconds + 1800, nbf: nowSeconds - 5 }));
+  const sig = createHmac("sha256", secretKey).update(`${head}.${body}`).digest("base64url");
+  return `${head}.${body}.${sig}`;
+}
+
+/** Kling API base URL (configured regional host or the global Singapore endpoint). */
+export const klingBase = (config: Record<string, unknown>) => (str(config.baseUrl) ?? "https://api-singapore.klingai.com").replace(/\/+$/, "");
+
+/** Plaid API host for the connection's environment. */
+export const plaidHost = (config: Record<string, unknown>) => (config.environment === "production" ? "https://production.plaid.com" : "https://sandbox.plaid.com");
+
+/** Wise API host for the connection's environment. */
+export const wiseHost = (config: Record<string, unknown>) => (config.environment === "sandbox" ? "https://api.sandbox.transferwise.tech" : "https://api.wise.com");
+
+/** Shotstack Edit API base for the connection's environment ("stage" sandbox or "v1" production). */
+export const shotstackBase = (config: Record<string, unknown>) => `https://api.shotstack.io/edit/${config.environment === "v1" ? "v1" : "stage"}`;
+
+/** Zendesk API base of the connection's subdomain (validated: it is interpolated into URLs). */
+export function zendeskBase(config: Record<string, unknown>): string | null {
+  const sub = str(config.subdomain);
+  return sub && /^[a-z0-9][a-z0-9-]{0,62}$/.test(sub) ? `https://${sub}.zendesk.com/api/v2` : null;
+}
+
+/** OpenAI-compatible base URL of a connection (no trailing slash). */
+export const compatibleBase = (provider: string, config: Record<string, unknown>) =>
+  provider === "openrouter" ? "https://openrouter.ai/api/v1" : provider === "openai" ? "https://api.openai.com/v1" : (str(config.baseUrl) ?? "").replace(/\/+$/, "");
+
+const PRIVATE_V4 = [/^10\./, /^127\./, /^169\.254\./, /^192\.168\./, /^172\.(1[6-9]|2\d|3[01])\./, /^0\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./];
+
+/** SIP trunk check: the host must resolve to a public address (credentials can only be proven by a real call). */
+async function resolvePublicHost(host: string): Promise<string> {
+  if (isIP(host)) throw new ProviderError("enter the carrier's SIP domain, not an IP address");
+  const addrs = await lookup(host, { all: true }).catch(() => []);
+  if (!addrs.length) throw new ProviderError(`${host} does not resolve`, 404);
+  const pub = addrs.find((a) => (a.family === 4 ? !PRIVATE_V4.some((re) => re.test(a.address)) : !/^(::1|fc|fd|fe80)/i.test(a.address)));
+  if (!pub) throw new ProviderError(`${host} resolves only to private addresses`, 400);
+  return pub.address;
+}
 
 /** Developer token for Google Ads: the company's own (stored encrypted) or the platform's. */
 export const googleAdsDeveloperToken = (config: Record<string, unknown>) => str(config.developerToken) ?? env().GOOGLE_ADS_DEVELOPER_TOKEN ?? null;
@@ -449,6 +501,36 @@ export function authHeaders(provider: string, token: string, config: Record<stri
     }
     case "linkedin_ads":
       return { ...bearer, "linkedin-version": LINKEDIN_API_VERSION, "x-restli-protocol-version": "2.0.0" };
+    case "openrouter":
+      return { ...bearer, "x-title": "Realy", "http-referer": env().APP_URL };
+    case "elevenlabs":
+      return { "xi-api-key": token };
+    case "deepgram":
+      return { authorization: `Token ${token}` };
+    case "shotstack":
+      return { "x-api-key": token };
+    case "kling":
+      return { authorization: `Bearer ${klingJwt(str(config.accessKey) ?? "", token)}` };
+    case "twilio_voice":
+      return { authorization: `Basic ${b64(`${str(config.accountSid) ?? ""}:${token}`)}` };
+    case "pipedrive":
+      return { "x-api-token": token };
+    case "notion":
+      return { ...bearer, "notion-version": NOTION_API_VERSION };
+    case "clickup":
+      return { authorization: token };
+    case "zendesk":
+      return { authorization: `Basic ${b64(`${str(config.email) ?? ""}/token:${token}`)}` };
+    case "intercom":
+      return { ...bearer, "intercom-version": INTERCOM_API_VERSION };
+    case "plaid":
+      return { "plaid-client-id": str(config.clientId) ?? "", "plaid-secret": token, "plaid-version": PLAID_API_VERSION };
+    // The URL itself is the credential (automation catch hooks); SIP trunks are not HTTP APIs.
+    case "zapier":
+    case "make":
+    case "n8n":
+    case "sip_trunk":
+      return {};
     default:
       return bearer;
   }
@@ -728,6 +810,151 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const accounts = accountsOf(acc.result, "account");
       return { account: accounts.find((a) => a.id === str(config.accountId))?.name ?? accounts[0]?.name ?? "Cloudflare", extra: { accounts } };
     }
+    case "openrouter": {
+      const u = await getJson("https://openrouter.ai/api/v1/key", authHeaders(provider, token, config));
+      const d = (u.data ?? {}) as { label?: string; limit?: number | null; usage?: number; is_free_tier?: boolean };
+      return { account: `OpenRouter · ${str(d.label) ?? "key"}`, extra: { creditLimitUsd: typeof d.limit === "number" ? d.limit : null, usageUsd: typeof d.usage === "number" ? d.usage : null } };
+    }
+    case "openai_compatible": {
+      const base = compatibleBase(provider, config);
+      if (!base) throw new ProviderError("base URL missing");
+      const u = await getJson(`${base}/models`, bearer);
+      const models = Array.isArray(u.data) ? (u.data as { id?: string }[]) : [];
+      const model = str(config.model);
+      if (model && models.length && !models.some((m) => m.id === model)) throw new ProviderError(`the API does not list the model ${model}`, 404);
+      return { account: `${new URL(base).host} · ${models.length} models` };
+    }
+    case "elevenlabs": {
+      const u = await getJson("https://api.elevenlabs.io/v1/user/subscription", authHeaders(provider, token, config));
+      const used = typeof u.character_count === "number" ? u.character_count : null;
+      const limit = typeof u.character_limit === "number" ? u.character_limit : null;
+      return { account: `ElevenLabs · ${str(u.tier) ?? "plan"}`, extra: { charactersUsed: used, characterLimit: limit } };
+    }
+    case "deepgram": {
+      const u = await getJson("https://api.deepgram.com/v1/projects", authHeaders(provider, token, config));
+      const projects = Array.isArray(u.projects) ? (u.projects as { project_id?: string; name?: string }[]) : [];
+      if (!projects.length) throw new ProviderError("the key has no Deepgram project", 403);
+      return { account: str(projects[0]!.name) ?? "Deepgram", extra: { projectId: projects[0]!.project_id ?? null } };
+    }
+    case "jamendo": {
+      const u = await getJson(`https://api.jamendo.com/v3.0/tracks/?client_id=${encodeURIComponent(token)}&limit=1&format=json`, {});
+      const h = (u.headers ?? {}) as { status?: string; error_message?: string };
+      if (h.status && h.status !== "success") throw new ProviderError(`Jamendo: ${h.error_message || h.status}`, 401);
+      return { account: "Jamendo · client id" };
+    }
+    case "luma": {
+      await getJson("https://api.lumalabs.ai/dream-machine/v1/generations?limit=1", bearer);
+      return { account: "Luma Dream Machine" };
+    }
+    case "kling": {
+      const access = str(config.accessKey);
+      if (!access) throw new ProviderError("access key missing");
+      const res = await fetch(`${klingBase(config)}/v1/videos/text2video?pageNum=1&pageSize=1`, { headers: { accept: "application/json", ...authHeaders(provider, token, config) }, signal: AbortSignal.timeout(TIMEOUT) });
+      const body = (await res.json().catch(() => ({}))) as { code?: number; message?: string };
+      if (!res.ok || (typeof body.code === "number" && body.code !== 0)) throw new ProviderError(`Kling rejected the keys: ${body.message ?? res.status}`, res.ok ? 401 : res.status);
+      return { account: `Kling · ${new URL(klingBase(config)).host}` };
+    }
+    case "shotstack": {
+      await getJson(`${shotstackBase(config)}/templates`, authHeaders(provider, token, config));
+      return { account: `Shotstack · ${config.environment === "v1" ? "production" : "sandbox"}` };
+    }
+    case "creatomate": {
+      const res = await fetch("https://api.creatomate.com/v1/templates", { headers: { accept: "application/json", ...bearer }, signal: AbortSignal.timeout(TIMEOUT) });
+      if (!res.ok) throw new ProviderError(`api.creatomate.com responded ${res.status}`, res.status);
+      const list = (await res.json().catch(() => [])) as unknown[];
+      return { account: `Creatomate · ${Array.isArray(list) ? list.length : 0} templates` };
+    }
+    case "twilio_voice": {
+      const sid = str(config.accountSid);
+      if (!sid || !/^AC[a-f0-9]{32}$/.test(sid)) throw new ProviderError("account SID missing");
+      const h = authHeaders(provider, token, config);
+      const u = await getJson(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`, h);
+      if (str(u.status) && u.status !== "active") throw new ProviderError(`Twilio account is ${String(u.status)}`, 403);
+      const nums = await getJson(`https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers.json?PageSize=100`, h).catch(() => ({}) as Record<string, unknown>);
+      const accounts = (Array.isArray(nums.incoming_phone_numbers) ? nums.incoming_phone_numbers : [])
+        .map((n) => n as { sid?: string; phone_number?: string; friendly_name?: string; capabilities?: { voice?: boolean } })
+        .filter((n) => n.sid && n.phone_number && n.capabilities?.voice !== false)
+        .map((n) => ({ id: n.phone_number!, name: n.friendly_name && n.friendly_name !== n.phone_number ? `${n.phone_number} · ${n.friendly_name}` : n.phone_number!, type: "number" }));
+      return { account: `${str(u.friendly_name) ?? sid} · ${accounts.length} voice numbers`, extra: { accounts } };
+    }
+    case "sip_trunk": {
+      const host = str(config.sipDomain);
+      if (!host) throw new ProviderError("SIP domain missing");
+      await resolvePublicHost(host);
+      return { account: `sip:${str(config.username) ?? "user"}@${host}`, extra: { verification: "config_only" } };
+    }
+    case "pipedrive": {
+      const u = await getJson("https://api.pipedrive.com/v1/users/me", authHeaders(provider, token, config));
+      const d = (u.data ?? {}) as { name?: string; email?: string; company_name?: string; company_domain?: string };
+      return { account: [str(d.company_name), str(d.email)].filter(Boolean).join(" · ") || "Pipedrive", extra: d.company_domain ? { companyDomain: d.company_domain } : undefined };
+    }
+    case "notion": {
+      const u = await getJson("https://api.notion.com/v1/users/me", authHeaders(provider, token, config));
+      const bot = (u.bot ?? {}) as { workspace_name?: string };
+      return { account: str(bot.workspace_name) ?? str(u.name) ?? "Notion" };
+    }
+    case "clickup": {
+      const h = authHeaders(provider, token, config);
+      const u = await getJson("https://api.clickup.com/api/v2/user", h);
+      const teams = await getJson("https://api.clickup.com/api/v2/team", h).catch(() => ({}) as Record<string, unknown>);
+      const user = (u.user ?? {}) as { email?: string; username?: string };
+      return { account: str(user.email) ?? str(user.username) ?? "ClickUp", extra: { accounts: accountsOf(teams.teams, "workspace") } };
+    }
+    case "calendly": {
+      const u = await getJson("https://api.calendly.com/users/me", bearer);
+      const r = (u.resource ?? {}) as { name?: string; email?: string; uri?: string; current_organization?: string; scheduling_url?: string };
+      if (!r.uri) throw new ProviderError("Calendly returned no user", 401);
+      return { account: str(r.email) ?? str(r.name) ?? "Calendly", extra: { userUri: r.uri, organizationUri: r.current_organization ?? null, schedulingUrl: r.scheduling_url ?? null } };
+    }
+    case "google_drive": {
+      const u = await getJson("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress,displayName),storageQuota(limit,usage)", bearer);
+      const user = (u.user ?? {}) as { emailAddress?: string; displayName?: string };
+      return { account: str(user.emailAddress) ?? str(user.displayName) ?? "Google Drive" };
+    }
+    case "zendesk": {
+      const base = zendeskBase(config);
+      if (!base) throw new ProviderError("Zendesk subdomain missing");
+      const u = await getJson(`${base}/users/me.json`, authHeaders(provider, token, config));
+      const user = (u.user ?? {}) as { email?: string; role?: string; id?: number | null };
+      // Zendesk answers bad credentials with an anonymous end-user instead of 401.
+      if (!user.id || user.role === "end-user") throw new ProviderError("Zendesk did not accept the email / API token", 401);
+      return { account: `${str(config.subdomain)}.zendesk.com · ${str(user.email) ?? "agent"}` };
+    }
+    case "intercom": {
+      const u = await getJson("https://api.intercom.io/me", authHeaders(provider, token, config));
+      const app = (u.app ?? {}) as { name?: string; id_code?: string };
+      return { account: str(app.name) ?? str(u.email) ?? "Intercom", extra: app.id_code ? { appId: app.id_code } : undefined };
+    }
+    case "plaid": {
+      if (!str(config.clientId)) throw new ProviderError("client id missing");
+      await postJsonChecked(`${plaidHost(config)}/institutions/get`, authHeaders(provider, token, config), { count: 1, offset: 0, country_codes: plaidCountries(config) });
+      return { account: `Plaid · ${config.environment === "production" ? "production" : "sandbox"}` };
+    }
+    case "wise": {
+      const res = await fetch(`${wiseHost(config)}/v2/profiles`, { headers: { accept: "application/json", ...bearer }, signal: AbortSignal.timeout(TIMEOUT) });
+      if (!res.ok) throw new ProviderError(`Wise responded ${res.status}`, res.status);
+      const profiles = (await res.json().catch(() => [])) as { id?: number; type?: string; fullName?: string; businessName?: string }[];
+      const accounts = (Array.isArray(profiles) ? profiles : []).filter((p) => p.id).map((p) => ({ id: String(p.id), name: p.businessName ?? p.fullName ?? `${p.type ?? "profile"} ${p.id}`, type: (p.type ?? "profile").toLowerCase() }));
+      const business = accounts.find((a) => a.type === "business") ?? accounts[0];
+      return { account: business?.name ?? "Wise", extra: { accounts } };
+    }
+    case "zapier":
+    case "make":
+    case "n8n": {
+      // Catch hooks have no identity endpoint: send one clearly labelled test event (what Zapier / Make / n8n ask for when wiring a trigger).
+      const body = JSON.stringify({ event: "realy.connection_test", sentAt: new Date().toISOString(), data: { message: "Realy connection test — safe to ignore" } });
+      const sig = str(config.signingSecret);
+      const ts = Math.floor(Date.now() / 1000);
+      const res = await fetch(token, {
+        method: "POST",
+        headers: { "content-type": "application/json", "user-agent": "Realy", ...(sig ? { "x-realy-signature": `t=${ts},v1=${createHmac("sha256", sig).update(`${ts}.${body}`).digest("hex")}` } : {}) },
+        body,
+        redirect: "manual",
+        signal: AbortSignal.timeout(TIMEOUT),
+      });
+      if (!res.ok) throw new ProviderError(`${new URL(token).host} responded ${res.status}`, res.status === 404 || res.status === 410 ? 401 : res.status);
+      return { account: `${new URL(token).host} · test event delivered` };
+    }
     default:
       throw new ProviderError("this provider has no connection test");
   }
@@ -740,6 +967,12 @@ export async function postConnectDetails(provider: string, token: string): Promi
     return r.extra ?? {};
   }
   return {};
+}
+
+/** Plaid Link / institution country codes of a connection (default US). */
+export function plaidCountries(config: Record<string, unknown>): string[] {
+  const v = str(config.countryCodes);
+  return v && /^[A-Z]{2}(,[A-Z]{2}){0,11}$/.test(v) ? v.split(",") : ["US"];
 }
 
 export function requireProvider(key: string): ProviderInfo {

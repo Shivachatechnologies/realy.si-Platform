@@ -24,6 +24,7 @@ export type PlatformModule = (typeof PLATFORM_MODULES)[number];
 
 /** API path segment after /companies/:companyId/ (or /organizations/:orgId/) → module. */
 const API_SEGMENT_MODULE: Record<string, PlatformModule> = {
+  creative: "marketing",
   livechat: "support",
   crm: "crm",
   leads: "crm",
@@ -54,6 +55,7 @@ const API_SEGMENT_MODULE: Record<string, PlatformModule> = {
 
 /** First page path segment after the locale → module. */
 const PAGE_SEGMENT_MODULE: Record<string, PlatformModule> = {
+  studio: "marketing",
   voice: "comms",
   livechat: "support",
   crm: "crm",

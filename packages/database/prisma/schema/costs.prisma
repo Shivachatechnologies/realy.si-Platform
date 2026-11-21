@@ -1,0 +1,150 @@
+// Unified cost ledger (packages/backend/src/server/modules/costs): one CostLedgerEntry per real spend (AI tokens,
+// images, video, voice, telephony, email, messaging, external APIs), budgets with hard stops and usage alerts.
+// Also the agents runtime's context store (compaction summaries) and its read-only request deduplication cache.
+
+enum CostCategory {
+  AI_TOKENS
+  IMAGE
+  VIDEO
+  VOICE
+  STT
+  TTS
+  TELEPHONY
+  EMAIL
+  SMS
+  MESSAGING
+  EXTERNAL_API
+  OTHER
+}
+
+/// What a budget limits: the whole company, one department, one AI employee, or every single task.
+enum CostBudgetScope {
+  COMPANY
+  DEPARTMENT
+  AGENT
+  TASK
+}
+
+/// One real spend. Amounts are micro-USD (1e-6 USD); `estimated` = priced from the list-price table, not an invoice.
+model CostLedgerEntry {
+  id               String       @id @default(uuid(7)) @db.Uuid
+  organizationId   String       @map("organization_id") @db.Uuid
+  companyId        String       @map("company_id") @db.Uuid
+  occurredAt       DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  category         CostCategory
+  provider         String
+  model            String?
+  /// e.g. "agent.turn", "images.generate", "voice.call", "sms.send".
+  operation        String
+  department       String?
+  aiEmployeeId     String?      @map("ai_employee_id") @db.Uuid
+  taskId           String?      @map("task_id") @db.Uuid
+  /// Where the spend came from ("agent_task", "integration_usage", "voice_call", module keys...) + its id: idempotency.
+  sourceType       String       @map("source_type")
+  sourceId         String       @map("source_id")
+  inputTokens      Int          @default(0) @map("input_tokens")
+  outputTokens     Int          @default(0) @map("output_tokens")
+  /// Prompt-cache reads (billed at the cache-read price).
+  cachedTokens     Int          @default(0) @map("cached_tokens")
+  /// Prompt-cache writes (billed at the cache-write price).
+  cacheWriteTokens Int          @default(0) @map("cache_write_tokens")
+  units            Int          @default(1)
+  /// What `units` counts: "token", "image", "second", "minute", "message", "request".
+  unit             String       @default("request")
+  costMicros       BigInt       @map("cost_micros")
+  estimated        Boolean      @default(true)
+  /// Non-secret details (size, call id, fallback, cache hit...).
+  meta             Json         @default("{}")
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, sourceType, sourceId])
+  @@index([organizationId, companyId, occurredAt])
+  @@index([companyId, department, occurredAt])
+  @@index([companyId, aiEmployeeId, occurredAt])
+  @@index([companyId, taskId])
+  @@map("cost_ledger_entries")
+}
+
+/// A spending limit. Monthly (UTC month) for COMPANY / DEPARTMENT / AGENT, per task for TASK.
+model CostBudget {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  companyId      String          @map("company_id") @db.Uuid
+  scope          CostBudgetScope
+  /// "*" (company / every task), a department key, or an AI employee id.
+  scopeKey       String          @map("scope_key")
+  limitMicros    BigInt          @map("limit_micros")
+  /// Stop new spend once the limit is reached (else alerts only).
+  hardStop       Boolean         @default(true) @map("hard_stop")
+  updatedById    String          @map("updated_by_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  alerts  CostAlert[]
+
+  @@unique([companyId, scope, scopeKey])
+  @@index([organizationId, companyId])
+  @@map("cost_budgets")
+}
+
+/// A usage alert sent for a budget (50 / 80 / 100 % of the limit), once per period.
+model CostAlert {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  budgetId       String   @map("budget_id") @db.Uuid
+  threshold      Int
+  /// "2026-11" for monthly budgets, the task id for TASK budgets.
+  periodKey      String   @map("period_key")
+  spentMicros    BigInt   @map("spent_micros")
+  limitMicros    BigInt   @map("limit_micros")
+  sentAt         DateTime @default(now()) @map("sent_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  budget  CostBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, threshold, periodKey])
+  @@index([organizationId, companyId, sentAt])
+  @@map("cost_alerts")
+}
+
+/// Stored summaries of long agent histories (server-side compaction output), per task.
+model AgentContextSummary {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  model          String
+  summary        String
+  /// Input tokens of the history when it was summarized.
+  inputTokens    Int?     @map("input_tokens")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, taskId])
+  @@map("agent_context_summaries")
+}
+
+/// Results of read-only agent runs, reused for an identical request within the TTL instead of paying again.
+model AgentRequestCache {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  keyHash        String   @map("key_hash")
+  taskId         String?  @map("task_id") @db.Uuid
+  model          String
+  result         Json
+  hits           Int      @default(0)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, keyHash])
+  @@index([expiresAt])
+  @@map("agent_request_cache")
+}

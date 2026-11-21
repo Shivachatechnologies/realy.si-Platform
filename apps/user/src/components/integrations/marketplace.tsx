@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, CircleDashed, KeyRound, Search, ShieldQuestion, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, BadgeCheck, CheckCircle2, CircleDashed, Clock, KeyRound, Lock, Search, ShieldQuestion, Sparkles } from "lucide-react";
 import { Input, Select } from "@/components/ui/input";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useT } from "@/i18n/client";
@@ -13,7 +13,7 @@ import { PROVIDER_CATEGORIES } from "@/server/modules/integrations/catalog";
  * Connection state shown in the marketplace. "verified" is the only state that reads as connected: the credentials were
  * accepted by the provider (connection test, scheduled health check or a successful call) and no error is pending.
  */
-export type MarketplaceState = "verified" | "unverified" | "failing" | "ready" | "credentials_required" | "platform_setup";
+export type MarketplaceState = "verified" | "configured" | "unverified" | "failing" | "ready" | "credentials_required" | "platform_setup" | "awaiting_docs";
 
 export interface MarketplaceItem {
   key: string;
@@ -29,17 +29,21 @@ export interface MarketplaceItem {
   capabilities?: string[];
   /** Pre-formatted "verified …" time (server locale + time zone), when verified. */
   verifiedLabel?: string | null;
+  /** Plan restriction of the provider's category: cheapest plan that unlocks it, and whether this organization's plan lacks it. */
+  plan?: { minPlan: string; locked: boolean };
 }
 
 type Filter = "all" | "connected" | "attention" | "available";
 
 const STATE_STYLE: Record<MarketplaceState, { tone: string; icon: typeof CheckCircle2 }> = {
   verified: { tone: "border-success/30 bg-success/8 text-success", icon: CheckCircle2 },
+  configured: { tone: "border-success/30 bg-success/8 text-success", icon: BadgeCheck },
   unverified: { tone: "border-warning/40 bg-warning/8 text-warning", icon: ShieldQuestion },
   failing: { tone: "border-danger/40 bg-danger/8 text-danger", icon: AlertTriangle },
   ready: { tone: "border-[var(--world-line)] bg-[var(--world-soft)] text-foreground", icon: Sparkles },
   credentials_required: { tone: "bg-muted text-muted-foreground", icon: KeyRound },
   platform_setup: { tone: "bg-muted text-muted-foreground", icon: CircleDashed },
+  awaiting_docs: { tone: "bg-muted text-muted-foreground", icon: Clock },
 };
 
 /** Fallback for callers that do not pass `state` (older call sites): derive it from status + configuration. */
@@ -53,7 +57,10 @@ export function itemState(i: MarketplaceItem): MarketplaceState {
 }
 
 const inFilter = (s: MarketplaceState, f: Filter) =>
-  f === "all" || (f === "connected" && s === "verified") || (f === "attention" && (s === "failing" || s === "unverified")) || (f === "available" && (s === "ready" || s === "credentials_required" || s === "platform_setup"));
+  f === "all" ||
+  (f === "connected" && (s === "verified" || s === "configured")) ||
+  (f === "attention" && (s === "failing" || s === "unverified")) ||
+  (f === "available" && (s === "ready" || s === "credentials_required" || s === "platform_setup"));
 
 /** Searchable, filterable integrations marketplace: readiness filters, state per provider and what each one unlocks. */
 export function Marketplace({ locale, items, initialView }: { locale: string; items: MarketplaceItem[]; initialView: "all" | "connected" }) {
@@ -176,7 +183,8 @@ function ProviderCard({ locale, item: i, state }: { locale: string; item: Market
   const Icon = style.icon;
   const caps = i.capabilities ?? [];
   const hue = hueOf(i.key);
-  const footer = state === "verified" ? (i.verifiedLabel ?? i.account ?? "") : state === "failing" || state === "unverified" ? (i.account ?? "") : t(`integrations.marketplace.hints.${state}`);
+  const footer =
+    state === "verified" || state === "configured" ? (i.verifiedLabel ?? i.account ?? "") : state === "failing" || state === "unverified" ? (i.account ?? "") : i.plan?.locked ? t("integrations.marketplace.planLockedHint", { plan: t(`integrations.marketplace.plans.${i.plan.minPlan}`) }) : t(`integrations.marketplace.hints.${state}`);
   return (
     <Link
       href={`/${locale}/integrations/${i.key}`}
@@ -206,9 +214,15 @@ function ProviderCard({ locale, item: i, state }: { locale: string; item: Market
         </span>
       </div>
       <p className="line-clamp-2 text-sm text-muted-foreground">{t(`integrations.providers.${i.key}.description`)}</p>
+      {i.plan && i.plan.minPlan !== "starter" ? (
+        <p className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", i.plan.locked ? "border-warning/40 bg-warning/8 text-warning" : "text-muted-foreground")}>
+          <Lock aria-hidden className="size-3" />
+          {i.plan.locked ? t("integrations.marketplace.planLocked", { plan: t(`integrations.marketplace.plans.${i.plan.minPlan}`) }) : t("integrations.marketplace.planIncluded", { plan: t(`integrations.marketplace.plans.${i.plan.minPlan}`) })}
+        </p>
+      ) : null}
       {caps.length ? (
         <div className="grid gap-1.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{state === "verified" ? t("integrations.marketplace.powering") : t("integrations.marketplace.unlocks")}</p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{state === "verified" || state === "configured" ? t("integrations.marketplace.powering") : t("integrations.marketplace.unlocks")}</p>
           <ul className="flex flex-wrap gap-1">
             {caps.slice(0, 4).map((c) => (
               <li key={c} className="rounded-md bg-[var(--world-soft)] px-1.5 py-0.5 text-xs">

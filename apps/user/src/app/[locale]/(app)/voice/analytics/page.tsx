@@ -6,8 +6,8 @@ import { EmptyState } from "@/components/comms/bits";
 import { voicePage } from "@/components/voice/context";
 import { formatDuration } from "@/components/voice/bits";
 import { getT } from "@/i18n/server";
-import { formatDate } from "@/i18n/format";
-import { voiceAnalytics } from "@/server/modules/voice/analytics";
+import { formatDate, formatMoney } from "@/i18n/format";
+import { callMeetingFunnel, voiceAnalytics } from "@/server/modules/voice/analytics";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +22,15 @@ export default async function VoiceAnalyticsPage({ searchParams }: PageProps<"/[
   const { t, locale, viewer, org, company, tz, wrap } = p;
   const sp = await searchParams;
   const days = RANGES.find((r) => String(r) === sp.days) ?? 30;
-  const a = await voiceAnalytics(viewer.ctx, org.id, company.id, days);
+  const [a, f] = await Promise.all([voiceAnalytics(viewer.ctx, org.id, company.id, days), callMeetingFunnel(viewer.ctx, org.id, company.id, days)]);
+  const funnel = [
+    { key: "placed", value: f.placed },
+    { key: "connected", value: f.connected },
+    { key: "conversations", value: f.conversations },
+    { key: "qualified", value: f.qualified },
+    { key: "meetings", value: f.meetings },
+  ];
+  const maxFunnel = Math.max(1, ...funnel.map((x) => x.value));
   const maxOutcome = Math.max(1, ...a.outcomes.map((o) => o.count));
   const maxDay = Math.max(1, ...a.daily.map((d) => d.inbound + d.outbound));
   const rated = a.sentiments.filter((s) => s.key !== "UNKNOWN").reduce((s, x) => s + x.count, 0);
@@ -41,6 +49,30 @@ export default async function VoiceAnalyticsPage({ searchParams }: PageProps<"/[
         <StatTile index={2} label={t("voice.analytics.avgDuration")} value={a.avgDurationSec !== null ? formatDuration(a.avgDurationSec) : "—"} />
         <StatTile index={3} label={t("voice.analytics.cost")} money={{ amountMinor: a.costCents, currency: "USD" }} hint={t("voice.analytics.costHint")} />
       </StatGrid>
+      <Card>
+        <CardHeader title={t("voice.funnel.title")} description={t("voice.funnel.hint")} />
+        <CardBody className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          {f.placed ? (
+            <ul className="grid gap-2">
+              {funnel.map((x, i) => (
+                <li key={x.key} className="grid grid-cols-[8.5rem_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm">
+                  <span className="truncate">{t(`voice.funnel.stages.${x.key}`)}</span>
+                  <span className="h-4 rounded-e-[4px] bg-muted"><span className="block h-full rounded-e-[4px] bg-primary" style={{ width: `${(x.value / maxFunnel) * 100}%`, opacity: 1 - i * 0.12 }} /></span>
+                  <span className="text-end tabular-nums text-muted-foreground">{x.value}{i > 0 && funnel[i - 1]!.value ? ` · ${Math.round((x.value / funnel[i - 1]!.value) * 100)}%` : ""}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("voice.funnel.empty")}</p>
+          )}
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div><dt className="text-xs text-muted-foreground">{t("voice.funnel.connectRate")}</dt><dd className="text-lg font-semibold tabular-nums">{f.connectRate !== null ? `${f.connectRate}%` : "—"}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">{t("voice.funnel.costPerMeeting")}</dt><dd className="text-lg font-semibold tabular-nums">{f.costPerMeetingMinor !== null ? formatMoney({ amountMinor: f.costPerMeetingMinor, currency: f.currency }, locale) : "—"}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">{t("voice.funnel.meetingsHeld")}</dt><dd className="tabular-nums">{t("voice.funnel.meetingsHeldValue", { held: f.customerMeetings.held, unconfirmed: f.customerMeetings.unconfirmed, cancelled: f.customerMeetings.cancelled })}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">{t("voice.funnel.intel")}</dt><dd className="tabular-nums">{t("voice.funnel.intelValue", { prepared: f.intel.prepared, summarized: f.intel.summarized, sent: f.intel.followUpsSent })}</dd></div>
+          </dl>
+        </CardBody>
+      </Card>
       {a.total === 0 ? (
         <EmptyState>{t("voice.analytics.empty")}</EmptyState>
       ) : (

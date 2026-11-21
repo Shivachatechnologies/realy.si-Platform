@@ -78,4 +78,22 @@ export const FLAT_COST_MICROS: Record<string, number> = {
   "twilio.sms": 7_900,
   "twilio.whatsapp": 5_000,
   "sendgrid.email": 1_000,
+  /** ElevenLabs: ~$0.18 per 1,000 characters on the Creator plan overage (per character). */
+  "elevenlabs.character": 180,
+  /** ElevenLabs Scribe: $0.40 per audio hour (per second). */
+  "elevenlabs.stt_second": 111,
+  /** Deepgram Nova-3 pre-recorded: $0.0043 per minute (per second). */
+  "deepgram.stt_second": 72,
+  /** Luma Ray 2: ~$0.32 per 5 s 720p clip (per second). */
+  "luma.second": 64_000,
+  /** Kling standard 5 s clip ≈ $0.14 (per second). */
+  "kling.second": 28_000,
+  /** Shotstack pay-as-you-go: $0.40 per rendered minute (per second). */
+  "shotstack.second": 6_700,
+  /** Creatomate: ~$0.015 per rendered second at entry tier. */
+  "creatomate.second": 15_000,
+  /** Twilio Voice US outbound: $0.014 per minute (per second). */
+  "twilio.voice_second": 233,
+  /** Plaid Transactions: billed per connected item per month — not per call; recorded as 0. */
+  "plaid.sync": 0,
 };

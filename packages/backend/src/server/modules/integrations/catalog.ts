@@ -19,6 +19,12 @@ export const PROVIDER_CATEGORIES = [
   "accounting",
   "productivity",
   "developer",
+  "voice",
+  "video",
+  "telephony",
+  "support",
+  "finance",
+  "automation",
 ] as const;
 export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number];
 
@@ -57,6 +63,21 @@ export interface ProviderInfo {
   configFields?: CredentialField[];
   /** The provider exposes several selectable sub-accounts (pages, channels, ad accounts, sites...): config.accounts + config.activeAccountId. */
   multiAccount?: boolean;
+  /**
+   * "awaiting_docs": the adapter is not live yet (no public API-key access, or the official API needs a partner
+   * agreement / certificate flow Realy has not implemented). Shown honestly; it cannot be connected.
+   */
+  availability?: "awaiting_docs";
+  /**
+   * "config_only": the provider has no API that can prove the credentials (e.g. a SIP trunk); the connection test only
+   * validates the configuration (host resolves publicly), so the marketplace shows "Configured" rather than "Verified".
+   */
+  verification?: "config_only";
+  /**
+   * The provider sends webhooks / status callbacks to Realy at the connection's provider-webhook URL
+   * (/api/v1/integrations/webhooks/<provider>/<connectionId>/<token>), verified with the given scheme.
+   */
+  inboundWebhooks?: { scheme: "token" | "TWILIO" | "CALENDLY" | "META" | "ELEVENLABS" | "PLAID" | "ZENDESK" | "INTERCOM"; events: string[] };
 }
 
 /** A selectable sub-account of a connection, stored in config.accounts (non-secret). */
@@ -82,7 +103,7 @@ export const PROVIDERS: ProviderInfo[] = [
       { key: "organization", secret: false, required: false, placeholder: "org-…", pattern: "^org-[A-Za-z0-9]{6,}$" },
       { key: "model", secret: false, required: false, placeholder: "gpt-4.1-mini", pattern: "^[A-Za-z0-9.:_-]{2,64}$" },
     ],
-    capabilities: ["ai_text", "image_generation"],
+    capabilities: ["ai_text", "image_generation", "speech_to_text", "text_to_speech"],
   },
   {
     key: "gemini",
@@ -98,6 +119,7 @@ export const PROVIDERS: ProviderInfo[] = [
     ],
     capabilities: ["ai_text"],
   },
+  // Speech (Realy Voice OS, modules/voiceos): speech-to-text and text-to-speech for the voice console.
   // ───────────── Research ─────────────
   {
     key: "tavily",
@@ -269,7 +291,9 @@ export const PROVIDERS: ProviderInfo[] = [
       { key: "phoneNumberId", secret: false, required: true, placeholder: "1234567890", pattern: "^\\d{5,25}$" },
       { key: "businessAccountId", secret: false, required: false, placeholder: "1234567890", pattern: "^\\d{5,25}$" },
     ],
+    configFields: [{ key: "appSecret", secret: true, required: false, placeholder: "Meta app secret", pattern: "^[a-f0-9]{32}$" }],
     capabilities: ["chat"],
+    inboundWebhooks: { scheme: "META", events: ["messages", "message_status"] },
   },
   {
     key: "hubspot",
@@ -528,6 +552,7 @@ export const PROVIDERS: ProviderInfo[] = [
       { key: "whatsappFrom", secret: false, required: false, placeholder: "+15551234567", pattern: "^\\+[1-9]\\d{6,14}$" },
     ],
     capabilities: ["sms", "chat"],
+    inboundWebhooks: { scheme: "TWILIO", events: ["message.status"] },
   },
   // ───────────── Voice (AI phone team, src/server/modules/voice) ─────────────
   {
@@ -648,7 +673,362 @@ export const PROVIDERS: ProviderInfo[] = [
     ],
     capabilities: ["workflow_actions"],
   },
+
+  // ───────────── AI (OpenAI-compatible gateways) ─────────────
+  {
+    key: "openrouter",
+    name: "OpenRouter",
+    category: "ai",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://openrouter.ai/docs/api-reference/authentication",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "sk-or-v1-…", pattern: "^sk-or-[A-Za-z0-9_\\-]{20,}$" },
+      { key: "model", secret: false, required: false, placeholder: "openai/gpt-4.1-mini", pattern: "^[A-Za-z0-9._:/-]{2,100}$" },
+    ],
+    capabilities: ["ai_text"],
+  },
+  {
+    key: "openai_compatible",
+    name: "OpenAI-compatible API",
+    category: "ai",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+    fields: [
+      { key: "baseUrl", secret: false, required: true, placeholder: "https://api.together.xyz/v1", pattern: "^https://[^\\s]{3,300}$" },
+      { key: "apiKey", secret: true, required: true, placeholder: "…", pattern: "^[^\\s]{8,400}$" },
+      { key: "model", secret: false, required: true, placeholder: "meta-llama/Llama-3.3-70B-Instruct-Turbo", pattern: "^[A-Za-z0-9._:/-]{2,100}$" },
+    ],
+    capabilities: ["ai_text"],
+  },
+  // ───────────── Voice & audio ─────────────
+  {
+    key: "elevenlabs",
+    name: "ElevenLabs",
+    category: "voice",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://elevenlabs.io/docs/api-reference/authentication",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "sk_…", pattern: "^[A-Za-z0-9_\\-]{20,128}$" },
+      { key: "defaultVoiceId", secret: false, required: false, placeholder: "21m00Tcm4TlvDq8ikWAM", pattern: "^[A-Za-z0-9]{10,40}$" },
+    ],
+    configFields: [
+      { key: "webhookSecret", secret: true, required: false, placeholder: "wsec_…", pattern: "^[^\\s]{8,200}$" },
+      { key: "voiceId", secret: false, required: false, placeholder: "21m00Tcm4TlvDq8ikWAM", pattern: "^[A-Za-z0-9]{10,40}$" },
+    ],
+    capabilities: ["speech_synthesis", "text_to_speech", "voice_library", "speech_to_text"],
+    inboundWebhooks: { scheme: "ELEVENLABS", events: ["speech_to_text_transcription", "post_call_transcription"] },
+  },
+  {
+    key: "deepgram",
+    name: "Deepgram",
+    category: "voice",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developers.deepgram.com/docs/create-additional-api-keys",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "40 hex characters", pattern: "^[A-Za-z0-9]{32,64}$" },
+      { key: "model", secret: false, required: false, placeholder: "nova-3", pattern: "^[a-z0-9.-]{2,40}$" },
+    ],
+    capabilities: ["speech_to_text"],
+    inboundWebhooks: { scheme: "token", events: ["transcription.callback"] },
+  },
+  // ───────────── Video generation & rendering ─────────────
+  {
+    key: "jamendo",
+    name: "Jamendo Music",
+    category: "video",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://devportal.jamendo.com/",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "clientId", placeholder: "Client ID", pattern: "^[A-Za-z0-9]{6,64}$" }],
+    capabilities: ["licensed_music"],
+  },
+  {
+    key: "luma",
+    name: "Luma Dream Machine",
+    category: "video",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.lumalabs.ai/docs/api",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "luma-…", pattern: "^[A-Za-z0-9_\\-]{20,200}$" },
+      { key: "videoModel", secret: false, required: false, placeholder: "ray-2", pattern: "^[a-z0-9.-]{2,40}$" },
+    ],
+    capabilities: ["video_generation", "image_generation"],
+    inboundWebhooks: { scheme: "token", events: ["generation.completed", "generation.failed"] },
+  },
+  {
+    key: "kling",
+    name: "Kling AI",
+    category: "video",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+    fields: [
+      { key: "accessKey", secret: false, required: true, placeholder: "Access Key", pattern: "^[A-Za-z0-9]{16,64}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "secretKey", placeholder: "Secret Key", pattern: "^[A-Za-z0-9]{16,64}$" },
+      { key: "baseUrl", secret: false, required: false, placeholder: "https://api-singapore.klingai.com", pattern: "^https://api(-[a-z]+)?\\.klingai\\.com/?$" },
+    ],
+    capabilities: ["video_generation"],
+    inboundWebhooks: { scheme: "token", events: ["task.succeed", "task.failed"] },
+  },
+  {
+    key: "shotstack",
+    name: "Shotstack",
+    category: "video",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://shotstack.io/docs/guide/getting-started/core-concepts/",
+    fields: [
+      { key: "apiKey", secret: true, required: true, placeholder: "40 characters", pattern: "^[A-Za-z0-9]{20,64}$" },
+      { key: "environment", secret: false, required: true, placeholder: "stage / v1", pattern: "^(stage|v1)$" },
+    ],
+    capabilities: ["video_rendering"],
+    inboundWebhooks: { scheme: "token", events: ["render.done", "render.failed"] },
+  },
+  {
+    key: "creatomate",
+    name: "Creatomate",
+    category: "video",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://creatomate.com/docs/api/introduction",
+    fields: [{ key: "apiKey", secret: true, required: true, placeholder: "Project API key", pattern: "^[A-Za-z0-9]{20,128}$" }],
+    capabilities: ["video_rendering", "image_generation"],
+    inboundWebhooks: { scheme: "token", events: ["render.succeeded", "render.failed"] },
+  },
+  // ───────────── Telephony ─────────────
+  {
+    key: "twilio_voice",
+    name: "Twilio Voice",
+    category: "telephony",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://www.twilio.com/docs/voice/api",
+    fields: [
+      { key: "accountSid", secret: false, required: true, placeholder: "AC…", pattern: "^AC[a-f0-9]{32}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "authToken", placeholder: "32 hex characters", pattern: "^[a-f0-9]{32}$" },
+      { key: "fromNumber", secret: false, required: false, placeholder: "+15551234567", pattern: "^\\+[1-9]\\d{6,14}$" },
+    ],
+    capabilities: ["voice_calls", "phone_numbers", "call_recordings"],
+    multiAccount: true,
+    inboundWebhooks: { scheme: "TWILIO", events: ["call.status", "recording.completed"] },
+  },
+  {
+    key: "sip_trunk",
+    name: "SIP trunk",
+    category: "telephony",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://datatracker.ietf.org/doc/html/rfc3261",
+    fields: [
+      { key: "sipDomain", secret: false, required: true, placeholder: "sip.example-carrier.com", pattern: "^(?=.{3,253}$)[A-Za-z0-9]([A-Za-z0-9-]{0,62}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,62}[A-Za-z0-9])?)+$" },
+      { key: "username", secret: false, required: true, placeholder: "trunk-user", pattern: "^[A-Za-z0-9_.+\\-]{1,64}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "sipPassword", placeholder: "…", pattern: "^[^\\s]{6,128}$" },
+      { key: "transport", secret: false, required: false, placeholder: "udp / tcp / tls", pattern: "^(udp|tcp|tls)$" },
+      { key: "callerId", secret: false, required: false, placeholder: "+15551234567", pattern: "^\\+[1-9]\\d{6,14}$" },
+    ],
+    capabilities: ["sip_trunking", "voice_calls"],
+    verification: "config_only",
+  },
+  // ───────────── Business apps ─────────────
+  {
+    key: "pipedrive",
+    name: "Pipedrive",
+    category: "crm",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://pipedrive.readme.io/docs/how-to-find-the-api-token",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "40 hex characters", pattern: "^[a-f0-9]{40}$" }],
+    syncKinds: ["pipedrive.persons"],
+    capabilities: ["contacts", "sync"],
+  },
+  {
+    key: "notion",
+    name: "Notion",
+    category: "productivity",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developers.notion.com/docs/create-a-notion-integration",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "integrationSecret", placeholder: "ntn_… / secret_…", pattern: "^(ntn_|secret_)[A-Za-z0-9]{20,}$" }],
+    capabilities: ["notes_docs", "workflow_actions"],
+  },
+  {
+    key: "clickup",
+    name: "ClickUp",
+    category: "productivity",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developer.clickup.com/docs/authentication",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "pk_…", pattern: "^pk_[A-Za-z0-9_]{20,}$" }],
+    capabilities: ["tasks", "workflow_actions"],
+    multiAccount: true,
+  },
+  {
+    key: "calendly",
+    name: "Calendly",
+    category: "productivity",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developer.calendly.com/how-to-authenticate-with-personal-access-tokens",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "personalAccessToken", placeholder: "eyJ…", pattern: "^[A-Za-z0-9_\\-.]{40,4000}$" }],
+    syncKinds: ["calendly.events"],
+    capabilities: ["scheduling", "meetings", "sync"],
+    inboundWebhooks: { scheme: "CALENDLY", events: ["invitee.created", "invitee.canceled"] },
+  },
+  {
+    key: "google_drive",
+    name: "Google Drive",
+    category: "productivity",
+    authType: "oauth2",
+    scopes: ["openid", "email", "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive.metadata.readonly"],
+    envVars: ["OAUTH_GOOGLE_CLIENT_ID", "OAUTH_GOOGLE_CLIENT_SECRET"],
+    docsUrl: "https://developers.google.com/drive/api/guides/about-auth",
+    capabilities: ["files", "storage"],
+  },
+  // ───────────── Customer support ─────────────
+  {
+    key: "zendesk",
+    name: "Zendesk",
+    category: "support",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developer.zendesk.com/api-reference/introduction/security-and-auth/",
+    fields: [
+      { key: "subdomain", secret: false, required: true, placeholder: "yourcompany", pattern: "^[a-z0-9][a-z0-9-]{0,62}$" },
+      { key: "email", secret: false, required: true, placeholder: "agent@example.com", pattern: "^[^\\s@]{1,64}@[^\\s@]{1,190}\\.[^\\s@]{2,}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "…", pattern: "^[A-Za-z0-9]{20,80}$" },
+    ],
+    configFields: [{ key: "webhookSecret", secret: true, required: false, placeholder: "Webhook signing secret", pattern: "^[^\\s]{8,200}$" }],
+    capabilities: ["support_tickets"],
+    inboundWebhooks: { scheme: "ZENDESK", events: ["ticket.created", "ticket.updated"] },
+  },
+  {
+    key: "intercom",
+    name: "Intercom",
+    category: "support",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication",
+    fields: [{ key: "apiKey", secret: true, required: true, labelKey: "accessToken", placeholder: "dG9r…", pattern: "^[A-Za-z0-9=_\\-:]{20,200}$" }],
+    configFields: [{ key: "webhookSecret", secret: true, required: false, placeholder: "App client secret", pattern: "^[^\\s]{8,200}$" }],
+    capabilities: ["support_tickets", "chat"],
+    inboundWebhooks: { scheme: "INTERCOM", events: ["conversation.user.created", "conversation.user.replied"] },
+  },
+  // ───────────── Finance (bank feeds, read-only) ─────────────
+  {
+    key: "plaid",
+    name: "Plaid",
+    category: "finance",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://plaid.com/docs/quickstart/",
+    fields: [
+      { key: "clientId", secret: false, required: true, placeholder: "24 hex characters", pattern: "^[a-f0-9]{24}$" },
+      { key: "apiKey", secret: true, required: true, labelKey: "plaidSecret", placeholder: "30 hex characters", pattern: "^[a-f0-9]{30}$" },
+      { key: "environment", secret: false, required: true, placeholder: "sandbox / production", pattern: "^(sandbox|production)$" },
+      { key: "countryCodes", secret: false, required: false, placeholder: "US,CA,GB", pattern: "^[A-Z]{2}(,[A-Z]{2}){0,11}$" },
+    ],
+    syncKinds: ["plaid.transactions"],
+    capabilities: ["bank_feeds", "balances", "sync"],
+    inboundWebhooks: { scheme: "PLAID", events: ["TRANSACTIONS:SYNC_UPDATES_AVAILABLE", "ITEM:ERROR", "ITEM:PENDING_EXPIRATION"] },
+  },
+  {
+    key: "wise",
+    name: "Wise Business",
+    category: "finance",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.wise.com/api-docs/features/authentication-access/personal-tokens",
+    fields: [
+      { key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", pattern: "^[a-f0-9-]{36}$" },
+      { key: "environment", secret: false, required: true, placeholder: "sandbox / production", pattern: "^(sandbox|production)$" },
+    ],
+    syncKinds: ["wise.balances"],
+    capabilities: ["balances", "sync"],
+    multiAccount: true,
+  },
+  {
+    key: "revolut_business",
+    name: "Revolut Business",
+    category: "finance",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://developer.revolut.com/docs/business/business-api",
+    fields: [],
+    capabilities: ["balances", "bank_feeds"],
+    availability: "awaiting_docs",
+  },
+  // ───────────── Automation platforms ─────────────
+  {
+    key: "zapier",
+    name: "Zapier",
+    category: "automation",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://help.zapier.com/hc/en-us/articles/8496288690317-Trigger-Zaps-from-webhooks",
+    fields: [
+      { key: "apiKey", secret: true, required: true, labelKey: "catchHookUrl", placeholder: "https://hooks.zapier.com/hooks/catch/123/abc/", pattern: "^https://hooks\\.zapier\\.com/hooks/catch/\\d{1,20}/[A-Za-z0-9]{3,40}/?$" },
+      { key: "signingSecret", secret: true, required: false, placeholder: "Optional: verify Realy's signature in your Zap", pattern: "^[^\\s]{16,200}$" },
+    ],
+    capabilities: ["automation_triggers", "workflow_actions"],
+  },
+  {
+    key: "make",
+    name: "Make",
+    category: "automation",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://www.make.com/en/help/tools/webhooks",
+    fields: [
+      { key: "apiKey", secret: true, required: true, labelKey: "webhookUrl", placeholder: "https://hook.eu1.make.com/…", pattern: "^https://hook\\.[a-z0-9]{2,10}\\.make\\.com/[A-Za-z0-9]{10,80}$" },
+      { key: "signingSecret", secret: true, required: false, placeholder: "Optional: verify Realy's signature in your scenario", pattern: "^[^\\s]{16,200}$" },
+    ],
+    capabilities: ["automation_triggers", "workflow_actions"],
+  },
+  {
+    key: "n8n",
+    name: "n8n",
+    category: "automation",
+    authType: "api_key",
+    scopes: [],
+    envVars: [],
+    docsUrl: "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/",
+    fields: [
+      { key: "apiKey", secret: true, required: true, labelKey: "webhookUrl", placeholder: "https://n8n.example.com/webhook/…", pattern: "^https://[^\\s]{3,500}$" },
+      { key: "signingSecret", secret: true, required: false, placeholder: "Optional: HMAC secret checked by your workflow", pattern: "^[^\\s]{16,200}$" },
+    ],
+    capabilities: ["automation_triggers", "workflow_actions"],
+  },
 ];
 
 export const PROVIDER_KEYS = PROVIDERS.map((p) => p.key);
 export const providerInfo = (key: string): ProviderInfo | undefined => PROVIDERS.find((p) => p.key === key);
+
+/** Providers that can be connected today (adapters awaiting documentation are listed but not connectable). */
+export const isConnectable = (info: ProviderInfo) => info.availability !== "awaiting_docs";

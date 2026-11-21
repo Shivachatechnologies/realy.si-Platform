@@ -3,6 +3,7 @@ import { handleCeoAnswer } from "./ceo-chat";
 import { expireDelegationProposals } from "./delegation";
 import { escalateStaleToFounder, handleTaskFailed, handleTaskFinished } from "./hierarchy";
 import { handleTriggerEvent, runDueSchedules } from "./schedules";
+import { handleRefinementFinished, runProvisioningJobs } from "./org-designer";
 
 /** Background work of the workforce module, run by the worker (src/worker/index.ts via src/worker/modules.ts). */
 export const WORKFORCE_JOBS: ModuleJobs = {
@@ -12,6 +13,8 @@ export const WORKFORCE_JOBS: ModuleJobs = {
     { name: "workforce.escalation-ladder", everyMs: 15 * 60_000, run: () => escalateStaleToFounder() },
     // Delegation proposals nobody decided within 72 h are closed.
     { name: "workforce.delegation-expiry", everyMs: 60 * 60_000, run: () => expireDelegationProposals() },
+    // Organization designer: provisioning jobs continue in batches (managers first; resumable after a crash).
+    { name: "workforce.org-provisioning", everyMs: 30_000, run: () => runProvisioningJobs() },
   ],
   onEvent: [
     // AI event triggers: a domain event starts a task for the AI employee (deduped per event id via ai_schedule_runs).
@@ -22,5 +25,7 @@ export const WORKFORCE_JOBS: ModuleJobs = {
     { name: "workforce.escalate-failures", types: ["agent.task.failed"], handle: handleTaskFailed },
     // Delegated results roll up to the manager (and the founder at the top); escalation tasks resolve or climb.
     { name: "workforce.rollups", types: ["agent.task.completed", "agent.task.failed"], handle: handleTaskFinished },
+    // Organization designer: the AI CEO's review of a proposal is validated and stored as the refined proposal.
+    { name: "workforce.org-design-refinement", types: ["agent.task.completed", "agent.task.failed"], handle: handleRefinementFinished },
   ],
 };

@@ -82,6 +82,44 @@ enum VoiceCampaignStatus {
   CANCELLED
 }
 
+/// How calls reach the phone network: the AI provider's own telephony, or the company's Twilio account (Programmable
+/// Voice) bridged to the AI agent.
+enum VoiceTelephony {
+  PROVIDER
+  TWILIO
+}
+
+/// How a Twilio call is bridged to the AI agent.
+enum VoiceBridgeMode {
+  /// Retell: the call is registered on Retell (register-phone-call) and dialled to sip:<call_id>@sip.retellai.com.
+  PROVIDER_SIP
+  /// Any SIP endpoint of an AI voice platform (e.g. a Vapi SIP number), with optional digest credentials.
+  CUSTOM_SIP
+  /// Twilio Media Streams to a websocket bridge the company operates (wss://…).
+  MEDIA_STREAM
+}
+
+enum VoiceRunStatus {
+  PLANNED
+  AWAITING_APPROVAL
+  RUNNING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum VoiceRunTargetStatus {
+  ELIGIBLE
+  SKIPPED
+  SCHEDULED
+  CALLING
+  NO_ANSWER
+  QUALIFIED
+  NOT_QUALIFIED
+  MEETING_BOOKED
+  FAILED
+}
+
 enum VoiceDncSource {
   MANUAL
   CALLER_REQUEST
@@ -89,32 +127,50 @@ enum VoiceDncSource {
 
 /// Per-company phone team settings: provider, webhook key, calling rules and inbound routing.
 model VoiceSettings {
-  companyId        String         @id @map("company_id") @db.Uuid
-  organizationId   String         @map("organization_id") @db.Uuid
-  provider         VoiceProvider?
+  companyId           String          @id @map("company_id") @db.Uuid
+  organizationId      String          @map("organization_id") @db.Uuid
+  provider            VoiceProvider?
   /// Public, unguessable id in the provider webhook URL (/api/v1/webhooks/voice/<provider>/<webhookKey>).
-  webhookKey       String         @unique @map("webhook_key")
+  webhookKey          String          @unique @map("webhook_key")
   /// Shared secret Vapi sends in x-vapi-secret (encrypted; bound to the company).
-  vapiSecretEnc    String?        @map("vapi_secret_enc")
+  vapiSecretEnc       String?         @map("vapi_secret_enc")
   /// Calling window in the callee's local time, minutes after midnight [start, end).
-  callingStartMin  Int            @default(540) @map("calling_start_min")
-  callingEndMin    Int            @default(1080) @map("calling_end_min")
+  callingStartMin     Int             @default(540) @map("calling_start_min")
+  callingEndMin       Int             @default(1080) @map("calling_end_min")
   /// ISO weekdays (1 = Monday … 7 = Sunday) on which outbound calls may be placed.
-  callingDays      Int[]          @default([1, 2, 3, 4, 5]) @map("calling_days")
-  maxDurationSec   Int            @default(600) @map("max_duration_sec")
+  callingDays         Int[]           @default([1, 2, 3, 4, 5]) @map("calling_days")
+  maxDurationSec      Int             @default(600) @map("max_duration_sec")
   /// Record calls (the opening line then always announces the recording).
-  recordCalls      Boolean        @default(false) @map("record_calls")
-  maxConcurrent    Int            @default(2) @map("max_concurrent")
+  recordCalls         Boolean         @default(false) @map("record_calls")
+  maxConcurrent       Int             @default(2) @map("max_concurrent")
   /// Who receives messages taken by the AI receptionist (null = members with communication.manage).
-  voicemailUserId  String?        @map("voicemail_user_id") @db.Uuid
+  voicemailUserId     String?         @map("voicemail_user_id") @db.Uuid
   /// Inbound routing: create a support ticket / a CRM lead when the caller needs one.
-  inboundTickets   Boolean        @default(true) @map("inbound_tickets")
-  inboundLeads     Boolean        @default(true) @map("inbound_leads")
+  inboundTickets      Boolean         @default(true) @map("inbound_tickets")
+  inboundLeads        Boolean         @default(true) @map("inbound_leads")
   /// After each call create follow-up tasks and book requested meetings.
-  autoFollowUps    Boolean        @default(true) @map("auto_follow_ups")
-  setupCompletedAt DateTime?      @map("setup_completed_at") @db.Timestamptz(3)
-  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  autoFollowUps       Boolean         @default(true) @map("auto_follow_ups")
+  telephony           VoiceTelephony  @default(PROVIDER)
+  bridgeMode          VoiceBridgeMode @default(PROVIDER_SIP) @map("bridge_mode")
+  /// CUSTOM_SIP target, e.g. sip:assistant@sip.vapi.ai.
+  bridgeSipUri        String?         @map("bridge_sip_uri")
+  sipUsername         String?         @map("sip_username")
+  /// SIP digest password (encrypted, bound to the company).
+  sipPasswordEnc      String?         @map("sip_password_enc")
+  /// MEDIA_STREAM websocket (wss://…).
+  mediaStreamUrl      String?         @map("media_stream_url")
+  /// Caller id on Twilio (E.164) when telephony is TWILIO.
+  twilioFromNumber    String?         @map("twilio_from_number")
+  /// Twilio real-time transcription of bridged calls (live transcript).
+  liveTranscription   Boolean         @default(true) @map("live_transcription")
+  /// Where "transfer to a person" / "take over" sends a live call (E.164).
+  humanTransferNumber String?         @map("human_transfer_number")
+  /// Unanswered campaign calls are retried this many extra times, this many minutes apart.
+  retryMaxAttempts    Int             @default(1) @map("retry_max_attempts")
+  retryDelayMin       Int             @default(240) @map("retry_delay_min")
+  setupCompletedAt    DateTime?       @map("setup_completed_at") @db.Timestamptz(3)
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
@@ -206,6 +262,8 @@ model VoiceCampaign {
   purpose        String?
   status         VoiceCampaignStatus @default(DRAFT)
   approvalId     String?             @map("approval_id") @db.Uuid
+  /// Live calls of this campaign at once (null = the company limit only).
+  maxConcurrent  Int?                @map("max_concurrent")
   createdById    String              @map("created_by_id") @db.Uuid
   startedAt      DateTime?           @map("started_at") @db.Timestamptz(3)
   completedAt    DateTime?           @map("completed_at") @db.Timestamptz(3)
@@ -268,13 +326,32 @@ model VoiceCall {
   processedAt        DateTime?          @map("processed_at") @db.Timestamptz(3)
   /// [{ type, id, label }] records created from this call.
   results            Json               @default("[]")
+  /// Telephony layer of the call (null = the AI provider's own) and its Twilio CallSid.
+  telephony          VoiceTelephony?
+  telephonySid       String?            @map("telephony_sid")
+  /// Price of the Twilio leg in minor units of costCurrency (the AI provider's price stays in costMinor).
+  telephonyCostMinor BigInt?            @map("telephony_cost_minor")
+  /// Vapi live-control URL (monitor.controlUrl), encrypted: it can end or redirect the call.
+  controlUrlEnc      String?            @map("control_url_enc")
+  /// The AI voice is muted (Vapi mute-assistant).
+  muted              Boolean            @default(false)
+  /// Number the call was transferred to (a person), and who took the call over.
+  transferredTo      String?            @map("transferred_to")
+  takenOverAt        DateTime?          @map("taken_over_at") @db.Timestamptz(3)
+  takenOverById      String?            @map("taken_over_by_id") @db.Uuid
+  /// 1 = first try; retries and callbacks link to the call they repeat.
+  attempt            Int                @default(1)
+  retryOfId          String?            @map("retry_of_id") @db.Uuid
+  /// A person set the outcome by hand.
+  outcomeSetById     String?            @map("outcome_set_by_id") @db.Uuid
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  agent    VoiceAgent?       @relation(fields: [agentId, companyId], references: [id, companyId], onDelete: NoAction)
-  number   VoicePhoneNumber? @relation(fields: [numberId, companyId], references: [id, companyId], onDelete: NoAction)
-  campaign VoiceCampaign?    @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
+  company         Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  agent           VoiceAgent?           @relation(fields: [agentId, companyId], references: [id, companyId], onDelete: NoAction)
+  number          VoicePhoneNumber?     @relation(fields: [numberId, companyId], references: [id, companyId], onDelete: NoAction)
+  campaign        VoiceCampaign?        @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
+  transcriptLines VoiceTranscriptLine[]
 
   @@unique([id, companyId])
   @@unique([provider, externalCallId])
@@ -283,7 +360,103 @@ model VoiceCall {
   @@index([companyId, leadId])
   @@index([companyId, contactId])
   @@index([campaignId])
+  @@index([telephonySid])
   @@map("voice_calls")
+}
+
+/// Incremental transcript of a call as the provider streams it (Vapi transcript messages, Retell transcript_updated,
+/// Twilio real-time transcription). The final transcript stays on VoiceCall.transcript.
+model VoiceTranscriptLine {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  callId         String   @map("call_id") @db.Uuid
+  /// agent | caller | human (a person who took the call over).
+  role           String
+  text           String
+  /// Seconds from call start, when reported.
+  atSec          Int?     @map("at_sec")
+  /// vapi | retell | twilio
+  source         String
+  /// Provider-derived key so a redelivered event is stored once.
+  dedupeKey      String   @map("dedupe_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  call    VoiceCall @relation(fields: [callId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([callId, dedupeKey])
+  @@index([callId, createdAt])
+  @@map("voice_transcript_lines")
+}
+
+/// Autonomous calling campaign ("call 100 qualified leads…"): eligibility, prioritisation, per-lead briefs, then a
+/// VoiceCampaign executed by the dialer; results (qualified, meetings, follow-ups) roll up into the report.
+model VoiceCallingRun {
+  id                 String         @id @default(uuid(7)) @db.Uuid
+  organizationId     String         @map("organization_id") @db.Uuid
+  companyId          String         @map("company_id") @db.Uuid
+  name               String
+  /// The instruction in plain words ("Call 100 qualified leads and book demos").
+  goal               String
+  /// { stages, minScore, tags, sources, maxCalls, consent, cooldownDays }
+  criteria           Json           @default("{}")
+  agentId            String         @map("agent_id") @db.Uuid
+  numberId           String         @map("number_id") @db.Uuid
+  purpose            String
+  maxConcurrent      Int?           @map("max_concurrent")
+  status             VoiceRunStatus @default(PLANNED)
+  approvalId         String?        @map("approval_id") @db.Uuid
+  campaignId         String?        @unique @map("campaign_id") @db.Uuid
+  /// { considered, eligible, skipped: { reason: count } }
+  eligibility        Json           @default("{}")
+  /// Final report (numbers computed from calls, meetings and follow-ups).
+  report             Json           @default("{}")
+  summary            String?
+  requestedById      String         @map("requested_by_id") @db.Uuid
+  requestedByProfile String?        @map("requested_by_profile")
+  startedAt          DateTime?      @map("started_at") @db.Timestamptz(3)
+  completedAt        DateTime?      @map("completed_at") @db.Timestamptz(3)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  targets VoiceCallingTarget[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@map("voice_calling_runs")
+}
+
+/// One person considered by a calling run: why they are (not) called, their priority, brief and result.
+model VoiceCallingTarget {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  runId          String               @map("run_id") @db.Uuid
+  leadId         String?              @map("lead_id") @db.Uuid
+  contactId      String?              @map("contact_id") @db.Uuid
+  name           String
+  phone          String?
+  /// 0–100, higher is called first.
+  priority       Int                  @default(0)
+  reasons        String[]             @default([])
+  /// Context brief compiled from CRM records (passed to the agent as the call purpose).
+  brief          String?
+  status         VoiceRunTargetStatus @default(ELIGIBLE)
+  skipReason     String?              @map("skip_reason")
+  callId         String?              @map("call_id") @db.Uuid
+  meetingId      String?              @map("meeting_id") @db.Uuid
+  followUps      Int                  @default(0) @map("follow_ups")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     VoiceCallingRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([runId, status])
+  @@index([callId])
+  @@map("voice_calling_targets")
 }
 
 /// Numbers that must never be called (manual entries and callers who asked not to be called again).

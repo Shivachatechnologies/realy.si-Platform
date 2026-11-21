@@ -1,0 +1,259 @@
+// Creative production suite (src/server/modules/creative): image studio, the persisted video pipeline (a resumable job
+// graph of steps and storyboard scenes) and the studio media library. Visual outputs (images, video clips, renders)
+// live in the shared marketing library (MarketingAsset) so marketing can publish them; CreativeAsset adds studio
+// metadata (folders, versions, cost, brand check, license) and holds non-visual artifacts (voiceover audio, captions,
+// timelines). MarketingAsset, campaigns and users are referenced by plain uuids validated inside the company by the
+// service, so this module adds back-relations only to Company.
+
+enum CreativeProjectKind {
+  IMAGE_SET
+  VIDEO
+}
+
+enum CreativeProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  IN_REVIEW
+  APPROVED
+  EXPORTED
+  ARCHIVED
+}
+
+enum CreativeStepStatus {
+  PENDING
+  RUNNING
+  /// Handed to a provider (video clip, render): the worker polls until the provider reports a final state.
+  WAITING_PROVIDER
+  /// Needs a person (approval, music choice, missing connection the person can fix).
+  NEEDS_INPUT
+  /// Cannot run: a required provider is not connected or not available yet (error says which).
+  BLOCKED
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum CreativeSceneStatus {
+  DRAFT
+  GENERATING
+  READY
+  FAILED
+}
+
+enum CreativeAssetKind {
+  IMAGE
+  VIDEO
+  AUDIO
+  CAPTIONS
+  TIMELINE
+  DOCUMENT
+}
+
+model CreativeFolder {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  color          String?
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("creative_folders")
+}
+
+model CreativeTemplate {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  kind           CreativeProjectKind
+  name           String
+  /// Image category (product, social, poster, …) or video format (explainer, ad, …).
+  category       String
+  preset         String?
+  style          String?
+  prompt         String
+  /// Video: scene outline [{ title, shot, seconds }]; image: extra options.
+  structure      Json                @default("{}")
+  createdById    String              @map("created_by_id") @db.Uuid
+  archivedAt     DateTime?           @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([companyId, kind, archivedAt])
+  @@map("creative_templates")
+}
+
+model CreativeProject {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  kind           CreativeProjectKind
+  status         CreativeProjectStatus @default(DRAFT)
+  name           String
+  /// The idea / brief the pipeline starts from.
+  brief          String
+  objective      String?
+  audience       String?
+  /// Target platforms (instagram, tiktok, youtube, linkedin, …).
+  platforms      String[]              @default([])
+  /// Primary aspect ratio ("9:16", "1:1", "16:9").
+  aspect         String                @default("9:16")
+  targetSeconds  Int                   @default(30) @map("target_seconds")
+  language       String                @default("en")
+  campaignId     String?               @map("campaign_id") @db.Uuid
+  templateId     String?               @map("template_id") @db.Uuid
+  folderId       String?               @map("folder_id") @db.Uuid
+  /// Let the worker run the next runnable step on its own (never review or hand-off).
+  autoAdvance    Boolean               @default(false) @map("auto_advance")
+  /// Options: { research, voiceProvider, voiceId, sceneMedia, videoProvider, renderProvider, musicSource }.
+  settings       Json                  @default("{}")
+  approvedById   String?               @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?             @map("approved_at") @db.Timestamptz(3)
+  reviewNote     String?               @map("review_note")
+  exportedAt     DateTime?             @map("exported_at") @db.Timestamptz(3)
+  createdById    String                @map("created_by_id") @db.Uuid
+  archivedAt     DateTime?             @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  steps   CreativeStep[]
+  scenes  CreativeScene[]
+
+  @@unique([id, companyId])
+  @@index([companyId, archivedAt, updatedAt])
+  @@index([autoAdvance, status])
+  @@map("creative_projects")
+}
+
+model CreativeStep {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  projectId      String             @map("project_id") @db.Uuid
+  /// Step key (creative/presets.ts PIPELINE_STEPS): idea, research, concept, script, hook, storyboard, …
+  key            String
+  position       Int
+  status         CreativeStepStatus @default(PENDING)
+  /// Step result (concept text, script, timeline, render job, export manifest, …); editable for text steps.
+  output         Json?
+  error          String?
+  provider       String?
+  providerJobId  String?            @map("provider_job_id")
+  attempts       Int                @default(0)
+  /// Estimated provider cost of this step in micro-USD (sum of its usage records); null when unknown.
+  costMicros     BigInt?            @map("cost_micros")
+  /// Edited by a person after the AI produced it (later steps should be re-run).
+  edited         Boolean            @default(false)
+  startedAt      DateTime?          @map("started_at") @db.Timestamptz(3)
+  finishedAt     DateTime?          @map("finished_at") @db.Timestamptz(3)
+  nextPollAt     DateTime?          @map("next_poll_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project CreativeProject @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([projectId, key])
+  @@index([status, nextPollAt])
+  @@map("creative_steps")
+}
+
+model CreativeScene {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  projectId      String              @map("project_id") @db.Uuid
+  position       Int
+  title          String
+  /// Shot description: framing, subject, camera movement, setting.
+  shot           String
+  narration      String              @default("")
+  onScreenText   String?             @map("on_screen_text")
+  seconds        Float               @default(4)
+  /// "image" (still with motion in the edit) or "video" (generated clip).
+  media          String              @default("image")
+  status         CreativeSceneStatus @default(DRAFT)
+  provider       String?
+  providerJobId  String?             @map("provider_job_id")
+  /// Generated media in the marketing library (MarketingAsset id).
+  assetId        String?             @map("asset_id") @db.Uuid
+  error          String?
+  costMicros     BigInt?             @map("cost_micros")
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  project CreativeProject @relation(fields: [projectId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([projectId, position])
+  @@index([status, provider])
+  @@map("creative_scenes")
+}
+
+model CreativeAsset {
+  id               String            @id @default(uuid(7)) @db.Uuid
+  organizationId   String            @map("organization_id") @db.Uuid
+  companyId        String            @map("company_id") @db.Uuid
+  kind             CreativeAssetKind
+  name             String
+  /// Visual media in the shared marketing library (MarketingAsset id); null for non-visual artifacts.
+  marketingAssetId String?           @map("marketing_asset_id") @db.Uuid
+  /// Integrations storage reference for non-visual artifacts ("s3:<key>" / "db:<id>").
+  storageRef       String?           @map("storage_ref")
+  mimeType         String?           @map("mime_type")
+  sizeBytes        Int?              @map("size_bytes")
+  /// Provider-hosted URL when the output could not be stored (render outputs over the storage limit).
+  url              String?
+  /// image: product, social, poster, banner, ad, thumbnail, infographic, illustration, brand; video: scene, render, variant.
+  category         String?
+  /// Pipeline role: scene, voiceover, music, captions_srt, captions_vtt, timeline, render, thumbnail, variant, export.
+  role             String?
+  preset           String?
+  width            Int?
+  height           Int?
+  prompt           String?
+  provider         String?
+  model            String?
+  tags             String[]          @default([])
+  folderId         String?           @map("folder_id") @db.Uuid
+  projectId        String?           @map("project_id") @db.Uuid
+  sceneId          String?           @map("scene_id") @db.Uuid
+  campaignId       String?           @map("campaign_id") @db.Uuid
+  templateId       String?           @map("template_id") @db.Uuid
+  /// Version chain: the first version's id (null on the first version itself) and the version number.
+  rootId           String?           @map("root_id") @db.Uuid
+  parentId         String?           @map("parent_id") @db.Uuid
+  version          Int               @default(1)
+  /// How this version was made: generate, variant, edit, upscale, upload, render.
+  operation        String            @default("generate")
+  /// Estimated provider cost of producing this asset (micro-USD); null when unknown.
+  costMicros       BigInt?           @map("cost_micros")
+  /// Last brand-consistency check: { score, palette, matches, logo, issues, checkedAt }.
+  brandCheck       Json?             @map("brand_check")
+  /// Music/stock license: { source, licenseUrl, attribution, attestedById, attestedAt }.
+  license          Json?
+  createdById      String            @map("created_by_id") @db.Uuid
+  archivedAt       DateTime?         @map("archived_at") @db.Timestamptz(3)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([companyId, archivedAt, createdAt])
+  @@index([companyId, projectId])
+  @@index([companyId, folderId])
+  @@index([companyId, campaignId])
+  @@index([rootId])
+  @@index([marketingAssetId])
+  @@map("creative_assets")
+}

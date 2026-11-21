@@ -11,6 +11,7 @@ import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { classifyTool, toolChannel } from "@/server/modules/workforce/autonomy-classes";
 import { evaluateAutonomy, finishAutonomousAction, reserveAutonomousAction, type AutonomyDecision } from "@/server/modules/workforce/autonomy-policy";
+import { applyAutopilotCeiling, effectiveMode } from "@/server/modules/autopilot/gate";
 import { getTool, loadTools, type ToolDefinition, type ToolExecutionContext, type ToolOutput } from "./registry";
 
 /** Approval requests expire after 72 h (docs/agent-runtime.md). */
@@ -104,6 +105,12 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
       // Policy store unavailable (e.g. not migrated yet): fail safe to the behaviour before autonomy — never automatic.
       logger.warn({ err: err instanceof Error ? err.message : String(err), tool: tool.name }, "autonomy policy unavailable; using approvals");
       autonomy = null;
+    }
+    // Company Autopilot (autopilot/gate.ts): the department's mode can only narrow the decision (Off / Manual /
+    // Assisted / Approval required); AUTONOMOUS leaves it to the autonomy policy.
+    if (autonomy && run.autonomy) {
+      const mode = await effectiveMode({ organizationId: run.organizationId, companyId: run.companyId }, run.autonomy.department).catch(() => null);
+      if (mode) autonomy = applyAutopilotCeiling(autonomy, mode.mode, req.actionClass === "read");
     }
   }
   if (run.autonomy && req && autonomy) {

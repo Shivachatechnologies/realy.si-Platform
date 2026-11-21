@@ -18,6 +18,9 @@ import { ProviderError, testConnection } from "./providers";
 
 export const VERIFY_EVERY_MS = 24 * 3_600_000;
 
+/** Providers whose connection test has a visible side effect (a test event that runs the customer's Zap / scenario): never re-tested on a schedule. */
+export const NO_SCHEDULED_TEST = ["zapier", "make", "n8n"] as const;
+
 export type VerifyOutcome = "verified" | "rejected" | "transient" | "no_credentials" | "skipped";
 
 /** Test one connection with its stored credentials (system context: no user permission involved). */
@@ -25,7 +28,7 @@ export async function verifyConnection(connectionId: string): Promise<VerifyOutc
   const row = await db().integrationConnection.findUnique({ where: { id: connectionId } });
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return "skipped";
   const info = providerInfo(row.provider);
-  if (!info || info.authType === "none") return "skipped";
+  if (!info || info.authType === "none" || (NO_SCHEDULED_TEST as readonly string[]).includes(row.provider) || info.availability === "awaiting_docs") return "skipped";
   // getConnection refreshes expiring OAuth tokens (and marks the connection ERROR when the refresh is refused).
   const conn = await getConnection(row.organizationId, row.companyId, row.provider);
   if (!conn?.accessToken) {
@@ -92,7 +95,7 @@ export async function runDueHealthChecks(limit = 25): Promise<number> {
     where: {
       status: { in: ["CONNECTED", "ERROR"] },
       credentialsEnc: { not: null },
-      provider: { not: "webhook" },
+      provider: { notIn: ["webhook", ...NO_SCHEDULED_TEST] },
       AND: [{ OR: [{ lastTestedAt: null }, { lastTestedAt: { lt: cutoff } }] }, { OR: [{ lastSuccessAt: null }, { lastSuccessAt: { lt: cutoff } }] }],
     },
     orderBy: { lastTestedAt: { sort: "asc", nulls: "first" } },

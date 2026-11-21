@@ -12,7 +12,7 @@ import { requireOrgContext } from "@/server/workspace";
 import { safeTz } from "@/server/modules/voice/common";
 import { PhoneWaves } from "./graphics";
 
-export const VOICE_TABS = ["overview", "calls", "agents", "numbers", "campaigns", "analytics", "settings"] as const;
+export const VOICE_TABS = ["overview", "live", "calls", "agents", "numbers", "campaigns", "analytics", "settings"] as const;
 export type VoiceTab = (typeof VOICE_TABS)[number] | "setup";
 
 /**

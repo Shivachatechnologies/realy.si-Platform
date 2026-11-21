@@ -12,6 +12,8 @@ import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { listCampaigns } from "@/server/modules/voice/campaigns";
 import { toE164 } from "@/server/modules/voice/common";
+import { listRuns } from "@/server/modules/voice/runs";
+import { RunPlanner } from "@/components/voice/runs";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("voice.tabs.campaigns") };
@@ -24,7 +26,8 @@ export default async function VoiceCampaignsPage() {
   if (p.gate) return p.gate;
   const { t, locale, viewer, org, company, tz, base, perms, wrap } = p;
   const scope = { organizationId: org.id, companyId: company.id };
-  const [campaigns, agents, numbers, leads, contacts] = await Promise.all([
+  const [runs, campaigns, agents, numbers, leads, contacts] = await Promise.all([
+    listRuns(viewer.ctx, org.id, company.id),
     listCampaigns(viewer.ctx, org.id, company.id),
     db().voiceAgent.findMany({ where: { ...scope, archivedAt: null, syncStatus: "SYNCED", goal: { not: "RECEPTIONIST" } }, select: { id: true, name: true, provider: true }, orderBy: { createdAt: "asc" } }),
     db().voicePhoneNumber.findMany({ where: { ...scope, releasedAt: null }, select: { id: true, number: true, label: true, provider: true } }),
@@ -35,8 +38,43 @@ export default async function VoiceCampaignsPage() {
     ...leads.filter((l) => toE164(l.phone)).map((l) => ({ id: l.id, kind: "lead" as const, name: l.name, phone: toE164(l.phone)!, detail: [l.account, t(`voice.campaigns.stage.${l.stage}`)].filter(Boolean).join(" · ") || null })),
     ...contacts.filter((c) => toE164(c.phone)).map((c) => ({ id: c.id, kind: "contact" as const, name: [c.firstName, c.lastName].filter(Boolean).join(" "), phone: toE164(c.phone)!, detail: c.title })),
   ];
+  const RUN_TONE = { PLANNED: "neutral", AWAITING_APPROVAL: "warning", RUNNING: "accent", COMPLETED: "success", CANCELLED: "neutral", FAILED: "danger" } as const;
   return wrap(
     <div className="grid gap-4">
+      <Card>
+        <CardHeader icon={<Megaphone />} title={t("voice.runs.title")} description={t("voice.runs.description")} />
+        <CardBody className="grid gap-4">
+          {runs.length ? (
+            <ul className="grid gap-2">
+              {runs.slice(0, 8).map((r) => {
+                const s = r.stages;
+                const called = (s.CALLING ?? 0) + (s.NO_ANSWER ?? 0) + (s.QUALIFIED ?? 0) + (s.NOT_QUALIFIED ?? 0) + (s.MEETING_BOOKED ?? 0) + (s.FAILED ?? 0);
+                return (
+                  <li key={r.id}>
+                    <Link href={`/${locale}/voice/campaigns/runs/${r.id}`} className="grid gap-1 rounded-md border px-3 py-2.5 hover:bg-muted/50 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-medium">{r.name} <Badge tone={RUN_TONE[r.status]}>{t(`voice.runs.status.${r.status}`)}</Badge></span>
+                        <span className="block truncate text-xs text-muted-foreground">{r.goal}</span>
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {t("voice.runs.rowStats", { called, qualified: (s.QUALIFIED ?? 0) + (s.MEETING_BOOKED ?? 0), meetings: s.MEETING_BOOKED ?? 0 })} · {formatDateTime(r.createdAt, locale, tz)}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          {perms.post ? (
+            <details className="rounded-md border" open={!runs.length}>
+              <summary className="cursor-pointer px-3 py-2.5 text-sm font-medium">{t("voice.runs.new")}</summary>
+              <div className="border-t p-3">
+                <RunPlanner base={base} locale={locale} agents={agents.map((a) => ({ id: a.id, name: a.name }))} />
+              </div>
+            </details>
+          ) : null}
+        </CardBody>
+      </Card>
       {campaigns.length ? (
         <div className="grid gap-3">
           {campaigns.map((c) => {

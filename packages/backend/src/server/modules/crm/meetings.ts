@@ -188,3 +188,17 @@ export async function meetingIcs(ctx: RequestContext, organizationId: string, co
   ];
   return { filename: `${m.title.replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "meeting"}.ics`, body: lines.map(fold).join("\r\n") + "\r\n" };
 }
+
+/** Replace a scheduled meeting's agenda (meeting intelligence: generated or edited agenda, saved by a person). */
+export async function setCrmMeetingAgenda(ctx: RequestContext, organizationId: string, companyId: string, id: string, agenda: string) {
+  return transaction(async (tx) => {
+    await authorize(ctx, organizationId, companyId, "sales.manage", tx);
+    if (!isUuid(id)) throw notFound("Meeting");
+    const m = await tx.crmMeeting.findFirst({ where: { id, organizationId, companyId } });
+    if (!m) throw notFound("Meeting");
+    if (m.status !== "SCHEDULED") throw conflict("This meeting is already closed", { reason: "crm_meeting_closed" });
+    const u = await tx.crmMeeting.update({ where: { id }, data: { agenda: agenda.slice(0, 5000) } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "crm.meeting.agenda_updated", resourceType: "crm_meeting", resourceId: id });
+    return u;
+  });
+}

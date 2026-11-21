@@ -18,6 +18,8 @@ import { listSubjectTasks } from "@/server/modules/agents/service";
 import { listPeople } from "@/server/modules/comms/common";
 import { connectionStatuses } from "@/server/modules/comms/connections-bridge";
 import { getMeeting, listAgendaTemplates } from "@/server/modules/comms/meetings";
+import { getMeetingIntel } from "@/server/modules/crm/meeting-intel";
+import { MeetingIntelPanel, type IntelData } from "@/components/comms/meeting-intel";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("communication.meetings.title") };
@@ -38,6 +40,7 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
     connectionStatuses(org.id, company.id),
     listAgendaTemplates(viewer.ctx, org.id, company.id),
   ]);
+  const intel = perms.runAgents ? (JSON.parse(JSON.stringify(await getMeetingIntel(viewer.ctx, org.id, company.id, "COMMS", m.id), (_k, v) => (typeof v === "bigint" ? v.toString() : v))) as IntelData) : null;
   const inSeries = m.series.length > 1;
   const seriesIndex = m.series.findIndex((x) => x.id === m.id);
   const fu = m.followUpResult as { sent?: number; failed?: number; notConfigured?: number; skipped?: number } | null;
@@ -218,6 +221,12 @@ export default async function MeetingPage({ params }: PageProps<"/[locale]/commu
           </Card>
         ) : null}
         {!perms.runAgents ? <Notice>{t("communication.ai.noPermission")}</Notice> : null}
+        {intel ? (
+          <section aria-label={t("communication.intel.title")} className="grid gap-2">
+            <h2 className="text-sm font-semibold tracking-tight">{t("communication.intel.title")}</h2>
+            <MeetingIntelPanel base={base} kind="comms" data={intel} canEdit={m.canEdit && perms.post} aiReady={perms.aiReady} locale={locale} tz={tz} />
+          </section>
+        ) : null}
         <Link href={`/${locale}/communication/meetings`} className="text-sm hover:underline">
           ← {t("communication.meetings.back")}
         </Link>

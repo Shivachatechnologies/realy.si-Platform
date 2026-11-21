@@ -23,5 +23,8 @@ export const MODULE_TOOLS = (): Promise<Record<string, ToolDefinition>[]> =>
     import("@/server/modules/livechat/ai-tools").then((m) => m.LIVECHAT_TOOLS),
     import("@/server/modules/briefing/ai-tools").then((m) => m.BRIEFING_TOOLS),
     import("@/server/modules/voice/ai-tools").then((m) => m.VOICE_TOOLS),
+    import("@/server/modules/costs/ai-tools").then((m) => m.COSTS_TOOLS),
+    import("@/server/modules/autopilot/ai-tools").then((m) => m.AUTOPILOT_TOOLS),
+    import("@/server/modules/creative/ai-tools").then((m) => m.CREATIVE_TOOLS),
     import("@/server/modules/sites/ai-tools").then((m) => m.SITES_TOOLS),
   ]);

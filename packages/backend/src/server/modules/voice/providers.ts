@@ -83,7 +83,9 @@ function vapiAssistantBody(s: AgentSpec) {
     endCallFunctionEnabled: true,
     artifactPlan: { recordingEnabled: s.recordCalls },
     analysisPlan: { summaryPlan: { enabled: true }, structuredDataPlan: { enabled: true, schema: analysisJsonSchema() } },
-    serverMessages: ["status-update", "end-of-call-report"],
+    serverMessages: ["status-update", "end-of-call-report", "transcript"],
+    // Live call control (end, transfer to a person, mute the AI) through the call's monitor.controlUrl.
+    monitorPlan: { listenEnabled: false, controlEnabled: true },
     server: { url: s.webhookUrl, timeoutSeconds: 20, headers: s.webhookSecret ? { "x-vapi-secret": s.webhookSecret } : {} },
     metadata: s.metadata,
   };
@@ -248,7 +250,19 @@ export interface PlaceCallInput {
   metadata: Record<string, string>;
 }
 
-export async function placeCall(provider: VoiceProvider, conn: Connection, c: PlaceCallInput): Promise<{ externalCallId: string; status: string | null }> {
+/** Vapi control URLs are capability URLs on vapi.ai; anything else is refused (no request to arbitrary hosts). */
+export function safeVapiControlUrl(v: unknown): string | null {
+  const s = str(v);
+  if (!s) return null;
+  try {
+    const u = new URL(s);
+    return u.protocol === "https:" && (u.hostname === "vapi.ai" || u.hostname.endsWith(".vapi.ai")) ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function placeCall(provider: VoiceProvider, conn: Connection, c: PlaceCallInput): Promise<{ externalCallId: string; status: string | null; controlUrl: string | null }> {
   if (provider === "VAPI") {
     const r = obj(
       await call(conn, `${VAPI}/call`, {
@@ -265,7 +279,7 @@ export async function placeCall(provider: VoiceProvider, conn: Connection, c: Pl
     );
     const id = str(r.id);
     if (!id) throw new ProviderError("Vapi returned no call id");
-    return { externalCallId: id, status: str(r.status) };
+    return { externalCallId: id, status: str(r.status), controlUrl: safeVapiControlUrl(obj(r.monitor).controlUrl) };
   }
   const r = obj(
     await call(conn, `${RETELL}/v2/create-phone-call`, {
@@ -276,7 +290,7 @@ export async function placeCall(provider: VoiceProvider, conn: Connection, c: Pl
   );
   const id = str(r.call_id);
   if (!id) throw new ProviderError("Retell returned no call id");
-  return { externalCallId: id, status: str(r.call_status) };
+  return { externalCallId: id, status: str(r.call_status), controlUrl: null };
 }
 
 // ───────────── Webhooks ─────────────
@@ -323,6 +337,8 @@ export interface NormalizedEvent {
   recordingUrl: string | null;
   /** USD cents. */
   costCents: number | null;
+  /** Vapi live-control URL (monitor.controlUrl), when the agent has controls enabled. */
+  controlUrl: string | null;
 }
 
 const date = (v: unknown): Date | null => {
@@ -383,6 +399,7 @@ export function parseVapi(body: unknown): NormalizedEvent | null {
     failed: !!reason && /error|failed|could-not|invalid|twilio-failed|pipeline/.test(reason) && !/assistant-ended-call|customer-ended-call/.test(reason),
     recordingUrl: ended ? (https(artifact.recordingUrl) ?? https(m.recordingUrl) ?? https(obj(artifact.recording).stereoUrl)) : null,
     costCents: cost !== null ? Math.round(cost * 100) : null,
+    controlUrl: safeVapiControlUrl(obj(c.monitor).controlUrl),
   };
 }
 
@@ -432,5 +449,59 @@ export function parseRetell(body: unknown): NormalizedEvent | null {
     failed: !!reason && /dial_failed|error|invalid_destination|telephony_provider/.test(reason),
     recordingUrl: done ? https(c.recording_url) : null,
     costCents: cost !== null ? Math.round(cost) : null,
+    controlUrl: null,
   };
+}
+
+// ───────────── Live transcript events ─────────────
+
+export interface LiveLine {
+  role: "agent" | "caller";
+  text: string;
+  atSec: number | null;
+  /** Stable per call: a redelivered event updates the same row. */
+  key: string;
+}
+
+export interface LiveTranscriptEvent {
+  externalCallId: string;
+  realyCallId: string | null;
+  lines: LiveLine[];
+}
+
+/**
+ * Real-time transcript events: Vapi "transcript" messages (final turns only) and Retell "transcript_updated" (sent on
+ * turn-taking when enabled on the agent; the last, still-open turn is skipped). Null for other events.
+ */
+export function parseLiveTranscript(provider: VoiceProvider, body: unknown): LiveTranscriptEvent | null {
+  if (provider === "VAPI") {
+    const m = obj(obj(body).message);
+    if (str(m.type) !== "transcript" || str(m.transcriptType) !== "final") return null;
+    const c = obj(m.call);
+    const id = str(c.id);
+    const text = str(m.transcript);
+    if (!id || !text) return null;
+    const role = str(m.role) === "user" ? "caller" : "agent";
+    const ts = num(m.timestamp);
+    const atSec = num(m.secondsFromStart);
+    const key = `v:${role}:${ts ?? atSec ?? hashText(text)}`;
+    return { externalCallId: id, realyCallId: str({ ...obj(c.metadata), ...obj(obj(c.assistantOverrides).metadata) }.realyCallId), lines: [{ role, text: text.slice(0, 4000), atSec: atSec !== null ? Math.round(atSec) : null, key }] };
+  }
+  const b = obj(body);
+  if (str(b.event) !== "transcript_updated") return null;
+  const c = obj(b.call);
+  const id = str(c.call_id);
+  if (!id) return null;
+  const turns = arr(c.transcript_object).map(obj);
+  const lines: LiveLine[] = turns.slice(0, Math.max(0, turns.length - 1)).map((x, i) => {
+    const at = num(arr(x.words).map(obj)[0]?.start);
+    return { role: x.role === "agent" ? "agent" : "caller", text: (str(x.content) ?? "").slice(0, 4000), atSec: at !== null ? Math.round(at) : null, key: `r:${i}` };
+  });
+  return { externalCallId: id, realyCallId: str(obj(c.metadata).realyCallId), lines: lines.filter((l) => l.text) };
+}
+
+function hashText(t: string): string {
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (Math.imul(31, h) + t.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
 }

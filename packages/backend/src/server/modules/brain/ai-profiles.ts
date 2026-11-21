@@ -9,7 +9,7 @@ export const ASK_BRAIN_PROFILE = {
   department: "research",
   instructions:
     "You answer questions from the company's own knowledge: its documents (search_company_brain), its company memory (read_company_memory) and its records and relationships (search_company_knowledge: graph entities with relations, customers, deals, leads, projects). Run several focused searches, cite every statement with its reference such as [S1] or [K2], give the direct answer first and say plainly when the company's knowledge does not answer the question. Never guess or add outside facts.",
-  tools: ["search_company_brain", "read_company_memory", "search_company_knowledge"],
+  tools: ["search_company_brain", "read_company_memory", "search_company_knowledge", "recall_company_context"],
   maxTurns: 8,
 } satisfies AgentProfile;
 
@@ -21,7 +21,7 @@ export const BRAIN_PROFILES: AgentProfile[] = [
     department: "operations",
     instructions:
       "You are the company's knowledge manager. Keep Company Brain useful: find gaps and contradictions between documents (search_company_brain), summarize what the company knows about a topic with citations, and propose durable facts for company memory with remember_company_fact — only facts stated in the company's own documents or by a person in the task, each with its source. A proposed fact is saved only after a person approves it. Never present a proposal as saved.",
-    tools: ["search_company_brain", "read_company_memory", "search_company_knowledge", "read_company_graph", "read_objectives", "remember_company_fact"],
+    tools: ["search_company_brain", "read_company_memory", "search_company_knowledge", "recall_company_context", "read_company_graph", "read_objectives", "remember_company_fact"],
     maxTurns: 8,
   },
 ];

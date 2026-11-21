@@ -151,10 +151,16 @@ export const LIMITS = {
   "seats.max": { group: "support", unit: "count", meter: null, values: { starter: 1, growth: 3, scale: 10 } },
   "crm.contacts.max": { group: "sales", unit: "count", meter: null, values: { starter: 1_000, growth: 10_000, scale: 100_000 } },
   "content.generations.month": { group: "marketing", unit: "count", meter: "content.generations", highCost: true, values: { starter: 30, growth: 250, scale: 1_000 } },
+  /** Generated images (image studio, scene stills, thumbnails, edits and upscales), metered per output image. */
+  "image.generations.month": { group: "marketing", unit: "count", meter: "image.generations", highCost: true, values: { starter: 50, growth: 400, scale: 2_000 } },
+  /** Generated video clips and server-side renders (creative pipeline), metered per clip / render. */
+  "video.generations.month": { group: "marketing", unit: "count", meter: "video.generations", highCost: true, values: { starter: 5, growth: 40, scale: 200 } },
   "channels.max": { group: "marketing", unit: "count", meter: null, values: { starter: 2, growth: 5, scale: 15 } },
   "automations.active.max": { group: "automation", unit: "count", meter: null, values: { starter: 5, growth: 25, scale: 100 } },
   "ai.credits.month": { group: "workforce", unit: "credits", meter: "ai.credits", highCost: true, values: { starter: 10_000, growth: 50_000, scale: 300_000 } },
   "voice.minutes.month": { group: "operations", unit: "minutes", meter: "voice.minutes", highCost: true, values: { starter: 0, growth: 0, scale: 500 } },
+  /** Realy Voice OS (modules/voiceos): provider speech-to-text + text-to-speech minutes (browser speech is free). */
+  "voice.assistant.minutes.month": { group: "workforce", unit: "minutes", meter: "voice.assistant.minutes", highCost: true, values: { starter: 60, growth: 300, scale: 1_500 } },
   "email.sends.month": { group: "marketing", unit: "count", meter: "email.sends", highCost: true, values: { starter: 2_000, growth: 20_000, scale: 100_000 } },
   /** Pass-through cap for paid external APIs (research, enrichment, generation providers), in USD cents. */
   "api.cost.month": { group: "platform", unit: "cents", meter: "api.cost_cents", highCost: true, values: { starter: 2_000, growth: 10_000, scale: 50_000 } },
@@ -170,11 +176,14 @@ export type LimitKey = keyof typeof LIMITS;
 export const LIMIT_KEYS = Object.keys(LIMITS) as LimitKey[];
 export const isLimitKey = (k: string): k is LimitKey => Object.hasOwn(LIMITS, k);
 
-export type MeterKey = "ai.credits" | "content.generations" | "voice.minutes" | "email.sends" | "api.cost_cents" | "ads.spend_cents";
+export type MeterKey = "ai.credits" | "content.generations" | "image.generations" | "video.generations" | "voice.minutes" | "voice.assistant.minutes" | "email.sends" | "api.cost_cents" | "ads.spend_cents";
 export const METER_LIMIT: Record<MeterKey, LimitKey> = {
   "ai.credits": "ai.credits.month",
   "content.generations": "content.generations.month",
+  "image.generations": "image.generations.month",
+  "video.generations": "video.generations.month",
   "voice.minutes": "voice.minutes.month",
+  "voice.assistant.minutes": "voice.assistant.minutes.month",
   "email.sends": "email.sends.month",
   "api.cost_cents": "api.cost.month",
   "ads.spend_cents": "ads.spend.month",

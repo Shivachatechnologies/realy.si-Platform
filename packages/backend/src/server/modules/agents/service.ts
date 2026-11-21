@@ -20,6 +20,8 @@ import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/ad
 import { AGENT_TASK_STATUSES } from "./statuses";
 import { PROFILE_KEYS, profileByKey } from "./profiles";
 import { aiConfigured, REMEMBER_LINE, runTask, TaskError } from "./runtime";
+import { autopilotGate, inferTrigger, isProactive, logAutopilotRun, proactiveTriggerOf, type WorkTrigger } from "@/server/modules/autopilot/gate";
+import { assertSpendAllowed, checkSpend } from "@/server/modules/costs/service";
 
 export const createTaskInput = z.object({
   /** Optional milestone (same company) the task advances. */
@@ -143,14 +145,27 @@ export async function createTask(
   organizationId: string,
   companyId: string,
   raw: z.input<typeof createTaskInput>,
-  opts: { parentTaskId?: string } = {},
+  opts: { parentTaskId?: string; /** Who started the work (inferred from the context when omitted; see autopilot/gate.ts). */ trigger?: WorkTrigger } = {},
 ) {
   const input = createTaskInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "agents.run");
   requireProvider();
+  const trigger = inferTrigger(ctx, opts);
+  const department = await departmentForTask(organizationId, companyId, input);
   // "Pause all AI" (/autonomy): no new AI work starts in this company until a person resumes it.
-  if (await isCompanyAiPaused(organizationId, companyId)) throw new AppError("not_available", "All AI in this company is paused; resume it in Autonomy", { reason: "workforce_ai_paused" });
+  if (await isCompanyAiPaused(organizationId, companyId)) {
+    if (isProactive(trigger)) await logAutopilotRun({ organizationId, companyId }, { department, trigger, mode: "OFF", status: "BLOCKED", reason: "autopilot_paused", title: input.title });
+    throw new AppError("not_available", "All AI in this company is paused; resume it in Autonomy", { reason: "workforce_ai_paused" });
+  }
+  // Company Autopilot: the department's mode, schedule window and the kind of trigger decide whether work may start.
+  const gate = await autopilotGate({ organizationId, companyId }, department, trigger);
+  if (!gate.allowed) {
+    if (isProactive(trigger)) await logAutopilotRun({ organizationId, companyId }, { department, trigger, mode: gate.mode, status: "BLOCKED", reason: gate.reason, title: input.title });
+    throw new AppError("not_available", gate.message, { reason: gate.reason });
+  }
   await requireBudget(organizationId, companyId, input.profile);
+  // Cost budgets (company / department / AI employee): hard stop before any spend.
+  await assertSpendAllowed({ organizationId, companyId, department, aiEmployeeId: input.aiEmployeeId ?? null });
   // Plan AI credits (docs/entitlements.md): metered per run in processAgentTask.
   await assertLimit(ctx, organizationId, "ai.credits.month", 1);
   const task = await transaction(async (tx) => {
@@ -210,8 +225,18 @@ export async function createTask(
     });
     return t;
   });
+  if (isProactive(trigger)) await logAutopilotRun({ organizationId, companyId }, { department, trigger, mode: gate.mode, status: "STARTED", title: input.title, taskId: task.id });
   await enqueue(task.id, 1);
   return task;
+}
+
+/** The department a new task works for: its AI employee's, else its role's. */
+async function departmentForTask(organizationId: string, companyId: string, input: { aiEmployeeId?: string; profile?: string }): Promise<string> {
+  if (input.aiEmployeeId) {
+    const e = await db().aiEmployee.findFirst({ where: { id: input.aiEmployeeId, organizationId, companyId }, select: { department: true } });
+    if (e) return e.department;
+  }
+  return (input.profile ? profileByKey(input.profile)?.department : null) ?? "operations";
 }
 
 export async function listTasks(ctx: RequestContext, organizationId: string, companyId: string, rawPage: Partial<PageInput> & Record<string, unknown> = {}) {
@@ -338,6 +363,14 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
     }
     const profile = profileByKey(task.profile);
     if (!profile) throw new TaskError("unknown_profile", "This AI employee profile no longer exists");
+    const department = employee?.department ?? profile.department ?? "operations";
+    // Company Autopilot may have changed since the task was queued (Off, or Manual for proactively started work).
+    const trigger = (await proactiveTriggerOf(taskId)) ?? { kind: "person" as const, source: "person" };
+    const gate = await autopilotGate({ organizationId: task.organizationId, companyId: task.companyId }, department, trigger);
+    if (!gate.allowed) throw new TaskError(gate.reason, gate.message);
+    // Cost budgets (task / AI employee / department / company) may have been reached since the task was queued.
+    const spend = await checkSpend({ organizationId: task.organizationId, companyId: task.companyId, department, aiEmployeeId: employee?.id ?? null, taskId });
+    if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}; the task did not start. Raise the budget in Costs or retry next period.`);
     let tools: readonly string[] = profile.tools;
     let tokenCeiling: number | null = null;
     if (employee) {
@@ -374,11 +407,12 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       isCancelled: async () => !(await db().agentTask.count({ where: held })),
       tools,
       tokenCeiling,
-      autonomy: { department: employee?.department ?? profile.department ?? "operations", aiEmployeeId: employee?.id ?? null },
+      runId: jobId,
+      autonomy: { department, aiEmployeeId: employee?.id ?? null },
       employee: employee
         ? {
             name: employee.name,
-            instructions: employee.instructions,
+            instructions: [employee.instructions, employee.personality && `Personality: ${employee.personality}`, employee.communicationStyle && `Communication style: ${employee.communicationStyle}`].filter(Boolean).join("\n\n") || null,
             skills: employee.skills,
             autonomyGuidance: AUTONOMY_GUIDANCE[employee.autonomy],
             memory: employee.memories.map((m) => m.content),
@@ -404,7 +438,7 @@ export async function processAgentTask(taskId: string, jobId: string, opts: { fi
       });
       if (count) {
         await recordUsage(task.organizationId, "ai.credits", creditsForTokens(result.inputTokens + result.outputTokens), { companyId: task.companyId, idempotencyKey: taskId, client: tx });
-        await writeAudit(tx, ctx, { category: "TENANT", organizationId: task.organizationId, action: "agent.task.completed", resourceType: "agent_task", resourceId: taskId, newValue: { model: result.model, citations: result.citations.length, companyId: task.companyId } });
+        await writeAudit(tx, ctx, { category: "TENANT", organizationId: task.organizationId, action: "agent.task.completed", resourceType: "agent_task", resourceId: taskId, newValue: { model: result.model, citations: result.citations.length, companyId: task.companyId, tier: result.tier ?? null, costMicros: result.costMicros ?? 0, reusedFromTaskId: result.reusedFromTaskId ?? null } });
         if (employee && remembered.length) {
           await tx.aiEmployeeMemory.createMany({
             data: remembered.map((content) => ({ organizationId: task.organizationId, companyId: task.companyId, aiEmployeeId: employee.id, content, source: "TASK" as const, sourceTaskId: taskId })),

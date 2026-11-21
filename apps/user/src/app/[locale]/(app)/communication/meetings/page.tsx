@@ -45,6 +45,13 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/[locale
           </details>
         </Card>
       ) : null}
+      <Link href={`/${locale}/communication/meetings/customer`} className="flex items-center justify-between gap-3 rounded-lg border bg-surface px-4 py-3 text-sm hover:bg-muted/50">
+        <span className="grid gap-0.5">
+          <span className="font-medium">{t("communication.intel.customerLink")}</span>
+          <span className="text-xs text-muted-foreground">{t("communication.intel.customerLinkHint")}</span>
+        </span>
+        <span aria-hidden className="rtl:rotate-180">→</span>
+      </Link>
       <Card>
         <CardHeader title={t("communication.meetings.title")} description={t("communication.meetings.description")} />
         <form className="grid gap-2 border-b p-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]" action={path}>

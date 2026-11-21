@@ -9,7 +9,8 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { createTask } from "@/server/modules/agents/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { dueSlot, fillTemplate, localParts } from "./slots";
+import { dueSlot, fillTemplate, localParts, withinWorkingHours } from "./slots";
+import { workingHoursOf } from "./service";
 import { generateBriefing } from "./briefings";
 
 const isUuid = (v: string) => z.string().uuid().safeParse(v).success;
@@ -177,15 +178,19 @@ async function fire(s: FireableSchedule, slot: string, vars: { date: string; eve
 export async function runDueSchedules(now = new Date()): Promise<number> {
   const schedules = await db().aiSchedule.findMany({
     where: { kind: "RECURRING", enabled: true, aiEmployee: { status: "ACTIVE", archivedAt: null } },
-    include: { company: { select: { timezone: true, deletedAt: true } } },
+    include: { company: { select: { timezone: true, deletedAt: true } }, aiEmployee: { select: { timezone: true, workingHours: true } } },
     take: 5000,
   });
   let fired = 0;
   for (const s of schedules) {
     if (s.company.deletedAt) continue;
-    const slot = dueSlot(s, now, s.company.timezone);
+    // The employee's own timezone and working hours (employee record) win over the company's.
+    const tz = s.aiEmployee.timezone ?? s.company.timezone;
+    const slot = dueSlot(s, now, tz);
     if (!slot || slot === s.lastSlot) continue;
-    if (await fire(s, slot, { date: localParts(now, s.company.timezone).date })) fired++;
+    // Outside working hours the slot waits (a daily / weekly slot fires once the hours start; hourly slots are skipped).
+    if (!withinWorkingHours(workingHoursOf(s.aiEmployee.workingHours), now, tz)) continue;
+    if (await fire(s, slot, { date: localParts(now, tz).date })) fired++;
   }
   return fired;
 }

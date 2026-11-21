@@ -1,0 +1,67 @@
+// Company Autopilot (packages/backend/src/server/modules/autopilot): one global mode per company and per department
+// on top of the autonomy policy engine and the department autopilots, schedule windows and a persistent run log.
+
+/// OFF: no AI work in the scope · MANUAL: AI works only when a person asks · ASSISTED: proactive work as suggestions
+/// only · APPROVAL_REQUIRED: proactive work, every action needs approval · AUTONOMOUS: the autonomy policy decides.
+enum AutopilotMode {
+  OFF
+  MANUAL
+  ASSISTED
+  APPROVAL_REQUIRED
+  AUTONOMOUS
+}
+
+enum AutopilotRunStatus {
+  /// Proactive work was allowed and queued (taskId set).
+  STARTED
+  /// Proactive work was refused by the mode, the schedule window or "pause all" (reason set).
+  BLOCKED
+}
+
+model AutopilotSetting {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  /// "*" = company-wide default, else a workforce department key.
+  department     String
+  mode           AutopilotMode
+  /// Proactive work only on these weekdays (0 = Sunday) in the company's timezone; empty = every day.
+  windowDays     Int[]         @default([]) @map("window_days")
+  /// "HH:MM" window [from, to) in the company's timezone; null = all day.
+  windowFrom     String?       @map("window_from")
+  windowTo       String?       @map("window_to")
+  updatedById    String        @map("updated_by_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, department])
+  @@index([organizationId, companyId])
+  @@map("autopilot_settings")
+}
+
+/// Every proactive (non-person) attempt to start AI work: what triggered it, the mode, and whether it ran.
+model AutopilotRun {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  department     String
+  /// "schedule" | "autopilot" | "event" | "system".
+  trigger        String
+  /// Which business trigger (e.g. "schedule:<id>", "ceo-loop", "marketing.autopilot").
+  source         String
+  mode           AutopilotMode
+  status         AutopilotRunStatus
+  reason         String?
+  title          String?
+  taskId         String?            @map("task_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, createdAt])
+  @@index([companyId, department, createdAt])
+  @@index([taskId])
+  @@map("autopilot_runs")
+}

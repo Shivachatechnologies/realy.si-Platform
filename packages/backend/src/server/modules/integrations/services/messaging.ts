@@ -1,5 +1,6 @@
 import "server-only";
 import { providerFetch } from "../client";
+import { providerWebhookUrl } from "../provider-webhooks";
 import { FLAT_COST_MICROS, recordUsage } from "../usage";
 import { ensureOk, errorText, str, usableConnection, type ServiceResult } from "./common";
 
@@ -23,7 +24,8 @@ async function twilioSend(organizationId: string, companyId: string, channel: "s
   const from = channel === "sms" ? str(conn.config.fromNumber) : str(conn.config.whatsappFrom);
   if (!sid || !/^AC[a-f0-9]{32}$/.test(sid)) return { ok: false, code: "not_connected", error: "Twilio account SID missing", providerId: "twilio", attempts: [] };
   if (!from) return { ok: false, code: "not_connected", error: channel === "sms" ? "Set a Twilio sender number (or messaging service) on the connection" : "Set a Twilio WhatsApp sender on the connection", providerId: "twilio", attempts: [] };
-  const form: Record<string, string> = { To: channel === "whatsapp" ? `whatsapp:${to}` : to, Body: body };
+  // Delivery status (sent / delivered / failed) comes back signed to the connection's provider-webhook URL.
+  const form: Record<string, string> = { To: channel === "whatsapp" ? `whatsapp:${to}` : to, Body: body, StatusCallback: providerWebhookUrl("twilio", conn.id) };
   if (from.startsWith("MG")) form.MessagingServiceSid = from;
   else form.From = channel === "whatsapp" ? `whatsapp:${from}` : from;
   const operation = channel === "sms" ? "sms.send" : "whatsapp.send";

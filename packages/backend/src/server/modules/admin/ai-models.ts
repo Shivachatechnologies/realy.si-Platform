@@ -250,3 +250,76 @@ export async function setOrgAiPaused(ctx: RequestContext, organizationId: string
   const cur = await getOrgOverride(organizationId);
   return setOrgOverride(ctx, organizationId, { ...cur, aiDisabled: input.paused, reason: input.reason });
 }
+
+// ───────────── Routing by task complexity (agents/router.ts) ─────────────
+
+/** Complexity tiers of an agent run, plus specialized media tiers other modules resolve through the same table. */
+export const ROUTING_TIERS = ["simple", "standard", "complex", "voice", "image", "video"] as const;
+export type RoutingTier = (typeof ROUTING_TIERS)[number];
+const TIER_MODELS_KEY = "ai:tierModels";
+/** Media tiers hold provider model ids (e.g. a TTS voice model), not only Claude ids. */
+const mediaModelId = z.string().regex(/^[A-Za-z0-9._:@/-]{2,80}$/);
+const tierRow = z.object({ simple: modelId.nullable().optional(), standard: modelId.nullable().optional(), complex: modelId.nullable().optional(), voice: mediaModelId.nullable().optional(), image: mediaModelId.nullable().optional(), video: mediaModelId.nullable().optional() });
+const tierTable = z.object({ enabled: z.boolean().default(true), byClass: z.record(z.string(), tierRow).default({}) });
+export type TierTable = z.infer<typeof tierTable>;
+
+/**
+ * Built-in routing used until a platform admin edits the table: simple runs on the cheap tier, standard on the mid
+ * tier, complex reasoning on the class / platform default (resolvePlatformModel). Disallowed models are skipped.
+ */
+export const DEFAULT_TIER_MODELS: Partial<Record<RoutingTier, string>> = { simple: "claude-haiku-5-5", standard: "claude-sonnet-5-5" };
+
+let tierCache: { at: number; table: TierTable } | null = null;
+
+/** The routing table: { enabled, byClass: { "*": {simple, standard, complex, voice, image, video}, "<class>": {...} } }. */
+export async function readTierModels(): Promise<TierTable> {
+  if (!tierCache || Date.now() - tierCache.at > 30_000) tierCache = { at: Date.now(), table: await readSetting(TIER_MODELS_KEY, tierTable, { enabled: true, byClass: {} }) };
+  return tierCache.table;
+}
+
+/**
+ * The model for a tier: an organization override always wins (pinned); else the class's tier model, the platform-wide
+ * tier model, the built-in default; complex (or nothing usable) falls back to resolvePlatformModel. Returns null for a
+ * media tier with no configured model (the module then uses its own default). Never returns a disabled model.
+ */
+export async function resolveTierModel(opts: { organizationId?: string | null; profile?: string | null; tier: RoutingTier }): Promise<string | null> {
+  const media = opts.tier === "voice" || opts.tier === "image" || opts.tier === "video";
+  const [table, c] = await Promise.all([readTierModels(), getControls()]);
+  const dept = opts.profile ? (AGENT_PROFILES.find((p) => p.key === opts.profile)?.department ?? "general") : null;
+  if (media) return (dept ? table.byClass[dept]?.[opts.tier] : null) ?? table.byClass["*"]?.[opts.tier] ?? null;
+  const platform = await resolvePlatformModel(opts);
+  const orgPinned = opts.organizationId ? resolverCache?.org[opts.organizationId] : undefined;
+  if (orgPinned && orgPinned === platform) return platform;
+  if (!table.enabled) return platform;
+  const allowed = (m: string | null | undefined): m is string => !!m && !c.aiDisabledModels.includes(m) && (c.aiAllowedModels.length === 0 || c.aiAllowedModels.includes(m));
+  const candidates = [dept ? table.byClass[dept]?.[opts.tier] : null, table.byClass["*"]?.[opts.tier], opts.tier === "complex" ? null : DEFAULT_TIER_MODELS[opts.tier]];
+  return candidates.find(allowed) ?? platform;
+}
+
+export const tierModelsInput = z.object({
+  enabled: z.boolean().optional(),
+  /** "*" or a profile class. */
+  profileClass: z.string().max(60).optional(),
+  tiers: tierRow.optional(),
+  reason: reasonSchema,
+});
+
+/** Admin: edit the routing table (per class or platform-wide "*"), audited. */
+export async function updateTierModels(ctx: RequestContext, raw: z.input<typeof tierModelsInput>) {
+  const input = tierModelsInput.parse(raw);
+  const cur = await readSetting(TIER_MODELS_KEY, tierTable, { enabled: true, byClass: {} });
+  const next: TierTable = { enabled: input.enabled ?? cur.enabled, byClass: { ...cur.byClass } };
+  if (input.tiers) {
+    const cls = input.profileClass ?? "*";
+    if (cls !== "*" && !PROFILE_CLASSES.includes(cls)) throw notFound("Profile class");
+    const known = new Set([...Object.keys(MODEL_PRICES), env().AGENT_MODEL]);
+    for (const t of ["simple", "standard", "complex"] as const) {
+      const m = input.tiers[t];
+      if (m && !known.has(m) && !/^[a-z]+\.anthropic\./.test(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
+    }
+    next.byClass[cls] = input.tiers;
+  }
+  await saveSetting(ctx, TIER_MODELS_KEY, next, input.reason, { action: "platform.ai.tier_models_changed", oldValue: cur, newValue: next });
+  tierCache = null;
+  return next;
+}

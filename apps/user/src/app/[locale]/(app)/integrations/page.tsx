@@ -27,11 +27,14 @@ type Listed = Awaited<ReturnType<typeof listIntegrations>>[number];
 
 /** Connected only when the provider accepted the credentials (test, health check or a successful call) with no error pending. */
 function stateOf(i: Listed): MarketplaceState {
+  if (i.info.availability === "awaiting_docs") return "awaiting_docs";
   if (i.status === "ERROR") return "failing";
   if (i.status === "CONNECTED") {
     if (i.info.key === "webhook") return "verified";
     const c = i.connection;
-    return c && !c.lastError && (c.lastTestedAt || c.lastSuccessAt) ? "verified" : "unverified";
+    const tested = c && !c.lastError && (c.lastTestedAt || c.lastSuccessAt);
+    // Providers without an identity API (SIP trunks) can only be "configured", never "verified".
+    return tested ? (i.info.verification === "config_only" ? "configured" : "verified") : "unverified";
   }
   if (i.info.authType === "oauth2") return i.oauthAvailable ? "ready" : "platform_setup";
   if (i.info.authType === "api_key") return "credentials_required";
@@ -71,9 +74,10 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
       state,
       capabilities: i.info.capabilities,
       verifiedLabel: state === "verified" && verifiedAt ? t("integrations.marketplace.verifiedAgo", { time: formatRelativeTime(verifiedAt, locale, now) }) : null,
+      plan: i.plan,
     };
   });
-  const verified = items.filter((i) => i.state === "verified").length;
+  const verified = items.filter((i) => i.state === "verified" || i.state === "configured").length;
   const attention = items.filter((i) => i.state === "failing" || i.state === "unverified").length;
   const guide = [
     { icon: Compass, title: t("integrations.guide.whatTitle"), body: t("integrations.guide.what") },
@@ -126,7 +130,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
               category: i.category,
               categoryLabel: t(`integrations.categories.${i.category}`),
               // Only verified connections light up as connected; failing and unverified ones show as needing attention.
-              status: i.state === "verified" ? "CONNECTED" : i.state === "failing" || i.state === "unverified" ? "ERROR" : null,
+              status: i.state === "verified" || i.state === "configured" ? "CONNECTED" : i.state === "failing" || i.state === "unverified" ? "ERROR" : null,
               href: `/${locale}/integrations/${i.key}`,
             }))}
           />

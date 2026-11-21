@@ -6,7 +6,9 @@ import { logger } from "@/server/core/logger";
 import { consume } from "@/server/core/rate-limit";
 import { getConnection } from "@/server/modules/integrations/connections";
 import { last10, obj, str } from "./common";
-import { parseRetell, parseVapi, verifyRetellSignature, verifyVapiSecret, type NormalizedEvent } from "./providers";
+import { parseLiveTranscript, parseRetell, parseVapi, verifyRetellSignature, verifyVapiSecret, type NormalizedEvent } from "./providers";
+import { ingestLiveTranscript } from "./live";
+import { sealControlUrl } from "./telephony";
 import { readVapiSecret } from "./service";
 import { processCall } from "./outcomes";
 import { recordUsage } from "@/server/modules/entitlements/service";
@@ -73,6 +75,11 @@ export async function receiveVoiceWebhook(providerSlug: string, key: string, raw
   } catch {
     return { status: 400, body: { error: { code: "validation_error", message: "invalid JSON" } } };
   }
+  const live = parseLiveTranscript(provider, body);
+  if (live) {
+    const stored = await ingestLiveTranscript(organizationId, companyId, provider, live);
+    return { status: 200, body: { ok: true, lines: stored } };
+  }
   const ev = provider === "VAPI" ? parseVapi(body) : parseRetell(body);
   if (!ev) return { status: 200, body: { ok: true, ignored: true } };
   const callId = await applyEvent(organizationId, companyId, provider, ev, settings.recordCalls);
@@ -124,6 +131,9 @@ async function applyEvent(organizationId: string, companyId: string, provider: V
       // Recordings stay on the provider; Realy links them only when recording is enabled for the company.
       ...(ev.recordingUrl && recordCalls ? { recordingUrl: ev.recordingUrl } : {}),
       ...(ev.costCents !== null ? { costMinor: BigInt(ev.costCents), costCurrency: "USD" } : {}),
+      ...(ev.controlUrl && !final && !call.controlUrlEnc ? { controlUrlEnc: sealControlUrl(companyId, ev.controlUrl) } : {}),
+      // The live-control URL is useless (and sensitive) once the call is over.
+      ...(final ? { controlUrlEnc: null } : {}),
       ...(final && ev.failed && !ev.durationSec ? { error: `Call failed: ${ev.endedReason ?? "unknown reason"}` } : {}),
     },
   });

@@ -213,6 +213,8 @@ model User {
   guideRequests     GuideRequest[]
   commandSessions   CommandSession[]
   guidedDrafts      GuidedDraft[]
+  voiceosSettings   VoiceosSettings[]
+  voiceosSessions   VoiceosSession[]
 
   @@map("users")
 }
@@ -727,6 +729,30 @@ model Company {
   sitePages                       SitePage[]
   sitePageVersions                SitePageVersion[]
   siteFormSubmissions             SiteFormSubmission[]
+  brainRetentionPolicies          BrainRetentionPolicy[]
+  brainEmbeddings                 BrainEmbedding[]
+  voiceosSettings                 VoiceosSettings[]
+  voiceosSessions                 VoiceosSession[]
+  voiceosTurns                    VoiceosTurn[]
+  autopilotSettings               AutopilotSetting[]
+  autopilotRuns                   AutopilotRun[]
+  costLedgerEntries               CostLedgerEntry[]
+  costBudgets                     CostBudget[]
+  costAlerts                      CostAlert[]
+  agentContextSummaries           AgentContextSummary[]
+  agentRequestCaches              AgentRequestCache[]
+  aiOrgDesigns                    AiOrgDesign[]
+  aiOrgProvisionJobs              AiOrgProvisionJob[]
+  creativeFolders                 CreativeFolder[]
+  creativeTemplates               CreativeTemplate[]
+  creativeProjects                CreativeProject[]
+  creativeSteps                   CreativeStep[]
+  creativeScenes                  CreativeScene[]
+  creativeAssets                  CreativeAsset[]
+  meetingIntels                   MeetingIntel[]
+  voiceTranscriptLines            VoiceTranscriptLine[]
+  voiceCallingRuns                VoiceCallingRun[]
+  voiceCallingTargets             VoiceCallingTarget[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -901,10 +927,11 @@ model BrainDocument {
   createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  company    Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  department Department?  @relation("BrainDocumentDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
-  chunks     BrainChunk[]
-  links      BrainLink[]
+  company               Company               @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  department            Department?           @relation("BrainDocumentDepartment", fields: [departmentId, companyId], references: [id, companyId], onDelete: NoAction)
+  chunks                BrainChunk[]
+  links                 BrainLink[]
+  brainDocumentPolicies BrainDocumentPolicy[]
 
   @@unique([id, companyId])
   // The same content is ingested once per company.

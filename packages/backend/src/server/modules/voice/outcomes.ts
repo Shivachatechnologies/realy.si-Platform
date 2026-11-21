@@ -12,6 +12,8 @@ import { scheduleMeeting } from "@/server/modules/crm/meetings";
 import { createTicket } from "@/server/modules/support/tickets";
 import { maskNumber, obj, str, type CallResult, type TranscriptLine } from "./common";
 import { emitVoiceEvent, ensureSettings } from "./service";
+import { scheduleCampaignFollowUpCall } from "./live";
+import { syncRunTargetForCall } from "./runs";
 
 /**
  * After a call: log it on the CRM record, create follow-ups, book the meeting the person agreed to, open a support
@@ -195,6 +197,9 @@ async function run(callId: string): Promise<number> {
       data: { direction: call.direction, outcome: meetingBooked ? "MEETING_BOOKED" : call.outcome, sentiment: call.sentiment, durationSec: call.durationSec, leadId, contactId },
     });
   });
+  // Campaign calls: retry unanswered ones / schedule the callback the person asked for; roll up calling-run targets.
+  await safe("follow_up_call", () => scheduleCampaignFollowUpCall(call.id));
+  await safe("run_target", () => syncRunTargetForCall(call.id));
   return results.length;
 }
 

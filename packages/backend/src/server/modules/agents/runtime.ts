@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { randomUUID } from "node:crypto";
 import type {
   BetaContentBlockParam,
+  BetaTextBlockParam,
   BetaMessage,
   BetaMessageParam,
   BetaToolResultBlockParam,
@@ -11,7 +13,6 @@ import type {
 import { env } from "@/server/core/env";
 import { keyFingerprint } from "@/server/core/platform-secrets";
 import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/admin/ai-models";
-import { fallbackModels } from "@/server/modules/admin/ops";
 import { db } from "@/server/core/db";
 import { effectiveModel } from "@/server/modules/workforce/models";
 import type { RequestContext } from "@/server/core/context";
@@ -19,12 +20,19 @@ import { isAppError } from "@/server/core/errors";
 import { requestTool, ToolDenied } from "@/server/modules/tools/gateway";
 import { getTool, loadTools, type Citable } from "@/server/modules/tools/registry";
 import { memoryForPrompt, memorySection } from "@/server/modules/brain/memory";
+import { checkSpend, recordCost } from "@/server/modules/costs/service";
+import { tokenCostMicros } from "@/server/modules/costs/prices";
+import { providerOf } from "@/server/modules/admin/ai-models";
 import type { AgentProfile } from "./profiles";
+import { breakerAllows, breakerFailure, breakerSuccess, classifyRun, fallbackChain, modelForTier, type ComplexityTier, type RouteHints } from "./router";
+import { cachedRun, CONTEXT_BUDGET, estimateTokens, readOnlyTools, requestKey, selectRelevantContext, storeContextSummary, storeRun } from "./context";
 
 /** A failure with a stable code and a message safe to show the user. `retryable` failures may be retried by the queue. */
 export class TaskError extends Error {
   /** Tokens the run had already spent when it failed (so failed work still counts against budgets and cost). */
   usage?: { model: string; inputTokens: number; outputTokens: number };
+  /** Set for provider failures: the provider error was a model / availability problem (fallback-eligible). */
+  fallbackEligible?: boolean;
   constructor(
     readonly code: string,
     message: string,
@@ -115,21 +123,55 @@ export interface RunInput {
    * company's autonomy policy for this department. Without it, every supervised tool files an approval (as before).
    */
   autonomy?: { department: string; aiEmployeeId: string | null } | null;
+  /** Execution id (the queue job id): makes cost-ledger rows idempotent per attempt. */
+  runId?: string;
+  /** Routing hints for the model router (agents/router.ts). */
+  hints?: RouteHints;
 }
 
-/** The model for a run: explicit, else the task's AI employee's configured model (only allowed ids), else the default. */
-async function modelFor(input: RunInput): Promise<string> {
-  // Platform default (Admin → AI): organization override → profile class default → platform default → AGENT_MODEL.
-  const platformDefault = await resolvePlatformModel({ organizationId: input.organizationId, profile: input.profile.key });
-  if (input.model) return effectiveModel(input.model);
-  if (!input.taskId) return platformDefault;
-  try {
-    const t = await db().agentTask.findUnique({ where: { id: input.taskId }, select: { aiEmployee: { select: { model: true } } } });
-    return t?.aiEmployee?.model ? effectiveModel(t.aiEmployee.model) : platformDefault;
-  } catch {
-    return platformDefault;
+/**
+ * The model for a run: explicit, else the AI employee's pinned model (only allowed ids), else the model router — the
+ * run's complexity tier mapped through the admin routing table (organization overrides stay pinned).
+ */
+async function modelFor(input: RunInput, tier: ComplexityTier): Promise<{ model: string; pinned: boolean }> {
+  if (input.model) return { model: effectiveModel(input.model), pinned: true };
+  if (input.taskId) {
+    try {
+      const t = await db().agentTask.findUnique({ where: { id: input.taskId }, select: { aiEmployee: { select: { model: true } } } });
+      if (t?.aiEmployee?.model) return { model: effectiveModel(t.aiEmployee.model), pinned: true };
+    } catch {
+      // fall through to routing
+    }
   }
+  try {
+    const routed = await modelForTier(input.organizationId, input.profile.key, tier);
+    if (routed) return { model: routed, pinned: false };
+  } catch {
+    // routing table unavailable: platform default below
+  }
+  // Platform default (Admin → AI): organization override → profile class default → platform default → AGENT_MODEL.
+  return { model: await resolvePlatformModel({ organizationId: input.organizationId, profile: input.profile.key }), pinned: false };
 }
+
+const bareModel = (m: string) => m.replace(/^(?:[a-z]+\.)?anthropic\./, "");
+/** Request features each model accepts (unsupported parameters would be rejected by the API). */
+function capabilities(model: string) {
+  const m = bareModel(model);
+  const firstParty = m === model;
+  return {
+    serverFallback: firstParty && /^claude-(fable-5|mythos-5|opus-5|sonnet-5-5)/.test(m),
+    compaction: firstParty && /^claude-(fable|mythos|opus-(5|4-[678])|sonnet-(5|4-6)|haiku-5-5)/.test(m),
+    effort: !/^claude-(haiku-4|3|(sonnet|opus)-4-[015])/.test(m),
+  };
+}
+
+const EFFORT: Record<ComplexityTier, "low" | "medium" | "high"> = { simple: "low", standard: "medium", complex: "high" };
+/** History size (input tokens) at which the provider summarizes earlier turns (server-side compaction). */
+const COMPACT_AT = 120_000;
+/** Most alternative models one call may try after a provider failure (retry limit). */
+const MAX_FALLBACK_ATTEMPTS = 3;
+/** Output tokens assumed when checking a budget before a call (the real spend is recorded after). */
+const ESTIMATED_OUTPUT_TOKENS = 1_500;
 
 /** Lines starting with REMEMBER: in a deliverable are saved to the AI employee's memory (and removed from the output). */
 export const REMEMBER_LINE = /^\s*REMEMBER:\s*(.+)$/gim;
@@ -139,8 +181,18 @@ export interface RunResult {
   citations: Citation[];
   toolCalls: ToolCallRecord[];
   model: string;
+  /** All prompt tokens processed (uncached + cache writes + cache reads), so token budgets never undercount. */
   inputTokens: number;
   outputTokens: number;
+  /** Prompt-cache reads / writes included in inputTokens. */
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  /** Cost recorded in the cost ledger for this run (micro-USD). */
+  costMicros?: number;
+  /** Complexity tier the router chose. */
+  tier?: ComplexityTier;
+  /** Set when an identical read-only request was answered from the dedup cache (no model call, no cost). */
+  reusedFromTaskId?: string | null;
 }
 
 
@@ -155,6 +207,13 @@ export async function runTask(input: RunInput): Promise<RunResult> {
   const toolCalls: ToolCallRecord[] = [];
   let inputTokens = 0;
   let outputTokens = 0;
+  let cacheReadTokens = 0;
+  let cacheWriteTokens = 0;
+  let costMicros = 0;
+  const runId = input.runId ?? randomUUID();
+  const department = input.autonomy?.department ?? profile.department ?? "operations";
+  const aiEmployeeId = input.autonomy?.aiEmployeeId ?? null;
+  const spendScope = { organizationId, companyId, department, aiEmployeeId, taskId: input.taskId };
 
   const companyFacts = [
     `Company: ${input.company.name}`,
@@ -179,17 +238,17 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     : "";
   // Company memory (brain/memory.ts): pinned facts plus those most relevant to this task, if the principal may read them.
   const companyMemory = memorySection(await memoryForPrompt(ctx, organizationId, companyId, `${input.title}\n${input.instructions}`));
-  const system = `${SYSTEM_PROMPT}\n\n${companyFacts.join("\n")}${companyMemory}\n\nYour role:\n${profile.instructions}${employeeSection}`;
+  // Prompt caching: the stable prefix (shared rules, company facts, role, employee) is one cached block; the
+  // task-specific memory follows it uncached. Tools carry a breakpoint on the last definition.
+  const stableSystem = `${SYSTEM_PROMPT}\n\n${companyFacts.join("\n")}\n\nYour role:\n${profile.instructions}${employeeSection}`;
+  const system: BetaTextBlockParam[] = [{ type: "text", text: stableSystem, cache_control: { type: "ephemeral" } }];
+  if (companyMemory.trim()) system.push({ type: "text", text: companyMemory.trim() });
   await loadTools();
   const tools: BetaToolUnion[] = offered.flatMap((t) => {
     const def = getTool(t);
     return def ? [{ name: t, description: def.description, strict: true, input_schema: def.modelSchema as BetaTool["input_schema"] }] : [];
   });
-  const messages: BetaMessageParam[] = [{ role: "user", content: `Task: ${input.title}\n\n${input.instructions}` }];
-  // Platform-wide monthly AI spend cap (Admin → AI): refuse new work once reached.
-  const budgetRefusal = await platformBudgetRefusal();
-  if (budgetRefusal) throw new TaskError(budgetRefusal, "The platform's monthly AI budget is used up; retry later");
-  let model = await modelFor(input);
+  if (tools.length) (tools[tools.length - 1] as BetaTool).cache_control = { type: "ephemeral" };
 
   const cite = (c: Citable) => {
     let source = sources.get(c.passageId);
@@ -200,6 +259,26 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     return source.ref;
   };
 
+  // Model router: complexity tier → model (admin routing table), unless the model is pinned.
+  const route = classifyRun({ profile, title: input.title, instructions: input.instructions, toolCount: tools.length, hints: input.hints });
+  // Platform-wide monthly AI spend cap (Admin → AI): refuse new work once reached.
+  const budgetRefusal = await platformBudgetRefusal();
+  if (budgetRefusal) throw new TaskError(budgetRefusal, "The platform's monthly AI budget is used up; retry later");
+  let { model } = await modelFor(input, route.tier);
+
+  // Deduplication: an identical read-only request answered within the TTL is reused (no model call, nothing spent).
+  const dedupKey = readOnlyTools(offered) ? requestKey({ companyId, profile: profile.key, system: stableSystem + companyMemory, tools: [...offered].sort(), title: input.title, instructions: input.instructions, tier: route.tier }) : null;
+  if (dedupKey) {
+    const hit = await cachedRun(companyId, dedupKey);
+    if (hit && hit.taskId !== input.taskId) {
+      return { output: hit.output, citations: hit.citations as Citation[], toolCalls: hit.toolCalls as ToolCallRecord[], model: hit.model, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, costMicros: 0, tier: route.tier, reusedFromTaskId: hit.taskId };
+    }
+  }
+
+  // Relevant-context selection: best-matching brain passages within the tier's token budget (citable up front).
+  const preload = offered.includes("search_company_brain") ? await selectRelevantContext(ctx, organizationId, companyId, input.title, CONTEXT_BUDGET[route.tier], cite) : "";
+  const messages: BetaMessageParam[] = [{ role: "user", content: `Task: ${input.title}\n\n${input.instructions}${preload}` }];
+
   /** Every tool call goes through the gateway: allow-list, schema, the requester's permissions, autonomy policy. */
   async function runTool(name: string, rawInput: unknown): Promise<string> {
     const r = await requestTool(name, rawInput, { ctx, organizationId, companyId, allowedTools: offered, profileKey: profile.key, taskId: input.taskId, cite, autonomy: input.autonomy ?? undefined });
@@ -209,6 +288,54 @@ export async function runTask(input: RunInput): Promise<RunResult> {
     return r.content;
   }
 
+  const call = (m: string) => {
+    const cap = capabilities(m);
+    const betas: string[] = [];
+    if (cap.serverFallback) betas.push("server-side-fallback-2026-07-01");
+    if (cap.compaction) betas.push("compact-2026-01-12");
+    return callModel({
+      model: m,
+      max_tokens: MAX_TOKENS,
+      system,
+      tools,
+      messages,
+      // Automatic caching of the growing conversation (the last cacheable block), on top of the explicit breakpoints.
+      cache_control: { type: "ephemeral" },
+      ...(cap.effort ? { output_config: { effort: EFFORT[route.tier] } } : {}),
+      // Route policy declines to the default fallback model instead of failing the task.
+      ...(cap.serverFallback ? { fallbacks: "default" as const } : {}),
+      // Long histories are summarized by the provider (summary returned as a compaction block, stored below).
+      ...(cap.compaction ? { context_management: { edits: [{ type: "compact_20260112" as const, trigger: { type: "input_tokens" as const, value: COMPACT_AT } }] } } : {}),
+      ...(betas.length ? { betas } : {}),
+    });
+  };
+
+  /** One model call with circuit breaker, automatic fallback on provider errors and a retry limit. */
+  async function callWithFallback(): Promise<BetaMessage> {
+    const chain = [model, ...(await fallbackChain(organizationId, profile.key, model, route.tier).catch(() => [] as string[]))];
+    let lastErr: unknown = null;
+    let attempts = 0;
+    for (const m of chain) {
+      if (attempts > MAX_FALLBACK_ATTEMPTS) break;
+      if (!breakerAllows(m)) continue;
+      attempts++;
+      try {
+        const res = await call(m);
+        breakerSuccess(m);
+        if (m !== model) model = m;
+        return res;
+      } catch (err) {
+        lastErr = err;
+        const mapped = providerError(err);
+        // Credentials / request errors are not the model's fault: no breaker trip, no fallback.
+        if (!mapped.fallbackEligible) throw mapped;
+        breakerFailure(m);
+      }
+    }
+    if (lastErr === null) throw new TaskError("provider_unavailable", "Every AI model for this task is temporarily paused after repeated provider errors; retry shortly", true);
+    throw providerError(lastErr);
+  }
+
   try {
     for (let turn = 0; turn < profile.maxTurns; turn++) {
       if (await input.isCancelled()) throw new TaskError("cancelled", "The task was cancelled");
@@ -216,48 +343,54 @@ export async function runTask(input: RunInput): Promise<RunResult> {
       if (input.tokenCeiling != null && inputTokens + outputTokens >= input.tokenCeiling) {
         throw new TaskError("employee_over_budget", "The AI budget was reached during this task; raise the budget or retry next month");
       }
+      // Cost budgets (task / AI employee / department / company): checked before every model call — hard stop.
+      const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(stableSystem + companyMemory + JSON.stringify(messages)), outputTokens: ESTIMATED_OUTPUT_TOKENS });
+      const spend = await checkSpend(spendScope, estimate);
+      if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}, so the task stopped before spending more. Raise the budget in Costs or retry next period.`);
 
-      const call = (m: string) =>
-        callModel({
-          model: m,
-          max_tokens: MAX_TOKENS,
-          system,
-          tools,
-          messages,
-          output_config: { effort: "medium" },
-          // Route policy declines to the default fallback model instead of failing the task.
-          betas: ["server-side-fallback-2026-07-01"],
-          fallbacks: "default",
-        });
-      let response: BetaMessage;
-      try {
-        response = await call(model);
-      } catch (err) {
-        if (!modelUnavailable(err)) throw providerError(err);
-        // The model is unavailable: try the platform's fallback chain (Admin → AI routing), keeping the first that works.
-        let recovered: BetaMessage | null = null;
-        let lastErr: unknown = err;
-        for (const alt of await fallbackModels(model).catch(() => [] as string[])) {
-          try {
-            recovered = await call(alt);
-            model = alt;
-            break;
-          } catch (e) {
-            lastErr = e;
-            if (!modelUnavailable(e)) break;
-          }
-        }
-        if (!recovered) throw providerError(lastErr);
-        response = recovered;
+      const response = await callWithFallback();
+      const u = response.usage;
+      const read = u.cache_read_input_tokens ?? 0;
+      const write = u.cache_creation_input_tokens ?? 0;
+      inputTokens += u.input_tokens + read + write;
+      outputTokens += u.output_tokens;
+      cacheReadTokens += read;
+      cacheWriteTokens += write;
+      const servedBy = response.model || model;
+      const turnCost = await tokenCostMicros(servedBy, { inputTokens: u.input_tokens, outputTokens: u.output_tokens, cacheReadTokens: read, cacheWriteTokens: write });
+      costMicros += turnCost;
+      await recordCost({
+        organizationId,
+        companyId,
+        category: "AI_TOKENS",
+        provider: providerOf(servedBy),
+        model: servedBy,
+        operation: "agent.turn",
+        department,
+        aiEmployeeId,
+        taskId: input.taskId,
+        sourceType: "agent_turn",
+        sourceId: `${input.taskId ?? "adhoc"}:${runId}:${turn}`,
+        inputTokens: u.input_tokens,
+        outputTokens: u.output_tokens,
+        cachedTokens: read,
+        cacheWriteTokens: write,
+        units: u.input_tokens + read + write + u.output_tokens,
+        unit: "token",
+        costMicros: turnCost,
+        meta: { tier: route.tier, profile: profile.key, routed: servedBy !== model ? "fallback" : "primary" },
+      });
+
+      // Server-side compaction summarized earlier turns: keep the summary as a stored context summary.
+      for (const block of response.content) {
+        if (block.type === "compaction" && block.content) await storeContextSummary({ organizationId, companyId }, input.taskId, servedBy, block.content, u.input_tokens + read + write);
       }
-      inputTokens += response.usage.input_tokens;
-      outputTokens += response.usage.output_tokens;
 
       if (response.stop_reason === "refusal") throw new TaskError("refused", "The AI declined this task");
       if (response.stop_reason === "max_tokens") throw new TaskError("output_too_long", "The deliverable exceeded the output limit; narrow the task");
       messages.push({ role: "assistant", content: response.content as BetaContentBlockParam[] });
 
-      if (response.stop_reason === "pause_turn") continue;
+      if (response.stop_reason === "pause_turn" || (response.stop_reason as string) === "compaction") continue;
       if (response.stop_reason === "tool_use") {
         const results: BetaToolResultBlockParam[] = [];
         for (const block of response.content) {
@@ -280,7 +413,9 @@ export async function runTask(input: RunInput): Promise<RunResult> {
         .join("")
         .trim();
       if (!output) throw new TaskError("empty_output", "The AI returned no deliverable");
-      return { output, citations: citationsIn(output, sources), toolCalls, model: response.model, inputTokens, outputTokens };
+      const result: RunResult = { output, citations: citationsIn(output, sources), toolCalls, model: response.model, inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, costMicros, tier: route.tier, reusedFromTaskId: null };
+      if (dedupKey) await storeRun({ organizationId, companyId }, dedupKey, { output, citations: result.citations, toolCalls, model: response.model, taskId: input.taskId });
+      return result;
     }
     throw new TaskError("turn_limit", `The task needed more than ${profile.maxTurns} steps; split it into smaller tasks`);
   } catch (err) {
@@ -320,6 +455,13 @@ function modelUnavailable(err: unknown): boolean {
 /** Map SDK errors to task errors; messages never include provider responses or credentials. */
 function providerError(err: unknown): TaskError {
   if (err instanceof TaskError) return err;
+  const e = providerErrorBase(err);
+  // Model / availability problems may succeed on another model; credentials and request errors would not.
+  e.fallbackEligible = modelUnavailable(err) || e.code === "provider_unavailable" || e.code === "provider_error";
+  return e;
+}
+
+function providerErrorBase(err: unknown): TaskError {
   if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
     return new TaskError("provider_auth", "The AI provider rejected the configured credentials");
   }

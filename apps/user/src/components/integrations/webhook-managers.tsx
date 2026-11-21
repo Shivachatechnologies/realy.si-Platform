@@ -55,9 +55,16 @@ export function CopyText({ value, label }: { value: string; label: string }) {
   );
 }
 
-const VERIFICATIONS = ["TOKEN", "HMAC_SHA256", "STRIPE", "GITHUB", "SHOPIFY", "SLACK"] as const;
+const VERIFICATIONS = ["TOKEN", "HMAC_SHA256", "STRIPE", "GITHUB", "SHOPIFY", "SLACK", "TWILIO", "CALENDLY", "META", "ELEVENLABS", "ZENDESK", "INTERCOM"] as const;
 type Verification = (typeof VERIFICATIONS)[number];
-const PRESET_HEADERS: Partial<Record<Verification, string>> = { STRIPE: "Stripe-Signature", GITHUB: "X-Hub-Signature-256", SHOPIFY: "X-Shopify-Hmac-Sha256", SLACK: "X-Slack-Signature" };
+const PRESET_HEADERS: Partial<Record<Verification, string>> = { STRIPE: "Stripe-Signature", GITHUB: "X-Hub-Signature-256", SHOPIFY: "X-Shopify-Hmac-Sha256", SLACK: "X-Slack-Signature",
+  TWILIO: "X-Twilio-Signature",
+  CALENDLY: "Calendly-Webhook-Signature",
+  META: "X-Hub-Signature-256",
+  ELEVENLABS: "ElevenLabs-Signature",
+  ZENDESK: "X-Zendesk-Webhook-Signature",
+  INTERCOM: "X-Hub-Signature",
+};
 const isPreset = (v: Verification) => v in PRESET_HEADERS;
 
 export function NewHookForm({ base }: { base: string }) {

@@ -160,7 +160,8 @@ export async function receiveHook(hookId: string, raw: string, headers: Headers,
   if (Buffer.byteLength(raw) > MAX_HOOK_BODY) return { status: 413, body: { error: "payload_too_large" } };
 
   const secret = decryptSecret(hook.secretEnc, hookPurpose(hook.id));
-  const check = verifyHookSignature({ verification: hook.verification, secret, raw, headers, query, signatureHeader: hook.signatureHeader });
+  const qs = query.toString();
+  const check = verifyHookSignature({ verification: hook.verification, secret, raw, headers, query, signatureHeader: hook.signatureHeader, url: `${hookUrl(hook.id)}${qs ? `?${qs}` : ""}` });
   const contentType = headers.get("content-type")?.slice(0, 100) ?? null;
   if (!check.ok) {
     await db().integrationHookDelivery.create({ data: { organizationId: hook.organizationId, companyId: hook.companyId, hookId: hook.id, status: "REJECTED", contentType, error: check.reason.slice(0, 200), ip } });
