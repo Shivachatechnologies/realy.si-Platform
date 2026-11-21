@@ -4,6 +4,20 @@ import { isAppLocale, LOCALE_COOKIE } from "@/i18n/config";
 import { negotiateLocale } from "@/i18n/negotiate";
 import { buildCsp, newNonce } from "@/server/core/security-headers";
 
+/** Common URLs people (and the landing site) link to that are not this app's routes: redirect, never 404. */
+const ALIASES: Record<string, string> = {
+  login: "sign-in",
+  "log-in": "sign-in",
+  signin: "sign-in",
+  "sign_in": "sign-in",
+  signup: "sign-up",
+  "sign_up": "sign-up",
+  register: "sign-up",
+  "get-started": "sign-up",
+  dashboard: "",
+  app: "",
+};
+
 /**
  * User app proxy (apps/user, app.realy.si):
  *   1. Locale-prefix routing.
@@ -30,6 +44,13 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
   const page = rest.filter(Boolean);
+  if (!companySite && page.length === 1 && Object.hasOwn(ALIASES, page[0].toLowerCase())) {
+    const url = req.nextUrl.clone();
+    // Already signed in: "Login"/"Get started" links go straight to the Command Center.
+    const target = req.cookies.get(SESSION_COOKIES.user)?.value ? "" : ALIASES[page[0].toLowerCase()];
+    url.pathname = `/${first}${target ? `/${target}` : ""}`;
+    return NextResponse.redirect(url);
+  }
   if (!companySite && page[0] === "admin") {
     const adminUrl = process.env.ADMIN_URL;
     if (adminUrl) return NextResponse.redirect(new URL(`/${first}${page.length > 1 ? `/${page.slice(1).join("/")}` : ""}${req.nextUrl.search}`, adminUrl));
