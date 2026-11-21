@@ -5,7 +5,7 @@
   "description": "Realy Control Center (admin.realy.si): platform administration only. Never runs database migrations.",
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "pnpm --filter @realy/database run generate && NODE_OPTIONS=--max-old-space-size=6144 next build",
+    "build": "pnpm --filter @realy/database run generate && NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit"
   },

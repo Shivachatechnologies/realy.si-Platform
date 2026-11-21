@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
   // Every HTML response is rendered per request: the proxy's nonce CSP and the console gate need it.
   cacheComponents: false,
   poweredByHeader: false,
+  // Vercel's 8 GB build machine: Turbopack's native memory plus a full TypeScript pass no longer fit together.
+  // Types are checked separately (`pnpm typecheck`, CI) so the build itself skips the type pass; no server source maps.
+  typescript: { ignoreBuildErrors: process.env.VERCEL === "1" },
+  experimental: { serverSourceMaps: false },
   // Inlined at build time: selects the admin session cookie in @realy/auth-core (shared backend code).
   env: { REALY_APP: "admin" },
   serverExternalPackages: ["@node-rs/argon2", "pino", "@sentry/node"],

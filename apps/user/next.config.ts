@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   // response to be rendered per request (Next.js docs: PPR static shells cannot carry a nonce).
   cacheComponents: false,
   poweredByHeader: false,
+  // Vercel's 8 GB build machine: Turbopack's native memory plus a full TypeScript pass no longer fit together.
+  // Types are checked separately (`pnpm typecheck`, CI) so the build itself skips the type pass; no server source maps.
+  typescript: { ignoreBuildErrors: process.env.VERCEL === "1" },
+  experimental: { serverSourceMaps: false },
   // Inlined at build time: selects this app's session cookie in @realy/auth-core (shared backend code).
   env: { REALY_APP: "user" },
   // Native/server-only packages stay external to the server bundle.
