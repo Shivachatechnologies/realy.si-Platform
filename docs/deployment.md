@@ -39,9 +39,9 @@ Set the **same values on web and worker** unless the column says otherwise. Ever
 | `APP_URL` | ✓ | ✓ | Public base URL (OAuth redirect URIs, webhook URLs, email links). |
 | `NODE_ENV` | ✓ | ✓ | `production`. |
 
-### Platform / surfaces (optional)
+### Platform (optional) — two apps, see [architecture/apps.md](architecture/apps.md)
 
-`APP_SURFACE`, `ADMIN_URL`, `USER_APP_URL`, `REALY_BOOTSTRAP_ADMIN_EMAIL`, `TRUSTED_PROXY_HOPS` (Vercel: `1`),
+`ADMIN_URL` (user app), `USER_APP_URL` (admin app), `REALY_BOOTSTRAP_ADMIN_EMAIL`, `TRUSTED_PROXY_HOPS` (Vercel: `1`),
 `SKIP_DB_MIGRATIONS`, `RUN_DB_MIGRATIONS`, `LOG_LEVEL`, `APP_VERSION` / `GIT_SHA` (shown in worker heartbeats).
 
 ### AI, email, billing, observability (optional, both services)
@@ -93,7 +93,8 @@ keys under Integrations; they are verified with the provider before the connecti
 | Framework preset | Next.js |
 | Node.js version | 22.x |
 | Install command | `pnpm install --frozen-lockfile` |
-| Build command | `pnpm build` (= `prisma generate` → `scripts/deploy-db.mjs` → `next build`). On Vercel (`VERCEL=1`) the build applies pending migrations (`prisma migrate deploy`, using `DIRECT_DATABASE_URL`) and the idempotent reference-data seed. `SKIP_DB_MIGRATIONS=true` builds without touching the database. |
+| Root directory | `apps/user` (user app) · `apps/admin` (Control Center, second project — see [architecture/apps.md](architecture/apps.md)) |
+| Build command | `pnpm run build` from `vercel.json` (user: `prisma generate` → `scripts/deploy-db.mjs` → `next build`; admin: no migrations). On Vercel (`VERCEL=1`) the build applies pending migrations (`prisma migrate deploy`, using `DIRECT_DATABASE_URL`) and the idempotent reference-data seed. `SKIP_DB_MIGRATIONS=true` builds without touching the database. |
 | Output | default (`.next`) |
 | Function region | the region of the database and Redis |
 | Environment variables | §2, for Production and Preview (Preview should use its own database and Redis) |
@@ -114,10 +115,20 @@ keys under Integrations; they are verified with the provider before the connecti
 
 ## 5. Worker service
 
-**Command:** `node_modules/.bin/tsx src/worker/index.ts` (in the image) · `pnpm worker` (locally).
+**Command:** `node_modules/.bin/tsx src/worker/index.ts` (in the image's `worker` target, working directory `/app/packages/backend`) · `pnpm worker` (locally).
 **Image:** `docker build --target worker .` (or the default image with the command override).
 **Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker + Redis), `deploy/worker/fly.toml`
 (Fly.io), `deploy/worker/worker.env.example` (variable names), `docker-compose.yml` profile `app` (local full stack).
+
+**Running server modules outside Next.** The worker loads the same `src/server/**` modules as the web apps, many of
+which start with `import "server-only"`. Next resolves that marker to an empty module (`react-server` condition);
+plain Node takes the package's default entry, which throws. `src/worker/index.ts` therefore imports
+`src/worker/preload.ts` **first**: it redirects `server-only` to the package's empty module (a CommonJS
+`Module._resolveFilename` wrapper — tsx runs this package as CommonJS — plus `module.registerHooks` for ESM imports on
+Node ≥ 22.15) and points the app-provided `@/i18n/server` at `src/worker/i18n-server.ts` (user catalogs;
+`DEFAULT_LOCALE` when a job passes no locale). The web apps never import the preload, so Next behaviour is unchanged.
+Keep `import "./preload"` the first import of the worker entry; any other tsx entry that loads server modules must
+import it first too.
 
 What it runs:
 
@@ -161,7 +172,7 @@ to start without `REDIS_URL`.
 
 1. Build and push the image (or let Vercel build the web app).
 2. Apply migrations once: on Vercel this happens in the build; elsewhere run
-   `node_modules/.bin/prisma migrate deploy` (then `node_modules/.bin/tsx prisma/seed.ts` with `SEED_DEV_CATALOG=false`).
+   `node_modules/.bin/prisma migrate deploy` in `/app/packages/database` (then `node_modules/.bin/tsx prisma/seed.ts` with `SEED_DEV_CATALOG=false`).
    Migrations are additive, so old web/worker versions keep working while the new ones roll out.
 3. Deploy the web app, then roll the worker (rolling restart; each replica drains on SIGTERM).
 4. Verify: `GET /api/health/ready` → `status: "ready"`, `checks.worker: "ok"`; Admin → System → Background jobs shows the

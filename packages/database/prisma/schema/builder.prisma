@@ -1,0 +1,236 @@
+// ───────────────────────────── AI Company Builder ─────────────────────────────
+// A BuilderRun turns a founder's brief (new idea or existing business) into a working company: ordered steps each run
+// as a real AI task (agents module), their deliverables are saved in Company Brain, structural steps are converted
+// into a generated marketplace manifest and installed with the marketplace installer. Decisions that need the founder
+// (name, structure, configuration) pause the run until they are decided. Permissions: companies.read / companies.manage.
+
+enum BuilderRunMode {
+  NEW_IDEA
+  EXISTING
+  IMPORT
+}
+
+enum BuilderRunStatus {
+  /// Created; the founder is still adding sources (existing business) before starting.
+  DRAFT
+  RUNNING
+  WAITING_INPUT
+  FAILED
+  COMPLETED
+  CANCELLED
+}
+
+enum BuilderStepStatus {
+  PENDING
+  RUNNING
+  /// Claimed by one worker while its output is converted and applied.
+  APPLYING
+  WAITING_INPUT
+  COMPLETED
+  FAILED
+  SKIPPED
+  CANCELLED
+}
+
+enum BuilderDecisionStatus {
+  OPEN
+  DECIDED
+}
+
+enum BuilderSourceStatus {
+  INGESTED
+  FAILED
+}
+
+model BuilderRun {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  mode           BuilderRunMode
+  status         BuilderRunStatus @default(DRAFT)
+  /// The founder's answers (builder/brief.ts → briefSchema).
+  brief          Json
+  websiteUrl     String?          @map("website_url")
+  /// The marketplace installation that holds everything this run installed (listingKey "builder/<runId>").
+  installationId String?          @map("installation_id") @db.Uuid
+  errorMessage   String?          @map("error_message")
+  createdById    String           @map("created_by_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  startedAt      DateTime?        @map("started_at") @db.Timestamptz(3)
+  /// Created by the 6-stage onboarding journey (journey step list: research → blueprint → workforce → post-launch).
+  journey        Boolean          @default(false)
+  completedAt    DateTime?        @map("completed_at") @db.Timestamptz(3)
+
+  company   Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  steps     BuilderStep[]
+  decisions BuilderDecision[]
+  sources   BuilderSource[]
+  kitItems  BuilderKitItem[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([status])
+  @@map("builder_runs")
+}
+
+model BuilderStep {
+  id              String            @id @default(uuid(7)) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  companyId       String            @map("company_id") @db.Uuid
+  runId           String            @map("run_id") @db.Uuid
+  /// Step key (builder/steps.ts).
+  key             String
+  position        Int
+  status          BuilderStepStatus @default(PENDING)
+  /// Role profile that does the step's AI task (null for system steps).
+  profile         String?
+  agentTaskId     String?           @map("agent_task_id") @db.Uuid
+  brainDocumentId String?           @map("brain_document_id") @db.Uuid
+  /// Parsed structured output (zod-validated) for structural steps.
+  data            Json?
+  /// What applying the step created (installer summary, products, finance items).
+  result          Json?
+  /// Founder feedback for a re-run of this step.
+  feedback        String?
+  errorCode       String?           @map("error_code")
+  errorMessage    String?           @map("error_message")
+  /// Validation issues of the AI's structured output, shown as they are.
+  errorIssues     String[]          @default([]) @map("error_issues")
+  attempts        Int               @default(0)
+  startedAt       DateTime?         @map("started_at") @db.Timestamptz(3)
+  completedAt     DateTime?         @map("completed_at") @db.Timestamptz(3)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     BuilderRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, key])
+  @@unique([id, companyId])
+  @@index([agentTaskId])
+  @@map("builder_steps")
+}
+
+model BuilderDecision {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  companyId      String                @map("company_id") @db.Uuid
+  runId          String                @map("run_id") @db.Uuid
+  stepId         String                @map("step_id") @db.Uuid
+  /// NAME | STRUCTURE | CONFIGURATION | BLUEPRINT | WORKFORCE (the last two are approved in the onboarding journey editor)
+  kind           String
+  status         BuilderDecisionStatus @default(OPEN)
+  /// What the founder chooses from (e.g. name ideas, the proposed manifest).
+  options        Json
+  /// What the founder decided ({ action: "approve" | "revise", value?, feedback? }).
+  choice         Json?
+  decidedById    String?               @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?             @map("decided_at") @db.Timestamptz(3)
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     BuilderRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([runId, status])
+  @@map("builder_decisions")
+}
+
+/// What an existing-business run learned from: website pages fetched into Brain, uploaded documents, imports.
+model BuilderSource {
+  id              String              @id @default(uuid(7)) @db.Uuid
+  organizationId  String              @map("organization_id") @db.Uuid
+  companyId       String              @map("company_id") @db.Uuid
+  runId           String              @map("run_id") @db.Uuid
+  /// website_page | document | web_result
+  kind            String
+  url             String?
+  title           String
+  status          BuilderSourceStatus
+  brainDocumentId String?             @map("brain_document_id") @db.Uuid
+  errorMessage    String?             @map("error_message")
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     BuilderRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([runId])
+  @@map("builder_sources")
+}
+
+/// Where a user is in the onboarding journey (server-side, so returning users resume where they left).
+model BuilderOnboarding {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  userId       String    @unique @map("user_id") @db.Uuid
+  /// Legacy 10-stage journey index (kept for old rows; the 6-stage journey uses journeyStage).
+  stage        Int       @default(1)
+  /// Sub-step inside the first two stages (profile, workspace, plan, business, questions).
+  wizardStep   String?   @map("wizard_step")
+  /// Setup sub-steps the user has finished.
+  done         String[]  @default([])
+  runId        String?   @map("run_id") @db.Uuid
+  /// Stage key of the 6-stage journey (welcome, vision, intelligence, blueprint, workforce, launch).
+  journeyStage String?   @map("journey_stage")
+  /// Saved-but-unsubmitted answers: { vision, blueprint: { runId, value }, workforce: { runId, value } } (builder/journey.ts).
+  draft        Json      @default("{}")
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("builder_onboarding")
+}
+
+// ───────────── Founder Kit ─────────────
+// Every deliverable a first-time founder needs (idea refinement → AI workforce), each a real AI deliverable: an agent task
+// whose output is kept here (editable Markdown + validated structured part) and saved as a Company Brain document. The
+// logo is generated through the integrations image service into the assets module. "Turn this into action" creates real
+// records through the owning modules' services; what was created is listed in `actions`.
+
+enum BuilderKitItemStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+  /// A provider credential is missing (e.g. image generation for the logo); nothing was generated.
+  NEEDS_SETUP
+}
+
+model BuilderKitItem {
+  id              String               @id @default(uuid(7)) @db.Uuid
+  organizationId  String               @map("organization_id") @db.Uuid
+  companyId       String               @map("company_id") @db.Uuid
+  runId           String               @map("run_id") @db.Uuid
+  /// Deliverable key (builder/kit.ts → KIT).
+  key             String
+  status          BuilderKitItemStatus @default(PENDING)
+  agentTaskId     String?              @map("agent_task_id") @db.Uuid
+  brainDocumentId String?              @map("brain_document_id") @db.Uuid
+  /// The deliverable as Markdown (AI output, or the founder's edited version).
+  content         String?
+  /// Validated structured part (personas, canvas, pricing tiers, roadmap, forecast, sources, logo asset ids…).
+  data            Json?
+  /// The founder edited the AI's version.
+  edited          Boolean              @default(false)
+  feedback        String?
+  approvedAt      DateTime?            @map("approved_at") @db.Timestamptz(3)
+  approvedById    String?              @map("approved_by_id") @db.Uuid
+  /// Records created from this deliverable: [{ kind, id, label, at }].
+  actions         Json                 @default("[]")
+  errorCode       String?              @map("error_code")
+  errorMessage    String?              @map("error_message")
+  errorIssues     String[]             @default([]) @map("error_issues")
+  attempts        Int                  @default(0)
+  generatedAt     DateTime?            @map("generated_at") @db.Timestamptz(3)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     BuilderRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, key])
+  @@unique([id, companyId])
+  @@index([agentTaskId])
+  @@index([status])
+  @@map("builder_kit_items")
+}

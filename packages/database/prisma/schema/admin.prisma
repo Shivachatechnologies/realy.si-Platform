@@ -1,0 +1,20 @@
+// Admin Control Center: internal notes platform staff keep about users and organizations (never shown to tenants).
+// Written only by platform administrators; every note audited (platform.note_added / platform.note_deleted).
+
+enum AdminNoteTarget {
+  USER
+  ORGANIZATION
+}
+
+model AdminNote {
+  id         String          @id @default(uuid(7)) @db.Uuid
+  targetType AdminNoteTarget @map("target_type")
+  targetId   String          @map("target_id") @db.Uuid
+  body       String
+  pinned     Boolean         @default(false)
+  authorId   String          @map("author_id") @db.Uuid
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([targetType, targetId, createdAt])
+  @@map("admin_notes")
+}

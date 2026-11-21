@@ -1,0 +1,121 @@
+// Platform CMS & website builder (Admin Control Center → Content). Platform-level, not tenant data: written only by
+// platform administrators (platform.content.manage), every change audited. Public pages render only the published
+// snapshot (apps/user /[locale]/pages/[slug]); drafts never leave the Control Center.
+
+enum CmsEntryKind {
+  PAGE
+  POST
+  LANDING
+}
+
+enum CmsEntryStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+/// One page, blog post or landing page. Content for every locale lives in `draft` (validated by
+/// modules/cms/schemas.ts: { locales: { "<locale>": { title, summary, seo…, blocks[] } } }). `published` is the live
+/// snapshot; `pending` + `publishAt` is a scheduled snapshot that goes live at that time.
+model CmsEntry {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  kind        CmsEntryKind
+  /// URL slug, unique across kinds (served at /[locale]/pages/<slug>).
+  slug        String         @unique
+  status      CmsEntryStatus @default(DRAFT)
+  draft       Json
+  published   Json?
+  pending     Json?
+  publishAt   DateTime?      @map("publish_at") @db.Timestamptz(3)
+  publishedAt DateTime?      @map("published_at") @db.Timestamptz(3)
+  /// Version number of the live snapshot (cms_entry_versions.version).
+  liveVersion Int?           @map("live_version")
+  createdById String         @map("created_by_id") @db.Uuid
+  updatedById String         @map("updated_by_id") @db.Uuid
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  versions CmsEntryVersion[]
+
+  @@index([kind, status])
+  @@map("cms_entries")
+}
+
+/// Immutable snapshot taken on every publish / schedule (rollback restores one into the draft).
+model CmsEntryVersion {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  entryId     String   @map("entry_id") @db.Uuid
+  version     Int
+  content     Json
+  note        String   @default("")
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  entry CmsEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, version])
+  @@map("cms_entry_versions")
+}
+
+/// Uploaded website media, stored through the integrations storage service in the platform's media company
+/// (S3 when connected, else the bounded database fallback). `ref` is the storage reference for fresh signed URLs.
+model CmsMedia {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  ref            String
+  backend        String
+  fileName       String   @map("file_name")
+  contentType    String   @map("content_type")
+  size           Int
+  alt            String   @default("")
+  createdById    String   @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@map("cms_media")
+}
+
+enum PlatformEmailTemplateStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// Platform transactional email template for one key and locale. `{{variable}}` placeholders; the email service uses
+/// the published subject/body when present and falls back to the built-in catalog text otherwise.
+model PlatformEmailTemplate {
+  id               String                      @id @default(uuid(7)) @db.Uuid
+  key              String
+  locale           String
+  subject          String
+  body             String
+  status           PlatformEmailTemplateStatus @default(DRAFT)
+  publishedSubject String?                     @map("published_subject")
+  publishedBody    String?                     @map("published_body")
+  publishedAt      DateTime?                   @map("published_at") @db.Timestamptz(3)
+  version          Int                         @default(0)
+  updatedById      String                      @map("updated_by_id") @db.Uuid
+  createdAt        DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([key, locale])
+  @@map("platform_email_templates")
+}
+
+/// A platform announcement delivered as in-app notifications to the members of all or selected organizations.
+model PlatformAnnouncement {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  title       String
+  body        String   @default("")
+  href        String   @default("/")
+  /// "all" or the list of organization ids.
+  audience    Json
+  orgCount    Int      @map("org_count")
+  recipients  Int
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@map("platform_announcements")
+}

@@ -12,23 +12,48 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/server/*": [
+        "./packages/backend/src/server/*"
+      ],
+      "@/worker/*": [
+        "./packages/backend/src/worker/*"
+      ],
+      "@/generated/*": [
+        "./packages/database/src/generated/*"
+      ],
+      "@/lib/*": [
+        "./packages/shared-utils/src/lib/*"
+      ],
+      "@/i18n/*": [
+        "./packages/shared-utils/src/i18n/*"
+      ],
+      "@realy/auth-core": [
+        "./packages/auth-core/src/index.ts"
+      ],
+      "@realy/shared-types/*": [
+        "./packages/shared-types/src/*"
+      ],
+      "@/i18n/messages/*": [
+        "./apps/user/src/i18n/messages/*"
+      ],
+      "@/i18n/server": [
+        "./apps/user/src/i18n/server.ts"
+      ],
+      "@/lib/api-client": [
+        "./packages/api-client/src/user.ts"
+      ],
+      "@/app/api/v1/admin/*": [
+        "./apps/admin/src/app/api/v1/admin/*"
+      ],
+      "@/components/admin/*": [
+        "./apps/admin/src/components/admin/*"
+      ],
+      "@/*": [
+        "./apps/user/src/*"
+      ]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules", "scripts/split/templates"]
+  "include": ["tests/**/*.ts", "scripts/**/*.ts", "*.ts", "*.mts", "apps/user/.next/types/**/*.ts"],
+  "exclude": ["node_modules", "scripts/split"]
 }

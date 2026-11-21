@@ -1,0 +1,63 @@
+// ───────────────────────────── Marketing: "Run my marketing" (autonomous end-to-end loop) ─────────────────────────────
+// Owned by the marketing module (src/server/modules/marketing/run.ts). Permissions: marketing.read / marketing.manage.
+// One run chains real records: research reports → strategy plan → campaign + per-channel autopilots + SEO articles +
+// newsletters → publishing → metrics → optimizations. Every step is appended to `log`; counts are read live from rows.
+
+enum MarketingRunStatus {
+  RESEARCHING
+  PLANNING
+  AWAITING_APPROVAL
+  LAUNCHING
+  RUNNING
+  BLOCKED
+  PAUSED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+/// How much the run may do without the founder. Spend changes (ad budgets) always need a person.
+enum MarketingRunAutonomy {
+  /// The founder approves the plan and reviews every post, article and email.
+  REVIEW_EVERYTHING
+  /// The founder approves the plan; posts and articles then publish by themselves, low-risk optimizations apply
+  /// themselves, newsletters wait for approval.
+  APPROVE_PLAN
+  /// Plan approval, publishing, newsletter scheduling and low-risk optimizations run by themselves.
+  FULL_AUTOPILOT
+}
+
+model MarketingRun {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  companyId        String               @map("company_id") @db.Uuid
+  status           MarketingRunStatus   @default(RESEARCHING)
+  autonomy         MarketingRunAutonomy @default(APPROVE_PLAN)
+  /// { productIds, audience, regions, budget (major units string), periodDays, note, competitors }
+  inputs           Json                 @default("{}")
+  researchIds      String[]             @default([]) @map("research_ids")
+  planId           String?              @map("plan_id") @db.Uuid
+  campaignId       String?              @map("campaign_id") @db.Uuid
+  autopilotIds     String[]             @default([]) @map("autopilot_ids")
+  seoProjectId     String?              @map("seo_project_id") @db.Uuid
+  /// [{ kind: "article"|"newsletter", taskId, contentId?, emailCampaignId?, state, at }]
+  artifacts        Json                 @default("[]")
+  /// [{ at, step, outcome: "done"|"waiting"|"blocked"|"failed"|"skipped", detail, href? }]
+  log              Json                 @default("[]")
+  blockedReason    String?              @map("blocked_reason")
+  error            String?
+  lastTickAt       DateTime?            @map("last_tick_at") @db.Timestamptz(3)
+  nextArticleAt    DateTime?            @map("next_article_at") @db.Timestamptz(3)
+  nextNewsletterAt DateTime?            @map("next_newsletter_at") @db.Timestamptz(3)
+  createdById      String               @map("created_by_id") @db.Uuid
+  completedAt      DateTime?            @map("completed_at") @db.Timestamptz(3)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([companyId, status])
+  @@index([status, lastTickAt])
+  @@map("marketing_runs")
+}

@@ -1,0 +1,285 @@
+// AI Command pipeline: every command a founder gives becomes a persisted run with an understanding of the request
+// (intents, company facts, knowledge it drew on) and an explicit plan of steps. Each step is delegated to an AI
+// employee as a real agent task; the stages shown in the UI (Understanding → Planning → Delegation → Execution →
+// Review → Completion) are derived only from these rows, the agent tasks and their approvals.
+
+enum CommandRunStatus {
+  /// Plan saved, first steps being delegated.
+  PLANNED
+  /// At least one step is delegated and not all are finished.
+  RUNNING
+  /// All work steps finished; the review step is synthesizing the result.
+  REVIEWING
+  COMPLETED
+  /// Nothing could be delegated, or every work step failed.
+  FAILED
+  CANCELLED
+}
+
+enum CommandRunOrigin {
+  FOUNDER
+  CEO
+}
+
+enum CommandStepKind {
+  /// Gathers facts first (research analyst); department steps wait for it.
+  RESEARCH
+  /// One department's part of the command.
+  DEPARTMENT
+  /// Reviews the finished steps' results, writes the answer and recommends the next action.
+  REVIEW
+}
+
+enum CommandStepStatus {
+  /// Waiting for the steps it depends on.
+  WAITING
+  /// Handed to an AI employee (see taskId; live status comes from the agent task).
+  DELEGATED
+  /// The agent task could not be created (see errorReason).
+  BLOCKED
+  /// Not needed any more (e.g. everything it depended on failed, or the run was cancelled).
+  SKIPPED
+}
+
+/// One command given in a command session, with what the system understood and how it was routed.
+model CommandRun {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  companyId      String           @map("company_id") @db.Uuid
+  sessionId      String           @map("session_id") @db.Uuid
+  /// The USER command message this run answers.
+  messageId      String           @map("message_id") @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  text           String
+  locale         String           @default("en-US")
+  status         CommandRunStatus @default(PLANNED)
+  /// { intents: [{key, profile, score}], research: boolean, facts: {metric: n}, sources: [{type, id, title, href, passage?}], page?: string }
+  understanding  Json             @default("{}")
+  /// One line taken from the review step's output ("Next step: …"), shown as the recommended next action.
+  nextAction     String?          @map("next_action")
+  /// Who gave the command: the founder in AI Command, or the AI CEO's operating loop (guide/ceo-loop.ts).
+  origin         CommandRunOrigin @default(FOUNDER)
+  /// CEO weekly priority this run works on (origin CEO).
+  priorityId     String?          @map("priority_id") @db.Uuid
+  /// Objective this run advances (objective initiatives and CEO replans).
+  objectiveId    String?          @map("objective_id") @db.Uuid
+  /// The run this one follows up (its recommended next action).
+  parentRunId    String?          @map("parent_run_id") @db.Uuid
+  /// Company Brain document holding the synthesized result (written once the run completes).
+  documentId     String?          @map("document_id") @db.Uuid
+  /// Why the result could not be stored in Company Brain (e.g. forbidden for the run's owner).
+  documentError  String?          @map("document_error")
+  completedAt    DateTime?        @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  session CommandSession    @relation(fields: [sessionId, companyId], references: [id, companyId], onDelete: Cascade)
+  steps   CommandPlanStep[]
+
+  @@unique([id, companyId])
+  @@unique([messageId])
+  @@index([organizationId, companyId, status, updatedAt])
+  @@index([sessionId, createdAt])
+  @@index([organizationId, companyId, origin, createdAt])
+  @@map("command_runs")
+}
+
+/// One step of a command's plan: which AI employee does which part, after which other steps.
+model CommandPlanStep {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  runId          String            @map("run_id") @db.Uuid
+  position       Int
+  kind           CommandStepKind
+  /// Intent key (e.g. "prospecting", "research", "review").
+  intent         String
+  profile        String
+  aiEmployeeId   String?           @map("ai_employee_id") @db.Uuid
+  title          String
+  /// What this step must deliver (part of the agent task's instructions).
+  focus          String
+  /// Positions of the steps that must finish first.
+  dependsOn      Int[]             @default([]) @map("depends_on")
+  status         CommandStepStatus @default(WAITING)
+  taskId         String?           @map("task_id") @db.Uuid
+  errorReason    String?           @map("error_reason")
+  /// Times the step was retried after its task failed or could not be created (automatic + manual).
+  attempts       Int               @default(0)
+  delegatedAt    DateTime?         @map("delegated_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  run     CommandRun @relation(fields: [runId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([runId, position])
+  @@index([taskId])
+  @@map("command_plan_steps")
+}
+
+// ───────────────────────────── AI CEO operating loop (guide/ceo-loop.ts) ─────────────────────────────
+// Every day per company the AI CEO reviews objectives, health, risks, pipeline, cash, marketing and the AI team's
+// workload, keeps the week's priorities, delegates real command runs, follows up stalled work and escalates decisions.
+
+enum CeoCycleStatus {
+  RUNNING
+  COMPLETED
+  /// Did not run (kill switch, no AI CEO, budget, autonomy...): see skippedReason.
+  SKIPPED
+  FAILED
+}
+
+enum CeoPriorityStatus {
+  ACTIVE
+  /// The condition that raised it no longer holds (from real data).
+  RESOLVED
+  /// Dropped by the founder.
+  DROPPED
+}
+
+enum CeoActionKind {
+  /// Started a command run for a priority.
+  DELEGATED
+  /// Re-ran failed or stalled work.
+  RETRIED
+  /// Checked on stalled work and nudged it (new follow-up run).
+  FOLLOWED_UP
+  /// Raised a decision for the founder.
+  ESCALATED
+  /// Asked an objective's owner to replan (off track).
+  REPLANNED
+  /// Would delegate but its autonomy only allows proposing: raised as a decision.
+  PROPOSED
+  /// Wanted to act but a limit stopped it (daily cap, budget, missing AI employee).
+  HELD
+}
+
+enum CeoDecisionStatus {
+  OPEN
+  APPROVED
+  DISMISSED
+  /// Closed by the loop because the condition no longer holds.
+  RESOLVED
+}
+
+/// One review by the AI CEO for one company and day.
+model CeoCycle {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  day            DateTime       @db.Date
+  status         CeoCycleStatus @default(RUNNING)
+  /// "schedule" or "manual".
+  trigger        String         @default("schedule")
+  /// Member whose permissions the loop acted with.
+  actingUserId   String         @map("acting_user_id") @db.Uuid
+  ceoEmployeeId  String?        @map("ceo_employee_id") @db.Uuid
+  skippedReason  String?        @map("skipped_reason")
+  /// Snapshot of what the CEO reviewed: { objectives, offTrack, health, insights, approvals, pipeline, cash, workload } (real numbers only).
+  review         Json           @default("{}")
+  delegated      Int            @default(0)
+  followedUp     Int            @default(0) @map("followed_up")
+  escalated      Int            @default(0)
+  startedAt      DateTime       @default(now()) @map("started_at") @db.Timestamptz(3)
+  completedAt    DateTime?      @map("completed_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, day])
+  @@index([organizationId, companyId, startedAt])
+  @@map("ceo_cycles")
+}
+
+/// A priority the AI CEO set for the week, raised from real data (sourceKey dedupes it within the week).
+model CeoPriority {
+  id              String            @id @default(uuid(7)) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  companyId       String            @map("company_id") @db.Uuid
+  /// ISO week, e.g. "2026-W47".
+  weekKey         String            @map("week_key")
+  /// e.g. "kr:<id>", "insight:<id>", "health:<kind>:<metric>", "cash:overdue", "pipeline:stale", "approvals:backlog".
+  sourceKey       String            @map("source_key")
+  /// objective | health | growth | cash | pipeline | approvals | workload
+  kind            String
+  /// Higher = more urgent (ranking only).
+  score           Int               @default(0)
+  /// English summary used in the AI instructions; the UI renders kind + params.
+  title           String
+  rationale       String
+  params          Json              @default("{}")
+  href            String?
+  /// Department AI role the work goes to.
+  profile         String
+  aiEmployeeId    String?           @map("ai_employee_id") @db.Uuid
+  objectiveId     String?           @map("objective_id") @db.Uuid
+  status          CeoPriorityStatus @default(ACTIVE)
+  /// Latest command run started for it.
+  commandRunId    String?           @map("command_run_id") @db.Uuid
+  attempts        Int               @default(0)
+  lastDelegatedAt DateTime?         @map("last_delegated_at") @db.Timestamptz(3)
+  resolvedAt      DateTime?         @map("resolved_at") @db.Timestamptz(3)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, weekKey, sourceKey])
+  @@index([organizationId, companyId, status, weekKey])
+  @@map("ceo_priorities")
+}
+
+/// What the AI CEO did and why (one row per delegation, follow-up, escalation, replan, hold).
+model CeoAction {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  cycleId        String?       @map("cycle_id") @db.Uuid
+  priorityId     String?       @map("priority_id") @db.Uuid
+  kind           CeoActionKind
+  /// Reason key (command.ceo.reason.<reason>) with params.
+  reason         String
+  params         Json          @default("{}")
+  profile        String?
+  aiEmployeeId   String?       @map("ai_employee_id") @db.Uuid
+  commandRunId   String?       @map("command_run_id") @db.Uuid
+  taskId         String?       @map("task_id") @db.Uuid
+  decisionId     String?       @map("decision_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, createdAt])
+  @@index([priorityId])
+  @@map("ceo_actions")
+}
+
+/// A decision the AI CEO escalated to the founder.
+model CeoDecision {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  /// approvals_backlog | stalled_work | delegation_proposal | objective_off_track | budget_exhausted | no_ai_employee
+  kind           String
+  /// Dedupe key (one open decision per source and week).
+  sourceKey      String            @map("source_key")
+  title          String
+  params         Json              @default("{}")
+  href           String?
+  /// For delegation proposals: { profile, aiEmployeeId?, text } started as a CEO command run when approved.
+  proposal       Json?
+  priorityId     String?           @map("priority_id") @db.Uuid
+  status         CeoDecisionStatus @default(OPEN)
+  resolvedById   String?           @map("resolved_by_id") @db.Uuid
+  resolvedAt     DateTime?         @map("resolved_at") @db.Timestamptz(3)
+  note           String?
+  commandRunId   String?           @map("command_run_id") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, sourceKey])
+  @@index([organizationId, companyId, status, createdAt])
+  @@map("ceo_decisions")
+}

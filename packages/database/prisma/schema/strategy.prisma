@@ -1,0 +1,181 @@
+// ───────────────────────────── Strategy: mission, pillars, company goals, key results ─────────────────────────────
+// Owned by the objectives module (src/server/modules/objectives). Permissions: objectives.read / objectives.manage.
+// Hierarchy: CompanyGoal → Objective (core.prisma) → ObjectiveKeyResult + Milestone → Project → WorkTask.
+
+/// One per company: mission, vision and values (strategic pillars are separate rows).
+model CompanyStrategy {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @unique @map("company_id") @db.Uuid
+  mission        String?
+  vision         String?
+  values         String[] @default([])
+  updatedById    String?  @map("updated_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("company_strategies")
+}
+
+model StrategyPillar {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  position       Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company       @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  goals   CompanyGoal[]
+
+  @@unique([id, companyId])
+  @@index([companyId, position])
+  @@map("strategy_pillars")
+}
+
+enum CompanyGoalHorizon {
+  QUARTER
+  YEAR
+}
+
+enum CompanyGoalStatus {
+  ACTIVE
+  ACHIEVED
+  ABANDONED
+}
+
+/// A company-level goal above objectives (e.g. "Become profitable in 2027").
+model CompanyGoal {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  title          String
+  description    String?
+  horizon        CompanyGoalHorizon @default(QUARTER)
+  status         CompanyGoalStatus  @default(ACTIVE)
+  ownerId        String?            @map("owner_id") @db.Uuid
+  pillarId       String?            @map("pillar_id") @db.Uuid
+  targetDate     DateTime?          @map("target_date") @db.Date
+  /// Latest AI decomposition task (agent task with subject company_goal).
+  planTaskId     String?            @map("plan_task_id") @db.Uuid
+  /// Records created so far by "Apply plan": { "<item key>": "<record id>" } — makes a re-apply resume, never duplicate.
+  planApplied    Json               @default("{}") @map("plan_applied")
+  planAppliedAt  DateTime?          @map("plan_applied_at") @db.Timestamptz(3)
+  createdById    String             @map("created_by_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  owner      User?           @relation("CompanyGoalOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  pillar     StrategyPillar? @relation(fields: [pillarId, companyId], references: [id, companyId], onDelete: NoAction)
+  objectives Objective[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@map("company_goals")
+}
+
+enum KeyResultSource {
+  METRIC
+  MANUAL
+}
+
+enum KeyResultDirection {
+  INCREASE
+  DECREASE
+}
+
+/// Measurable result of an objective: a registry metric (computed for the objective period) or a manually updated value.
+/// Values are in the metric's native unit (money in minor units of the company currency).
+model ObjectiveKeyResult {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  objectiveId    String             @map("objective_id") @db.Uuid
+  title          String
+  source         KeyResultSource    @default(MANUAL)
+  /// Registry key (src/server/modules/bi/registry.ts) when source = METRIC.
+  metricKey      String?            @map("metric_key")
+  /// Free-text unit label for manual key results ("customers", "%").
+  unit           String?
+  baseline       Float              @default(0)
+  target         Float
+  /// Manual value (source = MANUAL).
+  current        Float?
+  direction      KeyResultDirection @default(INCREASE)
+  position       Int                @default(0)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  objective Objective @relation(fields: [objectiveId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([objectiveId, position])
+  @@map("objective_key_results")
+}
+
+// ───────────── Objective execution: owner AI employee, initiatives, live progress (objectives/execution.ts) ─────────────
+
+enum ObjectiveInitiativeStatus {
+  PLANNED
+  ACTIVE
+  DONE
+  DROPPED
+}
+
+/// Execution state of one objective: its owner AI employee and the last progress the AI CEO evaluated.
+model ObjectiveExecution {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  companyId         String    @map("company_id") @db.Uuid
+  objectiveId       String    @unique @map("objective_id") @db.Uuid
+  ownerAiEmployeeId String?   @map("owner_ai_employee_id") @db.Uuid
+  /// 0..1 from real key-result metrics at the last evaluation.
+  lastProgress      Float?    @map("last_progress")
+  /// KrStatus of the worst key result at the last evaluation (ON_TRACK, AT_RISK, OFF_TRACK, ACHIEVED, NO_DATA).
+  lastStatus        String?   @map("last_status")
+  offTrackSince     DateTime? @map("off_track_since") @db.Timestamptz(3)
+  replannedAt       DateTime? @map("replanned_at") @db.Timestamptz(3)
+  /// Latest "plan initiatives" agent task (subject objective_plan).
+  planTaskId        String?   @map("plan_task_id") @db.Uuid
+  lastEvaluatedAt   DateTime? @map("last_evaluated_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  objective Objective @relation(fields: [objectiveId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([organizationId, companyId])
+  @@map("objective_executions")
+}
+
+/// A planned initiative that moves an objective (or one key result), with the AI work linked to it.
+model ObjectiveInitiative {
+  id             String                    @id @default(uuid(7)) @db.Uuid
+  organizationId String                    @map("organization_id") @db.Uuid
+  companyId      String                    @map("company_id") @db.Uuid
+  objectiveId    String                    @map("objective_id") @db.Uuid
+  keyResultId    String?                   @map("key_result_id") @db.Uuid
+  title          String
+  description    String?
+  status         ObjectiveInitiativeStatus @default(PLANNED)
+  /// manual | ai | ceo
+  source         String                    @default("manual")
+  aiEmployeeId   String?                   @map("ai_employee_id") @db.Uuid
+  /// Latest command run carrying the initiative.
+  commandRunId   String?                   @map("command_run_id") @db.Uuid
+  position       Int                       @default(0)
+  createdById    String?                   @map("created_by_id") @db.Uuid
+  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company   @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  objective Objective @relation(fields: [objectiveId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([objectiveId, position])
+  @@map("objective_initiatives")
+}

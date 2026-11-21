@@ -30,6 +30,8 @@ jobs:
       # CI-only key; production keys come from the secrets manager.
       REALY_ENCRYPTION_KEY: Y2ktb25seS1rZXktbm90LWEtc2VjcmV0LTEyMzQ1Njc=
       APP_URL: http://localhost:3000
+      ADMIN_URL: http://localhost:3001
+      USER_APP_URL: http://localhost:3000
       TRUSTED_PROXY_HOPS: "1"
     steps:
       - uses: actions/checkout@v5
@@ -42,12 +44,18 @@ jobs:
       - name: Migrations apply cleanly and match the schema (drift check)
         run: |
           pnpm db:migrate
-          pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema --exit-code
+          pnpm --filter @realy/database exec prisma migrate diff --from-config-datasource --to-schema prisma/schema --exit-code
+      - name: App boundaries (user ⟷ admin isolation)
+        run: pnpm check:boundaries
+      - name: Admin message catalogs in sync with apps/user
+        run: pnpm i18n:check
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
-      - name: Build
-        run: pnpm build
+      - name: Build both apps
+        run: |
+          pnpm build:user
+          pnpm build:admin
       - name: E2E (fresh database)
         env:
           DATABASE_URL: postgresql://realy:realy@localhost:5432/realy_e2e
@@ -55,20 +63,21 @@ jobs:
           PGPASSWORD=realy psql -h localhost -U realy -d realy_test -c "CREATE DATABASE realy_e2e"
           pnpm db:migrate && pnpm db:seed
           pnpm exec playwright install --with-deps chromium
-          (pnpm start > server.log 2>&1 &)
+          (pnpm start:user > server.log 2>&1 &)
+          (pnpm start:admin > admin.log 2>&1 &)
           (pnpm worker > worker.log 2>&1 &)
-          npx --yes wait-on http://localhost:3000/api/health/ready
+          npx --yes wait-on http://localhost:3000/api/health/ready http://localhost:3001/api/health/ready
           pnpm test:e2e
       - name: Container image builds and serves health checks
         run: |
-          docker build -t realy:ci .
+          docker build --build-arg APP=user -t realy:ci .
           # The release image must be able to seed reference data with the documented command.
-          docker run --rm --network host -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
+          docker run --rm --network host -w /app/packages/database -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
             -e REDIS_URL -e REALY_ENCRYPTION_KEY -e TRUSTED_PROXY_HOPS=1 realy:ci prisma db seed
           docker run -d --name realy-web --network host \
             -e DATABASE_URL=postgresql://realy:realy@localhost:5432/realy_e2e \
             -e REDIS_URL -e REALY_ENCRYPTION_KEY -e APP_URL=http://localhost:3100 -e PORT=3100 -e TRUSTED_PROXY_HOPS=1 \
-            realy:ci
+            realy:ci next start -p 3100
           npx --yes wait-on -t 60000 http://localhost:3100/api/health/ready
           curl -fsS http://localhost:3100/api/health/ready
           docker logs realy-web
@@ -79,4 +88,5 @@ jobs:
           path: |
             test-results
             server.log
+            admin.log
             worker.log

@@ -1,0 +1,517 @@
+// AI Workforce OS (src/server/modules/workforce): AI employees instantiated from role profiles, their memory,
+// schedules / event triggers and AI CEO briefings. Tasks themselves are AgentTask rows (core.prisma).
+
+enum AiEmployeeStatus {
+  ACTIVE
+  PAUSED
+}
+
+/// Which tools an AI employee is offered (the tool gateway still enforces permissions and approvals).
+enum AiAutonomyLevel {
+  READ_ONLY
+  RECOMMEND
+  PREPARE
+  EXECUTE_WITH_APPROVAL
+  AUTONOMOUS_LOW_RISK
+}
+
+/// Position in the AI org chart: executives may delegate to anyone, managers and specialists only to their reports.
+enum AiOrgLevel {
+  EXECUTIVE
+  MANAGER
+  SPECIALIST
+}
+
+enum AiReportKind {
+  STATUS
+  ESCALATION
+  /// Automatic roll-up: a delegated task (or a whole delegated batch) finished; filed with the manager.
+  ROLLUP
+}
+
+/// A delegation proposed by a supervised AI employee: nothing runs until a person approves it.
+enum AiDelegationStatus {
+  PROPOSED
+  CREATED
+  REJECTED
+  FAILED
+}
+
+enum CeoMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum AiMemorySource {
+  MANUAL
+  TASK
+}
+
+enum AiScheduleKind {
+  RECURRING
+  EVENT
+}
+
+enum AiScheduleFrequency {
+  HOURLY
+  DAILY
+  WEEKLY
+}
+
+enum AiBriefingMode {
+  DAILY
+  WEEKLY
+  MONTHLY
+  TREND_RISK
+}
+
+/// An AI employee: a role profile (AGENT_PROFILES) with a name, custom instructions, tool subset, autonomy and budget.
+model AiEmployee {
+  id                     String           @id @default(uuid(7)) @db.Uuid
+  organizationId         String           @map("organization_id") @db.Uuid
+  companyId              String           @map("company_id") @db.Uuid
+  name                   String
+  /// Avatar initials (1–3 chars).
+  initials               String
+  profileKey             String           @map("profile_key")
+  department             String
+  /// Appended to the profile's role prompt.
+  instructions           String?
+  skills                 String[]         @default([])
+  /// Subset of the profile's tools; empty = all of the profile's tools.
+  allowedTools           String[]         @default([]) @map("allowed_tools")
+  /// The member whose permissions the AI acts with (null = the person who assigns each task).
+  runsAsUserId           String?          @map("runs_as_user_id") @db.Uuid
+  status                 AiEmployeeStatus @default(ACTIVE)
+  autonomy               AiAutonomyLevel  @default(EXECUTE_WITH_APPROVAL)
+  /// Monthly token allowance (input + output, UTC month); null = unlimited.
+  monthlyTokenBudget     Int?             @map("monthly_token_budget")
+  /// Monthly estimated-cost allowance in USD cents (minor units, UTC month); null = unlimited. Enforced before and during runs.
+  monthlyCostBudgetCents BigInt?          @map("monthly_cost_budget_cents")
+  /// Org chart: the AI manager this employee reports to (null = reports to a person, see managerUserId).
+  managerEmployeeId      String?          @map("manager_employee_id") @db.Uuid
+  /// The member (founder) this employee reports to when it has no AI manager. Validated as an active member.
+  managerUserId          String?          @map("manager_user_id") @db.Uuid
+  level                  AiOrgLevel       @default(SPECIALIST)
+  jobTitle               String?          @map("job_title")
+  jobDescription         String?          @map("job_description")
+  responsibilities       String[]         @default([])
+  goals                  String[]         @default([])
+  /// [{ key: metric registry key, target: number }]
+  kpis                   Json             @default("[]")
+  /// Model id (one of the allowed models); null = the platform default (AGENT_MODEL).
+  model                  String?
+  /// Set when the lifecycle setup (configure → role → goals → permissions → activate) was completed.
+  setupCompletedAt       DateTime?        @map("setup_completed_at") @db.Timestamptz(3)
+  createdById            String           @map("created_by_id") @db.Uuid
+  createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt             DateTime?        @map("archived_at") @db.Timestamptz(3)
+
+  company         Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  runsAs          User?              @relation("AiEmployeeRunsAs", fields: [runsAsUserId], references: [id], onDelete: SetNull)
+  manager         AiEmployee?        @relation("AiEmployeeManager", fields: [managerEmployeeId, companyId], references: [id, companyId], onDelete: NoAction)
+  reports         AiEmployee[]       @relation("AiEmployeeManager")
+  memories        AiEmployeeMemory[]
+  schedules       AiSchedule[]
+  tasks           AgentTask[]
+  writtenReports  AiEmployeeReport[] @relation("AiReportAuthor")
+  receivedReports AiEmployeeReport[] @relation("AiReportManager")
+  delegationsFrom AiDelegation[]     @relation("AiDelegationFrom")
+  delegationsTo   AiDelegation[]     @relation("AiDelegationTo")
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@index([managerEmployeeId])
+  @@map("ai_employees")
+}
+
+/// A durable note an AI employee keeps (top notes are included in its prompt).
+model AiEmployeeMemory {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  aiEmployeeId   String         @map("ai_employee_id") @db.Uuid
+  content        String
+  source         AiMemorySource @default(MANUAL)
+  sourceTaskId   String?        @map("source_task_id") @db.Uuid
+  pinned         Boolean        @default(false)
+  createdById    String?        @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company    Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  aiEmployee AiEmployee @relation(fields: [aiEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([aiEmployeeId, pinned, createdAt])
+  @@map("ai_employee_memories")
+}
+
+/// A recurring job or an event trigger that creates tasks for an AI employee. `briefingMode` makes it an AI CEO briefing.
+model AiSchedule {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  aiEmployeeId   String               @map("ai_employee_id") @db.Uuid
+  name           String
+  kind           AiScheduleKind
+  frequency      AiScheduleFrequency?
+  /// "HH:MM" in the company timezone (DAILY / WEEKLY; minute for HOURLY).
+  timeOfDay      String?              @map("time_of_day")
+  /// 0 = Sunday … 6 = Saturday (WEEKLY).
+  weekday        Int?
+  /// Domain event type (EVENT).
+  eventType      String?              @map("event_type")
+  /// Instructions template; {{date}}, {{event}} and {{data.<field>}} are filled in.
+  instructions   String
+  briefingMode   AiBriefingMode?      @map("briefing_mode")
+  enabled        Boolean              @default(true)
+  /// Last slot a task was created for (dedupe), e.g. "2026-11-20" or "2026-11-20T09".
+  lastSlot       String?              @map("last_slot")
+  lastRunAt      DateTime?            @map("last_run_at") @db.Timestamptz(3)
+  runCount       Int                  @default(0) @map("run_count")
+  createdById    String               @map("created_by_id") @db.Uuid
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company    Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  aiEmployee AiEmployee      @relation(fields: [aiEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+  runs       AiScheduleRun[]
+
+  @@unique([id, companyId])
+  @@index([kind, enabled])
+  @@index([organizationId, companyId])
+  @@map("ai_schedules")
+}
+
+/// One firing of a schedule (unique per slot / event id — at-most-once task creation).
+model AiScheduleRun {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  scheduleId     String   @map("schedule_id") @db.Uuid
+  /// Time slot or "event:<eventId>".
+  slot           String
+  taskId         String?  @map("task_id") @db.Uuid
+  error          String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  schedule AiSchedule @relation(fields: [scheduleId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@unique([scheduleId, slot])
+  @@index([taskId])
+  @@map("ai_schedule_runs")
+}
+
+/// An AI CEO / BI briefing: the agent task that writes it plus the deterministic KPI and issue snapshot it was given.
+model AiBriefing {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  mode           AiBriefingMode
+  profile        String
+  taskId         String?        @map("task_id") @db.Uuid
+  periodStart    DateTime       @map("period_start") @db.Timestamptz(3)
+  periodEnd      DateTime       @map("period_end") @db.Timestamptz(3)
+  /// [{ key, value, previous, changePct }]
+  kpis           Json           @default("[]")
+  /// [{ severity, kind, message, href? }]
+  issues         Json           @default("[]")
+  /// Structured daily card (performance, events, AI work, updates, risks, blockers, decisions, priorities); see workforce/briefing-card.ts.
+  sections       Json           @default("{}")
+  scheduled      Boolean        @default(false)
+  createdById    String         @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, createdAt])
+  @@map("ai_briefings")
+}
+
+/// A status report or escalation an AI employee files with its manager (report_to_manager / escalate_to_manager).
+model AiEmployeeReport {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  organizationId    String       @map("organization_id") @db.Uuid
+  companyId         String       @map("company_id") @db.Uuid
+  aiEmployeeId      String       @map("ai_employee_id") @db.Uuid
+  /// The AI manager it was filed with (null = the founder / a person).
+  managerEmployeeId String?      @map("manager_employee_id") @db.Uuid
+  managerUserId     String?      @map("manager_user_id") @db.Uuid
+  kind              AiReportKind @default(STATUS)
+  title             String
+  body              String
+  /// The task the report was written from.
+  taskId            String?      @map("task_id") @db.Uuid
+  /// Escalations: the task created for the manager.
+  escalationTaskId  String?      @map("escalation_task_id") @db.Uuid
+  /// Escalations: closed by a person or automatically when the manager's escalation task completed.
+  resolvedAt        DateTime?    @map("resolved_at") @db.Timestamptz(3)
+  resolvedById      String?      @map("resolved_by_id") @db.Uuid
+  /// Escalation ladder: when the founder was notified (immediately at the top of the chart, or after the AI manager did not resolve it).
+  founderNotifiedAt DateTime?    @map("founder_notified_at") @db.Timestamptz(3)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  aiEmployee AiEmployee  @relation("AiReportAuthor", fields: [aiEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+  manager    AiEmployee? @relation("AiReportManager", fields: [managerEmployeeId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([organizationId, companyId, createdAt])
+  @@index([managerEmployeeId, createdAt])
+  @@index([aiEmployeeId, createdAt])
+  @@index([companyId, kind, resolvedAt])
+  @@map("ai_employee_reports")
+}
+
+/// Monthly AI allowance of a whole department (all its AI employees together); enforced before and during runs.
+model AiDepartmentBudget {
+  id                     String   @id @default(uuid(7)) @db.Uuid
+  organizationId         String   @map("organization_id") @db.Uuid
+  companyId              String   @map("company_id") @db.Uuid
+  /// workforce DEPARTMENTS key, e.g. "sales".
+  department             String
+  /// Tokens per UTC month (input + output); null = unlimited.
+  monthlyTokenBudget     Int?     @map("monthly_token_budget")
+  /// Estimated cost per UTC month in USD cents; null = unlimited.
+  monthlyCostBudgetCents BigInt?  @map("monthly_cost_budget_cents")
+  updatedById            String   @map("updated_by_id") @db.Uuid
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, department])
+  @@index([organizationId, companyId])
+  @@map("ai_department_budgets")
+}
+
+/// A sub-task a supervised AI manager wants to hand to one of its reports (delegate_to_ai_employee). A person approves
+/// (the child task is then created with the approver as principal) or rejects it.
+model AiDelegation {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  /// The task that proposed it.
+  parentTaskId   String             @map("parent_task_id") @db.Uuid
+  fromEmployeeId String             @map("from_employee_id") @db.Uuid
+  toEmployeeId   String             @map("to_employee_id") @db.Uuid
+  title          String
+  instructions   String
+  status         AiDelegationStatus @default(PROPOSED)
+  /// The child task created on approval.
+  childTaskId    String?            @map("child_task_id") @db.Uuid
+  decidedById    String?            @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime?          @map("decided_at") @db.Timestamptz(3)
+  decisionNote   String?            @map("decision_note")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  fromEmployee AiEmployee @relation("AiDelegationFrom", fields: [fromEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+  toEmployee   AiEmployee @relation("AiDelegationTo", fields: [toEmployeeId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([organizationId, companyId, status, createdAt])
+  @@index([parentTaskId])
+  @@map("ai_delegations")
+}
+
+/// "Ask the CEO": a conversation thread between a member and the AI CEO.
+model CeoConversation {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  title          String
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+
+  company  Company      @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  messages CeoMessage[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdById, updatedAt])
+  @@map("ceo_conversations")
+}
+
+/// One message: a member's question (USER, with the ai_ceo task answering it) or the answer (ASSISTANT, from the task output).
+model CeoMessage {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  conversationId String         @map("conversation_id") @db.Uuid
+  role           CeoMessageRole
+  content        String
+  /// The ai_ceo task that answers (USER) or produced (ASSISTANT) the message.
+  taskId         String?        @map("task_id") @db.Uuid
+  createdById    String?        @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  conversation CeoConversation @relation(fields: [conversationId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([taskId])
+  @@map("ceo_messages")
+}
+
+// ───────────── Autonomy ("Auto mode") and trust (src/server/modules/workforce/autonomy-*.ts, docs/autonomy.md) ─────────────
+
+/// How far the AI may go for one action class: off, suggest only, ask a person (approval), or act on its own within limits.
+enum AutonomyLevel {
+  OFF
+  SUGGEST
+  ASK
+  AUTO
+}
+
+enum AutonomousActionStatus {
+  /// Limits reserved; the action is being carried out.
+  RUNNING
+  EXECUTED
+  FAILED
+  /// Reversed by a person (undo).
+  UNDONE
+}
+
+/// Trust signals besides approvals and autonomous outcomes.
+enum AutonomyFeedbackKind {
+  /// A person changed the AI's proposal before it went out.
+  EDITED
+  /// A customer, colleague or the founder complained about an action.
+  COMPLAINT
+  /// The action had to be reversed outside Realy's undo.
+  REVERSAL
+}
+
+/// Company-wide Auto mode switch, the emergency pause and the trust thresholds.
+model AutonomySettings {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  organizationId     String    @map("organization_id") @db.Uuid
+  companyId          String    @map("company_id") @db.Uuid
+  /// Master switch: while off, every AUTO policy behaves as ASK (nothing runs without a person).
+  autoModeEnabled    Boolean   @default(false) @map("auto_mode_enabled")
+  /// "Pause all AI": no AI task starts or acts in this company until resumed.
+  paused             Boolean   @default(false)
+  pausedAt           DateTime? @map("paused_at") @db.Timestamptz(3)
+  pausedById         String?   @map("paused_by_id") @db.Uuid
+  pauseReason        String?   @map("pause_reason")
+  /// Negative signals (rejections, failures, undos, complaints) within `demotionWindowDays` that send an AUTO policy back to ASK.
+  demotionThreshold  Int       @default(3) @map("demotion_threshold")
+  demotionWindowDays Int       @default(7) @map("demotion_window_days")
+  updatedById        String?   @map("updated_by_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId])
+  @@index([organizationId])
+  @@map("autonomy_settings")
+}
+
+/// One rule: company-wide (department "*") or per department, for one action class. Missing rows fall back to "*",
+/// then to the built-in defaults (reads AUTO, everything else ASK).
+model AutonomyPolicy {
+  id                String        @id @default(uuid(7)) @db.Uuid
+  organizationId    String        @map("organization_id") @db.Uuid
+  companyId         String        @map("company_id") @db.Uuid
+  /// workforce DEPARTMENTS key, or "*" for the whole company.
+  department        String
+  /// ACTION_CLASSES key (autonomy-classes.ts), e.g. "send_message".
+  actionClass       String        @map("action_class")
+  level             AutonomyLevel
+  /// AUTO only: actions of this class per company-timezone day; null = no count limit.
+  dailyLimit        Int?          @map("daily_limit")
+  /// Money caps in minor units of `currency` (spend / pay classes).
+  perActionMaxMinor BigInt?       @map("per_action_max_minor")
+  dailyMaxMinor     BigInt?       @map("daily_max_minor")
+  monthlyMaxMinor   BigInt?       @map("monthly_max_minor")
+  currency          String?       @db.Char(3)
+  /// "HH:MM" window in the company timezone (both null = any time); `allowedDays` 0 = Sunday … 6 = Saturday (empty = every day).
+  hoursFrom         String?       @map("hours_from")
+  hoursTo           String?       @map("hours_to")
+  allowedDays       Int[]         @default([]) @map("allowed_days")
+  /// Channels the AI may use on its own (e.g. email, sms, whatsapp, phone, social, ads); empty = any.
+  allowedChannels   String[]      @default([]) @map("allowed_channels")
+  /// Set when the trust system demoted the rule (AUTO → ASK).
+  demotedAt         DateTime?     @map("demoted_at") @db.Timestamptz(3)
+  demotionReason    String?       @map("demotion_reason")
+  updatedById       String?       @map("updated_by_id") @db.Uuid
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, department, actionClass])
+  @@index([organizationId, companyId])
+  @@map("autonomy_policies")
+}
+
+/// An action the AI carried out without asking, because a policy allowed it (the "auto-approved" log). Counts toward limits.
+model AutonomousAction {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  companyId      String                 @map("company_id") @db.Uuid
+  department     String
+  actionClass    String                 @map("action_class")
+  /// The policy that allowed it (null = built-in default) and the rule as it stood.
+  policyId       String?                @map("policy_id") @db.Uuid
+  policySnapshot Json                   @default("{}") @map("policy_snapshot")
+  aiEmployeeId   String?                @map("ai_employee_id") @db.Uuid
+  taskId         String?                @map("task_id") @db.Uuid
+  /// The tool that ran (null for non-tool actions recorded by a module).
+  tool           String?
+  /// The module that recorded a non-tool action, e.g. "crm".
+  source         String?
+  summary        String
+  input          Json?
+  channel        String?
+  amountMinor    BigInt?                @map("amount_minor")
+  currency       String?                @db.Char(3)
+  status         AutonomousActionStatus @default(RUNNING)
+  /// Records changed, as "type:id".
+  records        String[]               @default([])
+  result         String?
+  error          String?
+  /// How to reverse it: { tool, input } run as the person who clicks undo; null = not reversible.
+  undo           Json?
+  undoneAt       DateTime?              @map("undone_at") @db.Timestamptz(3)
+  undoneById     String?                @map("undone_by_id") @db.Uuid
+  /// Company-timezone day "YYYY-MM-DD" and month "YYYY-MM" (limit windows).
+  day            String
+  month          String
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([companyId, department, actionClass, day])
+  @@index([companyId, department, actionClass, month])
+  @@map("autonomous_actions")
+}
+
+/// A trust signal recorded by a person or a module (edited proposal, complaint, reversal).
+model AutonomyFeedback {
+  id                 String               @id @default(uuid(7)) @db.Uuid
+  organizationId     String               @map("organization_id") @db.Uuid
+  companyId          String               @map("company_id") @db.Uuid
+  department         String
+  actionClass        String               @map("action_class")
+  kind               AutonomyFeedbackKind
+  aiEmployeeId       String?              @map("ai_employee_id") @db.Uuid
+  autonomousActionId String?              @map("autonomous_action_id") @db.Uuid
+  approvalId         String?              @map("approval_id") @db.Uuid
+  /// The module that recorded it, e.g. "support".
+  source             String?
+  note               String?
+  createdById        String?              @map("created_by_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, department, actionClass, createdAt])
+  @@index([organizationId, companyId, createdAt])
+  @@map("autonomy_feedback")
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@realy/shared-utils",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-light utilities shared by both apps and the backend: src/lib (cn, safe-next, …) and the i18n runtime (config, translate, format, client provider, locale negotiation). Message catalogs live in each app.",
+  "dependencies": {
+    "@formatjs/intl-localematcher": "^0.9.0",
+    "clsx": "^2.1.1",
+    "intl-messageformat": "^12.1.3",
+    "negotiator": "^1.1.0",
+    "react": "19.3.0",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@types/negotiator": "^0.6.5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

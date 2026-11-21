@@ -1,0 +1,306 @@
+// AI phone team (src/server/modules/voice): voice agents on Vapi or Retell AI, phone numbers, outbound/inbound calls,
+// campaigns and the do-not-call list. CRM leads/contacts, AI employees and users are referenced by plain uuids
+// (validated inside the company by the service), so this module adds back-relations only to Company.
+
+enum VoiceProvider {
+  VAPI
+  RETELL
+}
+
+enum VoiceGoal {
+  QUALIFY_LEAD
+  BOOK_MEETING
+  SUPPORT_TRIAGE
+  COLLECTIONS_REMINDER
+  RECEPTIONIST
+}
+
+enum VoiceAgentSync {
+  DRAFT
+  SYNCED
+  ERROR
+}
+
+enum VoiceNumberSource {
+  PROVIDER
+  TWILIO
+}
+
+enum VoiceCallDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum VoiceCallStatus {
+  /// Waiting for a person's approval (place_voice_call / voice campaign approval).
+  AWAITING_APPROVAL
+  /// Approved; waits for the next calling window (callee local time).
+  SCHEDULED
+  /// Handed to the provider, not yet ringing.
+  QUEUED
+  RINGING
+  IN_PROGRESS
+  ENDED
+  /// The provider refused or the call errored before connecting.
+  FAILED
+  /// Not placed: do-not-call, kill switch, missing connection... (blockedReason says why).
+  BLOCKED
+  CANCELLED
+  /// The approval was rejected or expired.
+  REJECTED
+}
+
+enum VoiceCallOutcome {
+  INTERESTED
+  NOT_INTERESTED
+  MEETING_REQUESTED
+  MEETING_BOOKED
+  CALLBACK_REQUESTED
+  SUPPORT_ISSUE
+  PAYMENT_PROMISED
+  MESSAGE_TAKEN
+  VOICEMAIL
+  NO_ANSWER
+  WRONG_NUMBER
+  DO_NOT_CALL
+  OTHER
+}
+
+enum VoiceSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+enum VoiceCampaignStatus {
+  DRAFT
+  AWAITING_APPROVAL
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum VoiceDncSource {
+  MANUAL
+  CALLER_REQUEST
+}
+
+/// Per-company phone team settings: provider, webhook key, calling rules and inbound routing.
+model VoiceSettings {
+  companyId        String         @id @map("company_id") @db.Uuid
+  organizationId   String         @map("organization_id") @db.Uuid
+  provider         VoiceProvider?
+  /// Public, unguessable id in the provider webhook URL (/api/v1/webhooks/voice/<provider>/<webhookKey>).
+  webhookKey       String         @unique @map("webhook_key")
+  /// Shared secret Vapi sends in x-vapi-secret (encrypted; bound to the company).
+  vapiSecretEnc    String?        @map("vapi_secret_enc")
+  /// Calling window in the callee's local time, minutes after midnight [start, end).
+  callingStartMin  Int            @default(540) @map("calling_start_min")
+  callingEndMin    Int            @default(1080) @map("calling_end_min")
+  /// ISO weekdays (1 = Monday … 7 = Sunday) on which outbound calls may be placed.
+  callingDays      Int[]          @default([1, 2, 3, 4, 5]) @map("calling_days")
+  maxDurationSec   Int            @default(600) @map("max_duration_sec")
+  /// Record calls (the opening line then always announces the recording).
+  recordCalls      Boolean        @default(false) @map("record_calls")
+  maxConcurrent    Int            @default(2) @map("max_concurrent")
+  /// Who receives messages taken by the AI receptionist (null = members with communication.manage).
+  voicemailUserId  String?        @map("voicemail_user_id") @db.Uuid
+  /// Inbound routing: create a support ticket / a CRM lead when the caller needs one.
+  inboundTickets   Boolean        @default(true) @map("inbound_tickets")
+  inboundLeads     Boolean        @default(true) @map("inbound_leads")
+  /// After each call create follow-up tasks and book requested meetings.
+  autoFollowUps    Boolean        @default(true) @map("auto_follow_ups")
+  setupCompletedAt DateTime?      @map("setup_completed_at") @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("voice_settings")
+}
+
+/// A voice agent: an AI employee's voice persona, configured on the provider as an assistant/agent.
+model VoiceAgent {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  organizationId   String         @map("organization_id") @db.Uuid
+  companyId        String         @map("company_id") @db.Uuid
+  name             String
+  /// AI employee (workforce) this agent speaks for; plain uuid validated on write.
+  aiEmployeeId     String?        @map("ai_employee_id") @db.Uuid
+  goal             VoiceGoal
+  provider         VoiceProvider
+  /// BCP-47 language of the conversation (en-US, de-DE, hi-IN, zh-CN, ar-AE).
+  language         String         @default("en-US")
+  /// Provider voice id (empty = provider default).
+  voiceId          String?        @map("voice_id")
+  /// Greeting after the mandatory AI (and recording) disclosure.
+  greeting         String?
+  instructions     String?
+  /// Offers, prices and policies the founder wants the agent to use (quoted verbatim, never invented).
+  offerNotes       String?        @map("offer_notes")
+  /// Compiled company knowledge (Brain facts, products, help articles) sent to the provider.
+  knowledge        String?
+  knowledgeBuiltAt DateTime?      @map("knowledge_built_at") @db.Timestamptz(3)
+  externalAgentId  String?        @map("external_agent_id")
+  /// Retell LLM id (Retell agents run on a separate "Retell LLM" object).
+  externalLlmId    String?        @map("external_llm_id")
+  syncStatus       VoiceAgentSync @default(DRAFT) @map("sync_status")
+  syncError        String?        @map("sync_error")
+  syncedAt         DateTime?      @map("synced_at") @db.Timestamptz(3)
+  archivedAt       DateTime?      @map("archived_at") @db.Timestamptz(3)
+  createdById      String         @map("created_by_id") @db.Uuid
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  numbers   VoicePhoneNumber[]
+  calls     VoiceCall[]
+  campaigns VoiceCampaign[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, archivedAt])
+  @@map("voice_agents")
+}
+
+/// A phone number on the provider (bought there, or a Twilio number imported into Vapi).
+model VoicePhoneNumber {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  provider       VoiceProvider
+  /// Provider id of the number (Vapi phone-number id; Retell uses the E.164 number itself).
+  externalId     String            @map("external_id")
+  /// E.164.
+  number         String
+  label          String?
+  source         VoiceNumberSource @default(PROVIDER)
+  twilioSid      String?           @map("twilio_sid")
+  /// Agent answering inbound calls (AI receptionist).
+  inboundAgentId String?           @map("inbound_agent_id") @db.Uuid
+  releasedAt     DateTime?         @map("released_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company      Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  inboundAgent VoiceAgent?     @relation(fields: [inboundAgentId, companyId], references: [id, companyId], onDelete: NoAction)
+  calls        VoiceCall[]
+  campaigns    VoiceCampaign[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, provider, externalId])
+  @@index([provider, number])
+  @@map("voice_phone_numbers")
+}
+
+/// An outbound call list run by one agent from one number; approved once as a whole.
+model VoiceCampaign {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  name           String
+  agentId        String              @map("agent_id") @db.Uuid
+  numberId       String              @map("number_id") @db.Uuid
+  /// What the calls are about (passed to the agent as context).
+  purpose        String?
+  status         VoiceCampaignStatus @default(DRAFT)
+  approvalId     String?             @map("approval_id") @db.Uuid
+  createdById    String              @map("created_by_id") @db.Uuid
+  startedAt      DateTime?           @map("started_at") @db.Timestamptz(3)
+  completedAt    DateTime?           @map("completed_at") @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company          @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  agent   VoiceAgent       @relation(fields: [agentId, companyId], references: [id, companyId], onDelete: NoAction)
+  number  VoicePhoneNumber @relation(fields: [numberId, companyId], references: [id, companyId], onDelete: NoAction)
+  calls   VoiceCall[]
+
+  @@unique([id, companyId])
+  @@index([organizationId, companyId, status])
+  @@map("voice_campaigns")
+}
+
+/// One phone call (outbound or inbound) with its transcript, analysis and the records created from it.
+model VoiceCall {
+  id                 String             @id @default(uuid(7)) @db.Uuid
+  organizationId     String             @map("organization_id") @db.Uuid
+  companyId          String             @map("company_id") @db.Uuid
+  direction          VoiceCallDirection
+  status             VoiceCallStatus
+  provider           VoiceProvider?
+  externalCallId     String?            @map("external_call_id")
+  agentId            String?            @map("agent_id") @db.Uuid
+  numberId           String?            @map("number_id") @db.Uuid
+  campaignId         String?            @map("campaign_id") @db.Uuid
+  /// E.164 of the person called (outbound) or of the company number (inbound).
+  toNumber           String             @map("to_number")
+  fromNumber         String?            @map("from_number")
+  leadId             String?            @map("lead_id") @db.Uuid
+  contactId          String?            @map("contact_id") @db.Uuid
+  /// Display name of the person (snapshot).
+  subjectName        String?            @map("subject_name")
+  /// Why the call is made (context for the agent).
+  purpose            String?
+  approvalId         String?            @map("approval_id") @db.Uuid
+  requestedById      String?            @map("requested_by_id") @db.Uuid
+  requestedByProfile String?            @map("requested_by_profile")
+  scheduledFor       DateTime?          @map("scheduled_for") @db.Timestamptz(3)
+  blockedReason      String?            @map("blocked_reason")
+  error              String?
+  startedAt          DateTime?          @map("started_at") @db.Timestamptz(3)
+  endedAt            DateTime?          @map("ended_at") @db.Timestamptz(3)
+  durationSec        Int?               @map("duration_sec")
+  endedReason        String?            @map("ended_reason")
+  /// [{ role: "agent" | "caller", text, at? }] as delivered by the provider.
+  transcript         Json               @default("[]")
+  summary            String?
+  outcome            VoiceCallOutcome?
+  sentiment          VoiceSentiment?
+  /// Structured post-call analysis returned by the provider.
+  analysis           Json               @default("{}")
+  /// Provider-hosted recording (only kept when recording is enabled).
+  recordingUrl       String?            @map("recording_url")
+  costMinor          BigInt?            @map("cost_minor")
+  costCurrency       String             @default("USD") @map("cost_currency") @db.Char(3)
+  /// Post-call processing (CRM activity, follow-ups, meetings, tickets) finished.
+  processedAt        DateTime?          @map("processed_at") @db.Timestamptz(3)
+  /// [{ type, id, label }] records created from this call.
+  results            Json               @default("[]")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company           @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  agent    VoiceAgent?       @relation(fields: [agentId, companyId], references: [id, companyId], onDelete: NoAction)
+  number   VoicePhoneNumber? @relation(fields: [numberId, companyId], references: [id, companyId], onDelete: NoAction)
+  campaign VoiceCampaign?    @relation(fields: [campaignId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@unique([id, companyId])
+  @@unique([provider, externalCallId])
+  @@index([organizationId, companyId, createdAt])
+  @@index([companyId, status, scheduledFor])
+  @@index([companyId, leadId])
+  @@index([companyId, contactId])
+  @@index([campaignId])
+  @@map("voice_calls")
+}
+
+/// Numbers that must never be called (manual entries and callers who asked not to be called again).
+model VoiceDoNotCall {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  /// E.164.
+  phone          String
+  reason         String?
+  source         VoiceDncSource @default(MANUAL)
+  callId         String?        @map("call_id") @db.Uuid
+  createdById    String?        @map("created_by_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, phone])
+  @@map("voice_do_not_call")
+}

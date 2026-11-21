@@ -33,7 +33,8 @@ cp .env.example .env            # then set REALY_ENCRYPTION_KEY=$(openssl rand -
 pnpm install
 pnpm db:migrate                 # apply migrations
 pnpm db:seed                    # reference data (+ illustrative dev pricing catalog outside production)
-pnpm dev                        # web app on http://localhost:3000
+pnpm dev:user                   # user app on http://localhost:3000
+pnpm dev:admin                  # Control Center on http://localhost:3001 (docs/architecture/apps.md)
 pnpm worker                     # worker: outbox relay + password-reset email queue (required)
 ```
 
@@ -63,10 +64,11 @@ needs the same environment, including `TRUSTED_PROXY_HOPS`.
 ## Quality gates
 
 ```bash
-pnpm typecheck      # route types + tsc
+pnpm typecheck      # route types + tsc, both apps
+pnpm check:boundaries && pnpm i18n:check   # user/admin isolation, admin catalogs in sync
 pnpm lint
 pnpm test           # unit + integration against a real *_test PostgreSQL database (TEST_DATABASE_URL)
-pnpm build
+pnpm build:user && pnpm build:admin
 pnpm test:e2e       # Playwright founder journey against a running app (pnpm start + pnpm worker)
 ```
 
@@ -79,14 +81,12 @@ runs all of the above.
 ## Repository layout
 
 ```
-docs/                     architecture (frozen contracts + ADRs)
-prisma/                   schema, migrations (with DB-level invariants), seed
-src/app/[locale]/         UI (App Router, locale-prefixed, RTL-aware)
-src/app/api/              versioned HTTP API (/api/v1) and health checks
-src/server/core/          db, env, errors, crypto, http conventions, logging, pagination
-src/server/modules/       domain modules: auth, organizations, companies, rbac, pricing, billing,
-                          globalization, flags, audit, events
-src/worker/               worker entrypoint (outbox relay; workflows/agents in later phases)
-src/i18n/                 locale config, ICU message catalogs, Intl formatting
+docs/                     architecture (frozen contracts + ADRs); docs/architecture/apps.md: the two apps
+apps/user/                founder product (app.realy.si): src/app/[locale], src/app/api (/api/v1), components, i18n catalogs
+apps/admin/               Control Center (admin.realy.si): console, admin login/MFA, /api/v1/admin, own UI copy + theme
+packages/backend/         src/server/core, src/server/modules (domain modules), src/worker
+packages/database/        Prisma schema, migrations (with DB-level invariants), seed, generated client
+packages/auth-core/       per-app session cookies · packages/api-client/ user + admin browser clients
+packages/shared-utils/    lib utilities + i18n runtime · packages/shared-types/ types shared by backend and UI
 tests/                    unit, integration (real Postgres), e2e (Playwright)
 ```

@@ -1,0 +1,317 @@
+// Customer Support OS (src/server/modules/support). Requesters are shared Contact / Account rows (shared.prisma).
+// User ids (assignees, authors) are plain uuids so this module adds no back-relations to User.
+
+enum SupportChannel {
+  WEB
+  EMAIL
+  CHAT
+  PHONE
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum SupportTicketStatus {
+  NEW
+  OPEN
+  PENDING
+  ON_HOLD
+  SOLVED
+  CLOSED
+}
+
+/// Per-company support settings and the ticket number sequence.
+model SupportSettings {
+  companyId              String    @id @map("company_id") @db.Uuid
+  organizationId         String    @map("organization_id") @db.Uuid
+  nextTicketNumber       Int       @default(1) @map("next_ticket_number")
+  helpCenterEnabled      Boolean   @default(true) @map("help_center_enabled")
+  supportFormEnabled     Boolean   @default(true) @map("support_form_enabled")
+  /// Queue an AI classification task (support_agent) for new tickets created by staff.
+  aiTriageEnabled        Boolean   @default(false) @map("ai_triage_enabled")
+  /// The hired support AI employee drafts a first reply to every new ticket and proposes sending it; the send waits for
+  /// a person's approval unless the autonomy system allows it.
+  aiFirstResponseEnabled Boolean   @default(false) @map("ai_first_response_enabled")
+  /// On an SLA breach of a HIGH/URGENT ticket the support AI lead proposes the escalation and drafts a recovery reply.
+  aiSlaEscalationEnabled Boolean   @default(false) @map("ai_sla_escalation_enabled")
+  /// Customers may write to this address; it is shown on the help center and the support form.
+  emailChannelEnabled    Boolean   @default(false) @map("email_channel_enabled")
+  supportEmail           String?   @map("support_email")
+  /// Guided setup (/support/setup): last step reached (channels | promises | articles | done) and completion time.
+  setupStep              String?   @map("setup_step")
+  setupCompletedAt       DateTime? @map("setup_completed_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@map("support_settings")
+}
+
+model SupportCategory {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
+  companyId       String           @map("company_id") @db.Uuid
+  name            String
+  description     String?
+  /// Lower-case keywords for the rule-based classifier.
+  keywords        String[]         @default([])
+  defaultPriority SupportPriority? @map("default_priority")
+  archivedAt      DateTime?        @map("archived_at") @db.Timestamptz(3)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company         @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  tickets SupportTicket[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("support_categories")
+}
+
+model SupportSlaPolicy {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  companyId         String   @map("company_id") @db.Uuid
+  name              String
+  isDefault         Boolean  @default(false) @map("is_default")
+  /// Count only business hours (company timezone) toward targets.
+  businessHoursOnly Boolean  @default(false) @map("business_hours_only")
+  businessStartHour Int      @default(9) @map("business_start_hour")
+  businessEndHour   Int      @default(17) @map("business_end_hour")
+  /// ISO weekdays (1 = Monday … 7 = Sunday).
+  businessDays      Int[]    @default([1, 2, 3, 4, 5]) @map("business_days")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  targets SupportSlaTarget[]
+  tickets SupportTicket[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("support_sla_policies")
+}
+
+model SupportSlaTarget {
+  policyId             String          @map("policy_id") @db.Uuid
+  companyId            String          @map("company_id") @db.Uuid
+  priority             SupportPriority
+  firstResponseMinutes Int             @map("first_response_minutes")
+  resolutionMinutes    Int             @map("resolution_minutes")
+
+  policy SupportSlaPolicy @relation(fields: [policyId, companyId], references: [id, companyId], onDelete: Cascade)
+
+  @@id([policyId, priority])
+  @@map("support_sla_targets")
+}
+
+model SupportTicket {
+  id                      String              @id @default(uuid(7)) @db.Uuid
+  organizationId          String              @map("organization_id") @db.Uuid
+  companyId               String              @map("company_id") @db.Uuid
+  number                  Int
+  subject                 String
+  description             String?
+  requesterId             String?             @map("requester_id") @db.Uuid
+  accountId               String?             @map("account_id") @db.Uuid
+  channel                 SupportChannel      @default(WEB)
+  priority                SupportPriority     @default(NORMAL)
+  status                  SupportTicketStatus @default(NEW)
+  categoryId              String?             @map("category_id") @db.Uuid
+  tags                    String[]            @default([])
+  assigneeId              String?             @map("assignee_id") @db.Uuid
+  /// Shared Team row (HR) handling the ticket.
+  teamId                  String?             @map("team_id") @db.Uuid
+  /// Secret token for the customer's public ticket page /t/<token>.
+  publicToken             String              @unique @map("public_token")
+  slaPolicyId             String?             @map("sla_policy_id") @db.Uuid
+  firstResponseDueAt      DateTime?           @map("first_response_due_at") @db.Timestamptz(3)
+  resolutionDueAt         DateTime?           @map("resolution_due_at") @db.Timestamptz(3)
+  firstRespondedAt        DateTime?           @map("first_responded_at") @db.Timestamptz(3)
+  firstResponseBreachedAt DateTime?           @map("first_response_breached_at") @db.Timestamptz(3)
+  resolutionBreachedAt    DateTime?           @map("resolution_breached_at") @db.Timestamptz(3)
+  escalationLevel         Int                 @default(0) @map("escalation_level")
+  escalatedAt             DateTime?           @map("escalated_at") @db.Timestamptz(3)
+  solvedAt                DateTime?           @map("solved_at") @db.Timestamptz(3)
+  closedAt                DateTime?           @map("closed_at") @db.Timestamptz(3)
+  /// Customer satisfaction (1–5) given by the requester on the public ticket page after the ticket was solved.
+  csatScore               Int?                @map("csat_score")
+  csatComment             String?             @map("csat_comment")
+  csatRatedAt             DateTime?           @map("csat_rated_at") @db.Timestamptz(3)
+  /// Rule-based classifier output: { categoryId, priority, matched[] }.
+  classification          Json?
+  createdById             String?             @map("created_by_id") @db.Uuid
+  createdAt               DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company     Company             @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  requester   Contact?            @relation("SupportTicketRequester", fields: [requesterId, companyId], references: [id, companyId], onDelete: NoAction)
+  account     Account?            @relation("SupportTicketAccount", fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
+  category    SupportCategory?    @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+  slaPolicy   SupportSlaPolicy?   @relation(fields: [slaPolicyId, companyId], references: [id, companyId], onDelete: NoAction)
+  messages    SupportMessage[]
+  attachments SupportAttachment[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, number])
+  @@index([organizationId, companyId, status])
+  @@index([companyId, assigneeId, status])
+  @@index([requesterId])
+  @@index([accountId])
+  @@map("support_tickets")
+}
+
+enum SupportMessageKind {
+  PUBLIC_REPLY
+  INTERNAL_NOTE
+}
+
+enum SupportAuthorType {
+  AGENT
+  CUSTOMER
+  SYSTEM
+  AI
+}
+
+model SupportMessage {
+  id           String             @id @default(uuid(7)) @db.Uuid
+  companyId    String             @map("company_id") @db.Uuid
+  ticketId     String             @map("ticket_id") @db.Uuid
+  kind         SupportMessageKind
+  authorType   SupportAuthorType  @map("author_type")
+  authorUserId String?            @map("author_user_id") @db.Uuid
+  authorName   String?            @map("author_name")
+  body         String
+  /// AI-drafted internal note awaiting a person.
+  isDraft      Boolean            @default(false) @map("is_draft")
+  /// Delivery of a public reply to the requester: SENT, FAILED, NOT_CONFIGURED, NO_EMAIL.
+  emailStatus  String?            @map("email_status")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  ticket      SupportTicket       @relation(fields: [ticketId, companyId], references: [id, companyId], onDelete: Cascade)
+  attachments SupportAttachment[]
+
+  @@unique([id, companyId])
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
+}
+
+model SupportAttachment {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  ticketId     String   @map("ticket_id") @db.Uuid
+  messageId    String?  @map("message_id") @db.Uuid
+  fileName     String   @map("file_name")
+  contentType  String   @map("content_type")
+  size         Int
+  data         Bytes
+  uploadedById String?  @map("uploaded_by_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  ticket  SupportTicket   @relation(fields: [ticketId, companyId], references: [id, companyId], onDelete: Cascade)
+  message SupportMessage? @relation(fields: [messageId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@index([ticketId])
+  @@map("support_attachments")
+}
+
+enum SupportAssignmentStrategy {
+  ROUND_ROBIN
+  BY_CATEGORY
+}
+
+/// First matching active rule (by position) assigns new unassigned tickets.
+model SupportAssignmentRule {
+  id             String                    @id @default(uuid(7)) @db.Uuid
+  organizationId String                    @map("organization_id") @db.Uuid
+  companyId      String                    @map("company_id") @db.Uuid
+  name           String
+  strategy       SupportAssignmentStrategy
+  /// BY_CATEGORY: only tickets in this category.
+  categoryId     String?                   @map("category_id") @db.Uuid
+  /// Users to rotate through (BY_CATEGORY with one user assigns to that user).
+  assigneeIds    String[]                  @default([]) @map("assignee_ids")
+  cursor         Int                       @default(0)
+  position       Int                       @default(0)
+  active         Boolean                   @default(true)
+  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, active, position])
+  @@map("support_assignment_rules")
+}
+
+enum SupportEscalationTrigger {
+  FIRST_RESPONSE_BREACH
+  RESOLUTION_BREACH
+}
+
+model SupportEscalationRule {
+  id             String                   @id @default(uuid(7)) @db.Uuid
+  organizationId String                   @map("organization_id") @db.Uuid
+  companyId      String                   @map("company_id") @db.Uuid
+  name           String
+  trigger        SupportEscalationTrigger
+  raisePriority  Boolean                  @default(true) @map("raise_priority")
+  /// Reassign to this user when it fires.
+  reassignToId   String?                  @map("reassign_to_id") @db.Uuid
+  notifyManagers Boolean                  @default(true) @map("notify_managers")
+  active         Boolean                  @default(true)
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([companyId, active])
+  @@map("support_escalation_rules")
+}
+
+model SupportKbCategory {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  name           String
+  description    String?
+  position       Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  articles SupportKbArticle[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("support_kb_categories")
+}
+
+enum SupportArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model SupportKbArticle {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  companyId      String               @map("company_id") @db.Uuid
+  categoryId     String?              @map("category_id") @db.Uuid
+  title          String
+  slug           String
+  /// Markdown-ish text: paragraphs, "# " headings, "- " bullets.
+  body           String
+  status         SupportArticleStatus @default(DRAFT)
+  tags           String[]             @default([])
+  views          Int                  @default(0)
+  authorId       String               @map("author_id") @db.Uuid
+  publishedAt    DateTime?            @map("published_at") @db.Timestamptz(3)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company            @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  category SupportKbCategory? @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: NoAction)
+
+  @@unique([companyId, slug])
+  @@index([organizationId, companyId, status])
+  @@map("support_kb_articles")
+}

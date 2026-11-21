@@ -8,9 +8,9 @@
  * Runs as the SYSTEM actor through the normal assignRole path, so the grant is validated and audited.
  */
 import "dotenv/config";
-import { db } from "../src/server/core/db";
-import { systemContext } from "../src/server/core/context";
-import { assignRole, systemRoleId } from "../src/server/modules/rbac/service";
+import { db } from "../packages/backend/src/server/core/db";
+import { systemContext } from "../packages/backend/src/server/core/context";
+import { assignRole, systemRoleId } from "../packages/backend/src/server/modules/rbac/service";
 
 async function main() {
   const [email, roleKey, scopeType = "PLATFORM", scopeId = "*"] = process.argv.slice(2);

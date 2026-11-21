@@ -1,0 +1,37 @@
+"use client";
+
+import { Notice } from "@/components/ui/notice";
+import { useT } from "@/i18n/client";
+import { ApiError } from "@/lib/api-client";
+import { UpgradePrompt, upgradePropsFromError } from "@/components/billing/upgrade-prompt";
+
+/** Localized message for an API error code (the server's English message is for developers/logs). */
+export function useErrorMessage() {
+  const t = useT();
+  return (err: unknown) => {
+    const code = err instanceof ApiError ? err.code : "internal_error";
+    // A more specific, user-actionable reason when the server provides one (e.g. checkout_in_progress).
+    const reason = err instanceof ApiError && typeof err.details?.reason === "string" ? err.details.reason : null;
+    if (reason && /^[a-z_]+$/.test(reason)) {
+      const specific = t(`errors.reasons.${reason}`);
+      if (specific !== `errors.reasons.${reason}`) return specific;
+    }
+    const known = t(`errors.${code}`);
+    return known === `errors.${code}` ? t("errors.internal_error") : known;
+  };
+}
+
+export function FormError({ error }: { error: unknown }) {
+  const message = useErrorMessage();
+  if (!error) return null;
+  // Plan errors (plan_feature_locked / plan_limit_reached / plan_trial_expired) show the upgrade prompt instead.
+  const upgrade = upgradePropsFromError(error);
+  if (upgrade) return <UpgradePrompt {...upgrade} />;
+  const requestId = error instanceof ApiError ? error.requestId : undefined;
+  return (
+    <Notice tone="danger">
+      {message(error)}
+      {requestId ? <span className="ms-1 font-mono text-[11px] opacity-60">{requestId}</span> : null}
+    </Notice>
+  );
+}
