@@ -3566,6 +3566,10 @@
     "studio_video_producer": {
       "name": "Video Producer (Studio)",
       "summary": "Runs video projects from script and storyboard to voiceover, captions and the final edit."
+    },
+    "voice_assistant": {
+      "name": "Realy Voice Assistant",
+      "summary": "Answers your questions and small talk in Realy from live company data."
     }
   },
   "projects": {
@@ -23524,7 +23528,7 @@
       "CRITICAL": "critical"
     },
     "reply": {
-      "delegated": "On it. I’ve handed this to {team}. I’ll tell you when there’s a result.",
+      "delegated": "I’ve started this with {team} and will tell you when there’s a result.",
       "blocked": "I couldn’t start this: {reason}",
       "planned": "I’ve planned this and I’m assigning it now.",
       "failed": "I couldn’t start that command. Please try again.",
@@ -23536,7 +23540,22 @@
       "confirmUnclear": "I didn’t catch a clear decision. Please say “approve” or “reject”.",
       "doneNoAnswer": "That’s done. The results are in AI Command.",
       "runFailed": "That didn’t work out: {reason}",
-      "runCancelled": "That command was cancelled."
+      "runCancelled": "That command was cancelled.",
+      "queuedWorkerDown": "I’ve queued this for {team}, but background processing isn’t running right now, so it will only start once it’s back. I can’t promise a result soon.",
+      "queuedNoWorkerSetup": "I’ve queued this for {team}, but background processing isn’t set up on this workspace yet, so it won’t start until it is.",
+      "status": {
+        "hello": "Hi, I’m here.",
+        "intro": "Here’s what I can see right now:",
+        "tasks": "{running, plural, one {# AI task running} other {# AI tasks running}} and {queued} queued.",
+        "failed": "{count, plural, one {# task failed} other {# tasks failed}} in the last day.",
+        "approvals": "{count, plural, =0 {No approvals waiting.} one {# approval waiting.} other {# approvals waiting.}}",
+        "myTasks": "{count, plural, =0 {None of your tasks are due today.} one {# of your tasks is due today or overdue.} other {# of your tasks are due today or overdue.}}",
+        "meetings": "{count, plural, =0 {No meetings today.} one {# meeting today.} other {# meetings today.}}",
+        "workerDown": "Background processing isn’t running, so queued tasks are waiting.",
+        "nothingVisible": "Your access doesn’t include any company numbers I can read out.",
+        "noAi": "AI answers aren’t available right now, so these are just the live numbers.",
+        "aiFailed": "I couldn’t reach the AI just now, so these are just the live numbers."
+      }
     },
     "notice": {
       "notHeard": "I didn’t hear anything. Hold the button while you speak.",

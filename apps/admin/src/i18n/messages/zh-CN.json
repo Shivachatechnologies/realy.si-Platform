@@ -5277,6 +5277,10 @@
     "studio_video_producer": {
       "name": "视频制作人（工作室）",
       "summary": "从脚本、分镜到配音、字幕和成片剪辑，全程推进视频项目。"
+    },
+    "voice_assistant": {
+      "name": "Realy 语音助手",
+      "summary": "在 Realy 中根据实时公司数据回答你的问题和闲聊。"
     }
   },
   "projects": {
