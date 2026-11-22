@@ -5399,7 +5399,8 @@
         "do_not_contact": "在免打扰名单中",
         "already_in_crm": "已在您的 CRM 中",
         "lead_duplicate": "已是线索",
-        "lead_failed": "无法创建线索"
+        "lead_failed": "无法创建线索",
+        "not_interested": "不感兴趣"
       },
       "funnel": {
         "title": "实时漏斗",
@@ -5449,7 +5450,8 @@
         "ai_failed": "AI 写作服务无法响应",
         "no_ai_no_template": "未连接 AI 写作服务，设置中也没有写好的第一封邮件，因此没有准备任何邮件。",
         "draft_failed": "无法撰写第一封邮件。",
-        "send_failed": "有一封邮件无法发送"
+        "send_failed": "有一封邮件无法发送",
+        "company_ai_paused": "已暂停：本公司所有 AI 已暂停（自主 → 暂停所有 AI）。不会搜索、起草或发送任何内容。"
       },
       "providers": {
         "title": "数据与连接",
@@ -5594,6 +5596,31 @@
         },
         "back": "返回",
         "next": "下一步"
+      },
+      "replyClass": {
+        "INTERESTED": "感兴趣",
+        "NOT_INTERESTED": "不感兴趣",
+        "OUT_OF_OFFICE": "不在办公室",
+        "UNSUBSCRIBE": "要求停止",
+        "REFERRAL": "推荐他人",
+        "QUESTION": "提问",
+        "OTHER": "已回复"
+      },
+      "replyResumes": "不在办公室 — {date} 继续"
+    },
+    "winProbability": {
+      "label": "赢单概率（计算）",
+      "pending": "尚未计算（每 6 小时更新）",
+      "why": "为什么是这个数字（{date} 计算）",
+      "hint": "根据您过去两年已关闭的交易计算；不会更改您在交易上设置的概率。",
+      "factors": {
+        "base": "到达此阶段后赢单：{closed} 个中的 {won} 个（与阶段默认值混合）",
+        "stage_age": "在此阶段的天数：{days}",
+        "activity": "距上次活动天数：{days}",
+        "activity_none": "尚无活动记录",
+        "overdue": "已过预计成交日期",
+        "amount": "金额与您典型赢单的比较",
+        "owner": "负责人赢单率与公司对比"
       }
     }
   },
@@ -16247,7 +16274,8 @@
       "WEB": "网页",
       "EMAIL": "邮件",
       "CHAT": "聊天",
-      "PHONE": "电话"
+      "PHONE": "电话",
+      "WHATSAPP": "WhatsApp"
     },
     "ticket": {
       "title": "工单",
@@ -16304,7 +16332,10 @@
       "FAILED": "邮件失败",
       "NOT_CONFIGURED": "未配置邮件",
       "NO_EMAIL": "无邮箱地址",
-      "QUEUED": "发送中…"
+      "QUEUED": "发送中…",
+      "WHATSAPP_SENT": "已通过 WhatsApp 发送",
+      "WHATSAPP_FAILED": "WhatsApp 发送失败",
+      "WHATSAPP_NOT_CONFIGURED": "WhatsApp 未连接"
     },
     "reply": {
       "kinds": {
@@ -16459,7 +16490,11 @@
         "aiFirstResponseEnabled": "AI 首次回复",
         "aiFirstResponseEnabledHint": "您的支持 AI 员工会为每张新工单起草经过查证的首次回复。除非您授予自主权，发送需等待您的批准。",
         "aiSlaEscalationEnabled": "AI SLA 升级",
-        "aiSlaEscalationEnabledHint": "当高优先级或紧急工单违反 SLA 时，支持 AI 主管会建议由谁接手，并起草补救回复。"
+        "aiSlaEscalationEnabledHint": "当高优先级或紧急工单违反 SLA 时，支持 AI 主管会建议由谁接手，并起草补救回复。",
+        "emailChannelEnabled": "邮件工单",
+        "emailChannelEnabledHint": "发往支持地址的邮件按会话生成工单；回复从同一邮箱发出。",
+        "whatsappChannelEnabled": "WhatsApp 工单",
+        "whatsappChannelEnabledHint": "发送到您 WhatsApp Business 号码的消息会变成工单；回复通过 WhatsApp 发送（WhatsApp 只允许在客户最后一条消息后的 24 小时内自由回复）。"
       },
       "helpCenterLink": "打开帮助中心",
       "formLink": "打开客服表单",
@@ -16520,7 +16555,10 @@
       "reassignTo": "重新分配给",
       "noReassign": "不重新分配",
       "reassignToName": "重新分配给 {name}",
-      "aiDuty": "起草首次回复、分拣新工单并处理 SLA 违约；给客户的回复需等待您批准。"
+      "aiDuty": "起草首次回复、分拣新工单并处理 SLA 违约；给客户的回复需等待您批准。",
+      "inbound": "邮件和 WhatsApp 工单",
+      "inboundHint": "客户写信到您的支持邮箱或 WhatsApp 号码；每个对话都会成为工单，您的回复按原渠道发回。",
+      "saveAddress": "保存地址"
     },
     "help": {
       "title": "帮助中心",
@@ -16605,13 +16643,17 @@
         },
         "emailChannelEnabled": {
           "label": "邮件",
-          "hint": "在帮助中心和表单上显示您的客服邮箱地址。"
+          "hint": "发送到支持邮箱的邮件会变成工单，您的回复通过邮件发回。"
         },
         "preview": "预览",
         "address": "客服邮箱地址",
-        "addressHint": "会显示给客户。发到该邮箱的邮件不会自动导入——请在收件箱中登记为工单。",
+        "addressHint": "发送到此地址的邮件进入已连接的邮箱（通信 → 邮件中的 Gmail 或 Outlook）后会变成工单。只导入开启该渠道之后收到的邮件。",
         "emailReady": "邮件发送已配置：客户会通过邮件收到您的回复。",
-        "emailNotReady": "邮件发送尚未配置：您的回复会显示在客户的工单页面上，但不会发送邮件。"
+        "emailNotReady": "邮件发送尚未配置：您的回复会显示在客户的工单页面上，但不会发送邮件。",
+        "whatsappChannelEnabled": {
+          "label": "WhatsApp",
+          "hint": "发送到您 WhatsApp Business 号码的消息会变成工单；回复通过 WhatsApp 发回。"
+        }
       },
       "promise": {
         "respondLabel": "首次回复时间…",
@@ -16794,6 +16836,18 @@
       "speedHint": "此期间首次响应和解决所需小时数的中位数。",
       "medianFirstResponse": "首次响应",
       "medianResolution": "解决"
+    },
+    "inbound": {
+      "email": {
+        "ready": "发往 {support} 的邮件将从已连接的 {provider} 邮箱 {mailbox} 导入。",
+        "other_mailbox": "没有已连接的邮箱是 {support}。只有到达已连接邮箱（例如 {mailbox}（{provider}））的邮件才会导入：请将 {support} 转发到那里，或在通信 → 邮件中连接 {support}。",
+        "no_mailbox": "尚未连接邮箱，因此还不会导入邮件。请在通信 → 邮件中为 {support} 连接 Gmail 或 Outlook。",
+        "no_address": "请输入支持邮箱地址，以导入发送到该地址的邮件。"
+      },
+      "whatsapp": {
+        "ready": "WhatsApp Business 已连接：新消息会变成工单。",
+        "not_connected": "WhatsApp Business 未连接，因此还收不到消息。请在集成中连接。"
+      }
     }
   },
   "strategy": {

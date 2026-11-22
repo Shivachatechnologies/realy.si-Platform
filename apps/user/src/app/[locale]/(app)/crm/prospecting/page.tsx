@@ -10,7 +10,7 @@ import { EmailBadge } from "@/components/crm/prospecting/wizard";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
 import { getT } from "@/i18n/server";
-import { formatDateTime, formatMoney } from "@/i18n/format";
+import { formatDate, formatDateTime, formatMoney } from "@/i18n/format";
 import { providerInfo } from "@/server/modules/integrations/catalog";
 import { contactProviderStatus } from "@/server/modules/integrations/services/contacts";
 import { revenueChannels } from "@/server/modules/crm/channels";
@@ -24,6 +24,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const STATUS_TONE: Record<string, "success" | "warning" | "neutral" | "info" | "danger"> = { ACTIVE: "success", PAUSED: "warning", DRAFT: "neutral" };
+const REPLY_TONE: Record<string, "success" | "warning" | "neutral" | "info" | "danger" | "accent"> = {
+  INTERESTED: "success",
+  QUESTION: "info",
+  REFERRAL: "accent",
+  OUT_OF_OFFICE: "neutral",
+  NOT_INTERESTED: "warning",
+  UNSUBSCRIBE: "danger",
+  OTHER: "neutral",
+};
 const PERSON_TONE: Record<string, "success" | "warning" | "neutral" | "info" | "danger" | "accent"> = {
   FOUND: "neutral",
   READY: "info",
@@ -212,6 +221,12 @@ export default async function ProspectingPage({ searchParams }: { searchParams: 
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
                           <Badge tone={PERSON_TONE[p.status] ?? "neutral"}>{t(`crm.prospecting.personStatus.${p.status}`)}</Badge>
+                          {p.replyClass ? (
+                            <Badge tone={REPLY_TONE[p.replyClass] ?? "neutral"}>
+                              {t(`crm.prospecting.replyClass.${p.replyClass}`)}
+                              {p.replyClass === "OUT_OF_OFFICE" && p.replyResumeAt ? ` · ${formatDate(p.replyResumeAt, locale, tz)}` : ""}
+                            </Badge>
+                          ) : null}
                           {p.skipReason ? <span className="text-xs text-muted-foreground">{t(`crm.prospecting.skip.${p.skipReason}`) === `crm.prospecting.skip.${p.skipReason}` ? p.skipReason : t(`crm.prospecting.skip.${p.skipReason}`)}</span> : null}
                         </div>
                       </li>

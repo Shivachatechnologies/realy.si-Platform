@@ -11,7 +11,7 @@ export const blank = z.literal("").transform(() => undefined);
 
 export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
 export const STATUSES = ["NEW", "OPEN", "PENDING", "ON_HOLD", "SOLVED", "CLOSED"] as const;
-export const CHANNELS = ["WEB", "EMAIL", "CHAT", "PHONE"] as const;
+export const CHANNELS = ["WEB", "EMAIL", "CHAT", "PHONE", "WHATSAPP"] as const;
 export const OPEN_STATUSES = ["NEW", "OPEN", "PENDING", "ON_HOLD"] as const;
 
 export async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "support.read" | "support.manage", tx?: Tx) {

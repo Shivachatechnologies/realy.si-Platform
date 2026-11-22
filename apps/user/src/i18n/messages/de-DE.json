@@ -5399,7 +5399,8 @@
         "do_not_contact": "steht auf der Nicht-kontaktieren-Liste",
         "already_in_crm": "bereits in Ihrem CRM",
         "lead_duplicate": "bereits ein Lead",
-        "lead_failed": "Lead konnte nicht erstellt werden"
+        "lead_failed": "Lead konnte nicht erstellt werden",
+        "not_interested": "Kein Interesse"
       },
       "funnel": {
         "title": "Live-Trichter",
@@ -5449,7 +5450,8 @@
         "ai_failed": "Der KI-Schreibdienst konnte nicht antworten",
         "no_ai_no_template": "Kein KI-Schreibdienst verbunden und keine erste E-Mail in den Einstellungen hinterlegt, daher wurden keine E-Mails vorbereitet.",
         "draft_failed": "Die erste E-Mail konnte nicht geschrieben werden.",
-        "send_failed": "Eine E-Mail konnte nicht gesendet werden"
+        "send_failed": "Eine E-Mail konnte nicht gesendet werden",
+        "company_ai_paused": "Pausiert: Alle KI in diesem Unternehmen ist pausiert (Autonomie → Alle KI pausieren). Es wird nichts gesucht, entworfen oder gesendet."
       },
       "providers": {
         "title": "Daten und Verbindungen",
@@ -5594,6 +5596,31 @@
         },
         "back": "Zurück",
         "next": "Weiter"
+      },
+      "replyClass": {
+        "INTERESTED": "Interessiert",
+        "NOT_INTERESTED": "Kein Interesse",
+        "OUT_OF_OFFICE": "Abwesend",
+        "UNSUBSCRIBE": "Möchte keine E-Mails",
+        "REFERRAL": "Empfehlung",
+        "QUESTION": "Frage",
+        "OTHER": "Geantwortet"
+      },
+      "replyResumes": "Abwesend — geht weiter am {date}"
+    },
+    "winProbability": {
+      "label": "Gewinnwahrscheinlichkeit (berechnet)",
+      "pending": "Noch nicht berechnet (alle 6 Stunden aktualisiert)",
+      "why": "Warum dieser Wert (berechnet am {date})",
+      "hint": "Berechnet aus Ihren eigenen abgeschlossenen Deals der letzten zwei Jahre; die am Deal eingestellte Wahrscheinlichkeit bleibt unverändert.",
+      "factors": {
+        "base": "Gewonnen nach Erreichen dieser Phase: {won} von {closed} (gemischt mit dem Phasenstandard)",
+        "stage_age": "Tage in dieser Phase: {days}",
+        "activity": "Tage seit der letzten Aktivität: {days}",
+        "activity_none": "Noch keine Aktivität erfasst",
+        "overdue": "Erwartetes Abschlussdatum überschritten",
+        "amount": "Betrag im Vergleich zu Ihrem typischen gewonnenen Deal",
+        "owner": "Gewinnquote des Verantwortlichen vs. Unternehmen"
       }
     }
   },
@@ -16247,7 +16274,8 @@
       "WEB": "Web",
       "EMAIL": "E-Mail",
       "CHAT": "Chat",
-      "PHONE": "Telefon"
+      "PHONE": "Telefon",
+      "WHATSAPP": "WhatsApp"
     },
     "ticket": {
       "title": "Ticket",
@@ -16304,7 +16332,10 @@
       "FAILED": "E-Mail fehlgeschlagen",
       "NOT_CONFIGURED": "E-Mail nicht konfiguriert",
       "NO_EMAIL": "Keine E-Mail-Adresse",
-      "QUEUED": "Wird gesendet…"
+      "QUEUED": "Wird gesendet…",
+      "WHATSAPP_SENT": "Per WhatsApp gesendet",
+      "WHATSAPP_FAILED": "WhatsApp fehlgeschlagen",
+      "WHATSAPP_NOT_CONFIGURED": "WhatsApp nicht verbunden"
     },
     "reply": {
       "kinds": {
@@ -16459,7 +16490,11 @@
         "aiFirstResponseEnabled": "KI-Erstantwort",
         "aiFirstResponseEnabledHint": "Ihr KI-Support-Mitarbeiter entwirft für jedes neue Ticket eine recherchierte erste Antwort. Der Versand wartet auf Ihre Freigabe, sofern Sie keine Autonomie gewähren.",
         "aiSlaEscalationEnabled": "KI-SLA-Eskalation",
-        "aiSlaEscalationEnabledHint": "Verletzt ein dringendes oder hoch priorisiertes Ticket sein SLA, schlägt die KI-Supportleitung eine Übernahme vor und entwirft eine Antwort."
+        "aiSlaEscalationEnabledHint": "Verletzt ein dringendes oder hoch priorisiertes Ticket sein SLA, schlägt die KI-Supportleitung eine Übernahme vor und entwirft eine Antwort.",
+        "emailChannelEnabled": "E-Mail-Tickets",
+        "emailChannelEnabledHint": "E-Mails an die Support-Adresse werden zu Tickets, nach Gespräch gruppiert; Antworten gehen aus demselben Postfach.",
+        "whatsappChannelEnabled": "WhatsApp-Tickets",
+        "whatsappChannelEnabledHint": "Nachrichten an Ihre WhatsApp-Business-Nummer werden zu Tickets; Antworten gehen per WhatsApp (freie Antworten erlaubt WhatsApp innerhalb von 24 Stunden nach der letzten Kundennachricht)."
       },
       "helpCenterLink": "Hilfecenter öffnen",
       "formLink": "Supportformular öffnen",
@@ -16520,7 +16555,10 @@
       "reassignTo": "Neu zuweisen an",
       "noReassign": "Nicht neu zuweisen",
       "reassignToName": "Neu zuweisen an {name}",
-      "aiDuty": "Entwirft Erstantworten, sortiert neue Tickets und kümmert sich um SLA-Verletzungen; Antworten an Kunden warten auf Ihre Freigabe."
+      "aiDuty": "Entwirft Erstantworten, sortiert neue Tickets und kümmert sich um SLA-Verletzungen; Antworten an Kunden warten auf Ihre Freigabe.",
+      "inbound": "Tickets per E-Mail und WhatsApp",
+      "inboundHint": "Kunden schreiben an Ihre Support-Adresse oder WhatsApp-Nummer; jedes Gespräch wird ein Ticket und Ihre Antworten gehen auf demselben Weg zurück.",
+      "saveAddress": "Adresse speichern"
     },
     "help": {
       "title": "Hilfecenter",
@@ -16605,13 +16643,17 @@
         },
         "emailChannelEnabled": {
           "label": "E-Mail",
-          "hint": "Ihre Support-E-Mail-Adresse im Hilfecenter und im Formular anzeigen."
+          "hint": "E-Mails an Ihre Support-Adresse werden zu Tickets, und Ihre Antworten gehen per E-Mail zurück."
         },
         "preview": "Vorschau",
         "address": "Support-E-Mail-Adresse",
-        "addressHint": "Wird Kunden angezeigt. Dorthin gesendete E-Mails werden nicht automatisch importiert – erfassen Sie sie im Posteingang als Tickets.",
+        "addressHint": "E-Mails an diese Adresse werden zu Tickets, sobald sie in einem verbundenen Postfach ankommen (Gmail oder Outlook unter Kommunikation → E-Mail). Importiert wird nur, was nach dem Einschalten des Kanals eingeht.",
         "emailReady": "E-Mail-Versand ist eingerichtet: Kunden erhalten Ihre Antworten per E-Mail.",
-        "emailNotReady": "E-Mail-Versand ist noch nicht eingerichtet: Ihre Antworten erscheinen auf der Ticketseite des Kunden, es werden aber keine E-Mails versendet."
+        "emailNotReady": "E-Mail-Versand ist noch nicht eingerichtet: Ihre Antworten erscheinen auf der Ticketseite des Kunden, es werden aber keine E-Mails versendet.",
+        "whatsappChannelEnabled": {
+          "label": "WhatsApp",
+          "hint": "Nachrichten an Ihre WhatsApp-Business-Nummer werden zu Tickets; Antworten gehen per WhatsApp zurück."
+        }
       },
       "promise": {
         "respondLabel": "Erste Antwort innerhalb von …",
@@ -16794,6 +16836,18 @@
       "speedHint": "Median der Stunden bis zur ersten Antwort und bis zur Lösung in diesem Zeitraum.",
       "medianFirstResponse": "Erste Antwort",
       "medianResolution": "Lösung"
+    },
+    "inbound": {
+      "email": {
+        "ready": "E-Mails an {support} werden aus dem verbundenen {provider}-Postfach {mailbox} importiert.",
+        "other_mailbox": "Kein verbundenes Postfach ist {support}. Importiert wird nur, was in einem verbundenen Postfach ankommt, z. B. {mailbox} ({provider}): Leiten Sie {support} dorthin weiter oder verbinden Sie {support} unter Kommunikation → E-Mail.",
+        "no_mailbox": "Kein Postfach ist verbunden, daher wird noch keine E-Mail importiert. Verbinden Sie Gmail oder Outlook für {support} unter Kommunikation → E-Mail.",
+        "no_address": "Geben Sie Ihre Support-E-Mail-Adresse ein, um E-Mails an sie zu importieren."
+      },
+      "whatsapp": {
+        "ready": "WhatsApp Business ist verbunden: neue Nachrichten werden zu Tickets.",
+        "not_connected": "WhatsApp Business ist nicht verbunden, daher kommen noch keine Nachrichten an. Verbinden Sie es unter Integrationen."
+      }
     }
   },
   "strategy": {

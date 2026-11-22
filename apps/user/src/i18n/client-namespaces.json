@@ -1529,6 +1529,7 @@
       "support.dashboard",
       "support.filters",
       "support.followUps",
+      "support.inbound",
       "support.kb",
       "support.manage",
       "support.priorities",

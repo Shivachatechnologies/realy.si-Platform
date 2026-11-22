@@ -15,6 +15,8 @@ import { createOutreachDraft } from "./outreach";
 import { enrichLead, latestIntel } from "./intel";
 import { enroll } from "./cadences";
 import { listAutopilots } from "./prospecting";
+import { listCrmMeetings, scheduleMeeting } from "./meetings";
+import { storedPrediction } from "./win-probability";
 import { findPeople, SENIORITIES } from "@/server/modules/integrations/services/contacts";
 
 const money = (m: bigint, currency: string) => `${toMajor(m, currency) || "0"} ${currency}`;
@@ -70,6 +72,10 @@ export const CRM_TOOLS: Record<string, ToolDefinition> = {
         `Account: ${d.account ? `${d.account.name} (${d.account.id})` : "none"} · Contact: ${d.contact ? `${contactName(d.contact)}${d.contact.email ? ` <${d.contact.email}>` : ""}` : "none"} · Owner: ${d.ownerName ?? "unassigned"}`,
         `Pipeline: ${d.pipeline.name} · Stage: ${d.stage.name} (${d.status}) · Stages: ${d.pipeline.stages.map((s) => `${s.name} [${s.id}]`).join(", ")}`,
         `Amount: ${money(d.amountMinor, d.currency)} · Probability: ${d.effectiveProbability}% · Weighted: ${money(d.weightedMinor, d.currency)} · Expected close: ${isoDay(d.expectedCloseDate) ?? "none"}`,
+        (() => {
+          const p = storedPrediction(d);
+          return p ? `Computed win probability (from history, ${isoDay(p.at)}): ${p.probability}% — ${p.factors.map((f) => `${f.key} ${f.delta >= 0 && f.key !== "base" ? "+" : ""}${f.delta}`).join(", ")}` : "Computed win probability: not computed yet";
+        })(),
         `Source: ${d.source ?? "unknown"} · Campaign: ${d.campaignCode ?? "none"} · Created: ${isoDay(d.createdAt)} · In stage since: ${isoDay(d.stageEnteredAt)}${d.staleSince ? " · STALE" : ""}${d.lostReason ? ` · Lost reason: ${d.lostReason}` : ""}`,
         `Description: ${d.description ?? "none"}`,
         "",
@@ -582,6 +588,78 @@ export const CRM_TOOLS: Record<string, ToolDefinition> = {
       if (!r.data.people.length) return { content: `${r.providerId} found no matching people at ${input.domain}.` };
       const lines = r.data.people.map((p) => `- ${p.fullName}${p.title ? `, ${p.title}` : ""}: ${p.email ? `${p.email} (${p.emailStatus.toLowerCase()}, from ${p.emailSource})` : "no email returned"}${p.linkedinUrl ? ` · ${p.linkedinUrl}` : ""}`);
       return { content: `From ${r.providerId}:\n${lines.join("\n")}\nOnly verified addresses should be contacted.` };
+    },
+  }),
+
+  book_crm_meeting: def({
+    name: "book_crm_meeting",
+    version: 1,
+    description:
+      "Propose booking a sales meeting with a lead, contact or deal's contact (exactly one of leadId, contactId, dealId). startsAt is ISO 8601 with the UTC offset. After a person approves, the meeting is saved on the record and — when Google or Outlook Calendar is connected — added to the organiser's calendar with the customer invited (the calendar provider sends the invitation). Without a connected calendar nobody is invited; the result says so. Check read_crm_meetings first to avoid double booking.",
+    input: z
+      .object({
+        leadId: z.string().uuid().optional(),
+        contactId: z.string().uuid().optional(),
+        dealId: z.string().uuid().optional(),
+        title: z.string().trim().min(1).max(200),
+        startsAt: z.string().datetime({ offset: true }),
+        durationMin: z.number().int().min(15).max(240).optional(),
+        agenda: z.string().trim().max(5000).optional(),
+        location: z.string().trim().max(300).optional(),
+      })
+      .strict()
+      .refine((v) => [v.leadId, v.contactId, v.dealId].filter(Boolean).length === 1, { message: "Give exactly one of leadId, contactId, dealId" }),
+    modelSchema: {
+      type: "object",
+      properties: {
+        leadId: uuidField("Lead id"),
+        contactId: uuidField("Contact id"),
+        dealId: uuidField("Deal id"),
+        title: { type: "string", description: "Meeting title" },
+        startsAt: { type: "string", description: "ISO 8601 date-time with offset, e.g. 2026-12-03T10:00:00+01:00" },
+        durationMin: { type: "integer", minimum: 15, maximum: 240 },
+        agenda: { type: "string" },
+        location: { type: "string", description: "Video link, phone or address" },
+      },
+      required: ["title", "startsAt"],
+      additionalProperties: false,
+    },
+    permissions: ["sales.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 30_000,
+    summarize: ({ title, startsAt }) => `Book meeting "${title.slice(0, 80)}" at ${startsAt}`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const m = await scheduleMeeting(ctx, organizationId, companyId, { ...input, durationMin: input.durationMin ?? 30, addToCalendar: true });
+      const when = m.startsAt.toISOString().slice(0, 16).replace("T", " ");
+      const status =
+        m.calendar === "added"
+          ? m.attendeeEmail
+            ? `added to the ${m.calendarProvider === "google_calendar" ? "Google" : "Outlook"} calendar and the invitation was sent to ${m.attendeeEmail} by the calendar provider`
+            : "added to the calendar; the customer has no email address, so nobody was invited"
+          : m.calendar === "failed"
+            ? `saved, but the calendar refused it (${m.calendarError ?? "error"}) — nobody was invited; retry from the meeting`
+            : "saved on the record, but no calendar is connected — nobody was invited; a person must send the invitation (.ics on the meeting)";
+      return { content: `Meeting "${m.title}" on ${when} UTC: ${status}.`, records: [`crm_meeting:${m.id}`] };
+    },
+  }),
+
+  read_crm_meetings: def({
+    name: "read_crm_meetings",
+    version: 1,
+    description: "Lists upcoming scheduled sales meetings (optionally for one lead, contact or deal) with time, attendee and whether the calendar invitation went out.",
+    input: z.object({ leadId: z.string().uuid().optional(), contactId: z.string().uuid().optional(), dealId: z.string().uuid().optional() }).strict(),
+    modelSchema: { type: "object", properties: { leadId: uuidField("Lead id"), contactId: uuidField("Contact id"), dealId: uuidField("Deal id") }, required: [], additionalProperties: false },
+    permissions: ["sales.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: () => "Read upcoming sales meetings",
+    async execute(input, { ctx, organizationId, companyId }) {
+      const rows = await listCrmMeetings(ctx, organizationId, companyId, { ...input, upcoming: true, take: 50 });
+      if (!rows.length) return { content: "No upcoming sales meetings." };
+      const lines = rows.map((m) => `- ${m.id} ${m.startsAt.toISOString().slice(0, 16)}Z–${m.endsAt.toISOString().slice(11, 16)}Z "${m.title}" with ${m.attendeeName ?? "?"}${m.attendeeEmail ? ` <${m.attendeeEmail}>` : ""} · ${m.inviteSentAt ? "invited" : m.calendarError ? "calendar error" : "not invited"}`);
+      return { content: lines.join("\n"), records: rows.map((m) => `crm_meeting:${m.id}`) };
     },
   }),
 };

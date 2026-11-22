@@ -4,6 +4,7 @@ import { AppError } from "@/server/core/errors";
 import { getControls } from "@/server/core/platform-controls";
 import { activeConnection } from "@/server/modules/comms/connections-bridge";
 import { companyEmailProvider } from "@/server/modules/email/provider";
+import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
 
 /**
  * Which external providers the revenue engine can use for this company right now (all through Integrations):
@@ -51,11 +52,18 @@ export async function connectedCalendar(organizationId: string, companyId: strin
   return null;
 }
 
-/** Platform kill switches for AI features (Admin → Platform Controls). */
-export async function aiPaused() {
+/**
+ * Kill switches for AI features: the platform's (Admin → Platform Controls) and, when a company is given, the company's
+ * own "Pause all AI" (Autonomy). Every AI step of the revenue engine checks this before generating or sending anything.
+ */
+export async function aiPaused(organizationId?: string, companyId?: string) {
   const c = await getControls();
-  return !c.aiWorkforceEnabled || c.aiExecutionPaused;
+  if (!c.aiWorkforceEnabled || c.aiExecutionPaused) return true;
+  return !!organizationId && !!companyId && (await isCompanyAiPaused(organizationId, companyId));
 }
-export async function assertAiAllowed() {
-  if (await aiPaused()) throw new AppError("not_available", "AI is paused for the platform right now. Nothing was generated.", { reason: "ai_paused" });
+export async function assertAiAllowed(organizationId?: string, companyId?: string) {
+  const c = await getControls();
+  if (!c.aiWorkforceEnabled || c.aiExecutionPaused) throw new AppError("not_available", "AI is paused for the platform right now. Nothing was generated.", { reason: "ai_paused" });
+  if (organizationId && companyId && (await isCompanyAiPaused(organizationId, companyId)))
+    throw new AppError("not_available", "All AI in this company is paused (Autonomy → Pause all AI). Nothing was generated.", { reason: "company_ai_paused" });
 }

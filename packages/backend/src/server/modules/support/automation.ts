@@ -36,7 +36,7 @@ export async function handleNewTicket(companyId: string, ticketId: string) {
   const prefix = `First response #${ticket.number}`;
   if (await alreadyQueued(ticket.organizationId, companyId, ticket.id, prefix)) return 0;
   // Autonomy (docs/autonomy.md): may the support department email customers on its own right now?
-  const autonomy = await evaluateAutonomy(systemContext(), ticket.organizationId, companyId, { department: "support", actionClass: "send_message", channel: "email" }).catch(() => null);
+  const autonomy = await evaluateAutonomy(systemContext(), ticket.organizationId, companyId, { department: "support", actionClass: "send_message", channel: ticket.channel === "WHATSAPP" ? "whatsapp" : "email" }).catch(() => null);
   const autoSend = autonomy?.decision === "auto";
   const instructions = [
     `A new support ticket arrived (#${ticket.number}, ticketId ${ticket.id}, channel ${ticket.channel}). Call read_ticket first, then search_kb_articles for the customer's question.`,

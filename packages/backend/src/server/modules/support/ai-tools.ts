@@ -113,7 +113,7 @@ export const SUPPORT_TOOLS: Record<string, ToolDefinition> = {
   send_ticket_reply: def({
     name: "send_ticket_reply",
     version: 1,
-    description: "Propose sending a public reply to the ticket's requester (emailed, and visible on their ticket page). A person must approve the exact text; the result states whether the email was actually delivered.",
+    description: "Propose sending a public reply to the ticket's requester (emailed — or sent on WhatsApp for WhatsApp tickets — and visible on their ticket page). A person must approve the exact text; the result states whether the email was actually delivered.",
     input: z.object({ ticketId: z.string().uuid(), body: z.string().trim().min(1).max(20_000) }).strict(),
     modelSchema: { type: "object", properties: { ticketId: { type: "string" }, body: { type: "string", description: "Reply to the customer" } }, required: ["ticketId", "body"], additionalProperties: false },
     permissions: ["support.manage"],
@@ -124,8 +124,9 @@ export const SUPPORT_TOOLS: Record<string, ToolDefinition> = {
     async execute({ ticketId, body }, { ctx, organizationId, companyId }) {
       const r = await addMessage(ctx, organizationId, companyId, ticketId, { kind: "PUBLIC_REPLY", body });
       if (r.emailStatus === "SENT") return { content: "The reply was posted on the ticket and emailed to the requester.", records: [`ticket:${ticketId}`] };
+      if (r.emailStatus === "WHATSAPP_SENT") return { content: "The reply was posted on the ticket and sent to the requester on WhatsApp (accepted by WhatsApp; delivery is reported by the provider).", records: [`ticket:${ticketId}`] };
       if (r.emailStatus === "NO_EMAIL") return { content: "The reply was posted on the customer's ticket page; the requester has no email address, so no email was sent.", records: [`ticket:${ticketId}`] };
-      throw new AppError(r.emailStatus === "NOT_CONFIGURED" ? "not_configured" : "not_available", `The reply was posted on the ticket page, but the email was not delivered (${r.emailStatus}).`);
+      throw new AppError(r.emailStatus === "NOT_CONFIGURED" || r.emailStatus === "WHATSAPP_NOT_CONFIGURED" ? "not_configured" : "not_available", `The reply was posted on the ticket page, but it was not delivered (${r.emailStatus}).`);
     },
   }),
 

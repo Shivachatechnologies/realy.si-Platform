@@ -206,7 +206,7 @@ export async function deleteVisitorData(ctx: RequestContext, organizationId: str
     await authorize(ctx, organizationId, companyId, "support.manage", tx);
     const v = await tx.livechatVisitor.findFirst({ where: { id: visitorId, organizationId, companyId }, select: { id: true, leadId: true } });
     if (!v) throw notFound("Visitor");
-    const convs = await tx.livechatConversation.findMany({ where: { visitorId: v.id, companyId }, select: { leadId: true, ticketId: true } });
+    const convs = await tx.livechatConversation.findMany({ where: { visitorId: v.id, companyId }, select: { leadId: true, ticketId: true }, orderBy: { createdAt: "desc" }, take: 200 });
     await tx.livechatVisitor.delete({ where: { id: v.id } });
     const leadIds = [...new Set([v.leadId, ...convs.map((c) => c.leadId)].filter((x): x is string => !!x))];
     const ticketIds = [...new Set(convs.map((c) => c.ticketId).filter((x): x is string => !!x))];

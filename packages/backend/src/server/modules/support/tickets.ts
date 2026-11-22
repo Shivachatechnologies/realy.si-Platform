@@ -11,6 +11,8 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { sendPlainEmail } from "@/server/modules/email/service";
+import { replyInThreadAs } from "@/server/modules/comms/email";
+import { sendWhatsApp } from "@/server/modules/integrations/services/messaging";
 import { createTask } from "@/server/modules/agents/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
@@ -232,6 +234,8 @@ interface CreateArgs {
   assigneeId?: string;
   teamId?: string;
   tags: string[];
+  /** Inbound channel thread (support/inbound.ts): "email:<thread id>" or "whatsapp:<E.164>". */
+  externalThreadKey?: string;
 }
 
 async function createInTx(tx: Tx, ctx: RequestContext, organizationId: string, companyId: string, chain: ScopeChain, input: CreateArgs) {
@@ -274,6 +278,7 @@ async function createInTx(tx: Tx, ctx: RequestContext, organizationId: string, c
       slaPolicyId: policy?.id ?? null,
       ...due,
       classification: { categoryId: cls.categoryId, priority: cls.priority, sentiment: cls.sentiment, matched: cls.matched } as Prisma.InputJsonValue,
+      externalThreadKey: input.externalThreadKey ?? null,
       createdById: ctx.actor.id,
     },
   });
@@ -325,6 +330,54 @@ export async function createTicket(ctx: RequestContext, organizationId: string, 
   return ticket;
 }
 
+/**
+ * A ticket from an inbound channel (support/inbound.ts: email to the support address, a WhatsApp message). Runs the
+ * same intake as every ticket (classification, assignment, SLA, ticket.created → AI first response) and records the
+ * provider message id on a system note so a redelivered message never creates a second ticket.
+ */
+export async function createInboundTicket(
+  organizationId: string,
+  companyId: string,
+  input: { channel: "EMAIL" | "WHATSAPP"; subject: string; description: string; requesterId?: string; requesterEmail?: string; requesterName?: string; externalThreadKey: string; externalMessageId: string; note: string },
+) {
+  const ctx = systemContext();
+  return transaction(async (tx) => {
+    if (await tx.supportMessage.findFirst({ where: { companyId, externalMessageId: input.externalMessageId }, select: { id: true } })) return null;
+    const chain = await companyChain(tx, organizationId, companyId);
+    const { ticket } = await createInTx(tx, ctx, organizationId, companyId, chain, {
+      subject: input.subject.slice(0, 300) || "(no subject)",
+      description: input.description.slice(0, 20_000),
+      requesterId: input.requesterId,
+      requesterEmail: input.requesterEmail,
+      requesterName: input.requesterName,
+      channel: input.channel,
+      tags: [input.channel === "EMAIL" ? "email" : "whatsapp"],
+      externalThreadKey: input.externalThreadKey,
+    });
+    await tx.supportMessage.create({ data: { companyId, ticketId: ticket.id, kind: "INTERNAL_NOTE", authorType: "SYSTEM", body: input.note.slice(0, 2000), externalMessageId: input.externalMessageId } });
+    return ticket;
+  });
+}
+
+/** A customer message on an existing ticket from an inbound channel: reopens it and tells the assignee (deduped). */
+export async function appendInboundMessage(t: { id: string; organizationId: string; companyId: string; number: number; subject: string; status: SupportTicketStatus; assigneeId: string | null }, input: { body: string; authorName: string | null; externalMessageId: string }) {
+  const ctx = systemContext();
+  return transaction(async (tx) => {
+    if (await tx.supportMessage.findFirst({ where: { companyId: t.companyId, externalMessageId: input.externalMessageId }, select: { id: true } })) return null;
+    const m = await tx.supportMessage.create({
+      data: { companyId: t.companyId, ticketId: t.id, kind: "PUBLIC_REPLY", authorType: "CUSTOMER", authorName: input.authorName?.slice(0, 200) ?? null, body: input.body.slice(0, 20_000), externalMessageId: input.externalMessageId },
+    });
+    const reopen = t.status === "PENDING" || t.status === "SOLVED" || t.status === "ON_HOLD";
+    await tx.supportTicket.update({ where: { id: t.id }, data: { updatedAt: new Date(), ...(reopen ? { status: "OPEN", solvedAt: null } : {}) } });
+    if (reopen) {
+      await emitDomainEvent(tx, ctx, "ticket.updated", { organizationId: t.organizationId, companyId: t.companyId, entityType: "ticket", entityId: t.id, data: { number: t.number, status: "OPEN", previousStatus: t.status, customerReplied: true } });
+    }
+    const recipients = t.assigneeId ? [t.assigneeId] : await usersWithPermission(tx, t.organizationId, t.companyId, "support.manage");
+    await notifyUsers(tx, t.organizationId, recipients, "support.customer_reply", { companyId: t.companyId, title: `#${t.number} ${t.subject}`.slice(0, 120), href: ticketHref(t.id) });
+    return m;
+  });
+}
+
 /** Public support form /support-form/<companyId>: creates a WEB ticket and emails the requester their ticket link. */
 export async function createPublicTicket(companyId: string, raw: z.input<typeof publicTicketInput>, locale: string) {
   const input = publicTicketInput.parse(raw);
@@ -373,12 +426,12 @@ export async function getTicket(ctx: RequestContext, organizationId: string, com
       account: { select: { id: true, name: true } },
       category: { select: { id: true, name: true } },
       slaPolicy: { select: { id: true, name: true } },
-      messages: { orderBy: { createdAt: "asc" }, include: { attachments: { select: { id: true, fileName: true, size: true, contentType: true } } } },
+      messages: { orderBy: { createdAt: "asc" }, take: 500, include: { attachments: { select: { id: true, fileName: true, size: true, contentType: true } } } },
       attachments: { where: { messageId: null }, select: { id: true, fileName: true, size: true, contentType: true, createdAt: true } },
     },
   });
   if (!t) throw notFound("Ticket");
-  const followUps = await db().workTask.findMany({ where: { organizationId, companyId, sourceType: "ticket", sourceId: id }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, status: true, assigneeId: true, dueDate: true } });
+  const followUps = await db().workTask.findMany({ where: { organizationId, companyId, sourceType: "ticket", sourceId: id }, orderBy: { createdAt: "asc" }, take: 100, select: { id: true, title: true, status: true, assigneeId: true, dueDate: true } });
   const names = await userNames(db(), [t.assigneeId, ...t.messages.map((m) => m.authorUserId), ...followUps.map((f) => f.assigneeId)]);
   const team = t.teamId ? await db().team.findFirst({ where: { id: t.teamId, companyId }, select: { id: true, name: true } }) : null;
   const otherTickets = t.requesterId
@@ -470,11 +523,12 @@ export async function addMessage(ctx: RequestContext, organizationId: string, co
     await authorize(ctx, organizationId, companyId, "support.manage", tx);
     const ticket = await loadTicket(tx, organizationId, companyId, id);
     const now = new Date();
-    const requester = ticket.requesterId ? await tx.contact.findFirst({ where: { id: ticket.requesterId }, select: { email: true } }) : null;
+    const requester = ticket.requesterId ? await tx.contact.findFirst({ where: { id: ticket.requesterId }, select: { email: true, phone: true } }) : null;
     const company = await tx.company.findFirstOrThrow({ where: { id: companyId }, select: { defaultLocale: true } });
     const isPublic = input.kind === "PUBLIC_REPLY";
+    const target = replyTarget(ticket, requester);
     const message = await tx.supportMessage.create({
-      data: { companyId, ticketId: id, kind: input.kind, authorType: "AGENT", authorUserId: ctx.actor.id, body: input.body, emailStatus: isPublic ? (requester?.email ? "QUEUED" : "NO_EMAIL") : null },
+      data: { companyId, ticketId: id, kind: input.kind, authorType: "AGENT", authorUserId: ctx.actor.id, body: input.body, emailStatus: isPublic ? (target ? "QUEUED" : "NO_EMAIL") : null },
     });
     const data: Prisma.SupportTicketUncheckedUpdateInput = {};
     if (isPublic && !ticket.firstRespondedAt) data.firstRespondedAt = now;
@@ -492,22 +546,46 @@ export async function addMessage(ctx: RequestContext, organizationId: string, co
       if (STATUS_EVENTS.has(String(data.status)) && !STATUS_EVENTS.has(ticket.status)) await emitDomainEvent(tx, ctx, "ticket.resolved", { organizationId, companyId, entityType: "ticket", entityId: id, data: { ...snap, solvedAt: now } });
     }
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: isPublic ? "ticket.replied" : "ticket.note_added", resourceType: "ticket", resourceId: id, newValue: { messageId: message.id, status: data.status } });
-    return { message, ticket, recipient: isPublic ? (requester?.email ?? null) : null, locale: company.defaultLocale };
+    return { message, ticket, recipient: isPublic ? target : null, locale: company.defaultLocale };
   });
   if (!recipient) return { message, emailStatus: message.emailStatus };
-  const r = await sendPlainEmail({
-    to: recipient,
-    subject: `Re: [#${ticket.number}] ${ticket.subject}`,
-    text: `${input.body}\n\n—\nView the conversation or reply:\n${publicTicketUrl(locale, ticket.publicToken)}`,
-    template: "support.reply",
-    organizationId,
-    userId: ctx.actor.id,
-    locale,
-    companyId,
-    companyOnly: true,
-  });
-  await db().supportMessage.update({ where: { id: message.id }, data: { emailStatus: r.status } });
+  const r = await deliverReply(organizationId, companyId, ticket, recipient, input.body, locale, ctx.actor.id);
+  await db().supportMessage.update({ where: { id: message.id }, data: { emailStatus: r.status, ...(r.externalMessageId ? { externalMessageId: r.externalMessageId } : {}) } });
   return { message: { ...message, emailStatus: r.status }, emailStatus: r.status };
+}
+
+type ReplyTarget = { kind: "email"; to: string; threadId: string | null } | { kind: "whatsapp"; to: string };
+
+/** Where a public reply goes: back on WhatsApp for WhatsApp tickets, else by email (in the mail thread it came from). */
+function replyTarget(ticket: { channel: SupportChannel; externalThreadKey: string | null }, requester: { email: string | null; phone: string | null } | null): ReplyTarget | null {
+  const key = ticket.externalThreadKey ?? "";
+  if (ticket.channel === "WHATSAPP") {
+    const to = key.startsWith("whatsapp:") ? key.slice(9) : (requester?.phone ?? "");
+    return /^\+[1-9]\d{6,14}$/.test(to) ? { kind: "whatsapp", to } : null;
+  }
+  if (!requester?.email) return null;
+  return { kind: "email", to: requester.email, threadId: ticket.channel === "EMAIL" && key.startsWith("email:") ? key.slice(6) : null };
+}
+
+/**
+ * Send a public reply and return the truthful delivery status. WhatsApp: the company's connected WhatsApp sender
+ * (WHATSAPP_SENT / WHATSAPP_FAILED / WHATSAPP_NOT_CONFIGURED; outside WhatsApp's 24-hour window the provider refuses
+ * and that is shown). Email tickets: the mailbox thread the customer wrote to, else the company's email provider.
+ */
+async function deliverReply(organizationId: string, companyId: string, ticket: { number: number; subject: string; publicToken: string }, to: ReplyTarget, body: string, locale: string, userId: string | null): Promise<{ status: string; externalMessageId: string | null }> {
+  if (to.kind === "whatsapp") {
+    const r = await sendWhatsApp(organizationId, companyId, { to: to.to, body: body.slice(0, 1600) });
+    if (r.ok) return { status: "WHATSAPP_SENT", externalMessageId: `whatsapp-out:${r.data.messageId}` };
+    return { status: r.code === "not_connected" ? "WHATSAPP_NOT_CONFIGURED" : "WHATSAPP_FAILED", externalMessageId: null };
+  }
+  const footer = `\n\n—\nView the conversation or reply:\n${publicTicketUrl(locale, ticket.publicToken)}`;
+  if (to.threadId) {
+    const r = await replyInThreadAs(organizationId, companyId, to.threadId, { to: to.to, body: `${body}${footer}`, sentById: userId });
+    if (r.status === "SENT") return { status: "SENT", externalMessageId: r.providerMessageId ? `email-out:${r.providerMessageId}` : null };
+    if (r.status === "FAILED") return { status: "FAILED", externalMessageId: null };
+  }
+  const r = await sendPlainEmail({ to: to.to, subject: `Re: [#${ticket.number}] ${ticket.subject}`, text: `${body}${footer}`, template: "support.reply", organizationId, userId, locale, companyId, companyOnly: true });
+  return { status: r.status, externalMessageId: null };
 }
 
 /** Upload an attachment (≤ 5 MB) to a ticket, optionally on one of its messages. */
@@ -603,7 +681,7 @@ async function ticketByToken(token: string) {
 /** What the customer sees: public replies only (no internal notes, drafts or agent identities beyond first names). */
 export async function getPublicTicket(token: string) {
   const t = await ticketByToken(token);
-  const messages = await db().supportMessage.findMany({ where: { ticketId: t.id, companyId: t.companyId, kind: "PUBLIC_REPLY", authorType: { in: ["AGENT", "CUSTOMER"] }, isDraft: false }, orderBy: { createdAt: "asc" } });
+  const messages = await db().supportMessage.findMany({ where: { ticketId: t.id, companyId: t.companyId, kind: "PUBLIC_REPLY", authorType: { in: ["AGENT", "CUSTOMER"] }, isDraft: false }, orderBy: { createdAt: "asc" }, take: 500 });
   const names = await userNames(db(), messages.map((m) => m.authorUserId));
   return {
     number: t.number,
