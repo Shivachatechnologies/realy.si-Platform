@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { RequestContext } from "@/server/core/context";
-import { forbidden, invalid } from "@/server/core/errors";
+import { env } from "@/server/core/env";
+import { AppError, forbidden, invalid } from "@/server/core/errors";
 import { can, requirePermission } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
 
@@ -70,3 +71,18 @@ export const utcDayStart = () => {
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 };
+
+/**
+ * MFA re-check for the most sensitive admin changes (platform roles, custom roles, break-glass, impersonation): a
+ * current authenticator (or recovery) code is verified against this session. Development may relax it with
+ * REALY_DEV_RELAX_MFA.
+ */
+export async function recheckMfa(ctx: RequestContext, code: string | undefined) {
+  if (env().REALY_DEV_RELAX_MFA && !code) return;
+  if (!ctx.sessionId) throw new AppError("mfa_required", "Confirm with your authenticator code", { reason: "mfa_recheck" });
+  if (!code) throw new AppError("mfa_required", "Enter the current code from your authenticator app", { reason: "mfa_recheck" });
+  const { verifyMfa } = await import("@/server/modules/auth/service");
+  await verifyMfa(ctx, ctx.sessionId, ctx.actor.id!, code);
+}
+
+export const mfaCodeSchema = z.string().trim().max(20).optional();

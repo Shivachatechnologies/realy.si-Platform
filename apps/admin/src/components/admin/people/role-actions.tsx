@@ -25,6 +25,9 @@ export function RoleGrant({ roles }: { roles: { key: string; name: string }[] })
   const [email, setEmail] = useState("");
   const [roleKey, setRoleKey] = useState(roles[0]?.key ?? "");
   const [code, setCode] = useState("");
+  const [temporary, setTemporary] = useState(false);
+  const [hours, setHours] = useState("24");
+  const h = Number(hours);
   return (
     <ActionDialog
       trigger={
@@ -36,9 +39,9 @@ export function RoleGrant({ roles }: { roles: { key: string; name: string }[] })
       title={t("admin.roles.grant")}
       description={t("admin.roles.grantHint")}
       confirmLabel={t("admin.roles.grant")}
-      canSubmit={/.+@.+\..+/.test(email) && !!roleKey}
+      canSubmit={/.+@.+\..+/.test(email) && !!roleKey && (!temporary || (h >= 1 && h <= 90 * 24))}
       onConfirm={async (reason) => {
-        await run("/api/v1/admin/roles", "POST", { email, roleKey, reason, mfaCode: code || undefined });
+        await run("/api/v1/admin/roles", "POST", { email, roleKey, reason, mfaCode: code || undefined, ...(temporary ? { expiresAt: new Date(Date.now() + h * 3_600_000).toISOString() } : {}) });
         setCode("");
       }}
     >
@@ -54,6 +57,15 @@ export function RoleGrant({ roles }: { roles: { key: string; name: string }[] })
           ))}
         </Select>
       </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={temporary} onChange={(e) => setTemporary(e.target.checked)} />
+        {t("admin.access.roles.temporary")}
+      </label>
+      {temporary ? (
+        <Field label={t("admin.access.roles.durationHours")} htmlFor="role-hours" hint={t("admin.access.roles.durationHint", { days: 90 })}>
+          <Input id="role-hours" type="number" min={1} max={90 * 24} value={hours} onChange={(e) => setHours(e.target.value)} className="w-28" />
+        </Field>
+      ) : null}
       <MfaField value={code} onChange={setCode} />
     </ActionDialog>
   );

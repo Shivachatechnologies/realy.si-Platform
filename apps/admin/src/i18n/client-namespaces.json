@@ -18,6 +18,7 @@
       "errors.reasons"
     ],
     "[locale]/(console)": [
+      "admin.access",
       "admin.ai",
       "admin.aiModels",
       "admin.aiWorkforce",

@@ -16,6 +16,8 @@ datasource db {
 enum UserStatus {
   ACTIVE
   SUSPENDED
+  // Admin Control Center (stream B): deletion requested; restorable until deletionScheduledFor, then purged.
+  PENDING_DELETION
   DELETED
 }
 
@@ -190,6 +192,11 @@ model User {
   mfaEnabled      Boolean    @default(false) @map("mfa_enabled")
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  // Admin Control Center (stream B): grace-period deletion and platform-set restrictions (enforced in rbac can()).
+  deletionRequestedAt  DateTime? @map("deletion_requested_at") @db.Timestamptz(3)
+  deletionScheduledFor DateTime? @map("deletion_scheduled_for") @db.Timestamptz(3)
+  // { readOnly?: boolean, aiDisabled?: boolean } — see modules/admin/users.ts USER_RESTRICTIONS.
+  restrictions         Json      @default("{}")
 
   sessions          Session[]
   mfaFactors        MfaFactor[]
@@ -216,6 +223,7 @@ model User {
   voiceosSettings   VoiceosSettings[]
   voiceosSessions   VoiceosSession[]
 
+  @@index([status, deletionScheduledFor])
   @@map("users")
 }
 
@@ -233,10 +241,14 @@ model Session {
   lastSeenAt           DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
   expiresAt            DateTime  @map("expires_at") @db.Timestamptz(3)
   revokedAt            DateTime? @map("revoked_at") @db.Timestamptz(3)
+  // Admin Control Center (stream B): set on sessions minted by an audited impersonation (admin_impersonations).
+  impersonatorId       String?   @map("impersonator_id") @db.Uuid
+  impersonationId      String?   @map("impersonation_id") @db.Uuid
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([impersonationId])
   @@map("sessions")
 }
 
@@ -296,6 +308,9 @@ model Organization {
   createdById   String?            @map("created_by_id") @db.Uuid
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  // Admin Control Center (stream B): archive (status CLOSED).
+  closedAt      DateTime?          @map("closed_at") @db.Timestamptz(3)
+  closedReason  String?            @map("closed_reason")
 
   memberships               Membership[]
   invitations               Invitation[]
