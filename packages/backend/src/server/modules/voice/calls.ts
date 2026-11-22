@@ -17,13 +17,15 @@ import { placeCall } from "./providers";
 import { sealControlUrl, twilioCallerId, twilioPlaceCall } from "./telephony";
 import { emitVoiceEvent, ensureSettings, isDoNotCall, providerLabel } from "./service";
 import { assertFeature, assertLimit, checkLimit, hasFeature } from "@/server/modules/entitlements/service";
+import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
 
 /**
  * Calls of the phone team. Outbound calls are requested by a person (CRM call button, /voice) or by an AI employee
  * (place_voice_call) and always go through the tool gateway: SUPERVISED + HIGH, so a person approves each call (or a
  * campaign as a whole) unless the founder granted autonomy for it. An approved call is dialled only inside the calling
- * window of the callee's time zone, never to a do-not-call number, only while the platform's kill switches allow AI
- * work, and only when the provider accepts it — otherwise the call says why it was not placed.
+ * window of the callee's time zone, never to a do-not-call number, only while the platform's kill switches and the
+ * company's "Pause all AI" allow AI work, and only when the provider accepts it — otherwise the call says why it was not
+ * placed. Calls that are waiting stay SCHEDULED and are dialled once AI is resumed.
  */
 
 export const requestCallInput = z
@@ -128,6 +130,7 @@ export async function fileCallApproval(ctx: RequestContext, organizationId: stri
 
 /** Create a call for an AI employee's approved place_voice_call (input without a pre-created call). */
 export async function createApprovedCall(ctx: RequestContext, organizationId: string, companyId: string, input: { agentId?: string; leadId?: string; contactId?: string; purpose: string }) {
+  await assertCompanyAiRunning(organizationId, companyId);
   await assertFeature(ctx, organizationId, "feature.voice_agent");
   await assertLimit(ctx, organizationId, "voice.minutes.month", 1);
   let agentId = input.agentId;
@@ -160,8 +163,11 @@ export async function createApprovedCall(ctx: RequestContext, organizationId: st
   });
 }
 
-/** Why AI calling is off right now (platform kill switches, module, suspension), or null. */
-export async function callingBlocked(organizationId: string): Promise<string | null> {
+/**
+ * Why AI calling is off right now (platform kill switches, module, suspension, and — given the company — the company's
+ * "Pause all AI" kill switch), or null.
+ */
+export async function callingBlocked(organizationId: string, companyId?: string | null): Promise<string | null> {
   const c = await getControls();
   if (c.maintenanceMode) return "platform_maintenance";
   if (c.readOnlyMode) return "platform_read_only";
@@ -169,7 +175,13 @@ export async function callingBlocked(organizationId: string): Promise<string | n
   if (c.aiExecutionPaused) return "ai_execution_paused";
   if (!(await isModuleEnabled(organizationId, "comms"))) return "module_disabled";
   if (await isOrganizationSuspended(organizationId)) return "organization_suspended";
+  if (companyId && (await isCompanyAiPaused(organizationId, companyId))) return "company_ai_paused";
   return null;
+}
+
+/** Refuse to start new AI calling work while the company's AI is paused (Autonomy → Pause all AI). */
+export async function assertCompanyAiRunning(organizationId: string, companyId: string): Promise<void> {
+  if (await isCompanyAiPaused(organizationId, companyId)) throw new AppError("conflict", "All AI in this company is paused; resume it in Autonomy first", { reason: "company_ai_paused" });
 }
 
 /**
@@ -199,7 +211,7 @@ export async function dialCall(callId: string): Promise<{ status: VoiceCallStatu
   if (!call || call.status !== "SCHEDULED") return { status: call?.status ?? "CANCELLED", detail: "Nothing to dial." };
   const { organizationId, companyId } = call;
   if (call.campaign && call.campaign.status !== "RUNNING") return { status: "SCHEDULED", detail: "The campaign is not running." };
-  const blocked = await callingBlocked(organizationId);
+  const blocked = await callingBlocked(organizationId, companyId);
   if (blocked) return { status: "SCHEDULED", detail: `Waiting: ${blocked.replace(/_/g, " ")}.` };
   // Plan (background dialer, no user ctx): never throw; the call is blocked with the reason instead.
   if (!(await hasFeature(organizationId, "feature.voice_agent")) || !(await checkLimit(organizationId, "voice.minutes.month", 1)).allowed) return block(callId, "plan_limit_reached");
@@ -294,9 +306,24 @@ async function dialViaTwilio(call: DialableCall, settings: Awaited<ReturnType<ty
   }
 }
 
-/** Worker: dial calls whose time has come (bounded per run). */
+/** Companies whose AI is paused (their due calls wait and must not crowd out other companies' calls). */
+async function pausedCompanyIds(): Promise<string[]> {
+  try {
+    return (await db().autonomySettings.findMany({ where: { paused: true }, select: { companyId: true }, take: 5000 })).map((r) => r.companyId);
+  } catch {
+    return [];
+  }
+}
+
+/** Worker: dial calls whose time has come (bounded per run). Calls of companies with AI paused wait (stay SCHEDULED). */
 export async function dialDueCalls(): Promise<number> {
-  const due = await db().voiceCall.findMany({ where: { status: "SCHEDULED", OR: [{ scheduledFor: null }, { scheduledFor: { lte: new Date() } }] }, orderBy: { scheduledFor: "asc" }, take: 50, select: { id: true } });
+  const paused = await pausedCompanyIds();
+  const due = await db().voiceCall.findMany({
+    where: { status: "SCHEDULED", OR: [{ scheduledFor: null }, { scheduledFor: { lte: new Date() } }], ...(paused.length ? { companyId: { notIn: paused } } : {}) },
+    orderBy: { scheduledFor: "asc" },
+    take: 50,
+    select: { id: true },
+  });
   let placed = 0;
   for (const c of due) {
     try {

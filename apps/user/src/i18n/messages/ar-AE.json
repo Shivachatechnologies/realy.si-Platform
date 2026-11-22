@@ -19510,7 +19510,27 @@
       "recsFrom": "من موجز الذكاء الاصطناعي {when}",
       "recsTask": "اطّلع على التحليل",
       "live": "النشاط المباشر",
-      "setupProgress": "تم {done} من {total}"
+      "setupProgress": "تم {done} من {total}",
+      "board": {
+        "title": "العمليات المباشرة",
+        "noData": "لا بيانات",
+        "areaHidden": "لا شيء هنا مرئي لك (لا توجد صلاحية)، أو لا توجد مقاييس لهذا المجال بعد.",
+        "credits": "أرصدة الذكاء الاصطناعي هذا الشهر",
+        "creditsOf": "{used} من {limit}",
+        "creditsUnlimited": "{used} (بلا حد)",
+        "alerts": "التنبيهات",
+        "noAlerts": "لا يوجد مفتوح",
+        "alertCounts": "{critical} حرجة · {warning} تحذيرات",
+        "asOf": "الأرقام محسوبة {when}",
+        "areas": {
+          "money": "المال",
+          "growth": "النمو وخط المبيعات",
+          "work": "المشاريع والمهام",
+          "people": "الفريق وقوة العمل الذكية",
+          "customers": "المكالمات والاجتماعات والتذاكر",
+          "platform": "استخدام الواجهات والإخفاقات"
+        }
+      }
     },
     "brain": {
       "eyebrow": "المعرفة",
@@ -23624,7 +23644,8 @@
     "caption": {
       "idle": "اضغط مطولًا على الزر أو مفتاح المسافة وتحدث إلى {company}.",
       "listening": "أستمع…",
-      "thinking": "أعمل على ذلك…"
+      "thinking": "أعمل على ذلك…",
+      "transcribing": "جارٍ تحويل كلامك إلى نص…"
     },
     "state": {
       "IDLE": "جاهز",
@@ -23633,7 +23654,9 @@
       "EXECUTING": "ينفذ",
       "SPEAKING": "يتحدث",
       "ALERT": "تنبيه",
-      "SUCCESS": "تم"
+      "SUCCESS": "تم",
+      "TRANSCRIBING": "جارٍ التفريغ",
+      "ERROR": "خطأ"
     },
     "mic": {
       "recording": "الميكروفون يعمل",

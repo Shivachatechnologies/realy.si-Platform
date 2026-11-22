@@ -1,9 +1,10 @@
 import "server-only";
 import type { RequestContext } from "@/server/core/context";
-import type { MetricDefinition } from "@/server/core/metrics";
+import type { ScopeChain } from "@/server/modules/rbac/scope";
+import type { MetricDefinition, MetricScope } from "@/server/core/metrics";
 import { criticalIssues, type Issue } from "./issues";
-import { resolveRange } from "./range";
-import { BI_DEPARTMENTS, metricContext, metricSeries, metricValues, type BiDepartment, type MetricValue } from "./service";
+import { BI_DEPARTMENTS, metricContext, type BiDepartment, type MetricValue, type SeriesPoint } from "./service";
+import { companySnapshot, forecastCandidates, snapshotSeries, snapshotValues, type MetricSnapshot } from "./snapshots";
 
 /**
  * Business health, deterministic and explainable (no AI): every KPI the viewer may see is scored from its change vs
@@ -87,15 +88,14 @@ export function linearFit(values: (number | null)[], min = 6) {
   return { a, b, r2: ssTot === 0 ? 0 : clamp(1 - ssRes / ssTot, 0, 1) };
 }
 
-async function forecastOf(m: MetricDefinition, scope: Parameters<typeof metricSeries>[1]): Promise<Forecast | null> {
-  const range = resolveRange("90d");
-  const to = range.to;
-  const from = new Date(to.getTime() - HISTORY_WEEKS * WEEK);
-  const series = await metricSeries(m, scope, { from, to }, HISTORY_WEEKS);
-  const values = series.map((p) => p.value);
+/** Forecast from the metric's weekly history (the last HISTORY_WEEKS of the snapshot's 90-day series). */
+export function forecastFrom(m: MetricDefinition, series: SeriesPoint[]): Forecast | null {
+  const hist = series.slice(-HISTORY_WEEKS);
+  const values = hist.map((p) => p.value);
   if (!values.some((v) => v !== null && v !== 0)) return null;
   const fit = linearFit(values);
   if (!fit) return null;
+  const to = new Date(hist[hist.length - 1]!.to);
   const projection = Array.from({ length: PROJECT_WEEKS }, (_, i) => {
     const x = values.length + i;
     return { from: new Date(to.getTime() + i * WEEK).toISOString(), value: Math.max(0, fit.a + fit.b * x) };
@@ -107,7 +107,7 @@ async function forecastOf(m: MetricDefinition, scope: Parameters<typeof metricSe
     labelKey: m.labelKey,
     unit: m.unit,
     higherIsBetter: m.higherIsBetter ?? null,
-    history: series.map((p) => ({ from: p.from, value: p.value })),
+    history: hist.map((p) => ({ from: p.from, value: p.value })),
     projection,
     slope: fit.b,
     r2: fit.r2,
@@ -115,25 +115,22 @@ async function forecastOf(m: MetricDefinition, scope: Parameters<typeof metricSe
   };
 }
 
-/** Flow metrics worth forecasting: revenue first, then other money flows, then the busiest flow metrics. */
-function forecastCandidates(metrics: MetricDefinition[], values: MetricValue[], max = 4) {
-  const flows = metrics.filter((m) => m.kind === "flow" && m.higherIsBetter !== undefined);
-  const valueOf = new Map(values.map((v) => [v.key, v.value ?? 0]));
-  const ranked = [...flows].sort((a, b) => {
-    const pa = (a.key === "finance.revenue" ? 3 : 0) + (a.unit === "money" ? 2 : 0) + (a.department === "sales" ? 1 : 0);
-    const pb = (b.key === "finance.revenue" ? 3 : 0) + (b.unit === "money" ? 2 : 0) + (b.department === "sales" ? 1 : 0);
-    return pb - pa || (valueOf.get(b.key) ?? 0) - (valueOf.get(a.key) ?? 0);
-  });
-  return ranked.filter((m) => (valueOf.get(m.key) ?? 0) > 0).slice(0, max);
+/**
+ * Business health for the viewer. Reads the company's metric snapshot (bi/snapshots.ts; computed live and stored when
+ * missing) so the score, the KPI ribbon and the forecasts come from one value set.
+ */
+export async function businessHealth(ctx: RequestContext, organizationId: string, companyId: string, opts: { snapshot?: MetricSnapshot } = {}) {
+  const { chain, scope, metrics } = await metricContext(ctx, organizationId, companyId);
+  const snap = opts.snapshot ?? (await companySnapshot(scope));
+  return businessHealthFrom(ctx, chain, scope, metrics, snap);
 }
 
-export async function businessHealth(ctx: RequestContext, organizationId: string, companyId: string) {
-  const { chain, scope, metrics } = await metricContext(ctx, organizationId, companyId);
-  const values = await metricValues(metrics, scope, resolveRange("30d"));
-  const week = await metricValues(metrics, scope, resolveRange("7d"));
+/** Business health from a snapshot and the viewer's visible metrics. */
+export async function businessHealthFrom(ctx: RequestContext, chain: ScopeChain, scope: MetricScope, metrics: MetricDefinition[], snap: MetricSnapshot) {
+  const [values, week] = await Promise.all([snapshotValues(snap, scope, metrics, "30d"), snapshotValues(snap, scope, metrics, "7d")]);
   const [issues, forecasts] = await Promise.all([
     criticalIssues(ctx, chain, scope, metrics, week),
-    Promise.all(forecastCandidates(metrics, values).map((m) => forecastOf(m, scope).catch(() => null))).then((f) => f.filter((x): x is Forecast => !!x)),
+    Promise.all(forecastCandidates(metrics, values).map((m) => snapshotSeries(snap, scope, m).then((s) => forecastFrom(m, s), () => null))).then((f) => f.filter((x): x is Forecast => !!x)),
   ]);
 
   const departments: DepartmentHealth[] = BI_DEPARTMENTS.flatMap((d) => {
@@ -176,6 +173,6 @@ export async function businessHealth(ctx: RequestContext, organizationId: string
   const order = { critical: 0, warning: 1, info: 2 } as const;
   insights.sort((a, b) => order[a.severity] - order[b.severity]);
 
-  return { currency: scope.currency, score, base: base === null ? null : Math.round(base), penalty, scoredMetrics, departments, forecasts, insights, issues: issues.length };
+  return { currency: scope.currency, score, base: base === null ? null : Math.round(base), penalty, scoredMetrics, departments, forecasts, insights, issues: issues.length, computedAt: snap.computedAt };
 }
-export type BusinessHealth = Awaited<ReturnType<typeof businessHealth>>;
+export type BusinessHealth = Awaited<ReturnType<typeof businessHealthFrom>>;

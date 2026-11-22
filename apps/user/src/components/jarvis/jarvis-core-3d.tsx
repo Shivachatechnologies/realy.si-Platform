@@ -122,7 +122,7 @@ function Scene({ state, level, pulses, activity, palette, quality = "full", ambi
       core.current.rotation.y += dt * L.spin;
       core.current.rotation.x += dt * L.spin * 0.35;
       const breathe = state === "IDLE" ? Math.sin(t * 1.1) * 0.03 : 0;
-      core.current.scale.setScalar(1 + breathe + L.level * 0.38 + (state === "THINKING" ? Math.sin(t * 6) * 0.025 : 0));
+      core.current.scale.setScalar(1 + breathe + L.level * 0.38 + (state === "THINKING" ? Math.sin(t * 6) * 0.025 : state === "TRANSCRIBING" ? Math.sin(t * 10) * 0.018 : 0));
     }
     if (coreMat.current) {
       coreMat.current.emissive.copy(L.color);
@@ -132,7 +132,7 @@ function Scene({ state, level, pulses, activity, palette, quality = "full", ambi
     if (halo.current) halo.current.scale.setScalar(1.12 + L.level * 0.6 + Math.sin(t * 0.9) * 0.04);
     if (haloMat.current) {
       haloMat.current.color.copy(L.color);
-      haloMat.current.opacity = 0.1 + L.level * 0.25 + (state === "ALERT" ? (Math.sin(t * 8) + 1) * 0.08 : 0);
+      haloMat.current.opacity = 0.1 + L.level * 0.25 + (state === "ALERT" ? (Math.sin(t * 8) + 1) * 0.08 : state === "ERROR" ? (Math.sin(t * 3) + 1) * 0.06 : 0);
     }
     if (shell.current) {
       shell.current.rotation.y -= dt * L.spin * 0.4;

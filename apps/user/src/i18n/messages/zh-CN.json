@@ -19510,7 +19510,27 @@
       "recsFrom": "来自 {when} 的 AI 简报",
       "recsTask": "查看分析",
       "live": "实时动态",
-      "setupProgress": "已完成 {done}/{total}"
+      "setupProgress": "已完成 {done}/{total}",
+      "board": {
+        "title": "实时运营",
+        "noData": "无数据",
+        "areaHidden": "这里没有您可查看的内容（无权限），或该领域还没有指标。",
+        "credits": "本月 AI 额度",
+        "creditsOf": "{used} / {limit}",
+        "creditsUnlimited": "{used}（不限）",
+        "alerts": "警报",
+        "noAlerts": "无未处理",
+        "alertCounts": "{critical} 个严重 · {warning} 个警告",
+        "asOf": "数据计算于{when}",
+        "areas": {
+          "money": "资金",
+          "growth": "增长与销售管道",
+          "work": "项目与任务",
+          "people": "团队与 AI 员工",
+          "customers": "通话、会议与工单",
+          "platform": "API 用量与失败"
+        }
+      }
     },
     "brain": {
       "eyebrow": "知识",
@@ -23624,7 +23644,8 @@
     "caption": {
       "idle": "按住按钮或空格键，与 {company} 对话。",
       "listening": "正在聆听…",
-      "thinking": "正在处理…"
+      "thinking": "正在处理…",
+      "transcribing": "正在把您的话转成文字…"
     },
     "state": {
       "IDLE": "就绪",
@@ -23633,7 +23654,9 @@
       "EXECUTING": "执行中",
       "SPEAKING": "播报中",
       "ALERT": "注意",
-      "SUCCESS": "完成"
+      "SUCCESS": "完成",
+      "TRANSCRIBING": "正在转写",
+      "ERROR": "出错"
     },
     "mic": {
       "recording": "麦克风已开启",

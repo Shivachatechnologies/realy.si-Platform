@@ -75,7 +75,6 @@ export function CommandPalette({ showAdmin }: { showAdmin: boolean }) {
                       >
                         <item.icon className="size-4 text-muted-foreground group-data-[selected=true]/item:text-primary rtl:-scale-x-100" aria-hidden />
                         {t(item.label)}
-                        {item.phase ? <span className="ms-auto font-mono text-[10px] text-muted-foreground">{t("nav.phaseShort", { phase: item.phase })}</span> : null}
                       </Command.Item>
                     ))}
                   </Command.Group>

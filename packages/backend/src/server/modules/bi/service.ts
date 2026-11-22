@@ -100,10 +100,16 @@ async function computeMetricUncached(m: MetricDefinition, scope: MetricScope, ra
   }
 }
 
-const trendOf = (m: MetricDefinition, change: number | null): -1 | 0 | 1 => {
+export const trendOf = (m: Pick<MetricDefinition, "higherIsBetter">, change: number | null): -1 | 0 | 1 => {
   if (change === null || Math.abs(change) < 0.5 || m.higherIsBetter === undefined) return 0;
   return (change > 0) === m.higherIsBetter ? 1 : -1;
 };
+
+/** A metric's value object from an already computed value and previous-period value (live or snapshot). */
+export function toMetricValue(m: MetricDefinition, value: number | null, previous: number | null): MetricValue {
+  const change = value !== null && previous !== null ? changePct(value, previous) : null;
+  return { ...metaOf(m), value, previous, changePct: change, trend: trendOf(m, change) };
+}
 
 /** Values for the range and the previous period of equal length. */
 export async function metricValues(metrics: MetricDefinition[], scope: MetricScope, range: MetricRange): Promise<MetricValue[]> {
@@ -111,8 +117,7 @@ export async function metricValues(metrics: MetricDefinition[], scope: MetricSco
   return Promise.all(
     metrics.map(async (m) => {
       const [value, previous] = await Promise.all([computeMetric(m, scope, range), computeMetric(m, scope, prev)]);
-      const change = value !== null && previous !== null ? changePct(value, previous) : null;
-      return { ...metaOf(m), value, previous, changePct: change, trend: trendOf(m, change) };
+      return toMetricValue(m, value, previous);
     }),
   );
 }

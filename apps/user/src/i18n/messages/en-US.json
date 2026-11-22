@@ -19510,7 +19510,27 @@
       "recsFrom": "From the AI briefing {when}",
       "recsTask": "See the analysis",
       "live": "Live activity",
-      "setupProgress": "{done} of {total} done"
+      "setupProgress": "{done} of {total} done",
+      "board": {
+        "title": "Live operations",
+        "noData": "no data",
+        "areaHidden": "Nothing here is visible to you (no permission), or this area has no metrics yet.",
+        "credits": "AI credits this month",
+        "creditsOf": "{used} of {limit}",
+        "creditsUnlimited": "{used} (no limit)",
+        "alerts": "Alerts",
+        "noAlerts": "none open",
+        "alertCounts": "{critical} critical · {warning} warnings",
+        "asOf": "Figures computed {when}",
+        "areas": {
+          "money": "Money",
+          "growth": "Growth & pipeline",
+          "work": "Projects & tasks",
+          "people": "People & AI workforce",
+          "customers": "Calls, meetings & tickets",
+          "platform": "API usage & failures"
+        }
+      }
     },
     "brain": {
       "eyebrow": "Knowledge",
@@ -23624,7 +23644,8 @@
     "caption": {
       "idle": "Hold the button or Space and talk to {company}.",
       "listening": "Listening…",
-      "thinking": "Working on it…"
+      "thinking": "Working on it…",
+      "transcribing": "Turning your words into text…"
     },
     "state": {
       "IDLE": "Ready",
@@ -23633,7 +23654,9 @@
       "EXECUTING": "Executing",
       "SPEAKING": "Speaking",
       "ALERT": "Attention",
-      "SUCCESS": "Done"
+      "SUCCESS": "Done",
+      "TRANSCRIBING": "Transcribing",
+      "ERROR": "Error"
     },
     "mic": {
       "recording": "Microphone on",

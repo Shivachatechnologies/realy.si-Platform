@@ -85,7 +85,7 @@ export function JarvisDock() {
   const [, setTick] = useState(0);
 
   useEffect(() => {
-    const until = Math.max(voice.flash.alertUntil, voice.flash.successUntil);
+    const until = Math.max(voice.flash.alertUntil, voice.flash.successUntil, voice.flash.errorUntil);
     const wait = until - Date.now();
     if (wait <= 0) return;
     const id = setTimeout(() => setTick((n) => n + 1), wait + 30);
@@ -102,11 +102,13 @@ export function JarvisDock() {
 
   const state = deriveCoreState({
     listening: voice.phase === "listening",
-    thinking: voice.phase === "transcribing" || voice.phase === "thinking",
+    transcribing: voice.phase === "transcribing",
+    thinking: voice.phase === "thinking",
     speaking: voice.speaking,
     executing: !!voice.run?.open,
     alertUntil: voice.flash.alertUntil,
     successUntil: voice.flash.successUntil,
+    errorUntil: voice.flash.errorUntil,
   });
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -144,9 +146,13 @@ export function JarvisDock() {
           {!base ? <p className="text-xs text-muted-foreground">{t("jarvis.dock.loading")}</p> : null}
           {voice.bootError ? <FormError error={voice.bootError} /> : null}
           <p aria-live="polite" className="min-h-[2.5rem] text-sm text-muted-foreground">
-            {voice.phase === "listening" || voice.phase === "transcribing"
+            {voice.phase === "listening"
               ? voice.interim || t("jarvis.caption.listening")
-              : voice.phase === "thinking"
+              : voice.phase === "transcribing"
+                ? voice.interim || t("jarvis.caption.transcribing")
+                : voice.streaming
+                  ? voice.streaming
+                  : voice.phase === "thinking"
                 ? t("jarvis.caption.thinking")
                 : lastAssistant
                   ? lastAssistant.text.length > 280

@@ -19510,7 +19510,27 @@
       "recsFrom": "AI ब्रीफिंग से {when}",
       "recsTask": "विश्लेषण देखें",
       "live": "लाइव गतिविधि",
-      "setupProgress": "{total} में से {done} पूरे"
+      "setupProgress": "{total} में से {done} पूरे",
+      "board": {
+        "title": "लाइव संचालन",
+        "noData": "कोई डेटा नहीं",
+        "areaHidden": "यहाँ आपके लिए कुछ दिखाई नहीं देता (अनुमति नहीं), या इस क्षेत्र में अभी कोई मीट्रिक नहीं है।",
+        "credits": "इस महीने के AI क्रेडिट",
+        "creditsOf": "{limit} में से {used}",
+        "creditsUnlimited": "{used} (कोई सीमा नहीं)",
+        "alerts": "अलर्ट",
+        "noAlerts": "कोई खुला नहीं",
+        "alertCounts": "{critical} गंभीर · {warning} चेतावनी",
+        "asOf": "आंकड़े {when} गणना किए गए",
+        "areas": {
+          "money": "पैसा",
+          "growth": "विकास और पाइपलाइन",
+          "work": "प्रोजेक्ट और कार्य",
+          "people": "लोग और AI कार्यबल",
+          "customers": "कॉल, मीटिंग और टिकट",
+          "platform": "API उपयोग और विफलताएँ"
+        }
+      }
     },
     "brain": {
       "eyebrow": "ज्ञान",
@@ -23624,7 +23644,8 @@
     "caption": {
       "idle": "बटन या स्पेस दबाकर रखें और {company} से बात करें।",
       "listening": "सुन रहा हूँ…",
-      "thinking": "इस पर काम कर रहा हूँ…"
+      "thinking": "इस पर काम कर रहा हूँ…",
+      "transcribing": "आपकी बात को टेक्स्ट में बदल रहा हूँ…"
     },
     "state": {
       "IDLE": "तैयार",
@@ -23633,7 +23654,9 @@
       "EXECUTING": "काम कर रहा है",
       "SPEAKING": "बोल रहा है",
       "ALERT": "ध्यान दें",
-      "SUCCESS": "पूरा हुआ"
+      "SUCCESS": "पूरा हुआ",
+      "TRANSCRIBING": "लिख रहा है",
+      "ERROR": "त्रुटि"
     },
     "mic": {
       "recording": "माइक्रोफ़ोन चालू",

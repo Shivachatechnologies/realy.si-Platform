@@ -37,23 +37,12 @@ import {
   Network,
 } from "lucide-react";
 
-/** Modules outside the current product scope; reachable only by URL, they render the roadmap placeholder. */
-export const MODULE_PHASE = {
-  studio: 6,
-  deployments: 6,
-  environments: 6,
-} as const;
-
-export type ModuleKey = keyof typeof MODULE_PHASE;
-export const isModuleKey = (v: string): v is ModuleKey => v in MODULE_PHASE;
-
 export interface NavItem {
   /** i18n key */
   label: string;
   /** path after /{locale} */
   href: string;
   icon: LucideIcon;
-  phase?: number;
 }
 
 export interface NavSection {
