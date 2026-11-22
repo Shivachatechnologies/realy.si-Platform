@@ -22,6 +22,7 @@ import { contactName, contactOptions } from "@/server/modules/crm/contacts";
 import { customDisplay, listFieldDefs } from "@/server/modules/crm/custom-fields";
 import { getDeal } from "@/server/modules/crm/deals";
 import { listOwners } from "@/server/modules/crm/service";
+import { storedPrediction } from "@/server/modules/crm/win-probability";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("crm.tabs.deals") };
@@ -47,6 +48,7 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
   const money = (m: bigint) => formatMoney({ amountMinor: m, currency: d.currency }, locale);
   const custom = (d.customFields ?? {}) as Record<string, string | number | null>;
   const daysInStage = d.daysInStage;
+  const prediction = storedPrediction(d);
   return (
     <CrmFrame active="deals" intro={false} actions={c.canRunAgents && aiConfigured() ? <HelpMeButton base={base} url={`${base}/crm/help`} body={{ kind: "deal", id: d.id, page: "crm.deal" }} locale={locale} /> : undefined} title={d.name} subtitle={[d.account?.name, `${d.pipeline.name} · ${d.stage.name}`].filter(Boolean).join(" · ")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -78,6 +80,7 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
               <Facts
                 items={[
                   [t("crm.probability"), `${d.effectiveProbability}%${d.probability == null && d.status === "OPEN" ? ` (${t("crm.stageDefault")})` : ""}`],
+                  [t("crm.winProbability.label"), d.status === "OPEN" ? (prediction ? `${prediction.probability}%` : t("crm.winProbability.pending")) : null],
                   [t("crm.weighted"), money(d.weightedMinor)],
                   [t("crm.expectedClose"), d.expectedCloseDate ? formatDate(d.expectedCloseDate, locale, "UTC") : null],
                   [t("crm.owner"), d.ownerName ?? t("crm.unassigned")],
@@ -93,6 +96,20 @@ export default async function DealPage({ params }: { params: Promise<{ dealId: s
                   ...customDisplay(fields, d.customFields).map((f) => [f.label, f.value] as [string, string]),
                 ]}
               />
+              {d.status === "OPEN" && prediction ? (
+                <details className="text-sm">
+                  <summary className="cursor-pointer font-medium">{t("crm.winProbability.why", { date: formatDate(prediction.at, locale, tz) })}</summary>
+                  <ul className="mt-2 grid gap-1 text-muted-foreground">
+                    {prediction.factors.map((f) => (
+                      <li key={f.key} className="flex justify-between gap-4">
+                        <span>{t(`crm.winProbability.factors.${f.key === "activity" && f.detail.days == null ? "activity_none" : f.key}`, { won: f.detail.won ?? 0, closed: f.detail.closed ?? 0, days: f.detail.days ?? 0 })}</span>
+                        <span className="tabular-nums">{f.key === "base" ? `${f.delta}%` : `${f.delta > 0 ? "+" : ""}${f.delta}`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs text-muted-foreground">{t("crm.winProbability.hint")}</p>
+                </details>
+              ) : null}
               {d.description ? <p className="whitespace-pre-wrap text-sm">{d.description}</p> : null}
               {c.canManage && active ? (
                 <details>

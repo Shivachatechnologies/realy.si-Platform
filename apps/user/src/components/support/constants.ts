@@ -4,4 +4,4 @@
  */
 export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
 export const STATUSES = ["NEW", "OPEN", "PENDING", "ON_HOLD", "SOLVED", "CLOSED"] as const;
-export const CHANNELS = ["WEB", "EMAIL", "CHAT", "PHONE"] as const;
+export const CHANNELS = ["WEB", "EMAIL", "CHAT", "PHONE", "WHATSAPP"] as const;

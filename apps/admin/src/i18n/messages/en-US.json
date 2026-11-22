@@ -7110,7 +7110,8 @@
         "do_not_contact": "on the do-not-contact list",
         "already_in_crm": "already in your CRM",
         "lead_duplicate": "already a lead",
-        "lead_failed": "lead could not be created"
+        "lead_failed": "lead could not be created",
+        "not_interested": "Not interested"
       },
       "funnel": {
         "title": "Live funnel",
@@ -7160,7 +7161,8 @@
         "ai_failed": "The AI writing service could not answer",
         "no_ai_no_template": "No AI writing service is connected and no first email was written in the settings, so no emails were prepared.",
         "draft_failed": "The first email could not be written.",
-        "send_failed": "An email could not be sent"
+        "send_failed": "An email could not be sent",
+        "company_ai_paused": "Paused: all AI in this company is paused (Autonomy → Pause all AI). Nothing is searched, drafted or sent."
       },
       "providers": {
         "title": "Data and connections",
@@ -7305,6 +7307,31 @@
         },
         "back": "Back",
         "next": "Next"
+      },
+      "replyClass": {
+        "INTERESTED": "Interested",
+        "NOT_INTERESTED": "Not interested",
+        "OUT_OF_OFFICE": "Out of office",
+        "UNSUBSCRIBE": "Asked to stop",
+        "REFERRAL": "Referral",
+        "QUESTION": "Question",
+        "OTHER": "Replied"
+      },
+      "replyResumes": "Out of office — continues {date}"
+    },
+    "winProbability": {
+      "label": "Win probability (computed)",
+      "pending": "Not computed yet (refreshed every 6 hours)",
+      "why": "Why this number (computed {date})",
+      "hint": "Computed from your own closed deals of the last two years; it does not change the probability you set on the deal.",
+      "factors": {
+        "base": "Won after reaching this stage: {won} of {closed} (blended with the stage default)",
+        "stage_age": "Days in this stage: {days}",
+        "activity": "Days since the last activity: {days}",
+        "activity_none": "No activity logged yet",
+        "overdue": "Expected close date passed",
+        "amount": "Amount vs. your typical won deal",
+        "owner": "Owner's win rate vs. the company's"
       }
     }
   },
@@ -17652,7 +17679,8 @@
       "WEB": "Web",
       "EMAIL": "Email",
       "CHAT": "Chat",
-      "PHONE": "Phone"
+      "PHONE": "Phone",
+      "WHATSAPP": "WhatsApp"
     },
     "ticket": {
       "title": "Ticket",
@@ -17709,7 +17737,10 @@
       "FAILED": "Email failed",
       "NOT_CONFIGURED": "Email not configured",
       "NO_EMAIL": "No email address",
-      "QUEUED": "Sending…"
+      "QUEUED": "Sending…",
+      "WHATSAPP_SENT": "Sent on WhatsApp",
+      "WHATSAPP_FAILED": "WhatsApp failed",
+      "WHATSAPP_NOT_CONFIGURED": "WhatsApp not connected"
     },
     "reply": {
       "kinds": {
@@ -17864,7 +17895,11 @@
         "aiFirstResponseEnabled": "AI first response",
         "aiFirstResponseEnabledHint": "Your support AI employee drafts a researched first reply to every new ticket. Sending waits for your approval unless you grant it autonomy.",
         "aiSlaEscalationEnabled": "AI SLA escalation",
-        "aiSlaEscalationEnabledHint": "When a high or urgent ticket breaches its SLA, the support AI lead proposes who takes over and drafts a recovery reply."
+        "aiSlaEscalationEnabledHint": "When a high or urgent ticket breaches its SLA, the support AI lead proposes who takes over and drafts a recovery reply.",
+        "emailChannelEnabled": "Email tickets",
+        "emailChannelEnabledHint": "Mail to the support address becomes tickets, threaded by conversation; replies go out from the same mailbox.",
+        "whatsappChannelEnabled": "WhatsApp tickets",
+        "whatsappChannelEnabledHint": "Messages to your WhatsApp Business number become tickets; replies are sent on WhatsApp (WhatsApp allows free-form replies within 24 hours of the customer's last message)."
       },
       "helpCenterLink": "Open the help center",
       "formLink": "Open the support form",
@@ -17925,7 +17960,10 @@
       "reassignTo": "Reassign to",
       "noReassign": "Don't reassign",
       "reassignToName": "Reassign to {name}",
-      "aiDuty": "Drafts first replies, triages new tickets and handles SLA breaches; replies to customers wait for your approval."
+      "aiDuty": "Drafts first replies, triages new tickets and handles SLA breaches; replies to customers wait for your approval.",
+      "inbound": "Email and WhatsApp tickets",
+      "inboundHint": "Customers write to your support address or WhatsApp number; each conversation becomes a ticket and your replies go back the same way.",
+      "saveAddress": "Save address"
     },
     "help": {
       "title": "Help center",
@@ -18010,13 +18048,17 @@
         },
         "emailChannelEnabled": {
           "label": "Email",
-          "hint": "Show your support email address on the help center and form."
+          "hint": "Emails to your support address become tickets, and your replies go back by email."
         },
         "preview": "Preview",
         "address": "Support email address",
-        "addressHint": "Shown to customers. Emails sent there aren't imported automatically — log them as tickets in the inbox.",
+        "addressHint": "Mail to this address becomes tickets once it reaches a connected mailbox (Gmail or Outlook in Communication → Email). Only mail received after you turn the channel on is imported.",
         "emailReady": "Email sending is set up: customers receive your replies by email.",
-        "emailNotReady": "Email sending isn't set up yet: your replies appear on the customer's ticket page, but no emails are sent."
+        "emailNotReady": "Email sending isn't set up yet: your replies appear on the customer's ticket page, but no emails are sent.",
+        "whatsappChannelEnabled": {
+          "label": "WhatsApp",
+          "hint": "Messages to your WhatsApp Business number become tickets; replies go back on WhatsApp."
+        }
       },
       "promise": {
         "respondLabel": "First reply within…",
@@ -18199,6 +18241,18 @@
       "speedHint": "Median hours to first response and to resolution in this period.",
       "medianFirstResponse": "First response",
       "medianResolution": "Resolution"
+    },
+    "inbound": {
+      "email": {
+        "ready": "Mail to {support} is imported from the connected {provider} mailbox {mailbox}.",
+        "other_mailbox": "No connected mailbox is {support}. Mail is imported only when it reaches a connected mailbox, such as {mailbox} ({provider}): forward {support} there, or connect {support} in Communication → Email.",
+        "no_mailbox": "No mailbox is connected, so no mail is imported yet. Connect Gmail or Outlook for {support} in Communication → Email.",
+        "no_address": "Enter your support email address to import mail sent to it."
+      },
+      "whatsapp": {
+        "ready": "WhatsApp Business is connected: new messages become tickets.",
+        "not_connected": "WhatsApp Business isn't connected, so no messages arrive yet. Connect it in Integrations."
+      }
     }
   },
   "strategy": {

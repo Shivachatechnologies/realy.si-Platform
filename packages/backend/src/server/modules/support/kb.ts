@@ -39,7 +39,7 @@ async function uniqueSlug(tx: Tx, companyId: string, title: string, excludeId?: 
 
 export async function listKbCategories(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  return db().supportKbCategory.findMany({ where: { organizationId, companyId }, orderBy: [{ position: "asc" }, { name: "asc" }], include: { _count: { select: { articles: true } } } });
+  return db().supportKbCategory.findMany({ where: { organizationId, companyId }, orderBy: [{ position: "asc" }, { name: "asc" }], take: 500, include: { _count: { select: { articles: true } } } });
 }
 
 export async function saveKbCategory(ctx: RequestContext, organizationId: string, companyId: string, id: string | null, raw: z.input<typeof kbCategoryInput>) {

@@ -10,8 +10,8 @@ import { getControls, isModuleEnabled, isOrganizationSuspended, type PlatformCon
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
+import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
 import { webSearch } from "@/server/modules/integrations/services/research";
-import { generateText } from "@/server/modules/integrations/services/ai-text";
 import {
   cleanDomain,
   connectedContactProviders,
@@ -28,8 +28,10 @@ import {
 import { unsubscribeUrl } from "@/server/modules/marketing/tracking";
 import { actorId, authorize, isUuid } from "./common";
 import { aiPaused } from "./channels";
+import { crmModelText } from "./ai-text";
 import { renderTemplate } from "./cadences";
-import { addressIn, hasRepliedSince, sendClaimed } from "./outreach";
+import { addressIn, sendClaimed } from "./outreach";
+import { processReply } from "./replies";
 import { createLead } from "./service";
 import { stopOutreachTo, suppressedDomains, suppressionFor, suppressSystem } from "./suppression";
 
@@ -298,6 +300,7 @@ export async function runAutopilotNow(ctx: RequestContext, organizationId: strin
   await authorize(ctx, organizationId, companyId, "sales.manage");
   const a = await loadAutopilot(db(), organizationId, companyId, id);
   if (a.status !== "ACTIVE") throw conflict("Turn the autopilot on first.", { reason: "crm_autopilot_not_active" });
+  if (await isCompanyAiPaused(organizationId, companyId)) throw conflict("All AI in this company is paused (Autonomy → Pause all AI). The autopilot did not run.", { reason: "company_ai_paused" });
   await db().crmProspectingAutopilot.update({ where: { id }, data: { nextRunAt: new Date() } });
   const queued = await dispatchJob(MODULE_JOBS_QUEUE, "crm.autopilot_run", { autopilotId: id }, { jobId: `autopilot_${id}_${Math.floor(Date.now() / 60_000)}`, organizationId });
   if (queued) return { queued: true, run: null };
@@ -379,7 +382,7 @@ export async function syncOutcomes(a: { id: string; organizationId: string; comp
     where: { autopilotId: a.id, companyId: a.companyId, status: { in: ["CONTACTED", "REPLIED"] }, contactedAt: { not: null } },
     orderBy: { contactedAt: "asc" },
     take: 300,
-    select: { id: true, status: true, emailNormalized: true, leadId: true, contactedAt: true, enrollmentId: true, fullName: true },
+    select: { id: true, status: true, emailNormalized: true, leadId: true, contactedAt: true, enrollmentId: true, fullName: true, replyClassifiedAt: true },
   });
   if (!people.length) return 0;
   const oldest = people[0]!.contactedAt!;
@@ -416,17 +419,18 @@ export async function syncOutcomes(a: { id: string; organizationId: string; comp
         changed++;
         continue;
       }
-      if (p.status === "CONTACTED" && (await hasRepliedSince(a.organizationId, a.companyId, email, since))) {
-        await transaction(async (tx) => {
-          await tx.crmProspectPerson.update({ where: { id: p.id }, data: { status: "REPLIED", repliedAt: now } });
-          if (p.enrollmentId) {
-            await tx.crmCadenceEnrollment.updateMany({ where: { id: p.enrollmentId, status: { in: ["ACTIVE", "PAUSED"] } }, data: { status: "REPLIED", stoppedReason: "replied", nextRunAt: null } });
-            await tx.crmOutreachMessage.updateMany({ where: { enrollmentId: p.enrollmentId, status: { in: ["DRAFT", "PENDING_APPROVAL"] } }, data: { status: "CANCELLED" } });
-          }
-          await notifyUsers(tx, a.organizationId, [a.ownerId ?? a.createdById], "crm.autopilot_replied", { companyId: a.companyId, title: p.fullName, href: p.leadId ? `/crm/${p.leadId}` : "/crm/prospecting" });
-        });
-        changed++;
-        continue;
+      // A reply: classified and routed (replies.ts) — unsubscribe, out of office, interested, referral, …
+      if (p.status === "CONTACTED") {
+        const after = p.replyClassifiedAt && p.replyClassifiedAt > since ? p.replyClassifiedAt : since;
+        const r = await processReply(
+          { organizationId: a.organizationId, companyId: a.companyId, email, name: p.fullName, leadId: p.leadId, ownerId: a.ownerId ?? a.createdById, prospectId: p.id, enrollmentId: p.enrollmentId, href: p.leadId ? `/crm/${p.leadId}` : "/crm/prospecting", repliedNotice: "crm.autopilot_replied" },
+          after,
+          now,
+        );
+        if (r) {
+          changed++;
+          continue;
+        }
       }
       if (p.leadId) {
         const m = await db().crmMeeting.findFirst({ where: { companyId: a.companyId, leadId: p.leadId, createdAt: { gte: since }, status: { not: "CANCELLED" } }, select: { id: true } });
@@ -666,6 +670,8 @@ export function withUnsubscribe(body: string, a: { organizationId: string; compa
   return `${body.trimEnd()}${unsubFooter(a.unsubscribeLine, unsubscribeUrl({ o: a.organizationId, c: a.companyId, e: email }))}`.slice(0, 10_000);
 }
 
+const EMAIL_SCHEMA = { type: "object", properties: { subject: { type: "string" }, body: { type: "string" } }, required: ["subject", "body"], additionalProperties: false };
+
 function parseEmailJson(text: string): { subject: string; body: string } | null {
   try {
     const j = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)) as { subject?: unknown; body?: unknown };
@@ -694,7 +700,7 @@ async function outreachStep(a: Autopilot, controls: PlatformControls, notes: Not
   const people = await db().crmProspectPerson.findMany({ where: { autopilotId: a.id, status: "READY", firstMessageId: null, leadId: { not: null } }, orderBy: { createdAt: "asc" }, take: 40 });
   if (!people.length) return;
   const eff = effectiveAutonomy(a, controls);
-  const useAi = !(await aiPaused());
+  const useAi = !(await aiPaused(a.organizationId, a.companyId));
   const [company, sender] = await Promise.all([
     db().company.findFirst({ where: { id: a.companyId }, select: { name: true, defaultLocale: true } }),
     db().user.findFirst({ where: { id: a.ownerId ?? a.activatedById ?? a.createdById }, select: { name: true } }),
@@ -725,17 +731,22 @@ async function outreachStep(a: Autopilot, controls: PlatformControls, notes: Not
         prof?.location ? `Location: ${prof.location}` : "",
         prof?.description ? `About them: ${prof.description.slice(0, 600)}` : "",
       ].filter(Boolean);
-      const ai = await generateText(a.organizationId, a.companyId, {
+      const ai = await crmModelText(a.organizationId, a.companyId, {
+        profileKey: "sdr",
+        operation: "crm.prospecting_first_email",
+        sourceType: "crm_prospect_person",
+        sourceId: p.id,
+        jsonSchema: EMAIL_SCHEMA,
         system:
           "You write short, honest first sales emails (cold outreach) for a small business. Use ONLY the facts given; never invent results, customers, prices, mutual contacts or meetings. Plain text, no markdown, no placeholders in brackets, under 120 words, one clear easy question at the end. Do not add an unsubscribe line (it is added automatically). Reply with JSON only.",
         prompt: `We are ${company?.name ?? "our company"}; the sender is ${sender?.name ?? "the owner"}.\nWhat we offer and why it matters: ${a.pitch || a.audience}\nWho we help: ${a.audience}\nFacts about the recipient (from a contact-data provider):\n${facts.join("\n")}\nWrite the email in the language of this locale: ${company?.defaultLocale ?? "en-US"}.\n\nReturn JSON: {"subject": "<short subject>", "body": "<plain-text email, greeting with first name ${firstName}, signed by ${sender?.name ?? "the sender"}>"}`,
-        maxOutputTokens: 600,
+        maxTokens: 600,
         temperature: 0.5,
       });
       if (ai.ok) {
-        const parsed = parseEmailJson(ai.data.text);
-        if (parsed) draft = { subject: parsed.subject.slice(0, 200), body: parsed.body, ai: `${ai.providerId}:${ai.data.model}`.slice(0, 80) };
-      } else if (ai.code === "not_connected") {
+        const parsed = parseEmailJson(ai.text);
+        if (parsed) draft = { subject: parsed.subject.slice(0, 200), body: parsed.body, ai: ai.via };
+      } else if (ai.code === "not_configured" || ai.code === "paused") {
         aiMissing = true;
       } else {
         notes.push({ code: "ai_failed", detail: ai.error.slice(0, 200) });
@@ -801,6 +812,11 @@ export async function runAutopilot(id: string, opts: { force?: boolean } = {}) {
   if (!a || a.status !== "ACTIVE") return null;
   const controls = await getControls();
   if (!controls.automationsEnabled || !(await isModuleEnabled(a.organizationId, "crm")) || (await isOrganizationSuspended(a.organizationId))) return null;
+  // Company kill switch ("Pause all AI"): the AI SDR does nothing — no search, drafts or sends — until it is resumed.
+  if (await isCompanyAiPaused(a.organizationId, a.companyId)) {
+    if (a.lastError !== "company_ai_paused") await db().crmProspectingAutopilot.update({ where: { id }, data: { lastError: "company_ai_paused" } });
+    return null;
+  }
   // Claim the slot so overlapping ticks / "Run now" cannot run the same autopilot twice.
   const { count } = await db().crmProspectingAutopilot.updateMany({
     where: {

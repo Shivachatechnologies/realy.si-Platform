@@ -14,6 +14,7 @@ export const settingsInput = z.object({
   aiFirstResponseEnabled: z.boolean().optional(),
   aiSlaEscalationEnabled: z.boolean().optional(),
   emailChannelEnabled: z.boolean().optional(),
+  whatsappChannelEnabled: z.boolean().optional(),
   supportEmail: z.string().trim().toLowerCase().email().max(254).nullable().optional().or(z.literal("").transform(() => null)),
   setupStep: z.enum(["channels", "promises", "articles", "done"]).optional(),
 });
@@ -31,8 +32,10 @@ export async function updateSettings(ctx: RequestContext, organizationId: string
   const input = settingsInput.parse(raw);
   return transaction(async (tx) => {
     await authorize(ctx, organizationId, companyId, "support.manage", tx);
-    await ensureSettings(tx, organizationId, companyId);
-    const s = await tx.supportSettings.update({ where: { companyId }, data: { ...input, ...(input.setupStep === "done" ? { setupCompletedAt: new Date() } : {}) } });
+    const before = await ensureSettings(tx, organizationId, companyId);
+    // Mail is imported from the moment the email channel is turned on (older mail in the mailbox is not).
+    const emailOn = input.emailChannelEnabled === true && !before.emailChannelEnabled ? { emailChannelEnabledAt: new Date() } : {};
+    const s = await tx.supportSettings.update({ where: { companyId }, data: { ...input, ...emailOn, ...(input.setupStep === "done" ? { setupCompletedAt: new Date() } : {}) } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "support.settings.updated", resourceType: "support_settings", resourceId: companyId, newValue: input });
     return s;
   });
@@ -49,7 +52,7 @@ export const categoryInput = z.object({
 
 export async function listCategories(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  return db().supportCategory.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" }, include: { _count: { select: { tickets: true } } } });
+  return db().supportCategory.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" }, take: 500, include: { _count: { select: { tickets: true } } } });
 }
 
 export async function saveCategory(ctx: RequestContext, organizationId: string, companyId: string, id: string | null, raw: z.input<typeof categoryInput>) {
@@ -95,7 +98,7 @@ export const slaPolicyInput = z.object({
 
 export async function listSlaPolicies(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  return db().supportSlaPolicy.findMany({ where: { organizationId, companyId }, orderBy: [{ isDefault: "desc" }, { name: "asc" }], include: { targets: true } });
+  return db().supportSlaPolicy.findMany({ where: { organizationId, companyId }, orderBy: [{ isDefault: "desc" }, { name: "asc" }], take: 100, include: { targets: true } });
 }
 
 export async function saveSlaPolicy(ctx: RequestContext, organizationId: string, companyId: string, id: string | null, raw: z.input<typeof slaPolicyInput>) {
@@ -154,7 +157,7 @@ export const assignmentRuleInput = z.object({
 
 export async function listAssignmentRules(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  return db().supportAssignmentRule.findMany({ where: { organizationId, companyId }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] });
+  return db().supportAssignmentRule.findMany({ where: { organizationId, companyId }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], take: 200 });
 }
 
 export async function saveAssignmentRule(ctx: RequestContext, organizationId: string, companyId: string, id: string | null, raw: z.input<typeof assignmentRuleInput>) {
@@ -187,7 +190,7 @@ export const escalationRuleInput = z.object({
 
 export async function listEscalationRules(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "support.read");
-  return db().supportEscalationRule.findMany({ where: { organizationId, companyId }, orderBy: { createdAt: "asc" } });
+  return db().supportEscalationRule.findMany({ where: { organizationId, companyId }, orderBy: { createdAt: "asc" }, take: 200 });
 }
 
 export async function saveEscalationRule(ctx: RequestContext, organizationId: string, companyId: string, id: string | null, raw: z.input<typeof escalationRuleInput>) {

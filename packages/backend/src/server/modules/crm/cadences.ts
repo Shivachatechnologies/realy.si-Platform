@@ -8,7 +8,9 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { notifyUsers } from "@/server/modules/notifications/service";
 import { actorId, authorize, isUuid } from "./common";
 import { contactName } from "./contacts";
-import { hasRepliedSince, sendClaimed } from "./outreach";
+import { sendClaimed } from "./outreach";
+import { processReply, resumeOutOfOffice } from "./replies";
+import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
 
 /**
  * Cadences (automated follow-up sequences). Each enrolled person moves through timed steps:
@@ -52,6 +54,7 @@ export async function listCadences(ctx: RequestContext, organizationId: string, 
   const rows = await db().crmCadence.findMany({
     where: { organizationId, companyId, status: { not: "ARCHIVED" } },
     orderBy: { createdAt: "desc" },
+    take: 200,
     include: { steps: { orderBy: { position: "asc" }, select: { kind: true, delayDays: true } }, _count: { select: { enrollments: true } } },
   });
   const counts = rows.length
@@ -215,15 +218,6 @@ export async function advanceAfterSend(tx: Tx, enrollmentId: string, now = new D
   });
 }
 
-async function stopReplied(e: { id: string; organizationId: string; companyId: string; name: string; ownerId: string | null; enrolledById: string; cadenceId: string }) {
-  await transaction(async (tx) => {
-    const { count } = await tx.crmCadenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE" }, data: { status: "REPLIED", stoppedReason: "replied", nextRunAt: null } });
-    if (!count) return;
-    await tx.crmOutreachMessage.updateMany({ where: { enrollmentId: e.id, status: { in: ["DRAFT", "PENDING_APPROVAL"] } }, data: { status: "CANCELLED" } });
-    await notifyUsers(tx, e.organizationId, [e.ownerId ?? e.enrolledById], "crm.sequence_replied", { companyId: e.companyId, title: e.name, href: `/crm/sequences/${e.cadenceId}` });
-  });
-}
-
 /**
  * Worker job: run due cadence steps. Returns the number of steps processed. Waiting enrollments (an email pending
  * approval) are only checked for replies.
@@ -232,6 +226,8 @@ export async function runCadences(now = new Date()): Promise<number> {
   // Sequences are automations: the platform-wide switch pauses them (nothing is lost; due steps run when re-enabled).
   if (!(await getControls()).automationsEnabled) return 0;
   const ctx = systemContext();
+  // Sequences paused by an out-of-office reply continue once the person is back.
+  await resumeOutOfOffice(now);
   const due = await db().crmCadenceEnrollment.findMany({
     where: { status: "ACTIVE", cadence: { status: "ACTIVE" }, OR: [{ nextRunAt: { lte: now } }, { nextRunAt: null }] },
     orderBy: { nextRunAt: "asc" },
@@ -242,12 +238,25 @@ export async function runCadences(now = new Date()): Promise<number> {
   const controls = await getControls();
   const { suppressionFor } = await import("./suppression");
   const autopilots = await autopilotsForCadences([...new Set(due.map((e) => e.cadenceId))]);
+  // Company kill switch ("Pause all AI"), checked once per company per run.
+  const pausedCache = new Map<string, boolean>();
+  const companyPaused = async (organizationId: string, companyId: string) => {
+    if (!pausedCache.has(companyId)) pausedCache.set(companyId, await isCompanyAiPaused(organizationId, companyId));
+    return pausedCache.get(companyId)!;
+  };
   let processed = 0;
   for (const e of due) {
     try {
-      if (e.cadence.stopOnReply && (await hasRepliedSince(e.organizationId, e.companyId, e.toEmail, e.createdAt))) {
-        await stopReplied(e);
-        continue;
+      if (e.cadence.stopOnReply) {
+        // A new reply (since enrolment, or since the last classified one) is classified and routed (replies.ts).
+        const since = e.replyClassifiedAt && e.replyClassifiedAt > e.createdAt ? e.replyClassifiedAt : e.createdAt;
+        const person = await db().crmProspectPerson.findFirst({ where: { companyId: e.companyId, enrollmentId: e.id }, select: { id: true } });
+        const r = await processReply(
+          { organizationId: e.organizationId, companyId: e.companyId, email: e.toEmail, name: e.name, leadId: e.leadId, ownerId: e.ownerId ?? e.enrolledById, prospectId: person?.id ?? null, enrollmentId: e.id, href: `/crm/sequences/${e.cadenceId}`, repliedNotice: "crm.sequence_replied" },
+          since,
+          now,
+        );
+        if (r) continue;
       }
       if (!e.nextRunAt || e.nextRunAt > now) continue; // waiting for an approval
       if (e.leadId) {
@@ -293,11 +302,15 @@ export async function runCadences(now = new Date()): Promise<number> {
       // Follow-ups of a prospecting autopilot respect its status and daily send cap (deferred to tomorrow when reached).
       const autopilot = autopilots.get(e.cadenceId) ?? null;
       if (autopilot && autopilot.status !== "ACTIVE") continue;
+      // While the company's AI is paused the AI SDR's follow-ups wait (nothing is lost), and no sequence email is sent
+      // automatically: it is queued for a person's approval instead.
+      const paused = await companyPaused(e.organizationId, e.companyId);
+      if (autopilot && paused) continue;
       if (autopilot && !(await autopilotHasSendBudget(autopilot, now))) {
         await db().crmCadenceEnrollment.updateMany({ where: { id: e.id, status: "ACTIVE", nextRunAt: e.nextRunAt }, data: { nextRunAt: nextUtcDay(now) } });
         continue;
       }
-      let auto = e.cadence.autoSend && !!e.cadence.activatedAt;
+      let auto = e.cadence.autoSend && !!e.cadence.activatedAt && !paused;
       if (auto && autopilot) {
         // Autopilot follow-ups auto-send only within its effective autonomy and to verified addresses.
         const person = await db().crmProspectPerson.findFirst({ where: { companyId: e.companyId, enrollmentId: e.id }, select: { emailStatus: true } });

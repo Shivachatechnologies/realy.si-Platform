@@ -8,6 +8,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { getT } from "@/i18n/server";
 import { articleDraftTasks, setupState } from "@/server/modules/support/setup";
+import { inboundChannelStatus } from "@/server/modules/support/inbound";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("support.setup.title") };
@@ -33,6 +34,7 @@ export default async function SupportSetupPage({ searchParams }: PageProps<"/[lo
   const asked = typeof sp.step === "string" ? STEPS.indexOf(sp.step as (typeof STEPS)[number]) : -1;
   const current = asked >= 0 && asked <= reached && asked < 3 ? asked : reached;
   const step = STEPS[current]!;
+  const inbound = step === "channels" ? await inboundChannelStatus(org.id, company.id, state.settings.supportEmail) : null;
   const drafts = step === "articles" ? await articleDraftTasks(viewer.ctx, org.id, company.id) : [];
   const normal = state.policy?.targets.find((x) => x.priority === "NORMAL");
   const bh = state.policy?.businessHoursOnly ?? true;
@@ -49,7 +51,8 @@ export default async function SupportSetupPage({ searchParams }: PageProps<"/[lo
             <ChannelsStep
               base={base}
               emailReady={state.emailReady}
-              initial={{ supportFormEnabled: state.settings.supportFormEnabled, helpCenterEnabled: state.settings.helpCenterEnabled, emailChannelEnabled: state.settings.emailChannelEnabled, supportEmail: state.settings.supportEmail }}
+              inbound={inbound!}
+              initial={{ supportFormEnabled: state.settings.supportFormEnabled, helpCenterEnabled: state.settings.helpCenterEnabled, emailChannelEnabled: state.settings.emailChannelEnabled, whatsappChannelEnabled: state.settings.whatsappChannelEnabled, supportEmail: state.settings.supportEmail }}
               links={{ form: `/${locale}/support-form/${company.id}`, help: `/${locale}/help/${company.id}` }}
             />
           ) : null}

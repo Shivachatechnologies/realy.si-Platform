@@ -9,9 +9,9 @@ import { notifyUsers, usersWithPermission } from "@/server/modules/notifications
 import { sendPlainEmail } from "@/server/modules/email/service";
 import { gmailSend, outlookSend } from "@/server/modules/comms/providers";
 import { ProviderError } from "@/server/modules/integrations/providers";
-import { generateText } from "@/server/modules/integrations/services/ai-text";
 import { authorize, isUuid } from "./common";
 import { assertAiAllowed, connectedMailbox } from "./channels";
+import { crmModelText } from "./ai-text";
 import { contactName } from "./contacts";
 
 /**
@@ -185,24 +185,31 @@ const GOAL_TEXT: Record<OutreachGoal, string> = {
 export async function aiOutreachDraft(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof outreachAiInput>) {
   const input = outreachAiInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "sales.manage");
-  await assertAiAllowed();
+  await assertAiAllowed(organizationId, companyId);
   const r = await resolveRecipient(organizationId, companyId, input);
   const [company, me] = await Promise.all([
     db().company.findFirst({ where: { id: companyId, organizationId }, select: { name: true } }),
     ctx.actor.id ? db().user.findFirst({ where: { id: ctx.actor.id }, select: { name: true } }) : Promise.resolve(null),
   ]);
-  const ai = await generateText(organizationId, companyId, {
+  const ai = await crmModelText(organizationId, companyId, {
+    profileKey: "sdr",
+    operation: "crm.outreach_draft",
+    sourceType: r.leadId ? "lead" : r.dealId ? "crm_deal" : "contact",
+    sourceId: `${r.leadId ?? r.dealId ?? r.contactId}:${Date.now()}`,
+    jsonSchema: { type: "object", properties: { subject: { type: "string" }, body: { type: "string" } }, required: ["subject", "body"], additionalProperties: false },
     system:
       "You write short, honest sales emails for a small business. Use only facts from the record; never invent prices, results, customers or meetings. Plain text, no markdown, no placeholders in brackets. Reply with JSON only.",
     prompt: `We are ${company?.name ?? "our company"}; the sender is ${me?.name ?? "the owner"}.\nWrite ${GOAL_TEXT[input.goal]}.\nTone: ${input.tone}.\nRecipient: ${r.name}${r.organisation ? ` at ${r.organisation}` : ""}.\nWhat we know:\n${r.context || "(little is known yet)"}${input.guidance ? `\nExtra direction: ${input.guidance}` : ""}\n\nReturn JSON: {"subject": "<subject line>", "body": "<plain-text email body, greeting with first name ${r.firstName}, signed by ${me?.name ?? "the sender"}>"}`,
-    maxOutputTokens: 700,
+    maxTokens: 700,
     temperature: 0.6,
   });
   if (!ai.ok) {
-    if (ai.code === "not_connected") throw new AppError("not_configured", "No AI text provider (OpenAI or Gemini) is connected. Write the email yourself or connect one.", { reason: "crm_ai_not_connected" });
+    if (ai.code === "not_configured") throw new AppError("not_configured", "No AI model is configured on the platform. Write the email yourself.", { reason: "crm_ai_not_connected" });
+    if (ai.code === "paused") throw new AppError("not_available", "AI is paused for this company. Nothing was generated.", { reason: "company_ai_paused" });
+    if (ai.code === "budget") throw new AppError("not_available", `${ai.error} Nothing was generated.`, { reason: "cost_budget_reached" });
     throw new AppError("not_available", `The AI provider could not answer: ${ai.error}`, { reason: "crm_ai_failed" });
   }
-  const text = ai.data.text;
+  const text = ai.text;
   let subject = "";
   let body = "";
   try {
@@ -213,7 +220,7 @@ export async function aiOutreachDraft(ctx: RequestContext, organizationId: strin
     /* unreadable */
   }
   if (!subject || !body) throw new AppError("not_available", "The AI answer could not be read; nothing was saved. Please try again.", { reason: "crm_ai_unreadable" });
-  return createOutreachDraft(ctx, organizationId, companyId, { leadId: input.leadId, contactId: input.contactId, dealId: input.dealId, subject: subject.slice(0, 200), body: body.slice(0, 10_000) }, { aiProvider: `${ai.providerId}:${ai.data.model}`.slice(0, 80) });
+  return createOutreachDraft(ctx, organizationId, companyId, { leadId: input.leadId, contactId: input.contactId, dealId: input.dealId, subject: subject.slice(0, 200), body: body.slice(0, 10_000) }, { aiProvider: ai.via });
 }
 
 async function loadMessage(tx: Tx, organizationId: string, companyId: string, id: string) {

@@ -76,7 +76,7 @@ async function research(organizationId: string, companyId: string, query: string
 
 /** Facts extracted by AI from the given sources only (empty when no AI text provider is connected or it fails). */
 async function extractFacts(organizationId: string, companyId: string, subject: string, results: WebResult[]) {
-  if (!results.length || (await aiPaused())) return { summary: "", facts: [] as IntelFact[], model: null as string | null, provider: null as string | null };
+  if (!results.length || (await aiPaused(organizationId, companyId))) return { summary: "", facts: [] as IntelFact[], model: null as string | null, provider: null as string | null };
   const numbered = results.map((r, i) => `[${i + 1}] ${r.title}\n${r.url}\n${r.snippet}`).join("\n\n");
   const ai = await generateText(organizationId, companyId, {
     system:
@@ -174,7 +174,7 @@ export async function qualifyLead(ctx: RequestContext, organizationId: string, c
     include: { activities: { orderBy: { occurredAt: "desc" }, take: 8, select: { type: true, summary: true, occurredAt: true } } },
   });
   if (!lead) throw notFound("Lead");
-  await assertAiAllowed();
+  await assertAiAllowed(organizationId, companyId);
   const enrichment = await db().crmIntel.findFirst({ where: { companyId, leadId, kind: "ENRICHMENT" }, orderBy: { createdAt: "desc" }, select: { summary: true, data: true } });
   const company = await db().company.findFirst({ where: { id: companyId, organizationId }, select: { name: true } });
   const facts = ((enrichment?.data as { facts?: IntelFact[] } | null)?.facts ?? []).map((f) => `- ${f.label}: ${f.value}`).join("\n");
