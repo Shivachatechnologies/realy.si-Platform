@@ -10109,7 +10109,14 @@
       "notePlaceholder": "可选指引（语气、角度、受众）",
       "starting": "正在启动…",
       "applied": "已应用",
-      "none": "暂无 AI 任务。"
+      "none": "暂无 AI 任务。",
+      "assignTo": "分配给 AI 员工",
+      "defaultRole": "默认角色",
+      "campaignContent": "制作活动内容",
+      "campaignContentHint": "为此活动制作草稿、图片和社交帖子。每个草稿、图片和帖子都需等待审批；只有平台确认后，帖子才算已发布。",
+      "team": "此活动的 AI 团队",
+      "teamEmpty": "尚无 AI 员工处理此活动。请在上方分配。",
+      "teamTasks": "{count, plural, other {# 个任务}}"
     },
     "contentType": {
       "BLOG": "博客文章",
@@ -10869,7 +10876,8 @@
         "title": "连接",
         "connect": "连接",
         "images": "图片生成",
-        "video": "视频生成"
+        "video": "视频生成",
+        "needsKeys": "不可用 — Realy 需要设置平台密钥 {keys}"
       },
       "goals": {
         "title": "目标",
@@ -11062,7 +11070,8 @@
         "lastPlanned": "上次规划 {when}",
         "missingAccounts": "以下平台未选择账号：{platforms}。这些时段不会被规划。",
         "smartTimes": "使用您结果中的最佳时间，否则使用平台默认",
-        "noPaid": "不进行付费生成"
+        "noPaid": "不进行付费生成",
+        "aiPaused": "本公司的所有 AI 已暂停。自动驾驶不会规划新内容、不运行 AI 步骤，并暂缓其自行排期的帖子；经人工批准的条目仍可排期。"
       },
       "canvas": {
         "title": "内容画布",
@@ -12033,7 +12042,8 @@
         "connect": "设置",
         "realyBlog": "您的 Realy 博客（连接 WordPress、Webflow 或 Shopify 即可在那里发布）",
         "safety": "每个帖子都会按照您的品牌和合规规则检查，只通过平台 API 发布并验证链接；发送的邮件始终包含退订链接，并跳过已退订的联系人。广告支出变更始终等待您批准。",
-        "channels": "支持发布到：{list}"
+        "channels": "支持发布到：{list}",
+        "researchKeys": "Realy 需要设置平台密钥 {keys}"
       },
       "analytics": {
         "cpl": "单个潜在客户成本",
@@ -12043,6 +12053,11 @@
         "byChannelHint": "各渠道的支出、按 UTM 来源的潜在客户、覆盖和互动——仅来自真实记录。",
         "leads": "潜在客户（UTM）",
         "noChannels": "此期间尚无渠道活动。"
+      },
+      "aiPaused": {
+        "title": "所有 AI 已暂停",
+        "body": "运行停留在当前阶段：在有人恢复 AI 之前，不进行研究、计划、启动、内容或自动优化。",
+        "open": "打开自主设置"
       }
     }
   },
@@ -24069,7 +24084,9 @@
         "title": "最终渲染",
         "ready": "已连接渲染服务商——将生成成品 MP4。",
         "missing": "平台暂不提供视频渲染。您将获得可编辑的时间线。"
-      }
+      },
+      "needsKeys": "Realy 需要设置平台密钥 {keys}",
+      "disabled": "服务商已配置，但已对此组织关闭 — 请联系 Realy 团队。"
     },
     "projects": {
       "title": "视频项目",

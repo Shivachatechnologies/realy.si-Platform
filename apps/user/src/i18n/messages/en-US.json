@@ -10109,7 +10109,14 @@
       "notePlaceholder": "Optional direction (tone, angle, audience)",
       "starting": "Starting…",
       "applied": "Applied",
-      "none": "No AI tasks yet."
+      "none": "No AI tasks yet.",
+      "assignTo": "Assign to AI employee",
+      "defaultRole": "Default role",
+      "campaignContent": "Produce campaign content",
+      "campaignContentHint": "Drafts, images and social posts for this campaign. Every draft, image and post waits for approval; a post counts as published only when the platform confirms it.",
+      "team": "AI team on this campaign",
+      "teamEmpty": "No AI employee has worked on this campaign yet. Assign one above.",
+      "teamTasks": "{count, plural, one {# task} other {# tasks}}"
     },
     "contentType": {
       "BLOG": "Blog post",
@@ -10869,7 +10876,8 @@
         "title": "Connections",
         "connect": "Connect",
         "images": "Image generation",
-        "video": "Video generation"
+        "video": "Video generation",
+        "needsKeys": "Not available — Realy must set the platform key {keys}"
       },
       "goals": {
         "title": "Goals",
@@ -11062,7 +11070,8 @@
         "lastPlanned": "Last planned {when}",
         "missingAccounts": "No account selected for: {platforms}. Those slots are not planned.",
         "smartTimes": "Best times from your results, else platform defaults",
-        "noPaid": "No paid generation"
+        "noPaid": "No paid generation",
+        "aiPaused": "All AI in this company is paused. Autopilots plan nothing new, run no AI steps and hold the posts they scheduled on their own; items a person approved can still be scheduled."
       },
       "canvas": {
         "title": "Content canvas",
@@ -12033,7 +12042,8 @@
         "connect": "Set up",
         "realyBlog": "Your Realy blog (connect WordPress, Webflow or Shopify to publish there)",
         "safety": "Every post is checked against your brand and compliance rules, published only through the platform's API with a verified link, and sent emails always carry an unsubscribe link and skip opted-out contacts. Ad spend changes always wait for you.",
-        "channels": "Publishing supported on: {list}"
+        "channels": "Publishing supported on: {list}",
+        "researchKeys": "Realy must set the platform key {keys}"
       },
       "analytics": {
         "cpl": "Cost per lead",
@@ -12043,6 +12053,11 @@
         "byChannelHint": "Spend, leads by UTM source, reach and engagement per channel — from real records only.",
         "leads": "Leads (UTM)",
         "noChannels": "No channel activity in this period yet."
+      },
+      "aiPaused": {
+        "title": "All AI is paused",
+        "body": "Runs wait at their current stage: no research, plans, launches, content or automatic optimizations until a person resumes AI.",
+        "open": "Open Autonomy"
       }
     }
   },
@@ -24069,7 +24084,9 @@
         "title": "Final render",
         "ready": "Rendering provider connected — finished MP4s are produced.",
         "missing": "Video rendering is not available on the platform yet. You get an editable timeline."
-      }
+      },
+      "needsKeys": "Realy must set the platform key {keys}",
+      "disabled": "The provider is set up but turned off for this organization — ask the Realy team."
     },
     "projects": {
       "title": "Video projects",

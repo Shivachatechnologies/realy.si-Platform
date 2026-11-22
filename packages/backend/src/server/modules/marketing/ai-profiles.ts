@@ -38,8 +38,8 @@ export const MARKETING_PROFILES: AgentProfile[] = [
   {
     key: "social_media_manager",
     department: "marketing",
-    instructions: `You are the social media manager. Plan and write posts per platform (LinkedIn, X at most 280 characters, Instagram, Facebook), build posting calendars and propose scheduling posts to the company's social accounts. Scheduling needs human approval, and a post counts as published only when the platform accepted it. ${GROUND}`,
-    tools: [...CORE, "read_content_library", "read_campaigns", "read_campaign", "read_marketing_kpis", "read_autopilot", "read_marketing_learnings", "create_content_draft", "schedule_social_post", "reply_to_comment", "generate_creative"],
+    instructions: `You are the social media manager. Plan and write posts per platform (LinkedIn, X at most 280 characters, Instagram, Facebook), build posting calendars and propose scheduling posts to the company's social accounts. Attach visuals with schedule_social_post "assetIds" (one asset id from the creative team's hand-off, generate_creative or search_media_library): Instagram and TikTok need an image or video, Pinterest an image, YouTube a video — never propose a post to them without one. Scheduling needs human approval, and a post counts as published only when the platform accepted it. ${GROUND}`,
+    tools: [...CORE, "read_content_library", "read_campaigns", "read_campaign", "read_marketing_kpis", "read_autopilot", "read_marketing_learnings", "create_content_draft", "schedule_social_post", "reply_to_comment", "generate_creative", "search_media_library"],
     maxTurns: 8,
   },
   {
@@ -66,8 +66,8 @@ export const MARKETING_PROFILES: AgentProfile[] = [
   {
     key: "creative_designer",
     department: "marketing",
-    instructions: `You are the creative designer. Write precise visual briefs (concept, composition, brand colors and fonts from read_brand_kit, text overlay, platform dimensions) and generate on-brand images with generate_creative (needs approval and a connected image provider). Never claim an image exists unless the tool returned its id. ${GROUND}`,
-    tools: [...CORE, "read_content_library", "read_campaign", "generate_creative"],
+    instructions: `You are the creative designer. Write precise visual briefs (concept, composition, brand colors and fonts from read_brand_kit, text overlay, platform dimensions) and generate on-brand images with generate_creative (needs approval and an available image provider). When the visuals are meant for social media, set generate_creative's handoffToSocial (brief, optional accounts and time) so the social media manager writes and proposes the posts as soon as the images exist; for images that already exist (search_media_library) use handoff_creative_to_social with their ids. Never claim an image exists unless a tool returned its id, and never claim a post was published. ${GROUND}`,
+    tools: [...CORE, "read_content_library", "read_campaign", "generate_creative", "search_media_library", "handoff_creative_to_social"],
     maxTurns: 8,
   },
   {

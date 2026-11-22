@@ -15,6 +15,7 @@ import { formatDateTime } from "@/i18n/format";
 import { listProjects } from "@/server/modules/creative/pipeline";
 import { campaignUsage, studioOverview } from "@/server/modules/creative/library";
 import { campaignOptions } from "@/server/modules/marketing/campaigns";
+import { platformKeyOptions } from "@/server/modules/marketing/provider-keys";
 import { formatMicros, IMAGE_STATUS_PROVIDERS, RENDER_PROVIDERS, SCENE_VIDEO_PROVIDERS, VOICE_PROVIDERS } from "@/server/modules/creative/presets";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,14 +35,20 @@ export default async function StudioOverviewPage() {
     campaignOptions(viewer.ctx, org.id, company.id),
   ]);
   const has = (keys: readonly string[]) => keys.some((k) => overview.connected.includes(k));
-  const capabilities = [
-    { key: "text", ok: has(["openai", "gemini"]), href: "openai" },
-    { key: "image", ok: has(IMAGE_STATUS_PROVIDERS), href: "openai" },
-    { key: "video", ok: has(SCENE_VIDEO_PROVIDERS), href: "runway" },
-    { key: "voice", ok: has(VOICE_PROVIDERS), href: "elevenlabs" },
-    { key: "music", ok: has(["jamendo"]), href: "jamendo" },
-    { key: "render", ok: has(RENDER_PROVIDERS), href: "shotstack" },
-  ];
+  const capabilities = (
+    [
+      { key: "text", providers: ["openai", "gemini"], href: "openai" },
+      { key: "image", providers: IMAGE_STATUS_PROVIDERS, href: "openai" },
+      { key: "video", providers: SCENE_VIDEO_PROVIDERS, href: "runway" },
+      { key: "voice", providers: VOICE_PROVIDERS, href: "elevenlabs" },
+      { key: "music", providers: ["jamendo"], href: "jamendo" },
+      { key: "render", providers: RENDER_PROVIDERS, href: "shotstack" },
+    ] as const
+  ).map((c) => {
+    const ok = has(c.providers);
+    // Not available: name the exact platform keys the Realy team has to set (never values; customers never enter keys).
+    return { ...c, ok, keys: ok ? [] : platformKeyOptions(c.providers) };
+  });
   const meter = (m: { used: number; limit: number | null }) => (m.limit === null ? `${m.used}` : `${m.used} / ${m.limit}`);
   const videos = projects.filter((x) => x.kind === "VIDEO");
   return wrap(
@@ -64,6 +71,7 @@ export default async function StudioOverviewPage() {
                 <span className="grid gap-0.5">
                   <span className="font-medium">{t(`creative.capabilities.${c.key}.title`)}</span>
                   <span className="text-xs text-muted-foreground">{t(`creative.capabilities.${c.key}.${c.ok ? "ready" : "missing"}`)}</span>
+                  {!c.ok ? <span className="text-xs text-warning">{c.keys.length ? t("creative.capabilities.needsKeys", { keys: c.keys.join(" · ") }) : t("creative.capabilities.disabled")}</span> : null}
                   {!c.ok && perms.integrations ? (
                     <Link href={`/${locale}/integrations/${c.href}`} className="text-xs font-medium text-primary hover:underline">
                       {t("creative.common.connect")}

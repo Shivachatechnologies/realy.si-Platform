@@ -110,7 +110,7 @@ export async function listLibrary(ctx: RequestContext, organizationId: string, c
   const [total, rows, folders] = await Promise.all([
     db().creativeAsset.count({ where }),
     db().creativeAsset.findMany({ where, orderBy: { createdAt: "desc" }, skip: (f.page - 1) * PAGE, take: PAGE }),
-    db().creativeFolder.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" }, select: { id: true, name: true, color: true } }),
+    db().creativeFolder.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" }, select: { id: true, name: true, color: true }, take: 200 }),
   ]);
   const counts = await db().creativeAsset.groupBy({ by: ["folderId"], where: { organizationId, companyId, archivedAt: null, folderId: { not: null } }, _count: { _all: true } });
   const countOf = new Map(counts.map((c) => [c.folderId, c._count._all]));

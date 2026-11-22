@@ -43,6 +43,7 @@ async function nurture(event: OutboxEvent) {
       ...(event.type === "form.submitted" ? { OR: [{ triggerFormId: null }, ...(formId ? [{ triggerFormId: formId }] : [])] } : {}),
     },
     select: { id: true, organizationId: true, companyId: true },
+    take: 50,
   });
   for (const seq of sequences) {
     const seen = await db().marketingSequenceEnrollment.findFirst({ where: { sequenceId: seq.id, sourceEventId: event.id }, select: { id: true } });

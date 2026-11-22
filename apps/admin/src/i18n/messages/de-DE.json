@@ -11668,7 +11668,14 @@
       "notePlaceholder": "Optionale Vorgaben (Ton, Blickwinkel, Zielgruppe)",
       "starting": "Wird gestartet…",
       "applied": "Übernommen",
-      "none": "Noch keine KI-Aufgaben."
+      "none": "Noch keine KI-Aufgaben.",
+      "assignTo": "KI-Mitarbeiter zuweisen",
+      "defaultRole": "Standardrolle",
+      "campaignContent": "Kampagneninhalte erstellen",
+      "campaignContentHint": "Entwürfe, Bilder und Social-Posts für diese Kampagne. Jeder Entwurf, jedes Bild und jeder Post wartet auf Freigabe; ein Post gilt erst als veröffentlicht, wenn die Plattform ihn bestätigt.",
+      "team": "KI-Team dieser Kampagne",
+      "teamEmpty": "Noch kein KI-Mitarbeiter hat an dieser Kampagne gearbeitet. Weisen Sie oben einen zu.",
+      "teamTasks": "{count, plural, one {# Aufgabe} other {# Aufgaben}}"
     },
     "contentType": {
       "BLOG": "Blogartikel",
@@ -12428,7 +12435,8 @@
         "title": "Verbindungen",
         "connect": "Verbinden",
         "images": "Bilderzeugung",
-        "video": "Videoerzeugung"
+        "video": "Videoerzeugung",
+        "needsKeys": "Nicht verfügbar – Realy muss den Plattformschlüssel {keys} hinterlegen"
       },
       "goals": {
         "title": "Ziele",
@@ -12621,7 +12629,8 @@
         "lastPlanned": "Zuletzt geplant {when}",
         "missingAccounts": "Kein Konto ausgewählt für: {platforms}. Diese Termine werden nicht geplant.",
         "smartTimes": "Beste Zeiten aus Ihren Ergebnissen, sonst Plattform-Standards",
-        "noPaid": "Keine kostenpflichtige Erzeugung"
+        "noPaid": "Keine kostenpflichtige Erzeugung",
+        "aiPaused": "Die gesamte KI dieses Unternehmens ist pausiert. Autopiloten planen nichts Neues, führen keine KI-Schritte aus und halten selbst geplante Posts zurück; von einer Person freigegebene Elemente können weiterhin eingeplant werden."
       },
       "canvas": {
         "title": "Content-Leinwand",
@@ -13592,7 +13601,8 @@
         "connect": "Einrichten",
         "realyBlog": "Ihr Realy-Blog (verbinden Sie WordPress, Webflow oder Shopify, um dort zu veröffentlichen)",
         "safety": "Jeder Beitrag wird gegen Ihre Marken- und Compliance-Regeln geprüft, nur über die API der Plattform mit verifiziertem Link veröffentlicht, und versendete E-Mails enthalten immer einen Abmeldelink und überspringen abgemeldete Kontakte. Budgetänderungen warten immer auf Sie.",
-        "channels": "Veröffentlichung möglich auf: {list}"
+        "channels": "Veröffentlichung möglich auf: {list}",
+        "researchKeys": "Realy muss den Plattformschlüssel {keys} hinterlegen"
       },
       "analytics": {
         "cpl": "Kosten pro Lead",
@@ -13602,6 +13612,11 @@
         "byChannelHint": "Ausgaben, Leads nach UTM-Quelle, Reichweite und Interaktionen pro Kanal – nur aus echten Datensätzen.",
         "leads": "Leads (UTM)",
         "noChannels": "In diesem Zeitraum noch keine Kanalaktivität."
+      },
+      "aiPaused": {
+        "title": "Die gesamte KI ist pausiert",
+        "body": "Läufe warten in ihrer aktuellen Phase: keine Recherche, Pläne, Starts, Inhalte oder automatischen Optimierungen, bis eine Person die KI fortsetzt.",
+        "open": "Autonomie öffnen"
       }
     }
   },

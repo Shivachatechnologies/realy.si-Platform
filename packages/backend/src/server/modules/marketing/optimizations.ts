@@ -7,6 +7,7 @@ import { conflict, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { createTask } from "@/server/modules/agents/service";
+import { pausedCompanyIds } from "./ai-pause";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { authorize, isUuid } from "./common";
 import { extractJson } from "./ai";
@@ -379,8 +380,11 @@ export async function runOptimizationLoop(): Promise<number> {
     db().marketingAutopilot.groupBy({ by: ["organizationId", "companyId"], where: { status: "ACTIVE", archivedAt: null } }),
   ]);
   const companies = new Map([...social, ...ads, ...aps].map((c) => [c.companyId, c.organizationId]));
+  // "Pause all AI": no new proposals (and no AI review tasks) for paused companies.
+  const paused = await pausedCompanyIds();
   let n = 0;
   for (const [companyId, organizationId] of companies) {
+    if (paused.has(companyId)) continue;
     try {
       n += await generateOptimizations(organizationId, companyId);
     } catch (err) {

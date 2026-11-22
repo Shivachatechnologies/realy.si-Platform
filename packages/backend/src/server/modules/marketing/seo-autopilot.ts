@@ -50,7 +50,7 @@ export async function seoAutopilotData(ctx: RequestContext, organizationId: stri
   const since = new Date(Date.now() - 28 * 86_400_000);
   const prev = new Date(Date.now() - 56 * 86_400_000);
   const [clusters, articles, pages, queries, prevPages, gscConnected] = await Promise.all([
-    db().seoTopicCluster.findMany({ where: { projectId }, orderBy: { name: "asc" } }),
+    db().seoTopicCluster.findMany({ where: { projectId }, orderBy: { name: "asc" }, take: 200 }),
     db().marketingContent.findMany({ where: { companyId, seoProjectId: projectId, archivedAt: null }, orderBy: { updatedAt: "desc" }, take: 50, select: { id: true, title: true, status: true, clusterId: true, publishedUrl: true, publishedAt: true, keywords: true } }),
     db().seoSearchMetric.groupBy({ by: ["page"], where: { projectId, date: { gte: since } }, _sum: { clicks: true, impressions: true }, _avg: { position: true }, orderBy: { _sum: { clicks: "desc" } }, take: 25 }),
     db().seoSearchMetric.groupBy({ by: ["query"], where: { projectId, date: { gte: since } }, _sum: { clicks: true, impressions: true }, _avg: { position: true }, orderBy: { _sum: { impressions: "desc" } }, take: 50 }),
@@ -292,7 +292,7 @@ export async function syncSearchConsole(projectId: string): Promise<number> {
     db().seoSearchMetric.createMany({ data: rows.map((r) => ({ organizationId: p.organizationId, companyId: p.companyId, projectId, date: new Date(`${r.date}T00:00:00Z`), page: r.page, query: r.query, clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })), skipDuplicates: true }),
   ]);
   // Rank tracking from real positions for tracked keywords.
-  const keywords = await db().seoKeyword.findMany({ where: { projectId }, select: { id: true, keyword: true, currentRank: true } });
+  const keywords = await db().seoKeyword.findMany({ where: { projectId }, select: { id: true, keyword: true, currentRank: true }, orderBy: { createdAt: "asc" }, take: 2000 });
   for (const k of keywords) {
     const hits = rows.filter((r) => r.query.toLowerCase() === k.keyword.toLowerCase());
     if (!hits.length) continue;
