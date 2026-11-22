@@ -2233,7 +2233,8 @@
       "COMPLETED": "पूर्ण",
       "FAILED": "विफल",
       "CANCELLED": "रद्द",
-      "WAITING_APPROVAL": "स्वीकृति की प्रतीक्षा"
+      "WAITING_APPROVAL": "स्वीकृति की प्रतीक्षा",
+      "PAUSED": "रोका गया"
     },
     "back": "सभी कार्य",
     "deliverable": "परिणाम",

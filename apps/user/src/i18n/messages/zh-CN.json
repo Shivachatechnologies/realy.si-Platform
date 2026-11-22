@@ -2233,7 +2233,8 @@
       "COMPLETED": "已完成",
       "FAILED": "失败",
       "CANCELLED": "已取消",
-      "WAITING_APPROVAL": "等待审批"
+      "WAITING_APPROVAL": "等待审批",
+      "PAUSED": "已暂停"
     },
     "back": "全部任务",
     "deliverable": "成果",

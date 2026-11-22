@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.workflows.title") };
 }
 
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning", PAUSED: "warning" } as const;
 const NOTIFY_PERMISSIONS = [
   "sales.read",
   "sales.manage",

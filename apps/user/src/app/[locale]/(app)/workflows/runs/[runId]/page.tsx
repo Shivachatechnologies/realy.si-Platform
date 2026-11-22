@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const STEP_TONE = { RUNNING: "accent", WAITING: "warning", SUCCEEDED: "success", FAILED: "danger", SKIPPED: "neutral" } as const;
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning", PAUSED: "warning" } as const;
 
 function Json({ value }: { value: unknown }) {
   return <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-muted p-2 font-mono text-xs">{JSON.stringify(value, null, 2)}</pre>;

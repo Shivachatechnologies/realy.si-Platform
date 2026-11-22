@@ -15,6 +15,7 @@ import { isUuid, reasonSchema, requireAnyPlatform, utcMonthStart } from "./acces
 import { aiCostUsage } from "./ai";
 import { setControl, setOrgOverride } from "./controls";
 import { aiUsageSince } from "./overview";
+import type { BudgetScope } from "./ai-budgets";
 
 /**
  * AI Control → Models & providers and AI workforce browser.
@@ -65,13 +66,26 @@ export async function resolvePlatformModel(opts: { organizationId?: string | nul
   return candidates.find(allowed) ?? env().AGENT_MODEL;
 }
 
-/** Refusal code when the platform-wide monthly AI spend cap (USD, estimated) is reached, else null. */
-export async function platformBudgetRefusal(): Promise<"platform_ai_budget_reached" | null> {
-  const cap = await readSetting(BUDGET_KEY, budgetSchema, null);
-  if (cap === null) return null;
-  const usage = await aiUsageSince(utcMonthStart());
-  return usage.costMicros >= cap * 1_000_000 ? "platform_ai_budget_reached" : null;
+let legacyCapCache: { at: number; refused: boolean } | null = null;
+
+/**
+ * Refusal code when a platform AI budget is reached, else null: the legacy platform-wide monthly USD cap (estimated
+ * from task tokens), then the hard limits of the budgets center (Admin → AI → Budgets: global, organization,
+ * department, AI employee, user, provider and model; daily or monthly) that apply to `scope`. Without a scope only
+ * platform-wide limits apply. Fails open when the budget store is unavailable (logged by ai-budgets).
+ */
+export async function platformBudgetRefusal(scope: BudgetScope = {}): Promise<"platform_ai_budget_reached" | null> {
+  if (!legacyCapCache || Date.now() - legacyCapCache.at > 30_000) {
+    const cap = await readSetting(BUDGET_KEY, budgetSchema, null);
+    legacyCapCache = { at: Date.now(), refused: cap !== null && (await aiUsageSince(utcMonthStart())).costMicros >= cap * 1_000_000 };
+  }
+  if (legacyCapCache.refused) return "platform_ai_budget_reached";
+  const { budgetRefusal } = await import("./ai-budgets");
+  return (await budgetRefusal(scope)) ? "platform_ai_budget_reached" : null;
 }
+
+/** Who / what a model call spends for (platform budgets). */
+export type { BudgetScope };
 
 export async function aiModelsOverview(ctx: RequestContext, raw: { days?: unknown } = {}) {
   await requireAnyPlatform(ctx, AI_READ);
@@ -84,12 +98,8 @@ export async function aiModelsOverview(ctx: RequestContext, raw: { days?: unknow
     aiCostUsage(ctx, { days: Number(raw.days) || 30 }),
   ]);
   const models = [...new Set([...Object.keys(MODEL_PRICES), ...cost.byModel.map((m) => m.model).filter((m) => m !== "unknown"), env().AGENT_MODEL])].sort();
-  const providerCost = new Map<string, { tokens: number; costMicros: number; tasks: number }>();
-  for (const m of cost.byModel) {
-    const p = providerOf(m.model);
-    const cur = providerCost.get(p) ?? { tokens: 0, costMicros: 0, tasks: 0 };
-    providerCost.set(p, { tokens: cur.tokens + m.tokens, costMicros: cur.costMicros + m.costMicros, tasks: cur.tasks + m.tasks });
-  }
+  const providerCost = new Map<string, { tokens: number; costMicros: number; calls: number }>();
+  for (const m of cost.byProvider) providerCost.set(m.provider, { tokens: m.tokens, costMicros: m.costMicros, calls: m.calls });
   const providers = AI_PROVIDERS.map((p) => {
     const own = models.filter((m) => p.match(m));
     return {
@@ -99,7 +109,7 @@ export async function aiModelsOverview(ctx: RequestContext, raw: { days?: unknow
       envKey: p.envKey,
       models: own.length,
       enabled: own.length > 0 ? own.some((m) => !controls.aiDisabledModels.includes(m)) : false,
-      usage: providerCost.get(p.key) ?? { tokens: 0, costMicros: 0, tasks: 0 },
+      usage: providerCost.get(p.key) ?? { tokens: 0, costMicros: 0, calls: 0 },
     };
   });
   const orgIds = Object.keys(orgModels);
@@ -171,6 +181,7 @@ export async function updateAiModels(ctx: RequestContext, raw: z.input<typeof ai
     case "budget": {
       const cur = await readSetting(BUDGET_KEY, budgetSchema, null);
       await saveSetting(ctx, BUDGET_KEY, input.monthlyUsd, input.reason, { action: "platform.ai.budget_changed", oldValue: { monthlyUsd: cur }, newValue: { monthlyUsd: input.monthlyUsd } });
+      legacyCapCache = null;
       return { monthlyUsd: input.monthlyUsd };
     }
   }
@@ -251,13 +262,34 @@ export async function setOrgAiPaused(ctx: RequestContext, organizationId: string
 
 // ───────────── Routing by task complexity (agents/router.ts) ─────────────
 
-/** Complexity tiers of an agent run, plus specialized media tiers other modules resolve through the same table. */
-export const ROUTING_TIERS = ["simple", "standard", "complex", "voice", "image", "video"] as const;
+/**
+ * Routing tiers (routing v2). Complexity tiers of an agent run (simple / standard / complex), work-type tiers chosen by
+ * the per-task-type override map (coding / creative; unset → the run's complexity tier), the embedding tier (recorded
+ * for the brain module; embeddings currently run on each company's own provider connection) and specialized media
+ * tiers other modules resolve through the same table.
+ */
+export const ROUTING_TIERS = ["simple", "standard", "complex", "coding", "creative", "embedding", "voice", "image", "video"] as const;
 export type RoutingTier = (typeof ROUTING_TIERS)[number];
+/** Tiers whose value is a provider-specific id (not necessarily a priced chat model). */
+const FREEFORM_TIERS = new Set<RoutingTier>(["embedding", "voice", "image", "video"]);
+/** Tiers that fall back to the run's complexity tier when no model is set (null from resolveTierModel). */
+export const WORK_TIERS = ["coding", "creative"] as const;
+/** The directive's tier names → this table's tiers ("department" = per-class rows, "task" = per-task-type overrides). */
+export const DIRECTIVE_TIERS = { default: "standard", fast: "simple", reasoning: "complex", coding: "coding", creative: "creative", embedding: "embedding", fallback: "fallback chain", department: "profile class row", task: "task-type override" } as const;
 const TIER_MODELS_KEY = "ai:tierModels";
 /** Media tiers hold provider model ids (e.g. a TTS voice model), not only Claude ids. */
 const mediaModelId = z.string().regex(/^[A-Za-z0-9._:@/-]{2,80}$/);
-const tierRow = z.object({ simple: modelId.nullable().optional(), standard: modelId.nullable().optional(), complex: modelId.nullable().optional(), voice: mediaModelId.nullable().optional(), image: mediaModelId.nullable().optional(), video: mediaModelId.nullable().optional() });
+const tierRow = z.object({
+  simple: modelId.nullable().optional(),
+  standard: modelId.nullable().optional(),
+  complex: modelId.nullable().optional(),
+  coding: modelId.nullable().optional(),
+  creative: modelId.nullable().optional(),
+  embedding: mediaModelId.nullable().optional(),
+  voice: mediaModelId.nullable().optional(),
+  image: mediaModelId.nullable().optional(),
+  video: mediaModelId.nullable().optional(),
+});
 const tierTable = z.object({ enabled: z.boolean().default(true), byClass: z.record(z.string(), tierRow).default({}) });
 export type TierTable = z.infer<typeof tierTable>;
 
@@ -281,10 +313,18 @@ export async function readTierModels(): Promise<TierTable> {
  * media tier with no configured model (the module then uses its own default). Never returns a disabled model.
  */
 export async function resolveTierModel(opts: { organizationId?: string | null; profile?: string | null; tier: RoutingTier }): Promise<string | null> {
-  const media = opts.tier === "voice" || opts.tier === "image" || opts.tier === "video";
   const [table, c] = await Promise.all([readTierModels(), getControls()]);
   const dept = opts.profile ? (AGENT_PROFILES.find((p) => p.key === opts.profile)?.department ?? "general") : null;
-  if (media) return (dept ? table.byClass[dept]?.[opts.tier] : null) ?? table.byClass["*"]?.[opts.tier] ?? null;
+  if (FREEFORM_TIERS.has(opts.tier)) return (dept ? table.byClass[dept]?.[opts.tier] : null) ?? table.byClass["*"]?.[opts.tier] ?? null;
+  if ((WORK_TIERS as readonly string[]).includes(opts.tier)) {
+    // Work-type tier: only an explicitly configured, allowed model (else null → the caller uses the complexity tier).
+    if (!table.enabled) return null;
+    const ok = (m: string | null | undefined): m is string => !!m && !c.aiDisabledModels.includes(m) && (c.aiAllowedModels.length === 0 || c.aiAllowedModels.includes(m));
+    await resolvePlatformModel(opts); // refreshes resolverCache (organization overrides)
+    const orgPinned = opts.organizationId ? resolverCache?.org[opts.organizationId] : undefined;
+    if (orgPinned && ok(orgPinned)) return null;
+    return [dept ? table.byClass[dept]?.[opts.tier] : null, table.byClass["*"]?.[opts.tier]].find(ok) ?? null;
+  }
   const platform = await resolvePlatformModel(opts);
   const orgPinned = opts.organizationId ? resolverCache?.org[opts.organizationId] : undefined;
   if (orgPinned && orgPinned === platform) return platform;
@@ -312,7 +352,7 @@ export async function updateTierModels(ctx: RequestContext, raw: z.input<typeof 
     const cls = input.profileClass ?? "*";
     if (cls !== "*" && !PROFILE_CLASSES.includes(cls)) throw notFound("Profile class");
     const known = new Set([...Object.keys(MODEL_PRICES), env().AGENT_MODEL]);
-    for (const t of ["simple", "standard", "complex"] as const) {
+    for (const t of ["simple", "standard", "complex", "coding", "creative"] as const) {
       const m = input.tiers[t];
       if (m && !known.has(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
     }
@@ -348,5 +388,96 @@ export async function aiRoutingOverview(ctx: RequestContext) {
     defaults: DEFAULT_TIER_MODELS,
     providers: AI_PROVIDERS.map((p) => ({ key: p.key, label: p.label, envKey: p.envKey, configured: providerKeyConfigured(p.key), fallbackModels: p.fallbackModels, openBreakers: breakers.filter((b) => b.provider === p.key && b.open).length })),
     breakers,
+  };
+}
+
+// ───────────── Routing v2: per-task-type overrides and the effective-route simulator ─────────────
+
+const TASK_TIERS_KEY = "ai:taskTiers";
+export const OVERRIDE_TIERS = ["simple", "standard", "complex", "coding", "creative"] as const;
+export type OverrideTier = (typeof OVERRIDE_TIERS)[number];
+/** Task type = an agent profile key (e.g. "engineering_lead") or a quick-call operation (e.g. "voiceos.answer"). */
+const taskTypeKey = z.string().regex(/^[a-z0-9_.:-]{2,80}$/);
+const taskTierMap = z.record(z.string(), z.enum(OVERRIDE_TIERS));
+let taskTierCache: { at: number; map: Record<string, OverrideTier> } | null = null;
+
+/** The per-task-type routing overrides (cached 30 s). */
+export async function readTaskTiers(): Promise<Record<string, OverrideTier>> {
+  if (!taskTierCache || Date.now() - taskTierCache.at > 30_000) taskTierCache = { at: Date.now(), map: await readSetting(TASK_TIERS_KEY, taskTierMap, {}) };
+  return taskTierCache.map;
+}
+
+/** Override tier for a task type (profile key, then quick-call operation), or null. */
+export async function taskTierOverride(keys: (string | null | undefined)[]): Promise<OverrideTier | null> {
+  const map = await readTaskTiers();
+  for (const k of keys) if (k && map[k]) return map[k];
+  return null;
+}
+
+export const taskTierInput = z.object({ taskType: taskTypeKey, tier: z.enum(OVERRIDE_TIERS).nullable(), reason: reasonSchema });
+
+/** Admin: set or clear one task-type override, audited. */
+export async function updateTaskTier(ctx: RequestContext, raw: z.input<typeof taskTierInput>) {
+  const input = taskTierInput.parse(raw);
+  await requirePermission(ctx, "platform.ai.manage", platformChain());
+  const cur = await readSetting(TASK_TIERS_KEY, taskTierMap, {});
+  const next = { ...cur };
+  if (input.tier) next[input.taskType] = input.tier;
+  else delete next[input.taskType];
+  await saveSetting(ctx, TASK_TIERS_KEY, next, input.reason, { action: "platform.ai.task_tier_changed", oldValue: { [input.taskType]: cur[input.taskType] ?? null }, newValue: { [input.taskType]: input.tier } });
+  taskTierCache = null;
+  return next;
+}
+
+export const simulateRouteInput = z.object({
+  organizationId: z.string().uuid().nullable().optional(),
+  profile: z.string().regex(/^[a-z0-9_]{2,60}$/),
+  title: z.string().trim().max(500).default(""),
+  instructions: z.string().max(20_000).default(""),
+  toolCount: z.coerce.number().int().min(0).max(100).optional(),
+  operation: taskTypeKey.optional(),
+});
+
+/**
+ * Effective-route simulator: "org X, profile Y, title Z → model". Runs the same deterministic classification and the
+ * same resolution as the runtime (task-type override, organization pin, class row, platform row, built-in default),
+ * then the fallback chain and the breaker state of each candidate. No model is called.
+ */
+export async function simulateRoute(ctx: RequestContext, raw: z.input<typeof simulateRouteInput>) {
+  await requireAnyPlatform(ctx, AI_READ);
+  const input = simulateRouteInput.parse(raw);
+  const { classifyRun, fallbackChain, breakerSnapshot } = await import("@/server/modules/agents/router");
+  const profile = AGENT_PROFILES.find((p) => p.key === input.profile);
+  if (!profile) throw notFound("Profile");
+  const organizationId = input.organizationId ?? null;
+  const classification = classifyRun({ profile, title: input.title, instructions: input.instructions, toolCount: input.toolCount ?? profile.tools.length });
+  const override = await taskTierOverride([profile.key, input.operation]);
+  const complexity = override && !(WORK_TIERS as readonly string[]).includes(override) ? (override as "simple" | "standard" | "complex") : classification.tier;
+  const work = override && (WORK_TIERS as readonly string[]).includes(override) ? override : null;
+  const steps: { step: string; model: string | null; used: boolean }[] = [];
+  const workModel = work ? await resolveTierModel({ organizationId, profile: profile.key, tier: work }) : null;
+  if (work) steps.push({ step: `tier:${work}`, model: workModel, used: !!workModel });
+  const tierModel = await resolveTierModel({ organizationId, profile: profile.key, tier: complexity });
+  steps.push({ step: `tier:${complexity}`, model: tierModel, used: !workModel && !!tierModel });
+  const platform = await resolvePlatformModel({ organizationId, profile: profile.key });
+  const model = workModel ?? tierModel ?? platform;
+  if (!workModel && !tierModel) steps.push({ step: "platform_default", model: platform, used: true });
+  const orgPinned = organizationId ? (resolverCache?.org[organizationId] ?? null) : null;
+  const [chain, breakers, c] = await Promise.all([fallbackChain(organizationId, profile.key, model, complexity).catch(() => [] as string[]), breakerSnapshot().catch(() => []), getControls()]);
+  const allowed = (m: string) => !c.aiDisabledModels.includes(m) && (c.aiAllowedModels.length === 0 || c.aiAllowedModels.includes(m));
+  return {
+    classification,
+    override,
+    complexityTier: complexity,
+    workTier: work,
+    orgPinned,
+    steps,
+    model,
+    provider: providerOf(model),
+    providerConfigured: providerKeyConfigured(providerOf(model)),
+    allowed: allowed(model),
+    fallbackChain: chain.map((m) => ({ model: m, provider: providerOf(m), configured: providerKeyConfigured(providerOf(m)), breakerOpen: breakers.some((b) => b.model === m && b.open) })),
+    breakerOpen: breakers.some((b) => b.model === model && b.open),
+    killSwitch: !c.aiWorkforceEnabled || c.aiExecutionPaused,
   };
 }

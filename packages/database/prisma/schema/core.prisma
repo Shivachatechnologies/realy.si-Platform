@@ -972,6 +972,7 @@ enum AgentTaskStatus {
   CANCELLED
   /// Parked: the run filed approval requests and resumes with their outcome once they are decided (G1, B27).
   WAITING_APPROVAL
+  PAUSED // admin-c: paused by a platform admin; never claimed by the worker until resumed
 }
 
 model AgentTask {

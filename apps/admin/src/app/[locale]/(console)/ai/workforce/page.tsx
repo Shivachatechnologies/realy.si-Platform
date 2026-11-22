@@ -112,7 +112,9 @@ export default async function AdminAiWorkforcePage({ searchParams }: PageProps<"
                     <div className="flex items-center gap-2">
                       <Avatar name={e.name} size="sm" square />
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{e.name}</div>
+                        <Link href={`${base}/${e.id}`} className="block truncate font-medium hover:underline">
+                          {e.name}
+                        </Link>
                         <div className="truncate text-[11px] text-muted-foreground">{e.jobTitle ?? e.profileKey}</div>
                       </div>
                     </div>

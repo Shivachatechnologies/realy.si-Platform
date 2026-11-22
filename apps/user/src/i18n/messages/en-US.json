@@ -2233,7 +2233,8 @@
       "COMPLETED": "Completed",
       "FAILED": "Failed",
       "CANCELLED": "Cancelled",
-      "WAITING_APPROVAL": "Waiting for approval"
+      "WAITING_APPROVAL": "Waiting for approval",
+      "PAUSED": "Paused"
     },
     "back": "All tasks",
     "deliverable": "Deliverable",

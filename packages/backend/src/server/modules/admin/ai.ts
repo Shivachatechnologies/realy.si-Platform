@@ -56,13 +56,17 @@ export async function aiOverview(ctx: RequestContext) {
   };
 }
 
+/** Task statuses the admin filters on (the tenant list plus PAUSED, which only platform admins set). */
+export const ADMIN_TASK_STATUSES = [...AGENT_TASK_STATUSES, "PAUSED"] as const;
+
 export const taskSearchInput = z.object({
   q: z.string().trim().max(200).optional().catch(undefined),
-  status: z.enum(AGENT_TASK_STATUSES).optional().catch(undefined),
+  status: z.enum(ADMIN_TASK_STATUSES).optional().catch(undefined),
   profile: z.string().regex(/^[a-z_]{2,60}$/).optional().catch(undefined),
   org: z.string().uuid().optional().catch(undefined),
   errorCode: z.string().regex(/^[a-z_]{2,60}$/).optional().catch(undefined),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  employee: z.string().uuid().optional().catch(undefined),
+  limit: z.coerce.number().int().min(1).max(200).default(50).catch(50),
   cursor: z.string().uuid().optional().catch(undefined),
 });
 
@@ -76,6 +80,7 @@ export async function searchTasks(ctx: RequestContext, raw: Partial<Record<keyof
     ...(f.profile ? { profile: f.profile } : {}),
     ...(f.org ? { organizationId: f.org } : {}),
     ...(f.errorCode ? { errorCode: f.errorCode } : {}),
+    ...(f.employee ? { aiEmployeeId: f.employee } : {}),
   };
   const rows = await db().agentTask.findMany({
     where,
@@ -115,42 +120,63 @@ export async function adminTaskAction(ctx: RequestContext, taskId: string, actio
 
 const usageInput = z.object({ days: z.coerce.number().int().min(1).max(90).default(30) });
 
-/** Cost and usage monitoring: tokens and estimated cost by organization, model and day. */
+type UsageAgg = { tokens: number; cachedTokens: number; costMicros: number; calls: number };
+interface LedgerGroupRow {
+  key: string | null;
+  tokens: bigint | null;
+  cached: bigint | null;
+  cost: bigint | null;
+  calls: bigint;
+}
+
+const usageCache = new Map<number, { at: number; value: Awaited<ReturnType<typeof computeCostUsage>> }>();
+
+async function computeCostUsage(days: number) {
+  const since = daysAgo(days);
+  const group = (col: Prisma.Sql) =>
+    db().$queryRaw<LedgerGroupRow[]>(Prisma.sql`
+      SELECT ${col} AS key, SUM(input_tokens + output_tokens + cached_tokens + cache_write_tokens)::bigint AS tokens,
+        SUM(cached_tokens)::bigint AS cached, SUM(cost_micros)::bigint AS cost, COUNT(*)::bigint AS calls
+      FROM cost_ledger_entries WHERE category = 'AI_TOKENS' AND occurred_at >= ${since}
+      GROUP BY 1 ORDER BY cost DESC NULLS LAST LIMIT 100`);
+  const [byOrg, byModel, byProvider, byOperation, byDepartment, byDay] = await Promise.all([
+    group(Prisma.sql`organization_id::text`),
+    group(Prisma.sql`COALESCE(model, 'unknown')`),
+    group(Prisma.sql`provider`),
+    group(Prisma.sql`operation`),
+    group(Prisma.sql`COALESCE(department, 'none')`),
+    db().$queryRaw<LedgerGroupRow[]>(Prisma.sql`
+      SELECT to_char(date_trunc('day', occurred_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS key, SUM(input_tokens + output_tokens + cached_tokens + cache_write_tokens)::bigint AS tokens,
+        SUM(cached_tokens)::bigint AS cached, SUM(cost_micros)::bigint AS cost, COUNT(*)::bigint AS calls
+      FROM cost_ledger_entries WHERE category = 'AI_TOKENS' AND occurred_at >= ${since} GROUP BY 1 ORDER BY 1 DESC`),
+  ]);
+  const agg = (r: LedgerGroupRow): UsageAgg => ({ tokens: Number(r.tokens ?? 0), cachedTokens: Number(r.cached ?? 0), costMicros: Number(r.cost ?? 0), calls: Number(r.calls) });
+  const topOrgs = byOrg.slice(0, 25);
+  const names = await db().organization.findMany({ where: { id: { in: topOrgs.map((r) => r.key!).filter(Boolean) } }, select: { id: true, name: true } });
+  return {
+    days,
+    source: "cost_ledger_entries" as const,
+    computedAt: new Date().toISOString(),
+    byOrg: topOrgs.map((r) => ({ id: r.key!, name: names.find((n) => n.id === r.key)?.name ?? r.key!.slice(0, 8), ...agg(r) })),
+    byModel: byModel.map((r) => ({ model: r.key ?? "unknown", ...agg(r) })),
+    byProvider: byProvider.map((r) => ({ provider: r.key ?? "unknown", ...agg(r) })),
+    byOperation: byOperation.map((r) => ({ operation: r.key ?? "unknown", ...agg(r) })),
+    byDepartment: byDepartment.map((r) => ({ department: r.key ?? "none", ...agg(r) })),
+    byDay: byDay.map((r) => ({ day: r.key!, ...agg(r) })),
+  };
+}
+
+/**
+ * Cost and usage monitoring from the cost ledger (`cost_ledger_entries`, category AI_TOKENS): one row per real model
+ * call (agent turns, quick calls, Voice OS), cache-aware cost, by organization, model, provider, operation,
+ * department and day. Cached 60 s per window.
+ */
 export async function aiCostUsage(ctx: RequestContext, raw: z.input<typeof usageInput> = {}) {
   await requireAnyPlatform(ctx, AI_READ);
   const { days } = usageInput.parse(raw);
-  const since = daysAgo(days);
-  const [byOrgModel, byDayModel] = await Promise.all([
-    db().agentTask.groupBy({ by: ["organizationId", "model"], where: { startedAt: { gte: since } }, _sum: { inputTokens: true, outputTokens: true }, _count: { _all: true } }),
-    db().$queryRaw<{ day: Date; model: string | null; input: bigint | null; output: bigint | null; tasks: bigint }[]>(Prisma.sql`
-      SELECT date_trunc('day', started_at) AS day, model, SUM(input_tokens)::bigint AS input, SUM(output_tokens)::bigint AS output, COUNT(*)::bigint AS tasks
-      FROM agent_tasks WHERE started_at >= ${since} GROUP BY 1, 2 ORDER BY 1 DESC`),
-  ]);
-  const orgMap = new Map<string, { tokens: number; costMicros: number; tasks: number }>();
-  const modelMap = new Map<string, { tokens: number; costMicros: number; tasks: number }>();
-  for (const r of byOrgModel) {
-    const i = r._sum.inputTokens ?? 0;
-    const o = r._sum.outputTokens ?? 0;
-    const c = costMicros(r.model, i, o);
-    for (const [map, key] of [[orgMap, r.organizationId], [modelMap, r.model ?? "unknown"]] as const) {
-      const cur = map.get(key) ?? { tokens: 0, costMicros: 0, tasks: 0 };
-      map.set(key, { tokens: cur.tokens + i + o, costMicros: cur.costMicros + c, tasks: cur.tasks + r._count._all });
-    }
-  }
-  const dayMap = new Map<string, { tokens: number; costMicros: number; tasks: number }>();
-  for (const r of byDayModel) {
-    const key = r.day.toISOString().slice(0, 10);
-    const i = Number(r.input ?? 0);
-    const o = Number(r.output ?? 0);
-    const cur = dayMap.get(key) ?? { tokens: 0, costMicros: 0, tasks: 0 };
-    dayMap.set(key, { tokens: cur.tokens + i + o, costMicros: cur.costMicros + costMicros(r.model, i, o), tasks: cur.tasks + Number(r.tasks) });
-  }
-  const topOrgs = [...orgMap].sort((a, b) => b[1].costMicros - a[1].costMicros).slice(0, 25);
-  const names = await db().organization.findMany({ where: { id: { in: topOrgs.map(([id]) => id) } }, select: { id: true, name: true } });
-  return {
-    days,
-    byOrg: topOrgs.map(([id, v]) => ({ id, name: names.find((n) => n.id === id)?.name ?? id, ...v })),
-    byModel: [...modelMap].map(([model, v]) => ({ model, ...v })).sort((a, b) => b.costMicros - a.costMicros),
-    byDay: [...dayMap].map(([day, v]) => ({ day, ...v })),
-  };
+  const hit = usageCache.get(days);
+  if (hit && Date.now() - hit.at < 60_000) return hit.value;
+  const value = await computeCostUsage(days);
+  usageCache.set(days, { at: Date.now(), value });
+  return value;
 }

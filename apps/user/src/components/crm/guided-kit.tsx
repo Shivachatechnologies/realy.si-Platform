@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 /** Client building blocks of the guided journeys (Sales OS and Finance OS). */
 
-export type TaskStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "WAITING_APPROVAL";
+export type TaskStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "WAITING_APPROVAL" | "PAUSED";
 export interface TaskView {
   id: string;
   status: TaskStatus;
@@ -22,7 +22,7 @@ export interface TaskView {
   output: string | null;
 }
 
-const TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
+const TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning", PAUSED: "warning" } as const;
 export const isActive = (s?: TaskStatus | null) => s === "QUEUED" || s === "RUNNING";
 
 /** A real agent task: live status, the deliverable once it exists, and a link to the full task. Never invents output. */

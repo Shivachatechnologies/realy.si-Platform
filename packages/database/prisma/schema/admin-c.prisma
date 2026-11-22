@@ -9,3 +9,58 @@
 //   - Relations between this stream's own new tables are fine.
 //   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
 //   - At most one migration per PR, timestamp minute reserved for stream C: …_30xx.
+
+/// Outcome of one model call attempt (agents runtime, quick calls, Voice OS stream, embeddings).
+enum AiRequestStatus {
+  SUCCESS
+  ERROR
+  /// This attempt failed and the call moved on to the next model of the fallback chain.
+  FALLBACK
+  REFUSED
+  BUDGET_BLOCKED
+  CACHED
+}
+
+/// One AI model call attempt across the platform (Admin → AI → Requests). Metadata only: never prompt or reply
+/// content. Written fire-and-forget after each attempt; kept 30 days (admin-c retention, like integration_request_logs).
+model AiRequestLog {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String?         @map("organization_id") @db.Uuid
+  companyId      String?         @map("company_id") @db.Uuid
+  /// The person on whose behalf the call ran (task requester, request user), if known.
+  userId         String?         @map("user_id") @db.Uuid
+  taskId         String?         @map("task_id") @db.Uuid
+  aiEmployeeId   String?         @map("ai_employee_id") @db.Uuid
+  /// Correlates the attempts of one logical call (run id + turn, request id).
+  traceId        String?         @map("trace_id")
+  /// "agent.turn", the quick-call operation (e.g. "voiceos.answer"), "embedding", "admin.copilot".
+  operation      String
+  profile        String?
+  department     String?
+  tier           String?
+  provider       String
+  requestedModel String          @map("requested_model")
+  servedModel    String?         @map("served_model")
+  status         AiRequestStatus
+  errorCode      String?         @map("error_code")
+  /// Truncated, secret-free message (never provider response bodies).
+  errorMessage   String?         @map("error_message")
+  latencyMs      Int?            @map("latency_ms")
+  inputTokens    Int             @default(0) @map("input_tokens")
+  outputTokens   Int             @default(0) @map("output_tokens")
+  cachedTokens   Int             @default(0) @map("cached_tokens")
+  costMicros     BigInt          @default(0) @map("cost_micros")
+  /// 1 = the first model tried for this call; n = the n-th model of the fallback chain.
+  attempt        Int             @default(1)
+  streamed       Boolean         @default(false)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([provider, status, createdAt(sort: Desc)])
+  @@index([servedModel, createdAt(sort: Desc)])
+  @@index([taskId])
+  @@index([aiEmployeeId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("ai_request_logs")
+}
