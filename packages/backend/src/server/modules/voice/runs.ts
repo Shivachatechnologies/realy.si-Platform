@@ -14,6 +14,7 @@ import { suppressionFor } from "@/server/modules/crm/suppression";
 import { updateLead } from "@/server/modules/crm/service";
 import { actorId, authorize, isUuid, LIVE_STATUSES, maskNumber, toE164, uuid } from "./common";
 import { isDoNotCall } from "./service";
+import { assertCompanyAiRunning } from "./calls";
 
 /**
  * Autonomous calling campaign ("Call 100 qualified leads and book demos"):
@@ -85,6 +86,7 @@ export async function planRun(ctx: RequestContext, organizationId: string, compa
   const c = runCriteria.parse(input.criteria ?? {});
   await authorize(ctx, organizationId, companyId, "communication.post");
   await assertFeature(ctx, organizationId, "feature.voice_agent");
+  if (opts.profile) await assertCompanyAiRunning(organizationId, companyId);
   const { agent, number } = await pickAgentAndNumber(organizationId, companyId, input.agentId, input.numberId);
   const leads = await db().lead.findMany({
     where: {
@@ -257,6 +259,7 @@ export async function requestRunStart(ctx: RequestContext, organizationId: strin
   if (run.status !== "PLANNED") throw conflict(`This run is ${run.status.toLowerCase().replace(/_/g, " ")}`, { reason: "voice_run_state" });
   const people = await db().voiceCallingTarget.count({ where: { runId, status: "ELIGIBLE" } });
   if (!people) throw invalid("Nobody in this run can be called", { reason: "voice_campaign_empty" });
+  await assertCompanyAiRunning(organizationId, companyId);
   const r = await requestTool("start_calling_campaign", { runId, name: run.name, people }, { ctx, organizationId, companyId, allowedTools: ["start_calling_campaign"], profileKey: "voice_caller", taskId: null });
   if (r.status === "approval_requested") {
     await db().voiceCallingRun.update({ where: { id: runId }, data: { status: "AWAITING_APPROVAL", approvalId: r.approvalId } });
@@ -274,6 +277,8 @@ export async function executeRun(ctx: RequestContext, organizationId: string, co
   const run = await db().voiceCallingRun.findFirst({ where: { id: runId, organizationId, companyId } });
   if (!run) throw notFound("Calling run");
   if (run.status !== "PLANNED" && run.status !== "AWAITING_APPROVAL") return { started: false, detail: `The run is ${run.status.toLowerCase()}; nothing changed.`, campaignId: run.campaignId };
+  // Company kill switch: an approved run does not start while all AI is paused (the approval fails with the reason).
+  await assertCompanyAiRunning(organizationId, companyId);
   const { agent, number } = await pickAgentAndNumber(organizationId, companyId, run.agentId, run.numberId).catch((err) => {
     throw err instanceof AppError ? err : invalid("The run's agent or number is no longer available", { reason: "voice_agent_not_synced" });
   });

@@ -8,6 +8,7 @@ import type { VoiceSettingsView } from "@/server/modules/voiceos/access";
 import { personalityOf, STOP_WORDS, WAKE_PHRASES, isVoiceLanguage, type VoiceLanguage } from "@/server/modules/voiceos/catalog";
 import { audioEngine } from "./audio-engine";
 import { pickSystemVoice, readResults, recognitionCtor, synthesisSupported, type SpeechRecognitionLike } from "./browser-speech";
+import { streamUtterance } from "./stream-answer";
 
 export type Phase = "idle" | "listening" | "transcribing" | "thinking";
 export type TalkMode = "ptt" | "toggle" | "wake";
@@ -106,7 +107,9 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
   const [error, setError] = useState<unknown>(null);
   const [muted, setMuted] = useState(false);
   const [wakeListening, setWakeListening] = useState(false);
-  const [flash, setFlash] = useState({ alertUntil: 0, successUntil: 0 });
+  const [flash, setFlash] = useState({ alertUntil: 0, successUntil: 0, errorUntil: 0 });
+  /** The answer as it is being streamed (shown as the caption until the final reply arrives). */
+  const [streaming, setStreaming] = useState("");
   const [bootKey, setBootKey] = useState(0);
 
   const speaking = useSyncExternalStore(subscribeAudio, () => audioEngine.playing, () => false);
@@ -141,6 +144,10 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     wakeWanted: false,
     wakeErrors: 0,
     history: [] as { role: "user" | "assistant"; text: string }[],
+    /** Bumped on every interruption: queued sentences of an older reply are dropped. */
+    speechGen: 0,
+    speechChain: Promise.resolve() as Promise<void>,
+    streamFailed: false,
   });
   const latest = useRef({ boot, settings, muted, pendingApproval, t, path });
   useEffect(() => {
@@ -161,6 +168,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
   }, []);
   const flashAlert = useCallback(() => setFlash((f) => ({ ...f, alertUntil: Date.now() + 2_600 })), []);
   const flashSuccess = useCallback(() => setFlash((f) => ({ ...f, successUntil: Date.now() + 2_200 })), []);
+  const flashError = useCallback(() => setFlash((f) => ({ ...f, errorUntil: Date.now() + 3_200 })), []);
 
   // ───── Bootstrap ─────
   useEffect(() => {
@@ -220,8 +228,28 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     return s.ttsProvider === "auto" ? b.providers.tts.length > 0 : (b.providers.tts as string[]).includes(s.ttsProvider);
   };
 
-  const speakBrowser = useCallback((text: string, language?: string) => {
-    if (!synthesisSupported()) return;
+  /** Interrupt speech now (barge-in, stop, mute) and drop every queued sentence. */
+  const stopSpeech = useCallback(() => {
+    r.current.speechGen++;
+    r.current.speechChain = Promise.resolve();
+    audioEngine.stop();
+    if (synthesisSupported()) window.speechSynthesis.cancel();
+  }, []);
+
+  /** Resolves when the current voice output ends or is stopped. */
+  const untilQuiet = () =>
+    new Promise<void>((res) => {
+      if (!audioEngine.playing) return res();
+      const unsub = audioEngine.subscribe(() => {
+        if (!audioEngine.playing) {
+          unsub();
+          res();
+        }
+      });
+    });
+
+  const speakBrowser = useCallback((text: string, language?: string): Promise<void> => {
+    if (!synthesisSupported()) return Promise.resolve();
     const s = latest.current.settings;
     const persona = personalityOf(s?.personality);
     const u = new SpeechSynthesisUtterance(text);
@@ -230,40 +258,80 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     if (v) u.voice = v;
     u.rate = persona.rate;
     u.pitch = persona.pitch;
-    u.onstart = () => audioEngine.setPlaying(true);
-    u.onboundary = () => audioEngine.speechPulse(0.75);
-    u.onend = () => audioEngine.setPlaying(false);
-    u.onerror = () => audioEngine.setPlaying(false);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+    return new Promise<void>((res) => {
+      u.onstart = () => audioEngine.setPlaying(true);
+      u.onboundary = () => audioEngine.speechPulse(0.75);
+      u.onend = () => {
+        audioEngine.setPlaying(false);
+        res();
+      };
+      u.onerror = () => {
+        audioEngine.setPlaying(false);
+        res();
+      };
+      window.speechSynthesis.speak(u);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const speak = useCallback(
-    async (text: string, language?: string) => {
-      const s = latest.current.settings;
-      if (!text || latest.current.muted || (s && !s.speakReplies)) return;
-      audioEngine.stop();
-      if (canProviderTts() && base) {
-        try {
-          const sessionId = await ensureSession();
-          const out = await api<{ provider: string; audio: string | null; format: "mp3" | "pcm16" | null; sampleRate: number | null }>(`${base}/voiceos/speak`, { body: { sessionId, text, language: language && isVoiceLanguage(language) ? language : lang() } });
-          if (out.audio && out.format) {
-            await audioEngine.play(out.audio, out.format, out.sampleRate, () => undefined);
-            return;
-          }
-        } catch (e) {
-          r.current.ttsFailed = true;
-          setNotice({ key: e instanceof ApiError && typeof e.details?.reason === "string" && e.details.reason.startsWith("plan_") ? "ttsLimit" : "ttsFallback", tone: "warning" });
-        }
+  /** Provider TTS for one piece of text (null: use the browser voice). Requested right away so it overlaps playback. */
+  const fetchSpeech = useCallback(
+    async (text: string, language?: string): Promise<{ audio: string; format: "mp3" | "pcm16"; sampleRate: number | null } | null> => {
+      if (!canProviderTts() || !base) return null;
+      try {
+        const sessionId = await ensureSession();
+        const out = await api<{ provider: string; audio: string | null; format: "mp3" | "pcm16" | null; sampleRate: number | null }>(`${base}/voiceos/speak`, { body: { sessionId, text, language: language && isVoiceLanguage(language) ? language : lang() } });
+        return out.audio && out.format ? { audio: out.audio, format: out.format, sampleRate: out.sampleRate } : null;
+      } catch (e) {
+        r.current.ttsFailed = true;
+        flashError();
+        setNotice({ key: e instanceof ApiError && typeof e.details?.reason === "string" && e.details.reason.startsWith("plan_") ? "ttsLimit" : "ttsFallback", tone: "warning" });
+        return null;
       }
-      speakBrowser(text, language);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [base, ensureSession, speakBrowser],
+    [base, ensureSession, flashError],
   );
 
-  const stopSpeaking = useCallback(() => audioEngine.stop(), []);
+  /**
+   * Sentence-chunked speech: each piece is synthesised as soon as it is queued (in parallel with what is playing) and
+   * played in order. An interruption (stopSpeech) drops whatever is still queued.
+   */
+  const enqueueSpeech = useCallback(
+    (text: string, language?: string) => {
+      const s = latest.current.settings;
+      if (!text || latest.current.muted || (s && !s.speakReplies)) return;
+      const gen = r.current.speechGen;
+      const audio = fetchSpeech(text, language);
+      r.current.speechChain = r.current.speechChain.then(async () => {
+        if (gen !== r.current.speechGen) return;
+        const a = await audio;
+        if (gen !== r.current.speechGen) return;
+        if (a) {
+          try {
+            await audioEngine.play(a.audio, a.format, a.sampleRate, () => undefined);
+            await untilQuiet();
+            return;
+          } catch {
+            /* audio output unavailable: browser voice */
+          }
+        }
+        if (gen === r.current.speechGen) await speakBrowser(text, language);
+      });
+    },
+    [fetchSpeech, speakBrowser],
+  );
+
+  /** Speak a whole reply, replacing anything still being said. */
+  const speak = useCallback(
+    async (text: string, language?: string) => {
+      stopSpeech();
+      enqueueSpeech(text, language);
+    },
+    [stopSpeech, enqueueSpeech],
+  );
+
+  const stopSpeaking = stopSpeech;
 
   // ───── Replies ─────
   const reasonText = useCallback((reason: string | null | undefined) => {
@@ -360,13 +428,14 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
       void speak(line);
     } else if ((next.status === "FAILED" || next.status === "CANCELLED") && !r.current.announced.has(`done:${id}`)) {
       r.current.announced.add(`done:${id}`);
-      flashAlert();
+      if (next.status === "FAILED") flashError();
+      else flashAlert();
       const line = next.status === "FAILED" ? tt("jarvis.reply.runFailed", { reason: reasonText(next.failedReason) }) : tt("jarvis.reply.runCancelled");
       addTurn({ role: "assistant", text: line, tone: "danger" });
       void speak(line);
     }
     if (next.open || next.approvals.length) r.current.pollTimer = setTimeout(() => void pollRef.current(), POLL_MS);
-  }, [base, addTurn, speak, flashAlert, flashSuccess, reasonText]);
+  }, [base, addTurn, speak, flashAlert, flashError, flashSuccess, reasonText]);
   useEffect(() => {
     pollRef.current = poll;
   }, [poll]);
@@ -389,7 +458,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
       const tt = latest.current.t;
       const said = norm(text);
       if (STOP_WORDS[lang()].includes(said) || STOP_WORDS["en-US"].includes(said)) {
-        audioEngine.stop();
+        stopSpeech();
         setPhase("idle");
         return;
       }
@@ -419,13 +488,46 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
             return;
           }
         }
-        const out = await api<UtterResult>(`${base}/voiceos/sessions/${sessionId}/utterances`, { body: { text, inputMode: mode === "text" ? "text" : mode === "wake" ? "wake" : "voice", provider, path: latest.current.path, context } });
+        const payload = { text, inputMode: mode === "text" ? "text" : mode === "wake" ? "wake" : "voice", provider, path: latest.current.path, context };
+        // Streamed answer: sentences are spoken as the model writes them; the final result is authoritative.
+        stopSpeech();
+        let spoken = 0;
+        let shown = "";
+        const replyLang = { code: undefined as string | undefined };
+        let out: UtterResult & { streamedSentences?: number };
+        if (!r.current.streamFailed) {
+          try {
+            out = await streamUtterance<UtterResult>(`${base}/voiceos/sessions/${sessionId}/stream-answer`, payload, (ev) => {
+              if (ev.type === "route") {
+                replyLang.code = ev.language;
+                return;
+              }
+              if (ev.type !== "sentence") return;
+              shown = shown ? `${shown} ${ev.text}` : ev.text;
+              setStreaming(shown);
+              spoken++;
+              enqueueSpeech(ev.text, replyLang.code);
+            });
+          } catch (e) {
+            // An older server without the stream route: use the plain request from now on.
+            if (!(e instanceof ApiError && (e.code === "not_found" || e.code === "network") && !spoken)) throw e;
+            r.current.streamFailed = true;
+            out = await api<UtterResult>(`${base}/voiceos/sessions/${sessionId}/utterances`, { body: payload });
+          }
+        } else {
+          out = await api<UtterResult>(`${base}/voiceos/sessions/${sessionId}/utterances`, { body: payload });
+        }
+        setStreaming("");
         setPhase("idle");
         const line = replyText(out.reply.key, out.reply.params, out.reply.text);
         const fine = out.reply.key === "answer" || out.reply.key === "delegated";
         addTurn({ role: "assistant", text: line, tone: fine ? "info" : "warning" });
-        if (!fine) flashAlert();
-        void speak(line, out.reply.key === "answer" ? out.reply.language : undefined);
+        if (!fine) {
+          if (out.reply.key === "failed") flashError();
+          else flashAlert();
+        }
+        // Already spoken sentence by sentence unless the answer was replaced (AI failed mid-answer → honest status).
+        if (!(out.reply.key === "answer" && spoken > 0 && (out.streamedSentences ?? 0) > 0)) void speak(line, out.reply.key === "answer" ? out.reply.language : undefined);
         if (out.run) {
           r.current.runId = out.run.id;
           setRun({ id: out.run.id, status: out.run.status, open: out.open, running: 0, answer: null, spoken: null, nextAction: null, failedReason: null, canDecide: false, approvals: [], profiles: out.run.profiles, steps: out.run.steps });
@@ -433,14 +535,15 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
           r.current.pollTimer = setTimeout(() => void poll(), POLL_MS);
         }
       } catch (e) {
+        setStreaming("");
         setPhase("idle");
         setError(e);
-        flashAlert();
+        flashError();
         if (e instanceof ApiError && e.code === "conflict" && e.details?.reason === "voiceos_session_ended") r.current.sessionId = null;
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [base, addTurn, ensureSession, poll, replyText, speak, flashAlert, flashSuccess, setPhase],
+    [base, addTurn, ensureSession, poll, replyText, speak, enqueueSpeech, stopSpeech, flashAlert, flashError, flashSuccess, setPhase],
   );
 
   // ───── Capture ─────
@@ -464,12 +567,13 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         return text;
       })().catch((e: unknown) => {
         r.current.sttFailed = true;
+        flashError();
         setNotice({ key: e instanceof ApiError && typeof e.details?.reason === "string" && e.details.reason.startsWith("plan_") ? "sttLimit" : "sttFallback", tone: "warning" });
         r.current.segTexts[index] = "";
         return "";
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [base, ensureSession],
+    [base, ensureSession, flashError],
   );
 
   const startRecorder = useCallback(
@@ -599,7 +703,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     async (mode: TalkMode) => {
       const st = r.current;
       if (!base || st.capturing || st.phase === "transcribing" || st.phase === "thinking") return;
-      audioEngine.stop(); // barge-in: talking interrupts the reply
+      stopSpeech(); // barge-in: talking interrupts the reply (and drops queued sentences)
       setNotice(null);
       setError(null);
       pauseWake();
@@ -612,6 +716,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         st.capturing = false;
         st.mode = null;
         setNotice({ key: e instanceof Error && e.message === "mic_unsupported" ? "micUnsupported" : "micDenied", tone: "danger" });
+        flashError();
         return;
       }
       if (!st.capturing) {
@@ -682,7 +787,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
       }, 60);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [base, startRecorder, cutSegment, finishCapture, setPhase],
+    [base, startRecorder, cutSegment, finishCapture, setPhase, stopSpeech, flashError],
   );
 
   const startTalk = useCallback((mode: TalkMode = "ptt") => void beginCapture(mode), [beginCapture]);
@@ -691,9 +796,9 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
   const sendText = useCallback((text: string) => void dispatch(text, "text", "keyboard"), [dispatch]);
 
   const stopAll = useCallback(() => {
-    audioEngine.stop();
+    stopSpeech();
     void finishCapture(true);
-  }, [finishCapture]);
+  }, [finishCapture, stopSpeech]);
 
   const decide = useCallback(
     async (decision: "approve" | "reject") => {
@@ -709,10 +814,10 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         void poll();
       } catch (e) {
         setError(e);
-        flashAlert();
+        flashError();
       }
     },
-    [base, addTurn, poll, flashAlert, flashSuccess],
+    [base, addTurn, poll, flashError, flashSuccess],
   );
 
   // ───── Push-to-talk keyboard (hold Space), Escape stops ─────
@@ -760,7 +865,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         const { finalText, interim: live } = readResults(e);
         const heard = norm(`${finalText} ${live}`);
         if (!heard) return;
-        if (audioEngine.playing && (stops.some((w) => heard.includes(w)) || phrases.some((p) => heard.includes(p)))) audioEngine.stop();
+        if (audioEngine.playing && (stops.some((w) => heard.includes(w)) || phrases.some((p) => heard.includes(p)))) stopSpeech();
         const hit = phrases.find((p) => heard.includes(p));
         if (!hit) return;
         const rest = heard.slice(heard.indexOf(hit) + hit.length).trim();
@@ -802,6 +907,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
   // Release everything when the console unmounts.
   useEffect(
     () => () => {
+      r.current.speechGen++;
       audioEngine.stop();
       audioEngine.closeMic();
     },
@@ -819,6 +925,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     micLive: micOpen || wakeListening,
     wakeListening,
     interim,
+    streaming,
     turns,
     run,
     pendingApproval,
@@ -827,11 +934,12 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     muted,
     setMuted: (v: boolean) => {
       setMuted(v);
-      if (v) audioEngine.stop();
+      if (v) stopSpeech();
     },
     flash,
     flashAlert,
     flashSuccess,
+    flashError,
     startTalk,
     stopTalk,
     cancelTalk,

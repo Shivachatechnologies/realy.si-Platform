@@ -6,7 +6,7 @@ import { AppError, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
 import { requestTool } from "@/server/modules/tools/gateway";
 import { actorId, authorize, isUuid, LIVE_STATUSES, uuid } from "./common";
-import { resolveSubject, type CallSubject } from "./calls";
+import { assertCompanyAiRunning, resolveSubject, type CallSubject } from "./calls";
 
 /**
  * Outbound call lists. A campaign is approved as a whole (run_voice_campaign: SUPERVISED + HIGH, the approval lists how
@@ -107,6 +107,8 @@ export async function startApprovedCampaign(organizationId: string, companyId: s
   const c = await db().voiceCampaign.findFirst({ where: { id: campaignId, organizationId, companyId } });
   if (!c) throw notFound("Campaign");
   if (c.status !== "AWAITING_APPROVAL" && c.status !== "DRAFT") return { started: false, detail: `The campaign is ${c.status.toLowerCase()}; nothing changed.` };
+  // Company kill switch: an approved campaign does not start while all AI is paused (the approval fails with the reason).
+  await assertCompanyAiRunning(organizationId, companyId);
   const now = new Date();
   const [{ count }] = await Promise.all([
     db().voiceCall.updateMany({ where: { campaignId, status: "AWAITING_APPROVAL" }, data: { status: "SCHEDULED", scheduledFor: now } }),
@@ -126,6 +128,7 @@ export async function campaignAction(ctx: RequestContext, organizationId: string
     if (!c) throw notFound("Campaign");
     const allowed = { pause: ["RUNNING"], resume: ["PAUSED"], cancel: ["AWAITING_APPROVAL", "RUNNING", "PAUSED", "DRAFT"] }[action];
     if (!allowed.includes(c.status)) throw new AppError("conflict", `A ${c.status.toLowerCase()} campaign can't be ${action}d`, { reason: "voice_campaign_state" });
+    if (action === "resume") await assertCompanyAiRunning(organizationId, companyId);
     const status = action === "pause" ? "PAUSED" : action === "resume" ? "RUNNING" : "CANCELLED";
     await tx.voiceCampaign.update({ where: { id }, data: { status, ...(action === "cancel" ? { completedAt: new Date() } : {}) } });
     if (action === "cancel") await tx.voiceCall.updateMany({ where: { campaignId: id, status: { in: ["AWAITING_APPROVAL", "SCHEDULED"] } }, data: { status: "CANCELLED", blockedReason: "campaign_cancelled" } });

@@ -19356,7 +19356,27 @@
       "recsFrom": "Aus dem KI-Briefing {when}",
       "recsTask": "Analyse ansehen",
       "live": "Live-Aktivität",
-      "setupProgress": "{done} von {total} erledigt"
+      "setupProgress": "{done} von {total} erledigt",
+      "board": {
+        "title": "Live-Betrieb",
+        "noData": "keine Daten",
+        "areaHidden": "Hier ist nichts für Sie sichtbar (keine Berechtigung), oder dieser Bereich hat noch keine Kennzahlen.",
+        "credits": "KI-Credits diesen Monat",
+        "creditsOf": "{used} von {limit}",
+        "creditsUnlimited": "{used} (unbegrenzt)",
+        "alerts": "Warnungen",
+        "noAlerts": "keine offen",
+        "alertCounts": "{critical} kritisch · {warning} Warnungen",
+        "asOf": "Zahlen berechnet {when}",
+        "areas": {
+          "money": "Finanzen",
+          "growth": "Wachstum & Pipeline",
+          "work": "Projekte & Aufgaben",
+          "people": "Team & KI-Belegschaft",
+          "customers": "Anrufe, Meetings & Tickets",
+          "platform": "API-Nutzung & Fehler"
+        }
+      }
     },
     "brain": {
       "eyebrow": "Wissen",
@@ -23470,7 +23490,8 @@
     "caption": {
       "idle": "Halte den Button oder die Leertaste gedrückt und sprich mit {company}.",
       "listening": "Ich höre zu …",
-      "thinking": "Ich arbeite daran …"
+      "thinking": "Ich arbeite daran …",
+      "transcribing": "Ihre Worte werden in Text umgewandelt …"
     },
     "state": {
       "IDLE": "Bereit",
@@ -23479,7 +23500,9 @@
       "EXECUTING": "Führt aus",
       "SPEAKING": "Spricht",
       "ALERT": "Achtung",
-      "SUCCESS": "Erledigt"
+      "SUCCESS": "Erledigt",
+      "TRANSCRIBING": "Transkribiere",
+      "ERROR": "Fehler"
     },
     "mic": {
       "recording": "Mikrofon an",

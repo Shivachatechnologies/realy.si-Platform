@@ -339,6 +339,7 @@ async function main() {
         opts: { jobId: e.id, removeOnComplete: 10_000, removeOnFail: 50_000, attempts: 10, backoff: { type: "exponential", delay: 1000 } },
       })),
     );
+    await (await import("@/server/modules/voiceos/stream-bus")).publishStreamEvents(redis, events); // G5: live-stream fan-out (B20); never throws
   };
 
   log.info({ queues: workers.map((w) => w.name), relay: has("relay") }, "worker started");

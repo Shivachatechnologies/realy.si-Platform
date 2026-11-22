@@ -129,7 +129,7 @@ async function inbound(settings: VoiceSettings, conn: Connection, p: Record<stri
     }
   }
   if (!call) return { status: 200, twiml: unavailableTwiml() };
-  const blocked = await callingBlocked(organizationId);
+  const blocked = await callingBlocked(organizationId, companyId);
   if (blocked || !agent) {
     await db().voiceCall.update({ where: { id: call.id }, data: { status: "FAILED", error: blocked ? `AI calling is off: ${blocked.replace(/_/g, " ")}` : "No AI receptionist is assigned to this number" } });
     return { status: 200, twiml: unavailableTwiml(agent?.language ?? "en-US") };

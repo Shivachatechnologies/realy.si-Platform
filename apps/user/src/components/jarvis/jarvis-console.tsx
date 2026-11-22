@@ -79,16 +79,18 @@ export function JarvisConsole({ base, companyName, initialEvents }: { base: stri
   const executing = !!voice.run?.open || openRuns > 0;
   const state = deriveCoreState({
     listening: voice.phase === "listening",
-    thinking: voice.phase === "transcribing" || voice.phase === "thinking",
+    transcribing: voice.phase === "transcribing",
+    thinking: voice.phase === "thinking",
     speaking: voice.speaking,
     executing,
     alertUntil: voice.flash.alertUntil,
     successUntil: voice.flash.successUntil,
+    errorUntil: voice.flash.errorUntil,
   });
 
   // Re-render when an ALERT/SUCCESS flash ends.
   useEffect(() => {
-    const until = Math.max(voice.flash.alertUntil, voice.flash.successUntil);
+    const until = Math.max(voice.flash.alertUntil, voice.flash.successUntil, voice.flash.errorUntil);
     const wait = until - Date.now();
     if (wait <= 0) return;
     const id = setTimeout(() => setTick((n) => n + 1), wait + 30);
@@ -103,7 +105,7 @@ export function JarvisConsole({ base, companyName, initialEvents }: { base: stri
     setText("");
   };
   const lastAssistant = [...voice.turns].reverse().find((x) => x.role === "assistant");
-  const caption = voice.phase === "listening" || voice.phase === "transcribing" ? voice.interim || t("jarvis.caption.listening") : voice.phase === "thinking" ? t("jarvis.caption.thinking") : (lastAssistant?.text ?? t("jarvis.caption.idle", { company: companyName }));
+  const caption = voice.phase === "listening" ? voice.interim || t("jarvis.caption.listening") : voice.phase === "transcribing" && voice.interim ? voice.interim : voice.streaming ? voice.streaming : voice.phase === "transcribing" ? t("jarvis.caption.transcribing") : voice.phase === "thinking" ? t("jarvis.caption.thinking") : (lastAssistant?.text ?? t("jarvis.caption.idle", { company: companyName }));
 
   return (
     <div className="grid gap-4 lg:min-h-[calc(100dvh-8.5rem)] lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,21rem)]">

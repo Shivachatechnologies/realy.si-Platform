@@ -223,7 +223,13 @@ export interface UtterReply {
  * Command run delegated to AI employees, and the reply says honestly when the background worker is not running, so
  * the work is only queued.
  */
-export async function utter(ctx: RequestContext, organizationId: string, companyId: string, sessionId: string, raw: z.input<typeof utterInput>) {
+/** Streaming hooks of an utterance (voiceos stream-answer route): routing decision and answer text as it is written. */
+export interface UtterHooks {
+  onRoute?: (r: { intent: VoiceIntent; routedBy: "model" | "heuristic"; language: string }) => void;
+  onText?: (delta: string) => void;
+}
+
+export async function utter(ctx: RequestContext, organizationId: string, companyId: string, sessionId: string, raw: z.input<typeof utterInput>, hooks: UtterHooks = {}) {
   const started = Date.now();
   const input = utterInput.parse(raw);
   const scope = { organizationId, companyId };
@@ -240,6 +246,7 @@ export async function utter(ctx: RequestContext, organizationId: string, company
   const brief = () => (briefing ??= gatherBriefing(ctx, scope, chain, userId, session.language).catch(() => null));
   if (heuristicIntent(input.text) !== "work_request") void brief();
   const routed = await classifyUtterance(scope, session.id, userId, input.text, context, refusal);
+  hooks.onRoute?.({ intent: routed.intent, routedBy: routed.via, language: language.code });
 
   const touch = (extra: Record<string, unknown> = {}) =>
     db().voiceosSession.update({
@@ -255,7 +262,7 @@ export async function utter(ctx: RequestContext, organizationId: string, company
     } else {
       try {
         const viewer = await db().user.findUnique({ where: { id: userId }, select: { name: true } });
-        const answer = await answerDirect(scope, session.id, userId, { text: input.text, context, intent: routed.intent, briefing: facts, language, viewerName: viewer?.name ?? null });
+        const answer = await answerDirect(scope, session.id, userId, { text: input.text, context, intent: routed.intent, briefing: facts, language, viewerName: viewer?.name ?? null }, hooks.onText);
         reply = { key: "answer", params: {}, text: answer.text, language: answer.language.code };
       } catch {
         // The failure is recorded for Admin; the person still gets the real numbers, never an invented answer.

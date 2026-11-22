@@ -17,6 +17,7 @@ import { metricValues, visibleMetrics } from "@/server/modules/bi/service";
 import { resolveRange } from "@/server/modules/bi/range";
 import { listMyNotifications } from "@/server/modules/notifications/service";
 import { recentCompanyEvents } from "./stream";
+import { streamModelCall } from "./stream-model";
 import type { VoiceScope } from "./access";
 import { heuristicIntent, isVoiceIntent, stripWake, VOICE_PROFILE, VOICE_SUBJECT, type ReplyLanguage, type VoiceIntent, type WorkerState } from "./intent";
 
@@ -397,15 +398,24 @@ export interface DirectAnswer {
   model: string;
 }
 
-/** One grounded model call answering conversation or a company question. Throws on failure (recorded for Admin). */
-export async function answerDirect(scope: VoiceScope, sessionId: string, userId: string, input: { text: string; context: TurnContext[]; intent: VoiceIntent; briefing: Briefing; language: ReplyLanguage; viewerName: string | null }): Promise<DirectAnswer> {
+/**
+ * One grounded model call answering conversation or a company question. Throws on failure (recorded for Admin).
+ * With `onText` the answer is streamed (voiceos/stream-model.ts): deltas arrive as the model writes them.
+ */
+export async function answerDirect(
+  scope: VoiceScope,
+  sessionId: string,
+  userId: string,
+  input: { text: string; context: TurnContext[]; intent: VoiceIntent; briefing: Briefing; language: ReplyLanguage; viewerName: string | null },
+  onText?: (delta: string) => void,
+): Promise<DirectAnswer> {
   const system = `${ANSWER_RULES.replace("{language}", input.language.label)}\n\nThe person: ${input.viewerName ?? "a member of the company"}.\nRouting: this message was classified as ${input.intent === "conversation" ? "conversation / small talk" : "a question about the company's state"}.\n\nLive company facts (just gathered):\n${input.briefing.text}`;
   let result: QuickCallResult;
   try {
-    result = await quickModelCall({
+    const call = {
       ...scope,
       profileKey: VOICE_PROFILE,
-      tier: "simple",
+      tier: "simple" as const,
       system,
       messages: historyMessages(input.context.slice(-6), stripWake(input.text)),
       maxTokens: 400,
@@ -414,7 +424,8 @@ export async function answerDirect(scope: VoiceScope, sessionId: string, userId:
       sourceId: `${sessionId}:${Date.now()}`,
       department: "executive",
       timeoutMs: 20_000,
-    });
+    };
+    result = onText ? await streamModelCall({ ...call, onText }) : await quickModelCall(call);
   } catch (err) {
     await recordAssistantFailure(scope, sessionId, userId, "answer", err);
     throw err;
