@@ -22,6 +22,8 @@ import * as G from "./guided";
 import { createInvoicePaymentLink } from "./payment-links";
 import { notFound } from "@/server/core/errors";
 import * as FM from "./manager";
+import { roiAnalytics } from "./roi";
+import { cfoMonthlyPack, listMonthlyPackTasks, monthlyPackInput, requestCfoMonthlyPack } from "./monthly-pack";
 
 /**
  * Finance REST API: /api/v1/organizations/:orgId/companies/:companyId/finance/<path>. Each entry is wrapped with route()
@@ -222,6 +224,15 @@ add("GET", "guided/options", async ({ ctx, o, c }) => G.guidedOptions(ctx, o, c)
 add("GET", "guided/progress/:flow", async ({ ctx, o, c, p }) => G.getFlowProgress(ctx, o, c, flowOf(p.flow)));
 add("PUT", "guided/progress/:flow", async ({ req, ctx, o, c, p }) => G.saveFlowProgress(ctx, o, c, flowOf(p.flow), await input(req, G.flowProgressInput)));
 add("POST", "ask", async ({ req, ctx, o, c }) => askCfo(ctx, o, c, await input(req, askInput)));
+// AI and provider spend in finance, ROI and the monthly CFO pack.
+add("GET", "ai-spend", async ({ ctx, o, c, q }) => {
+  const d = await A.cashFlowOverview(ctx, o, c, parseRange(q));
+  return d.aiSpend;
+});
+add("GET", "roi", async ({ ctx, o, c, q }) => roiAnalytics(ctx, o, c, parseRange(q)));
+add("GET", "monthly-pack", async ({ ctx, o, c, q }) => cfoMonthlyPack(ctx, o, c, { month: q.month || undefined }));
+add("GET", "monthly-pack/tasks", async ({ ctx, o, c }) => ({ data: await listMonthlyPackTasks(ctx, o, c) }));
+add("POST", "monthly-pack", async ({ req, ctx, o, c }) => requestCfoMonthlyPack(ctx, o, c, await input(req, monthlyPackInput)));
 
 // AI Finance Manager desk: memo, revenue forecast, categorisation suggestions, budget variance explanations.
 add("POST", "manager/memo", async ({ req, ctx, o, c }) => FM.requestFinanceMemo(ctx, o, c, await input(req, FM.memoInput)));

@@ -280,11 +280,12 @@ export async function listWorkProjects(ctx: RequestContext, organizationId: stri
 /** Budget vs logged cost: time (minutes × rate captured at logging) + expenses, in the project currency. */
 export async function budgetSummary(projectId: string, budgetMinor: bigint | null) {
   const [entries, expenses] = await Promise.all([
-    db().workTimeEntry.findMany({ where: { projectId }, select: { minutes: true, rateMinor: true } }),
+    // Grouped by rate (exact): time entries grow without bound over a project's life.
+    db().workTimeEntry.groupBy({ by: ["rateMinor"], where: { projectId }, _sum: { minutes: true } }),
     db().projectExpense.aggregate({ where: { projectId }, _sum: { amountMinor: true } }),
   ]);
-  const minutes = entries.reduce((n, e) => n + e.minutes, 0);
-  const timeCostMinor = entries.reduce((n, e) => n + (e.rateMinor ? (e.rateMinor * BigInt(e.minutes)) / 60n : 0n), 0n);
+  const minutes = entries.reduce((n, e) => n + (e._sum.minutes ?? 0), 0);
+  const timeCostMinor = entries.reduce((n, e) => n + (e.rateMinor ? (e.rateMinor * BigInt(e._sum.minutes ?? 0)) / 60n : 0n), 0n);
   const expenseMinor = expenses._sum.amountMinor ?? 0n;
   const spentMinor = timeCostMinor + expenseMinor;
   return {
@@ -566,7 +567,7 @@ export async function deleteExpense(ctx: RequestContext, organizationId: string,
 
 export async function listTemplates(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "projects.read");
-  const custom = await db().projectTemplate.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" } });
+  const custom = await db().projectTemplate.findMany({ take: 500, where: { organizationId, companyId }, orderBy: { name: "asc" } });
   return {
     builtIn: BUILT_IN_TEMPLATES.map((b) => ({ key: b.key, milestones: b.blueprint.milestones.length, tasks: b.blueprint.tasks.length })),
     custom: custom.map((c) => {

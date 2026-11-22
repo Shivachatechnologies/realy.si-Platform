@@ -112,8 +112,8 @@ export async function startSprint(ctx: RequestContext, organizationId: string, c
     await authorizeProject(ctx, organizationId, companyId, s.projectId, "projects.manage", tx);
     if (s.status !== "PLANNED") throw conflict("Only planned sprints can start", { reason: "work_sprint_not_planned" });
     if (await tx.sprint.findFirst({ where: { projectId: s.projectId, status: "ACTIVE" }, select: { id: true } })) throw conflict("Another sprint is active", { reason: "work_sprint_active_exists" });
-    const tasks = await tx.workTask.findMany({ where: { sprintId, archivedAt: null, status: { not: "CANCELLED" } }, select: { estimatePoints: true } });
-    const updated = await tx.sprint.update({ where: { id: sprintId }, data: { status: "ACTIVE", startedAt: new Date(), committedPoints: points(tasks) } });
+    const committed = await tx.workTask.aggregate({ where: { sprintId, archivedAt: null, status: { not: "CANCELLED" } }, _sum: { estimatePoints: true } });
+    const updated = await tx.sprint.update({ where: { id: sprintId }, data: { status: "ACTIVE", startedAt: new Date(), committedPoints: committed._sum.estimatePoints ?? 0 } });
     await audit(tx, ctx, organizationId, "sprint.started", sprintId, { committedPoints: updated.committedPoints });
     return updated;
   });
@@ -132,9 +132,9 @@ export async function completeSprint(ctx: RequestContext, organizationId: string
       if (!next) throw notFound("Sprint");
       target = next.id;
     }
-    const done = await tx.workTask.findMany({ where: { sprintId, status: "DONE", archivedAt: null }, select: { estimatePoints: true } });
+    const done = await tx.workTask.aggregate({ where: { sprintId, status: "DONE", archivedAt: null }, _sum: { estimatePoints: true } });
     const rolled = await tx.workTask.updateMany({ where: { sprintId, status: OPEN }, data: { sprintId: target } });
-    const updated = await tx.sprint.update({ where: { id: sprintId }, data: { status: "COMPLETED", completedAt: new Date(), completedPoints: points(done) } });
+    const updated = await tx.sprint.update({ where: { id: sprintId }, data: { status: "COMPLETED", completedAt: new Date(), completedPoints: done._sum.estimatePoints ?? 0 } });
     await audit(tx, ctx, organizationId, "sprint.completed", sprintId, { completedPoints: updated.completedPoints, rolledOver: rolled.count, to: target ?? "backlog" });
     return { ...updated, rolledOver: rolled.count };
   });
@@ -165,7 +165,7 @@ export async function getSprint(ctx: RequestContext, organizationId: string, com
   const [project, tasks, retro, otherSprints] = await Promise.all([
     db().project.findFirstOrThrow({ where: { id: s.projectId }, select: { id: true, name: true } }),
     db().workTask.findMany({ where: { sprintId, archivedAt: null }, orderBy: [{ status: "asc" }, { position: "asc" }], select: taskListSelect }),
-    db().sprintRetroItem.findMany({ where: { sprintId }, orderBy: { createdAt: "asc" } }),
+    db().sprintRetroItem.findMany({ take: 500, where: { sprintId }, orderBy: { createdAt: "asc" } }),
     db().sprint.findMany({ where: { projectId: s.projectId, status: "PLANNED", id: { not: sprintId } }, orderBy: { startDate: "asc" }, select: { id: true, name: true } }),
   ]);
   const names = await userNames(db(), retro.map((r) => r.authorId));

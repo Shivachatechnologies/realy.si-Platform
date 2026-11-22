@@ -253,7 +253,7 @@ export async function getEmployee(ctx: RequestContext, organizationId: string, c
   const [history, documents] = await Promise.all([
     privileged || isManager ? db().hrEmployeeEvent.findMany({ where: { employeeId: e.id, companyId }, orderBy: { createdAt: "desc" }, take: 100 }) : [],
     privileged
-      ? db().hrDocument.findMany({
+      ? db().hrDocument.findMany({ take: 500,
           where: { employeeId: e.id, companyId },
           orderBy: { createdAt: "desc" },
           select: { id: true, name: true, category: true, filename: true, mimeType: true, sizeBytes: true, createdAt: true },
@@ -469,7 +469,7 @@ export async function linkEmployeeUser(ctx: RequestContext, organizationId: stri
 
 export async function listDesignations(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().hrDesignation.findMany({
+  return db().hrDesignation.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: { name: "asc" },
     include: { _count: { select: { employees: { where: { archivedAt: null, status: { not: "TERMINATED" } } } } } },

@@ -37,6 +37,8 @@ const INTRO_NEXT: Record<FinanceTab, string | undefined> = {
   learn: "/start",
   accounting: "/reports",
   reports: "/start?flow=profit",
+  roi: "/reports",
+  monthlyPack: "/reports",
   settings: "/start",
 };
 

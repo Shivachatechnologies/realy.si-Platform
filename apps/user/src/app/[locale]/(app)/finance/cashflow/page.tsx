@@ -5,6 +5,7 @@ import { financePage } from "@/components/finance/page-context";
 import { ScenarioForm } from "@/components/finance/scenario-form";
 import { ActionButton, FormDialog, ResourceForm } from "@/components/finance/ui";
 import { BarChart, Empty, Kpi, RangeForm, rangePresets } from "@/components/finance/widgets";
+import { AiSpendCard } from "@/components/finance/ai-spend-card";
 import { getT } from "@/i18n/server";
 import { cashFlowOverview, listPlanItems, projectScenarios } from "@/server/modules/finance/analytics";
 import { dayString, fromMinor, parseRange } from "@/server/modules/finance/common";
@@ -33,6 +34,7 @@ export default async function CashFlowPage({ searchParams }: PageProps<"/[locale
         <Kpi label={t("finance.metrics.runwayMonths")} value={o.runwayMonths === null ? t("finance.dashboard.noBurn") : t("finance.dashboard.months", { count: o.runwayMonths })} tone={o.runwayMonths !== null && o.runwayMonths < 6 ? "danger" : undefined} />
         <Kpi label={t("finance.cashflow.projected6")} value={money(o.forecast.months.at(-1)?.balance ?? o.cash)} tone={(o.forecast.months.at(-1)?.balance ?? 0n) < 0n ? "danger" : undefined} />
       </div>
+      <AiSpendCard ai={o.aiSpend} t={t} locale={locale} money={money} />
       <RangeForm action={`/${locale}/finance/cashflow`} from={range.fromStr} to={range.toStr} labels={{ from: t("finance.range.from"), to: t("finance.range.to"), apply: t("finance.range.apply"), presets: rangePresets(t) }} />
       <Card>
         <CardHeader title={t("finance.cashflow.historyTitle")} description={t("finance.cashflow.historyHint")} />

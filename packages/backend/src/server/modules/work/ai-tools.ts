@@ -8,8 +8,24 @@ import { PRODUCT_TOOLS } from "./product-ai-tools";
 import { deadlineRisks, workloadBalance } from "./delivery";
 import { detectBottlenecks } from "./bottlenecks";
 import { addProcessVersion, getProcess } from "./operations";
+import { executeObjective, executeObjectiveInput, executionStatus, objectiveExecutionStatus, type ExecutionStatus } from "./execution";
 
 /** AI tools of the work module, registered in src/server/modules/tools/modules.ts. */
+
+const blockerReason = { overdue: "overdue", unassigned: "no owner", stalled: "no progress for 7+ days", not_started: "should have started" } as const;
+function executionText(s: ExecutionStatus) {
+  const t = s.totals;
+  const lines = [
+    `Project ${s.project.id} "${s.project.name}" [${s.project.status}] — computed health ${s.health} (set by people: ${s.manualHealth}). ${t.done}/${t.total} tasks done (${t.progress}%), ${t.open} open: ${t.ready} ready to start, ${t.blocked} blocked, ${t.overdue} overdue, ${t.stalled} stalled. ${t.dependencies} dependencies.`,
+    s.complete ? "All tasks are done." : `Remaining critical path ${s.criticalDays} day(s): projected finish ${day(s.projectedFinish)}${s.project.dueDate ? ` vs due ${day(s.project.dueDate)}${s.projectedLate ? " — LATE" : ""}` : ""}.`,
+    s.objectives.length ? `Objectives: ${s.objectives.map((o) => `"${o.objectiveTitle}" (${o.objectiveId}, milestone ${o.completedAt ? "done" : "open"})`).join("; ")}.` : "Not linked to an objective.",
+    s.milestones.length ? `Milestones:\n${s.milestones.map((m) => `- ${m.title}: ${m.done}/${m.total} done${m.dueDate ? `, due ${day(m.dueDate)}` : ""}${m.completedAt ? " (completed)" : m.late ? " — LATE" : ""}`).join("\n")}` : "No milestones.",
+    s.criticalBlockers.length ? `Critical blockers (holding up other work):\n${s.criticalBlockers.map((b) => `- Task ${b.id} "${b.title}" [${b.status}] blocks ${b.waiting} task(s): ${b.reasons.map((r) => blockerReason[r]).join(", ")}${b.externalProjectId ? ` (in another project ${b.externalProjectId})` : ""}`).join("\n")}` : "No critical blockers.",
+    s.ready.length ? `Ready to start:\n${s.ready.slice(0, 15).map((x) => `- Task ${x.id} "${x.title}" [${x.priority}]${x.assigneeId ? "" : " — unassigned"}${x.dueDate ? `, due ${day(x.dueDate)}` : ""}`).join("\n")}` : "Nothing is ready to start.",
+    s.stalled.length ? `Stalled:\n${s.stalled.slice(0, 10).map((x) => `- Task ${x.id} "${x.title}" [${x.status}]`).join("\n")}` : "",
+  ];
+  return lines.filter(Boolean).join("\n");
+}
 
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
 const day = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : "—");
@@ -383,5 +399,83 @@ export const WORK_TOOLS: Record<string, ToolDefinition> = {
       return { content: `Saved version ${r.version} of the process.`, records: [`ops_process:${processId}`] };
     },
   }),
+  plan_objective_execution: def({
+    name: "plan_objective_execution",
+    version: 1,
+    description:
+      "Propose turning an active objective into executable work: one project with milestones and tasks, where each task lists the tasks it depends on (finish-to-start, by index in the task list). Tasks are scheduled after their predecessors automatically; the project is linked to the objective so its progress is tracked until every task is done. A person must approve it first.",
+    input: executeObjectiveInput.strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        objectiveId: { type: "string", description: "Objective id (read_objectives)" },
+        name: { type: "string", description: "Project name" },
+        description: { type: "string" },
+        startDate: { type: "string", description: "YYYY-MM-DD (default today)" },
+        dueDate: { type: "string", description: "YYYY-MM-DD (default: the objective's target date)" },
+        ownerId: { type: "string", description: "User id of the project owner (default: the requester)" },
+        milestones: { type: "array", items: { type: "object", properties: { title: { type: "string" }, offsetDays: { type: "integer", description: "Days after the start" } }, required: ["title", "offsetDays"], additionalProperties: false } },
+        tasks: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              description: { type: "string" },
+              priority: { type: "string", enum: [...PRIORITIES] },
+              offsetDays: { type: "integer", description: "Earliest start, days after the project start" },
+              durationDays: { type: "integer" },
+              points: { type: "integer" },
+              milestone: { type: "string", description: "Exact title of one of the milestones" },
+              dependsOn: { type: "array", items: { type: "integer" }, description: "Indexes of tasks in this list that must be done first" },
+              assigneeId: { type: "string", description: "User id (read_team_workload)" },
+            },
+            required: ["title"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["objectiveId", "name", "tasks"],
+      additionalProperties: false,
+    },
+    permissions: ["projects.manage", "objectives.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 60_000,
+    summarize: ({ name, tasks, milestones }) => `Create project "${name}" with ${milestones?.length ?? 0} milestone(s) and ${tasks.length} task(s) for an objective`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const r = await executeObjective(ctx, organizationId, companyId, input);
+      return {
+        content: `Created project ${r.projectId} (${r.startDate} → ${r.dueDate}) with ${r.milestones} milestone(s), ${r.tasks} task(s) and ${r.dependencies} dependencies${r.rescheduled ? `; ${r.rescheduled} task(s) were moved after their predecessors` : ""}. It is linked to objective ${r.objectiveId} and tracked with read_execution_status.`,
+        records: [`project:${r.projectId}`, `objective:${r.objectiveId}`, `milestone:${r.objectiveMilestoneId}`],
+      };
+    },
+  }),
+
+  read_execution_status: def({
+    name: "read_execution_status",
+    version: 1,
+    description:
+      "Execution tracking of a project or of every project carrying an objective: progress per milestone, tasks ready to start, blocked tasks and the root blockers holding them up (overdue, unassigned, stalled, not started), remaining critical path vs the due date and a computed health.",
+    input: z.object({ projectId: uuid.optional(), objectiveId: uuid.optional() }).strict().refine((v) => !!v.projectId !== !!v.objectiveId, { message: "Give either projectId or objectiveId" }),
+    modelSchema: { type: "object", properties: { projectId: { type: "string" }, objectiveId: { type: "string" } }, required: [], additionalProperties: false },
+    permissions: ["projects.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 30_000,
+    actionClass: "read",
+    summarize: ({ objectiveId }) => (objectiveId ? "Read an objective's execution status" : "Read a project's execution status"),
+    async execute({ projectId, objectiveId }, { ctx, organizationId, companyId }) {
+      if (projectId) {
+        const s = await executionStatus(ctx, organizationId, companyId, projectId);
+        return { content: executionText(s), count: s.totals.total, records: [`project:${projectId}`] };
+      }
+      const o = await objectiveExecutionStatus(ctx, organizationId, companyId, objectiveId!);
+      if (!o.projects.length) return { content: `Objective "${o.objective.title}" has no project carrying it yet${o.hiddenProjects ? ` that you can see (${o.hiddenProjects} hidden)` : ""}. Propose one with plan_objective_execution.`, count: 0 };
+      const head = `Objective "${o.objective.title}" [${o.objective.status}]${o.objective.targetDate ? `, target ${day(o.objective.targetDate)}` : ""}: ${o.totals.projects} project(s), ${o.totals.done}/${o.totals.total} tasks done (${o.totals.progress}%), ${o.totals.blocked} blocked, ${o.totals.criticalBlockers} critical blocker(s), overall health ${o.health}${o.complete ? ", all work done" : ""}.`;
+      return { content: [head, ...o.projects.map(executionText)].join("\n\n"), count: o.totals.total, records: [`objective:${o.objective.id}`, ...o.projects.map((p) => `project:${p.project.id}`)] };
+    },
+  }),
+
   ...PRODUCT_TOOLS,
 };

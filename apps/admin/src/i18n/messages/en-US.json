@@ -11061,7 +11061,8 @@
       "sprints": "Sprints",
       "templates": "Templates",
       "timeline": "Timeline",
-      "start": "Start a project"
+      "start": "Start a project",
+      "execution": "Execution"
     },
     "task": {
       "add": "New task",
@@ -11439,6 +11440,51 @@
       "reassign": "Reassign",
       "balanced": "Workload is balanced — no reassignments needed.",
       "export": "Export status report"
+    },
+    "execution": {
+      "intro": "Tracked from the project's tasks and dependencies: what is ready, what is blocked and by what, until every task is done.",
+      "objectives": "Carries the objective",
+      "milestoneDone": "done",
+      "complete": "Every task is done.",
+      "health": "Computed health",
+      "manualHealth": "Set by people: {health}",
+      "progress": "Progress",
+      "doneOf": "{done} of {total} done",
+      "ready": "Ready to start",
+      "blocked": "Blocked",
+      "overdue": "Overdue",
+      "projected": "Projected finish",
+      "criticalDays": "{count, plural, one {# day} other {# days}} on the critical path",
+      "blockersTitle": "Blockers",
+      "blockersHint": "Unfinished tasks other tasks wait on, the ones holding up the most work first.",
+      "task": "Task",
+      "owner": "Owner",
+      "due": "Due",
+      "waiting": "Tasks waiting",
+      "why": "Why it matters",
+      "otherProject": "In another project",
+      "reasons": {
+        "overdue": "overdue",
+        "unassigned": "no owner",
+        "stalled": "no progress for 7+ days",
+        "not_started": "should have started"
+      },
+      "waitingItself": "waiting on other tasks",
+      "noBlockers": "Nothing is blocked.",
+      "readyTitle": "Ready to start",
+      "readyHint": "Open tasks whose predecessors are all done.",
+      "noReady": "No task is waiting to be started.",
+      "milestonesTitle": "Milestones",
+      "late": "late",
+      "noMilestones": "This project has no milestones.",
+      "stalledTitle": "Stalled work",
+      "truncated": "Only the first 5,000 tasks are included.",
+      "unassigned": "unassigned",
+      "plan": "Plan execution with AI",
+      "objectivesTitle": "Execute an objective",
+      "objectivesHint": "The AI project manager proposes a project with milestones and dependent tasks; you approve it before anything is created.",
+      "projectN": "Project {n}",
+      "noProject": "no project yet"
     }
   },
   "marketing": {
@@ -14018,7 +14064,9 @@
       "start": "Start here",
       "alerts": "Alerts",
       "learn": "Learn the words",
-      "manager": "AI desk"
+      "manager": "AI desk",
+      "roi": "ROI",
+      "monthlyPack": "Monthly pack"
     },
     "accounting": {
       "tabs": {
@@ -14961,6 +15009,18 @@
         "why": "You see what changed, why, and what to do next, without reading every transaction.",
         "can": "Run the finance memo, check the revenue forecast, understand budget gaps and categorise expenses in one click.",
         "next": "Check budgets"
+      },
+      "roi": {
+        "what": "Return on spend: AI employees, departments and marketing campaigns.",
+        "why": "It shows which spending brings revenue back.",
+        "can": "Compare recorded costs with won deals for any period.",
+        "next": "See reports"
+      },
+      "monthlyPack": {
+        "what": "The month in one page: P&L, cash, burn, budgets, AI spend and ROI.",
+        "why": "Leadership gets the same complete picture every month.",
+        "can": "Pick a month and ask the AI CFO to write the pack.",
+        "next": "See reports"
       }
     },
     "os": {
@@ -15474,6 +15534,85 @@
           "words": "Similar descriptions: {confidence}% of {count} matches"
         }
       }
+    },
+    "aiSpend": {
+      "title": "AI and provider spend",
+      "hint": "Recorded in the cost ledger: AI models, images, video, voice, calls, messaging and external APIs.",
+      "openCosts": "Open costs",
+      "empty": "No AI or provider spend is recorded for this period.",
+      "period": "Spend in the period",
+      "estimated": "{amount} estimated from provider prices",
+      "monthly": "Monthly average",
+      "monthlyHint": "Last 3 full months",
+      "profitAfter": "Net profit after AI & provider spend",
+      "burnWith": "Net burn incl. AI spend",
+      "runwayWith": "Runway incl. AI spend",
+      "notConverted": "Shown in USD and not added to your figures: the cost ledger is in USD and no exchange rate is recorded.",
+      "byCategory": "By category",
+      "roiLink": "See return on this spend",
+      "pnlLine": "AI & provider spend (cost ledger)",
+      "pnlHint": "Not a journal entry: recorded by the cost ledger from provider usage.",
+      "categories": {
+        "AI_TOKENS": "AI models",
+        "IMAGE": "Images",
+        "VIDEO": "Video",
+        "VOICE": "Voice",
+        "STT": "Speech to text",
+        "TTS": "Text to speech",
+        "TELEPHONY": "Telephony",
+        "EMAIL": "Email",
+        "SMS": "SMS",
+        "MESSAGING": "Messaging",
+        "EXTERNAL_API": "External APIs",
+        "OTHER": "Other"
+      }
+    },
+    "roi": {
+      "method": "Costs are recorded spend; returns are deals marked won. A deal counts for an AI employee when that AI worked its lead, and for a campaign when it carries the campaign code. ROI is shown only when cost and revenue are in the same currency.",
+      "aiCost": "AI & provider cost",
+      "dealsWon": "Won deals",
+      "revenueWon": "Won revenue",
+      "unattributed": "Deals not attributed to an AI",
+      "empty": "No AI spend, campaign spend or won deals are recorded in this period.",
+      "agentsTitle": "AI employees",
+      "agentsHint": "Cost from the cost ledger, tasks completed and won deals of leads they worked.",
+      "agent": "AI employee",
+      "department": "Department",
+      "cost": "Cost",
+      "tasks": "Tasks done",
+      "revenue": "Revenue",
+      "roi": "ROI",
+      "noAgents": "No AI employee has recorded spend or attributed deals in this period.",
+      "departmentsTitle": "Departments",
+      "departmentsHint": "AI and provider cost per department and the won deals of its AI employees.",
+      "noDepartments": "No department spend in this period.",
+      "campaignsTitle": "Campaigns",
+      "campaignsHint": "Recorded campaign spend vs won deals carrying the campaign code.",
+      "campaign": "Campaign",
+      "budget": "Budget",
+      "spend": "Spend",
+      "noCampaigns": "No campaign spend or attributed deals in this period.",
+      "truncated": "Only the newest 5,000 won deals are included.",
+      "mixed": "Cost and revenue are in different currencies, so no ROI is computed.",
+      "mixedShort": "other currency"
+    },
+    "monthlyPack": {
+      "ask": "Ask the AI CFO to write the pack",
+      "month": "Month",
+      "partial": "This month is not finished yet: figures are month to date.",
+      "vsPrev": "{pct}% vs the month before",
+      "cashEnd": "Cash at month end",
+      "cashChange": "Change {amount}",
+      "overBudget": "Budgets over limit",
+      "budgetsTitle": "Budget variance",
+      "budget": "Budget",
+      "planned": "Planned",
+      "actual": "Actual",
+      "used": "Used",
+      "noBudgets": "No budgets cover this month.",
+      "aiTitle": "AI CFO commentary",
+      "aiHint": "The AI CFO reads these figures and writes the pack with risks and next steps.",
+      "raw": "Pack as text"
     }
   },
   "hr": {

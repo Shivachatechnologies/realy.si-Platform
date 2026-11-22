@@ -9502,7 +9502,8 @@
       "sprints": "冲刺",
       "templates": "模板",
       "timeline": "时间线",
-      "start": "启动项目"
+      "start": "启动项目",
+      "execution": "执行"
     },
     "task": {
       "add": "新建任务",
@@ -9880,6 +9881,51 @@
       "reassign": "重新分配",
       "balanced": "工作负荷均衡——无需重新分配。",
       "export": "导出状态报告"
+    },
+    "execution": {
+      "intro": "根据项目的任务和依赖跟踪：哪些已就绪、哪些受阻以及因何受阻，直到所有任务完成。",
+      "objectives": "承载目标",
+      "milestoneDone": "已完成",
+      "complete": "所有任务均已完成。",
+      "health": "计算的健康度",
+      "manualHealth": "人工设置：{health}",
+      "progress": "进度",
+      "doneOf": "已完成 {done}/{total}",
+      "ready": "可开始",
+      "blocked": "受阻",
+      "overdue": "逾期",
+      "projected": "预计完成",
+      "criticalDays": "关键路径上 {count, plural, other {# 天}}",
+      "blockersTitle": "阻塞项",
+      "blockersHint": "其他任务在等待的未完成任务，阻塞工作最多的排在前面。",
+      "task": "任务",
+      "owner": "负责人",
+      "due": "截止",
+      "waiting": "等待中的任务",
+      "why": "原因",
+      "otherProject": "在其他项目中",
+      "reasons": {
+        "overdue": "逾期",
+        "unassigned": "无负责人",
+        "stalled": "7 天以上无进展",
+        "not_started": "应已开始"
+      },
+      "waitingItself": "自身也在等待其他任务",
+      "noBlockers": "没有受阻的工作。",
+      "readyTitle": "可开始",
+      "readyHint": "前置任务均已完成的未结任务。",
+      "noReady": "没有等待开始的任务。",
+      "milestonesTitle": "里程碑",
+      "late": "延期",
+      "noMilestones": "此项目没有里程碑。",
+      "stalledTitle": "停滞的工作",
+      "truncated": "仅包含前 5,000 个任务。",
+      "unassigned": "未分配",
+      "plan": "用 AI 规划执行",
+      "objectivesTitle": "执行一个目标",
+      "objectivesHint": "AI 项目经理提出包含里程碑和依赖任务的项目；在创建任何内容之前由您批准。",
+      "projectN": "项目 {n}",
+      "noProject": "尚无项目"
     }
   },
   "marketing": {
@@ -12459,7 +12505,9 @@
       "start": "从这里开始",
       "alerts": "警报",
       "learn": "术语学习",
-      "manager": "AI 工作台"
+      "manager": "AI 工作台",
+      "roi": "投资回报",
+      "monthlyPack": "月度报告包"
     },
     "accounting": {
       "tabs": {
@@ -13402,6 +13450,18 @@
         "why": "无需逐笔查看交易，就能知道变化了什么、为什么以及下一步该做什么。",
         "can": "生成财务备忘录、查看收入预测、理解预算差异，并一键为支出分类。",
         "next": "查看预算"
+      },
+      "roi": {
+        "what": "支出回报：AI 员工、部门和营销活动。",
+        "why": "显示哪些支出带来了收入。",
+        "can": "在任意期间比较已记录成本与赢单。",
+        "next": "查看报表"
+      },
+      "monthlyPack": {
+        "what": "一页看完整月：损益、现金、消耗、预算、AI 支出和回报。",
+        "why": "管理层每月获得同样完整的全貌。",
+        "can": "选择月份，让 AI CFO 撰写报告包。",
+        "next": "查看报表"
       }
     },
     "os": {
@@ -13915,6 +13975,85 @@
           "words": "相似描述：{count} 个匹配中的 {confidence}%"
         }
       }
+    },
+    "aiSpend": {
+      "title": "AI 与服务商支出",
+      "hint": "记录于成本台账：AI 模型、图片、视频、语音、通话、消息和外部 API。",
+      "openCosts": "打开成本",
+      "empty": "此期间没有记录 AI 或服务商支出。",
+      "period": "期间支出",
+      "estimated": "其中 {amount} 按服务商价格估算",
+      "monthly": "月均",
+      "monthlyHint": "最近 3 个完整月",
+      "profitAfter": "扣除 AI 与服务商支出后的净利润",
+      "burnWith": "含 AI 支出的净消耗",
+      "runwayWith": "含 AI 支出的跑道",
+      "notConverted": "以美元显示且未计入您的数字：成本台账以美元记账，且没有记录汇率。",
+      "byCategory": "按类别",
+      "roiLink": "查看这些支出的回报",
+      "pnlLine": "AI 与服务商支出（成本台账）",
+      "pnlHint": "非会计分录：由成本台账根据服务商用量记录。",
+      "categories": {
+        "AI_TOKENS": "AI 模型",
+        "IMAGE": "图片",
+        "VIDEO": "视频",
+        "VOICE": "语音",
+        "STT": "语音转文字",
+        "TTS": "文字转语音",
+        "TELEPHONY": "电话",
+        "EMAIL": "邮件",
+        "SMS": "短信",
+        "MESSAGING": "消息",
+        "EXTERNAL_API": "外部 API",
+        "OTHER": "其他"
+      }
+    },
+    "roi": {
+      "method": "成本为已记录的支出；回报为标记为赢单的交易。当某 AI 员工处理过交易的线索时，交易计入该 AI；交易带有活动代码时计入该活动。仅当成本与收入币种相同时才显示回报率。",
+      "aiCost": "AI 与服务商成本",
+      "dealsWon": "赢单",
+      "revenueWon": "赢单收入",
+      "unattributed": "未归属 AI 的交易",
+      "empty": "此期间没有记录 AI 支出、活动支出或赢单。",
+      "agentsTitle": "AI 员工",
+      "agentsHint": "来自成本台账的成本、完成的任务以及其处理线索的赢单。",
+      "agent": "AI 员工",
+      "department": "部门",
+      "cost": "成本",
+      "tasks": "完成任务",
+      "revenue": "收入",
+      "roi": "回报率",
+      "noAgents": "此期间没有 AI 员工有记录的支出或归属交易。",
+      "departmentsTitle": "部门",
+      "departmentsHint": "各部门的 AI 与服务商成本及其 AI 员工的赢单。",
+      "noDepartments": "此期间没有部门支出。",
+      "campaignsTitle": "营销活动",
+      "campaignsHint": "已记录的活动支出与带活动代码的赢单对比。",
+      "campaign": "活动",
+      "budget": "预算",
+      "spend": "支出",
+      "noCampaigns": "此期间没有活动支出或归属交易。",
+      "truncated": "仅包含最新的 5,000 笔赢单。",
+      "mixed": "成本与收入币种不同，因此不计算回报率。",
+      "mixedShort": "其他币种"
+    },
+    "monthlyPack": {
+      "ask": "让 AI CFO 撰写报告包",
+      "month": "月份",
+      "partial": "本月尚未结束：数字为截至今日。",
+      "vsPrev": "较上月 {pct}%",
+      "cashEnd": "月末现金",
+      "cashChange": "变动 {amount}",
+      "overBudget": "超限预算",
+      "budgetsTitle": "预算差异",
+      "budget": "预算",
+      "planned": "计划",
+      "actual": "实际",
+      "used": "已用",
+      "noBudgets": "本月没有预算。",
+      "aiTitle": "AI CFO 点评",
+      "aiHint": "AI CFO 阅读这些数字，撰写包含风险和后续步骤的报告包。",
+      "raw": "文本形式的报告包"
     }
   },
   "hr": {

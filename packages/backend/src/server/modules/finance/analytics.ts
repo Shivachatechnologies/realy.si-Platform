@@ -33,6 +33,7 @@ import { budgetVsActual } from "./transactions";
 import { billBalance, upcomingPayables } from "./payables";
 import { projectCostsReport } from "./project-costs";
 import { OPEN_BILL_STATUSES, openPayables, POSTED_BILL_STATUSES } from "./spend";
+import { aiSpendToBase, aiSpendTotals, aiSpendView, usdFromMicros } from "./ai-costs";
 
 const months = (from: Date, to: Date) => {
   const out: string[] = [];
@@ -58,16 +59,18 @@ export async function profitAndLossTotals(client: Tx | Db, companyId: string, ra
 
 /** Cash in/out per month from the bank register (transfers excluded). */
 export async function cashByMonth(client: Tx | Db, companyId: string, range: DateRange) {
-  const rows = await client.financeTransaction.findMany({ where: { companyId, type: { in: ["INCOME", "EXPENSE"] }, date: { gte: range.from, lt: range.to } }, select: { type: true, date: true, amountMinor: true, source: true } });
+  // One grouped sum per month (exact, bounded) instead of loading every transaction of the range.
   const keys = months(range.from, range.to);
-  const map = new Map(keys.map((k) => [k, { month: k, inflow: 0n, outflow: 0n }]));
-  for (const r of rows) {
-    const m = map.get(monthKey(r.date));
-    if (!m) continue;
-    if (r.type === "INCOME") m.inflow += r.amountMinor;
-    else m.outflow += r.amountMinor;
-  }
-  return [...map.values()].map((m) => ({ ...m, net: m.inflow - m.outflow }));
+  return Promise.all(
+    keys.map(async (k) => {
+      const start = new Date(`${k}-01T00:00:00Z`);
+      const end = addMonths(start, 1);
+      const sums = await client.financeTransaction.groupBy({ by: ["type"], where: { companyId, type: { in: ["INCOME", "EXPENSE"] }, date: { gte: start < range.from ? range.from : start, lt: end > range.to ? range.to : end } }, _sum: { amountMinor: true } });
+      const inflow = sums.find((x) => x.type === "INCOME")?._sum.amountMinor ?? 0n;
+      const outflow = sums.find((x) => x.type === "EXPENSE")?._sum.amountMinor ?? 0n;
+      return { month: k, inflow, outflow, net: inflow - outflow };
+    }),
+  );
 }
 
 export async function cashBalance(client: Tx | Db, companyId: string, asOf?: Date) {
@@ -116,7 +119,7 @@ export async function cashForecast(client: Tx | Db, companyId: string, count = 6
     client.recurringInvoice.findMany({ where: { companyId, active: true }, select: { nextIssueDate: true, frequency: true, netMinor: true, endDate: true, dueDays: true } }),
     client.recurringExpense.findMany({ where: { companyId, active: true }, select: { nextRunDate: true, frequency: true, amountMinor: true, endDate: true } }),
     client.cashPlanItem.findMany({ where: { companyId, date: { gte: today, lt: end } }, select: { date: true, amountMinor: true } }),
-    client.financeTransaction.findMany({ where: { companyId, type: { in: ["INCOME", "EXPENSE"] }, date: { gte: histFrom, lt: histTo } }, select: { type: true, source: true, amountMinor: true } }),
+    client.financeTransaction.groupBy({ by: ["type", "source"], where: { companyId, type: { in: ["INCOME", "EXPENSE"] }, date: { gte: histFrom, lt: histTo } }, _sum: { amountMinor: true } }),
     cashBalance(client, companyId),
   ]);
   const keys = months(start, end);
@@ -152,9 +155,9 @@ export async function cashForecast(client: Tx | Db, companyId: string, count = 6
     const r = rows.get(p.date < start ? first : monthKey(p.date));
     if (r) r.planned += p.amountMinor;
   }
-  const otherIncome = hist.filter((h) => h.type === "INCOME" && h.source !== "PAYMENT").reduce((s, h) => s + h.amountMinor, 0n) / 3n;
+  const otherIncome = hist.filter((h) => h.type === "INCOME" && h.source !== "PAYMENT").reduce((s, h) => s + (h._sum.amountMinor ?? 0n), 0n) / 3n;
   // Bill payments are forecast from the open bills themselves, so they're left out of the trend.
-  const otherExpense = hist.filter((h) => h.type === "EXPENSE" && h.source !== "RECURRING" && h.source !== "BILL_PAYMENT").reduce((s, h) => s + h.amountMinor, 0n) / 3n;
+  const otherExpense = hist.filter((h) => h.type === "EXPENSE" && h.source !== "RECURRING" && h.source !== "BILL_PAYMENT").reduce((s, h) => s + (h._sum.amountMinor ?? 0n), 0n) / 3n;
   let balance = cash;
   const out = [...rows.values()].map((r) => {
     r.trendIncome = otherIncome;
@@ -192,8 +195,11 @@ export async function financeDashboard(ctx: RequestContext, organizationId: stri
   ]);
   const cashIn = cashSeries.reduce((s, m) => s + m.inflow, 0n);
   const cashOut = cashSeries.reduce((s, m) => s + m.outflow, 0n);
+  const company = await companyInfo(client, organizationId, companyId);
+  const aiSpend = await aiSpendView(client, organizationId, companyId, company.baseCurrency, range, { profit: pnl.profit, netBurn: burn.netBurn, cash }, now);
   return {
     ...pnl,
+    aiSpend,
     margin: pnl.revenue > 0n ? Number((pnl.profit * 10_000n) / pnl.revenue) / 100 : null,
     cashIn,
     cashOut,
@@ -217,18 +223,15 @@ export async function financeDashboard(ctx: RequestContext, organizationId: stri
 }
 
 async function pnlByMonth(client: Tx | Db, companyId: string, range: DateRange) {
-  const lines = await client.journalLine.findMany({
-    where: { companyId, entry: { status: "POSTED", date: { gte: range.from, lt: range.to } }, ledgerAccount: { type: { in: ["INCOME", "EXPENSE"] } } },
-    select: { debitMinor: true, creditMinor: true, ledgerAccount: { select: { type: true } }, entry: { select: { date: true } } },
-  });
-  const map = new Map(months(range.from, range.to).map((k) => [k, { month: k, revenue: 0n, expenses: 0n }]));
-  for (const l of lines) {
-    const m = map.get(monthKey(l.entry.date));
-    if (!m) continue;
-    if (l.ledgerAccount.type === "INCOME") m.revenue += l.creditMinor - l.debitMinor;
-    else m.expenses += l.debitMinor - l.creditMinor;
-  }
-  return [...map.values()].map((m) => ({ ...m, profit: m.revenue - m.expenses }));
+  // Grouped ledger totals per month (exact, bounded) instead of loading every journal line of the range.
+  return Promise.all(
+    months(range.from, range.to).map(async (k) => {
+      const start = new Date(`${k}-01T00:00:00Z`);
+      const end = addMonths(start, 1);
+      const r = await profitAndLossTotals(client, companyId, { from: start < range.from ? range.from : start, to: end > range.to ? range.to : end });
+      return { month: k, revenue: r.revenue, expenses: r.expenses, profit: r.profit };
+    }),
+  );
 }
 
 // ───────────── Anomalies ─────────────
@@ -342,7 +345,7 @@ export const scenarioInput = z.object({
 
 export async function listScenarios(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  return db().cashScenario.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" } });
+  return db().cashScenario.findMany({ take: 500, where: { organizationId, companyId }, orderBy: { name: "asc" } });
 }
 
 function scenarioData(input: z.output<typeof scenarioInput>, currency: string) {
@@ -429,8 +432,9 @@ export async function projectScenarios(ctx: RequestContext, organizationId: stri
 export async function cashFlowOverview(ctx: RequestContext, organizationId: string, companyId: string, range: DateRange, now = new Date()) {
   await authorize(ctx, organizationId, companyId, "finance.read");
   const client = db();
-  const [series, forecast, burn, cash] = await Promise.all([cashByMonth(client, companyId, range), cashForecast(client, companyId, 6, now), burnRate(client, companyId, now), cashBalance(client, companyId)]);
-  return { series, forecast, burn, cash, runwayMonths: burn.netBurn > 0n ? Number((cash * 10n) / burn.netBurn) / 10 : null };
+  const [series, forecast, burn, cash, company] = await Promise.all([cashByMonth(client, companyId, range), cashForecast(client, companyId, 6, now), burnRate(client, companyId, now), cashBalance(client, companyId), companyInfo(client, organizationId, companyId)]);
+  const aiSpend = await aiSpendView(client, organizationId, companyId, company.baseCurrency, range, { netBurn: burn.netBurn, cash }, now);
+  return { series, forecast, burn, cash, runwayMonths: burn.netBurn > 0n ? Number((cash * 10n) / burn.netBurn) / 10 : null, aiSpend };
 }
 
 // ───────────── Reports ─────────────
@@ -447,7 +451,11 @@ export async function profitAndLossReport(ctx: RequestContext, organizationId: s
   const expense = rows.filter((r) => r.type === "EXPENSE");
   const totalIncome = income.reduce((s, r) => s + r.amountMinor, 0n);
   const totalExpense = expense.reduce((s, r) => s + r.amountMinor, 0n);
-  return { income, expense, totalIncome, totalExpense, net: totalIncome - totalExpense };
+  // AI and provider spend from the cost ledger: shown as its own line below the book result (see ai-costs.ts).
+  const [company, ai] = await Promise.all([companyInfo(db(), organizationId, companyId), aiSpendTotals(db(), organizationId, companyId, range)]);
+  const aiBase = aiSpendToBase(ai.micros, company.baseCurrency);
+  const net = totalIncome - totalExpense;
+  return { income, expense, totalIncome, totalExpense, net, aiSpend: { micros: ai.micros, estimatedMicros: ai.estimatedMicros, entries: ai.entries, byCategory: ai.byCategory, amountMinor: aiBase }, netAfterAi: aiBase !== null ? net - aiBase : null };
 }
 
 export async function balanceSheetReport(ctx: RequestContext, organizationId: string, companyId: string, asOf: Date) {
@@ -588,7 +596,7 @@ export async function reportCsv(ctx: RequestContext, organizationId: string, com
   switch (report) {
     case "pnl": {
       const r = await profitAndLossReport(ctx, organizationId, companyId, range);
-      return toCsv([["section", "code", "account", "amount"], ...r.income.map((x) => ["income", x.code, x.name, m(x.amountMinor)]), ["income", "", "Total income", m(r.totalIncome)], ...r.expense.map((x) => ["expense", x.code, x.name, m(x.amountMinor)]), ["expense", "", "Total expenses", m(r.totalExpense)], ["net", "", "Net profit", m(r.net)]]);
+      return toCsv([["section", "code", "account", "amount"], ...r.income.map((x) => ["income", x.code, x.name, m(x.amountMinor)]), ["income", "", "Total income", m(r.totalIncome)], ...r.expense.map((x) => ["expense", x.code, x.name, m(x.amountMinor)]), ["expense", "", "Total expenses", m(r.totalExpense)], ["net", "", "Net profit", m(r.net)], ...(r.aiSpend.entries ? [r.aiSpend.amountMinor !== null ? ["ai_provider_spend", "", "AI & provider spend (cost ledger)", m(r.aiSpend.amountMinor)] : ["ai_provider_spend", "", "AI & provider spend (cost ledger, not converted)", usdFromMicros(r.aiSpend.micros)], ...(r.netAfterAi !== null ? [["net_after_ai", "", "Net profit after AI & provider spend", m(r.netAfterAi)]] : [])] : [])]);
     }
     case "balance": {
       const r = await balanceSheetReport(ctx, organizationId, companyId, addDays(range.to, -1));

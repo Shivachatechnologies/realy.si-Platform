@@ -51,7 +51,7 @@ const days = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86_4
 
 export async function listStructures(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "payroll.read");
-  return db().hrSalaryStructure.findMany({
+  return db().hrSalaryStructure.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: { name: "asc" },
     include: { components: { orderBy: { position: "asc" } }, _count: { select: { compensations: true } } },
@@ -147,7 +147,7 @@ export async function compensationOverview(ctx: RequestContext, organizationId: 
 export async function employeeCompensation(ctx: RequestContext, organizationId: string, companyId: string, employeeId: string) {
   await authorize(ctx, organizationId, companyId, "payroll.read");
   await requireEmployee(db(), organizationId, companyId, employeeId, { includeArchived: true });
-  return db().hrCompensation.findMany({ where: { companyId, employeeId }, orderBy: { effectiveFrom: "desc" }, include: { structure: { select: { id: true, name: true } } } });
+  return db().hrCompensation.findMany({ take: 500, where: { companyId, employeeId }, orderBy: { effectiveFrom: "desc" }, include: { structure: { select: { id: true, name: true } } } });
 }
 
 export async function addCompensation(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof compensationInput>) {
