@@ -286,12 +286,22 @@ export async function reindexEmbeddings(): Promise<number> {
   const swept = await sweepOrphanEmbeddings().catch(() => 0);
   const cap = await vectorStoreAvailable();
   if (!cap.extension || !cap.column) return swept;
-  const companies = await db().integrationConnection.findMany({
-    where: { provider: { in: [...EMBEDDING_PROVIDERS] }, status: { not: "DISCONNECTED" } },
-    distinct: ["companyId"],
-    select: { organizationId: true, companyId: true },
-    take: 500,
-  });
+  // OpenAI / Gemini embeddings run on the platform's keys (platform-managed providers): when one is available, every
+  // company with documents or memories is a candidate. Voyage AI stays a company-connected provider.
+  const { availablePlatformProviders } = await import("@/server/modules/integrations/platform-managed");
+  const platformReady = (await availablePlatformProviders(["openai", "gemini"])).length > 0;
+  const companies = platformReady
+    ? await db().$queryRaw<{ organizationId: string; companyId: string }[]>`
+        SELECT organization_id AS "organizationId", company_id AS "companyId" FROM brain_documents WHERE status = 'READY'
+        UNION
+        SELECT organization_id AS "organizationId", company_id AS "companyId" FROM company_memories
+        LIMIT 500`
+    : await db().integrationConnection.findMany({
+        where: { provider: { in: EMBEDDING_PROVIDERS.filter((p) => p === "voyage") }, status: { not: "DISCONNECTED" } },
+        distinct: ["companyId"],
+        select: { organizationId: true, companyId: true },
+        take: 500,
+      });
   let n = swept;
   for (const c of companies) {
     try {

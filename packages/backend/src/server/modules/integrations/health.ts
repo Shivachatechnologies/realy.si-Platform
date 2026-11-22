@@ -15,6 +15,8 @@ export const FAILURE_THRESHOLD = 5;
 interface HealthTarget {
   id: string;
   provider: string;
+  /** Platform connection (platform-managed provider): no row to update. */
+  platform?: boolean;
 }
 
 /** Whether a call outcome says something about the connection's health (caller mistakes like 400/404/422 do not). */
@@ -66,6 +68,7 @@ export async function recordCallFailure(conn: HealthTarget, error: string): Prom
 
 /** Record the outcome of a provider call by HTTP status (null = network error). */
 export async function recordCallOutcome(conn: HealthTarget, status: number | null, error?: string | null): Promise<void> {
+  if (conn.platform) return;
   const signal = healthSignal(status);
   if (signal === "success") await recordCallSuccess(conn);
   else if (signal === "failure") await recordCallFailure(conn, error ?? (status === null ? "network error" : `provider responded ${status}`));

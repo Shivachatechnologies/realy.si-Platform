@@ -3,6 +3,7 @@ import { db } from "@/server/core/db";
 import { providerFetch } from "../client";
 import type { Connection } from "../connections";
 import { recordUsage } from "../usage";
+import { availablePlatformProviders } from "../platform-managed";
 import { ensureOk, errorText, withFallback, type ProviderAttempt, type ServiceResult } from "./common";
 
 /**
@@ -586,21 +587,21 @@ export interface ContactProviderStatus {
 /** Connection state + 30-day usage of the contact-data providers (for status panels). */
 export async function contactProviderStatus(organizationId: string, companyId: string): Promise<ContactProviderStatus[]> {
   const since = new Date(Date.now() - 30 * 86_400_000);
-  const [conns, usage] = await Promise.all([
-    db().integrationConnection.findMany({ where: { organizationId, companyId, provider: { in: [...CONTACT_PROVIDERS] } }, select: { provider: true, status: true, externalAccount: true, lastError: true, credentialsEnc: true } }),
+  const [available, usage] = await Promise.all([
+    availablePlatformProviders(CONTACT_PROVIDERS),
     db().integrationUsage.groupBy({ by: ["provider", "status"], where: { organizationId, companyId, provider: { in: [...CONTACT_PROVIDERS] }, createdAt: { gte: since } }, _count: { _all: true }, _sum: { estimatedCostMicros: true } }),
   ]);
   return CONTACT_PROVIDERS.map((p) => {
-    const c = conns.find((x) => x.provider === p);
+    // Platform-managed: "connected" means available on the platform's account (no per-company account or error).
     const u = usage.filter((x) => x.provider === p);
     const priced = u.map((x) => x._sum.estimatedCostMicros).filter((v): v is number => typeof v === "number");
-    const connected = !!c && c.status !== "DISCONNECTED" && !!c.credentialsEnc;
+    const connected = available.includes(p);
     return {
       provider: p,
       connected,
-      status: c ? (c.status as ContactProviderStatus["status"]) : "NOT_CONNECTED",
-      account: c?.externalAccount ?? null,
-      lastError: c?.status === "ERROR" ? (c.lastError ?? null) : null,
+      status: connected ? "CONNECTED" : "NOT_CONNECTED",
+      account: null,
+      lastError: null,
       calls30d: u.reduce((a, x) => a + x._count._all, 0),
       failed30d: u.filter((x) => x.status === "FAILED").reduce((a, x) => a + x._count._all, 0),
       costMicros30d: priced.length ? priced.reduce((a, v) => a + v, 0) : null,
@@ -610,7 +611,8 @@ export async function contactProviderStatus(organizationId: string, companyId: s
 
 /** Which contact-data providers are usable right now (connected, credentials present). */
 export async function connectedContactProviders(organizationId: string, companyId: string): Promise<ContactProvider[]> {
-  const rows = await db().integrationConnection.findMany({ where: { organizationId, companyId, provider: { in: [...CONTACT_PROVIDERS] }, status: { not: "DISCONNECTED" }, credentialsEnc: { not: null } }, select: { provider: true } });
-  return CONTACT_PROVIDERS.filter((p) => rows.some((r) => r.provider === p));
+  void organizationId;
+  void companyId;
+  return availablePlatformProviders(CONTACT_PROVIDERS);
 }
 

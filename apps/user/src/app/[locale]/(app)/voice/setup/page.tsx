@@ -48,7 +48,7 @@ export default async function VoiceSetupPage() {
       <p className="max-w-3xl text-sm text-muted-foreground">{t("voice.setup.intro")}</p>
       {!perms.manage ? <Notice tone="info">{t("voice.setup.readOnly")}</Notice> : null}
       <Step n={1} title={t("voice.setup.steps.provider.title")} body={t("voice.setup.steps.provider.body")} done={o.steps.provider} doneLabel={doneLabel}>
-        <ProviderPicker base={base} current={s.provider} states={{ vapi: o.connections.vapi, retell: o.connections.retell }} locale={locale} canManage={perms.manage} canConnect={perms.integrations} />
+        <ProviderPicker base={base} current={s.provider} states={{ vapi: o.connections.vapi, retell: o.connections.retell }} canManage={perms.manage} />
       </Step>
       <Step n={2} title={t("voice.setup.steps.rules.title")} body={t("voice.setup.steps.rules.body")} done={o.steps.rules} doneLabel={doneLabel}>
         <SettingsForm base={base} value={s} members={members.map((m) => ({ id: m.user.id, name: m.user.name }))} completeSetup canManage={perms.manage} />

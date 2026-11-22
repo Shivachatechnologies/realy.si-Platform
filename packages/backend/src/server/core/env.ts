@@ -35,9 +35,16 @@ const schema = z.object({
   STRIPE_SECRET_KEY: optional,
   STRIPE_WEBHOOK_SECRET: optional,
   STRIPE_AUTOMATIC_TAX: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
-  EMAIL_PROVIDER: z.enum(["resend", "postmark"]).optional().or(z.literal("").transform(() => undefined)),
+  EMAIL_PROVIDER: z.enum(["resend", "postmark", "smtp"]).optional().or(z.literal("").transform(() => undefined)),
   EMAIL_API_KEY: optional,
   EMAIL_FROM: optional,
+  /** SMTP (EMAIL_PROVIDER=smtp), e.g. Google Workspace: smtp.gmail.com:587 (STARTTLS) or :465 (TLS), or smtp-relay.gmail.com. */
+  SMTP_HOST: optional,
+  SMTP_PORT: optional,
+  /** true = implicit TLS (port 465); false = STARTTLS (587/25). Unset: derived from the port. */
+  SMTP_SECURE: optional,
+  SMTP_USER: optional,
+  SMTP_PASSWORD: optional,
   OAUTH_GOOGLE_CLIENT_ID: optional,
   OAUTH_GOOGLE_CLIENT_SECRET: optional,
   OAUTH_GITHUB_CLIENT_ID: optional,
@@ -93,10 +100,15 @@ const schema = z.object({
 export type Env = z.infer<typeof schema>;
 
 let cached: Env | undefined;
+let cachedGeneration = -1;
+// Invalidation is shared on globalThis: a server process can hold several copies of this module (one per route
+// bundle), and a platform-keys reload in one of them (core/platform-secrets.ts) must reach every copy's cache.
+const shared = globalThis as unknown as { realyEnvGeneration?: number };
 
 /** Validated server environment. Throws on first access if misconfigured. */
 export function env(): Env {
-  if (cached) return cached;
+  const generation = shared.realyEnvGeneration ?? 0;
+  if (cached && cachedGeneration === generation) return cached;
   const parsed = schema.safeParse(process.env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
@@ -112,10 +124,12 @@ export function env(): Env {
     throw new Error("TRUSTED_PROXY_HOPS must be set explicitly in production (number of proxies that append to X-Forwarded-For)");
   }
   cached = parsed.data;
+  cachedGeneration = generation;
   return cached;
 }
 
-/** Test hook: forget the cached env after mutating process.env. */
+/** Forget the cached env after mutating process.env (every copy of this module, see `shared`). */
 export function resetEnvCache() {
   cached = undefined;
+  shared.realyEnvGeneration = (shared.realyEnvGeneration ?? 0) + 1;
 }

@@ -114,7 +114,7 @@ export default async function StudioProjectPage({ params }: PageProps<"/[locale]
                 <span className="text-muted-foreground">{t("creative.music.licensed", { license: str((music.license as Record<string, unknown> | null)?.attribution) || str((music.license as Record<string, unknown> | null)?.note) || "—" })}</span>
               </div>
             ) : null}
-            {perms.manage && st !== "SKIPPED" ? <MusicPanel base={base} projectId={project.id} locale={locale} canManage={perms.manage} integrationsHref={perms.integrations ? `/${locale}/integrations/jamendo` : null} /> : null}
+            {perms.manage && st !== "SKIPPED" ? <MusicPanel base={base} projectId={project.id} locale={locale} canManage={perms.manage} /> : null}
           </div>
         );
       case "captions":
@@ -132,7 +132,7 @@ export default async function StudioProjectPage({ params }: PageProps<"/[locale]
             {mainRender?.file?.previewUrl ? (
               <video src={mainRender.file.previewUrl} controls playsInline className={cn("w-full rounded-md bg-black", project.aspect === "9:16" ? "max-w-xs" : "max-w-xl")} aria-label={t("creative.assembly.render")} />
             ) : out ? (
-              <Notice tone={out.note === "render_requires_provider" ? "info" : "warning"} action={out.note === "render_requires_provider" && perms.integrations ? <Link href={`/${locale}/integrations/shotstack`} className="text-sm font-medium text-primary hover:underline">{t("creative.common.connect")}</Link> : undefined}>
+              <Notice tone={out.note === "render_requires_provider" ? "info" : "warning"}>
                 {st === "WAITING_PROVIDER" ? t("creative.assembly.rendering") : t(`creative.assembly.notes.${str(out.note) || "render_requires_provider"}`)}
               </Notice>
             ) : null}

@@ -193,7 +193,9 @@ interface LogEntry {
 }
 
 /** Record a provider call in the connection's request log (best effort; never throws, never stores secrets or bodies). */
-export async function logProviderCall(conn: Pick<Connection, "id" | "provider"> & { organizationId?: string; companyId?: string }, entry: LogEntry): Promise<void> {
+export async function logProviderCall(conn: Pick<Connection, "id" | "provider"> & { organizationId?: string; companyId?: string; platform?: boolean }, entry: LogEntry): Promise<void> {
+  // Platform connections (platform-managed providers) have no connection row to attach the log to.
+  if (conn.platform) return;
   try {
     let scope = conn.organizationId && conn.companyId ? { organizationId: conn.organizationId, companyId: conn.companyId } : null;
     if (!scope) scope = await db().integrationConnection.findUnique({ where: { id: conn.id }, select: { organizationId: true, companyId: true } });
@@ -234,13 +236,13 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
     }
     const type = res.bytes ? "binary" : res.text && /^\s*[[{]/.test(res.text) ? "JSON" : res.text ? "text" : "empty";
     await log(res.status, `${res.status} · ${type} · ${res.bytes ? `${res.bytes.byteLength} bytes` : `${res.text.length} chars`}${res.ok ? "" : (errorCode(res.data) ? ` · ${errorCode(res.data)}` : "")}`, null);
-    if (!req.skipHealth) await recordCallOutcome(conn, res.status, errorCode(res.data) ? `${new URL(url).host} responded ${res.status} (${errorCode(res.data)})` : null);
+    if (!req.skipHealth && !conn.platform) await recordCallOutcome(conn, res.status, errorCode(res.data) ? `${new URL(url).host} responded ${res.status} (${errorCode(res.data)})` : null);
     return res;
   } catch (err) {
     const status = err instanceof ProviderError ? err.status : null;
     await log(status, null, err instanceof Error ? err.message : "request failed");
     // The local rate limit (429) and missing credentials are not provider failures.
-    if (!req.skipHealth && status !== 429 && status !== 401) await recordCallOutcome(conn, status, err instanceof Error ? err.message : null);
+    if (!req.skipHealth && !conn.platform && status !== 429 && status !== 401) await recordCallOutcome(conn, status, err instanceof Error ? err.message : null);
     throw err;
   }
 }

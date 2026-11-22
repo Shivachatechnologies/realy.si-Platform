@@ -7,7 +7,7 @@ import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
 import { getConnection, type Connection } from "@/server/modules/integrations/connections";
 import { ProviderError } from "@/server/modules/integrations/providers";
-import { authorize, isUuid, PROVIDER_KEY, toE164, uuid } from "./common";
+import { authorize, companyTwilioNumbers, isUuid, PROVIDER_KEY, toE164, TWILIO_VOICE, uuid } from "./common";
 import { assignInbound, buyProviderNumber, importTwilioToVapi, listNumbers, twilioBuy, twilioOwnedNumbers, twilioSearch, type ProviderNumber } from "./providers";
 import { ensureSettings, providerLabel } from "./service";
 
@@ -78,10 +78,12 @@ export async function syncNumbers(ctx: RequestContext, organizationId: string, c
 export async function twilioOptions(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof twilioSearchInput>) {
   await authorize(ctx, organizationId, companyId, "communication.manage");
   const input = twilioSearchInput.parse(raw);
-  const twilio = await getConnection(organizationId, companyId, "twilio");
+  const twilio = await getConnection(organizationId, companyId, TWILIO_VOICE);
   if (!twilio?.accessToken) return { connected: false as const, owned: [], available: [] };
   try {
-    const [owned, available] = await Promise.all([twilioOwnedNumbers(twilio), input.areaCode || input.country ? twilioSearch(twilio, input.country, input.areaCode ?? null) : Promise.resolve([])]);
+    const mine = await companyTwilioNumbers(organizationId, companyId);
+    // The platform account holds every company's numbers: list only this company's own.
+    const [owned, available] = await Promise.all([twilioOwnedNumbers(twilio).then((all) => all.filter((o) => mine.has(o.number))), input.areaCode || input.country ? twilioSearch(twilio, input.country, input.areaCode ?? null) : Promise.resolve([])]);
     const imported = new Set((await db().voicePhoneNumber.findMany({ where: { organizationId, companyId, releasedAt: null }, select: { number: true } })).map((n) => n.number));
     return { connected: true as const, owned: owned.map((o) => ({ ...o, imported: imported.has(o.number) })), available };
   } catch (err) {
@@ -104,15 +106,16 @@ export async function buyNumber(ctx: RequestContext, organizationId: string, com
       const number = toE164(input.number);
       if (!number) throw invalid("Enter the number in international format", { reason: "voice_number_invalid" });
       if (await db().voicePhoneNumber.findFirst({ where: { organizationId, companyId, number, releasedAt: null }, select: { id: true } })) throw conflict("This number is already connected", { reason: "voice_number_exists" });
-      const twilio = await getConnection(organizationId, companyId, "twilio");
-      if (!twilio?.accessToken) throw new AppError("not_configured", "Twilio is not connected", { reason: "voice_credential_required", provider: "twilio" });
+      const twilio = await getConnection(organizationId, companyId, TWILIO_VOICE);
+      if (!twilio?.accessToken) throw new AppError("not_configured", "Telephony is not available on the platform right now", { reason: "voice_credential_required", provider: TWILIO_VOICE });
       if (input.mode === "twilio_buy") {
         const bought = await twilioBuy(twilio, number, input.label || null);
         twilioSid = bought.sid;
         n = await importTwilioToVapi(conn, twilio, bought.number, input.label || null);
       } else {
+        const mine = await companyTwilioNumbers(organizationId, companyId);
         const owned = await twilioOwnedNumbers(twilio);
-        const match = owned.find((o) => o.number === number);
+        const match = mine.has(number) ? owned.find((o) => o.number === number) : undefined;
         if (!match) throw invalid("This number is not on your Twilio account", { reason: "voice_twilio_not_owned" });
         twilioSid = match.sid;
         n = await importTwilioToVapi(conn, twilio, number, input.label || null);

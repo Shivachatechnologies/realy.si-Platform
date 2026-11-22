@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
 import { FormError } from "@/components/form-error";
 import { Markdown } from "@/components/guide/markdown";
+import { KIT_TONE } from "./kit-tone";
 import { useI18n } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -36,8 +37,6 @@ export type KitItemProps = {
   taskId: string | null;
   taskStatus: string | null;
 };
-
-export const KIT_TONE = { PENDING: "neutral", GENERATING: "info", READY: "success", FAILED: "danger", NEEDS_SETUP: "warning" } as const;
 
 /** Allowed actions per permission (computed on the server; the services check again). */
 export type ActionGates = Record<string, boolean>;

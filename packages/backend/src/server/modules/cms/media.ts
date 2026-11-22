@@ -33,7 +33,9 @@ export async function listMedia(ctx: RequestContext) {
   await requireAnyPlatform(ctx, [MANAGE, "platform.controls.manage"]);
   const [rows, target] = await Promise.all([db().cmsMedia.findMany({ orderBy: { createdAt: "desc" }, take: 200 }), mediaTarget()]);
   const urls = await resolveMediaUrls(rows.map((r) => r.id));
-  const storage = target ? await db().integrationConnection.findFirst({ where: { organizationId: target.organizationId, companyId: target.companyId, provider: "s3", status: "CONNECTED" }, select: { id: true } }).catch(() => null) : null;
+  // S3 is platform-managed (Realy's bucket, Admin → Platform keys).
+  const { availablePlatformProviders } = await import("@/server/modules/integrations/platform-managed");
+  const storage = target ? (await availablePlatformProviders(["s3"])).length > 0 : false;
   return {
     target,
     backend: target ? (storage ? "s3" : "db") : null,

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, BadgeCheck, CheckCircle2, CircleDashed, Clock, KeyRound, Lock, Search, ShieldQuestion, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Ban, BadgeCheck, CheckCircle2, CircleDashed, Clock, KeyRound, Lock, Search, ShieldCheck, ShieldQuestion, Sparkles } from "lucide-react";
 import { Input, Select } from "@/components/ui/input";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useT } from "@/i18n/client";
@@ -13,7 +13,23 @@ import { PROVIDER_CATEGORIES } from "@/server/modules/integrations/catalog";
  * Connection state shown in the marketplace. "verified" is the only state that reads as connected: the credentials were
  * accepted by the provider (connection test, scheduled health check or a successful call) and no error is pending.
  */
-export type MarketplaceState = "verified" | "configured" | "unverified" | "failing" | "ready" | "credentials_required" | "platform_setup" | "awaiting_docs";
+export type MarketplaceState =
+  | "verified"
+  | "configured"
+  | "unverified"
+  | "failing"
+  | "ready"
+  | "credentials_required"
+  | "platform_setup"
+  | "awaiting_docs"
+  /** Platform-managed provider (AI, research, creative, voice, video, telephony) running on the platform's account. */
+  | "platform_available"
+  /** Platform-managed provider the platform has not configured yet. */
+  | "platform_unavailable"
+  /** Customer-connected provider switched off platform-wide by the admin. */
+  | "disabled"
+  /** Acts in the customer's own account but has no OAuth sign-in yet: customers cannot connect it. */
+  | "unavailable";
 
 export interface MarketplaceItem {
   key: string;
@@ -44,6 +60,10 @@ const STATE_STYLE: Record<MarketplaceState, { tone: string; icon: typeof CheckCi
   credentials_required: { tone: "bg-muted text-muted-foreground", icon: KeyRound },
   platform_setup: { tone: "bg-muted text-muted-foreground", icon: CircleDashed },
   awaiting_docs: { tone: "bg-muted text-muted-foreground", icon: Clock },
+  platform_available: { tone: "border-success/30 bg-success/8 text-success", icon: ShieldCheck },
+  platform_unavailable: { tone: "bg-muted text-muted-foreground", icon: Clock },
+  disabled: { tone: "bg-muted text-muted-foreground", icon: Ban },
+  unavailable: { tone: "bg-muted text-muted-foreground", icon: Clock },
 };
 
 /** Fallback for callers that do not pass `state` (older call sites): derive it from status + configuration. */
@@ -60,7 +80,9 @@ const inFilter = (s: MarketplaceState, f: Filter) =>
   f === "all" ||
   (f === "connected" && (s === "verified" || s === "configured")) ||
   (f === "attention" && (s === "failing" || s === "unverified")) ||
-  (f === "available" && (s === "ready" || s === "credentials_required" || s === "platform_setup"));
+  (f === "available" && (s === "ready" || s === "credentials_required" || s === "platform_setup" || s === "platform_available"));
+
+const isPlatformState = (s: MarketplaceState) => s === "platform_available" || s === "platform_unavailable";
 
 /** Searchable, filterable integrations marketplace: readiness filters, state per provider and what each one unlocks. */
 export function Marketplace({ locale, items, initialView }: { locale: string; items: MarketplaceItem[]; initialView: "all" | "connected" }) {
@@ -206,7 +228,7 @@ function ProviderCard({ locale, item: i, state }: { locale: string; item: Market
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium">{i.name}</p>
-            <p className="text-xs text-muted-foreground">{t(`integrations.authTypes.${i.authType}`)}</p>
+            <p className="text-xs text-muted-foreground">{isPlatformState(state) ? t("integrations.platform.managedBy") : i.authType === "oauth2" ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}</p>
           </div>
         </div>
         <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", style.tone)}>
@@ -223,7 +245,7 @@ function ProviderCard({ locale, item: i, state }: { locale: string; item: Market
       ) : null}
       {caps.length ? (
         <div className="grid gap-1.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{state === "verified" || state === "configured" ? t("integrations.marketplace.powering") : t("integrations.marketplace.unlocks")}</p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{state === "verified" || state === "configured" || state === "platform_available" ? t("integrations.marketplace.powering") : t("integrations.marketplace.unlocks")}</p>
           <ul className="flex flex-wrap gap-1">
             {caps.slice(0, 4).map((c) => (
               <li key={c} className="rounded-md bg-[var(--world-soft)] px-1.5 py-0.5 text-xs">

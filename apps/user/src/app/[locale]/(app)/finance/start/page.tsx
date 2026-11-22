@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FinanceFlows, FLOWS, type Flow, type FlowOptions, type Snapshot } from "@/components/finance/guided-flows";
+import { FinanceFlows, type FlowOptions, type Snapshot } from "@/components/finance/guided-flows";
+import { FLOWS, type Flow } from "@/components/finance/guided-flow-keys";
 import { financePage } from "@/components/finance/page-context";
 import { getT } from "@/i18n/server";
 import { aiConfigured } from "@/server/modules/agents/runtime";

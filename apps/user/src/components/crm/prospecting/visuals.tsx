@@ -87,7 +87,7 @@ export function ProviderStatus({ rows, extras, locale, t }: { rows: ProviderRow[
               {r.status === "ERROR" ? <CircleAlert className="size-4 text-danger" aria-hidden /> : r.connected ? <CheckCircle2 className="size-4 text-success" aria-hidden /> : <CircleDashed className="size-4 text-muted-foreground" aria-hidden />}
               <span className="font-medium">{r.name}</span>
               <Link href={`/${locale}/integrations/${r.provider}`} className="ms-auto text-xs font-medium text-primary underline">
-                {r.connected ? t("crm.prospecting.providers.manage") : t("crm.prospecting.providers.connect")}
+                {t("crm.prospecting.providers.details")}
               </Link>
             </div>
             <p className="text-xs text-muted-foreground">

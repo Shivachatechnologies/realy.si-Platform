@@ -2,6 +2,7 @@ import "server-only";
 import { randomToken } from "@/server/core/crypto";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { providerFetch } from "./client";
+import { isPlatformManaged } from "./catalog";
 import { asConfig, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
 import { providerWebhookUrl } from "./provider-webhooks";
 import { revokeAllPlaidItems } from "./services/banking";
@@ -19,7 +20,7 @@ type Conn = Connection & { accessToken: string };
 
 async function connOf(connectionId: string): Promise<{ conn: Conn; row: { id: string; organizationId: string; companyId: string; provider: string } } | null> {
   const row = await db().integrationConnection.findUnique({ where: { id: connectionId }, select: { id: true, organizationId: true, companyId: true, provider: true, status: true } });
-  if (!row || row.status === "DISCONNECTED") return null;
+  if (!row || row.status === "DISCONNECTED" || isPlatformManaged(row.provider)) return null;
   const conn = await getConnection(row.organizationId, row.companyId, row.provider);
   return conn?.accessToken ? { conn: conn as Conn, row } : null;
 }

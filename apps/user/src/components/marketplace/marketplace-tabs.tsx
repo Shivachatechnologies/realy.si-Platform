@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
-/** Browse | Installed | Publish | Review (reviewers only). */
-export function MarketplaceTabs({ reviewer }: { reviewer: boolean }) {
+/** Browse | Installed | Publish. Listing review is a platform-admin function (Control Center → Marketplace). */
+export function MarketplaceTabs() {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const base = `/${locale}/marketplace`;
@@ -14,7 +14,7 @@ export function MarketplaceTabs({ reviewer }: { reviewer: boolean }) {
     {
       key: "browse",
       href: base,
-      active: pathname === base || (!["/installed", "/publish", "/review"].some((p) => pathname.startsWith(base + p)) && pathname.startsWith(base)),
+      active: pathname === base || (!["/installed", "/publish"].some((p) => pathname.startsWith(base + p)) && pathname.startsWith(base)),
     },
     {
       key: "installed",
@@ -26,15 +26,6 @@ export function MarketplaceTabs({ reviewer }: { reviewer: boolean }) {
       href: `${base}/publish`,
       active: pathname.startsWith(`${base}/publish`),
     },
-    ...(reviewer
-      ? [
-          {
-            key: "review",
-            href: `${base}/review`,
-            active: pathname.startsWith(`${base}/review`),
-          },
-        ]
-      : []),
   ];
   return (
     <nav className="flex gap-1 overflow-x-auto border-b text-sm" aria-label={t("marketplace.title")}>

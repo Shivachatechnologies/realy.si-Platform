@@ -6,6 +6,8 @@ import { decryptSecret, encryptSecret } from "@/server/core/crypto";
 import { logger } from "@/server/core/logger";
 import { providerInfo } from "./catalog";
 import { ProviderError, refreshAccessToken, type ConnectionCredentials } from "./providers";
+import { isPlatformManaged } from "./catalog";
+import { platformConnection } from "./platform-managed";
 
 /**
  * Cross-module contract for reading provider connections (docs/module-development.md "External providers").
@@ -25,6 +27,8 @@ export interface Connection {
   /** Tenant of the connection (set by getConnection; used for the request log). */
   organizationId?: string;
   companyId?: string;
+  /** Built from platform keys (platform-managed provider): no database row, so no request log / health writes. */
+  platform?: boolean;
 }
 
 const REFRESH_WINDOW_MS = 2 * 60_000;
@@ -58,6 +62,9 @@ export async function getConnection(organizationId: string, companyId: string, p
   if (!isUuid(organizationId) || !isUuid(companyId)) return null;
   // A provider switched off platform-wide (Admin → Platform Controls) behaves as not connected.
   if (!(await isIntegrationEnabled(providerKey))) return null;
+  // Platform-managed providers (AI, research, creative, voice, video, telephony) always use the platform's keys; the
+  // company's own stored connection for them, if any, is kept but never used.
+  if (isPlatformManaged(providerKey)) return platformConnection(organizationId, companyId, providerKey);
   const row = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider: providerKey } });
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return null;
   const info = providerInfo(providerKey);

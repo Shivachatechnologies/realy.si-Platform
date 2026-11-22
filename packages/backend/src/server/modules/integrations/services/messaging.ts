@@ -24,8 +24,9 @@ async function twilioSend(organizationId: string, companyId: string, channel: "s
   const from = channel === "sms" ? str(conn.config.fromNumber) : str(conn.config.whatsappFrom);
   if (!sid || !/^AC[a-f0-9]{32}$/.test(sid)) return { ok: false, code: "not_connected", error: "Twilio account SID missing", providerId: "twilio", attempts: [] };
   if (!from) return { ok: false, code: "not_connected", error: channel === "sms" ? "Set a Twilio sender number (or messaging service) on the connection" : "Set a Twilio WhatsApp sender on the connection", providerId: "twilio", attempts: [] };
-  // Delivery status (sent / delivered / failed) comes back signed to the connection's provider-webhook URL.
-  const form: Record<string, string> = { To: channel === "whatsapp" ? `whatsapp:${to}` : to, Body: body, StatusCallback: providerWebhookUrl("twilio", conn.id) };
+  // Delivery status (sent / delivered / failed) comes back signed to the connection's provider-webhook URL (company
+  // connections only: Realy's platform account has no per-company callback URL).
+  const form: Record<string, string> = { To: channel === "whatsapp" ? `whatsapp:${to}` : to, Body: body, ...(conn.platform ? {} : { StatusCallback: providerWebhookUrl("twilio", conn.id) }) };
   if (from.startsWith("MG")) form.MessagingServiceSid = from;
   else form.From = channel === "whatsapp" ? `whatsapp:${from}` : from;
   const operation = channel === "sms" ? "sms.send" : "whatsapp.send";

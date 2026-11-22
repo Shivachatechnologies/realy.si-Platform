@@ -245,12 +245,7 @@ export function JourneyWizard(p: JourneyProps) {
               {p.drafts.length ? (
                 <>
                   {!p.imageProvider ? (
-                    <Notice tone="info">
-                      {t("marketing.studio.journey.noImageProvider")}{" "}
-                      <Link className="underline" href={`/${p.locale}/integrations/openai`}>
-                        {t("marketing.common.openIntegrations")}
-                      </Link>
-                    </Notice>
+                    <Notice tone="info">{t("marketing.studio.journey.noImageProvider")}</Notice>
                   ) : null}
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {p.drafts.map((d, i) => {
