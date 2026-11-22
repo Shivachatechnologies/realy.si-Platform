@@ -117,7 +117,7 @@ keys under Integrations; they are verified with the provider before the connecti
 
 **Command:** `node_modules/.bin/tsx src/worker/index.ts` (in the image's `worker` target, working directory `/app/packages/backend`) · `pnpm worker` (locally).
 **Image:** `docker build --target worker .` (or the default image with the command override).
-**Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker + Redis), `deploy/worker/fly.toml`
+**Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker only; uses the web app's Redis via `REDIS_URL`), `deploy/worker/fly.toml`
 (Fly.io), `deploy/worker/worker.env.example` (variable names), `docker-compose.yml` profile `app` (local full stack).
 
 **Running server modules outside Next.** The worker loads the same `src/server/**` modules as the web apps, many of
