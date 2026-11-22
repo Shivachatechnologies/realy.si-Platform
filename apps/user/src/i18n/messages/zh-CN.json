@@ -3566,6 +3566,10 @@
     "studio_video_producer": {
       "name": "视频制作人（工作室）",
       "summary": "从脚本、分镜到配音、字幕和成片剪辑，全程推进视频项目。"
+    },
+    "voice_assistant": {
+      "name": "Realy 语音助手",
+      "summary": "在 Realy 中根据实时公司数据回答你的问题和闲聊。"
     }
   },
   "projects": {
@@ -23518,7 +23522,7 @@
       "CRITICAL": "严重"
     },
     "reply": {
-      "delegated": "好的。我已把这项工作交给 {team}，有结果时会告诉你。",
+      "delegated": "我已和{team}开始处理，有结果会告诉你。",
       "blocked": "我无法开始：{reason}",
       "planned": "我已制定计划，正在分配。",
       "failed": "我无法启动该命令，请重试。",
@@ -23530,7 +23534,22 @@
       "confirmUnclear": "我没有听清明确的决定。请说“批准”或“拒绝”。",
       "doneNoAnswer": "已完成。结果在 AI Command 中。",
       "runFailed": "没有成功：{reason}",
-      "runCancelled": "该命令已取消。"
+      "runCancelled": "该命令已取消。",
+      "queuedWorkerDown": "我已为{team}排好队，但后台处理现在没有运行，要等它恢复后才会开始，我无法保证很快有结果。",
+      "queuedNoWorkerSetup": "我已为{team}排好队，但这个工作区还没有设置后台处理，设置好之前不会开始。",
+      "status": {
+        "hello": "你好，我在。",
+        "intro": "我现在看到的是：",
+        "tasks": "{running, plural, other {# 个 AI 任务正在运行}}，{queued} 个在排队。",
+        "failed": "过去一天有 {count, plural, other {# 个任务失败}}。",
+        "approvals": "{count, plural, =0 {没有待审批事项。} other {# 个审批在等待。}}",
+        "myTasks": "{count, plural, =0 {你今天没有到期的任务。} other {你有 # 个任务今天到期或已逾期。}}",
+        "meetings": "{count, plural, =0 {今天没有会议。} other {今天有 # 个会议。}}",
+        "workerDown": "后台处理没有运行，所以排队的任务在等待。",
+        "nothingVisible": "以你的权限，我没有可以读出的公司数据。",
+        "noAi": "AI 回答现在不可用，以下只是实时数据。",
+        "aiFailed": "我刚才无法连接 AI，以下只是实时数据。"
+      }
     },
     "notice": {
       "notHeard": "我没有听到声音。说话时请按住按钮。",

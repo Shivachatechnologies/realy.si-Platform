@@ -5248,6 +5248,10 @@
     "studio_video_producer": {
       "name": "Videoproduzent (Studio)",
       "summary": "Führt Videoprojekte von Skript und Storyboard bis zu Voiceover, Untertiteln und finalem Schnitt."
+    },
+    "voice_assistant": {
+      "name": "Realy-Sprachassistent",
+      "summary": "Beantwortet deine Fragen und Small Talk in Realy mit Live-Unternehmensdaten."
     }
   },
   "projects": {

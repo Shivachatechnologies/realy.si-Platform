@@ -36,11 +36,17 @@ export interface FollowedRun {
 }
 
 interface UtterResult {
-  commandSessionId: string;
+  commandSessionId: string | null;
+  /** How the server routed the utterance: answered directly (conversation / company_question) or dispatched as work. */
+  intent: "conversation" | "company_question" | "work_request";
   run: { id: string; status: string; profiles: string[]; steps: FollowedRun["steps"] } | null;
-  reply: { key: string; params: Record<string, string | number> };
+  /** key "answer" carries its own text (and the language it is in); other keys are jarvis.reply.* templates. */
+  reply: { key: string; params: Record<string, string | number>; text?: string; language?: string };
   open: boolean;
 }
+
+/** Turns sent with each utterance as short multi-turn context (kept in memory only). */
+const CONTEXT_TURNS = 6;
 
 /** localStorage key mirroring the wake-word preference (convenience only; the server setting is the source of truth). */
 export const WAKE_KEY = "realy.voice.wake";
@@ -134,6 +140,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     wake: null as SpeechRecognitionLike | null,
     wakeWanted: false,
     wakeErrors: 0,
+    history: [] as { role: "user" | "assistant"; text: string }[],
   });
   const latest = useRef({ boot, settings, muted, pendingApproval, t, path });
   useEffect(() => {
@@ -149,6 +156,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     return isVoiceLanguage(l) ? l : isVoiceLanguage(locale) ? locale : "en-US";
   };
   const addTurn = useCallback((turn: Omit<VoiceTurnView, "id">) => {
+    r.current.history = [...r.current.history, { role: turn.role, text: turn.text.slice(0, 600) }].slice(-CONTEXT_TURNS);
     setTurns((prev) => [...prev, { ...turn, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }].slice(-60));
   }, []);
   const flashAlert = useCallback(() => setFlash((f) => ({ ...f, alertUntil: Date.now() + 2_600 })), []);
@@ -212,12 +220,12 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     return s.ttsProvider === "auto" ? b.providers.tts.length > 0 : (b.providers.tts as string[]).includes(s.ttsProvider);
   };
 
-  const speakBrowser = useCallback((text: string) => {
+  const speakBrowser = useCallback((text: string, language?: string) => {
     if (!synthesisSupported()) return;
     const s = latest.current.settings;
     const persona = personalityOf(s?.personality);
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang();
+    u.lang = language && isVoiceLanguage(language) ? language : lang();
     const v = pickSystemVoice(u.lang, persona.browserGender);
     if (v) u.voice = v;
     u.rate = persona.rate;
@@ -232,14 +240,14 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
   }, []);
 
   const speak = useCallback(
-    async (text: string) => {
+    async (text: string, language?: string) => {
       const s = latest.current.settings;
       if (!text || latest.current.muted || (s && !s.speakReplies)) return;
       audioEngine.stop();
       if (canProviderTts() && base) {
         try {
           const sessionId = await ensureSession();
-          const out = await api<{ provider: string; audio: string | null; format: "mp3" | "pcm16" | null; sampleRate: number | null }>(`${base}/voiceos/speak`, { body: { sessionId, text, language: lang() } });
+          const out = await api<{ provider: string; audio: string | null; format: "mp3" | "pcm16" | null; sampleRate: number | null }>(`${base}/voiceos/speak`, { body: { sessionId, text, language: language && isVoiceLanguage(language) ? language : lang() } });
           if (out.audio && out.format) {
             await audioEngine.play(out.audio, out.format, out.sampleRate, () => undefined);
             return;
@@ -249,7 +257,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
           setNotice({ key: e instanceof ApiError && typeof e.details?.reason === "string" && e.details.reason.startsWith("plan_") ? "ttsLimit" : "ttsFallback", tone: "warning" });
         }
       }
-      speakBrowser(text);
+      speakBrowser(text, language);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [base, ensureSession, speakBrowser],
@@ -267,10 +275,27 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
     return tt("jarvis.reply.reasonUnknown");
   }, []);
 
+  const statusText = useCallback((key: string, params: Record<string, string | number>) => {
+    const tt = latest.current.t;
+    const n = (k: string) => (typeof params[k] === "number" ? (params[k] as number) : -1);
+    const parts: string[] = [tt(key === "statusHello" ? "jarvis.reply.status.hello" : "jarvis.reply.status.intro")];
+    if (n("running") >= 0) parts.push(tt("jarvis.reply.status.tasks", { running: n("running"), queued: Math.max(0, n("queued")) }));
+    if (n("failed") > 0) parts.push(tt("jarvis.reply.status.failed", { count: n("failed") }));
+    if (n("approvals") >= 0) parts.push(tt("jarvis.reply.status.approvals", { count: n("approvals") }));
+    if (n("myTasksDue") >= 0) parts.push(tt("jarvis.reply.status.myTasks", { count: n("myTasksDue") }));
+    if (n("meetingsToday") >= 0) parts.push(tt("jarvis.reply.status.meetings", { count: n("meetingsToday") }));
+    if (params.worker && params.worker !== "ok" && n("queued") > 0) parts.push(tt("jarvis.reply.status.workerDown"));
+    if (parts.length === 1) parts.push(tt("jarvis.reply.status.nothingVisible"));
+    parts.push(tt(params.reason === "ai_failed" ? "jarvis.reply.status.aiFailed" : "jarvis.reply.status.noAi"));
+    return parts.join(" ");
+  }, []);
+
   const replyText = useCallback(
-    (key: string, params: Record<string, string | number>) => {
+    (key: string, params: Record<string, string | number>, text?: string) => {
       const tt = latest.current.t;
-      if (key === "delegated") {
+      if (key === "answer" && text) return text;
+      if (key === "status" || key === "statusHello") return statusText(key, params);
+      if (key === "delegated" || key === "queuedWorkerDown" || key === "queuedNoWorkerSetup") {
         const names = String(params.profiles ?? "")
           .split(",")
           .filter(Boolean)
@@ -284,14 +309,14 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         } catch {
           /* older browsers: comma list */
         }
-        return tt("jarvis.reply.delegated", { team, count: names.length });
+        return tt(`jarvis.reply.${key}`, { team, count: names.length });
       }
       if (key === "blocked") return tt("jarvis.reply.blocked", { reason: reasonText(String(params.reason ?? "")) });
       if (key === "planned") return tt("jarvis.reply.planned");
       return tt("jarvis.reply.failed");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [reasonText],
+    [reasonText, statusText],
   );
 
   // ───── Following the run ─────
@@ -368,6 +393,7 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
         setPhase("idle");
         return;
       }
+      const context = r.current.history.slice(-CONTEXT_TURNS);
       addTurn({ role: "user", text, provider });
       setError(null);
       setNotice(null);
@@ -375,25 +401,31 @@ export function useVoiceOS({ base, enabled = true, spaceToTalk = false, path }: 
       try {
         setPhase("thinking");
         const sessionId = await ensureSession();
-        if (approval && mode !== "text") {
-          const out = await api<{ outcome: "approve" | "reject" | "unclear"; status?: string }>(`${base}/voiceos/sessions/${sessionId}/confirm`, { body: { approvalId: approval.id, via: "voice", text } });
-          setPhase("idle");
-          const line = out.outcome === "unclear" ? tt("jarvis.reply.confirmUnclear") : out.outcome === "approve" ? tt("jarvis.reply.approved") : tt("jarvis.reply.rejected");
-          addTurn({ role: "assistant", text: line, tone: out.outcome === "unclear" ? "warning" : "success" });
-          if (out.outcome !== "unclear") {
-            setPendingApproval(null);
-            if (out.outcome === "approve") flashSuccess();
-            void poll();
+        // Typed and spoken replies behave the same: a short, explicit approve / reject decides the pending approval.
+        if (approval) {
+          const out = await api<{ outcome: "approve" | "reject" | "unclear"; status?: string }>(`${base}/voiceos/sessions/${sessionId}/confirm`, { body: { approvalId: approval.id, via: mode === "text" ? "text" : "voice", text } });
+          // Anything longer than a short reply is a new request, not an unclear decision.
+          const longer = text.split(/\s+/).filter(Boolean).length > 3;
+          if (out.outcome !== "unclear" || !longer) {
+            setPhase("idle");
+            const line = out.outcome === "unclear" ? tt("jarvis.reply.confirmUnclear") : out.outcome === "approve" ? tt("jarvis.reply.approved") : tt("jarvis.reply.rejected");
+            addTurn({ role: "assistant", text: line, tone: out.outcome === "unclear" ? "warning" : "success" });
+            if (out.outcome !== "unclear") {
+              setPendingApproval(null);
+              if (out.outcome === "approve") flashSuccess();
+              void poll();
+            }
+            void speak(line);
+            return;
           }
-          void speak(line);
-          return;
         }
-        const out = await api<UtterResult>(`${base}/voiceos/sessions/${sessionId}/utterances`, { body: { text, inputMode: mode === "text" ? "text" : mode === "wake" ? "wake" : "voice", provider, path: latest.current.path } });
+        const out = await api<UtterResult>(`${base}/voiceos/sessions/${sessionId}/utterances`, { body: { text, inputMode: mode === "text" ? "text" : mode === "wake" ? "wake" : "voice", provider, path: latest.current.path, context } });
         setPhase("idle");
-        const line = replyText(out.reply.key, out.reply.params);
-        addTurn({ role: "assistant", text: line, tone: out.reply.key === "delegated" ? "info" : "warning" });
-        if (out.reply.key !== "delegated") flashAlert();
-        void speak(line);
+        const line = replyText(out.reply.key, out.reply.params, out.reply.text);
+        const fine = out.reply.key === "answer" || out.reply.key === "delegated";
+        addTurn({ role: "assistant", text: line, tone: fine ? "info" : "warning" });
+        if (!fine) flashAlert();
+        void speak(line, out.reply.key === "answer" ? out.reply.language : undefined);
         if (out.run) {
           r.current.runId = out.run.id;
           setRun({ id: out.run.id, status: out.run.status, open: out.open, running: 0, answer: null, spoken: null, nextAction: null, failedReason: null, canDecide: false, approvals: [], profiles: out.run.profiles, steps: out.run.steps });

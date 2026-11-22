@@ -12,10 +12,14 @@ import { commandSuggestions, liveCommandRuns, runCommand } from "@/server/module
 import { authorizeVoice, isUuid, readSettings, type VoiceScope } from "./access";
 import { CONFIRM_WORDS, isVoiceLanguage, personalityOf, type VoiceLanguage } from "./catalog";
 import { connectedSpeechProviders } from "./speech";
+import { answerDirect, assistantRefusal, classifyUtterance, gatherBriefing, liveWorkerState, type Briefing, type TurnContext } from "./converse";
+import { dispatchReplyKey, heuristicIntent, replyLanguage, type VoiceIntent, type WorkerState } from "./intent";
 
 /**
- * Voice OS conversations. Every utterance is a real AI Command (guide/command.ts runCommand) in the session's command
- * session; acknowledgements and answers are derived from the stored run, its steps, agent tasks and approvals.
+ * Voice OS conversations. Each utterance is routed first (voiceos/converse.ts): conversation and questions about the
+ * company are answered directly in the request, grounded in live data; requests for work become a real AI Command
+ * (guide/command.ts runCommand) in the session's command session, and acknowledgements and answers are derived from
+ * the stored run, its steps, agent tasks and approvals — honest about a missing background worker.
  * Transcripts are written (VoiceosTurn) only while the person has history enabled.
  */
 
@@ -169,7 +173,7 @@ export async function clearVoiceHistory(ctx: RequestContext, organizationId: str
   });
 }
 
-// ───────────── Utterances → AI Command ─────────────
+// ───────────── Utterances → direct answer or AI Command ─────────────
 
 export const utterInput = z.object({
   text: z.string().trim().min(2).max(2000),
@@ -178,23 +182,96 @@ export const utterInput = z.object({
   provider: z.string().max(20).optional(),
   /** Browser path the person was on (page context for the command). */
   path: z.string().max(400).optional(),
+  /** The last turns of this conversation as the console shows them (short multi-turn context; never stored). */
+  context: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().trim().min(1).max(600) }))
+    .max(12)
+    .optional(),
 });
 
 const OPEN = new Set(["PLANNED", "RUNNING", "REVIEWING"]);
+const CONTEXT_TURNS = 6;
+
+/** Facts for the spoken status line the client builds when no AI answer is possible (-1 = not visible). */
+function statusParams(b: Briefing | null, reason: string): Record<string, string | number> {
+  const n = (v: number | null | undefined) => (typeof v === "number" ? v : -1);
+  return {
+    reason,
+    running: n(b?.facts.running),
+    queued: n(b?.facts.queued),
+    failed: n(b?.facts.failed24h),
+    approvals: n(b?.facts.approvals),
+    myTasksDue: n(b?.facts.myTasksDue),
+    meetingsToday: n(b?.facts.meetingsToday),
+    worker: b?.facts.worker ?? "missing",
+  };
+}
+
+export interface UtterReply {
+  /** jarvis.reply.* key the client voices; "answer" carries its own text. */
+  key: string;
+  params: Record<string, string | number>;
+  /** Direct answer text (key "answer"). */
+  text?: string;
+  /** Language the text is in (speech voice), when it differs from the session's. */
+  language?: string;
+}
 
 /**
- * Route one utterance into AI Command: a real run is planned and its steps delegated to AI employees. Returns the
- * run's real state and a reply key the client voices (jarvis.reply.*) — "delegated" only when a step is actually
- * handed to an AI employee, "blocked" with the stored reason otherwise.
+ * Route one utterance. Conversation and company questions are answered in the request: one grounded model call over
+ * live data the viewer may read (a factual status line when AI is unavailable). Requests for work become a real AI
+ * Command run delegated to AI employees, and the reply says honestly when the background worker is not running, so
+ * the work is only queued.
  */
 export async function utter(ctx: RequestContext, organizationId: string, companyId: string, sessionId: string, raw: z.input<typeof utterInput>) {
+  const started = Date.now();
   const input = utterInput.parse(raw);
   const scope = { organizationId, companyId };
-  const { userId } = await authorizeVoice(ctx, organizationId, companyId);
+  const { chain, userId } = await authorizeVoice(ctx, organizationId, companyId);
   const session = await ownedSession(scope, userId, sessionId);
   if (session.status !== "ACTIVE") throw new AppError("conflict", "This voice session has ended", { reason: "voiceos_session_ended" });
   const settings = await readSettings(scope, userId);
+  const context: TurnContext[] = (input.context ?? []).slice(-CONTEXT_TURNS);
+  const language = replyLanguage(input.text, session.language);
 
+  const refusal = await assistantRefusal(organizationId);
+  // Gather the live facts while the classifier runs, unless the words clearly ask for work.
+  let briefing: Promise<Briefing | null> | null = null;
+  const brief = () => (briefing ??= gatherBriefing(ctx, scope, chain, userId, session.language).catch(() => null));
+  if (heuristicIntent(input.text) !== "work_request") void brief();
+  const routed = await classifyUtterance(scope, session.id, userId, input.text, context, refusal);
+
+  const touch = (extra: Record<string, unknown> = {}) =>
+    db().voiceosSession.update({
+      where: { id: session.id },
+      data: { utterances: { increment: 1 }, lastActivityAt: new Date(), ...(settings.historyEnabled && !session.title ? { title: input.text.slice(0, 120) } : {}), ...extra },
+    });
+
+  if (routed.intent !== "work_request") {
+    const facts = await brief();
+    let reply: UtterReply;
+    if (refusal || !facts) {
+      reply = { key: routed.intent === "conversation" ? "statusHello" : "status", params: statusParams(facts, refusal ?? "data_unavailable") };
+    } else {
+      try {
+        const viewer = await db().user.findUnique({ where: { id: userId }, select: { name: true } });
+        const answer = await answerDirect(scope, session.id, userId, { text: input.text, context, intent: routed.intent, briefing: facts, language, viewerName: viewer?.name ?? null });
+        reply = { key: "answer", params: {}, text: answer.text, language: answer.language.code };
+      } catch {
+        // The failure is recorded for Admin; the person still gets the real numbers, never an invented answer.
+        reply = { key: routed.intent === "conversation" ? "statusHello" : "status", params: statusParams(facts, "ai_failed") };
+      }
+    }
+    await touch();
+    if (settings.historyEnabled) {
+      await writeTurn(scope, session.id, { role: "USER", kind: "UTTERANCE", text: input.text, inputMode: input.inputMode, provider: input.provider ?? null, params: { intent: routed.intent, via: routed.via } });
+      await writeTurn(scope, session.id, reply.key === "answer" ? { role: "ASSISTANT", kind: "ANSWER", text: reply.text } : { role: "ASSISTANT", kind: "NOTICE", replyKey: reply.key, params: reply.params });
+    }
+    return { commandSessionId: session.commandSessionId, intent: routed.intent as VoiceIntent, routedBy: routed.via, run: null, reply, open: false, worker: facts?.facts.worker ?? null, latencyMs: Date.now() - started };
+  }
+
+  // Work: a real AI Command run. Check the background worker first, so the reply never promises what cannot happen.
+  const worker: WorkerState = await liveWorkerState();
   const view = await runCommand(ctx, organizationId, companyId, {
     text: input.text,
     sessionId: session.commandSessionId ?? undefined,
@@ -202,37 +279,31 @@ export async function utter(ctx: RequestContext, organizationId: string, company
     path: input.path,
   });
   const run = view.runs[view.runs.length - 1];
-  await db().voiceosSession.update({
-    where: { id: session.id },
-    data: {
-      commandSessionId: view.id,
-      utterances: { increment: 1 },
-      lastActivityAt: new Date(),
-      ...(settings.historyEnabled && !session.title ? { title: input.text.slice(0, 120) } : {}),
-    },
-  });
+  await touch({ commandSessionId: view.id });
   const steps = run?.steps ?? [];
   const delegated = steps.filter((s) => s.status === "DELEGATED");
   const blocked = steps.filter((s) => s.status === "BLOCKED");
   const profiles = [...new Set(steps.filter((s) => s.kind !== "REVIEW").map((s) => s.profile))];
-  const reply = !run
-    ? { key: "failed", params: {} }
-    : delegated.length
-      ? { key: "delegated", params: { profiles: profiles.join(","), count: profiles.length } }
-      : blocked.length
-        ? { key: "blocked", params: { reason: blocked[0]!.errorReason ?? "unknown" } }
-        : { key: "planned", params: { count: steps.length } };
+  const outcome = !run ? "failed" : delegated.length ? "delegated" : blocked.length ? "blocked" : "planned";
+  const reply: UtterReply = {
+    key: dispatchReplyKey(outcome, worker),
+    params: outcome === "blocked" ? { reason: blocked[0]!.errorReason ?? "unknown" } : outcome === "failed" ? {} : { profiles: profiles.join(","), count: profiles.length || steps.length, worker },
+  };
   if (settings.historyEnabled) {
-    await writeTurn(scope, session.id, { role: "USER", kind: "UTTERANCE", text: input.text, inputMode: input.inputMode, provider: input.provider ?? null, commandRunId: run?.id ?? null });
+    await writeTurn(scope, session.id, { role: "USER", kind: "UTTERANCE", text: input.text, inputMode: input.inputMode, provider: input.provider ?? null, commandRunId: run?.id ?? null, params: { intent: routed.intent, via: routed.via } });
     await writeTurn(scope, session.id, { role: "ASSISTANT", kind: "ACK", replyKey: reply.key, params: reply.params, commandRunId: run?.id ?? null });
   }
   return {
     commandSessionId: view.id,
+    intent: routed.intent as VoiceIntent,
+    routedBy: routed.via,
     run: run
       ? { id: run.id, status: run.status, stages: run.stages, intents: run.understanding.intents.map((i) => i.key), profiles, steps: steps.map((s) => ({ id: s.id, kind: s.kind, profile: s.profile, status: s.status, errorReason: s.errorReason })) }
       : null,
     reply,
     open: run ? OPEN.has(run.status) : false,
+    worker,
+    latencyMs: Date.now() - started,
   };
 }
 
@@ -327,10 +398,11 @@ export async function followRun(ctx: RequestContext, organizationId: string, com
 
 export const confirmInput = z.object({
   approvalId: z.string().uuid(),
-  via: z.enum(["voice", "click"]),
+  /** "text": a typed reply in the console, read exactly like a spoken one. */
+  via: z.enum(["voice", "text", "click"]),
   /** Clicked decision. */
   decision: z.enum(["approve", "reject"]).optional(),
-  /** Spoken reply (via "voice"): must be a short, explicit yes/approve or no/reject phrase. */
+  /** Spoken or typed reply (via "voice" / "text"): must be a short, explicit yes/approve or no/reject phrase. */
   text: z.string().trim().max(200).optional(),
 });
 
@@ -380,14 +452,14 @@ export async function confirmApproval(ctx: RequestContext, organizationId: strin
   const taskIds = await sessionTaskIds(scope, session.commandSessionId);
   const approval = taskIds.length ? await db().approval.findFirst({ where: { ...scope, id: input.approvalId, taskId: { in: taskIds } }, select: { id: true, tool: true } }) : null;
   if (!approval) throw notFound("Approval");
-  const note = input.via === "voice" ? `Confirmed by voice in Realy: "${(input.text ?? "").slice(0, 120)}"` : "Decided in Realy";
+  const note = input.via === "voice" ? `Confirmed by voice in Realy: "${(input.text ?? "").slice(0, 120)}"` : input.via === "text" ? `Confirmed in Realy by typed reply: "${(input.text ?? "").slice(0, 120)}"` : "Decided in Realy";
   const result = await decideApproval(ctx, organizationId, companyId, approval.id, { decision, note });
   await transaction(async (tx) => {
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "voiceos.approval.decided", resourceType: "approval", resourceId: approval.id, newValue: { via: input.via, decision, tool: approval.tool, sessionId: session.id } });
   });
   const settings = await readSettings(scope, userId);
   if (settings.historyEnabled) {
-    if (input.via === "voice" && input.text) await writeTurn(scope, session.id, { role: "USER", kind: "UTTERANCE", text: input.text, inputMode: "voice", approvalId: approval.id });
+    if (input.via !== "click" && input.text) await writeTurn(scope, session.id, { role: "USER", kind: "UTTERANCE", text: input.text, inputMode: input.via, approvalId: approval.id });
     await writeTurn(scope, session.id, { role: "ASSISTANT", kind: "DECISION", replyKey: decision === "approve" ? "approved" : "rejected", params: { status: result.status }, approvalId: approval.id });
   }
   return { outcome: decision, approvalId: approval.id, status: result.status as string };
