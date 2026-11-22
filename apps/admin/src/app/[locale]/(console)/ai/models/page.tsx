@@ -9,7 +9,12 @@ import { BudgetEditor, ModelToggle, OrgModelOverride, ProfileModelPicker, Provid
 import { getLocale, getT } from "@/i18n/server";
 import { formatNumber } from "@/i18n/format";
 import { adminCapabilities } from "@/server/modules/admin/access";
-import { aiModelsOverview, aiRoutingOverview } from "@/server/modules/admin/ai-models";
+import { aiModelsOverview, aiRoutingOverview, DIRECTIVE_TIERS, readTaskTiers } from "@/server/modules/admin/ai-models";
+import { routingObservability } from "@/server/modules/admin/ai-requests";
+import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
+import { RouteSimulator } from "@/components/admin/ai/route-simulator";
+import { TaskTierEditor } from "@/components/admin/ai/ai-actions";
+import { Route } from "lucide-react";
 import { TierRoutingToggle, TierRowEditor } from "@/components/admin/ai-tier-editor";
 import { getControls } from "@/server/core/platform-controls";
 import { aiRouting } from "@/server/modules/admin/ai-ops";
@@ -21,9 +26,10 @@ export default async function AdminAiModelsPage() {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
-  const r = await guard(Promise.all([aiModelsOverview(viewer.ctx), adminCapabilities(viewer.ctx), getControls(), aiRouting(viewer.ctx), aiRoutingOverview(viewer.ctx)]), t("errors.forbidden"));
+  const r = await guard(Promise.all([aiModelsOverview(viewer.ctx), adminCapabilities(viewer.ctx), getControls(), aiRouting(viewer.ctx), aiRoutingOverview(viewer.ctx), readTaskTiers(), routingObservability(viewer.ctx, { window: "24h" })]), t("errors.forbidden"));
   if (!r.ok) return r.node;
-  const [o, caps, controls, routing, tiers] = r.value;
+  const [o, caps, controls, routing, tiers, taskTiers, observed] = r.value;
+  const taskTypes = [...AGENT_PROFILES.map((p) => p.key), "voiceos.answer", "admin.copilot"];
   const canManage = caps["platform.ai.manage"];
   const enabledModels = o.models.filter((m) => !m.disabled && m.allowed).map((m) => m.id);
   const n = (v: number) => formatNumber(v, locale);
@@ -54,7 +60,11 @@ export default async function AdminAiModelsPage() {
           <TBody>
             {o.providers.map((p) => (
               <Tr key={p.key}>
-                <Td className="font-medium">{p.label}</Td>
+                <Td className="font-medium">
+                  <Link href={`/${locale}/ai/providers/${p.key}`} className="hover:underline">
+                    {p.label}
+                  </Link>
+                </Td>
                 <Td>{p.configured ? <Badge tone="success">{t("admin.aiModels.configured")}</Badge> : <Badge tone="warning">{t("admin.aiModels.notConfigured")}</Badge>}</Td>
                 <Td className="tabular-nums">{n(p.models)}</Td>
                 <Td className="text-xs tabular-nums">
@@ -96,7 +106,7 @@ export default async function AdminAiModelsPage() {
                   </Td>
                   <Td className="text-[11px] text-muted-foreground tabular-nums">{m.price ? `$${m.price.input} / $${m.price.output}` : "—"}</Td>
                   <Td>{canManage ? <CreditEditor model={m.id} current={routing.credits[m.id] ?? null} /> : <span className="font-mono text-[11px]">{routing.credits[m.id] ? `${routing.credits[m.id]!.input} / ${routing.credits[m.id]!.output}` : "—"}</span>}</Td>
-                  <Td className="text-xs tabular-nums">{m.usage ? `${usd(m.usage.costMicros, locale)} · ${n(m.usage.tasks)}` : "—"}</Td>
+                  <Td className="text-xs tabular-nums">{m.usage ? `${usd(m.usage.costMicros, locale)} · ${n(m.usage.calls)}` : "—"}</Td>
                   <Td>
                     {m.id === o.platformDefault ? <Badge tone="accent">{t("admin.aiModels.default")}</Badge> : null}{" "}
                     {m.disabled ? <Badge tone="danger">{t("admin.aiModels.disabled")}</Badge> : !m.allowed ? <Badge tone="warning">{t("admin.aiModels.notAllowed")}</Badge> : <Badge tone="success">{t("admin.aiModels.enabled")}</Badge>}
@@ -181,6 +191,8 @@ export default async function AdminAiModelsPage() {
                 <Th>{t("admin.aiModels.tier.simple")}</Th>
                 <Th>{t("admin.aiModels.tier.standard")}</Th>
                 <Th>{t("admin.aiModels.tier.complex")}</Th>
+                <Th>{t("admin.aiModels.tier.coding")}</Th>
+                <Th>{t("admin.aiModels.tier.creative")}</Th>
                 <Th className="text-end">{t("admin.common.actions")}</Th>
               </Tr>
             </THead>
@@ -198,12 +210,84 @@ export default async function AdminAiModelsPage() {
                         <div className="text-[10px] text-muted-foreground">{row[tier] ? t("admin.aiModels.tierSet") : t("admin.aiModels.tierInherited")}</div>
                       </Td>
                     ))}
+                    {(["coding", "creative"] as const).map((tier) => (
+                      <Td key={tier}>
+                        <div className="font-mono text-[11px]">{row[tier] ?? (cls !== "*" ? tiers.table.byClass["*"]?.[tier] : null) ?? "—"}</div>
+                        <div className="text-[10px] text-muted-foreground">{row[tier] ? t("admin.aiModels.tierSet") : t("admin.aiModels.tierWorkFallback")}</div>
+                      </Td>
+                    ))}
                     <Td className="text-end">{canManage ? <TierRowEditor profileClass={cls} label={label} current={row} models={enabledModels} /> : null}</Td>
                   </Tr>
                 );
               })}
             </TBody>
           </Table>
+        </Card>
+        <Card>
+          <CardHeader icon={<Layers />} title={t("admin.aiModels.directiveTiers")} description={t("admin.aiModels.directiveTiersHint")} />
+          <CardBody className="flex flex-wrap gap-2 text-xs">
+            {Object.entries(DIRECTIVE_TIERS).map(([k, v]) => (
+              <span key={k} className="rounded border px-2 py-1">
+                <span className="font-medium">{t(`admin.aiModels.directive.${k}`)}</span> → <span className="font-mono">{v}</span>
+              </span>
+            ))}
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader icon={<Layers />} title={t("admin.aiModels.taskTiers")} description={t("admin.aiModels.taskTiersHint")} actions={canManage ? <TaskTierEditor taskTypes={taskTypes} /> : null} />
+          {Object.keys(taskTiers).length === 0 ? (
+            <Empty>{t("admin.aiModels.noTaskTiers")}</Empty>
+          ) : (
+            <Table>
+              <TBody>
+                {Object.entries(taskTiers).map(([k, v]) => (
+                  <Tr key={k}>
+                    <Td className="font-mono text-xs">{k}</Td>
+                    <Td>
+                      <Badge tone="accent">{t(`admin.aiModels.tier.${v}`)}</Badge>
+                    </Td>
+                    <Td className="text-end">{canManage ? <TaskTierEditor taskTypes={taskTypes} current={{ taskType: k, tier: v }} /> : null}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          )}
+        </Card>
+        <Card>
+          <CardHeader icon={<Route />} title={t("admin.aiModels.simulator")} description={t("admin.aiModels.simulatorHint")} />
+          <RouteSimulator profiles={AGENT_PROFILES.map((p) => p.key)} />
+        </Card>
+        <Card>
+          <CardHeader icon={<Route />} title={t("admin.aiModels.observed")} description={t("admin.aiModels.observedHint")} actions={<Link className="text-xs text-primary hover:underline" href={`/${locale}/ai/requests`}>{t("admin.aiRequests.nav")}</Link>} />
+          {observed.length === 0 ? (
+            <Empty>{t("admin.aiRequests.noRequests")}</Empty>
+          ) : (
+            <Table>
+              <THead>
+                <Tr>
+                  <Th>{t("admin.aiModels.tierLabel")}</Th>
+                  <Th>{t("admin.aiRequests.requestedModel")}</Th>
+                  <Th>{t("admin.aiRequests.servedModel")}</Th>
+                  <Th>{t("admin.ai.columns.status")}</Th>
+                  <Th>{t("admin.aiRequests.requests")}</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {observed.slice(0, 25).map((x, i) => (
+                  <Tr key={i}>
+                    <Td className="text-xs">{x.tier}</Td>
+                    <Td className="font-mono text-[11px]">{x.requested}</Td>
+                    <Td className="font-mono text-[11px]">
+                      {x.served ?? "—"}
+                      {x.rerouted ? <Badge className="ms-1" tone="warning">{t("admin.aiModels.rerouted")}</Badge> : null}
+                    </Td>
+                    <Td className="text-xs">{t(`admin.aiRequests.status.${x.status}`)}</Td>
+                    <Td className="text-xs tabular-nums">{n(x.count)}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          )}
         </Card>
         <Card>
           <CardHeader icon={<Server />} title={t("admin.aiModels.health")} description={t("admin.aiModels.healthHint")} />

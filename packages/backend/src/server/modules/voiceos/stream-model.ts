@@ -8,6 +8,7 @@ import { breakerAllows, breakerFailure, breakerSuccess, fallbackChain, modelForT
 import { estimateTokens } from "@/server/modules/agents/context";
 import { aiConfigured, quickModelCall, TaskError, type QuickCallResult } from "@/server/modules/agents/runtime";
 import { checkSpend, recordCost } from "@/server/modules/costs/service";
+import { logAiRequest } from "@/server/modules/admin/ai-request-log";
 import { tokenCostMicros } from "@/server/modules/costs/prices";
 
 /**
@@ -80,8 +81,6 @@ export async function streamModelCall(input: StreamCallInput): Promise<QuickCall
     input.onText(r.text);
     return r;
   }
-  const budget = await platformBudgetRefusal();
-  if (budget) throw new TaskError(budget, "The platform's monthly AI budget is used up; retry later");
   const { organizationId, companyId } = input;
   let model: string;
   try {
@@ -90,17 +89,32 @@ export async function streamModelCall(input: StreamCallInput): Promise<QuickCall
     model = await resolvePlatformModel({ organizationId, profile: input.profileKey });
   }
   const department = input.department ?? null;
+  // AI request log (admin-c): metadata of each attempt, never prompt or reply content.
+  const trace = { organizationId, companyId, traceId: `${input.sourceType}:${input.sourceId}`, operation: input.operation, profile: input.profileKey, department, tier: input.tier, streamed: true };
+  const budget = await platformBudgetRefusal({ organizationId, department, model });
+  if (budget) {
+    logAiRequest({ ...trace, provider: providerOf(model), requestedModel: model, status: "BUDGET_BLOCKED", errorCode: budget });
+    throw new TaskError(budget, "The platform's AI budget is used up; retry later");
+  }
   const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(input.system + JSON.stringify(input.messages)), outputTokens: input.maxTokens });
   const spend = await checkSpend({ organizationId, companyId, department }, estimate);
-  if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}, so nothing was spent. Raise the budget in Costs or retry next period.`);
+  if (!spend.ok) {
+    logAiRequest({ ...trace, provider: providerOf(model), requestedModel: model, status: "BUDGET_BLOCKED", errorCode: "cost_budget_reached" });
+    throw new TaskError("cost_budget_reached", `${spend.message}, so nothing was spent. Raise the budget in Costs or retry next period.`);
+  }
 
   const run = testStream ?? anthropicStream;
   const chain = [model, ...(await fallbackChain(organizationId, input.profileKey, model, input.tier).catch(() => [] as string[]))];
   let response: BetaMessage | null = null;
   let lastErr: unknown = null;
+  const requested = model;
+  let attempt = 0;
+  let latencyMs = 0;
   for (const m of chain.slice(0, MAX_ATTEMPTS)) {
     if (!breakerAllows(m)) continue;
     let emitted = false;
+    attempt++;
+    const started = Date.now();
     try {
       response = await run({ model: m, max_tokens: input.maxTokens, system: input.system, messages: input.messages }, (t) => {
         emitted = true;
@@ -108,18 +122,23 @@ export async function streamModelCall(input: StreamCallInput): Promise<QuickCall
       }, input.timeoutMs ?? 20_000);
       breakerSuccess(m);
       model = m;
+      latencyMs = Date.now() - started;
       break;
     } catch (err) {
       lastErr = err;
       const mapped = mapError(err);
       breakerFailure(m);
       // Part of an answer was already handed out: another model would start a different one.
-      if (emitted || !mapped.fallbackEligible) throw mapped;
+      const final = emitted || !mapped.fallbackEligible;
+      const last = m === chain.slice(0, MAX_ATTEMPTS).at(-1);
+      logAiRequest({ ...trace, provider: providerOf(m), requestedModel: requested, servedModel: m, status: final || last ? "ERROR" : "FALLBACK", errorCode: mapped.code, errorMessage: mapped.message, latencyMs: Date.now() - started, attempt });
+      if (final) throw mapped;
     }
   }
   if (!response) {
-    if (lastErr === null) throw new TaskError("provider_unavailable", "Every AI model is temporarily paused after repeated provider errors; retry shortly", true);
-    throw mapError(lastErr);
+    const final = lastErr === null ? new TaskError("provider_unavailable", "Every AI model is temporarily paused after repeated provider errors; retry shortly", true) : mapError(lastErr);
+    if (lastErr === null) logAiRequest({ ...trace, provider: providerOf(requested), requestedModel: requested, status: "ERROR", errorCode: final.code, errorMessage: final.message });
+    throw final;
   }
   const u = response.usage;
   const read = u.cache_read_input_tokens ?? 0;
@@ -146,6 +165,7 @@ export async function streamModelCall(input: StreamCallInput): Promise<QuickCall
     meta: { tier: input.tier, profile: input.profileKey, streamed: true },
   });
   const inputTokens = u.input_tokens + read + write;
+  logAiRequest({ ...trace, provider: providerOf(servedBy), requestedModel: requested, servedModel: servedBy, status: response.stop_reason === "refusal" ? "REFUSED" : "SUCCESS", latencyMs, inputTokens, outputTokens: u.output_tokens, cachedTokens: read, costMicros, attempt });
   if (response.stop_reason === "refusal") throw Object.assign(new TaskError("refused", "The AI declined this request"), { usage: { model: servedBy, inputTokens, outputTokens: u.output_tokens } });
   const text = response.content
     .filter((b) => b.type === "text")

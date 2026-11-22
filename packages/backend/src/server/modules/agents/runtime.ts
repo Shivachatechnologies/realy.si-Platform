@@ -10,7 +10,8 @@ import type {
   BetaToolUnion,
   MessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
-import { platformBudgetRefusal, resolvePlatformModel } from "@/server/modules/admin/ai-models";
+import { platformBudgetRefusal, resolvePlatformModel, resolveTierModel, taskTierOverride, WORK_TIERS, type OverrideTier } from "@/server/modules/admin/ai-models";
+import { logAiRequest, type AiRequestLogEntry } from "@/server/modules/admin/ai-request-log";
 import { db } from "@/server/core/db";
 import { effectiveModel } from "@/server/modules/workforce/models";
 import type { RequestContext } from "@/server/core/context";
@@ -21,7 +22,7 @@ import { memoryForPrompt, memorySection } from "@/server/modules/brain/memory";
 import { checkSpend, recordCost } from "@/server/modules/costs/service";
 import { tokenCostMicros } from "@/server/modules/costs/prices";
 import type { AgentProfile } from "./profiles";
-import { breakerAllows, breakerFailure, breakerSuccess, classifyRun, fallbackChain, modelForTier, syncBreakers, type ComplexityTier, type RouteHints } from "./router";
+import { breakerAllows, breakerFailure, breakerSuccess, classifyRun, fallbackChain, modelForTier, syncBreakers, type Classification, type ComplexityTier, type RouteHints } from "./router";
 import { cachedRun, CONTEXT_BUDGET, estimateTokens, readOnlyTools, requestKey, selectRelevantContext, storeContextSummary, storeRun } from "./context";
 import { configuredProviders, MODEL_PROVIDERS, providerFor, providerOf, ProviderHttpError, ProviderNotConfigured, type AiProviderKey } from "./providers";
 
@@ -161,7 +162,7 @@ export class ParkRun extends Error {
  * The model for a run: explicit, else the AI employee's pinned model (only allowed ids), else the model router — the
  * run's complexity tier mapped through the admin routing table (organization overrides stay pinned).
  */
-async function modelFor(input: RunInput, tier: ComplexityTier): Promise<{ model: string; pinned: boolean }> {
+async function modelFor(input: RunInput, tier: ComplexityTier, work: OverrideTier | null = null): Promise<{ model: string; pinned: boolean }> {
   if (input.model) return { model: effectiveModel(input.model), pinned: true };
   if (input.taskId) {
     try {
@@ -172,6 +173,9 @@ async function modelFor(input: RunInput, tier: ComplexityTier): Promise<{ model:
     }
   }
   try {
+    // Routing v2: a work-type tier (coding / creative) from the task-type override map, when it has a model.
+    const byWork = work ? await resolveTierModel({ organizationId: input.organizationId, profile: input.profile.key, tier: work }) : null;
+    if (byWork) return { model: byWork, pinned: false };
     const routed = await modelForTier(input.organizationId, input.profile.key, tier);
     if (routed) return { model: routed, pinned: false };
   } catch {
@@ -291,18 +295,25 @@ export async function runTask(input: RunInput): Promise<RunResult> {
   };
 
   // Model router: complexity tier → model (admin routing table), unless the model is pinned.
-  const route = classifyRun({ profile, title: input.title, instructions: input.instructions, toolCount: tools.length, hints: input.hints });
-  // Platform-wide monthly AI spend cap (Admin → AI): refuse new work once reached.
-  const budgetRefusal = await platformBudgetRefusal();
-  if (budgetRefusal) throw new TaskError(budgetRefusal, "The platform's monthly AI budget is used up; retry later");
-  let { model } = await modelFor(input, route.tier);
+  const classified = classifyRun({ profile, title: input.title, instructions: input.instructions, toolCount: tools.length, hints: input.hints });
+  const { route, work } = applyOverride(classified, input.hints?.tier ? null : await taskTierOverride([profile.key]).catch(() => null));
+  let { model } = await modelFor(input, route.tier, work);
   if (resume?.model) model = resume.model;
+  // AI request log (admin-c): metadata of every model call attempt, never prompt or reply content.
+  const trace: TraceBase = { organizationId, companyId, userId: actorUserId(ctx), taskId: input.taskId, aiEmployeeId, operation: "agent.turn", profile: profile.key, department, tier: work ?? route.tier };
+  // Platform AI budgets (Admin → AI → Budgets, plus the legacy monthly USD cap): refuse new work once a hard limit is reached.
+  const budgetRefusal = await platformBudgetRefusal({ organizationId, department, aiEmployeeId, userId: trace.userId ?? null, model });
+  if (budgetRefusal) {
+    logBlocked(trace, model, budgetRefusal, `${runId}:start`);
+    throw new TaskError(budgetRefusal, "The platform's AI budget is used up; retry later");
+  }
 
   // Deduplication: an identical read-only request answered within the TTL is reused (no model call, nothing spent).
   const dedupKey = !resume && readOnlyTools(offered) ? requestKey({ companyId, profile: profile.key, system: stableSystem + companyMemory, tools: [...offered].sort(), title: input.title, instructions: input.instructions, tier: route.tier }) : null;
   if (dedupKey) {
     const hit = await cachedRun(companyId, dedupKey);
     if (hit && hit.taskId !== input.taskId) {
+      logAiRequest({ ...trace, traceId: `${input.taskId ?? "adhoc"}:${runId}:cache`, provider: providerOf(hit.model), requestedModel: model, servedModel: hit.model, status: "CACHED", latencyMs: 0 });
       return { output: hit.output, citations: hit.citations as Citation[], toolCalls: hit.toolCalls as ToolCallRecord[], model: hit.model, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, costMicros: 0, tier: route.tier, reusedFromTaskId: hit.taskId };
     }
   }
@@ -353,11 +364,12 @@ export async function runTask(input: RunInput): Promise<RunResult> {
   };
 
   /** One model call with circuit breaker, automatic (cross-provider) fallback on provider errors and a retry limit. */
-  async function callWithFallback(): Promise<BetaMessage> {
+  async function callWithFallback(traceId: string): Promise<{ res: BetaMessage; requested: string; latencyMs: number; attempt: number }> {
+    const requested = model;
     const chain = [model, ...(await fallbackChain(organizationId, profile.key, model, route.tier).catch(() => [] as string[]))];
-    const { res, model: served } = await callChain(chain, call, MAX_FALLBACK_ATTEMPTS + 1);
+    const { res, model: served, latencyMs, attempt } = await callChain(chain, call, MAX_FALLBACK_ATTEMPTS + 1, { ...trace, traceId });
     if (served !== model) model = served;
-    return res;
+    return { res, requested, latencyMs, attempt };
   }
 
   try {
@@ -370,9 +382,20 @@ export async function runTask(input: RunInput): Promise<RunResult> {
       // Cost budgets (task / AI employee / department / company): checked before every model call — hard stop.
       const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(stableSystem + companyMemory + JSON.stringify(messages)), outputTokens: ESTIMATED_OUTPUT_TOKENS });
       const spend = await checkSpend(spendScope, estimate);
-      if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}, so the task stopped before spending more. Raise the budget in Costs or retry next period.`);
+      const traceId = `${input.taskId ?? "adhoc"}:${runId}:${turn}`;
+      if (!spend.ok) {
+        logBlocked({ ...trace, traceId }, model, "cost_budget_reached", traceId);
+        throw new TaskError("cost_budget_reached", `${spend.message}, so the task stopped before spending more. Raise the budget in Costs or retry next period.`);
+      }
+      if (turn > (resume?.turn ?? 0)) {
+        const mid = await platformBudgetRefusal({ organizationId, department, aiEmployeeId, userId: trace.userId ?? null, model });
+        if (mid) {
+          logBlocked({ ...trace, traceId }, model, mid, traceId);
+          throw new TaskError(mid, "The platform's AI budget was reached during this task; retry later");
+        }
+      }
 
-      const response = await callWithFallback();
+      const { res: response, requested, latencyMs, attempt } = await callWithFallback(traceId);
       const u = response.usage;
       const read = u.cache_read_input_tokens ?? 0;
       const write = u.cache_creation_input_tokens ?? 0;
@@ -402,8 +425,9 @@ export async function runTask(input: RunInput): Promise<RunResult> {
         units: u.input_tokens + read + write + u.output_tokens,
         unit: "token",
         costMicros: turnCost,
-        meta: { tier: route.tier, profile: profile.key, routed: servedBy !== model ? "fallback" : "primary" },
+        meta: { tier: route.tier, profile: profile.key, routed: servedBy !== requested ? "fallback" : "primary" },
       });
+      logAiRequest({ ...trace, traceId, provider: providerOf(servedBy), requestedModel: requested, servedModel: servedBy, status: response.stop_reason === "refusal" ? "REFUSED" : "SUCCESS", latencyMs, inputTokens: u.input_tokens + read + write, outputTokens: u.output_tokens, cachedTokens: read, costMicros: turnCost, attempt });
 
       // Server-side compaction summarized earlier turns: keep the summary as a stored context summary.
       for (const block of response.content) {
@@ -518,11 +542,19 @@ function providerErrorBase(err: unknown): TaskError {
  * still serve); model / availability errors trip the breaker and fall back; request errors stop. At most `maxCalls`
  * real provider calls.
  */
-async function callChain(chain: string[], call: (m: string) => Promise<BetaMessage>, maxCalls: number): Promise<{ res: BetaMessage; model: string }> {
+async function callChain(chain: string[], call: (m: string) => Promise<BetaMessage>, maxCalls: number, trace?: TraceBase): Promise<{ res: BetaMessage; model: string; latencyMs: number; attempt: number }> {
   await syncBreakers();
   const dead = new Set<AiProviderKey>();
   let lastErr: unknown = null;
   let calls = 0;
+  // Failed attempts, logged once the outcome is known: FALLBACK when another model was tried after it, ERROR for the last.
+  const failed: { model: string; code: string; message: string; latencyMs: number }[] = [];
+  const logFailures = (final: TaskError | null) => {
+    if (!trace) return;
+    const requestedModel = chain[0] ?? "unknown";
+    failed.forEach((f, i) => logAiRequest({ ...trace, provider: providerOf(f.model), requestedModel, servedModel: f.model, status: final && i === failed.length - 1 ? "ERROR" : "FALLBACK", errorCode: f.code, errorMessage: f.message, latencyMs: f.latencyMs, attempt: i + 1 }));
+    if (final && !failed.length) logAiRequest({ ...trace, provider: providerOf(requestedModel), requestedModel, status: "ERROR", errorCode: final.code, errorMessage: final.message, latencyMs: null, attempt: 1 });
+  };
   for (const m of chain) {
     if (calls >= maxCalls) break;
     const p = providerOf(m);
@@ -534,23 +566,47 @@ async function callChain(chain: string[], call: (m: string) => Promise<BetaMessa
     }
     if (!breakerAllows(m)) continue;
     calls++;
+    const started = Date.now();
     try {
       const res = await call(m);
       breakerSuccess(m);
-      return { res, model: m };
+      logFailures(null);
+      return { res, model: m, latencyMs: Date.now() - started, attempt: calls };
     } catch (err) {
       lastErr = err;
       const mapped = providerError(err);
+      failed.push({ model: m, code: mapped.code, message: mapped.message, latencyMs: Date.now() - started });
       if (mapped.code === "provider_auth" || mapped.code === "ai_not_configured") {
         dead.add(p);
         continue;
       }
-      if (!mapped.fallbackEligible) throw mapped;
+      if (!mapped.fallbackEligible) {
+        logFailures(mapped);
+        throw mapped;
+      }
       breakerFailure(m);
     }
   }
-  if (lastErr === null) throw new TaskError("provider_unavailable", "Every AI model for this task is temporarily paused after repeated provider errors; retry shortly", true);
-  throw providerError(lastErr);
+  const final = lastErr === null ? new TaskError("provider_unavailable", "Every AI model for this task is temporarily paused after repeated provider errors; retry shortly", true) : providerError(lastErr);
+  logFailures(final);
+  throw final;
+}
+
+/** A task-type override: a complexity tier replaces the classified one; a work tier (coding / creative) picks the model. */
+function applyOverride(route: Classification, override: OverrideTier | null): { route: Classification; work: "coding" | "creative" | null } {
+  if (!override) return { route, work: null };
+  if ((WORK_TIERS as readonly string[]).includes(override)) return { route: { ...route, reasons: [...route.reasons, `override:${override}`] }, work: override as "coding" | "creative" };
+  return { route: { tier: override as ComplexityTier, score: route.score, reasons: [...route.reasons, `override:${override}`] }, work: null };
+}
+
+/** Request-log fields shared by every attempt of one logical call. */
+type TraceBase = Omit<AiRequestLogEntry, "status" | "provider" | "requestedModel" | "servedModel" | "attempt" | "latencyMs" | "errorCode" | "errorMessage">;
+
+const actorUserId = (ctx: RequestContext | null | undefined) => (ctx?.actor.type === "USER" ? ctx.actor.id : null);
+
+/** A call refused before any provider was contacted (platform or tenant budget). */
+function logBlocked(trace: TraceBase, model: string, code: string, traceId: string) {
+  logAiRequest({ ...trace, traceId: trace.traceId ?? traceId, provider: providerOf(model), requestedModel: model, status: "BUDGET_BLOCKED", errorCode: code, latencyMs: null });
 }
 
 // ───────────── Quick calls (synchronous, no tools) ─────────────
@@ -574,6 +630,10 @@ export interface QuickCallInput {
   department?: string | null;
   /** Per-attempt timeout (default 20 s); a request-path call must not hang. */
   timeoutMs?: number;
+  /** AI request log (admin-c): the person the call runs for and the AI employee / task it belongs to, if any. */
+  userId?: string | null;
+  aiEmployeeId?: string | null;
+  taskId?: string | null;
 }
 
 export interface QuickCallResult {
@@ -590,20 +650,48 @@ export interface QuickCallResult {
  * after it. Throws TaskError (codes as runTask) on refusal or provider failure; never fabricates a reply.
  */
 export async function quickModelCall(input: QuickCallInput): Promise<QuickCallResult> {
+  return shortCall(input, { organizationId: input.organizationId, companyId: input.companyId });
+}
+
+export type PlatformCallInput = Omit<QuickCallInput, "organizationId" | "companyId" | "department" | "aiEmployeeId" | "taskId"> & { userId: string | null };
+
+/**
+ * A short model call made by the platform itself (e.g. the Admin Copilot), not by a tenant: platform AI keys, the same
+ * router tier, fallback chain, circuit breaker and platform AI budgets, but no tenant cost budget or tenant cost
+ * ledger row (there is no company to bill). Its spend is recorded in the AI request log with no organization, where
+ * the platform budgets count it.
+ */
+export async function platformModelCall(input: PlatformCallInput): Promise<QuickCallResult> {
+  return shortCall({ ...input, organizationId: "", companyId: "", department: "platform" }, null);
+}
+
+async function shortCall(raw: QuickCallInput, tenant: { organizationId: string; companyId: string } | null): Promise<QuickCallResult> {
   if (!aiConfigured()) throw new TaskError("ai_not_configured", "AI is not configured on this platform");
-  const budget = await platformBudgetRefusal();
-  if (budget) throw new TaskError(budget, "The platform's monthly AI budget is used up; retry later");
-  const { organizationId, companyId } = input;
+  const organizationId = tenant?.organizationId ?? null;
+  const department = raw.department ?? null;
+  // Routing v2: the per-task-type override map (keyed by the operation, then the profile key).
+  const { route, work } = applyOverride({ tier: raw.tier, score: 0, reasons: [] }, await taskTierOverride([raw.operation, raw.profileKey]).catch(() => null));
+  const input = { ...raw, tier: route.tier };
   let model: string;
   try {
-    model = (await modelForTier(organizationId, input.profileKey, input.tier)) ?? (await resolvePlatformModel({ organizationId, profile: input.profileKey }));
+    model = (work ? await resolveTierModel({ organizationId, profile: input.profileKey, tier: work }) : null) ?? (await modelForTier(organizationId, input.profileKey, input.tier)) ?? (await resolvePlatformModel({ organizationId, profile: input.profileKey }));
   } catch {
     model = await resolvePlatformModel({ organizationId, profile: input.profileKey });
   }
-  const department = input.department ?? null;
-  const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(input.system + JSON.stringify(input.messages)), outputTokens: input.maxTokens });
-  const spend = await checkSpend({ organizationId, companyId, department }, estimate);
-  if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}, so nothing was spent. Raise the budget in Costs or retry next period.`);
+  const trace: TraceBase = { organizationId, companyId: tenant?.companyId ?? null, userId: input.userId ?? null, taskId: input.taskId ?? null, aiEmployeeId: input.aiEmployeeId ?? null, traceId: `${input.sourceType}:${input.sourceId}`, operation: input.operation, profile: input.profileKey, department, tier: input.tier };
+  const budget = await platformBudgetRefusal({ organizationId, department, aiEmployeeId: input.aiEmployeeId ?? null, userId: input.userId ?? null, model });
+  if (budget) {
+    logBlocked(trace, model, budget, trace.traceId!);
+    throw new TaskError(budget, "The platform's AI budget is used up; retry later");
+  }
+  if (tenant) {
+    const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(input.system + JSON.stringify(input.messages)), outputTokens: input.maxTokens });
+    const spend = await checkSpend({ ...tenant, department }, estimate);
+    if (!spend.ok) {
+      logBlocked(trace, model, "cost_budget_reached", trace.traceId!);
+      throw new TaskError("cost_budget_reached", `${spend.message}, so nothing was spent. Raise the budget in Costs or retry next period.`);
+    }
+  }
 
   const call = (m: string) => {
     const cap = capabilities(m);
@@ -620,8 +708,9 @@ export async function quickModelCall(input: QuickCallInput): Promise<QuickCallRe
       { timeoutMs: input.timeoutMs ?? 20_000, maxRetries: 1 },
     );
   };
+  const requested = model;
   const chain = [model, ...(await fallbackChain(organizationId, input.profileKey, model, input.tier).catch(() => [] as string[]))];
-  const served = await callChain(chain, call, MAX_FALLBACK_ATTEMPTS);
+  const served = await callChain(chain, call, MAX_FALLBACK_ATTEMPTS, trace);
   const response = served.res;
   model = served.model;
   const u = response.usage;
@@ -629,26 +718,29 @@ export async function quickModelCall(input: QuickCallInput): Promise<QuickCallRe
   const write = u.cache_creation_input_tokens ?? 0;
   const servedBy = response.model || model;
   const costMicros = await tokenCostMicros(servedBy, { inputTokens: u.input_tokens, outputTokens: u.output_tokens, cacheReadTokens: read, cacheWriteTokens: write });
-  await recordCost({
-    organizationId,
-    companyId,
-    category: "AI_TOKENS",
-    provider: providerOf(servedBy),
-    model: servedBy,
-    operation: input.operation,
-    department,
-    sourceType: input.sourceType,
-    sourceId: input.sourceId,
-    inputTokens: u.input_tokens,
-    outputTokens: u.output_tokens,
-    cachedTokens: read,
-    cacheWriteTokens: write,
-    units: u.input_tokens + read + write + u.output_tokens,
-    unit: "token",
-    costMicros,
-    meta: { tier: input.tier, profile: input.profileKey },
-  });
+  if (tenant) {
+    await recordCost({
+      organizationId: tenant.organizationId,
+      companyId: tenant.companyId,
+      category: "AI_TOKENS",
+      provider: providerOf(servedBy),
+      model: servedBy,
+      operation: input.operation,
+      department,
+      sourceType: input.sourceType,
+      sourceId: input.sourceId,
+      inputTokens: u.input_tokens,
+      outputTokens: u.output_tokens,
+      cachedTokens: read,
+      cacheWriteTokens: write,
+      units: u.input_tokens + read + write + u.output_tokens,
+      unit: "token",
+      costMicros,
+      meta: { tier: input.tier, profile: input.profileKey },
+    });
+  }
   const inputTokens = u.input_tokens + read + write;
+  logAiRequest({ ...trace, provider: providerOf(servedBy), requestedModel: requested, servedModel: servedBy, status: response.stop_reason === "refusal" ? "REFUSED" : "SUCCESS", latencyMs: served.latencyMs, inputTokens, outputTokens: u.output_tokens, cachedTokens: read, costMicros, attempt: served.attempt });
   if (response.stop_reason === "refusal") throw Object.assign(new TaskError("refused", "The AI declined this request"), { usage: { model: servedBy, inputTokens, outputTokens: u.output_tokens } });
   const text = response.content
     .filter((b) => b.type === "text")

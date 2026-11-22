@@ -2233,7 +2233,8 @@
       "COMPLETED": "Abgeschlossen",
       "FAILED": "Fehlgeschlagen",
       "CANCELLED": "Abgebrochen",
-      "WAITING_APPROVAL": "Wartet auf Freigabe"
+      "WAITING_APPROVAL": "Wartet auf Freigabe",
+      "PAUSED": "Pausiert"
     },
     "back": "Alle Aufgaben",
     "deliverable": "Ergebnis",

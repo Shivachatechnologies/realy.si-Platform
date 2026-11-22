@@ -58,7 +58,7 @@ export function classifyRun(input: { profile: Pick<AgentProfile, "key" | "depart
 }
 
 /** The model for a tier (admin table → built-in defaults → platform default). */
-export async function modelForTier(organizationId: string, profileKey: string, tier: RoutingTier): Promise<string | null> {
+export async function modelForTier(organizationId: string | null, profileKey: string, tier: RoutingTier): Promise<string | null> {
   return resolveTierModel({ organizationId, profile: profileKey, tier });
 }
 
@@ -72,7 +72,7 @@ const NEXT_TIER: Record<ComplexityTier, ComplexityTier | null> = { simple: "stan
  * same tier on every other provider whose platform key is set (cross-provider fallback). Distinct, disallowed models
  * skipped, max 5.
  */
-export async function fallbackChain(organizationId: string, profileKey: string, model: string, tier: ComplexityTier): Promise<string[]> {
+export async function fallbackChain(organizationId: string | null, profileKey: string, model: string, tier: ComplexityTier): Promise<string[]> {
   const out: string[] = [];
   // Lazy import: admin/ops → workforce/service → agents/service → runtime → router would otherwise be a load-time cycle.
   const { fallbackModels } = await import("@/server/modules/admin/ai-ops");
@@ -198,3 +198,14 @@ export const resetBreakers = async () => {
   lastSync = 0;
   await shared()?.del(sharedKey()).catch(() => undefined);
 };
+
+/** Close the breakers of one provider (Admin → AI → Providers, audited by the caller). Returns how many were reset. */
+export async function resetProviderBreakers(provider: string): Promise<number> {
+  await syncBreakers(Date.now(), true);
+  const keys = [...breakers.keys()].filter((k) => k.startsWith(`${provider}:`));
+  for (const k of keys) {
+    breakers.delete(k);
+    publish(k, null);
+  }
+  return keys.length;
+}

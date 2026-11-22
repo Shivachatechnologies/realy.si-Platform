@@ -2233,7 +2233,8 @@
       "COMPLETED": "مكتملة",
       "FAILED": "فشلت",
       "CANCELLED": "ملغاة",
-      "WAITING_APPROVAL": "بانتظار الموافقة"
+      "WAITING_APPROVAL": "بانتظار الموافقة",
+      "PAUSED": "متوقفة مؤقتًا"
     },
     "back": "كل المهام",
     "deliverable": "المخرَج",

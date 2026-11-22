@@ -92,7 +92,7 @@ export function hrefWith(path: string, current: QueryParams, changes: QueryChang
 
 export const MEETING_TONE = { SCHEDULED: "accent", COMPLETED: "success", CANCELLED: "neutral" } as const;
 
-export const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", WAITING_APPROVAL: "warning", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+export const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", WAITING_APPROVAL: "warning", PAUSED: "warning", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
 
 export interface SubjectTask {
   id: string;
