@@ -9,3 +9,216 @@
 //   - Relations between this stream's own new tables are fine.
 //   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
 //   - At most one migration per PR, timestamp minute reserved for stream F: …_60xx.
+
+// ───────────── Platform support center (customers → Realy; not a company's own helpdesk, see support.prisma) ─────────────
+
+enum PlatformTicketStatus {
+  NEW
+  OPEN
+  PENDING_CUSTOMER
+  ON_HOLD
+  SOLVED
+  CLOSED
+}
+
+enum PlatformTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+/// A customer's ticket to Realy. `organizationId` / `requesterId` are plain columns (no relations; checked in code).
+model PlatformSupportTicket {
+  id              String                 @id @default(uuid(7)) @db.Uuid
+  number          Int                    @unique @default(autoincrement())
+  organizationId  String?                @map("organization_id") @db.Uuid
+  requesterId     String?                @map("requester_id") @db.Uuid
+  requesterEmail  String                 @map("requester_email")
+  subject         String
+  /// billing | bug | account | ai | integration | other
+  category        String?
+  status          PlatformTicketStatus   @default(NEW)
+  priority        PlatformTicketPriority @default(NORMAL)
+  assigneeId      String?                @map("assignee_id") @db.Uuid
+  /// 0 = none; each escalation raises it by one (audited).
+  escalationLevel Int                    @default(0) @map("escalation_level")
+  /// in_app | email
+  channel         String                 @default("in_app")
+  /// Linked platform incident (stream E `platform_incidents.id`), plain column.
+  incidentId      String?                @map("incident_id") @db.Uuid
+  tags            String[]               @default([])
+  slaDueAt        DateTime?              @map("sla_due_at") @db.Timestamptz(3)
+  firstResponseAt DateTime?              @map("first_response_at") @db.Timestamptz(3)
+  lastCustomerAt  DateTime?              @map("last_customer_at") @db.Timestamptz(3)
+  solvedAt        DateTime?              @map("solved_at") @db.Timestamptz(3)
+  closedAt        DateTime?              @map("closed_at") @db.Timestamptz(3)
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  messages PlatformSupportMessage[]
+
+  @@index([status, priority, updatedAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([requesterId, createdAt(sort: Desc)])
+  @@index([assigneeId, status])
+  @@index([slaDueAt])
+  @@map("platform_support_tickets")
+}
+
+model PlatformSupportMessage {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  ticketId       String   @map("ticket_id") @db.Uuid
+  /// customer | staff | system
+  authorType     String   @map("author_type")
+  authorId       String?  @map("author_id") @db.Uuid
+  body           String
+  /// Internal notes are never shown to the customer.
+  internal       Boolean  @default(false)
+  attachments    Json     @default("[]")
+  /// email_messages.id of the reply notification, when one was sent.
+  emailMessageId String?  @map("email_message_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  ticket PlatformSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("platform_support_messages")
+}
+
+// ───────────── API request logs and rate-limit events (sampled, 14-day retention) ─────────────
+
+model ApiRequestLog {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  apiKeyId       String?  @map("api_key_id") @db.Uuid
+  /// user | admin
+  app            String
+  method         String
+  /// Route template, e.g. "GET /organizations/:orgId/contacts".
+  route          String
+  status         Int
+  durationMs     Int      @map("duration_ms")
+  requestId      String   @map("request_id")
+  ipHash         String?  @map("ip_hash")
+  userAgent      String?  @map("user_agent")
+  errorCode      String?  @map("error_code")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([apiKeyId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("api_request_logs")
+}
+
+/// One row per (rule, subject, window) the limiter refused; subjects are hashed.
+model RateLimitEvent {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  rule           String
+  keyHash        String   @map("key_hash")
+  organizationId String?  @map("organization_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  route          String?
+  limit          Int?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([rule, createdAt(sort: Desc)])
+  @@map("rate_limit_events")
+}
+
+// ───────────── Platform email: provider events (signed webhooks) and the suppression list ─────────────
+
+model EmailEvent {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  emailMessageId    String?  @map("email_message_id") @db.Uuid
+  provider          String
+  providerMessageId String?  @map("provider_message_id")
+  /// delivered | bounced | complained | opened | clicked | deferred
+  type              String
+  recipient         String
+  detail            Json     @default("{}")
+  occurredAt        DateTime @map("occurred_at") @db.Timestamptz(3)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([provider, providerMessageId, type, occurredAt])
+  @@index([recipient, occurredAt(sort: Desc)])
+  @@index([type, occurredAt(sort: Desc)])
+  @@index([providerMessageId])
+  @@map("email_events")
+}
+
+model EmailSuppression {
+  /// Lower-cased address.
+  email       String   @id
+  /// hard_bounce | complaint | manual
+  reason      String
+  source      String?
+  note        String?
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@map("email_suppressions")
+}
+
+// ───────────── Feature flags v2 (rollout, environment targeting, kill switch, versions) ─────────────
+
+/// Rollout state of a feature flag (`feature_flags.id`, plain column: core.prisma is not touched).
+model FeatureFlagRollout {
+  flagId       String    @id @map("flag_id") @db.Uuid
+  /// 0–100: share of subjects (user, else organization) that get the flag when no targeting rule matches.
+  percentage   Int?
+  /// Empty = every environment; otherwise production | preview | development.
+  environments String[]  @default([])
+  startsAt     DateTime? @map("starts_at") @db.Timestamptz(3)
+  endsAt       DateTime? @map("ends_at") @db.Timestamptz(3)
+  /// Kill switch: while set the flag evaluates to off everywhere.
+  killedAt     DateTime? @map("killed_at") @db.Timestamptz(3)
+  killedById   String?   @map("killed_by_id") @db.Uuid
+  updatedById  String?   @map("updated_by_id") @db.Uuid
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("feature_flag_rollouts")
+}
+
+/// Snapshot of a flag (default, status, rules, rollout) after each change: history and rollback source.
+model FeatureFlagVersion {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  flagId    String   @map("flag_id") @db.Uuid
+  version   Int
+  snapshot  Json
+  action    String
+  actorId   String?  @map("actor_id") @db.Uuid
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([flagId, version])
+  @@map("feature_flag_versions")
+}
+
+// ───────────── Files: approved deletion workflow (requester ≠ approver) ─────────────
+
+model FileDeletionRequest {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  /// integration_stored_object | cms_media | visual_asset | creative_asset
+  store          String
+  fileId         String    @map("file_id") @db.Uuid
+  organizationId String?   @map("organization_id") @db.Uuid
+  /// Metadata snapshot at request time (name, size, type) — never file contents.
+  fileMeta       Json      @default("{}") @map("file_meta")
+  /// PENDING | APPROVED | REJECTED | CANCELLED | FAILED
+  status         String    @default("PENDING")
+  requestedById  String    @map("requested_by_id") @db.Uuid
+  reason         String
+  decidedById    String?   @map("decided_by_id") @db.Uuid
+  decisionReason String?   @map("decision_reason")
+  decidedAt      DateTime? @map("decided_at") @db.Timestamptz(3)
+  error          String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([store, fileId])
+  @@map("file_deletion_requests")
+}

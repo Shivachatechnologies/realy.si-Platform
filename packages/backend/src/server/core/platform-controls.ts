@@ -291,8 +291,10 @@ export function invalidateOrgState(organizationId?: string) {
   else orgStates.clear();
 }
 
+/** Suspended or CLOSED (stream B's close flow) organizations are blocked at the API level alike. */
 export async function isOrganizationSuspended(organizationId: string): Promise<boolean> {
-  return (await orgState(organizationId)).status === "SUSPENDED";
+  const status = (await orgState(organizationId)).status;
+  return status === "SUSPENDED" || status === "CLOSED";
 }
 
 export const organizationSuspendedError = () =>

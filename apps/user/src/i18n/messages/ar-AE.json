@@ -24893,5 +24893,54 @@
       "notConnected": "غير مرتبط"
     },
     "nav": "الاستوديو الإبداعي"
+  },
+  "platformSupport": {
+    "back": "كل تذاكري",
+    "categories": {
+      "account": "الحساب",
+      "ai": "الذكاء الاصطناعي",
+      "billing": "الفوترة",
+      "bug": "شيء لا يعمل",
+      "integration": "تكامل",
+      "other": "أخرى"
+    },
+    "category": "الموضوع",
+    "closedNotice": "هذه التذكرة مغلقة. افتح تذكرة جديدة إذا احتجت مساعدة إضافية.",
+    "conversation": "المحادثة",
+    "markSolved": "وضع علامة محلولة",
+    "message": "الرسالة",
+    "messageHint": "صف ما حدث وما كنت تتوقعه وأي رسالة خطأ. لا ترسل كلمات المرور أو المفاتيح أبداً.",
+    "myTickets": "تذاكري",
+    "newTicket": "تذكرة جديدة",
+    "newTicketHint": "يرد فريقنا عبر البريد وهنا.",
+    "noOrganization": "لا تخص مؤسسة",
+    "noTickets": "لم تفتح أي تذكرة بعد.",
+    "organization": "المؤسسة",
+    "priorities": {
+      "HIGH": "مرتفعة",
+      "LOW": "منخفضة",
+      "NORMAL": "عادية"
+    },
+    "priority": "الإلحاح",
+    "priorityHint": "المرتفعة للعمل المتوقف.",
+    "realyTeam": "فريق Realy",
+    "reply": "ردك",
+    "send": "إرسال",
+    "statuses": {
+      "CLOSED": "مغلقة",
+      "NEW": "مستلمة",
+      "ON_HOLD": "معلقة",
+      "OPEN": "قيد المعالجة",
+      "PENDING_CUSTOMER": "بانتظارك",
+      "SOLVED": "محلولة"
+    },
+    "subject": "الموضوع",
+    "submit": "إرسال إلى دعم Realy",
+    "subtitle": "أسئلة أو مشكلات في Realy نفسه؟ اكتب إلى فريق Realy.",
+    "system": "تحديث",
+    "ticketMeta": "التذكرة #{number} · فُتحت {created}",
+    "title": "التواصل مع دعم Realy",
+    "updated": "حُدّثت {when}",
+    "you": "أنت"
   }
 }

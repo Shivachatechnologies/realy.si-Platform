@@ -296,6 +296,31 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     testable: true,
     placeholder: "xxxx xxxx xxxx xxxx",
   },
+  // Email provider webhooks (bounces, complaints, delivery): /api/v1/webhooks/email/<provider> on the user app.
+  {
+    key: "EMAIL_WEBHOOK_SECRET_RESEND",
+    group: "email",
+    kind: "secret",
+    label: "Resend webhook signing secret",
+    help: "Resend → Webhooks → your endpoint → Signing secret (whsec_…). Events: email.delivered, email.bounced, email.complained, email.delivery_delayed. Without it the endpoint refuses every event.",
+    docsUrl: "https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests",
+    register: { kind: "webhook", paths: ["/api/v1/webhooks/email/resend"] },
+    validate: pattern(/^whsec_[A-Za-z0-9+/=]{16,200}$/, "Starts with whsec_"),
+    appliesWhen: (all) => all("EMAIL_PROVIDER") === "resend",
+    placeholder: "whsec_…",
+  },
+  {
+    key: "EMAIL_WEBHOOK_SECRET_POSTMARK",
+    group: "email",
+    kind: "secret",
+    label: "Postmark webhook credentials",
+    help: "username:password set as Basic auth on the Postmark webhook URL (Servers → your server → Webhooks). Postmark does not sign payloads, so the credentials are the check. Without them the endpoint refuses every event.",
+    docsUrl: "https://postmarkapp.com/developer/webhooks/webhooks-overview",
+    register: { kind: "webhook", paths: ["/api/v1/webhooks/email/postmark"] },
+    validate: pattern(/^[^:\s]{6,128}:[^\s]{12,256}$/, "username:password (password at least 12 characters)"),
+    appliesWhen: (all) => all("EMAIL_PROVIDER") === "postmark",
+    placeholder: "realy-hooks:…",
+  },
   // ───── Payments ─────
   {
     key: "STRIPE_SECRET_KEY",
