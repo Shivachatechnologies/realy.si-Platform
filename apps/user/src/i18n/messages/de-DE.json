@@ -2232,7 +2232,8 @@
       "RUNNING": "Läuft",
       "COMPLETED": "Abgeschlossen",
       "FAILED": "Fehlgeschlagen",
-      "CANCELLED": "Abgebrochen"
+      "CANCELLED": "Abgebrochen",
+      "WAITING_APPROVAL": "Wartet auf Freigabe"
     },
     "back": "Alle Aufgaben",
     "deliverable": "Ergebnis",
@@ -2500,7 +2501,10 @@
       "handoff_video_to_publishing": "Video zur Veröffentlichung übergeben",
       "start_calling_campaign": "KI-Anrufkampagne starten",
       "read_calling_runs": "KI-Anrufkampagnen lesen",
-      "send_meeting_follow_up_email": "Follow-up-E-Mail zum Termin senden"
+      "send_meeting_follow_up_email": "Follow-up-E-Mail zum Termin senden",
+      "book_crm_meeting": "Termin buchen",
+      "read_crm_meetings": "Termine lesen",
+      "read_security_posture": "Sicherheitslage lesen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -3316,6 +3320,23 @@
       "hint": "Menschen, die KI-Mitarbeitende direkt führen.",
       "openNetwork": "Live-Netzwerk ansehen",
       "counts": "{ai} KI-Berichtende · {humans} menschliche Berichtende"
+    },
+    "roles": {
+      "title": "Eigene Rollen Ihres Unternehmens",
+      "hint": "Definieren Sie eine Rolle, die es noch nicht gibt: was sie tut, welche Werkzeuge sie nutzen darf und wie viele Schritte eine Aufgabe haben darf. Aktionen folgen weiter Ihren Freigaben, Ihrer Autonomie und Ihren Budgets.",
+      "empty": "Noch keine eigenen Rollen.",
+      "create": "Rolle erstellen",
+      "name": "Rollenname",
+      "department": "Abteilung",
+      "description": "Kurzbeschreibung",
+      "instructions": "Was diese Rolle tut",
+      "instructionsHint": "Wie eine Stellenbeschreibung: Ziele, Arbeitsweise, was berichtet wird. Die KI folgt ihr innerhalb der Sicherheitsregeln der Plattform.",
+      "tools": "{count, plural, one {Werkzeuge (# ausgewählt)} other {Werkzeuge (# ausgewählt)}}",
+      "maxTurns": "Schritte pro Aufgabe",
+      "maxTurnsHint": "1–15. Mehr Schritte erlauben längere Recherchen, kosten aber mehr.",
+      "save": "Rolle speichern",
+      "archive": "Archivieren",
+      "archiveConfirm": "Rolle „{name}“ archivieren? Keine KI-Mitarbeitenden dürfen sie noch haben."
     }
   },
   "profiles": {
@@ -3570,6 +3591,18 @@
     "voice_assistant": {
       "name": "Realy-Sprachassistent",
       "summary": "Beantwortet deine Fragen und Small Talk in Realy mit Live-Unternehmensdaten."
+    },
+    "ai_clo": {
+      "name": "KI-Chefjurist (CLO)",
+      "summary": "Prüft Verträge und Richtlinien aus Ihren Dokumenten und markiert rechtliche und Compliance-Risiken."
+    },
+    "ai_ciso": {
+      "name": "KI-Sicherheitschef (CISO)",
+      "summary": "Prüft Zwei-Faktor-Abdeckung, API-Schlüssel, Integrationen und Sicherheitsereignisse und schlägt Korrekturen vor."
+    },
+    "ai_cdo": {
+      "name": "KI-Datenchef (CDO)",
+      "summary": "Findet fehlende oder veraltete Daten und defekte Quellen und schlägt die wichtigsten Korrekturen vor."
     }
   },
   "projects": {
@@ -3608,7 +3641,12 @@
       "HIGH": "Hohes Risiko",
       "CRITICAL": "Kritisch"
     },
-    "messagePreview": "Zu sendende Nachricht"
+    "messagePreview": "Zu sendende Nachricht",
+    "retry": "Aktion wiederholen",
+    "retrying": "Wird wiederholt …",
+    "retryFailed": "Die Wiederholung konnte nicht starten",
+    "retryLimit": "Zu oft wiederholt – lehnen Sie ab oder bitten Sie die KI um einen neuen Vorschlag.",
+    "attempts": "Versuch {count} von {max}"
   },
   "objectives": {
     "subtitle": "Setzen Sie Ziele, gliedern Sie sie in Meilensteine, verknüpfen Sie Meilensteine mit Projekten und lassen Sie KI-Mitarbeiter Meilensteine zur Freigabe vorschlagen.",
@@ -3841,6 +3879,17 @@
       "noInitiatives": "Noch keine Initiativen. Planen Sie sie mit KI oder fügen Sie eigene hinzu.",
       "runsTitle": "KI-Arbeit für dieses Ziel",
       "runsHint": "Jeder dafür gestartete Befehlslauf."
+    },
+    "budget": {
+      "amount": "Budget",
+      "hint": "Optional. Ist-Kosten sind die echten KI- und Anbieterkosten der Arbeit an diesem Ziel.",
+      "currency": "Währung",
+      "column": "Budget vs. Ist",
+      "of": "{actual} von {budget}",
+      "spentNoBudget": "{actual} ausgegeben · kein Budget",
+      "over": "Budget überschritten ({pct} %)",
+      "otherCurrency": "KI-Ausgaben werden in USD erfasst; bitte manuell vergleichen.",
+      "initiativeAmount": "Budget ({currency}, optional)"
     }
   },
   "notifications": {
@@ -4038,6 +4087,10 @@
         "review_requested": "Video bereit zur Prüfung: {title}",
         "approved": "Video freigegeben: {title}",
         "changes_requested": "Änderungen am Video angefordert: {title}"
+      },
+      "billing": {
+        "payment_failed": "Zahlung für {title} fehlgeschlagen: Zahlungsmethode aktualisieren",
+        "payment_recovered": "Zahlung für {title} eingegangen: die Abrechnung ist wieder in Ordnung"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -5399,7 +5452,8 @@
         "do_not_contact": "steht auf der Nicht-kontaktieren-Liste",
         "already_in_crm": "bereits in Ihrem CRM",
         "lead_duplicate": "bereits ein Lead",
-        "lead_failed": "Lead konnte nicht erstellt werden"
+        "lead_failed": "Lead konnte nicht erstellt werden",
+        "not_interested": "Kein Interesse"
       },
       "funnel": {
         "title": "Live-Trichter",
@@ -5449,7 +5503,8 @@
         "ai_failed": "Der KI-Schreibdienst konnte nicht antworten",
         "no_ai_no_template": "Kein KI-Schreibdienst verbunden und keine erste E-Mail in den Einstellungen hinterlegt, daher wurden keine E-Mails vorbereitet.",
         "draft_failed": "Die erste E-Mail konnte nicht geschrieben werden.",
-        "send_failed": "Eine E-Mail konnte nicht gesendet werden"
+        "send_failed": "Eine E-Mail konnte nicht gesendet werden",
+        "company_ai_paused": "Pausiert: Alle KI in diesem Unternehmen ist pausiert (Autonomie → Alle KI pausieren). Es wird nichts gesucht, entworfen oder gesendet."
       },
       "providers": {
         "title": "Daten und Verbindungen",
@@ -5594,6 +5649,31 @@
         },
         "back": "Zurück",
         "next": "Weiter"
+      },
+      "replyClass": {
+        "INTERESTED": "Interessiert",
+        "NOT_INTERESTED": "Kein Interesse",
+        "OUT_OF_OFFICE": "Abwesend",
+        "UNSUBSCRIBE": "Möchte keine E-Mails",
+        "REFERRAL": "Empfehlung",
+        "QUESTION": "Frage",
+        "OTHER": "Geantwortet"
+      },
+      "replyResumes": "Abwesend — geht weiter am {date}"
+    },
+    "winProbability": {
+      "label": "Gewinnwahrscheinlichkeit (berechnet)",
+      "pending": "Noch nicht berechnet (alle 6 Stunden aktualisiert)",
+      "why": "Warum dieser Wert (berechnet am {date})",
+      "hint": "Berechnet aus Ihren eigenen abgeschlossenen Deals der letzten zwei Jahre; die am Deal eingestellte Wahrscheinlichkeit bleibt unverändert.",
+      "factors": {
+        "base": "Gewonnen nach Erreichen dieser Phase: {won} von {closed} (gemischt mit dem Phasenstandard)",
+        "stage_age": "Tage in dieser Phase: {days}",
+        "activity": "Tage seit der letzten Aktivität: {days}",
+        "activity_none": "Noch keine Aktivität erfasst",
+        "overdue": "Erwartetes Abschlussdatum überschritten",
+        "amount": "Betrag im Vergleich zu Ihrem typischen gewonnenen Deal",
+        "owner": "Gewinnquote des Verantwortlichen vs. Unternehmen"
       }
     }
   },
@@ -5634,7 +5714,8 @@
     "frequencies": {
       "HOURLY": "Stündlich",
       "DAILY": "Täglich",
-      "WEEKLY": "Wöchentlich"
+      "WEEKLY": "Wöchentlich",
+      "MONTHLY": "Jeden Monat"
     },
     "weekdays": {
       "0": "Sonntag",
@@ -5667,7 +5748,9 @@
       "instructions": "Anweisungen",
       "instructionsHint": "Platzhalter: '{{date}}', '{{event}}' und '{{data.field}}' für Ereignisfelder.",
       "enabled": "Aktiv",
-      "create": "Zeitplan erstellen"
+      "create": "Zeitplan erstellen",
+      "dayOfMonth": "Tag im Monat",
+      "dayOfMonthHint": "In kürzeren Monaten laufen die Tage 29–31 am letzten Tag."
     }
   },
   "intelligence": {
@@ -6710,7 +6793,8 @@
       "access_denied": "Der Zugriff wurde beim Anbieter verweigert.",
       "forbidden": "Sie dürfen die Integrationen dieses Unternehmens nicht verwalten.",
       "invalid_request": "Die Verbindungsanfrage war ungültig.",
-      "rate_limited": "Zu viele Versuche. Bitte eine Minute warten und erneut versuchen."
+      "rate_limited": "Zu viele Versuche. Bitte eine Minute warten und erneut versuchen.",
+      "invalid_account": "Geben Sie eine gültige Kontoadresse ein, um zu verbinden."
     },
     "webhooks": {
       "incoming": "Eingehende Webhooks",
@@ -7089,7 +7173,12 @@
       "setUpByRealyBody": "Das Realy-Team hat Ihr eigenes {name}-Konto für Sie eingerichtet. Es funktioniert wie eine selbst hergestellte Verbindung, und Sie können sie jederzeit trennen.",
       "help": "Verbinden Sie Ihr eigenes {name}-Konto: Melden Sie sich an und bestätigen Sie Realy. Hier geben Sie nie Schlüssel ein. Auf Wunsch richtet das Realy-Team es für Sie ein.",
       "notReady": "Die Anmeldung mit {name} ist noch nicht freigeschaltet. Wenden Sie sich an Realy, dann richtet unser Team Ihr eigenes {name}-Konto für Sie ein."
-    }
+    },
+    "connectParams": {
+      "subdomain": "Zendesk-Subdomain (ihrefirma.zendesk.com)",
+      "shopDomain": "Shopify-Shop-Adresse"
+    },
+    "grantedScopes": "Gewährter Zugriff"
   },
   "workflows": {
     "subtitle": "Automatisieren Sie wiederkehrende Arbeit: Wenn etwas passiert, führt Realy die Schritte aus – mit Freigaben, Wiederholungen und vollständigem Protokoll.",
@@ -7297,7 +7386,8 @@
       "rerunConfirm": "Der gewählte Schritt und alle folgenden laufen erneut, einschließlich ihrer Aktionen (Datensätze, Nachrichten). Fortfahren?",
       "rerunHelp": "Führen Sie diesen Lauf ab einem beliebigen Schritt erneut aus; frühere Schritte behalten ihre Ergebnisse.",
       "deadNotice": "Dieser Lauf ist endgültig fehlgeschlagen und steht auf der Fehlerliste. Die verantwortliche Person des Workflows wurde benachrichtigt.",
-      "deadSummary": "{count, plural, one {# Lauf ist endgültig fehlgeschlagen.} other {# Läufe sind endgültig fehlgeschlagen.}}"
+      "deadSummary": "{count, plural, one {# Lauf ist endgültig fehlgeschlagen.} other {# Läufe sind endgültig fehlgeschlagen.}}",
+      "waiting_company_paused": "Angehalten: alle KI ist für dieses Unternehmen pausiert"
     },
     "approvals": {
       "pending": "Warten auf Entscheidung",
@@ -7690,7 +7780,10 @@
       "creative_changes_requested": "Änderungen an Kreativ angefordert",
       "creative_handed_off": "Kreativ an Marketing übergeben",
       "autopilot_mode_changed": "Autopilot-Modus geändert",
-      "costs_budget_reached": "KI-Budget erreicht"
+      "costs_budget_reached": "KI-Budget erreicht",
+      "comms_email_received": "E-Mail empfangen",
+      "integration_whatsapp_message_received": "WhatsApp-Nachricht empfangen",
+      "approval_retry_requested": "Erneute Ausführung einer freigegebenen Aktion angefordert"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -8077,6 +8170,15 @@
     "flowCard": {
       "title": "So funktioniert es, in einfachen Worten",
       "hint": "Der aktuelle Entwurf als Ablauf. Bearbeiten Sie ihn im Builder; veröffentlichen und einschalten, wenn er stimmt."
+    },
+    "autonomy": {
+      "label": "Externe Aktionen",
+      "hint": "E-Mails, Slack- und Teams-Nachrichten, Webhooks und Custom-API-Aufrufe in Läufen, die dieser Workflow selbst startet. Ein von einer Person gestarteter Lauf gilt als Aktion dieser Person. „Alle KI pausieren“ hält jeden Lauf an.",
+      "modes": {
+        "OFF": "Aus: externe Aktionen werden abgelehnt",
+        "APPROVAL_REQUIRED": "Freigabe: eine Person gibt jede einzeln frei",
+        "AUTONOMOUS": "Autonom: im Rahmen der Autonomie-Richtlinie des Unternehmens"
+      }
     }
   },
   "marketplace": {
@@ -9502,7 +9604,8 @@
       "sprints": "Sprints",
       "templates": "Vorlagen",
       "timeline": "Zeitplan",
-      "start": "Projekt starten"
+      "start": "Projekt starten",
+      "execution": "Umsetzung"
     },
     "task": {
       "add": "Neue Aufgabe",
@@ -9880,6 +9983,51 @@
       "reassign": "Neu zuweisen",
       "balanced": "Die Auslastung ist ausgeglichen – keine Umverteilung nötig.",
       "export": "Statusbericht exportieren"
+    },
+    "execution": {
+      "intro": "Aus den Aufgaben und Abhängigkeiten des Projekts verfolgt: was bereit ist, was blockiert ist und wodurch – bis alle Aufgaben erledigt sind.",
+      "objectives": "Setzt das Ziel um",
+      "milestoneDone": "erledigt",
+      "complete": "Alle Aufgaben sind erledigt.",
+      "health": "Berechneter Zustand",
+      "manualHealth": "Von Menschen gesetzt: {health}",
+      "progress": "Fortschritt",
+      "doneOf": "{done} von {total} erledigt",
+      "ready": "Startbereit",
+      "blocked": "Blockiert",
+      "overdue": "Überfällig",
+      "projected": "Voraussichtliches Ende",
+      "criticalDays": "{count, plural, one {# Tag} other {# Tage}} auf dem kritischen Pfad",
+      "blockersTitle": "Blocker",
+      "blockersHint": "Unerledigte Aufgaben, auf die andere warten – die mit der meisten wartenden Arbeit zuerst.",
+      "task": "Aufgabe",
+      "owner": "Verantwortlich",
+      "due": "Fällig",
+      "waiting": "Wartende Aufgaben",
+      "why": "Warum es zählt",
+      "otherProject": "In einem anderen Projekt",
+      "reasons": {
+        "overdue": "überfällig",
+        "unassigned": "ohne Verantwortliche",
+        "stalled": "seit 7+ Tagen kein Fortschritt",
+        "not_started": "hätte schon beginnen sollen"
+      },
+      "waitingItself": "wartet selbst auf andere Aufgaben",
+      "noBlockers": "Nichts ist blockiert.",
+      "readyTitle": "Startbereit",
+      "readyHint": "Offene Aufgaben, deren Vorgänger alle erledigt sind.",
+      "noReady": "Keine Aufgabe wartet auf den Start.",
+      "milestonesTitle": "Meilensteine",
+      "late": "verspätet",
+      "noMilestones": "Dieses Projekt hat keine Meilensteine.",
+      "stalledTitle": "Stockende Arbeit",
+      "truncated": "Nur die ersten 5.000 Aufgaben sind enthalten.",
+      "unassigned": "nicht zugewiesen",
+      "plan": "Umsetzung mit KI planen",
+      "objectivesTitle": "Ein Ziel umsetzen",
+      "objectivesHint": "Die KI-Projektleitung schlägt ein Projekt mit Meilensteinen und abhängigen Aufgaben vor; Sie genehmigen es, bevor etwas angelegt wird.",
+      "projectN": "Projekt {n}",
+      "noProject": "noch kein Projekt"
     }
   },
   "marketing": {
@@ -10109,7 +10257,14 @@
       "notePlaceholder": "Optionale Vorgaben (Ton, Blickwinkel, Zielgruppe)",
       "starting": "Wird gestartet…",
       "applied": "Übernommen",
-      "none": "Noch keine KI-Aufgaben."
+      "none": "Noch keine KI-Aufgaben.",
+      "assignTo": "KI-Mitarbeiter zuweisen",
+      "defaultRole": "Standardrolle",
+      "campaignContent": "Kampagneninhalte erstellen",
+      "campaignContentHint": "Entwürfe, Bilder und Social-Posts für diese Kampagne. Jeder Entwurf, jedes Bild und jeder Post wartet auf Freigabe; ein Post gilt erst als veröffentlicht, wenn die Plattform ihn bestätigt.",
+      "team": "KI-Team dieser Kampagne",
+      "teamEmpty": "Noch kein KI-Mitarbeiter hat an dieser Kampagne gearbeitet. Weisen Sie oben einen zu.",
+      "teamTasks": "{count, plural, one {# Aufgabe} other {# Aufgaben}}"
     },
     "contentType": {
       "BLOG": "Blogartikel",
@@ -10869,7 +11024,8 @@
         "title": "Verbindungen",
         "connect": "Verbinden",
         "images": "Bilderzeugung",
-        "video": "Videoerzeugung"
+        "video": "Videoerzeugung",
+        "needsKeys": "Nicht verfügbar – Realy muss den Plattformschlüssel {keys} hinterlegen"
       },
       "goals": {
         "title": "Ziele",
@@ -11062,7 +11218,8 @@
         "lastPlanned": "Zuletzt geplant {when}",
         "missingAccounts": "Kein Konto ausgewählt für: {platforms}. Diese Termine werden nicht geplant.",
         "smartTimes": "Beste Zeiten aus Ihren Ergebnissen, sonst Plattform-Standards",
-        "noPaid": "Keine kostenpflichtige Erzeugung"
+        "noPaid": "Keine kostenpflichtige Erzeugung",
+        "aiPaused": "Die gesamte KI dieses Unternehmens ist pausiert. Autopiloten planen nichts Neues, führen keine KI-Schritte aus und halten selbst geplante Posts zurück; von einer Person freigegebene Elemente können weiterhin eingeplant werden."
       },
       "canvas": {
         "title": "Content-Leinwand",
@@ -12033,7 +12190,8 @@
         "connect": "Einrichten",
         "realyBlog": "Ihr Realy-Blog (verbinden Sie WordPress, Webflow oder Shopify, um dort zu veröffentlichen)",
         "safety": "Jeder Beitrag wird gegen Ihre Marken- und Compliance-Regeln geprüft, nur über die API der Plattform mit verifiziertem Link veröffentlicht, und versendete E-Mails enthalten immer einen Abmeldelink und überspringen abgemeldete Kontakte. Budgetänderungen warten immer auf Sie.",
-        "channels": "Veröffentlichung möglich auf: {list}"
+        "channels": "Veröffentlichung möglich auf: {list}",
+        "researchKeys": "Realy muss den Plattformschlüssel {keys} hinterlegen"
       },
       "analytics": {
         "cpl": "Kosten pro Lead",
@@ -12043,6 +12201,11 @@
         "byChannelHint": "Ausgaben, Leads nach UTM-Quelle, Reichweite und Interaktionen pro Kanal – nur aus echten Datensätzen.",
         "leads": "Leads (UTM)",
         "noChannels": "In diesem Zeitraum noch keine Kanalaktivität."
+      },
+      "aiPaused": {
+        "title": "Die gesamte KI ist pausiert",
+        "body": "Läufe warten in ihrer aktuellen Phase: keine Recherche, Pläne, Starts, Inhalte oder automatischen Optimierungen, bis eine Person die KI fortsetzt.",
+        "open": "Autonomie öffnen"
       }
     }
   },
@@ -12459,7 +12622,9 @@
       "start": "Hier starten",
       "alerts": "Warnungen",
       "learn": "Begriffe lernen",
-      "manager": "KI-Schreibtisch"
+      "manager": "KI-Schreibtisch",
+      "roi": "ROI",
+      "monthlyPack": "Monatspaket"
     },
     "accounting": {
       "tabs": {
@@ -13402,6 +13567,18 @@
         "why": "Sie sehen, was sich geändert hat, warum und was als Nächstes zu tun ist – ohne jede Buchung zu lesen.",
         "can": "Finanzmemo erstellen, Umsatzprognose prüfen, Budgetabweichungen verstehen und Ausgaben mit einem Klick kategorisieren.",
         "next": "Budgets prüfen"
+      },
+      "roi": {
+        "what": "Rendite der Ausgaben: KI-Mitarbeitende, Abteilungen und Marketingkampagnen.",
+        "why": "Sie sehen, welche Ausgaben Umsatz zurückbringen.",
+        "can": "Erfasste Kosten mit gewonnenen Deals für jeden Zeitraum vergleichen.",
+        "next": "Berichte ansehen"
+      },
+      "monthlyPack": {
+        "what": "Der Monat auf einer Seite: GuV, Liquidität, Burn, Budgets, KI-Ausgaben und ROI.",
+        "why": "Die Führung bekommt jeden Monat dasselbe vollständige Bild.",
+        "can": "Monat wählen und den KI-CFO das Paket schreiben lassen.",
+        "next": "Berichte ansehen"
       }
     },
     "os": {
@@ -13915,6 +14092,85 @@
           "words": "Ähnliche Beschreibungen: {confidence} % von {count} Treffern"
         }
       }
+    },
+    "aiSpend": {
+      "title": "KI- und Anbieterkosten",
+      "hint": "Im Kostenbuch erfasst: KI-Modelle, Bilder, Video, Sprache, Anrufe, Messaging und externe APIs.",
+      "openCosts": "Kosten öffnen",
+      "empty": "Für diesen Zeitraum sind keine KI- oder Anbieterkosten erfasst.",
+      "period": "Ausgaben im Zeitraum",
+      "estimated": "{amount} anhand der Anbieterpreise geschätzt",
+      "monthly": "Monatsdurchschnitt",
+      "monthlyHint": "Letzte 3 volle Monate",
+      "profitAfter": "Nettogewinn nach KI- und Anbieterkosten",
+      "burnWith": "Netto-Burn inkl. KI-Kosten",
+      "runwayWith": "Runway inkl. KI-Kosten",
+      "notConverted": "In USD angezeigt und nicht zu Ihren Zahlen addiert: Das Kostenbuch führt USD und es ist kein Wechselkurs erfasst.",
+      "byCategory": "Nach Kategorie",
+      "roiLink": "Rendite dieser Ausgaben ansehen",
+      "pnlLine": "KI- und Anbieterkosten (Kostenbuch)",
+      "pnlHint": "Keine Buchung: vom Kostenbuch aus der Anbieternutzung erfasst.",
+      "categories": {
+        "AI_TOKENS": "KI-Modelle",
+        "IMAGE": "Bilder",
+        "VIDEO": "Video",
+        "VOICE": "Sprache",
+        "STT": "Sprache zu Text",
+        "TTS": "Text zu Sprache",
+        "TELEPHONY": "Telefonie",
+        "EMAIL": "E-Mail",
+        "SMS": "SMS",
+        "MESSAGING": "Messaging",
+        "EXTERNAL_API": "Externe APIs",
+        "OTHER": "Sonstiges"
+      }
+    },
+    "roi": {
+      "method": "Kosten sind erfasste Ausgaben; Erträge sind als gewonnen markierte Deals. Ein Deal zählt für einen KI-Mitarbeitenden, wenn diese KI den Lead bearbeitet hat, und für eine Kampagne, wenn er den Kampagnencode trägt. ROI wird nur angezeigt, wenn Kosten und Umsatz dieselbe Währung haben.",
+      "aiCost": "KI- und Anbieterkosten",
+      "dealsWon": "Gewonnene Deals",
+      "revenueWon": "Gewonnener Umsatz",
+      "unattributed": "Deals ohne KI-Zuordnung",
+      "empty": "In diesem Zeitraum sind keine KI-Ausgaben, Kampagnenausgaben oder gewonnenen Deals erfasst.",
+      "agentsTitle": "KI-Mitarbeitende",
+      "agentsHint": "Kosten aus dem Kostenbuch, erledigte Aufgaben und gewonnene Deals der bearbeiteten Leads.",
+      "agent": "KI-Mitarbeitende",
+      "department": "Abteilung",
+      "cost": "Kosten",
+      "tasks": "Erledigte Aufgaben",
+      "revenue": "Umsatz",
+      "roi": "ROI",
+      "noAgents": "Kein KI-Mitarbeitender hat in diesem Zeitraum erfasste Ausgaben oder zugeordnete Deals.",
+      "departmentsTitle": "Abteilungen",
+      "departmentsHint": "KI- und Anbieterkosten je Abteilung und die gewonnenen Deals ihrer KI-Mitarbeitenden.",
+      "noDepartments": "Keine Abteilungsausgaben in diesem Zeitraum.",
+      "campaignsTitle": "Kampagnen",
+      "campaignsHint": "Erfasste Kampagnenausgaben gegenüber gewonnenen Deals mit dem Kampagnencode.",
+      "campaign": "Kampagne",
+      "budget": "Budget",
+      "spend": "Ausgaben",
+      "noCampaigns": "Keine Kampagnenausgaben oder zugeordneten Deals in diesem Zeitraum.",
+      "truncated": "Nur die neuesten 5.000 gewonnenen Deals sind enthalten.",
+      "mixed": "Kosten und Umsatz haben unterschiedliche Währungen, daher wird kein ROI berechnet.",
+      "mixedShort": "andere Währung"
+    },
+    "monthlyPack": {
+      "ask": "KI-CFO das Paket schreiben lassen",
+      "month": "Monat",
+      "partial": "Dieser Monat ist noch nicht abgeschlossen: Die Zahlen gelten bis heute.",
+      "vsPrev": "{pct}% gegenüber dem Vormonat",
+      "cashEnd": "Liquidität am Monatsende",
+      "cashChange": "Veränderung {amount}",
+      "overBudget": "Budgets über dem Limit",
+      "budgetsTitle": "Budgetabweichung",
+      "budget": "Budget",
+      "planned": "Geplant",
+      "actual": "Ist",
+      "used": "Verbraucht",
+      "noBudgets": "Für diesen Monat gibt es keine Budgets.",
+      "aiTitle": "Kommentar des KI-CFO",
+      "aiHint": "Der KI-CFO liest diese Zahlen und schreibt das Paket mit Risiken und nächsten Schritten.",
+      "raw": "Paket als Text"
     }
   },
   "hr": {
@@ -16093,7 +16349,8 @@
       "WEB": "Web",
       "EMAIL": "E-Mail",
       "CHAT": "Chat",
-      "PHONE": "Telefon"
+      "PHONE": "Telefon",
+      "WHATSAPP": "WhatsApp"
     },
     "ticket": {
       "title": "Ticket",
@@ -16150,7 +16407,10 @@
       "FAILED": "E-Mail fehlgeschlagen",
       "NOT_CONFIGURED": "E-Mail nicht konfiguriert",
       "NO_EMAIL": "Keine E-Mail-Adresse",
-      "QUEUED": "Wird gesendet…"
+      "QUEUED": "Wird gesendet…",
+      "WHATSAPP_SENT": "Per WhatsApp gesendet",
+      "WHATSAPP_FAILED": "WhatsApp fehlgeschlagen",
+      "WHATSAPP_NOT_CONFIGURED": "WhatsApp nicht verbunden"
     },
     "reply": {
       "kinds": {
@@ -16305,7 +16565,11 @@
         "aiFirstResponseEnabled": "KI-Erstantwort",
         "aiFirstResponseEnabledHint": "Ihr KI-Support-Mitarbeiter entwirft für jedes neue Ticket eine recherchierte erste Antwort. Der Versand wartet auf Ihre Freigabe, sofern Sie keine Autonomie gewähren.",
         "aiSlaEscalationEnabled": "KI-SLA-Eskalation",
-        "aiSlaEscalationEnabledHint": "Verletzt ein dringendes oder hoch priorisiertes Ticket sein SLA, schlägt die KI-Supportleitung eine Übernahme vor und entwirft eine Antwort."
+        "aiSlaEscalationEnabledHint": "Verletzt ein dringendes oder hoch priorisiertes Ticket sein SLA, schlägt die KI-Supportleitung eine Übernahme vor und entwirft eine Antwort.",
+        "emailChannelEnabled": "E-Mail-Tickets",
+        "emailChannelEnabledHint": "E-Mails an die Support-Adresse werden zu Tickets, nach Gespräch gruppiert; Antworten gehen aus demselben Postfach.",
+        "whatsappChannelEnabled": "WhatsApp-Tickets",
+        "whatsappChannelEnabledHint": "Nachrichten an Ihre WhatsApp-Business-Nummer werden zu Tickets; Antworten gehen per WhatsApp (freie Antworten erlaubt WhatsApp innerhalb von 24 Stunden nach der letzten Kundennachricht)."
       },
       "helpCenterLink": "Hilfecenter öffnen",
       "formLink": "Supportformular öffnen",
@@ -16366,7 +16630,10 @@
       "reassignTo": "Neu zuweisen an",
       "noReassign": "Nicht neu zuweisen",
       "reassignToName": "Neu zuweisen an {name}",
-      "aiDuty": "Entwirft Erstantworten, sortiert neue Tickets und kümmert sich um SLA-Verletzungen; Antworten an Kunden warten auf Ihre Freigabe."
+      "aiDuty": "Entwirft Erstantworten, sortiert neue Tickets und kümmert sich um SLA-Verletzungen; Antworten an Kunden warten auf Ihre Freigabe.",
+      "inbound": "Tickets per E-Mail und WhatsApp",
+      "inboundHint": "Kunden schreiben an Ihre Support-Adresse oder WhatsApp-Nummer; jedes Gespräch wird ein Ticket und Ihre Antworten gehen auf demselben Weg zurück.",
+      "saveAddress": "Adresse speichern"
     },
     "help": {
       "title": "Hilfecenter",
@@ -16451,13 +16718,17 @@
         },
         "emailChannelEnabled": {
           "label": "E-Mail",
-          "hint": "Ihre Support-E-Mail-Adresse im Hilfecenter und im Formular anzeigen."
+          "hint": "E-Mails an Ihre Support-Adresse werden zu Tickets, und Ihre Antworten gehen per E-Mail zurück."
         },
         "preview": "Vorschau",
         "address": "Support-E-Mail-Adresse",
-        "addressHint": "Wird Kunden angezeigt. Dorthin gesendete E-Mails werden nicht automatisch importiert – erfassen Sie sie im Posteingang als Tickets.",
+        "addressHint": "E-Mails an diese Adresse werden zu Tickets, sobald sie in einem verbundenen Postfach ankommen (Gmail oder Outlook unter Kommunikation → E-Mail). Importiert wird nur, was nach dem Einschalten des Kanals eingeht.",
         "emailReady": "E-Mail-Versand ist eingerichtet: Kunden erhalten Ihre Antworten per E-Mail.",
-        "emailNotReady": "E-Mail-Versand ist noch nicht eingerichtet: Ihre Antworten erscheinen auf der Ticketseite des Kunden, es werden aber keine E-Mails versendet."
+        "emailNotReady": "E-Mail-Versand ist noch nicht eingerichtet: Ihre Antworten erscheinen auf der Ticketseite des Kunden, es werden aber keine E-Mails versendet.",
+        "whatsappChannelEnabled": {
+          "label": "WhatsApp",
+          "hint": "Nachrichten an Ihre WhatsApp-Business-Nummer werden zu Tickets; Antworten gehen per WhatsApp zurück."
+        }
       },
       "promise": {
         "respondLabel": "Erste Antwort innerhalb von …",
@@ -16640,6 +16911,18 @@
       "speedHint": "Median der Stunden bis zur ersten Antwort und bis zur Lösung in diesem Zeitraum.",
       "medianFirstResponse": "Erste Antwort",
       "medianResolution": "Lösung"
+    },
+    "inbound": {
+      "email": {
+        "ready": "E-Mails an {support} werden aus dem verbundenen {provider}-Postfach {mailbox} importiert.",
+        "other_mailbox": "Kein verbundenes Postfach ist {support}. Importiert wird nur, was in einem verbundenen Postfach ankommt, z. B. {mailbox} ({provider}): Leiten Sie {support} dorthin weiter oder verbinden Sie {support} unter Kommunikation → E-Mail.",
+        "no_mailbox": "Kein Postfach ist verbunden, daher wird noch keine E-Mail importiert. Verbinden Sie Gmail oder Outlook für {support} unter Kommunikation → E-Mail.",
+        "no_address": "Geben Sie Ihre Support-E-Mail-Adresse ein, um E-Mails an sie zu importieren."
+      },
+      "whatsapp": {
+        "ready": "WhatsApp Business ist verbunden: neue Nachrichten werden zu Tickets.",
+        "not_connected": "WhatsApp Business ist nicht verbunden, daher kommen noch keine Nachrichten an. Verbinden Sie es unter Integrationen."
+      }
     }
   },
   "strategy": {
@@ -19356,7 +19639,27 @@
       "recsFrom": "Aus dem KI-Briefing {when}",
       "recsTask": "Analyse ansehen",
       "live": "Live-Aktivität",
-      "setupProgress": "{done} von {total} erledigt"
+      "setupProgress": "{done} von {total} erledigt",
+      "board": {
+        "title": "Live-Betrieb",
+        "noData": "keine Daten",
+        "areaHidden": "Hier ist nichts für Sie sichtbar (keine Berechtigung), oder dieser Bereich hat noch keine Kennzahlen.",
+        "credits": "KI-Credits diesen Monat",
+        "creditsOf": "{used} von {limit}",
+        "creditsUnlimited": "{used} (unbegrenzt)",
+        "alerts": "Warnungen",
+        "noAlerts": "keine offen",
+        "alertCounts": "{critical} kritisch · {warning} Warnungen",
+        "asOf": "Zahlen berechnet {when}",
+        "areas": {
+          "money": "Finanzen",
+          "growth": "Wachstum & Pipeline",
+          "work": "Projekte & Aufgaben",
+          "people": "Team & KI-Belegschaft",
+          "customers": "Anrufe, Meetings & Tickets",
+          "platform": "API-Nutzung & Fehler"
+        }
+      }
     },
     "brain": {
       "eyebrow": "Wissen",
@@ -19998,7 +20301,9 @@
         "HOURLY": "Jede Stunde",
         "HOURLYHint": "Nur für Dinge, die sich schnell ändern",
         "EVENT": "Wenn etwas passiert",
-        "EVENTHint": "Zum Beispiel ein neuer Lead, eine bezahlte Rechnung oder ein neues Ticket"
+        "EVENTHint": "Zum Beispiel ein neuer Lead, eine bezahlte Rechnung oder ein neues Ticket",
+        "MONTHLY": "Einmal im Monat",
+        "MONTHLYHint": "Gut für Monatsabschlüsse und Berichte an den Vorstand"
       },
       "whatQ": "Was soll {name} jedes Mal tun?",
       "whatHint": "Wähle eine Idee oder schreibe eigene Anweisungen.",
@@ -20013,7 +20318,8 @@
       "weekly": "Jeden {day} um {time}",
       "hourly": "Stündlich um :{minute}",
       "event": "Immer wenn jemand {event}",
-      "full": "{when} erledigt {name} ({role}) „{job}“."
+      "full": "{when} erledigt {name} ({role}) „{job}“.",
+      "monthly": "Jeden Monat am {day}. um {time}"
     },
     "help": {
       "title": "Brauchst du Ideen?",
@@ -20071,6 +20377,10 @@
       "kpi_week": {
         "name": "Wöchentliche Zahlen",
         "body": "Erkläre, wie sich unsere Kennzahlen diese Woche bewegt haben und was dahinterstecken könnte."
+      },
+      "cfo_monthly_pack": {
+        "name": "Monatsbericht des CFO",
+        "body": "Am 1. jedes Monats: Umsatz, Ausgaben und Gewinn im Vergleich zum Vormonat, Liquidität und Reichweite, Forderungen und Verbindlichkeiten, Budget gegen Ist, KI- und Anbieterkosten sowie nötige Entscheidungen – nur aus Ihren echten Daten."
       }
     }
   },
@@ -21597,6 +21907,43 @@
       },
       "reportNote": "Details (optional)",
       "reportSend": "Meldung senden"
+    },
+    "unified": {
+      "title": "Wie weit die KI gehen darf – auf einen Blick",
+      "description": "Vier Einstellungen entscheiden, in dieser Reihenfolge geprüft. Die strengste gewinnt immer.",
+      "order": {
+        "platform": "Plattform und „Alle KI pausieren“",
+        "platformHint": "Wenn pausiert, läuft nichts – keine Aufgaben, Werkzeuge oder Nachrichten.",
+        "autopilot": "Autopilot der Abteilung",
+        "autopilotHint": "Ob die KI selbst Arbeit beginnen darf (Zeitpläne, Signale) oder nur auf Anfrage.",
+        "rules": "Regeln je Aktion und Auto-Modus",
+        "rulesHint": "Ob eine Aktion in Grenzen läuft, auf Freigabe wartet, nur vorgeschlagen wird oder aus ist.",
+        "employees": "Autonomie jedes KI-Mitarbeitenden",
+        "employeesHint": "Welche Werkzeuge ein KI-Mitarbeitender überhaupt bekommt (nur lesen, entwerfen, mit Freigabe handeln, selbst handeln)."
+      },
+      "levels": {
+        "PAUSED": "Pausiert",
+        "MANUAL": "Manuell",
+        "MANUALHint": "arbeitet nur auf Anfrage",
+        "ASSISTED": "Unterstützt",
+        "ASSISTEDHint": "entwirft und empfiehlt",
+        "APPROVAL": "Freigabe",
+        "APPROVALHint": "handelt nach Ihrer Freigabe",
+        "AUTONOMOUS": "Autonom",
+        "AUTONOMOUSHint": "handelt selbst innerhalb der Grenzen"
+      },
+      "department": "Abteilung",
+      "effective": "Gilt",
+      "autopilot": "Autopilot",
+      "rules": "Aktionsregeln",
+      "employees": "KI-Mitarbeitende",
+      "decidedBy": {
+        "pause": "durch „Alle KI pausieren“",
+        "autopilot": "durch den Autopiloten",
+        "rules": "durch die Aktionsregeln",
+        "employees": "durch die Autonomie der KI-Mitarbeitenden"
+      },
+      "autopilotLink": "Autopilot je Abteilung ändern"
     }
   },
   "briefing": {
@@ -22906,7 +23253,14 @@
       "status": "Status"
     },
     "view": "Ansehen",
-    "notEnforced": "Planlimits werden in dieser Installation nicht durchgesetzt; die Nutzung wird zur Information angezeigt."
+    "notEnforced": "Planlimits werden in dieser Installation nicht durchgesetzt; die Nutzung wird zur Information angezeigt.",
+    "paymentFailed": {
+      "title": "Ihre letzte Zahlung ist fehlgeschlagen",
+      "body": "Stripe konnte Ihre Zahlungsmethode nicht belasten. Aktualisieren Sie sie, um Ihren Tarif zu behalten; Stripe versucht es automatisch erneut.",
+      "bodyOn": "Stripe konnte Ihre Zahlungsmethode am {date} nicht belasten. Aktualisieren Sie sie, um Ihren Tarif zu behalten; Stripe versucht es automatisch erneut.",
+      "update": "Zahlungsmethode aktualisieren",
+      "askManager": "Bitten Sie eine Person, die die Abrechnung dieser Organisation verwaltet, die Zahlungsmethode zu aktualisieren."
+    }
   },
   "upgrade": {
     "featureTitle": "{feature} freischalten",
@@ -23470,7 +23824,8 @@
     "caption": {
       "idle": "Halte den Button oder die Leertaste gedrückt und sprich mit {company}.",
       "listening": "Ich höre zu …",
-      "thinking": "Ich arbeite daran …"
+      "thinking": "Ich arbeite daran …",
+      "transcribing": "Ihre Worte werden in Text umgewandelt …"
     },
     "state": {
       "IDLE": "Bereit",
@@ -23479,7 +23834,9 @@
       "EXECUTING": "Führt aus",
       "SPEAKING": "Spricht",
       "ALERT": "Achtung",
-      "SUCCESS": "Erledigt"
+      "SUCCESS": "Erledigt",
+      "TRANSCRIBING": "Transkribiere",
+      "ERROR": "Fehler"
     },
     "mic": {
       "recording": "Mikrofon an",
@@ -24069,7 +24426,9 @@
         "title": "Finales Rendering",
         "ready": "Rendering-Anbieter verbunden – fertige MP4s werden erstellt.",
         "missing": "Video-Rendering ist auf der Plattform noch nicht verfügbar. Sie erhalten eine bearbeitbare Zeitleiste."
-      }
+      },
+      "needsKeys": "Realy muss den Plattformschlüssel {keys} hinterlegen",
+      "disabled": "Der Anbieter ist eingerichtet, aber für diese Organisation deaktiviert – fragen Sie das Realy-Team."
     },
     "projects": {
       "title": "Videoprojekte",

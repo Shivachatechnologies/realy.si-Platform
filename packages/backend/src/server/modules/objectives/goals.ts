@@ -6,6 +6,7 @@ import { invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
 import { can } from "@/server/modules/rbac/service";
 import { authorize, eligibleMembers, isUuid, toDay } from "./service";
+import { budgetColumns, budgetInput, goalBudgets } from "./budgets";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 const optUuid = z.string().uuid().or(z.literal("")).nullable().optional();
@@ -22,6 +23,8 @@ export const goalInput = z.object({
   ownerId: optUuid,
   pillarId: optUuid,
   targetDate: optDate,
+  /** Budget for the goal (B15); actual = AI and provider spend of its work. */
+  budget: budgetInput,
 });
 export const createGoalInput = goalInput.extend({
   /** Start the AI decomposition right away (Command Center objective bar). */
@@ -72,6 +75,13 @@ export async function listGoals(ctx: RequestContext, organizationId: string, com
   });
 }
 
+/** Goals with budget vs actual (B15): the AI and provider spend of every task that worked on each goal. */
+export async function listGoalsWithBudgets(ctx: RequestContext, organizationId: string, companyId: string, f: GoalFilters = {}) {
+  const goals = await listGoals(ctx, organizationId, companyId, f);
+  const budgets = await goalBudgets({ organizationId, companyId }, goals);
+  return goals.map((g) => ({ ...g, budgetStatus: budgets.get(g.id)! }));
+}
+
 export async function getGoal(ctx: RequestContext, organizationId: string, companyId: string, goalId: string) {
   await authorize(ctx, organizationId, companyId, "objectives.read");
   if (!isUuid(goalId)) throw notFound("Goal");
@@ -94,6 +104,7 @@ export async function createGoal(ctx: RequestContext, organizationId: string, co
         description: input.description || null,
         horizon: input.horizon,
         targetDate: toDay(blank(input.targetDate)) ?? horizonEnd(input.horizon),
+        ...budgetColumns(input.budget),
         ...refs,
         createdById: ctx.actor.id ?? organizationId,
       },
@@ -123,6 +134,7 @@ export async function updateGoal(ctx: RequestContext, organizationId: string, co
         ...(input.horizon !== undefined ? { horizon: input.horizon } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.targetDate !== undefined ? { targetDate: toDay(blank(input.targetDate)) } : {}),
+        ...budgetColumns(input.budget),
       },
     });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "company_goal.updated", resourceType: "company_goal", resourceId: goalId, oldValue: before, newValue: g });

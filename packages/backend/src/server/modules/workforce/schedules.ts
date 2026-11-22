@@ -20,9 +20,11 @@ const scheduleBase = z.object({
   aiEmployeeId: z.string().uuid(),
   name: z.string().trim().min(1).max(120),
   kind: z.enum(["RECURRING", "EVENT"]),
-  frequency: z.enum(["HOURLY", "DAILY", "WEEKLY"]).nullable().optional(),
+  frequency: z.enum(["HOURLY", "DAILY", "WEEKLY", "MONTHLY"]).nullable().optional(),
   timeOfDay: hhmm.nullable().optional(),
   weekday: z.number().int().min(0).max(6).nullable().optional(),
+  /** MONTHLY: 1 … 31 (a day past the month's end runs on its last day). */
+  dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
   eventType: z.enum(DOMAIN_EVENTS).nullable().optional(),
   instructions: z.string().trim().min(1).max(6000),
   briefingMode: z.enum(["DAILY", "WEEKLY", "MONTHLY", "TREND_RISK"]).nullable().optional(),
@@ -36,10 +38,11 @@ function normalize(s: ScheduleShape) {
   if (s.kind === "RECURRING") {
     if (!s.frequency) throw invalid("Choose how often it runs", { reason: "workforce_schedule_frequency_required" });
     if (s.frequency === "WEEKLY" && (s.weekday === null || s.weekday === undefined)) throw invalid("Choose a weekday", { reason: "workforce_schedule_weekday_required" });
-    return { frequency: s.frequency, timeOfDay: s.timeOfDay ?? (s.frequency === "HOURLY" ? "00:00" : "09:00"), weekday: s.frequency === "WEEKLY" ? s.weekday! : null, eventType: null };
+    if (s.frequency === "MONTHLY" && (s.dayOfMonth === null || s.dayOfMonth === undefined)) throw invalid("Choose a day of the month", { reason: "workforce_schedule_day_required" });
+    return { frequency: s.frequency, timeOfDay: s.timeOfDay ?? (s.frequency === "HOURLY" ? "00:00" : "09:00"), weekday: s.frequency === "WEEKLY" ? s.weekday! : null, dayOfMonth: s.frequency === "MONTHLY" ? s.dayOfMonth! : null, eventType: null };
   }
   if (!s.eventType) throw invalid("Choose an event", { reason: "workforce_schedule_event_required" });
-  return { frequency: null, timeOfDay: null, weekday: null, eventType: s.eventType };
+  return { frequency: null, timeOfDay: null, weekday: null, dayOfMonth: null, eventType: s.eventType };
 }
 
 async function authorize(ctx: RequestContext, organizationId: string, companyId: string, permission: "agents.read" | "agents.manage", tx?: Tx) {
@@ -103,7 +106,7 @@ export async function updateSchedule(ctx: RequestContext, organizationId: string
     const merged = { ...before, ...Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)) } as ScheduleShape & typeof before;
     const timing = normalize(merged);
     if (input.aiEmployeeId && !(await tx.aiEmployee.count({ where: { id: input.aiEmployeeId, organizationId, companyId, archivedAt: null } }))) throw notFound("AI employee");
-    const timingChanged = timing.frequency !== before.frequency || timing.timeOfDay !== before.timeOfDay || timing.weekday !== before.weekday;
+    const timingChanged = timing.frequency !== before.frequency || timing.timeOfDay !== before.timeOfDay || timing.weekday !== before.weekday || timing.dayOfMonth !== before.dayOfMonth;
     const s = await tx.aiSchedule.update({
       where: { id: scheduleId },
       data: {

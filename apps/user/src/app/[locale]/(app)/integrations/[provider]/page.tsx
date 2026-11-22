@@ -149,6 +149,15 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   // The customer's own Stripe / Razorpay / WhatsApp / Mailchimp account: "Connect with X", or set up by the Realy team.
   const own = isOwnAccountProvider(info.key);
   const byRealy = !!conn && isSetUpByRealy(conn.config);
+  // Zendesk and Shopify sign-in pages live on the customer's own account address (B33).
+  const cfg = (conn?.config ?? {}) as Record<string, unknown>;
+  const connectParam =
+    info.key === "zendesk"
+      ? { name: "subdomain" as const, label: t("integrations.connectParams.subdomain"), placeholder: "yourcompany", pattern: "[a-z0-9][a-z0-9\\-]{0,62}", initial: typeof cfg.subdomain === "string" ? cfg.subdomain : undefined }
+      : info.key === "shopify"
+        ? { name: "shopDomain" as const, label: t("integrations.connectParams.shopDomain"), placeholder: "your-store.myshopify.com", pattern: "[a-z0-9][a-z0-9\\-]{0,60}(\\.myshopify\\.com)?", initial: typeof cfg.shopDomain === "string" ? cfg.shopDomain : undefined }
+        : undefined;
+  const grantedScopes = conn && Array.isArray(conn.scopes) ? (conn.scopes as string[]).filter(Boolean) : [];
 
   return frame(
     <>
@@ -198,6 +207,18 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                     <dt className="text-xs text-muted-foreground">{t("integrations.health.lastSuccess")}</dt>
                     <dd>{conn.lastSuccessAt ? formatDateTime(conn.lastSuccessAt, locale, tz) : "—"}</dd>
                   </div>
+                  {grantedScopes.length ? (
+                    <div className="sm:col-span-2">
+                      <dt className="text-xs text-muted-foreground">{t("integrations.grantedScopes")}</dt>
+                      <dd className="flex flex-wrap gap-1 pt-1">
+                        {grantedScopes.slice(0, 30).map((sc) => (
+                          <code key={sc} className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
+                            {sc}
+                          </code>
+                        ))}
+                      </dd>
+                    </div>
+                  ) : null}
                 </dl>
               ) : (
                 <p className="text-sm text-muted-foreground">{own ? t("integrations.ownAccount.help", { name: info.name }) : oauth ? t("integrations.platform.oauthHelp", { name: info.name }) : t("integrations.notConnectedHelp")}</p>
@@ -205,7 +226,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               {conn?.status === "ERROR" ? <Notice tone="danger">{oauth && !byRealy ? t("integrations.platform.reconnectHint", { name: info.name }) : t("integrations.platform.failingHint")}</Notice> : null}
               {canConnect ? (
                 <div className="flex flex-wrap items-center gap-3">
-                  <OAuthConnectButton provider={info.key} name={info.name} orgId={org.id} companyId={company.id} locale={locale} reconnect={!!conn} />
+                  <OAuthConnectButton provider={info.key} name={info.name} orgId={org.id} companyId={company.id} locale={locale} reconnect={!!conn} param={connectParam} />
                   <p className="text-xs text-muted-foreground">{t("integrations.oauthHelp")}</p>
                 </div>
               ) : null}

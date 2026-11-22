@@ -157,7 +157,7 @@ export async function startChecklistTx(
 
 export async function listTemplates(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.manage");
-  return db().hrChecklistTemplate.findMany({
+  return db().hrChecklistTemplate.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: [{ kind: "asc" }, { name: "asc" }],
     include: { tasks: { orderBy: { position: "asc" } } },
@@ -479,7 +479,7 @@ export async function getChecklistApi(ctx: RequestContext, organizationId: strin
 export async function onboardingOf(ctx: RequestContext, organizationId: string, companyId: string, employeeId: string) {
   const me = await myEmployee(db(), ctx, organizationId, companyId);
   await authorize(ctx, organizationId, companyId, me?.id === employeeId ? "hr.read" : "hr.manage");
-  const lists = await db().hrChecklist.findMany({ where: { organizationId, companyId, employeeId }, orderBy: { createdAt: "desc" }, include: { items: { select: { completedAt: true, workTaskId: true } } } });
+  const lists = await db().hrChecklist.findMany({ take: 500, where: { organizationId, companyId, employeeId }, orderBy: { createdAt: "desc" }, include: { items: { select: { completedAt: true, workTaskId: true } } } });
   const checklists = (await withProgress(companyId, lists)).map((l) => ({ id: l.id, kind: l.kind, status: l.status, startDate: l.startDate, done: l.done, total: l.total, percent: l.percent }));
   return { checklists, assets: await employeeAssets(organizationId, companyId, employeeId) };
 }

@@ -3,7 +3,7 @@ import { db, transaction, type Prisma } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { conflict, forbidden, invalid, isAppError, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
-import { profileByKey } from "@/server/modules/agents/profiles";
+import { resolveProfile } from "@/server/modules/agents/role-profiles";
 import { can, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
@@ -119,7 +119,7 @@ export async function runLifecycleAction(ctx: RequestContext, organizationId: st
       return out;
     }
     case "change_role": {
-      if (!profileByKey(input.profileKey)) throw notFound("Profile");
+      if (!(await resolveProfile({ organizationId, companyId }, input.profileKey))) throw notFound("Profile");
       if (input.profileKey === e.profileKey && !input.level && input.jobTitle === undefined) throw conflict("This is already the employee's role", { reason: "workforce_role_unchanged" });
       const out = await updateEmployee(ctx, organizationId, companyId, employeeId, { profileKey: input.profileKey, ...(input.level ? { level: input.level } : {}), ...(input.jobTitle !== undefined ? { jobTitle: input.jobTitle } : {}) });
       await audit(ctx, organizationId, companyId, employeeId, "role_changed", { profileKey: out.profileKey, level: out.level }, { profileKey: e.profileKey, level: e.level });
@@ -133,7 +133,7 @@ export async function runLifecycleAction(ctx: RequestContext, organizationId: st
       return out;
     }
     case "change_permissions": {
-      const profile = profileByKey(e.profileKey);
+      const profile = await resolveProfile({ organizationId, companyId }, e.profileKey);
       if (!profile) throw notFound("Profile");
       const allowedTools = input.allowedTools ?? e.allowedTools;
       await assertWithinOwnPermissions(ctx, chain, profile.tools, allowedTools, input.runsAsUserId, e.runsAsUserId);

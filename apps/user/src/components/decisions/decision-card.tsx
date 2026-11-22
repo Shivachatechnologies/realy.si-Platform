@@ -7,6 +7,10 @@ import { formatDateTime } from "@/i18n/format";
 import type { Translate } from "@/i18n/translate";
 import { cn } from "@/lib/utils";
 import { DecisionActions, ExpiryCountdown } from "./decision-actions";
+import { ApprovalRetry } from "@/components/approvals/approval-actions";
+
+/** Manual + first execution attempts of an approved action (approvals/service.ts MAX_APPROVAL_ATTEMPTS). */
+const MAX_APPROVAL_ATTEMPTS = 3;
 import type { ActionKind, ActionPreview } from "./describe";
 
 const KIND: Record<ActionKind, { icon: ReactNode; tile: string }> = {
@@ -103,6 +107,7 @@ export function DecisionCard({
           {a.decisionNote ? <p className="text-sm">“{a.decisionNote}”</p> : null}
           {a.status === "EXECUTED" && result?.content ? <p className="text-sm text-success">{result.content}</p> : null}
           {a.status === "FAILED" && a.error ? <p className="text-sm text-danger">{a.error}</p> : null}
+          {a.status === "FAILED" && canDecide ? <ApprovalRetry base={`${apiBase}/approvals/${a.id}`} attempts={a.attempts} maxAttempts={MAX_APPROVAL_ATTEMPTS} /> : null}
           {a.status === "EXPIRED" ? <p className="text-xs text-muted-foreground">{t("decisionInbox.expiredNote")}</p> : null}
         </div>
       )}

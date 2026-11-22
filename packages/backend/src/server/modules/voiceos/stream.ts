@@ -8,16 +8,24 @@ import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
 import { isUuid, type VoiceScope } from "./access";
 import { eventRule, profileDepartment, type Department } from "./catalog";
 import { VOICE_PROFILE } from "./intent";
+import { busLive, labelOf, subscribeCompany, type BusMessage } from "./stream-bus";
 
 /**
- * Realtime company event stream (Server-Sent Events). Each open connection polls the transactional outbox (events
- * table, cursor on occurred_at with a short look-back so rows committed slightly out of order are not missed) and the
- * state of agent tasks, command runs, approvals and phone calls, every ~1.5 s. Everything is tenant-scoped and
+ * Realtime company event stream (Server-Sent Events). Domain events arrive over Redis pub/sub from the worker's outbox
+ * relay (voiceos/stream-bus.ts) and are forwarded at once; each message also wakes the connection to re-read the
+ * state of agent tasks, command runs, approvals and phone calls. While the fan-out is live a connection only catches
+ * up from the database every ~10 s (state changes that emit no event); without Redis, or while the subscriber is
+ * down, it falls back to polling the transactional outbox (cursor on occurred_at with a short look-back so rows
+ * committed slightly out of order are not missed) and those tables every ~1.5 s. Everything is tenant-scoped and
  * filtered by the viewer's read permissions per department. Payload snapshots are never forwarded: only the type,
  * the entity and a short title.
  */
 
 const TICK_MS = 1_500;
+/** Catch-up poll while the pub/sub fan-out is live. */
+const BUS_TICK_MS = 10_000;
+/** At most one database read per connection in this window, however many wake-ups arrive. */
+const MIN_POLL_GAP_MS = 750;
 const LOOKBACK_MS = 5_000;
 const HEARTBEAT_MS = 15_000;
 const RECHECK_MS = 60_000;
@@ -62,16 +70,6 @@ export async function streamAccess(ctx: RequestContext, organizationId: string, 
   if (ctx.actor.type !== "USER" || !ctx.actor.id) throw forbidden("The live stream is available to signed-in people only");
   const granted = await Promise.all(STREAM_PERMISSIONS.map(async (p) => [p, await can(ctx, p, chain)] as const));
   return { scope: { organizationId, companyId }, chain, userId: ctx.actor.id, perms: new Set(granted.filter(([, ok]) => ok).map(([p]) => p)) };
-}
-
-function labelOf(payload: unknown): string | null {
-  const data = (payload as { data?: Record<string, unknown> } | null)?.data;
-  if (!data || typeof data !== "object") return null;
-  for (const k of ["title", "name", "subject", "number"]) {
-    const v = data[k];
-    if (typeof v === "string" && v.trim()) return v.trim().slice(0, 80);
-  }
-  return null;
 }
 
 /**
@@ -152,6 +150,16 @@ export async function recentCompanyEvents(ctx: RequestContext, organizationId: s
   return out;
 }
 
+/** Domain items of one pub/sub message the viewer may see (same shape and filter as the database poll). */
+export function busItems(access: StreamAccess, m: BusMessage): Extract<StreamItem, { kind: "domain" }>[] {
+  if (m.companyId !== access.scope.companyId || m.organizationId !== access.scope.organizationId) return [];
+  return m.events.flatMap((e) => {
+    const rule = eventRule(e.type);
+    if (!rule || !access.perms.has(rule.permission)) return [];
+    return [{ kind: "domain" as const, key: `e:${e.id}`, id: e.id, type: e.type, department: rule.department, entityType: e.aggregateType, entityId: e.aggregateId, label: e.label, at: e.at }];
+  });
+}
+
 export function parseCursor(raw: string | null | undefined): number | null {
   if (!raw || !/^\d{10,16}$/.test(raw)) return null;
   const n = Number(raw);
@@ -188,14 +196,48 @@ export function companyEventStream(ctx: RequestContext, access: StreamAccess, op
           /* already closed */
         }
       };
-      opts.signal.addEventListener("abort", close);
+      // Pub/sub fan-out: forward the viewer's domain events right away and wake the loop for a state read.
+      let wake: (() => void) | null = null;
+      let woken = false;
+      const unsubscribe = subscribeCompany(access.scope.companyId, (m) => {
+        for (const item of busItems(access, m)) {
+          if (seen.has(item.key)) continue;
+          seen.set(item.key, new Date(item.at).getTime());
+          send(`id: ${since}\nevent: domain\ndata: ${JSON.stringify(item)}\n\n`);
+        }
+        woken = true;
+        wake?.();
+      });
+      const sleep = (ms: number) =>
+        new Promise<void>((res) => {
+          if (woken) return res();
+          const timer: { t?: ReturnType<typeof setTimeout> } = {};
+          const done = () => {
+            clearTimeout(timer.t);
+            wake = null;
+            res();
+          };
+          timer.t = setTimeout(done, ms);
+          wake = done;
+        });
+      const onAbort = () => {
+        close();
+        wake?.();
+      };
+      opts.signal.addEventListener("abort", onAbort);
       send(`retry: 2000\nid: ${since}\nevent: hello\ndata: ${JSON.stringify({ t: since, departments: [...access.perms] })}\n\n`);
       const started = Date.now();
       let lastBeat = started;
       let lastCheck = started;
       let failures = 0;
+      let lastPoll = 0;
       while (!closed) {
-        await new Promise((r) => setTimeout(r, TICK_MS));
+        await sleep(busLive() ? BUS_TICK_MS : TICK_MS);
+        if (closed) break;
+        const gap = Date.now() - lastPoll;
+        if (gap < MIN_POLL_GAP_MS) await new Promise((r) => setTimeout(r, MIN_POLL_GAP_MS - gap));
+        woken = false;
+        lastPoll = Date.now();
         if (closed) break;
         const at = Date.now();
         if (at - started > STREAM_MAX_MS) {
@@ -224,7 +266,8 @@ export function companyEventStream(ctx: RequestContext, access: StreamAccess, op
           if (failures >= 5) break;
         }
       }
-      opts.signal.removeEventListener("abort", close);
+      unsubscribe();
+      opts.signal.removeEventListener("abort", onAbort);
       close();
     },
     cancel() {

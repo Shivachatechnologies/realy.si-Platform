@@ -8,6 +8,7 @@ import { Notice } from "@/components/ui/notice";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { financePage } from "@/components/finance/page-context";
 import { MoneyFlowCard } from "@/components/finance/money-flow-card";
+import { usdCents } from "@/components/finance/ai-spend-card";
 import { Empty, RangeForm, rangePresets, UsageBar } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
 import { addDays, param, parseRange } from "@/server/modules/finance/common";
@@ -72,6 +73,25 @@ export default async function ReportsPage({ searchParams }: PageProps<"/[locale]
             <Td className="text-base font-semibold">{t("finance.metrics.netProfit")}</Td>
             <Td className={cn("text-end text-base font-semibold tabular-nums", r.net < 0n && "text-danger")}>{money(r.net)}</Td>
           </Tr>
+          {r.aiSpend.entries ? (
+            <>
+              <Tr>
+                <Td>
+                  <Link href={`/${locale}/costs`} className="hover:underline">
+                    {t("finance.aiSpend.pnlLine")}
+                  </Link>
+                  <span className="block text-xs text-muted-foreground">{r.aiSpend.amountMinor === null ? t("finance.aiSpend.notConverted") : t("finance.aiSpend.pnlHint")}</span>
+                </Td>
+                <Td className="text-end tabular-nums">{r.aiSpend.amountMinor !== null ? money(r.aiSpend.amountMinor) : money(usdCents(r.aiSpend.micros), "USD")}</Td>
+              </Tr>
+              {r.netAfterAi !== null ? (
+                <Tr>
+                  <Td className="font-semibold">{t("finance.aiSpend.profitAfter")}</Td>
+                  <Td className={cn("text-end font-semibold tabular-nums", r.netAfterAi < 0n && "text-danger")}>{money(r.netAfterAi)}</Td>
+                </Tr>
+              ) : null}
+            </>
+          ) : null}
         </TBody>
       </Table>
     );

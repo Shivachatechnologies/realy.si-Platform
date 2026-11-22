@@ -489,8 +489,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Webflow",
     category: "cms",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
+    scopes: ["sites:read", "cms:read", "cms:write", "pages:read"],
+    envVars: ["WEBFLOW_CLIENT_ID", "WEBFLOW_CLIENT_SECRET"],
     docsUrl: "https://developers.webflow.com/data/reference/authentication/site-token",
     fields: [{ key: "apiKey", secret: true, required: true, placeholder: "site API token", pattern: "^[A-Za-z0-9_\\-]{20,}$" }],
     capabilities: ["cms_publishing"],
@@ -501,8 +503,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Shopify",
     category: "cms",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
+    scopes: ["read_products", "write_products", "read_orders", "read_customers", "read_content", "write_content"],
+    envVars: ["SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET"],
     docsUrl: "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/generate-app-access-tokens-admin",
     fields: [
       { key: "shopDomain", secret: false, required: true, placeholder: "your-store.myshopify.com", pattern: "^[a-z0-9][a-z0-9-]{0,60}\\.myshopify\\.com$" },
@@ -871,8 +875,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Notion",
     category: "productivity",
     authType: "api_key",
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
     scopes: [],
-    envVars: [],
+    envVars: ["NOTION_CLIENT_ID", "NOTION_CLIENT_SECRET"],
     docsUrl: "https://developers.notion.com/docs/create-a-notion-integration",
     fields: [{ key: "apiKey", secret: true, required: true, labelKey: "integrationSecret", placeholder: "ntn_… / secret_…", pattern: "^(ntn_|secret_)[A-Za-z0-9]{20,}$" }],
     capabilities: ["notes_docs", "workflow_actions"],
@@ -882,8 +888,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "ClickUp",
     category: "productivity",
     authType: "api_key",
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
     scopes: [],
-    envVars: [],
+    envVars: ["CLICKUP_CLIENT_ID", "CLICKUP_CLIENT_SECRET"],
     docsUrl: "https://developer.clickup.com/docs/authentication",
     fields: [{ key: "apiKey", secret: true, required: true, labelKey: "apiToken", placeholder: "pk_…", pattern: "^pk_[A-Za-z0-9_]{20,}$" }],
     capabilities: ["tasks", "workflow_actions"],
@@ -894,8 +902,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Calendly",
     category: "productivity",
     authType: "api_key",
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
     scopes: [],
-    envVars: [],
+    envVars: ["CALENDLY_CLIENT_ID", "CALENDLY_CLIENT_SECRET"],
     docsUrl: "https://developer.calendly.com/how-to-authenticate-with-personal-access-tokens",
     fields: [{ key: "apiKey", secret: true, required: true, labelKey: "personalAccessToken", placeholder: "eyJ…", pattern: "^[A-Za-z0-9_\\-.]{40,4000}$" }],
     syncKinds: ["calendly.events"],
@@ -918,8 +928,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Zendesk",
     category: "support",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
+    scopes: ["read", "write"],
+    envVars: ["ZENDESK_CLIENT_ID", "ZENDESK_CLIENT_SECRET"],
     docsUrl: "https://developer.zendesk.com/api-reference/introduction/security-and-auth/",
     fields: [
       { key: "subdomain", secret: false, required: true, placeholder: "yourcompany", pattern: "^[a-z0-9][a-z0-9-]{0,62}$" },
@@ -935,8 +947,10 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Intercom",
     category: "support",
     authType: "api_key",
+    // B33: customers connect their own account with Connect (Realy's OAuth app); the key fields are only for a setup by the Realy team.
+    oauthAlternative: true,
     scopes: [],
-    envVars: [],
+    envVars: ["INTERCOM_CLIENT_ID", "INTERCOM_CLIENT_SECRET"],
     docsUrl: "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication",
     fields: [{ key: "apiKey", secret: true, required: true, labelKey: "accessToken", placeholder: "dG9r…", pattern: "^[A-Za-z0-9=_\\-:]{20,200}$" }],
     configFields: [{ key: "webhookSecret", secret: true, required: false, placeholder: "App client secret", pattern: "^[^\\s]{8,200}$" }],
@@ -1120,11 +1134,13 @@ export function platformCredentialFields(info: ProviderInfo): (CredentialField &
  */
 export type CustomerConnectMode = "platform" | "oauth" | "unavailable";
 
-export function customerConnectMode(info: Pick<ProviderInfo, "key" | "authType" | "availability">): CustomerConnectMode {
+export function customerConnectMode(info: Pick<ProviderInfo, "key" | "authType" | "availability" | "oauthAlternative">): CustomerConnectMode {
   if (isPlatformManaged(info.key)) return "platform";
   // The customer's own payment / messaging / email-marketing accounts connect with Realy's platform app ("Connect with X").
   if (isOwnAccountProvider(info.key)) return "oauth";
   if (info.authType === "oauth2" && info.availability !== "awaiting_docs") return "oauth";
+  // API-key providers that also have an OAuth path on Realy's app (B33: Calendly, Zendesk, Intercom, Shopify, …).
+  if (info.oauthAlternative && info.availability !== "awaiting_docs") return "oauth";
   return "unavailable";
 }
 

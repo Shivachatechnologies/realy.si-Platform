@@ -21,6 +21,7 @@ import { assetPublicUrl, creativePrompt, presetFor, PRESETS } from "./assets";
 import { learningsContext } from "./learning";
 import { upsertRecommendation } from "./recommendations";
 import { assertFeature, hasFeature } from "@/server/modules/entitlements/service";
+import { isCompanyAiPaused, pausedCompanyIds } from "./ai-pause";
 
 type Item = MarketingAutopilotItem;
 export const AUTONOMY_LEVELS = ["DRAFT_ONLY", "REVIEW_REQUIRED", "AUTO_PUBLISH"] as const;
@@ -125,7 +126,7 @@ function dataOf(input: Partial<z.infer<typeof autopilotInput>>): Prisma.Marketin
 
 export async function listAutopilots(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "marketing.read");
-  const rows = await db().marketingAutopilot.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { createdAt: "desc" } });
+  const rows = await db().marketingAutopilot.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { createdAt: "desc" }, take: 200 });
   const counts = await db().marketingAutopilotItem.groupBy({ by: ["autopilotId", "stage"], where: { companyId, autopilotId: { in: rows.map((r) => r.id) } }, _count: { _all: true } });
   return rows.map((r) => ({ ...r, stages: Object.fromEntries(counts.filter((c) => c.autopilotId === r.id).map((c) => [c.stage, c._count._all])) as Partial<Record<MarketingPipelineStage, number>> }));
 }
@@ -666,6 +667,10 @@ export async function advanceItem(itemId: string): Promise<void> {
   if (!ap || ap.archivedAt) return;
   // The organization's plan no longer includes the autopilot: leave the item where it is.
   if (!(await hasFeature(ap.organizationId, "feature.marketing_autopilot"))) return;
+  // "Pause all AI": no AI step, provider call or self-scheduling runs. Only an item a person approved may still be
+  // scheduled (that is the person's decision); everything else waits where it is until the company resumes AI.
+  const humanApproved = it.stage === "READY" && !!it.approvedAt && !it.pendingTaskId;
+  if (!humanApproved && (await isCompanyAiPaused(ap.organizationId, ap.companyId))) return;
   try {
     // A step is running as an agent task: collect it.
     if (it.pendingTaskId) {
@@ -817,10 +822,16 @@ export async function runAutopilots(): Promise<number> {
   const all = await db().marketingAutopilot.findMany({
     where: { status: "ACTIVE", archivedAt: null },
     select: { id: true, name: true, organizationId: true, companyId: true, ownerId: true, createdById: true, lastPlannedAt: true },
+    // Bounded per tick; the least recently planned go first, so every autopilot gets its turn.
+    orderBy: { lastPlannedAt: { sort: "asc", nulls: "first" } },
+    take: 500,
   });
   const entitled = new Map<string, boolean>();
   const active: typeof all = [];
+  // Companies with "Pause all AI" on: no planning and no pipeline steps (and their items do not use up this tick's batch).
+  const paused = await pausedCompanyIds();
   for (const a of all) {
+    if (paused.has(a.companyId)) continue;
     if (!entitled.has(a.organizationId)) entitled.set(a.organizationId, await hasFeature(a.organizationId, "feature.marketing_autopilot"));
     if (entitled.get(a.organizationId)) active.push(a);
     else await pauseForPlan(a).catch((err) => logger.warn({ autopilotId: a.id, err: String(err) }, "autopilot plan pause failed"));

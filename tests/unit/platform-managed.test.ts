@@ -32,7 +32,7 @@ describe("platform-managed providers", () => {
     expect(customerConnectMode(providerInfo("openai")!)).toBe("platform");
     expect(customerConnectMode(providerInfo("mailchimp")!)).toBe("oauth");
     expect(customerConnectMode(providerInfo("stripe")!)).toBe("oauth");
-    expect(customerConnectMode(providerInfo("notion")!)).toBe("unavailable");
+    expect(customerConnectMode(providerInfo("pipedrive")!)).toBe("unavailable"); // G6 B33: notion now connects with OAuth
     expect(customerConnectMode(providerInfo("custom_api")!)).toBe("unavailable");
   });
 

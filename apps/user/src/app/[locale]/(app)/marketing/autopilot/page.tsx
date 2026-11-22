@@ -15,6 +15,8 @@ import { listAutopilots, listItems, parseItemFilters, pipelineSummary, PIPELINE_
 import { listAccounts, SOCIAL_PROVIDERS } from "@/server/modules/marketing/social";
 import { listHelpTasks } from "@/server/modules/marketing/intelligence";
 import { loadBrandKit } from "@/server/modules/marketing/brand";
+import { isCompanyAiPaused } from "@/server/modules/marketing/ai-pause";
+import { Notice } from "@/components/ui/notice";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.autopilot") };
@@ -27,13 +29,14 @@ export default async function AutopilotPage({ searchParams }: PageProps<"/[local
   if (m.blocked) return <MarketingShell {...shell} blocked={m.blocked} />;
   const { org, company, viewer, base, canManage, tz } = m;
   const f = parseItemFilters(await searchParams);
-  const [plans, items, stages, { accounts }, help, kit] = await Promise.all([
+  const [plans, items, stages, { accounts }, help, kit, aiPaused] = await Promise.all([
     listAutopilots(viewer.ctx, org.id, company.id),
     listItems(viewer.ctx, org.id, company.id, null, f),
     pipelineSummary(org.id, company.id),
     listAccounts(viewer.ctx, org.id, company.id),
     listHelpTasks(org.id, company.id, "autopilot"),
     loadBrandKit(db(), company.id),
+    isCompanyAiPaused(org.id, company.id),
   ]);
   const path = `/${locale}/marketing/autopilot`;
   const working = items.data.some((i) => i.pendingTaskId);
@@ -41,6 +44,14 @@ export default async function AutopilotPage({ searchParams }: PageProps<"/[local
   return (
     <MarketingShell {...shell}>
       <AutoRefresh active={working} intervalMs={8000} />
+      {aiPaused ? (
+        <Notice tone="warning" title={t("marketing.run.aiPaused.title")}>
+          {t("marketing.studio.autopilot.aiPaused")}{" "}
+          <Link href={`/${locale}/autonomy`} className="font-medium underline">
+            {t("marketing.run.aiPaused.open")}
+          </Link>
+        </Notice>
+      ) : null}
       <InfoStrip t={t} k="autopilot" />
       <StageBoard t={t} stages={PIPELINE_STAGES} counts={stages} href={(s) => `${path}?stage=${s}`} />
       {plans.length === 0 ? (

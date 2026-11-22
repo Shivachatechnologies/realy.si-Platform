@@ -39,6 +39,7 @@ export function ProjectTabs({ t, locale, projectId, active }: { t: Translate; lo
     { key: "timeline", href: `${p}/timeline`, label: t("work.tabs.timeline") },
     { key: "calendar", href: `${p}/calendar`, label: t("work.tabs.calendar") },
     { key: "sprints", href: `${p}/sprints`, label: t("work.tabs.sprints") },
+    { key: "execution", href: `${p}/execution`, label: t("work.tabs.execution") },
   ];
   return <SectionTabs tabs={tabs} active={active} label={t("work.tabs.projectLabel")} />;
 }

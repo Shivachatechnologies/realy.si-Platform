@@ -41,7 +41,7 @@ export default async function MarketingRunPage() {
 
   const checks: { key: string; ok: boolean; href: string; detail?: string }[] = [
     { key: "ai", ok: ready.ai, href: "/settings" },
-    { key: "research", ok: !!ready.research, href: "/integrations", detail: ready.research ?? undefined },
+    { key: "research", ok: !!ready.research, href: "/integrations", detail: ready.research ?? (ready.researchKeys.length ? t("marketing.run.ready.researchKeys", { keys: ready.researchKeys.join(" · ") }) : undefined) },
     { key: "social", ok: ready.social.length > 0, href: "/marketing/social", detail: ready.social.map((s) => `${t(`marketing.provider.${s.provider}`)} (${s.accounts})`).join(", ") || undefined },
     { key: "email", ok: ready.email, href: "/integrations" },
     { key: "blog", ok: true, href: ready.cms === "realy" ? "/marketing/blog" : "/integrations", detail: ready.cms === "realy" ? t("marketing.run.ready.realyBlog") : ready.cms },
@@ -52,6 +52,14 @@ export default async function MarketingRunPage() {
   return (
     <MarketingShell {...shell}>
       <AutoRefresh active={live} intervalMs={10_000} />
+      {ready.aiPaused ? (
+        <Notice tone="warning" title={t("marketing.run.aiPaused.title")}>
+          {t("marketing.run.aiPaused.body")}{" "}
+          <Link href={`/${locale}/autonomy`} className="font-medium underline">
+            {t("marketing.run.aiPaused.open")}
+          </Link>
+        </Notice>
+      ) : null}
       {view && run ? (
         <>
           <section className="glass relative overflow-hidden rounded-xl border p-4 shadow-elev-1 sm:p-5" aria-labelledby="run-title">

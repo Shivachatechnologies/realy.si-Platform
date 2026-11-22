@@ -23,6 +23,7 @@ import { getConnection } from "@/server/modules/integrations/connections";
 import { providerFetch } from "@/server/modules/integrations/client";
 import { ProviderError } from "@/server/modules/integrations/providers";
 import { validateTargetUrl } from "@/server/modules/integrations/webhooks";
+import { guardedFetch, OutboundBlockedError } from "@/server/core/outbound";
 import { render, type Action, type EvalScope } from "./definition";
 
 /**
@@ -530,13 +531,20 @@ function httpResult(status: number, text: string) {
 async function httpWebhook(env: ActionEnv, a: Extract<Action, { kind: "http_webhook" }>, scope: EvalScope) {
   const url = validateTargetUrl(a.url);
   const body = JSON.stringify(jsonBody(a.body, { event: scope.event, vars: scope.vars }));
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", "user-agent": "Realy-Workflows/1", "x-realy-workflow": env.workflowId, "x-realy-run": env.runId },
-    body,
-    redirect: "manual",
-    signal: AbortSignal.timeout(15_000),
-  });
+  let res: Response;
+  try {
+    // Pinned connection: the address the socket connects to is checked at send time; redirects are not followed.
+    res = await guardedFetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": "Realy-Workflows/1", "x-realy-workflow": env.workflowId, "x-realy-run": env.runId },
+      body,
+      redirect: "manual",
+      signal: AbortSignal.timeout(15_000),
+    }, { maxBytes: 1024 * 1024 });
+  } catch (err) {
+    if (err instanceof OutboundBlockedError) throw new PermanentError(`Webhook URL refused: ${err.message}`);
+    throw err;
+  }
   return httpResult(res.status, await res.text().catch(() => ""));
 }
 

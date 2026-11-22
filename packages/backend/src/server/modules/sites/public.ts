@@ -54,7 +54,7 @@ export async function loadPublicSite(slugRaw: string): Promise<PublicSite | null
   try {
     const site = await findSite(slugRaw);
     if (!site) return null;
-    const rows = await db().sitePage.findMany({ where: { siteId: site.id, status: { in: ["PUBLISHED", "SCHEDULED"] } }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { slug: true, kind: true, status: true, published: true, pending: true, publishAt: true, publishedAt: true } });
+    const rows = await db().sitePage.findMany({ where: { siteId: site.id, status: { in: ["PUBLISHED", "SCHEDULED"] } }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { slug: true, kind: true, status: true, published: true, pending: true, publishAt: true, publishedAt: true }, take: 500 });
     const pages = rows.flatMap((r) => {
       const live = liveSnapshot(r);
       if (!live) return [];

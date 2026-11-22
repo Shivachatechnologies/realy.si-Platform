@@ -24,7 +24,7 @@ export const updateApprovalRuleInput = approvalRuleInput.partial();
 
 export async function listApprovalRules(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  return db().financeApprovalRule.findMany({
+  return db().financeApprovalRule.findMany({ take: 500,
     where: { organizationId, companyId },
     orderBy: [{ active: "desc" }, { minAmountMinor: "asc" }, { name: "asc" }],
     include: { department: { select: { id: true, name: true } }, category: { select: { id: true, name: true } } },

@@ -173,9 +173,14 @@ export function TestRunDialog({ base, locale, workflowId, sampleKeys, hasPublish
   );
 }
 
-export function WorkflowSettingsForm({ base, workflowId, name: initialName, description: initialDescription, ownerId: initialOwner, users }: { base: string; workflowId: string; name: string; description: string; ownerId: string; users: { id: string; name: string }[] }) {
+const AUTONOMY_OPTIONS = ["OFF", "APPROVAL_REQUIRED", "AUTONOMOUS"] as const;
+/** MANUAL and ASSISTED behave like APPROVAL_REQUIRED for external actions (server: automation/governance.ts). */
+const autonomyOption = (mode: string) => (mode === "OFF" || mode === "AUTONOMOUS" ? mode : "APPROVAL_REQUIRED");
+
+export function WorkflowSettingsForm({ base, workflowId, name: initialName, description: initialDescription, ownerId: initialOwner, autonomyMode: initialAutonomy, users }: { base: string; workflowId: string; name: string; description: string; ownerId: string; autonomyMode: string; users: { id: string; name: string }[] }) {
   const t = useT();
   const [name, setName] = useState(initialName);
+  const [autonomy, setAutonomy] = useState(autonomyOption(initialAutonomy));
   const [description, setDescription] = useState(initialDescription);
   const [ownerId, setOwnerId] = useState(initialOwner);
   const [saved, setSaved] = useState(false);
@@ -183,7 +188,7 @@ export function WorkflowSettingsForm({ base, workflowId, name: initialName, desc
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setSaved(false);
-    void run(() => api(`${base}/workflows/${workflowId}`, { method: "PATCH", body: { name, description: description || null, ...(ownerId !== initialOwner ? { ownerId } : {}) } }), () => setSaved(true));
+    void run(() => api(`${base}/workflows/${workflowId}`, { method: "PATCH", body: { name, description: description || null, ...(ownerId !== initialOwner ? { ownerId } : {}), ...(autonomy !== autonomyOption(initialAutonomy) ? { autonomyMode: autonomy } : {}) } }), () => setSaved(true));
   };
   return (
     <form onSubmit={submit} className="grid gap-3 p-4">
@@ -198,6 +203,15 @@ export function WorkflowSettingsForm({ base, workflowId, name: initialName, desc
           {users.map((u) => (
             <option key={u.id} value={u.id}>
               {u.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label={t("workflows.autonomy.label")} htmlFor="set-autonomy" hint={t("workflows.autonomy.hint")}>
+        <Select id="set-autonomy" value={autonomy} onChange={(e) => setAutonomy(e.target.value as (typeof AUTONOMY_OPTIONS)[number])}>
+          {AUTONOMY_OPTIONS.map((m) => (
+            <option key={m} value={m}>
+              {t(`workflows.autonomy.modes.${m}`)}
             </option>
           ))}
         </Select>

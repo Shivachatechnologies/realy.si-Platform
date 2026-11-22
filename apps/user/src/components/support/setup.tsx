@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Check, Globe, Mail, MessageSquareText, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Globe, Mail, MessageCircle, MessageSquareText, Sparkles } from "lucide-react";
 import { FormError } from "@/components/form-error";
 import { AnimatedProgress } from "@/components/motion/animated-progress";
 import { isActive, useAgentTask, type LiveTask } from "@/components/guide-kit/use-agent-task";
@@ -15,6 +15,7 @@ import { Notice } from "@/components/ui/notice";
 import { useI18n } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { InboundStatusNotes, type InboundStatus } from "./settings";
 
 type Step = "channels" | "promises" | "articles" | "done";
 
@@ -27,7 +28,19 @@ function useSaveStep(base: string) {
 }
 
 /** Step 1: how customers reach you (web form, help center, email). */
-export function ChannelsStep({ base, initial, emailReady, links }: { base: string; initial: { supportFormEnabled: boolean; helpCenterEnabled: boolean; emailChannelEnabled: boolean; supportEmail: string | null }; emailReady: boolean; links: { form: string; help: string } }) {
+export function ChannelsStep({
+  base,
+  initial,
+  emailReady,
+  inbound,
+  links,
+}: {
+  base: string;
+  initial: { supportFormEnabled: boolean; helpCenterEnabled: boolean; emailChannelEnabled: boolean; whatsappChannelEnabled: boolean; supportEmail: string | null };
+  emailReady: boolean;
+  inbound: InboundStatus;
+  links: { form: string; help: string };
+}) {
   const { t } = useI18n();
   const save = useSaveStep(base);
   const [v, setV] = useState(initial);
@@ -37,10 +50,11 @@ export function ChannelsStep({ base, initial, emailReady, links }: { base: strin
     { key: "supportFormEnabled" as const, icon: <MessageSquareText />, rec: true, link: links.form },
     { key: "helpCenterEnabled" as const, icon: <BookOpen />, rec: true, link: links.help },
     { key: "emailChannelEnabled" as const, icon: <Mail />, rec: false, link: null },
+    { key: "whatsappChannelEnabled" as const, icon: <MessageCircle />, rec: false, link: null },
   ];
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((c) => (
           <label key={c.key} className={cn("hover-lift grid cursor-pointer content-start gap-2 rounded-lg border p-4 text-sm", v[c.key] && "border-primary bg-primary/5 shadow-glow")}>
             <span className="flex items-center gap-2">
@@ -66,11 +80,12 @@ export function ChannelsStep({ base, initial, emailReady, links }: { base: strin
           <Notice tone={emailReady ? "success" : "warning"}>{t(emailReady ? "support.setup.channels.emailReady" : "support.setup.channels.emailNotReady")}</Notice>
         </div>
       ) : null}
+      <InboundStatusNotes status={inbound} supportEmail={v.supportEmail} emailOn={v.emailChannelEnabled && !!v.supportEmail} whatsappOn={v.whatsappChannelEnabled} />
       <FormError error={error} />
       <div>
         <Button
           type="button"
-          disabled={busy || (!v.supportFormEnabled && !v.helpCenterEnabled && !v.emailChannelEnabled)}
+          disabled={busy || (!v.supportFormEnabled && !v.helpCenterEnabled && !v.emailChannelEnabled && !v.whatsappChannelEnabled)}
           aria-busy={busy}
           onClick={async () => {
             setBusy(true);

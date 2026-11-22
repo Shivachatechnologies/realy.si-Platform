@@ -43,11 +43,6 @@ function NavLinkBase({ item, onNavigate, pathname, locked = false }: { item: Nav
       />
       <span className={cn("truncate", collapsed && "sr-only")}>{label}</span>
       {locked && !collapsed ? <PlanLockBadge /> : null}
-      {item.phase && !collapsed ? (
-        <span className="ms-auto font-mono text-[10px] text-muted-foreground/70" title={t("common.comingInPhase", { phase: item.phase })}>
-          {t("nav.phaseShort", { phase: item.phase })}
-        </span>
-      ) : null}
     </Link>
   );
 }

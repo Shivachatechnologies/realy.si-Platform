@@ -52,6 +52,8 @@ model Workflow {
   /// Last schedule slot that fired (schedule triggers fire once per slot).
   lastScheduleSlot String?        @map("last_schedule_slot")
   templateKey      String?        @map("template_key")
+  /// Autonomy of the workflow's external actions in runs it starts itself (docs/automation.md §Autonomy).
+  autonomyMode     AutopilotMode  @default(APPROVAL_REQUIRED) @map("autonomy_mode")
   createdById      String         @map("created_by_id") @db.Uuid
   createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)

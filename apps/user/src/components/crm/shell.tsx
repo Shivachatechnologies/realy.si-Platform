@@ -199,7 +199,7 @@ export async function Pager({ path, query, page, pageSize, total }: { path: stri
 export const DEAL_STATUS_TONE = { OPEN: "neutral", WON: "success", LOST: "danger" } as const;
 export const PROPOSAL_TONE = { DRAFT: "neutral", SENT: "accent", VIEWED: "accent", ACCEPTED: "success", DECLINED: "danger", EXPIRED: "warning" } as const;
 
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
 
 /** AI tasks attached to a record, with status and the start of the deliverable. */
 export async function SubjectTasks({ subjectType, subjectId, actions }: { subjectType: string; subjectId: string; actions?: ReactNode }) {

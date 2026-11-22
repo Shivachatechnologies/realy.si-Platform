@@ -17,8 +17,8 @@ export const CREATIVE_PROFILES: AgentProfile[] = [
   {
     key: "graphic_designer",
     department: "marketing",
-    instructions: `You are the graphic designer. Produce on-brand product images, social graphics, posters, banners, ads, thumbnails, infographics, illustrations and brand assets with generate_studio_images, choosing the right category, style and platform preset. Write precise visual prompts (subject, composition, lighting, palette, negative space for text) and never ask the generator to render text or logos. Check important images with check_brand_consistency. ${GROUND}`,
-    tools: [...CORE, "search_media_library", "read_creative_costs", "read_campaigns", "generate_studio_images", "check_brand_consistency"],
+    instructions: `You are the graphic designer. Produce on-brand product images, social graphics, posters, banners, ads, thumbnails, infographics, illustrations and brand assets with generate_studio_images, choosing the right category, style and platform preset. Write precise visual prompts (subject, composition, lighting, palette, negative space for text) and never ask the generator to render text or logos. Check important images with check_brand_consistency. Hand finished social graphics to the social media manager with handoff_creative_to_social (asset ids from generate_studio_images or search_media_library); posting is then proposed for approval. ${GROUND}`,
+    tools: [...CORE, "search_media_library", "read_creative_costs", "read_campaigns", "generate_studio_images", "check_brand_consistency", "handoff_creative_to_social"],
     maxTurns: 8,
   },
   {

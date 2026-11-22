@@ -44,7 +44,7 @@ agent runtime ── tool.request(name, rawInput, runCtx)
   8. rate limit: per tool, per provider connection, per company
   9. credentials: Realy Connect mints a short-lived, minimally-scoped token for the provider call
  10. execute with timeout + abort signal; circuit breaker per provider
- 11. output = definition.output.parse(result)
+ 11. output = verifyToolOutput(result)   // generic ToolOutput contract + the tool's optional `output` schema (gateway.ts)
  12. persist tool_calls row (status, latency, cost, redacted I/O per audit level) + event tool.call.completed|failed
 ```
 Steps 2–8 never consult the model. Denials return a structured error the agent can reason about

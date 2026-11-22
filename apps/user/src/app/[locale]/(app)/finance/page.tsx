@@ -7,6 +7,7 @@ import { AutoRefresh } from "@/components/agents/auto-refresh";
 import { AskCfoForm } from "@/components/finance/approval-forms";
 import { InsightsButton } from "@/components/finance/insights-button";
 import { MoneyFlowCard } from "@/components/finance/money-flow-card";
+import { AiSpendCard } from "@/components/finance/ai-spend-card";
 import { financePage } from "@/components/finance/page-context";
 import { BarChart, Empty, Kpi, RangeForm, rangePresets, StatusBadge, TASK_TONE } from "@/components/finance/widgets";
 import { getT } from "@/i18n/server";
@@ -135,6 +136,7 @@ export default async function FinanceDashboardPage({ searchParams }: PageProps<"
 
       <FinanceCommandCenter data={command} locale={locale} />
       <MoneyFlowCard ctx={viewer.ctx} organizationId={org.id} companyId={company.id} range={range} t={t} locale={locale} money={money} qs={`from=${range.fromStr}&to=${range.toStr}`} />
+      <AiSpendCard ai={d.aiSpend} t={t} locale={locale} money={money} />
       <details className="rounded-lg border bg-surface" open={advancedOpen}>
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium">{t("finance.os.advanced")}</summary>
         <div className="grid gap-4 border-t p-4">

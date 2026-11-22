@@ -30,12 +30,14 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/v1/integrati
   if (!session || session.mfaPending) return NextResponse.redirect(new URL(`/${locale}/sign-in`, env().APP_URL));
   try {
     const requestCtx = userContext(session.userId, { ip: clientIp(req), userAgent: req.headers.get("user-agent"), sessionId: session.id, mfaVerifiedAt: session.mfaVerifiedAt });
-    const { url, cookie, maxAgeSeconds } = await startOAuthConnection(requestCtx, orgId, companyId, provider, locale);
+    // Per-account endpoints (Zendesk subdomain, Shopify shop) are named on the integration page before the redirect.
+    const params = { subdomain: q.get("subdomain") ?? undefined, shopDomain: q.get("shopDomain") ?? undefined };
+    const { url, cookie, maxAgeSeconds } = await startOAuthConnection(requestCtx, orgId, companyId, provider, locale, params);
     const res = NextResponse.redirect(url);
     // Lax: the provider's redirect back is a top-level GET navigation, which Lax cookies accompany.
     res.cookies.set(INTEGRATION_OAUTH_COOKIE, cookie, { httpOnly: true, secure: env().NODE_ENV === "production", sameSite: "lax", path: INTEGRATION_OAUTH_COOKIE_PATH, maxAge: maxAgeSeconds });
     return res;
   } catch (err) {
-    return back(isAppError(err) ? (err.code === "not_configured" ? "not_configured" : err.code === "forbidden" ? "forbidden" : "invalid_request") : "provider_error");
+    return back(isAppError(err) ? (err.code === "not_configured" ? "not_configured" : err.code === "forbidden" ? "forbidden" : err.details?.reason === "integrations_connect_param_invalid" ? "invalid_account" : "invalid_request") : "provider_error");
   }
 }

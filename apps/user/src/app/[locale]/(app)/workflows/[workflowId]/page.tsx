@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("modules.workflows.title") };
 }
 
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
 const NOTIFY_PERMISSIONS = [
   "sales.read",
   "sales.manage",
@@ -188,7 +188,7 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
           {canManage && !archived ? (
             <Card>
               <CardHeader title={t("workflows.settings")} />
-              <WorkflowSettingsForm base={base} workflowId={wf.id} name={wf.name} description={wf.description ?? ""} ownerId={wf.ownerId} users={opts.users} />
+              <WorkflowSettingsForm base={base} workflowId={wf.id} name={wf.name} description={wf.description ?? ""} ownerId={wf.ownerId} autonomyMode={wf.autonomyMode} users={opts.users} />
             </Card>
           ) : null}
         </div>

@@ -11,7 +11,7 @@ export const ESTIMATE_TONE = { DRAFT: "neutral", SENT: "accent", ACCEPTED: "succ
 export const BILL_TONE = { DRAFT: "neutral", AWAITING_APPROVAL: "warning", APPROVED: "accent", PARTIALLY_PAID: "warning", PAID: "success", VOID: "neutral" } as const;
 export const APPROVAL_TONE = { PENDING: "warning", APPROVED: "success", REJECTED: "danger", CANCELLED: "neutral" } as const;
 export const CLAIM_TONE = { PENDING: "warning", APPROVED: "success", REJECTED: "danger" } as const;
-export const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+export const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
 
 export function Kpi({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "danger" | "success" | "warning" }) {
   return (

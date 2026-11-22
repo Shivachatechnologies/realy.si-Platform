@@ -8,6 +8,9 @@ import { securityEvent } from "@/server/core/telemetry";
 import { connectionForPhoneNumberId, connectionsForRazorpayAccount, connectionsForStripeAccount, markDeauthorized } from "./own-accounts";
 import { receiveRoutedProviderEvent } from "./provider-webhooks";
 import { verifyHookSignature } from "./webhook-signatures";
+import { transaction } from "@/server/core/db"; // G3
+import { emitDomainEvent } from "@/server/modules/events/emit"; // G3
+import { parseMetaInbound } from "./services/whatsapp"; // G3
 
 /**
  * Platform-level webhooks of the customer's own accounts (docs/integrations.md §7). Realy's platform apps receive one
@@ -177,6 +180,8 @@ export async function receiveWhatsAppAppWebhook(raw: string, signature: string |
       if (!row) continue;
       // Dedupe per connection on the slice's own bytes (a retry of the same delivery produces the same slice).
       await receiveRoutedProviderEvent(row, slice, JSON.stringify(slice));
+      const inbound = parseMetaInbound(slice).messages; // G3: inbound messages → support tickets (support/inbound.ts)
+      if (inbound.length) await transaction(async (tx) => { for (const m of inbound) await emitDomainEvent(tx, systemContext(), "integration.whatsapp.message_received", { organizationId: row.organizationId, companyId: row.companyId, entityType: "whatsapp_message", entityId: m.messageId, data: { from: m.from, text: m.text, phoneNumberId, connectionId: row.id, provider: "whatsapp" } }); }); // G3
       routed.push({ organizationId: row.organizationId, companyId: row.companyId, connectionId: row.id, phoneNumberId, body: slice });
     }
   } catch (err) {

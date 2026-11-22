@@ -39,14 +39,31 @@ side states: WAITING · APPROVAL_REQUIRED · RETRYING · ESCALATED · FAILED · 
 ```
 * Each transition is persisted (`task_runs.state`, `executions` rows) and emitted as an event, so a
   worker crash resumes from the last durable state (runs are BullMQ jobs with the run id as job id).
-* **Hard limits** (all enforced by the runtime, not the model): `maxIterations` (default 25),
-  wall-clock timeout (default 15 min per run, longer only for sandboxed engineering tasks), token and
-  cost budget (checked before each model/tool call using estimated cost; exceeded → `ESCALATED`),
-  retry policy per tool (exponential backoff, max 3, only for idempotent/retryable errors),
-  per-provider circuit breakers, cancellation tokens checked between every step, company kill switch.
-  There is no code path that loops without decrementing an iteration budget.
-* `APPROVAL_REQUIRED` persists an `approvals` row and parks the run; approval/rejection events
-  resume it. Approvals expire (default 72 h) → `CANCELLED` with notification.
+* **Hard limits as implemented** (`packages/backend/src/server/modules/agents/runtime.ts`; enforced by the runtime,
+  not the model): the profile's `maxTurns` (8 for most roles, at most 15 for a company-defined role) per task — the
+  turn counter carries over when a parked run resumes, so parking never adds turns; a 5-minute wall-clock deadline per
+  execution (`DEADLINE_MS`); the AI employee's remaining monthly token allowance (`tokenCeiling`); cost budgets
+  (task / AI employee / department / company, `checkSpend` before every model call, hard stop); at most 4 model
+  calls per turn across the fallback chain; per-provider/model circuit breakers shared across workers through Redis;
+  a cancellation check before every model call; the company kill switch ("Pause all AI") and the platform controls
+  before the run starts and on every tool call. There is no code path that loops without decrementing a turn budget.
+* **Queue retries**: agent tasks run on the `agent-tasks` queue (3 attempts, exponential backoff) only for retryable
+  provider failures; after the last attempt the task is persisted as `FAILED` (with tokens already spent) and is
+  retried by a person (`retryTask`) — agent tasks are deliberately not sent to the dead-letter queue, because the
+  task row itself is the durable record. AI Command steps retry a failed task once automatically (`AUTO_RETRIES`).
+* **Park on approval** (`WAITING_APPROVAL`, G1 B27): a task created with `parkOnApproval` (every AI Command step)
+  stops after a turn whose tool calls filed approval requests; its conversation is stored in
+  `agent_tasks.resume_state`. When every request is decided (executed, failed, rejected or expired), the
+  `approval.resolved` handler (`approvals/jobs.ts`) or the 60 s sweep re-queues it, and the run continues with the
+  outcomes. At most `MAX_PARKS` (3) parks per task; a task parked longer than 4 days fails with `approval_timeout`.
+* **Approved actions** run once per attempt (claim `approvals.attempts`, idempotency key `approval:<id>:<attempt>`):
+  inline when a person approves, on the `module-jobs` queue (`approvals.execute`) when a FAILED action is retried
+  from a worker-enabled process, else inline. Executions lost mid-way become FAILED after 15 minutes. At most 3
+  attempts. Every outcome is emitted as `approval.resolved`, written back to the requesting task's trace and audited on
+  the AI Command run (`guide.command.approval_outcome`).
+* **Tool results are verified** before the model or an approval sees them (`tools/gateway.ts verifyToolOutput`, step 11
+  of docs/tool-system.md): the generic ToolOutput contract, then the tool's own `output` schema when it declares one;
+  results are cut at 100,000 characters.
 * `ESCALATED` creates a founder-visible item with the agent's summary, what it tried, and why it stopped.
 
 ## 3. Intelligence layer (orchestrator)
@@ -71,24 +88,28 @@ request approvals → execute → verify → measure → optimize → report.
 
 ## 4. Model provider abstraction
 
+As implemented (G1, B13) in `packages/backend/src/server/modules/agents/providers/`:
+
 ```ts
 interface ModelProvider {
-  id: 'anthropic' | 'openai' | 'google';
-  generate(req: GenerateRequest): Promise<GenerateResult>;   // messages, tools (JSON schema), response schema
-  stream(req: GenerateRequest): AsyncIterable<StreamEvent>;
-  embed?(input: string[]): Promise<number[][]>;
-  estimateCost(req): Money;
+  key: "anthropic" | "openai" | "gemini";
+  configured(): boolean;                                        // its platform key is set
+  call(req: ModelRequest, opts?: CallOptions): Promise<ModelResponse>;
 }
 ```
-* **Model routing** by tier: `fast` (classification, extraction, routing), `balanced` (most agent
-  steps), `frontier` (planning, complex reasoning, code). Default mapping per tier is configuration
-  (e.g. Anthropic `claude-haiku-*` / `claude-sonnet-*` / `claude-opus-*`, with OpenAI and Gemini
-  equivalents as fallbacks). No model id is hard-coded in business logic.
-* Fallback chain on provider errors/overload; per-company provider allow-list (data residency,
-  enterprise contracts).
-* Cost control: token budgets per company/agent/task, prompt caching for stable prefixes
-  (system + company instructions), context compression, response caching for deterministic
-  sub-queries, usage written to `usage_records` (`ai.input_tokens`, `ai.output_tokens`, `ai.cost_minor`).
+* The runtime speaks one canonical format — the Anthropic Messages shape (system blocks, tool_use / tool_result,
+  usage). `openai.ts` (Chat Completions + function calling) and `gemini.ts` (generateContent + function declarations,
+  JSON-schema subset) translate requests and replies; prompt-cache hits are reported as cache reads. Keys are Realy's
+  platform keys only: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (Admin → Platform keys).
+* **Model routing** by tier (`agents/router.ts`): simple / standard / complex mapped through the admin routing table
+  (Admin → AI → Models → Tier routing; per profile class or platform-wide), pinned models first.
+* **Fallback**: the admin fallback chain, the next tier, then the same tier on every other provider with a key
+  (`AiProviderInfo.fallbackModels`). Providers without a key are skipped; a provider that rejects its credentials is
+  skipped for the rest of the call; model/availability errors trip that model's circuit breaker.
+* **Cost**: list prices for Anthropic, OpenAI and Gemini models in `workforce/pricing.ts` (admin overrides in
+  `costs/prices.ts`); every turn is written to the cost ledger with its provider and model and counted against
+  cost budgets.
+* `aiConfigured()` is true when any provider is configured; without one, tasks are refused, never simulated.
 
 ## 5. Observability
 OpenTelemetry span per run and per step (`agent.run`, `agent.step`, `model.generate`, `tool.call`)

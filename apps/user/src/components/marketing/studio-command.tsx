@@ -11,6 +11,8 @@ import { listHelpTasks, marketingAiActivity } from "@/server/modules/marketing/i
 import { pipelineSummary, PIPELINE_STAGES } from "@/server/modules/marketing/autopilot";
 import { connectionStatus, SOCIAL_PROVIDERS } from "@/server/modules/marketing/social";
 import { creativeStatus } from "@/server/modules/marketing/assets";
+import { platformKeyOptions, socialMissingKeys } from "@/server/modules/marketing/provider-keys";
+import { IMAGE_PROVIDERS, VIDEO_PROVIDERS } from "@/server/modules/marketing/providers/generation";
 import { ActionButton } from "./ui";
 import { StatusBadge, type MarketingContext } from "./shell";
 import { HelpPanel, InfoStrip, StageBoard } from "./studio";
@@ -33,6 +35,11 @@ export async function StudioCommand({ m }: { m: Ready }) {
     listHelpTasks(org.id, company.id, "overview"),
     db().marketingAutopilot.count({ where: { companyId: company.id, archivedAt: null, status: "ACTIVE" } }),
   ]);
+  const socialKeys = socialMissingKeys();
+  const keysText = (providers: readonly string[]) => {
+    const keys = platformKeyOptions(providers);
+    return keys.length ? t("marketing.studio.connections.needsKeys", { keys: keys.join(" · ") }) : t("common.notConnected");
+  };
   const posts = Object.fromEntries(postStatus.map((p) => [p.status, p._count._all])) as Record<string, number>;
   const flow = ["IDEA", "RESEARCH", "DRAFT", "AI_REVIEW", "READY", "SCHEDULED", "PUBLISHED", "ANALYZED"].map((k) => ({ key: k, label: t(`marketing.studio.stage.${k}`), count: stages[k as keyof typeof stages] ?? 0 }));
   return (
@@ -107,7 +114,13 @@ export async function StudioCommand({ m }: { m: Ready }) {
                   <LiveDot tone={connected[p] ? "success" : "neutral"} pulse={false} />
                   {t(`marketing.provider.${p}`)}
                 </span>
-                {connected[p] ? <span className="text-xs text-success">{t("marketing.social.connected")}</span> : <Link href={`/${locale}/integrations/${p.toLowerCase()}`} className="text-xs text-muted-foreground hover:underline">{t("marketing.studio.connections.connect")}</Link>}
+                {connected[p] ? (
+                  <span className="text-xs text-success">{t("marketing.social.connected")}</span>
+                ) : socialKeys[p].length ? (
+                  <span className="text-xs text-warning">{t("marketing.studio.connections.needsKeys", { keys: socialKeys[p].join(" + ") })}</span>
+                ) : (
+                  <Link href={`/${locale}/integrations/${p.toLowerCase()}`} className="text-xs text-muted-foreground hover:underline">{t("marketing.studio.connections.connect")}</Link>
+                )}
               </li>
             ))}
             <li className="mt-2 flex items-center justify-between border-t pt-2">
@@ -115,14 +128,14 @@ export async function StudioCommand({ m }: { m: Ready }) {
                 <Plug className="size-3.5" aria-hidden />
                 {t("marketing.studio.connections.images")}
               </span>
-              <span className="text-xs text-muted-foreground">{creative.image ?? t("common.notConnected")}</span>
+              <span className="text-xs text-muted-foreground">{creative.image ?? keysText(IMAGE_PROVIDERS)}</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Plug className="size-3.5" aria-hidden />
                 {t("marketing.studio.connections.video")}
               </span>
-              <span className="text-xs text-muted-foreground">{creative.video ?? t("common.notConnected")}</span>
+              <span className="text-xs text-muted-foreground">{creative.video ?? keysText(VIDEO_PROVIDERS)}</span>
             </li>
           </ul>
         </Card>

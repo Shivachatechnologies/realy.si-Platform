@@ -1,5 +1,6 @@
 import "server-only";
-import { createHmac, randomInt } from "node:crypto";
+import { guardedFetch, isPrivateAddress, OutboundBlockedError, type GuardedInit } from "@/server/core/outbound";
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { env } from "@/server/core/env";
@@ -99,6 +100,14 @@ export function oauthClient(provider: string): OAuthClient | null {
     pinterest: [e.PINTEREST_CLIENT_ID, e.PINTEREST_CLIENT_SECRET],
     tiktok_ads: [e.TIKTOK_ADS_APP_ID, e.TIKTOK_ADS_APP_SECRET],
     mailchimp: [e.MAILCHIMP_CLIENT_ID, e.MAILCHIMP_CLIENT_SECRET],
+    // B33: OAuth for providers that had only an API-key path (the customer connects their own account with Connect).
+    calendly: [e.CALENDLY_CLIENT_ID, e.CALENDLY_CLIENT_SECRET],
+    zendesk: [e.ZENDESK_CLIENT_ID, e.ZENDESK_CLIENT_SECRET],
+    intercom: [e.INTERCOM_CLIENT_ID, e.INTERCOM_CLIENT_SECRET],
+    shopify: [e.SHOPIFY_CLIENT_ID, e.SHOPIFY_CLIENT_SECRET],
+    notion: [e.NOTION_CLIENT_ID, e.NOTION_CLIENT_SECRET],
+    webflow: [e.WEBFLOW_CLIENT_ID, e.WEBFLOW_CLIENT_SECRET],
+    clickup: [e.CLICKUP_CLIENT_ID, e.CLICKUP_CLIENT_SECRET],
     // The customer's own accounts through Realy's platform apps (docs/integrations.md §7). Stripe Connect authenticates
     // the token call with the platform's secret key (the same STRIPE_SECRET_KEY as Realy's billing, a separate use).
     stripe: [e.STRIPE_CONNECT_CLIENT_ID, e.STRIPE_SECRET_KEY],
@@ -140,7 +149,27 @@ async function revokeForm(url: string, form: Record<string, string>, headers: Re
   if (!r.ok) throw new ProviderError(`revoke failed (${r.status})`, r.status);
 }
 
-export function oauthDef(provider: string): OAuthDef | null {
+/**
+ * Per-account OAuth endpoints (B33): the customer names their Zendesk subdomain / Shopify shop before the consent
+ * screen. The value is validated here, carried in the signed state cookie and stored in the connection config.
+ */
+export const OAUTH_CONNECT_PARAMS: Record<string, { key: "subdomain" | "shopDomain"; pattern: RegExp }> = {
+  zendesk: { key: "subdomain", pattern: /^[a-z0-9][a-z0-9-]{0,62}$/ },
+  shopify: { key: "shopDomain", pattern: /^[a-z0-9][a-z0-9-]{0,60}\.myshopify\.com$/ },
+};
+
+/** Validated connect parameters of a provider (throws ProviderError on a missing / malformed value). */
+export function oauthConnectParams(provider: string, raw: Record<string, unknown> = {}): Record<string, string> {
+  const spec = OAUTH_CONNECT_PARAMS[provider];
+  if (!spec) return {};
+  const v = typeof raw[spec.key] === "string" ? (raw[spec.key] as string).trim().toLowerCase() : "";
+  // Shopify: accept the bare shop name too ("acme" → acme.myshopify.com).
+  const value = provider === "shopify" && v && !v.includes(".") ? `${v}.myshopify.com` : v;
+  if (!spec.pattern.test(value)) throw new ProviderError(`${spec.key} missing or invalid`, 400);
+  return { [spec.key]: value };
+}
+
+export function oauthDef(provider: string, params: Record<string, unknown> = {}): OAuthDef | null {
   const e = env();
   const graph = "https://graph.facebook.com/v21.0";
   const defs: Record<string, OAuthDef> = {
@@ -361,7 +390,112 @@ export function oauthDef(provider: string): OAuthDef | null {
       if (!res.ok) throw new ProviderError(`revoke failed (${res.status})`, res.status);
     },
   };
+  // ───── B33 ─────
+  defs.calendly = {
+    authorizeUrl: "https://auth.calendly.com/oauth/authorize",
+    tokenUrl: "https://auth.calendly.com/oauth/token",
+    scopeSeparator: " ",
+    pkce: true,
+    tokenAuth: "body",
+    revoke: (token, c) => revokeForm("https://auth.calendly.com/oauth/revoke", { client_id: c.clientId, client_secret: c.clientSecret, token }),
+  };
+  defs.intercom = {
+    authorizeUrl: "https://app.intercom.com/oauth",
+    tokenUrl: "https://api.intercom.io/auth/eagle/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "body",
+  };
+  defs.notion = {
+    authorizeUrl: "https://api.notion.com/v1/oauth/authorize",
+    tokenUrl: "https://api.notion.com/v1/oauth/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "basic",
+    extraAuthorizeParams: { owner: "user" },
+    // Notion's token endpoint takes JSON (HTTP Basic client authentication).
+    exchange: async (code, c) => {
+      const res = await fetch("https://api.notion.com/v1/oauth/token", {
+        method: "POST",
+        headers: { authorization: basic(c), "content-type": "application/json", accept: "application/json", "notion-version": NOTION_API_VERSION },
+        body: JSON.stringify({ grant_type: "authorization_code", code, redirect_uri: integrationRedirectUri("notion") }),
+        signal: AbortSignal.timeout(TIMEOUT),
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) throw new ProviderError(`token exchange failed (${res.status})`, res.status);
+      const t = toTokenSet("notion", body);
+      if (typeof body.workspace_name === "string") t.extra.workspaceName = body.workspace_name;
+      if (typeof body.workspace_id === "string") t.extra.workspaceId = body.workspace_id;
+      return t;
+    },
+  };
+  defs.webflow = {
+    authorizeUrl: "https://webflow.com/oauth/authorize",
+    tokenUrl: "https://api.webflow.com/oauth/access_token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "body",
+  };
+  defs.clickup = {
+    authorizeUrl: "https://app.clickup.com/api",
+    tokenUrl: "https://api.clickup.com/api/v2/oauth/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "body",
+    // ClickUp takes the code exchange as query parameters.
+    exchange: async (code, c) => {
+      const res = await fetch(`https://api.clickup.com/api/v2/oauth/token?${new URLSearchParams({ client_id: c.clientId, client_secret: c.clientSecret, code })}`, { method: "POST", headers: { accept: "application/json" }, signal: AbortSignal.timeout(TIMEOUT) });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) throw new ProviderError(`token exchange failed (${res.status})`, res.status);
+      return toTokenSet("clickup", body);
+    },
+  };
+  const sub = typeof params.subdomain === "string" && OAUTH_CONNECT_PARAMS.zendesk!.pattern.test(params.subdomain) ? params.subdomain : null;
+  if (sub) {
+    defs.zendesk = {
+      authorizeUrl: `https://${sub}.zendesk.com/oauth/authorizations/new`,
+      tokenUrl: `https://${sub}.zendesk.com/oauth/tokens`,
+      scopeSeparator: " ",
+      pkce: true,
+      tokenAuth: "body",
+      revoke: async (token) => {
+        const res = await fetch(`https://${sub}.zendesk.com/api/v2/oauth/tokens/current.json`, { method: "DELETE", headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(TIMEOUT) });
+        if (!res.ok && res.status !== 401 && res.status !== 404) throw new ProviderError(`revoke failed (${res.status})`, res.status);
+      },
+    };
+  }
+  const shop = typeof params.shopDomain === "string" && OAUTH_CONNECT_PARAMS.shopify!.pattern.test(params.shopDomain) ? params.shopDomain : null;
+  if (shop) {
+    defs.shopify = {
+      authorizeUrl: `https://${shop}/admin/oauth/authorize`,
+      tokenUrl: `https://${shop}/admin/oauth/access_token`,
+      scopeSeparator: ",",
+      pkce: false,
+      tokenAuth: "body",
+      revoke: async (token) => {
+        // Uninstalling the app is how a Shopify offline token is revoked.
+        const res = await fetch(`https://${shop}/admin/api_permissions/current.json`, { method: "DELETE", headers: { "x-shopify-access-token": token }, signal: AbortSignal.timeout(TIMEOUT) });
+        if (!res.ok && res.status !== 401 && res.status !== 404) throw new ProviderError(`revoke failed (${res.status})`, res.status);
+      },
+    };
+  }
   return defs[provider] ?? null;
+}
+
+/**
+ * Shopify signs the OAuth callback query (hmac = HMAC-SHA256 over the sorted other parameters, hex, with the app
+ * secret). Verify it before the code exchange, and that the shop is the one the flow started for.
+ */
+export function verifyShopifyCallback(query: URLSearchParams, secret: string, expectedShop: string): boolean {
+  const hmac = query.get("hmac");
+  if (!hmac || query.get("shop") !== expectedShop) return false;
+  const message = [...query.entries()]
+    .filter(([k]) => k !== "hmac" && k !== "signature")
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&");
+  const digest = createHmac("sha256", secret).update(message).digest("hex");
+  return digest.length === hmac.length && timingSafeEqual(Buffer.from(digest), Buffer.from(hmac));
 }
 
 const stripeBasic = (c: OAuthClient) => `Basic ${Buffer.from(`${c.clientSecret}:`).toString("base64")}`;
@@ -429,7 +563,8 @@ export const integrationRedirectUri = (provider: string) => `${env().APP_URL}/ap
 
 function toTokenSet(provider: string, body: Record<string, unknown>, previousRefresh: string | null = null): TokenSet {
   // Slack v2 returns the bot token at the top level; Salesforce omits expires_in (session-based, refreshed on 401).
-  const accessToken = typeof body.access_token === "string" ? body.access_token : null;
+  // Intercom's token endpoint names it "token".
+  const accessToken = typeof body.access_token === "string" ? body.access_token : provider === "intercom" && typeof body.token === "string" ? body.token : null;
   if (!accessToken) throw new ProviderError("no access token in provider response");
   const expiresIn = Number(body.expires_in ?? body.expires ?? 0);
   const scope = typeof body.scope === "string" ? body.scope.split(/[ ,]+/).filter(Boolean) : null;
@@ -454,6 +589,8 @@ function toTokenSet(provider: string, body: Record<string, unknown>, previousRef
     if (typeof body.razorpay_account_id === "string") extra.razorpayAccountId = body.razorpay_account_id;
     extra.authMode = "oauth";
   }
+  // B33 providers that also have an API-key setup: their OAuth tokens authenticate differently (authHeaders).
+  if (["calendly", "zendesk", "intercom", "shopify", "notion", "webflow", "clickup"].includes(provider)) extra.authMode = "oauth";
   return {
     accessToken,
     refreshToken: typeof body.refresh_token === "string" ? body.refresh_token : previousRefresh,
@@ -469,8 +606,8 @@ function clientAuth(def: OAuthDef, c: OAuthClient): { form: Record<string, strin
   return def.tokenAuth === "basic" ? { form: { [idParam]: c.clientId }, headers: { authorization: basic(c) } } : { form: { [idParam]: c.clientId, client_secret: c.clientSecret }, headers: {} };
 }
 
-export async function exchangeCode(provider: string, code: string, verifier: string | null): Promise<TokenSet> {
-  const def = oauthDef(provider);
+export async function exchangeCode(provider: string, code: string, verifier: string | null, params: Record<string, unknown> = {}): Promise<TokenSet> {
+  const def = oauthDef(provider, params);
   const client = oauthClient(provider);
   if (!def || !client) throw new ProviderError("provider not configured");
   let tokens: TokenSet;
@@ -488,8 +625,8 @@ export async function exchangeCode(provider: string, code: string, verifier: str
   return def.upgrade ? def.upgrade(tokens, client) : tokens;
 }
 
-export async function refreshAccessToken(provider: string, refreshToken: string): Promise<TokenSet> {
-  const def = oauthDef(provider);
+export async function refreshAccessToken(provider: string, refreshToken: string, config: Record<string, unknown> = {}): Promise<TokenSet> {
+  const def = oauthDef(provider, config);
   const client = oauthClient(provider);
   if (!def || !client) throw new ProviderError("provider not configured");
   if (def.refresh) return def.refresh(refreshToken, client);
@@ -500,15 +637,26 @@ export async function refreshAccessToken(provider: string, refreshToken: string)
 }
 
 export async function revokeToken(provider: string, token: string, config: Record<string, unknown> = {}): Promise<boolean> {
-  const def = oauthDef(provider);
+  const def = oauthDef(provider, config);
   const client = oauthClient(provider);
   if (!def?.revoke || !client) return false;
   await def.revoke(token, client, config);
   return true;
 }
 
-async function getJson(url: string, headers: Record<string, string>): Promise<Record<string, unknown>> {
-  const res = await fetch(url, { headers: { accept: "application/json", "user-agent": "Realy", ...headers }, signal: AbortSignal.timeout(TIMEOUT) });
+/** fetch() for a customer-configured host (SSRF guard, core/outbound): a refused target is a 400 ProviderError. */
+async function customFetch(url: string, init: GuardedInit): Promise<Response> {
+  try {
+    return await guardedFetch(url, init);
+  } catch (err) {
+    if (err instanceof OutboundBlockedError) throw new ProviderError(`${err.message}`, 400);
+    throw err;
+  }
+}
+
+async function getJson(url: string, headers: Record<string, string>, customerHost = false): Promise<Record<string, unknown>> {
+  const init = { headers: { accept: "application/json", "user-agent": "Realy", ...headers }, signal: AbortSignal.timeout(TIMEOUT) };
+  const res = customerHost ? await customFetch(url, init) : await fetch(url, init);
   const text = await res.text();
   let body: Record<string, unknown> = {};
   try {
@@ -573,14 +721,12 @@ export function zendeskBase(config: Record<string, unknown>): string | null {
 export const compatibleBase = (provider: string, config: Record<string, unknown>) =>
   provider === "openrouter" ? "https://openrouter.ai/api/v1" : provider === "openai" ? "https://api.openai.com/v1" : (str(config.baseUrl) ?? "").replace(/\/+$/, "");
 
-const PRIVATE_V4 = [/^10\./, /^127\./, /^169\.254\./, /^192\.168\./, /^172\.(1[6-9]|2\d|3[01])\./, /^0\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./];
-
 /** SIP trunk check: the host must resolve to a public address (credentials can only be proven by a real call). */
 async function resolvePublicHost(host: string): Promise<string> {
   if (isIP(host)) throw new ProviderError("enter the carrier's SIP domain, not an IP address");
   const addrs = await lookup(host, { all: true }).catch(() => []);
   if (!addrs.length) throw new ProviderError(`${host} does not resolve`, 404);
-  const pub = addrs.find((a) => (a.family === 4 ? !PRIVATE_V4.some((re) => re.test(a.address)) : !/^(::1|fc|fd|fe80)/i.test(a.address)));
+  const pub = addrs.find((a) => !isPrivateAddress(a.address));
   if (!pub) throw new ProviderError(`${host} resolves only to private addresses`, 400);
   return pub.address;
 }
@@ -651,9 +797,11 @@ export function authHeaders(provider: string, token: string, config: Record<stri
     case "notion":
       return { ...bearer, "notion-version": NOTION_API_VERSION };
     case "clickup":
+      // Personal and OAuth tokens alike go in the Authorization header as-is.
       return { authorization: token };
     case "zendesk":
-      return { authorization: `Basic ${b64(`${str(config.email) ?? ""}/token:${token}`)}` };
+      // OAuth access tokens are bearer tokens; an API token uses Basic "<email>/token:<token>".
+      return config.authMode === "oauth" ? bearer : { authorization: `Basic ${b64(`${str(config.email) ?? ""}/token:${token}`)}` };
     case "intercom":
       return { ...bearer, "intercom-version": INTERCOM_API_VERSION };
     case "plaid":
@@ -770,7 +918,7 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const base = str(config.baseUrl);
       if (!base) throw new ProviderError("base URL missing");
       const url = `${base.replace(/\/+$/, "")}${str(config.testPath) ?? ""}`;
-      const res = await fetch(url, { headers: { accept: "application/json", "user-agent": "Realy", ...authHeaders(provider, token, config) }, signal: AbortSignal.timeout(TIMEOUT), redirect: "manual" });
+      const res = await customFetch(url, { headers: { accept: "application/json", "user-agent": "Realy", ...authHeaders(provider, token, config) }, signal: AbortSignal.timeout(TIMEOUT), redirect: "manual" });
       if (res.status === 401 || res.status === 403 || res.status >= 500) throw new ProviderError(`${new URL(url).host} responded ${res.status}`, res.status);
       return { account: new URL(base).host };
     }
@@ -884,7 +1032,7 @@ export async function testConnection({ provider, token, config }: TestTarget): P
     case "wordpress": {
       const site = str(config.siteUrl);
       if (!site) throw new ProviderError("site URL missing");
-      const u = await getJson(`${site.replace(/\/+$/, "")}/wp-json/wp/v2/users/me?context=edit`, authHeaders(provider, token, config));
+      const u = await getJson(`${site.replace(/\/+$/, "")}/wp-json/wp/v2/users/me?context=edit`, authHeaders(provider, token, config), true);
       return { account: `${str(u.name) ?? str(u.slug) ?? "user"} · ${new URL(site).host}` };
     }
     case "webflow": {
@@ -933,7 +1081,8 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const target = s3TargetOf(config, token);
       if (!target) throw new ProviderError("bucket, region or access key missing");
       const url = objectUrl(target);
-      const res = await fetch(url, { method: "HEAD", headers: signS3Request(target, { method: "HEAD", url }), signal: AbortSignal.timeout(TIMEOUT) });
+      const head = { method: "HEAD", headers: signS3Request(target, { method: "HEAD", url }), signal: AbortSignal.timeout(TIMEOUT) };
+      const res = target.endpoint ? await customFetch(url.toString(), { ...head, redirect: "manual" }) : await fetch(url, head);
       if (!res.ok) throw new ProviderError(`HeadBucket failed (${res.status}${res.status === 301 ? ": wrong region" : res.status === 403 ? ": access denied" : res.status === 404 ? ": no such bucket" : ""})`, res.status);
       return { account: `${target.bucket} · ${target.endpoint ? new URL(target.endpoint).host : target.region}` };
     }
@@ -953,7 +1102,7 @@ export async function testConnection({ provider, token, config }: TestTarget): P
     case "openai_compatible": {
       const base = compatibleBase(provider, config);
       if (!base) throw new ProviderError("base URL missing");
-      const u = await getJson(`${base}/models`, bearer);
+      const u = await getJson(`${base}/models`, bearer, true);
       const models = Array.isArray(u.data) ? (u.data as { id?: string }[]) : [];
       const model = str(config.model);
       if (model && models.length && !models.some((m) => m.id === model)) throw new ProviderError(`the API does not list the model ${model}`, 404);
@@ -1080,7 +1229,7 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       const body = JSON.stringify({ event: "realy.connection_test", sentAt: new Date().toISOString(), data: { message: "Realy connection test — safe to ignore" } });
       const sig = str(config.signingSecret);
       const ts = Math.floor(Date.now() / 1000);
-      const res = await fetch(token, {
+      const res = await customFetch(token, {
         method: "POST",
         headers: { "content-type": "application/json", "user-agent": "Realy", ...(sig ? { "x-realy-signature": `t=${ts},v1=${createHmac("sha256", sig).update(`${ts}.${body}`).digest("hex")}` } : {}) },
         body,

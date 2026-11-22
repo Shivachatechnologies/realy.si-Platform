@@ -3,7 +3,8 @@ import { db, Prisma, transaction, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { conflict, invalid, notFound } from "@/server/core/errors";
 import { writeAudit } from "@/server/modules/audit/service";
-import { AGENT_PROFILES, profileByKey } from "@/server/modules/agents/profiles";
+import { AGENT_PROFILES, profileByKey, type AgentProfile } from "@/server/modules/agents/profiles";
+import { isCustomRoleKey, resolveProfile } from "@/server/modules/agents/role-profiles";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { AUTONOMY_LEVELS } from "./autonomy";
@@ -15,7 +16,7 @@ import { assertFeature, assertLimit } from "@/server/modules/entitlements/servic
 
 export const ORG_LEVELS = ["EXECUTIVE", "MANAGER", "SPECIALIST"] as const;
 /** Default org level of a role: the AI CEO is an executive, department leads are managers. */
-const EXECUTIVE_PROFILES = new Set(["ai_ceo", "ai_coo", "ai_cto", "ai_cro", "ai_chro", "cs_director", "product_director"]);
+const EXECUTIVE_PROFILES = new Set(["ai_ceo", "ai_coo", "ai_cto", "ai_cro", "ai_chro", "cs_director", "product_director", "ai_clo", "ai_ciso", "ai_cdo"]);
 const MANAGER_PROFILES = new Set(["cmo", "ai_cfo", "sales_manager", "ai_project_manager", "support_lead", "people_analyst"]);
 export const defaultLevelFor = (profileKey: string): (typeof ORG_LEVELS)[number] => (EXECUTIVE_PROFILES.has(profileKey) ? "EXECUTIVE" : MANAGER_PROFILES.has(profileKey) ? "MANAGER" : "SPECIALIST");
 
@@ -138,9 +139,8 @@ async function checkManager(tx: Tx, organizationId: string, companyId: string, e
   }
 }
 
-function checkTools(profileKey: string, tools: string[] | undefined) {
+function checkTools(profile: AgentProfile, tools: string[] | undefined) {
   if (!tools) return;
-  const profile = profileByKey(profileKey)!;
   const bad = tools.filter((t) => !profile.tools.includes(t));
   if (bad.length) throw invalid(`Tools not available to this role: ${bad.join(", ")}`, { reason: "workforce_employee_tool_not_in_profile" });
 }
@@ -226,9 +226,10 @@ export interface ProvisioningFields {
 
 export async function createEmployee(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof createEmployeeInput>, internal: ProvisioningFields = {}) {
   const input = createEmployeeInput.parse(raw);
-  const profile = profileByKey(input.profileKey);
+  // Built-in role, or the company's own role (B24).
+  const profile = await resolveProfile({ organizationId, companyId }, input.profileKey);
   if (!profile) throw notFound("Profile");
-  checkTools(profile.key, input.allowedTools);
+  checkTools(profile, input.allowedTools);
   // Plan entitlements (docs/entitlements.md): AI employee count, Auto autonomy, executive / manager roles.
   await assertLimit(ctx, organizationId, "agents.max", 1);
   if (input.autonomy === "AUTONOMOUS_LOW_RISK") await assertFeature(ctx, organizationId, "feature.autonomy_auto");
@@ -246,7 +247,7 @@ export async function createEmployee(ctx: RequestContext, organizationId: string
         name: input.name,
         initials: (input.initials ?? initialsOf(input.name)).toUpperCase(),
         profileKey: profile.key,
-        department: internal.department ?? departmentOf(profile.key),
+        department: internal.department ?? (isCustomRoleKey(profile.key) && (DEPARTMENTS as readonly string[]).includes(profile.department ?? "") ? (profile.department as Department) : departmentOf(profile.key)),
         orgDesignId: internal.orgDesignId ?? null,
         designRoleKey: internal.designRoleKey ?? null,
         personality: input.personality ?? null,
@@ -290,10 +291,10 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
     await authorize(ctx, organizationId, companyId, "agents.manage", tx);
     const before = await tx.aiEmployee.findFirst({ where: { id: employeeId, organizationId, companyId, archivedAt: null }, select: employeeSelect });
     if (!before) throw notFound("AI employee");
-    const nextProfile = input.profileKey && input.profileKey !== before.profileKey ? profileByKey(input.profileKey) : null;
+    const nextProfile = input.profileKey && input.profileKey !== before.profileKey ? ((await resolveProfile({ organizationId, companyId }, input.profileKey, tx)) ?? null) : null;
     if (input.profileKey && input.profileKey !== before.profileKey && !nextProfile) throw notFound("Profile");
-    const profileKey = nextProfile?.key ?? before.profileKey;
-    checkTools(profileKey, input.allowedTools);
+    const currentProfile = nextProfile ?? (await resolveProfile({ organizationId, companyId }, before.profileKey, tx));
+    if (currentProfile) checkTools(currentProfile, input.allowedTools);
     // A role change keeps only the tools the new role has (empty = all of the new role's tools).
     const keptTools = nextProfile && input.allowedTools === undefined ? before.allowedTools.filter((t) => nextProfile.tools.includes(t)) : undefined;
     if (nextProfile && (input.level ?? before.level) !== "SPECIALIST") await assertFeature(ctx, organizationId, "feature.executive_team");
@@ -322,7 +323,7 @@ export async function updateEmployee(ctx: RequestContext, organizationId: string
         ...(input.goals !== undefined ? { goals: input.goals } : {}),
         ...(input.kpis !== undefined ? { kpis: input.kpis } : {}),
         ...(input.model !== undefined ? { model: input.model } : {}),
-        ...(nextProfile ? { profileKey: nextProfile.key, department: input.department ?? departmentOf(nextProfile.key) } : input.department ? { department: input.department } : {}),
+        ...(nextProfile ? { profileKey: nextProfile.key, department: input.department ?? (isCustomRoleKey(nextProfile.key) && (DEPARTMENTS as readonly string[]).includes(nextProfile.department ?? "") ? (nextProfile.department as Department) : departmentOf(nextProfile.key)) } : input.department ? { department: input.department } : {}),
         ...(keptTools ? { allowedTools: keptTools } : {}),
         ...(input.personality !== undefined ? { personality: input.personality || null } : {}),
         ...(input.communicationStyle !== undefined ? { communicationStyle: input.communicationStyle || null } : {}),

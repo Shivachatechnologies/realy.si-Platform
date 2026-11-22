@@ -7,12 +7,13 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { ActionButton } from "@/components/comms/client";
 import { areaPage } from "@/components/comms/context";
-import { AssignmentRuleForm, CategoriesManager, EscalationRuleForm, PolicyRowView, RuleActiveToggle, SettingsToggles, SlaPolicyForm } from "@/components/support/settings";
+import { AssignmentRuleForm, CategoriesManager, EscalationRuleForm, InboundChannelSettings, PolicyRowView, RuleActiveToggle, SettingsToggles, SlaPolicyForm } from "@/components/support/settings";
 import { getT } from "@/i18n/server";
 import { AiManagerStrip } from "@/components/work/ai-manager";
 import { departmentManager } from "@/server/modules/cockpit/department-manager";
 import { listAgents } from "@/server/modules/support/common";
 import { getSettings, listAssignmentRules, listCategories, listEscalationRules, listSlaPolicies } from "@/server/modules/support/config";
+import { inboundChannelStatus } from "@/server/modules/support/inbound";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("support.settings.title") };
@@ -31,6 +32,7 @@ export default async function SupportSettingsPage() {
     listAgents(viewer.ctx, org.id, company.id),
   ]);
   const manager = await departmentManager(company.id, ["support_agent", "support_lead"]);
+  const inbound = await inboundChannelStatus(org.id, company.id, settings.supportEmail);
   if (!perms.manage) return wrap(<Notice tone="warning">{t("support.settings.manageOnly")}</Notice>);
   const agentName = new Map(agents.map((a) => [a.id, a.name]));
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
@@ -51,6 +53,12 @@ export default async function SupportSettingsPage() {
               <ExternalLink className="size-3.5" aria-hidden /> {t("support.settings.formLink")}
             </Link>
           </div>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title={t("support.settings.inbound")} description={t("support.settings.inboundHint")} />
+        <CardBody>
+          <InboundChannelSettings base={base} settings={{ emailChannelEnabled: settings.emailChannelEnabled, whatsappChannelEnabled: settings.whatsappChannelEnabled, supportEmail: settings.supportEmail }} status={inbound} />
         </CardBody>
       </Card>
       <Card>

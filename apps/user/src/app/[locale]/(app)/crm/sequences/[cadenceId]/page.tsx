@@ -96,6 +96,8 @@ export default async function SequencePage({ params }: { params: Promise<{ caden
                       {e.name}
                     </Link>
                     <Badge tone={ENROLL_TONE[e.status]}>{t(`crm.rev.seq.enrollStatus.${e.status}`)}</Badge>
+                    {e.replyClass ? <Badge tone="neutral">{t(`crm.prospecting.replyClass.${e.replyClass}`)}</Badge> : null}
+                    {e.status === "PAUSED" && e.replyResumeAt ? <span className="text-xs text-muted-foreground">{t("crm.prospecting.replyResumes", { date: formatDateTime(e.replyResumeAt, locale, tz) })}</span> : null}
                     <span className="text-xs text-muted-foreground">
                       {t("crm.rev.seq.progress", { done: Math.min(e.nextStep, s.steps.length), total: s.steps.length })}
                       {e.status === "ACTIVE" ? (e.nextRunAt ? ` · ${t("crm.rev.seq.nextAt", { date: formatDateTime(e.nextRunAt, locale, tz) })}` : ` · ${t("crm.rev.seq.waitingApproval")}`) : ""}

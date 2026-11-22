@@ -16,6 +16,7 @@ import { isTransient } from "./providers/http";
 import { assetMedia, assetPublicUrl } from "./assets";
 import { markContentPublished } from "./content";
 import { assertLimit } from "@/server/modules/entitlements/service";
+import { heldAutopilotPostIds, pausedCompanyIds } from "./ai-pause";
 
 export const SOCIAL_PROVIDERS = ["LINKEDIN", "X", "INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK", "THREADS", "PINTEREST"] as const;
 export const MAX_PUBLISH_ATTEMPTS = 5;
@@ -82,7 +83,7 @@ export async function connectionStatus(organizationId: string, companyId: string
 export async function listAccounts(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "marketing.read");
   const [accounts, connected] = await Promise.all([
-    db().marketingSocialAccount.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: [{ provider: "asc" }, { name: "asc" }] }),
+    db().marketingSocialAccount.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: [{ provider: "asc" }, { name: "asc" }], take: 200 }),
     connectionStatus(organizationId, companyId),
   ]);
   return { accounts: accounts.map((a) => ({ ...a, connected: connected[a.provider] })), connected };
@@ -196,7 +197,42 @@ function checkPublishable(
     if (need && !hasMedia) throw invalid("This platform needs media", { reason: "marketing_post_media_required", account: t.account.name });
     if (need === "video" && mediaKind && mediaKind !== "VIDEO") throw invalid("This platform needs a video", { reason: "marketing_post_video_required", account: t.account.name });
     if (need === "video" && !post.mediaAssetId) throw invalid("Upload the video to the media library first", { reason: "marketing_post_video_required", account: t.account.name });
+    if (need === "image" && mediaKind === "VIDEO") throw invalid("This platform needs an image", { reason: "marketing_post_image_required", account: t.account.name });
   }
+}
+
+export type MediaProblem = { account: string; provider: MarketingSocialProvider; need: "image" | "video" | "any"; reason: "media_required" | "video_required" | "image_required" };
+
+/**
+ * Which target accounts cannot publish with the given media (MEDIA_REQUIRED per platform). Same rules as
+ * checkPublishable, as data, so the AI tool can explain exactly what is missing instead of failing later in the queue.
+ */
+export function mediaProblems(accounts: { provider: MarketingSocialProvider; name: string }[], media: { kind: "IMAGE" | "VIDEO" | "LOGO" | "DOCUMENT" | null; fromLibrary: boolean; url: boolean }): MediaProblem[] {
+  const out: MediaProblem[] = [];
+  const has = media.fromLibrary || media.url;
+  for (const a of accounts) {
+    const need = MEDIA_REQUIRED[a.provider];
+    if (!need) continue;
+    if (!has) out.push({ account: a.name, provider: a.provider, need, reason: "media_required" });
+    else if (need === "video" && (!media.fromLibrary || media.kind !== "VIDEO")) out.push({ account: a.name, provider: a.provider, need, reason: "video_required" });
+    else if (need === "image" && media.kind === "VIDEO") out.push({ account: a.name, provider: a.provider, need, reason: "image_required" });
+  }
+  return out;
+}
+
+/**
+ * A media id the AI or the studio hands to a post: a marketing media library asset (generate_creative, uploads) or a
+ * creative studio library asset (generate_studio_images, renders) that has a marketing copy. Tenant-scoped; null when
+ * the id is not a visual asset of this company.
+ */
+export async function resolvePostMedia(organizationId: string, companyId: string, id: string) {
+  if (!isUuid(id)) return null;
+  const select = { id: true, name: true, kind: true, status: true } as const;
+  const direct = await db().marketingAsset.findFirst({ where: { id, organizationId, companyId, archivedAt: null }, select });
+  if (direct) return direct;
+  const studio = await db().creativeAsset.findFirst({ where: { id, organizationId, companyId, archivedAt: null, marketingAssetId: { not: null } }, select: { marketingAssetId: true } });
+  if (!studio?.marketingAssetId) return null;
+  return db().marketingAsset.findFirst({ where: { id: studio.marketingAssetId, organizationId, companyId, archivedAt: null }, select });
 }
 
 async function mediaKindOf(tx: Tx, companyId: string, id: string | null | undefined) {
@@ -464,7 +500,10 @@ export async function processPost(postId: string): Promise<number> {
 }
 
 export async function processDuePosts(): Promise<number> {
-  const due = await db().marketingSocialPost.findMany({ where: { status: "SCHEDULED", scheduledAt: { lte: new Date() } }, select: { id: true }, orderBy: { scheduledAt: "asc" }, take: 25 });
+  // "Pause all AI": posts the autopilot scheduled on its own wait while their company's AI is paused (excluded here, so
+  // they never block the queue for others). Posts a person scheduled or approved publish as usual.
+  const held = await heldAutopilotPostIds(await pausedCompanyIds());
+  const due = await db().marketingSocialPost.findMany({ where: { status: "SCHEDULED", scheduledAt: { lte: new Date() }, ...(held.length ? { id: { notIn: held } } : {}) }, select: { id: true }, orderBy: { scheduledAt: "asc" }, take: 25 });
   let n = 0;
   for (const p of due) n += await processPost(p.id);
   return n;

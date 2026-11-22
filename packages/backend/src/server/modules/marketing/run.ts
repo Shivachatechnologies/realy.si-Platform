@@ -10,6 +10,9 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { createTask } from "@/server/modules/agents/service";
+import { isCompanyAiPaused } from "./ai-pause";
+import { platformKeyOptions } from "./provider-keys";
+import { RESEARCH_PROVIDERS } from "@/server/modules/integrations/services/research";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { can } from "@/server/modules/rbac/service";
 import { authorize, isUuid, money, uuid } from "./common";
@@ -425,7 +428,7 @@ async function stepLaunch(run: MarketingRun) {
     if (!provider) continue;
     const name = `${plan.name.slice(0, 90)} · ${provider}`.slice(0, 120);
     if (existing.some((e) => e.name === name)) continue;
-    const accounts = await db().marketingSocialAccount.findMany({ where: { companyId, provider, archivedAt: null }, select: { id: true } });
+    const accounts = await db().marketingSocialAccount.findMany({ where: { companyId, provider, archivedAt: null }, select: { id: true }, take: 20 });
     if (!accounts.length) {
       log.push(entry("autopilot", "blocked", `No ${provider} account is connected — ${provider} posts are not planned until you connect one`, "/marketing/social"));
       continue;
@@ -558,7 +561,7 @@ async function stepArtifacts(run: MarketingRun, autonomy: MarketingRunAutonomy) 
   // Next article.
   const seoCh = channels.find((c) => c.channel === "seo" || c.channel === "content");
   if (run.seoProjectId && run.nextArticleAt && run.nextArticleAt.getTime() <= now && !artifacts.some((a) => a.kind === "article" && a.state === "writing")) {
-    const used = new Set((await db().marketingContent.findMany({ where: { companyId, seoProjectId: run.seoProjectId, archivedAt: null }, select: { keywords: true } })).flatMap((c) => c.keywords.slice(0, 1).map((k) => k.toLowerCase())));
+    const used = new Set((await db().marketingContent.findMany({ where: { companyId, seoProjectId: run.seoProjectId, archivedAt: null }, select: { keywords: true }, orderBy: { createdAt: "desc" }, take: 1000 })).flatMap((c) => c.keywords.slice(0, 1).map((k) => k.toLowerCase())));
     const kw = (await db().seoKeyword.findMany({ where: { projectId: run.seoProjectId }, orderBy: { createdAt: "asc" }, select: { keyword: true }, take: 500 })).find((k) => !used.has(k.keyword.toLowerCase()));
     if (!kw) log.push(entry("seo", "waiting", "Every keyword of the SEO project has an article — add keywords for more", `/marketing/seo/${run.seoProjectId}`));
     else {
@@ -651,6 +654,12 @@ export async function tickRun(runId: string): Promise<void> {
   const run = await db().marketingRun.findUnique({ where: { id: runId } });
   if (!run || !LIVE_STATUSES.includes(run.status)) return;
   if (!(await isModuleEnabled(run.organizationId, "marketing"))) return;
+  // "Pause all AI" (/autonomy): the run waits where it is — no research, plan drafts, launches, artifacts or
+  // auto-applied optimizations — and continues from the same stage once a person resumes AI.
+  if (await isCompanyAiPaused(run.organizationId, run.companyId)) {
+    await save(run, [entry("control", "waiting", "All AI in this company is paused (Autonomy) — the run continues when AI is resumed", "/autonomy")]);
+    return;
+  }
   const creator = await db().membership.findFirst({ where: { organizationId: run.organizationId, userId: run.createdById }, select: { id: true } });
   if (!creator) return blocked(run, "control", "The person who started this run is no longer a member — start a new run");
   try {
@@ -693,7 +702,11 @@ export async function runReadiness(ctx: RequestContext, organizationId: string, 
   ]);
   return {
     ai: aiConfigured(),
+    /** "Pause all AI" is on: runs and autopilots wait until a person resumes AI in Autonomy. */
+    aiPaused: await isCompanyAiPaused(organizationId, companyId),
     research,
+    /** Platform keys that would enable web research (names only), when no research provider is available. */
+    researchKeys: research ? [] : platformKeyOptions(RESEARCH_PROVIDERS),
     social: accounts.map((a) => ({ provider: a.provider, accounts: a._count._all })),
     email: !!email,
     cms,

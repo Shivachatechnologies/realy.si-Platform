@@ -12,7 +12,7 @@ import { formatRelativeTime } from "@/i18n/format";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-export type LaneStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+export type LaneStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "WAITING_APPROVAL";
 
 export interface LaneTask {
   id: string;

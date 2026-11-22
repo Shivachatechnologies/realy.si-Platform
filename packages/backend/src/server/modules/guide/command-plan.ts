@@ -69,14 +69,35 @@ export const needsResearch = (text: string, intents: RoutedIntent[]) => {
 
 const firstProfile = (...keys: string[]) => keys.find((k) => profileByKey(k)) ?? null;
 
-/** Build the plan for a command (pure apart from profile availability). */
-export function buildPlan(text: string, intents: RoutedIntent[]): { research: boolean; steps: PlannedStep[] } {
+/** What the model-based understanding adds to a plan (B26). */
+export interface PlanHints {
+  /** Research first; null = the word list decides. */
+  research: boolean | null;
+  /** Department intent → intents it needs first. */
+  dependsOn: Record<string, string[]>;
+  source?: "model" | "keywords";
+}
+
+/**
+ * Build the plan for a command (pure apart from profile availability). Department steps may depend on earlier
+ * department steps (hints from the classifier); a dependency on a later step is dropped, so the plan is always acyclic.
+ */
+export function buildPlan(text: string, intents: RoutedIntent[], hints?: PlanHints): { research: boolean; steps: PlannedStep[] } {
   const steps: PlannedStep[] = [];
-  const researchProfile = needsResearch(text, intents) ? firstProfile("marketing_analyst", "research_analyst") : null;
+  const wantsResearch = hints?.research ?? needsResearch(text, intents);
+  const researchProfile = wantsResearch ? firstProfile("marketing_analyst", "research_analyst") : null;
   if (researchProfile) steps.push({ position: 0, kind: "RESEARCH", intent: "research", profile: researchProfile, focus: RESEARCH_FOCUS, dependsOn: [] });
   const workDeps = researchProfile ? [0] : [];
-  for (const i of intents) {
-    steps.push({ position: steps.length, kind: "DEPARTMENT", intent: i.key, profile: i.profile, focus: FOCUS[i.key] ?? FOCUS.fallback!, dependsOn: workDeps });
+  // Order departments so that a step comes after the steps it needs (stable; cycles fall back to the given order).
+  const ordered: RoutedIntent[] = [];
+  const pending = [...intents];
+  while (pending.length) {
+    const i = pending.findIndex((x) => (hints?.dependsOn[x.key] ?? []).every((d) => ordered.some((o) => o.key === d) || !pending.some((p) => p.key === d)));
+    ordered.push(...pending.splice(i >= 0 ? i : 0, 1));
+  }
+  for (const i of ordered) {
+    const deps = (hints?.dependsOn[i.key] ?? []).map((d) => steps.find((s) => s.kind === "DEPARTMENT" && s.intent === d)?.position).filter((p): p is number => p !== undefined);
+    steps.push({ position: steps.length, kind: "DEPARTMENT", intent: i.key, profile: i.profile, focus: FOCUS[i.key] ?? FOCUS.fallback!, dependsOn: [...new Set([...workDeps, ...deps])] });
   }
   // A review step whenever more than one AI employee contributes (a single step's result is reviewed by the person).
   const reviewer = firstProfile("ai_ceo", "chief_of_staff", "research_analyst");

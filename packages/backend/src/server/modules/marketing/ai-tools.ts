@@ -4,7 +4,10 @@ import { db } from "@/server/core/db";
 import { attribution, campaignAnalytics, computeKpis, parseRange } from "./analytics";
 import { CAMPAIGN_STATUSES, createCampaign, listCampaigns } from "./campaigns";
 import { CONTENT_STATUSES, CONTENT_TYPES, createContent, listContent } from "./content";
-import { createPost, listAccounts } from "./social";
+import { createPost, listAccounts, mediaProblems, resolvePostMedia } from "./social";
+import { startSocialHandoff } from "./handoff";
+import { imageProvidersMissingText } from "./provider-keys";
+import { isAppError } from "@/server/core/errors";
 import { getProject, seoReport } from "./seo";
 import { authorize, CHANNELS } from "./common";
 import { brandContext, getBrandKit } from "./brand";
@@ -272,9 +275,9 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
 
   schedule_social_post: def({
     name: "schedule_social_post",
-    version: 1,
+    version: 2,
     description:
-      "Propose scheduling a social media post to one or more of the company's social accounts. Requires human approval; once approved it is queued and published by the publishing queue at the scheduled time, and only if the account's provider is connected and accepts it. Account ids are listed by read_marketing_kpis.",
+      "Propose scheduling a social media post to one or more of the company's social accounts, optionally with one image or video. Requires human approval; once approved it is queued and published by the publishing queue at the scheduled time, and only if the account's provider is connected and accepts it. Account ids are listed by read_marketing_kpis. Media: pass assetIds with ONE asset id from generate_creative, generate_studio_images or search_media_library (or an https mediaUrl for an image). Instagram and TikTok need an image or video, Pinterest an image, YouTube a video from the media library — posts to them without the right media are refused.",
     input: z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -282,8 +285,11 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
         accountIds: z.array(z.string().uuid()).min(1).max(10),
         scheduledAt: z.string().datetime({ offset: true }),
         campaignId: z.string().uuid().optional(),
+        assetIds: z.array(z.string().uuid()).max(1).optional(),
+        mediaUrl: z.string().trim().url().max(2000).refine((u) => /^https:\/\//i.test(u), "https only").optional(),
       })
-      .strict(),
+      .strict()
+      .refine((v) => !(v.assetIds?.length && v.mediaUrl), { path: ["mediaUrl"], message: "Use assetIds or mediaUrl, not both" }),
     modelSchema: {
       type: "object",
       properties: {
@@ -292,6 +298,8 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
         accountIds: { type: "array", items: { type: "string" }, description: "Social account ids (uuid)" },
         scheduledAt: { type: "string", description: "ISO 8601 date-time with offset" },
         campaignId: { type: "string" },
+        assetIds: { type: "array", items: { type: "string" }, description: "At most one media asset id (image or video) to publish with the post" },
+        mediaUrl: { type: "string", description: "Public https image URL (only when the image is not in the media library)" },
       },
       required: ["title", "text", "accountIds", "scheduledAt"],
       additionalProperties: false,
@@ -299,8 +307,10 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
     permissions: ["marketing.manage"],
     risk: "HIGH",
     autonomy: "SUPERVISED",
+    channel: "social",
     timeoutMs: 15_000,
-    summarize: ({ title, accountIds, scheduledAt }) => `Schedule social post "${title}" to ${accountIds.length} account(s) at ${scheduledAt}`,
+    summarize: ({ title, accountIds, scheduledAt, assetIds, mediaUrl }) =>
+      `Schedule social post "${title}" to ${accountIds.length} account(s) at ${scheduledAt}${assetIds?.length ? ` with media asset ${assetIds[0]}` : mediaUrl ? ` with image ${mediaUrl.slice(0, 120)}` : ""}`,
     async execute(input, { ctx, organizationId, companyId }) {
       const { accounts } = await listAccounts(ctx, organizationId, companyId);
       const known = new Set(accounts.map((a) => a.id));
@@ -308,12 +318,77 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
       if (missing.length) {
         return { content: `Unknown social account ids: ${missing.join(", ")}. Available: ${accounts.map((a) => `${a.name} [${a.provider}] ${a.id}`).join("; ") || "none"}.` };
       }
-      const p = await createPost(ctx, organizationId, companyId, { title: input.title, text: input.text, campaignId: input.campaignId, targets: input.accountIds.map((accountId) => ({ accountId })), scheduledAt: input.scheduledAt });
-      const notConnected = accounts.filter((a) => input.accountIds.includes(a.id) && !a.connected).map((a) => a.name);
+      const targets = accounts.filter((a) => input.accountIds.includes(a.id));
+      const assetId = input.assetIds?.[0];
+      const asset = assetId ? await resolvePostMedia(organizationId, companyId, assetId) : null;
+      if (assetId && !asset) return { content: `Not scheduled: ${assetId} is not an image or video in this company's media library. Find assets with search_media_library or create one with generate_creative.` };
+      if (asset && asset.status !== "READY") return { content: `Not scheduled: the asset "${asset.name}" is ${asset.status.toLowerCase()} (a video may still be rendering). Schedule it once it is READY.` };
+      if (asset && asset.kind !== "IMAGE" && asset.kind !== "VIDEO") return { content: `Not scheduled: the asset "${asset.name}" is a ${asset.kind.toLowerCase()}, not an image or video.` };
+      const problems = mediaProblems(targets, { kind: asset?.kind ?? null, fromLibrary: !!asset, url: !!input.mediaUrl });
+      if (problems.length) {
+        const what = (p: (typeof problems)[number]) => (p.reason === "video_required" ? "a video from the media library" : p.reason === "image_required" ? "an image (not a video)" : p.need === "any" ? "an image or video" : `a ${p.need}`);
+        return { content: `Not scheduled: ${problems.map((p) => `${p.account} (${p.provider}) needs ${what(p)}`).join("; ")}. Attach the right asset with assetIds (generate_creative / search_media_library) or leave those accounts out.` };
+      }
+      const p = await createPost(ctx, organizationId, companyId, {
+        title: input.title,
+        text: input.text,
+        campaignId: input.campaignId,
+        mediaAssetId: asset?.id,
+        mediaUrl: input.mediaUrl,
+        targets: input.accountIds.map((accountId) => ({ accountId })),
+        scheduledAt: input.scheduledAt,
+      });
+      const notConnected = targets.filter((a) => !a.connected).map((a) => a.name);
       return {
-        content: `Queued post "${p.title}" (id ${p.id}) for ${p.scheduledAt?.toISOString()}. It is not published yet; the publishing queue sends it at that time.${notConnected.length ? ` Warning: not connected, it will fail unless connected first: ${notConnected.join(", ")}.` : ""}`,
-        records: [`marketing_social_post:${p.id}`],
+        content: `Queued post "${p.title}" (id ${p.id}) for ${p.scheduledAt?.toISOString()}${asset ? ` with ${asset.kind.toLowerCase()} "${asset.name}"` : ""}. It is not published yet; the publishing queue sends it at that time and it counts as published only when the platform confirms it.${notConnected.length ? ` Warning: not connected, it will fail unless connected first: ${notConnected.join(", ")}.` : ""}`,
+        records: [`marketing_social_post:${p.id}`, ...(asset ? [`marketing_asset:${asset.id}`] : [])],
       };
+    },
+  }),
+
+  handoff_creative_to_social: def({
+    name: "handoff_creative_to_social",
+    version: 1,
+    description:
+      "Hand finished images or videos to the social media manager: starts an AI task that writes the platform copy and proposes schedule_social_post with the assets attached (scheduling still needs approval; nothing is published by this tool). Use asset ids returned by generate_creative / generate_studio_images or found with search_media_library; the assets must be READY.",
+    input: z
+      .object({
+        assetIds: z.array(z.string().uuid()).min(1).max(4),
+        brief: z.string().trim().min(3).max(2000),
+        accountIds: z.array(z.string().uuid()).max(10).optional(),
+        scheduledAt: z.string().datetime({ offset: true }).optional(),
+        campaignId: z.string().uuid().optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        assetIds: { type: "array", items: { type: "string" }, description: "1-4 media asset ids (images or videos)" },
+        brief: { type: "string", description: "What the posts are for: message, audience, CTA" },
+        accountIds: { type: "array", items: { type: "string" }, description: "Optional social account ids; default: all accounts" },
+        scheduledAt: { type: "string", description: "Optional ISO 8601 date-time with offset" },
+        campaignId: { type: "string" },
+      },
+      required: ["assetIds", "brief"],
+      additionalProperties: false,
+    },
+    permissions: ["marketing.manage", "agents.run"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: ({ assetIds, brief }) => `Hand ${assetIds.length} creative(s) to the social media manager: "${brief.slice(0, 120)}"`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      const m = /^task_([0-9a-f-]{36})$/.exec(ctx.requestId);
+      try {
+        const r = await startSocialHandoff(ctx, organizationId, companyId, { ...input, parentTaskId: m ? m[1]! : null });
+        return {
+          content: `Handed ${r.assets.length} asset(s) to the social media manager as task ${r.task.id} (status ${r.task.status}${r.aiEmployeeId ? "" : ", role profile — no active social media manager AI employee"}). It proposes the posts for approval; read the result later with read_task_result.${r.accounts ? "" : " Note: no social accounts are set up yet."}`,
+          records: [`agent_task:${r.task.id}`, ...r.assets.map((a) => `marketing_asset:${a.id}`)],
+        };
+      } catch (err) {
+        if (isAppError(err)) return { content: `Not handed off: ${err.message}`, count: 0 };
+        throw err;
+      }
     },
   }),
 
@@ -434,12 +509,33 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
 
   generate_creative: def({
     name: "generate_creative",
-    version: 1,
-    description: "Propose generating on-brand images with the company's connected image provider (OpenAI images or Stability) for a platform preset. Needs approval; fails if no provider is connected. Returns the new media library asset ids.",
-    input: z.object({ prompt: z.string().trim().min(3).max(3000), preset: z.enum(PRESET_KEYS as [string, ...string[]]), variations: z.number().int().min(1).max(4).optional(), campaignId: z.string().uuid().optional() }).strict(),
+    version: 2,
+    description:
+      "Propose generating on-brand images with the platform's image provider (OpenAI images, Stability or Replicate) for a platform preset. Needs approval; fails if no provider is available. Returns the new media library asset ids. Set handoffToSocial to have the social media manager write and propose the posts with the new images as soon as they exist (the posts still need approval).",
+    input: z
+      .object({
+        prompt: z.string().trim().min(3).max(3000),
+        preset: z.enum(PRESET_KEYS as [string, ...string[]]),
+        variations: z.number().int().min(1).max(4).optional(),
+        campaignId: z.string().uuid().optional(),
+        handoffToSocial: z.object({ brief: z.string().trim().min(3).max(2000), accountIds: z.array(z.string().uuid()).max(10).optional(), scheduledAt: z.string().datetime({ offset: true }).optional() }).strict().optional(),
+      })
+      .strict(),
     modelSchema: {
       type: "object",
-      properties: { prompt: { type: "string" }, preset: { type: "string", enum: [...PRESET_KEYS] }, variations: { type: "integer" }, campaignId: { type: "string" } },
+      properties: {
+        prompt: { type: "string" },
+        preset: { type: "string", enum: [...PRESET_KEYS] },
+        variations: { type: "integer" },
+        campaignId: { type: "string" },
+        handoffToSocial: {
+          type: "object",
+          description: "Optional: hand the generated images to the social media manager",
+          properties: { brief: { type: "string" }, accountIds: { type: "array", items: { type: "string" } }, scheduledAt: { type: "string" } },
+          required: ["brief"],
+          additionalProperties: false,
+        },
+      },
       required: ["prompt", "preset"],
       additionalProperties: false,
     },
@@ -447,10 +543,24 @@ export const MARKETING_TOOLS: Record<string, ToolDefinition> = {
     risk: "LOW",
     autonomy: "SUPERVISED",
     timeoutMs: 180_000,
-    summarize: ({ prompt, variations }) => `Generate ${variations ?? 1} image(s): "${prompt.slice(0, 120)}"`,
+    summarize: ({ prompt, variations, handoffToSocial }) => `Generate ${variations ?? 1} image(s): "${prompt.slice(0, 120)}"${handoffToSocial ? " and hand them to the social media manager" : ""}`,
     async execute(input, { ctx, organizationId, companyId }) {
-      const r = await generateCreative(ctx, organizationId, companyId, { ...input, preset: input.preset as never });
-      return { content: `Generated ${r.created.length} image(s) with ${r.provider}: ${r.created.join(", ")}${r.errors.length ? `; errors: ${r.errors.join("; ")}` : ""}.`, records: r.created.map((id) => `marketing_asset:${id}`) };
+      const { handoffToSocial, ...gen } = input;
+      let r: Awaited<ReturnType<typeof generateCreative>>;
+      try {
+        r = await generateCreative(ctx, organizationId, companyId, { ...gen, preset: gen.preset as never });
+      } catch (err) {
+        if (isAppError(err) && err.details?.reason === "marketing_image_not_connected") return { content: `No image was generated: ${imageProvidersMissingText()}`, count: 0 };
+        throw err;
+      }
+      let handoff = "";
+      if (handoffToSocial && r.created.length) {
+        const m = /^task_([0-9a-f-]{36})$/.exec(ctx.requestId);
+        handoff = await startSocialHandoff(ctx, organizationId, companyId, { assetIds: r.created, brief: handoffToSocial.brief, accountIds: handoffToSocial.accountIds, scheduledAt: handoffToSocial.scheduledAt, campaignId: gen.campaignId, parentTaskId: m ? m[1]! : null })
+          .then((h) => ` Handed to the social media manager as task ${h.task.id}.`)
+          .catch((err) => ` Hand-off to the social media manager did not start: ${err instanceof Error ? err.message : "error"}.`);
+      }
+      return { content: `Generated ${r.created.length} image(s) with ${r.provider}: ${r.created.join(", ")}${r.errors.length ? `; errors: ${r.errors.join("; ")}` : ""}.${handoff}`, records: r.created.map((id) => `marketing_asset:${id}`) };
     },
   }),
 

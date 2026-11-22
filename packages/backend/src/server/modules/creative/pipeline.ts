@@ -11,6 +11,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
 import { assertLimit, creditsForTokens, recordUsage } from "@/server/modules/entitlements/service";
 import { isCompanyAiPaused } from "@/server/modules/workforce/autonomy-policy";
+import { pausedCompanyIds } from "@/server/modules/marketing/ai-pause";
 import { generateText } from "@/server/modules/integrations/services/ai-text";
 import { webSearch } from "@/server/modules/integrations/services/research";
 import { generateImage } from "@/server/modules/integrations/services/images";
@@ -1057,7 +1058,9 @@ export async function runCreativePipelines(): Promise<number> {
   }
   const c = await getControls();
   if (!c.aiWorkforceEnabled || c.aiExecutionPaused) return work;
-  const auto = await db().creativeProject.findMany({ where: { autoAdvance: true, archivedAt: null, kind: "VIDEO", status: { in: ["DRAFT", "IN_PROGRESS", "APPROVED"] } }, take: 10, orderBy: { updatedAt: "asc" }, include: { steps: { orderBy: { position: "asc" } }, scenes: { orderBy: { position: "asc" } } } });
+  // Projects of companies with "Pause all AI" are left out of the query, so they never use up the batch.
+  const paused = await pausedCompanyIds();
+  const auto = await db().creativeProject.findMany({ where: { autoAdvance: true, archivedAt: null, kind: "VIDEO", status: { in: ["DRAFT", "IN_PROGRESS", "APPROVED"] }, ...(paused.size ? { companyId: { notIn: [...paused] } } : {}) }, take: 10, orderBy: { updatedAt: "asc" }, include: { steps: { orderBy: { position: "asc" } }, scenes: { orderBy: { position: "asc" } } } });
   for (const p of auto) {
     if (p.steps.some((s) => s.status === "RUNNING" || s.status === "WAITING_PROVIDER")) continue;
     if (await isCompanyAiPaused(p.organizationId, p.companyId)) continue;

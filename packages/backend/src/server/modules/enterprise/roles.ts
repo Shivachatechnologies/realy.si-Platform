@@ -222,6 +222,7 @@ export async function roleBuilderData(ctx: RequestContext, organizationId: strin
         },
       },
       orderBy: { createdAt: "asc" },
+      take: 2000, // B35: upper bound per view
     }),
     db().company.findMany({
       where: { organizationId, deletedAt: null },
@@ -231,6 +232,7 @@ export async function roleBuilderData(ctx: RequestContext, organizationId: strin
     db().roleAssignment.findMany({
       where: { organizationId, principalType: "USER" },
       include: { role: { select: { id: true, key: true, name: true } } },
+      take: 20_000, // B35: upper bound per view
     }),
   ]);
   return {

@@ -41,7 +41,7 @@ export async function adsOverview(ctx: RequestContext, organizationId: string, c
   await authorize(ctx, organizationId, companyId, "marketing.read");
   const since = new Date(Date.now() - 30 * 86_400_000);
   const [accounts, campaigns, metrics, connected] = await Promise.all([
-    db().marketingAdAccount.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" } }),
+    db().marketingAdAccount.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" }, take: 200 }),
     db().marketingAdCampaign.findMany({ where: { organizationId, companyId }, orderBy: { updatedAt: "desc" }, take: 200, include: { adAccount: { select: { provider: true, name: true, currency: true } } } }),
     db().marketingAdMetric.aggregate({ where: { organizationId, companyId, date: { gte: since } }, _sum: { spendMinor: true, impressions: true, clicks: true, conversions: true, revenueMinor: true } }),
     Promise.all(AD_PROVIDERS.map(async (p) => [p, isUsable(await getMarketingConnection(organizationId, companyId, p))] as const)),

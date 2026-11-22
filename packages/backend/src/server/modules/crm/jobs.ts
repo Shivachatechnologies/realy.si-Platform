@@ -8,6 +8,8 @@ import { runLeadIntake } from "./automation";
 import { expireProposals } from "./proposals";
 import { runCadences } from "./cadences";
 import { runAutopilot, runDueAutopilots } from "./prospecting";
+import { refreshWinProbabilities } from "./win-probability";
+import { repliesOnEmail } from "./replies";
 
 /**
  * Background work of the crm module, run by the worker (src/worker/index.ts via src/worker/modules.ts).
@@ -20,6 +22,7 @@ import { runAutopilot, runDueAutopilots } from "./prospecting";
  * - Prospecting autopilots (prospecting.ts): each active autopilot runs about hourly (due check every 15 minutes) —
  *   find people, verify emails, create leads, draft/send first emails within its caps; "Run now" dispatches
  *   crm.autopilot_run.
+ * - Deal win probability: every 6 hours open deals get a computed probability from history (win-probability.ts).
  * - lead.created: leads created outside createLead (e.g. marketing forms) without an owner go through the same intake
  *   workflow (assignment rule → follow-up → notify owner). Idempotent: only unowned leads are touched.
  */
@@ -113,8 +116,22 @@ export const CRM_JOBS: ModuleJobs = {
     { name: "crm.expire_proposals", everyMs: 6 * HOUR, run: () => expireProposals() },
     { name: "crm.cadences", everyMs: HOUR / 4, run: () => runCadences() },
     { name: "crm.prospecting_autopilot", everyMs: HOUR / 4, run: () => runDueAutopilots() },
+    // Computed win probability of open deals from the company's own history (win-probability.ts).
+    { name: "crm.deal_win_probability", everyMs: 6 * HOUR, run: () => refreshWinProbabilities() },
   ],
-  onEvent: [{ name: "crm.lead_intake", types: ["lead.created"], handle: (event) => leadIntakeOnCreated(event) }],
+  onEvent: [
+    { name: "crm.lead_intake", types: ["lead.created"], handle: (event) => leadIntakeOnCreated(event) },
+    // Replies to outreach are classified and routed as soon as mailbox sync stores them (replies.ts).
+    {
+      name: "crm.reply_routing",
+      types: ["comms.email.received"],
+      async handle(event) {
+        const from = (event.payload as { data?: { from?: unknown } } | null)?.data?.from;
+        if (!event.organizationId || !event.companyId || typeof from !== "string") return;
+        await repliesOnEmail(event.organizationId, event.companyId, from);
+      },
+    },
+  ],
   tasks: [
     {
       name: "crm.autopilot_run",

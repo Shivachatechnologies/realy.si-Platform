@@ -11,12 +11,17 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { workContext } from "@/components/work/context";
 import { KickoffAssign, KickoffDescribe, KickoffPlan } from "@/components/work/kickoff";
+import { PlanObjectiveButton } from "@/components/work/execution-actions";
 import { Timeline, ProjectsAreaTabs } from "@/components/work/views";
 import { formatRelativeTime } from "@/i18n/format";
 import { getT } from "@/i18n/server";
 import { AppError } from "@/server/core/errors";
 import { aiConfigured } from "@/server/modules/agents/runtime";
 import { getKickoff, listKickoffs } from "@/server/modules/work/kickoff";
+import { executableObjectives } from "@/server/modules/work/execution";
+import { can } from "@/server/modules/rbac/service";
+import { companyChain } from "@/server/modules/rbac/scope";
+import { formatDate } from "@/i18n/format";
 import { projectSummary } from "@/server/modules/work/projects";
 import { dayString, listPeople, today } from "@/server/modules/work/shared";
 import { timelineTasks, workload } from "@/server/modules/work/tasks";
@@ -52,7 +57,8 @@ export default async function ProjectStartPage({ searchParams }: PageProps<"/[lo
   );
 
   if (!kId) {
-    const resume = await listKickoffs(viewer.ctx, org.id, company.id);
+    const canObjectives = await can(viewer.ctx, "objectives.manage", await companyChain(db(), org.id, company.id));
+    const [resume, objectives] = await Promise.all([listKickoffs(viewer.ctx, org.id, company.id), canObjectives ? executableObjectives(viewer.ctx, org.id, company.id) : Promise.resolve([])]);
     return (
       <div className="mx-auto grid max-w-[1100px] min-w-0 gap-4">
         {w.header}
@@ -80,6 +86,34 @@ export default async function ProjectStartPage({ searchParams }: PageProps<"/[lo
                 </li>
               ))}
             </ul>
+          </Card>
+        ) : null}
+        {objectives.length ? (
+          <Card>
+            <CardHeader title={t("work.execution.objectivesTitle")} description={t("work.execution.objectivesHint")} />
+            <ul className="divide-y">
+              {objectives.map((o) => (
+                <li key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+                  <Link href={`/${locale}/objectives/${o.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                    {o.title}
+                  </Link>
+                  {o.targetDate ? <span className="text-xs text-muted-foreground">{formatDate(o.targetDate, locale, "UTC")}</span> : null}
+                  {o.projects.length ? (
+                    <span className="flex flex-wrap gap-2 text-xs">
+                      {o.projects.map((id, i) => (
+                        <Link key={id} href={`/${locale}/projects/${id}/execution`} className="underline">
+                          {t("work.execution.projectN", { n: i + 1 })}
+                        </Link>
+                      ))}
+                    </span>
+                  ) : (
+                    <Badge>{t("work.execution.noProject")}</Badge>
+                  )}
+                  {aiReady ? <PlanObjectiveButton base={apiBase} locale={locale} objectiveId={o.id} /> : null}
+                </li>
+              ))}
+            </ul>
+            {!aiConfigured() ? <p className="px-4 pb-3 text-xs text-muted-foreground">{t("agentTasks.notConfigured")}</p> : null}
           </Card>
         ) : null}
       </div>

@@ -79,7 +79,7 @@ export const goalInput = z.object({ name: z.string().trim().min(1).max(160), met
 
 export async function listGoals(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "marketing.read");
-  const goals = await db().marketingGoal.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { endDate: "asc" } });
+  const goals = await db().marketingGoal.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { endDate: "asc" }, take: 100 });
   return Promise.all(
     goals.map(async (g) => {
       const a = await unifiedAnalytics(organizationId, companyId, { from: g.startDate, to: new Date(g.endDate.getTime() + 86_400_000) });
@@ -127,7 +127,7 @@ export const hashtagSetInput = z.object({ name: z.string().trim().min(1).max(80)
 
 export async function listHashtagSets(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "marketing.read");
-  return db().marketingHashtagSet.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" } });
+  return db().marketingHashtagSet.findMany({ where: { organizationId, companyId }, orderBy: { name: "asc" }, take: 200 });
 }
 
 export async function saveHashtagSet(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof hashtagSetInput>) {

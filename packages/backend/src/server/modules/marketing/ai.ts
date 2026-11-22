@@ -10,13 +10,15 @@ import { brandContextFor } from "./brand";
 import { assertLimit, recordUsage } from "@/server/modules/entitlements/service";
 
 /** AI work attached to marketing records (agent tasks with a subject). Outputs are applied only from completed tasks. */
-export const AI_KINDS = ["content_draft", "content_meta", "seo_keywords", "seo_brief", "seo_report", "campaign_plan", "campaign_analysis"] as const;
+export const AI_KINDS = ["content_draft", "content_meta", "seo_keywords", "seo_brief", "seo_report", "campaign_plan", "campaign_analysis", "campaign_content"] as const;
 export type AiKind = (typeof AI_KINDS)[number];
 
 export const aiRequestInput = z.object({
   kind: z.enum(AI_KINDS),
   /** Extra direction from the user (topic for briefs, tone, etc.). */
   note: z.string().trim().max(2000).optional(),
+  /** Assign the work to this AI employee (same company, active, within budget) instead of the kind's default role. */
+  aiEmployeeId: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
 });
 export const applyInput = z.object({
   taskId: z.string().uuid(),
@@ -32,6 +34,7 @@ const SUBJECT: Record<AiKind, "marketing_content" | "seo_project" | "marketing_c
   seo_report: "seo_project",
   campaign_plan: "marketing_campaign",
   campaign_analysis: "marketing_campaign",
+  campaign_content: "marketing_campaign",
 };
 
 const extra = (note?: string) => (note ? `\n\nAdditional direction from the team: ${note}` : "");
@@ -76,10 +79,25 @@ export async function requestAi(ctx: RequestContext, organizationId: string, com
       instructions = `Use read_seo_project to load the project's keywords, rank history, competitors and audits, then write an SEO report: current visibility, rank movements, top technical/on-page issues from the audits, and a prioritized action plan. Use only the data the tools return; say plainly where data is missing.\n\n${context}${extra(input.note)}`;
     }
   } else {
-    const c = await db().marketingCampaign.findFirst({ where: { id: subjectId, organizationId, companyId } });
+    const c = await db().marketingCampaign.findFirst({ where: { id: subjectId, organizationId, companyId }, include: { segment: { select: { name: true } } } });
     if (!c) throw notFound("Campaign");
-    const context = `Campaign ${c.id}: "${c.name}" (code ${c.code}), status ${c.status}.${c.objective ? `\nObjective: ${c.objective}` : ""}${c.description ? `\nDescription: ${c.description}` : ""}`;
-    if (input.kind === "campaign_plan") {
+    const money = (m: bigint | null) => (m == null ? null : `${(Number(m) / 100).toFixed(2)} ${c.currency}`);
+    const context = [
+      `Campaign ${c.id}: "${c.name}" (code ${c.code}), status ${c.status}.`,
+      c.objective ? `Objective: ${c.objective}` : null,
+      c.description ? `Description: ${c.description}` : null,
+      `Budget: ${money(c.budgetMinor)}${c.targetLeads ? `; target leads ${c.targetLeads}` : ""}${c.targetRevenueMinor ? `; target revenue ${money(c.targetRevenueMinor)}` : ""}.`,
+      c.segment ? `Audience segment: ${c.segment.name}.` : "No audience segment is set.",
+      c.channels.length ? `Channels: ${c.channels.join(", ")}.` : null,
+      c.startDate || c.endDate ? `Dates: ${c.startDate?.toISOString().slice(0, 10) ?? "open"} – ${c.endDate?.toISOString().slice(0, 10) ?? "open"}.` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    if (input.kind === "campaign_content") {
+      profile = "social_media_manager";
+      title = `Campaign content: ${c.name}`.slice(0, 200);
+      instructions = `Produce this campaign's content. Use read_campaign for what already exists, then: (1) propose content drafts linked to the campaign (create_content_draft with campaignId ${c.id}) for its channels; (2) for social posts that need visuals, propose images with generate_creative (campaignId ${c.id}) or reuse assets from search_media_library; (3) propose schedule_social_post for each post with campaignId ${c.id} and the matching assetIds — Instagram and TikTok need an image or video, Pinterest an image, YouTube a video. Every draft, image and post goes to a person for approval; a post is published only when the platform confirms it. Report exactly what you proposed and what is waiting.\n\n${context}${extra(input.note)}`;
+    } else if (input.kind === "campaign_plan") {
       profile = "campaign_strategist";
       title = `Campaign plan: ${c.name}`.slice(0, 200);
       instructions = `Write a campaign plan: audience, positioning and key messages, channel mix with rationale, content calendar outline, budget split suggestion, KPIs and targets, and UTM conventions using the code ${c.code}. Ground claims in the company's documents.\n\n${context}${extra(input.note)}`;
@@ -92,7 +110,7 @@ export async function requestAi(ctx: RequestContext, organizationId: string, com
   const brand = await brandContextFor(companyId);
   if (brand) instructions = `${instructions}\n\n${brand}`;
   await assertLimit(ctx, organizationId, "content.generations.month", 1);
-  const task = await createTask(ctx, organizationId, companyId, { profile: profile as never, title, instructions, subject: { type: subjectType, id: subjectId } });
+  const task = await createTask(ctx, organizationId, companyId, { ...(input.aiEmployeeId ? { aiEmployeeId: input.aiEmployeeId } : { profile: profile as never }), title, instructions, subject: { type: subjectType, id: subjectId } });
   await recordUsage(organizationId, "content.generations", 1, { companyId, idempotencyKey: task.id });
   return task;
 }
@@ -155,4 +173,31 @@ export async function applyToSeoProject(ctx: RequestContext, organizationId: str
     return createContent(ctx, organizationId, companyId, { type: input.contentType ?? "BLOG", title: task.title.replace(/^Content brief:\s*/, "").slice(0, 250), brief: task.output.slice(0, 5000) });
   }
   throw invalid("Unsupported target");
+}
+
+/**
+ * The AI employees working on a campaign: everyone with an AI task on it (assigned from the campaign page, by the
+ * creative → social hand-off or by Run my marketing), with their latest task. Tenant-scoped, bounded.
+ */
+export async function campaignTeam(ctx: RequestContext, organizationId: string, companyId: string, campaignId: string) {
+  await authorize(ctx, organizationId, companyId, "marketing.read");
+  if (!isUuid(campaignId)) return [];
+  const tasks = await db().agentTask.findMany({
+    where: { organizationId, companyId, subjectType: "marketing_campaign", subjectId: campaignId, aiEmployeeId: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    select: { id: true, aiEmployeeId: true, status: true, title: true, createdAt: true },
+  });
+  const latest = new Map<string, (typeof tasks)[number]>();
+  for (const t of tasks) if (!latest.has(t.aiEmployeeId!)) latest.set(t.aiEmployeeId!, t);
+  if (!latest.size) return [];
+  const people = await db().aiEmployee.findMany({ where: { organizationId, companyId, id: { in: [...latest.keys()] } }, select: { id: true, name: true, jobTitle: true, department: true, status: true } });
+  return people.map((p) => ({ ...p, task: latest.get(p.id)!, tasks: tasks.filter((t) => t.aiEmployeeId === p.id).length }));
+}
+
+/** Active AI employees that can be assigned to marketing work (marketing department first). */
+export async function assignableEmployees(ctx: RequestContext, organizationId: string, companyId: string) {
+  await authorize(ctx, organizationId, companyId, "marketing.read");
+  const rows = await db().aiEmployee.findMany({ where: { organizationId, companyId, archivedAt: null, status: "ACTIVE" }, orderBy: { name: "asc" }, take: 200, select: { id: true, name: true, jobTitle: true, department: true } });
+  return [...rows.filter((r) => r.department === "marketing"), ...rows.filter((r) => r.department !== "marketing")];
 }

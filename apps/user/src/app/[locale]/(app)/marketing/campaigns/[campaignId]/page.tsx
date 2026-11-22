@@ -19,6 +19,7 @@ import { campaignAnalytics, campaignLeads, campaignPipeline, LEAD_STAGES } from 
 import { enumParam, pageParam, param } from "@/server/modules/marketing/common";
 import { CAMPAIGN_TRANSITIONS, getCampaign } from "@/server/modules/marketing/campaigns";
 import { listSegments } from "@/server/modules/marketing/segments";
+import { assignableEmployees, campaignTeam } from "@/server/modules/marketing/ai";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("marketing.tabs.campaigns") };
@@ -37,10 +38,12 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
     if (err instanceof AppError && err.code === "not_found") notFound();
     throw err;
   });
-  const [a, segments, tasks] = await Promise.all([
+  const [a, segments, tasks, team, employees] = await Promise.all([
     campaignAnalytics(viewer.ctx, org.id, company.id, campaignId),
     canManage ? listSegments(viewer.ctx, org.id, company.id) : Promise.resolve([]),
     canRunAgents || m.canRead ? listSubjectTasks(viewer.ctx, org.id, company.id, "marketing_campaign", c.id).catch(() => []) : Promise.resolve([]),
+    campaignTeam(viewer.ctx, org.id, company.id, c.id).catch(() => []),
+    canRunAgents ? assignableEmployees(viewer.ctx, org.id, company.id).catch(() => []) : Promise.resolve([]),
   ]);
   const leadFilters = { q: param(sp, "q"), stage: enumParam(sp, "stage", LEAD_STAGES), page: pageParam(sp) };
   const dealFilters = { status: enumParam(sp, "status", ["OPEN", "WON", "LOST"] as const), page: pageParam(sp) };
@@ -232,12 +235,38 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
       <Card>
         <CardHeader title={t("marketing.ai.title")} description={t("marketing.ai.campaignHint")} />
         <div className="grid gap-3 p-4">
-          {canRunAgents ? (
+          {canRunAgents && !archived ? (
             <div className="grid gap-2 sm:grid-cols-2">
-              <AiRequest path={`${path}/ai`} kind="campaign_plan" label={t("marketing.ai.campaignPlan")} notePlaceholder={t("marketing.ai.notePlaceholder")} />
-              <AiRequest path={`${path}/ai`} kind="campaign_analysis" label={t("marketing.ai.campaignAnalysis")} />
+              <AiRequest path={`${path}/ai`} kind="campaign_plan" label={t("marketing.ai.campaignPlan")} notePlaceholder={t("marketing.ai.notePlaceholder")} employees={employees} />
+              <AiRequest path={`${path}/ai`} kind="campaign_analysis" label={t("marketing.ai.campaignAnalysis")} employees={employees} />
+              <div className="grid gap-1 sm:col-span-2">
+                <p className="text-xs text-muted-foreground">{t("marketing.ai.campaignContentHint")}</p>
+                <AiRequest path={`${path}/ai`} kind="campaign_content" label={t("marketing.ai.campaignContent")} notePlaceholder={t("marketing.ai.notePlaceholder")} employees={employees} />
+              </div>
             </div>
           ) : null}
+          <div className="grid gap-1">
+            <p className="text-xs font-medium">{t("marketing.ai.team")}</p>
+            {team.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t("marketing.ai.teamEmpty")}</p>
+            ) : (
+              <ul className="grid gap-1 text-sm">
+                {team.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center gap-2">
+                    <Link href={`/${locale}/workforce/${p.id}`} className="font-medium hover:underline">
+                      {p.name}
+                    </Link>
+                    {p.jobTitle ? <span className="text-xs text-muted-foreground">{p.jobTitle}</span> : null}
+                    <StatusBadge status={p.task.status} label={t(`agentTasks.status.${p.task.status}`)} />
+                    <Link href={`/${locale}/tasks/${p.task.id}`} className="min-w-0 flex-1 truncate text-xs text-muted-foreground hover:underline">
+                      {p.task.title}
+                    </Link>
+                    <span className="text-xs text-muted-foreground">{t("marketing.ai.teamTasks", { count: p.tasks })}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <AiTaskList tasks={tasks} locale={locale} tz={tz} t={t} aiReady={m.aiReady} />
         </div>
       </Card>

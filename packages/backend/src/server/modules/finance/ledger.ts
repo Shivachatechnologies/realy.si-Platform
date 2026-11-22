@@ -452,7 +452,7 @@ export const periodInput = z.object({ name: z.string().trim().min(1).max(60), st
 
 export async function listPeriods(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  return db().financialPeriod.findMany({ where: { organizationId, companyId }, orderBy: { startDate: "desc" } });
+  return db().financialPeriod.findMany({ take: 500, where: { organizationId, companyId }, orderBy: { startDate: "desc" } });
 }
 
 export async function createPeriod(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof periodInput>) {

@@ -13,8 +13,8 @@ export async function requestCfoInsights(ctx: RequestContext, organizationId: st
   const input = insightsInput.parse(raw);
   await authorize(ctx, organizationId, companyId, "finance.read");
   const instructions = [
-    "Prepare a CFO briefing for the leadership team. Call read_financial_summary (last 3 months and the year to date), read_cashflow_forecast, detect_expense_anomalies and read_invoices with status OVERDUE.",
-    "Then write: (1) the state of the business in five bullet points with the key numbers (revenue, expenses, net profit, cash, burn rate, runway, MRR/ARR, overdue receivables); (2) risks, including unusual expenses and late payers; (3) the five most valuable actions for the next 30 days, each with its expected financial effect; (4) what data is missing to make better decisions.",
+    "Prepare a CFO briefing for the leadership team. Call read_financial_summary (last 3 months and the year to date), read_cashflow_forecast, detect_expense_anomalies, read_invoices with status OVERDUE and read_ai_provider_costs (AI and provider spend from the cost ledger).",
+    "Then write: (1) the state of the business in five bullet points with the key numbers (revenue, expenses, net profit, cash, burn rate, runway, MRR/ARR, overdue receivables, AI and provider spend); (2) risks, including unusual expenses and late payers; (3) the five most valuable actions for the next 30 days, each with its expected financial effect; (4) what data is missing to make better decisions.",
     "Do not propose creating records unless the requester asks for it.",
     input.focus ? `Additional focus from the requester: ${input.focus}` : null,
   ]
@@ -37,7 +37,7 @@ export async function askCfo(ctx: RequestContext, organizationId: string, compan
   await authorize(ctx, organizationId, companyId, "finance.read");
   const instructions = [
     `A member of the team asks: "${input.question}"`,
-    "Answer from the company's real financial records only. Use read_financial_summary, read_cashflow_forecast, read_payables, read_budget_status, read_invoices, read_expenses or detect_expense_anomalies as the question needs, and quote the figures (with the currency) your answer rests on.",
+    "Answer from the company's real financial records only. Use read_financial_summary, read_cashflow_forecast, read_payables, read_budget_status, read_invoices, read_expenses, detect_expense_anomalies, read_ai_provider_costs or read_roi as the question needs, and quote the figures (with the currency) your answer rests on.",
     "Be concise: a direct answer first, then the supporting numbers and, when useful, one to three recommendations. If the records can't answer the question, say what is missing. Do not create or change records unless the question explicitly asks for it.",
   ].join("\n\n");
   const title = `AI CFO: ${input.question.length > 80 ? `${input.question.slice(0, 77)}…` : input.question}`;

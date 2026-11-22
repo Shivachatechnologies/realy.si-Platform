@@ -100,7 +100,7 @@ export const VOICE_TOOLS: Record<string, ToolDefinition> = {
     timeoutMs: 45_000,
     summarize: (i) => (i.callId ? `AI phone call to ${i.label ?? "the requested person"}: ${i.purpose ?? ""}` : `AI phone call to ${i.leadId ? `lead ${i.leadId}` : `contact ${i.contactId}`}: ${i.purpose ?? ""}`),
     async execute(input, { ctx, organizationId, companyId }) {
-      const blocked = await callingBlocked(organizationId);
+      const blocked = await callingBlocked(organizationId, companyId);
       let callId = input.callId;
       if (callId) {
         const exists = await db().voiceCall.findFirst({ where: { id: callId, organizationId, companyId }, select: { id: true } });

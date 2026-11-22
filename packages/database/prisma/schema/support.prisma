@@ -6,6 +6,7 @@ enum SupportChannel {
   EMAIL
   CHAT
   PHONE
+  WHATSAPP
 }
 
 enum SupportPriority {
@@ -41,6 +42,10 @@ model SupportSettings {
   /// Customers may write to this address; it is shown on the help center and the support form.
   emailChannelEnabled    Boolean   @default(false) @map("email_channel_enabled")
   supportEmail           String?   @map("support_email")
+  /// When the email channel was last turned on: mail received before it is not imported into tickets.
+  emailChannelEnabledAt  DateTime? @map("email_channel_enabled_at") @db.Timestamptz(3)
+  /// Inbound WhatsApp messages (the company's connected WhatsApp Business number) become tickets; replies go back by WhatsApp.
+  whatsappChannelEnabled Boolean   @default(false) @map("whatsapp_channel_enabled")
   /// Guided setup (/support/setup): last step reached (channels | promises | articles | done) and completion time.
   setupStep              String?   @map("setup_step")
   setupCompletedAt       DateTime? @map("setup_completed_at") @db.Timestamptz(3)
@@ -143,6 +148,8 @@ model SupportTicket {
   csatRatedAt             DateTime?           @map("csat_rated_at") @db.Timestamptz(3)
   /// Rule-based classifier output: { categoryId, priority, matched[] }.
   classification          Json?
+  /// Inbound channel thread this ticket belongs to: "email:<comms thread id>" or "whatsapp:<E.164 number>".
+  externalThreadKey       String?             @map("external_thread_key")
   createdById             String?             @map("created_by_id") @db.Uuid
   createdAt               DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt               DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -161,6 +168,7 @@ model SupportTicket {
   @@index([companyId, assigneeId, status])
   @@index([requesterId])
   @@index([accountId])
+  @@index([companyId, externalThreadKey])
   @@map("support_tickets")
 }
 
@@ -177,24 +185,27 @@ enum SupportAuthorType {
 }
 
 model SupportMessage {
-  id           String             @id @default(uuid(7)) @db.Uuid
-  companyId    String             @map("company_id") @db.Uuid
-  ticketId     String             @map("ticket_id") @db.Uuid
-  kind         SupportMessageKind
-  authorType   SupportAuthorType  @map("author_type")
-  authorUserId String?            @map("author_user_id") @db.Uuid
-  authorName   String?            @map("author_name")
-  body         String
+  id                String             @id @default(uuid(7)) @db.Uuid
+  companyId         String             @map("company_id") @db.Uuid
+  ticketId          String             @map("ticket_id") @db.Uuid
+  kind              SupportMessageKind
+  authorType        SupportAuthorType  @map("author_type")
+  authorUserId      String?            @map("author_user_id") @db.Uuid
+  authorName        String?            @map("author_name")
+  body              String
   /// AI-drafted internal note awaiting a person.
-  isDraft      Boolean            @default(false) @map("is_draft")
+  isDraft           Boolean            @default(false) @map("is_draft")
   /// Delivery of a public reply to the requester: SENT, FAILED, NOT_CONFIGURED, NO_EMAIL.
-  emailStatus  String?            @map("email_status")
-  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  emailStatus       String?            @map("email_status")
+  /// Provider id of the inbound email / WhatsApp message (or of the delivered reply): dedupes webhook and sync retries.
+  externalMessageId String?            @map("external_message_id")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
 
   ticket      SupportTicket       @relation(fields: [ticketId, companyId], references: [id, companyId], onDelete: Cascade)
   attachments SupportAttachment[]
 
   @@unique([id, companyId])
+  @@unique([companyId, externalMessageId])
   @@index([ticketId, createdAt])
   @@map("support_messages")
 }

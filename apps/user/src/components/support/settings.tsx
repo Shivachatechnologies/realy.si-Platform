@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { FormError } from "@/components/form-error";
+import { Notice } from "@/components/ui/notice";
 import { useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { ActionButton, PeoplePicker, useAction, type Person } from "@/components/comms/client";
@@ -358,5 +359,65 @@ export function RuleActiveToggle({ path, rule }: { path: string; rule: Record<st
       </label>
       <FormError error={error} />
     </span>
+  );
+}
+
+export type InboundStatus = {
+  email: { state: "no_address" | "ready" | "other_mailbox" | "no_mailbox"; mailbox?: string; provider?: string };
+  whatsapp: { state: "ready" | "not_connected" };
+};
+
+/** What the inbound channels really do right now (connected mailbox / WhatsApp number), shown under the toggles. */
+export function InboundStatusNotes({ status, supportEmail, emailOn, whatsappOn }: { status: InboundStatus; supportEmail: string | null; emailOn: boolean; whatsappOn: boolean }) {
+  const t = useT();
+  const provider = status.email.provider === "outlook" ? "Outlook" : "Gmail";
+  return (
+    <div className="grid gap-2 text-sm">
+      {emailOn ? (
+        <Notice tone={status.email.state === "ready" ? "success" : "warning"}>
+          {t(`support.inbound.email.${status.email.state}`, { support: supportEmail ?? "", mailbox: status.email.mailbox ?? "", provider })}
+        </Notice>
+      ) : null}
+      {whatsappOn ? <Notice tone={status.whatsapp.state === "ready" ? "success" : "warning"}>{t(`support.inbound.whatsapp.${status.whatsapp.state}`)}</Notice> : null}
+    </div>
+  );
+}
+
+/** Email and WhatsApp as ticket channels: turn them on, set the support address. */
+export function InboundChannelSettings({ base, settings, status }: { base: string; settings: { emailChannelEnabled: boolean; whatsappChannelEnabled: boolean; supportEmail: string | null }; status: InboundStatus }) {
+  const t = useT();
+  const { busy, error, run } = useAction();
+  const [address, setAddress] = useState(settings.supportEmail ?? "");
+  const patch = (body: Record<string, unknown>) => void run(() => api(`${base}/support/settings`, { method: "PATCH", body }));
+  return (
+    <div className="grid gap-3">
+      {(["emailChannelEnabled", "whatsappChannelEnabled"] as const).map((k) => (
+        <label key={k} className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={settings[k]} disabled={busy} onChange={(e) => patch({ [k]: e.target.checked })} />
+          <span>
+            {t(`support.settings.toggles.${k}`)}
+            <span className="block text-xs text-muted-foreground">{t(`support.settings.toggles.${k}Hint`)}</span>
+          </span>
+        </label>
+      ))}
+      {settings.emailChannelEnabled ? (
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            patch({ supportEmail: address.trim() || null });
+          }}
+        >
+          <Field label={t("support.setup.channels.address")} htmlFor="sup-inbound-email" hint={t("support.setup.channels.addressHint")}>
+            <Input id="sup-inbound-email" type="email" maxLength={254} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="help@example.com" />
+          </Field>
+          <Button type="submit" variant="secondary" disabled={busy}>
+            {t("support.settings.saveAddress")}
+          </Button>
+        </form>
+      ) : null}
+      <InboundStatusNotes status={status} supportEmail={settings.supportEmail} emailOn={settings.emailChannelEnabled} whatsappOn={settings.whatsappChannelEnabled} />
+      <FormError error={error} />
+    </div>
   );
 }

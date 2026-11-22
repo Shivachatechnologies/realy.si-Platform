@@ -30,6 +30,21 @@ feedback). Models: `AutonomySettings`, `AutonomyPolicy`, `AutonomousAction`, `Au
   lockdown, org `aiDisabled`, suspended org → `deny`; `aiAutonomyCeiling` supervised / `aiRequireApprovalForWrites` → `ask`).
 - Turning an external class to AUTO, or Auto mode on, needs a fresh MFA verification.
 
+## One autonomy model (precedence)
+
+Three stored settings exist; `/autonomy` shows them as one level per department (`workforce/autonomy-unified.ts`):
+**Manual** (AI works only when a person asks, suggestions only), **Assisted** (drafts and recommends; nothing filed or
+done on its own), **Approval** (acts, every change waits for approval), **Autonomous** (acts on its own within the
+limits of AUTO rules). The most restrictive setting wins, checked in this order:
+
+1. Platform controls and "Pause all AI" (`AutonomySettings.paused`) → nothing runs.
+2. The department's Autopilot mode (`AutopilotSetting`: OFF → paused, MANUAL, ASSISTED, APPROVAL_REQUIRED,
+   AUTONOMOUS) → whether the AI may start work on its own and the ceiling for actions.
+3. The autonomy rules per action class (`AutonomyPolicy`) and the Auto mode switch → whether an action runs within
+   limits (AUTO, only while Auto mode is on), waits for approval (ASK), is only suggested (SUGGEST) or is off (OFF).
+4. Each AI employee's autonomy level (`AiEmployee.autonomy`: READ_ONLY → Manual, RECOMMEND / PREPARE → Assisted,
+   EXECUTE_WITH_APPROVAL → Approval, AUTONOMOUS_LOW_RISK → Autonomous) → which tools it is offered at all.
+
 ## Tools: nothing to do unless you want precision
 
 The gateway (`tools/gateway.ts` `requestTool`) evaluates the policy for **AI task runs** (the runtime passes

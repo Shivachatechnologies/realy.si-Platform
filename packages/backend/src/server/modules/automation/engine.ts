@@ -8,7 +8,10 @@ import { notifyUsers } from "@/server/modules/notifications/service";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { definitionSchema, evaluateAll, render, type Definition, type EvalScope, type Schedule, type Step } from "./definition";
-import { AI_TASK_KINDS, errorMessage, executeAction, isPermanent, parseDecision, renderAction, type ActionEnv } from "./actions";
+import { AI_TASK_KINDS, errorMessage, executeAction, isPermanent, parseDecision, renderAction, type ActionEnv, type ActionResult } from "./actions";
+import { approvalStatus, describeExternal, externalClass, gateExternalAction, isExternalAction, PAUSE_RECHECK_MS, requestExternalApproval, WORKFLOW_DEPARTMENT } from "./governance";
+import { runAutonomously } from "@/server/modules/workforce/autonomy-policy";
+import type { AutopilotMode } from "@/generated/prisma/enums";
 
 /**
  * Workflow engine.
@@ -170,7 +173,7 @@ export async function processRun(runId: string): Promise<string | null> {
     data: { status: "RUNNING", claimToken: token, claimedAt: now },
   });
   if (!claimed.count) return null;
-  const run = await db().workflowRun.findUniqueOrThrow({ where: { id: runId }, include: { workflow: { select: { id: true, name: true, ownerId: true, status: true } }, version: { select: { definition: true } } } });
+  const run = await db().workflowRun.findUniqueOrThrow({ where: { id: runId }, include: { workflow: { select: { id: true, name: true, ownerId: true, status: true, autonomyMode: true } }, version: { select: { definition: true } } } });
   if (!run.startedAt) await db().workflowRun.update({ where: { id: run.id }, data: { startedAt: now } });
 
   const finish = async (data: Prisma.WorkflowRunUpdateManyMutationInput) => {
@@ -193,7 +196,8 @@ export async function processRun(runId: string): Promise<string | null> {
         const scope: EvalScope = { event, vars: {}, steps: {} };
         for (const v of def.variables) scope.vars[v.name] = render(v.value, scope);
         const env: Omit<ActionEnv, "stepId"> = { ctx, organizationId: run.organizationId, companyId: run.companyId, ownerId: run.workflow.ownerId, runId: run.id, workflowId: run.workflowId, workflowName: run.workflow.name };
-        outcome = await walk(def.steps, { runId: run.id, organizationId: run.organizationId, companyId: run.companyId, steps, scope, env });
+        const gov = { mode: run.workflow.autonomyMode, personStarted: !!run.startedById };
+        outcome = await walk(def.steps, { runId: run.id, organizationId: run.organizationId, companyId: run.companyId, steps, scope, env, gov });
       }
     }
   } catch (err) {
@@ -230,6 +234,8 @@ interface WalkState {
   steps: Map<string, Prisma.WorkflowRunStepGetPayload<object>>;
   scope: EvalScope;
   env: Omit<ActionEnv, "stepId">;
+  /** Governance of external actions (./governance.ts). */
+  gov: { mode: AutopilotMode; personStarted: boolean };
 }
 
 async function saveStep(s: WalkState, step: Step, data: { status: "RUNNING" | "WAITING" | "SUCCEEDED" | "FAILED" | "SKIPPED"; input?: unknown; output?: unknown; error?: string | null; attempts?: number; finished?: boolean }) {
@@ -271,7 +277,11 @@ async function walk(list: Step[], s: WalkState): Promise<WalkOutcome> {
       continue;
     }
 
-    if (row?.status === "WAITING") {
+    if (row?.status === "WAITING" && step.type === "action" && typeof output.autonomyApprovalId === "string") {
+      // An external action waiting for a person's approval (autonomy): approved → execute it below.
+      const r = await resumeAutonomyApproval(s, step, output.autonomyApprovalId);
+      if (r) return r;
+    } else if (row?.status === "WAITING") {
       const r = await resumeWaiting(s, step, row.stepType, output);
       if (r) return r;
       continue;
@@ -303,11 +313,31 @@ async function walk(list: Step[], s: WalkState): Promise<WalkOutcome> {
         return { kind: "wait", waitingFor: "delay", until: resumeAt };
       }
       case "action": {
-        const attempts = (row?.attempts ?? 0) + 1;
         const rendered = renderAction(step.action, s.scope);
+        let autonomous = false;
+        if (isExternalAction(rendered)) {
+          const approved = (await approvalStatus(s.runId, step.id))?.status === "APPROVED";
+          const gate = await gateExternalAction({ organizationId: s.organizationId, companyId: s.companyId, ctx: s.env.ctx, mode: s.gov.mode, personStarted: s.gov.personStarted, approved, action: rendered });
+          // Kill switch: hold the run (nothing is sent); it checks again and resumes once the company is unpaused.
+          if (gate.kind === "hold") return { kind: "wait", waitingFor: "company_paused", until: new Date(Date.now() + PAUSE_RECHECK_MS) };
+          if (gate.kind === "refuse") {
+            await saveStep(s, step, { status: "FAILED", input: rendered, error: gate.reason, finished: true });
+            return { kind: "fail", error: `Step ${step.id}: ${gate.reason}` };
+          }
+          if (gate.kind === "approve") return awaitExternalApproval(s, step, rendered, gate.reason);
+          autonomous = !!gate.decision;
+        }
+        const attempts = (row?.attempts ?? 0) + 1;
         await saveStep(s, step, { status: "RUNNING", input: rendered, attempts, error: null });
         try {
-          const result = await executeAction(rendered, { ...s.env, stepId: step.id }, s.scope);
+          const exec = () => executeAction(rendered, { ...s.env, stepId: step.id }, s.scope);
+          let result: ActionResult;
+          if (autonomous && isExternalAction(rendered)) {
+            // AUTONOMOUS: reserve the policy's limits atomically, perform, record (Autonomy → auto-approved log).
+            const r = await runAutonomously(s.env.ctx, s.organizationId, s.companyId, { department: WORKFLOW_DEPARTMENT, ...externalClass(rendered.kind) }, { summary: `${s.env.workflowName}: ${describeExternal(rendered)}`, source: "automation", input: { workflowId: s.env.workflowId, runId: s.runId, stepId: step.id } }, async () => ({ value: await exec() }));
+            if (!r.actionId) return awaitExternalApproval(s, step, rendered, r.decision.message);
+            result = r.value!;
+          } else result = await exec();
           if (result.kind === "wait") {
             await saveStep(s, step, { status: "WAITING", output: result.output });
             return { kind: "wait", waitingFor: result.waitingFor, until: result.waitingFor === "agent_task" ? new Date(Date.now() + AGENT_POLL_MS) : null };
@@ -325,6 +355,24 @@ async function walk(list: Step[], s: WalkState): Promise<WalkOutcome> {
     }
   }
   return { kind: "completed" };
+}
+
+/** Park an external step until a person approves it (Workflows → Approvals). */
+async function awaitExternalApproval(s: WalkState, step: Extract<Step, { type: "action" }>, rendered: ReturnType<typeof renderAction>, reason: string): Promise<WalkOutcome> {
+  if (!isExternalAction(rendered)) return { kind: "fail", error: `Step ${step.id}: not an external action` };
+  const approvalId = await requestExternalApproval({ organizationId: s.organizationId, companyId: s.companyId, runId: s.runId, stepId: step.id, workflowName: s.env.workflowName, action: rendered, reason });
+  await saveStep(s, step, { status: "WAITING", input: rendered, output: { autonomyApprovalId: approvalId, reason } });
+  return { kind: "wait", waitingFor: "approval", until: null };
+}
+
+/** An external step's autonomy approval: null when approved (execute it), else the outcome (wait / cancelled). */
+async function resumeAutonomyApproval(s: WalkState, step: Step, approvalId: string): Promise<WalkOutcome | null> {
+  const req = await db().workflowApprovalRequest.findUnique({ where: { id: approvalId }, select: { status: true, note: true } });
+  if (req?.status === "APPROVED") return null;
+  if (!req || req.status === "PENDING") return { kind: "wait", waitingFor: "approval", until: null };
+  const error = req.status === "REJECTED" ? `rejected by approver${req.note ? ` (${req.note})` : ""}` : "approval cancelled";
+  await saveStep(s, step, { status: "FAILED", error: error.charAt(0).toUpperCase() + error.slice(1), finished: true });
+  return { kind: "fail", error: `Step ${step.id}: ${error}`, cancelled: true };
 }
 
 /** A WAITING step: resume it when its condition is met, or keep the run waiting. Returns null to continue walking. */

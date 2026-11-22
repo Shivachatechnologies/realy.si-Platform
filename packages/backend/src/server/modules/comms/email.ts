@@ -2,10 +2,11 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CommsEmailStatus } from "@/generated/prisma/enums";
 import { db, transaction } from "@/server/core/db";
-import type { RequestContext } from "@/server/core/context";
+import { systemContext, type RequestContext } from "@/server/core/context";
 import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
+import { emitDomainEvent } from "@/server/modules/events/emit";
 import { sendPlainEmail } from "@/server/modules/email/service";
 import { createTask } from "@/server/modules/agents/service";
 import { can } from "@/server/modules/rbac/service";
@@ -39,7 +40,7 @@ const addressOf = (s: string) => (s.match(/<([^>]+)>/)?.[1] ?? s).trim().toLower
 
 export async function listEmailAccounts(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "communication.read");
-  const accounts = await db().commsEmailAccount.findMany({ where: { organizationId, companyId }, orderBy: { createdAt: "asc" } });
+  const accounts = await db().commsEmailAccount.findMany({ where: { organizationId, companyId }, orderBy: { createdAt: "asc" }, take: 50 });
   const status = new Map<string, string>();
   for (const p of MAIL_PROVIDERS) {
     const c = await getConnection(organizationId, companyId, p);
@@ -100,21 +101,34 @@ async function storeFetched(account: { id: string; organizationId: string; compa
     }
     const exists = await db().commsEmailMessage.findFirst({ where: { threadId: thread.id, providerMessageId: m.providerMessageId }, select: { id: true } });
     if (exists) continue;
-    await db().commsEmailMessage.create({
-      data: {
-        companyId: account.companyId,
-        threadId: thread.id,
-        providerMessageId: m.providerMessageId,
-        direction: outbound ? "OUTBOUND" : "INBOUND",
-        status: outbound ? "SENT" : "RECEIVED",
-        fromAddress: m.from.slice(0, 300),
-        toAddresses: m.to.slice(0, 50),
-        ccAddresses: m.cc.slice(0, 50),
-        subject: (m.subject || "(no subject)").slice(0, 300),
-        bodyText: m.bodyText,
-        attachments: m.attachments as unknown as Prisma.InputJsonValue,
-        sentAt: m.sentAt,
-      },
+    const threadId = thread.id;
+    await transaction(async (tx) => {
+      const row = await tx.commsEmailMessage.create({
+        data: {
+          companyId: account.companyId,
+          threadId,
+          providerMessageId: m.providerMessageId,
+          direction: outbound ? "OUTBOUND" : "INBOUND",
+          status: outbound ? "SENT" : "RECEIVED",
+          fromAddress: m.from.slice(0, 300),
+          toAddresses: m.to.slice(0, 50),
+          ccAddresses: m.cc.slice(0, 50),
+          subject: (m.subject || "(no subject)").slice(0, 300),
+          bodyText: m.bodyText,
+          attachments: m.attachments as unknown as Prisma.InputJsonValue,
+          sentAt: m.sentAt,
+        },
+      });
+      // Inbound mail is announced to the other modules (support turns mail to the support address into tickets).
+      if (!outbound) {
+        await emitDomainEvent(tx, systemContext(), "comms.email.received", {
+          organizationId: account.organizationId,
+          companyId: account.companyId,
+          entityType: "comms_email_message",
+          entityId: row.id,
+          data: { accountId: account.id, threadId, from: addressOf(m.from), to: [...m.to, ...m.cc].map(addressOf).join(",").slice(0, 2000), subject: (m.subject || "").slice(0, 300), sentAt: m.sentAt },
+        });
+      }
     });
     if (m.sentAt >= thread.lastMessageAt) {
       await db().commsEmailThread.update({
@@ -339,6 +353,28 @@ export async function replyToThread(ctx: RequestContext, organizationId: string,
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "comms.email.replied", resourceType: "comms_email_thread", resourceId: threadId, newValue: { status: r.status, via: thread.account?.provider ?? "platform" } });
     return { message, status: r.status };
   });
+}
+
+/**
+ * Reply in a synced mailbox thread for another module that already authorized its caller (support tickets that came
+ * in by email). Sent only through the thread's own connected mailbox, so the customer sees it in the same conversation;
+ * NOT_CONFIGURED (nothing sent) when that mailbox isn't connected. The message is stored on the thread either way.
+ */
+export async function replyInThreadAs(organizationId: string, companyId: string, threadId: string, input: { to: string; body: string; sentById: string | null }) {
+  const thread = await db().commsEmailThread.findFirst({ where: { id: threadId, organizationId, companyId }, include: { account: true, messages: { orderBy: { sentAt: "desc" }, take: 20 } } });
+  if (!thread?.account) return { status: "NOT_CONFIGURED" as CommsEmailStatus, providerMessageId: null as string | null };
+  const conn = await activeConnection(organizationId, companyId, thread.account.provider as MailProvider);
+  if (!conn) return { status: "NOT_CONFIGURED" as CommsEmailStatus, providerMessageId: null as string | null };
+  const lastInbound = thread.messages.find((m) => m.direction === "INBOUND") ?? null;
+  const subject = /^re:/i.test(thread.subject) ? thread.subject : `Re: ${thread.subject}`;
+  const r = await send(systemContext(), organizationId, companyId, { account: thread.account, to: [input.to], cc: [], subject, body: input.body, providerThreadId: thread.providerThreadId, replyTo: lastInbound }, true);
+  await transaction(async (tx) => {
+    await tx.commsEmailMessage.create({
+      data: { companyId, threadId, providerMessageId: r.providerMessageId, direction: "OUTBOUND", status: r.status, fromAddress: r.from, toAddresses: [input.to], ccAddresses: [], subject, bodyText: input.body, error: r.error, sentById: input.sentById },
+    });
+    await tx.commsEmailThread.update({ where: { id: threadId }, data: { lastMessageAt: new Date(), snippet: input.body.slice(0, 200), unread: false } });
+  });
+  return { status: r.status, providerMessageId: r.providerMessageId };
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -97,37 +97,42 @@ model CrmPipelineStage {
 
 /// An opportunity: amount in minor units of `currency`, in a pipeline stage, optionally for an account/contact.
 model CrmDeal {
-  id                String        @id @default(uuid(7)) @db.Uuid
-  organizationId    String        @map("organization_id") @db.Uuid
-  companyId         String        @map("company_id") @db.Uuid
-  name              String
-  accountId         String?       @map("account_id") @db.Uuid
-  contactId         String?       @map("contact_id") @db.Uuid
+  id                   String        @id @default(uuid(7)) @db.Uuid
+  organizationId       String        @map("organization_id") @db.Uuid
+  companyId            String        @map("company_id") @db.Uuid
+  name                 String
+  accountId            String?       @map("account_id") @db.Uuid
+  contactId            String?       @map("contact_id") @db.Uuid
   /// Lead this deal was converted from.
-  leadId            String?       @map("lead_id") @db.Uuid
-  ownerId           String?       @map("owner_id") @db.Uuid
-  pipelineId        String        @map("pipeline_id") @db.Uuid
-  stageId           String        @map("stage_id") @db.Uuid
-  amountMinor       BigInt        @default(0) @map("amount_minor")
-  currency          String        @db.Char(3)
+  leadId               String?       @map("lead_id") @db.Uuid
+  ownerId              String?       @map("owner_id") @db.Uuid
+  pipelineId           String        @map("pipeline_id") @db.Uuid
+  stageId              String        @map("stage_id") @db.Uuid
+  amountMinor          BigInt        @default(0) @map("amount_minor")
+  currency             String        @db.Char(3)
   /// 0–100; null means the stage's probability.
-  probability       Int?
-  expectedCloseDate DateTime?     @map("expected_close_date") @db.Date
-  status            CrmDealStatus @default(OPEN)
-  closedAt          DateTime?     @map("closed_at") @db.Timestamptz(3)
-  lostReason        String?       @map("lost_reason")
-  source            String?
-  campaignCode      String?       @map("campaign_code")
-  description       String?
-  tags              String[]      @default([])
-  customFields      Json          @default("{}") @map("custom_fields")
-  stageEnteredAt    DateTime      @default(now()) @map("stage_entered_at") @db.Timestamptz(3)
+  probability          Int?
+  expectedCloseDate    DateTime?     @map("expected_close_date") @db.Date
+  status               CrmDealStatus @default(OPEN)
+  closedAt             DateTime?     @map("closed_at") @db.Timestamptz(3)
+  lostReason           String?       @map("lost_reason")
+  source               String?
+  campaignCode         String?       @map("campaign_code")
+  description          String?
+  tags                 String[]      @default([])
+  customFields         Json          @default("{}") @map("custom_fields")
+  stageEnteredAt       DateTime      @default(now()) @map("stage_entered_at") @db.Timestamptz(3)
   /// Set by the daily job when an open deal sat in its stage longer than the pipeline's staleDays.
-  staleSince        DateTime?     @map("stale_since") @db.Timestamptz(3)
-  archivedAt        DateTime?     @map("archived_at") @db.Timestamptz(3)
-  createdById       String        @map("created_by_id") @db.Uuid
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  staleSince           DateTime?     @map("stale_since") @db.Timestamptz(3)
+  /// Computed win probability 0–100 from history (crm/win-probability.ts, refreshed by crm.deal_win_probability).
+  predictedProbability Int?          @map("predicted_probability")
+  predictedAt          DateTime?     @map("predicted_at") @db.Timestamptz(3)
+  /// The factors behind predictedProbability ({ base, factors: [{ key, delta }] }), shown as "why".
+  predictedFactors     Json?         @map("predicted_factors")
+  archivedAt           DateTime?     @map("archived_at") @db.Timestamptz(3)
+  createdById          String        @map("created_by_id") @db.Uuid
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company      Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   account      Account?             @relation(fields: [accountId, companyId], references: [id, companyId], onDelete: NoAction)
@@ -760,6 +765,17 @@ enum CrmCadenceStepKind {
   TASK
 }
 
+/// What a reply to outreach means (crm/replies.ts); drives the follow-up action.
+enum CrmReplyClass {
+  INTERESTED
+  NOT_INTERESTED
+  OUT_OF_OFFICE
+  UNSUBSCRIBE
+  REFERRAL
+  QUESTION
+  OTHER
+}
+
 enum CrmEnrollmentStatus {
   ACTIVE
   PAUSED
@@ -819,24 +835,29 @@ model CrmCadenceStep {
 
 /// One person (lead or contact) going through a cadence.
 model CrmCadenceEnrollment {
-  id             String              @id @default(uuid(7)) @db.Uuid
-  organizationId String              @map("organization_id") @db.Uuid
-  companyId      String              @map("company_id") @db.Uuid
-  cadenceId      String              @map("cadence_id") @db.Uuid
-  leadId         String?             @map("lead_id") @db.Uuid
-  contactId      String?             @map("contact_id") @db.Uuid
-  toEmail        String              @map("to_email")
-  name           String
-  status         CrmEnrollmentStatus @default(ACTIVE)
+  id                String              @id @default(uuid(7)) @db.Uuid
+  organizationId    String              @map("organization_id") @db.Uuid
+  companyId         String              @map("company_id") @db.Uuid
+  cadenceId         String              @map("cadence_id") @db.Uuid
+  leadId            String?             @map("lead_id") @db.Uuid
+  contactId         String?             @map("contact_id") @db.Uuid
+  toEmail           String              @map("to_email")
+  name              String
+  status            CrmEnrollmentStatus @default(ACTIVE)
   /// Position of the next step to run.
-  nextStep       Int                 @default(0) @map("next_step")
-  nextRunAt      DateTime?           @map("next_run_at") @db.Timestamptz(3)
-  lastStepAt     DateTime?           @map("last_step_at") @db.Timestamptz(3)
-  stoppedReason  String?             @map("stopped_reason")
-  ownerId        String?             @map("owner_id") @db.Uuid
-  enrolledById   String              @map("enrolled_by_id") @db.Uuid
-  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  nextStep          Int                 @default(0) @map("next_step")
+  nextRunAt         DateTime?           @map("next_run_at") @db.Timestamptz(3)
+  lastStepAt        DateTime?           @map("last_step_at") @db.Timestamptz(3)
+  stoppedReason     String?             @map("stopped_reason")
+  ownerId           String?             @map("owner_id") @db.Uuid
+  enrolledById      String              @map("enrolled_by_id") @db.Uuid
+  /// Last reply's classification (crm/replies.ts); replies after replyClassifiedAt are classified again.
+  replyClass        CrmReplyClass?      @map("reply_class")
+  replyClassifiedAt DateTime?           @map("reply_classified_at") @db.Timestamptz(3)
+  /// Out of office: the sequence resumes at this time.
+  replyResumeAt     DateTime?           @map("reply_resume_at") @db.Timestamptz(3)
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company  Company              @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   cadence  CrmCadence           @relation(fields: [cadenceId, companyId], references: [id, companyId], onDelete: Cascade)
@@ -1030,46 +1051,51 @@ enum CrmProspectPersonStatus {
 /// A decision maker found by a contact-data provider. Name, title and email are stored exactly as the provider returned
 /// them, with the verification result and its source; nothing is guessed.
 model CrmProspectPerson {
-  id              String                  @id @default(uuid(7)) @db.Uuid
-  organizationId  String                  @map("organization_id") @db.Uuid
-  companyId       String                  @map("company_id") @db.Uuid
-  autopilotId     String                  @map("autopilot_id") @db.Uuid
-  domain          String
-  companyName     String?                 @map("company_name")
-  firstName       String?                 @map("first_name")
-  lastName        String?                 @map("last_name")
-  fullName        String                  @map("full_name")
-  title           String?
-  seniority       String?
-  linkedinUrl     String?                 @map("linkedin_url")
-  location        String?
+  id                String                  @id @default(uuid(7)) @db.Uuid
+  organizationId    String                  @map("organization_id") @db.Uuid
+  companyId         String                  @map("company_id") @db.Uuid
+  autopilotId       String                  @map("autopilot_id") @db.Uuid
+  domain            String
+  companyName       String?                 @map("company_name")
+  firstName         String?                 @map("first_name")
+  lastName          String?                 @map("last_name")
+  fullName          String                  @map("full_name")
+  title             String?
+  seniority         String?
+  linkedinUrl       String?                 @map("linkedin_url")
+  location          String?
   /// Provider that found the person (apollo / hunter / pdl) and its id there.
-  sourceProvider  String                  @map("source_provider")
-  externalId      String?                 @map("external_id")
-  email           String?
-  emailNormalized String?                 @map("email_normalized")
-  emailStatus     CrmEmailVerification    @default(NONE) @map("email_status")
+  sourceProvider    String                  @map("source_provider")
+  externalId        String?                 @map("external_id")
+  email             String?
+  emailNormalized   String?                 @map("email_normalized")
+  emailStatus       CrmEmailVerification    @default(NONE) @map("email_status")
   /// Provider that supplied the address, and the one that verified it.
-  emailSource     String?                 @map("email_source")
-  verifiedBy      String?                 @map("verified_by")
-  verifiedAt      DateTime?               @map("verified_at") @db.Timestamptz(3)
+  emailSource       String?                 @map("email_source")
+  verifiedBy        String?                 @map("verified_by")
+  verifiedAt        DateTime?               @map("verified_at") @db.Timestamptz(3)
   /// Provider verdict as returned (status, score, accept_all...).
-  verification    Json                    @default("{}")
+  verification      Json                    @default("{}")
   /// Lawful basis for contacting this person, copied from the autopilot when the lead was created.
-  consentBasis    String?                 @map("consent_basis")
-  consentNote     String?                 @map("consent_note")
-  status          CrmProspectPersonStatus @default(FOUND)
-  skipReason      String?                 @map("skip_reason")
-  leadId          String?                 @map("lead_id") @db.Uuid
-  firstMessageId  String?                 @map("first_message_id") @db.Uuid
-  enrollmentId    String?                 @map("enrollment_id") @db.Uuid
-  contactedAt     DateTime?               @map("contacted_at") @db.Timestamptz(3)
-  repliedAt       DateTime?               @map("replied_at") @db.Timestamptz(3)
-  meetingAt       DateTime?               @map("meeting_at") @db.Timestamptz(3)
-  bouncedAt       DateTime?               @map("bounced_at") @db.Timestamptz(3)
-  unsubscribedAt  DateTime?               @map("unsubscribed_at") @db.Timestamptz(3)
-  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  consentBasis      String?                 @map("consent_basis")
+  consentNote       String?                 @map("consent_note")
+  status            CrmProspectPersonStatus @default(FOUND)
+  skipReason        String?                 @map("skip_reason")
+  leadId            String?                 @map("lead_id") @db.Uuid
+  firstMessageId    String?                 @map("first_message_id") @db.Uuid
+  enrollmentId      String?                 @map("enrollment_id") @db.Uuid
+  contactedAt       DateTime?               @map("contacted_at") @db.Timestamptz(3)
+  repliedAt         DateTime?               @map("replied_at") @db.Timestamptz(3)
+  meetingAt         DateTime?               @map("meeting_at") @db.Timestamptz(3)
+  bouncedAt         DateTime?               @map("bounced_at") @db.Timestamptz(3)
+  unsubscribedAt    DateTime?               @map("unsubscribed_at") @db.Timestamptz(3)
+  /// Last reply's classification (crm/replies.ts); replies after replyClassifiedAt are classified again.
+  replyClass        CrmReplyClass?          @map("reply_class")
+  replyClassifiedAt DateTime?               @map("reply_classified_at") @db.Timestamptz(3)
+  /// Out of office: the sequence resumes at this time.
+  replyResumeAt     DateTime?               @map("reply_resume_at") @db.Timestamptz(3)
+  createdAt         DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   company   Company                 @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   autopilot CrmProspectingAutopilot @relation(fields: [autopilotId, companyId], references: [id, companyId], onDelete: Cascade)

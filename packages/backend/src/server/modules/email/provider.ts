@@ -149,7 +149,7 @@ export function emailProvider(): { provider: EmailProvider; from: string } | nul
   return selectEmailProvider(env());
 }
 
-type EmailEnv = Pick<ReturnType<typeof env>, "EMAIL_PROVIDER" | "EMAIL_API_KEY" | "EMAIL_FROM" | "SMTP_HOST" | "SMTP_PORT" | "SMTP_SECURE" | "SMTP_USER" | "SMTP_PASSWORD">;
+type EmailEnv = Partial<Pick<ReturnType<typeof env>, "EMAIL_PROVIDER" | "EMAIL_API_KEY" | "EMAIL_FROM" | "SMTP_HOST" | "SMTP_PORT" | "SMTP_SECURE" | "SMTP_USER" | "SMTP_PASSWORD">>;
 
 /**
  * Provider selection from settings (exported for tests): resend / postmark need EMAIL_API_KEY; smtp needs SMTP_HOST

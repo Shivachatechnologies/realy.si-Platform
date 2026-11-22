@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const PRIORITY_TONE = { HIGH: "danger", MEDIUM: "warning", LOW: "neutral" } as const;
 const ACTIVITY_ICON = { CALL: "☎", EMAIL: "✉", MEETING: "◷", NOTE: "✎", TASK: "☐" } as const;
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
 
 export default async function LeadPage({ params }: { params: Promise<{ leadId: string }> }) {
   const { leadId } = await params;

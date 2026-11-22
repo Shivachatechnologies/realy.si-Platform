@@ -14,6 +14,7 @@ import { startDelegatedRun } from "@/server/modules/guide/command-delegate";
 import { evaluateObjectives, toDisplay, type KrStatus } from "./key-results";
 import { extractJson } from "./plan";
 import { authorize, isUuid } from "./service";
+import { budgetColumns, budgetInput, initiativeBudget } from "./budgets";
 
 /**
  * Objective execution: every objective gets an owner AI employee, a plan of initiatives (written by the owner AI from
@@ -32,11 +33,14 @@ export const initiativeInput = z.object({
   title: z.string().trim().min(2).max(200),
   description: z.string().trim().max(2000).optional(),
   keyResultId: z.string().uuid().nullable().optional(),
+  /** Budget for the initiative (B15). */
+  budget: budgetInput,
 });
 export const updateInitiativeInput = z.object({
   title: z.string().trim().min(2).max(200).optional(),
   description: z.string().trim().max(2000).nullable().optional(),
   status: z.enum(INITIATIVE_STATUSES).optional(),
+  budget: budgetInput,
 });
 export const planInput = z.object({ guidance: z.string().trim().max(1500).optional() });
 
@@ -146,6 +150,7 @@ export async function objectiveExecution(ctx: RequestContext, organizationId: st
     canReadAi && execution?.planTaskId ? db().agentTask.findFirst({ where: { ...scope, id: execution.planTaskId }, select: { id: true, status: true, errorMessage: true, completedAt: true } }) : null,
   ]);
   const runOf = new Map(runs.map((r) => [r.id, r]));
+  const budgets = new Map(await Promise.all(initiatives.map(async (i) => [i.id, await initiativeBudget(scope, i)] as const)));
   const krs = objective.keyResults.map((k) => {
     const e = evaluated.keyResults.get(k.id)!;
     const unit = k.metricKey ? (metricByKey(k.metricKey)?.unit ?? null) : null;
@@ -171,6 +176,7 @@ export async function objectiveExecution(ctx: RequestContext, organizationId: st
         status: i.status,
         source: i.source,
         keyResultId: i.keyResultId,
+        budget: budgets.get(i.id)!,
         run: run ? { id: run.id, status: run.status as string, sessionId: run.userId === me ? run.sessionId : null, nextAction: run.nextAction, documentId: run.documentId } : null,
       };
     }),
@@ -219,7 +225,7 @@ export async function createInitiative(ctx: RequestContext, organizationId: stri
     const count = await tx.objectiveInitiative.count({ where: { ...scope, objectiveId, status: { not: "DROPPED" } } });
     if (count >= MAX_INITIATIVES) throw conflict(`An objective can have at most ${MAX_INITIATIVES} initiatives`, { reason: "objectives_initiative_limit" });
     const i = await tx.objectiveInitiative.create({
-      data: { ...scope, objectiveId, keyResultId: input.keyResultId ?? null, title: input.title, description: input.description ?? null, source: "manual", position: count, createdById: ctx.actor.id ?? null },
+      data: { ...scope, objectiveId, keyResultId: input.keyResultId ?? null, title: input.title, description: input.description ?? null, ...budgetColumns(input.budget), source: "manual", position: count, createdById: ctx.actor.id ?? null },
     });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objectives.initiative_created", resourceType: "objective_initiative", resourceId: i.id, newValue: { companyId, objectiveId, title: i.title } });
     return i;
@@ -233,7 +239,8 @@ export async function updateInitiative(ctx: RequestContext, organizationId: stri
     await authorize(ctx, organizationId, companyId, "objectives.manage", tx);
     const before = await tx.objectiveInitiative.findFirst({ where: { organizationId, companyId, id: initiativeId } });
     if (!before) throw notFound("Initiative");
-    const i = await tx.objectiveInitiative.update({ where: { id: initiativeId }, data: { ...input } });
+    const { budget, ...rest } = input;
+    const i = await tx.objectiveInitiative.update({ where: { id: initiativeId }, data: { ...rest, ...budgetColumns(budget) } });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "objectives.initiative_updated", resourceType: "objective_initiative", resourceId: i.id, oldValue: { status: before.status, title: before.title }, newValue: { companyId, status: i.status, title: i.title } });
     return i;
   });

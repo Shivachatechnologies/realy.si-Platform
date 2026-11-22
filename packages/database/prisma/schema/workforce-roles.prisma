@@ -1,0 +1,30 @@
+// ───────────────────────────── AI Workforce: company-defined roles (G1, B24) ─────────────────────────────
+// A company defines its own AI employee role as data: a role prompt, a tool allow-list chosen from the registered
+// tools, and a turn limit. agents/profiles.ts resolves `custom_*` profile keys per company from this table; the tool
+// gateway, approvals, autonomy and budgets apply exactly as for built-in roles.
+
+model AiRoleProfile {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  /// Profile key used by AI employees and tasks ("custom_<slug>"); never collides with a built-in role.
+  key            String
+  name           String
+  department     String
+  description    String?
+  /// Role prompt appended to the shared system prompt.
+  instructions   String
+  /// Registered tool names (validated against the registry when saved).
+  tools          String[]
+  maxTurns       Int       @default(8) @map("max_turns")
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([companyId, key])
+  @@index([organizationId, companyId, archivedAt])
+  @@map("ai_role_profiles")
+}
