@@ -7079,6 +7079,12 @@
       "legacyConnection": "Ihre bestehende {name}-Verbindung funktioniert weiter. Ihre Zugangsdaten verwaltet Realy; sie können hier nicht geändert werden.",
       "reconnectHint": "{name} meldet ein Problem mit dieser Verbindung. Verbinden Sie sich erneut, um sich noch einmal anzumelden.",
       "failingHint": "Diese Verbindung schlägt fehl. Realy wurde benachrichtigt."
+    },
+    "ownAccount": {
+      "setUpByRealy": "Vom Realy-Team eingerichtet",
+      "setUpByRealyBody": "Das Realy-Team hat Ihr eigenes {name}-Konto für Sie eingerichtet. Es funktioniert wie eine selbst hergestellte Verbindung, und Sie können sie jederzeit trennen.",
+      "help": "Verbinden Sie Ihr eigenes {name}-Konto: Melden Sie sich an und bestätigen Sie Realy. Hier geben Sie nie Schlüssel ein. Auf Wunsch richtet das Realy-Team es für Sie ein.",
+      "notReady": "Die Anmeldung mit {name} ist noch nicht freigeschaltet. Wenden Sie sich an Realy, dann richtet unser Team Ihr eigenes {name}-Konto für Sie ein."
     }
   },
   "workflows": {

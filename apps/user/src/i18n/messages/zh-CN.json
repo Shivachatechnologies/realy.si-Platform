@@ -7079,6 +7079,12 @@
       "legacyConnection": "您现有的 {name} 连接将继续工作。其凭据由 Realy 管理，无法在此更改。",
       "reconnectHint": "{name} 报告此连接有问题。请重新连接以再次登录。",
       "failingHint": "此连接出现故障，已通知 Realy。"
+    },
+    "ownAccount": {
+      "setUpByRealy": "由 Realy 团队设置",
+      "setUpByRealyBody": "Realy 团队已为您设置了您自己的 {name} 账户。它与您自己建立的连接一样运作，您可以随时断开连接。",
+      "help": "连接您自己的 {name} 账户：登录并授权 Realy。您无需在此输入任何密钥。如您愿意，也可以由 Realy 团队为您设置。",
+      "notReady": "使用 {name} 登录尚未开通。请联系 Realy，我们的团队可以为您设置您自己的 {name} 账户。"
     }
   },
   "workflows": {

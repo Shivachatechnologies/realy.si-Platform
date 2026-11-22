@@ -7079,6 +7079,12 @@
       "legacyConnection": "Your existing {name} connection keeps working. Its credentials are managed by Realy and cannot be changed here.",
       "reconnectHint": "{name} reported a problem with this connection. Connect again to sign in once more.",
       "failingHint": "This connection is failing. Realy has been notified."
+    },
+    "ownAccount": {
+      "setUpByRealy": "Set up by Realy team",
+      "setUpByRealyBody": "The Realy team set up your own {name} account for you. It works like a connection you made yourself, and you can disconnect it at any time.",
+      "help": "Connect your own {name} account: sign in and approve Realy. You never enter keys here. If you prefer, the Realy team can set it up for you.",
+      "notReady": "Signing in with {name} is not switched on yet. Contact Realy and our team can set up your own {name} account for you."
     }
   },
   "workflows": {

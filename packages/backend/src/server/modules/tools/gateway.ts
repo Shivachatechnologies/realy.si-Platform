@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
+import { detectSecretIn, SECRET_REFUSAL } from "@/server/core/secret-detect";
+import { securityEvent } from "@/server/core/telemetry";
 import type { RequestContext } from "@/server/core/context";
 import { toolPolicy } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
@@ -20,7 +22,7 @@ export const APPROVAL_TTL_MS = 72 * 60 * 60_000;
 /** A denial the agent can reason about; never a crash of the task. */
 export class ToolDenied extends Error {
   constructor(
-    readonly code: "unknown_tool" | "not_allowed" | "invalid_input" | "not_permitted" | "timeout" | "failed" | "suggest_only",
+    readonly code: "unknown_tool" | "not_allowed" | "invalid_input" | "not_permitted" | "timeout" | "failed" | "suggest_only" | "secret_refused",
     message: string,
   ) {
     super(message);
@@ -76,6 +78,13 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
   const tool = getTool(name);
   if (!tool) throw new ToolDenied("unknown_tool", `Unknown tool ${name}`);
   if (!run.allowedTools.includes(name)) throw new ToolDenied("not_allowed", `Tool ${name} is not available to this role`);
+  // No tool ever receives a provider credential (docs/integrations.md §7): a key or token pasted into the chat is refused
+  // before validation, never executed, filed as an approval or stored (the task trace records the call without input).
+  const secret = detectSecretIn(rawInput);
+  if (secret) {
+    securityEvent("ai.tool_secret_refused", { tool: name, kind: secret.kind });
+    throw new ToolDenied("secret_refused", SECRET_REFUSAL);
+  }
   const parsed = tool.input.safeParse(rawInput ?? {});
   if (!parsed.success) throw new ToolDenied("invalid_input", `Invalid input: ${parsed.error.issues.map((i) => `${i.path.join(".") || "input"} ${i.message}`).join("; ")}`.slice(0, 300));
   try {

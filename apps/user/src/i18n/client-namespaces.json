@@ -947,6 +947,7 @@
       "integrations.manage",
       "integrations.marketplace",
       "integrations.noneConnected",
+      "integrations.ownAccount",
       "integrations.platform",
       "integrations.providers",
       "integrations.reconnect",

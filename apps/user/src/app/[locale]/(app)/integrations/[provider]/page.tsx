@@ -15,7 +15,7 @@ import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
-import { customerConnectMode, providerInfo } from "@/server/modules/integrations/catalog";
+import { customerConnectMode, isOwnAccountProvider, isSetUpByRealy, providerInfo } from "@/server/modules/integrations/catalog";
 import { getIntegration, usageSummary } from "@/server/modules/integrations/service";
 import { providerRateLimit } from "@/server/modules/integrations/client";
 import { can } from "@/server/modules/rbac/service";
@@ -146,6 +146,9 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   const mode = customerConnectMode(info);
   const oauth = mode === "oauth";
   const canConnect = oauth && canManage && !data.disabled && data.oauthAvailable && !data.plan.locked;
+  // The customer's own Stripe / Razorpay / WhatsApp / Mailchimp account: "Connect with X", or set up by the Realy team.
+  const own = isOwnAccountProvider(info.key);
+  const byRealy = !!conn && isSetUpByRealy(conn.config);
 
   return frame(
     <>
@@ -153,7 +156,8 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
       {sp.connected === "1" ? <Notice tone="success">{t("integrations.connectedNotice")}</Notice> : null}
       {oauthError ? <Notice tone="danger">{t(`integrations.oauthErrors.${oauthError}`)}</Notice> : null}
       {data.disabled ? <Notice tone="warning">{t("integrations.platform.providerDisabled", { name: info.name })}</Notice> : null}
-      {!data.disabled && oauth && !data.oauthAvailable ? <Notice tone="info">{t("integrations.platform.oauthNotReady", { name: info.name })}</Notice> : null}
+      {!data.disabled && oauth && !data.oauthAvailable && !conn ? <Notice tone="info">{own ? t("integrations.ownAccount.notReady", { name: info.name }) : t("integrations.platform.oauthNotReady", { name: info.name })}</Notice> : null}
+      {byRealy ? <Notice tone="info">{t("integrations.ownAccount.setUpByRealyBody", { name: info.name })}</Notice> : null}
       {!oauth ? <Notice tone="info">{conn ? t("integrations.platform.legacyConnection", { name: info.name }) : t("integrations.platform.notConnectable", { name: info.name })}</Notice> : null}
       {data.plan.locked && !conn ? <Notice tone="warning">{t("integrations.marketplace.planLockedNotice", { plan: t(`integrations.marketplace.plans.${data.plan.minPlan}`) })}</Notice> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -163,10 +167,13 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               title={t("integrations.connection")}
               actions={
                 conn ? (
-                  <Badge tone={TONE[conn.status]}>
-                    <StatusDot tone={TONE[conn.status]} />
-                    {t(`integrations.status.${conn.status}`)}
-                  </Badge>
+                  <span className="flex flex-wrap items-center gap-2">
+                    {byRealy ? <Badge tone="info">{t("integrations.ownAccount.setUpByRealy")}</Badge> : null}
+                    <Badge tone={TONE[conn.status]}>
+                      <StatusDot tone={TONE[conn.status]} />
+                      {t(`integrations.status.${conn.status}`)}
+                    </Badge>
+                  </span>
                 ) : (
                   <Badge>{t("integrations.status.NOT_CONNECTED")}</Badge>
                 )
@@ -193,9 +200,9 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                   </div>
                 </dl>
               ) : (
-                <p className="text-sm text-muted-foreground">{oauth ? t("integrations.platform.oauthHelp", { name: info.name }) : t("integrations.notConnectedHelp")}</p>
+                <p className="text-sm text-muted-foreground">{own ? t("integrations.ownAccount.help", { name: info.name }) : oauth ? t("integrations.platform.oauthHelp", { name: info.name }) : t("integrations.notConnectedHelp")}</p>
               )}
-              {conn?.status === "ERROR" ? <Notice tone="danger">{oauth ? t("integrations.platform.reconnectHint", { name: info.name }) : t("integrations.platform.failingHint")}</Notice> : null}
+              {conn?.status === "ERROR" ? <Notice tone="danger">{oauth && !byRealy ? t("integrations.platform.reconnectHint", { name: info.name }) : t("integrations.platform.failingHint")}</Notice> : null}
               {canConnect ? (
                 <div className="flex flex-wrap items-center gap-3">
                   <OAuthConnectButton provider={info.key} name={info.name} orgId={org.id} companyId={company.id} locale={locale} reconnect={!!conn} />
@@ -256,7 +263,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("integrations.authType")}</p>
-                <p>{oauth ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}</p>
+                <p>{byRealy ? t("integrations.ownAccount.setUpByRealy") : oauth ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("integrations.powers")}</p>

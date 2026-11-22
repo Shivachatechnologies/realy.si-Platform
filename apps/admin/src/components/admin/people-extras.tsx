@@ -116,7 +116,7 @@ export async function UserAdminExtras({ ctx, locale, user }: { ctx: RequestConte
 }
 
 /** Tabs of the organization detail area (overview, members, activity, entitlements — the latter owned by Plans). */
-export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId: string; active: "overview" | "members" | "activity" }) {
+export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId: string; active: "overview" | "members" | "activity" | "integrations" }) {
   const t = await getT(locale as Parameters<typeof getT>[0]);
   const base = `/${locale}/organizations/${orgId}`;
   const tabs = [
@@ -124,8 +124,9 @@ export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId
     { key: "members", href: `${base}/members`, label: t("admin.people.tabs.members") },
     { key: "activity", href: `${base}/activity`, label: t("admin.people.tabs.activity") },
     { key: "entitlements", href: `/${locale}/plans/organizations/${orgId}`, label: t("admin.people.tabs.entitlements") },
-    // Connection status of the organization's integrations, with disconnect (Integrations & API page, filtered).
-    { key: "integrations", href: `/${locale}/integrations?org=${orgId}`, label: t("admin.people.tabs.integrations") },
+    // The organization's own payment / WhatsApp / Mailchimp accounts (status, Realy-team setup) and a link to all of
+    // its connections on the Integrations & API page.
+    { key: "integrations", href: `${base}/integrations`, label: t("admin.people.tabs.integrations") },
   ];
   return (
     <nav aria-label={t("admin.people.tabs.label")} className="flex gap-1 overflow-x-auto border-b">

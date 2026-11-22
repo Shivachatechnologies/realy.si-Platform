@@ -42,7 +42,7 @@ export interface ProviderWebhookResult {
   text?: boolean;
 }
 
-type Row = { id: string; organizationId: string; companyId: string; provider: string; connectedById: string; credentialsEnc: string | null; config: Prisma.JsonValue };
+export type ProviderEventRow = { id: string; organizationId: string; companyId: string; provider: string; connectedById: string; credentialsEnc: string | null; config: Prisma.JsonValue };
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const s = (v: unknown, max = 300): string | null => (typeof v === "string" && v ? v.slice(0, max) : typeof v === "number" ? String(v) : null);
@@ -51,7 +51,7 @@ const s = (v: unknown, max = 300): string | null => (typeof v === "string" && v 
 
 const plaidKeys = new Map<string, { key: JsonWebKey; fetchedAt: number }>();
 
-async function verifyPlaid(row: Row, raw: string, headers: Headers): Promise<string | null> {
+async function verifyPlaid(row: ProviderEventRow, raw: string, headers: Headers): Promise<string | null> {
   const jwt = headers.get("plaid-verification") ?? "";
   const [h, p, sig] = jwt.split(".");
   if (!h || !p || !sig) return "missing Plaid-Verification";
@@ -212,6 +212,27 @@ function parse(provider: string, body: Record<string, unknown>, raw: string): Pa
       const statuses = changes.flatMap((v) => (Array.isArray(v.statuses) ? v.statuses.map((x) => s(obj(x).status)) : [])).filter(Boolean);
       return { eventType: messages ? "messages" : statuses.length ? "message_status" : "unknown", dedupeKey: digest, summary: { messages, statuses: statuses.slice(0, 20) } };
     }
+    case "stripe": {
+      // Stripe Connect event of the customer's own account (routed by `account`, own-account-webhooks.ts).
+      const o = obj(obj(body.data).object);
+      const type = s(body.type, 120) ?? "unknown";
+      return {
+        eventType: type,
+        dedupeKey: s(body.id, 200) ?? digest,
+        summary: { object: s(o.object, 60), id: s(o.id, 120), status: s(o.status, 60), amount: typeof o.amount_total === "number" ? o.amount_total : typeof o.amount === "number" ? o.amount : null, currency: s(o.currency, 10), livemode: body.livemode === true },
+      };
+    }
+    case "razorpay": {
+      // Razorpay partner webhook of the customer's own account (routed by account_id).
+      const payload = obj(body.payload);
+      const entity = obj(obj(payload.payment).entity ?? obj(payload.payment_link).entity ?? obj(payload.order).entity);
+      const type = s(body.event, 120) ?? "unknown";
+      return {
+        eventType: type,
+        dedupeKey: `${type}:${s(entity.id, 120) ?? digest}:${s(body.created_at) ?? ""}`,
+        summary: { id: s(entity.id, 120), status: s(entity.status, 60), amount: typeof entity.amount === "number" ? entity.amount : null, currency: s(entity.currency, 10), accountId: s(body.account_id, 60) },
+      };
+    }
     case "luma":
       return { eventType: `generation.${s(body.state) ?? "unknown"}`, dedupeKey: `${s(body.id) ?? digest}:${s(body.state) ?? ""}`, summary: { generationId: s(body.id), state: s(body.state), failure: s(body.failure_reason) } };
     case "kling": {
@@ -242,7 +263,7 @@ function parse(provider: string, body: Record<string, unknown>, raw: string): Pa
   }
 }
 
-async function handle(row: Row, body: Record<string, unknown>, raw: string): Promise<{ duplicate: boolean }> {
+async function handle(row: ProviderEventRow, body: Record<string, unknown>, raw: string): Promise<{ duplicate: boolean }> {
   const p = parse(row.provider, body, raw);
   const existing = await db().integrationProviderEvent.findUnique({ where: { connectionId_dedupeKey: { connectionId: row.id, dedupeKey: p.dedupeKey.slice(0, 300) } }, select: { id: true, status: true } });
   if (existing && existing.status !== "failed") return { duplicate: true };
@@ -284,7 +305,7 @@ async function handle(row: Row, body: Record<string, unknown>, raw: string): Pro
   return { duplicate: false };
 }
 
-async function apply(row: Row, p: Parsed, body: Record<string, unknown>): Promise<{ status: string; resultRef?: string | null }> {
+async function apply(row: ProviderEventRow, p: Parsed, body: Record<string, unknown>): Promise<{ status: string; resultRef?: string | null }> {
   switch (row.provider) {
     case "calendly":
       if (p.eventType === "invitee.created" || p.eventType === "invitee.canceled") return applyCalendlyInvitee(row, p.eventType, obj(body.payload));
@@ -298,6 +319,15 @@ async function apply(row: Row, p: Parsed, body: Record<string, unknown>): Promis
       if (p.eventType === "ITEM:ERROR" || p.eventType === "ITEM:PENDING_EXPIRATION" || p.eventType === "ITEM:USER_PERMISSION_REVOKED") {
         await markConnectionError(row.id, `Plaid reported ${p.eventType} for a linked bank${p.summary.error ? ` (${String(p.summary.error)})` : ""}; relink the bank on the Plaid page`);
         return { status: "processed" };
+      }
+      return { status: "stored" };
+    }
+    case "stripe":
+    case "razorpay": {
+      // Payments on the customer's own account: pull them with the regular sync (stripe.payments) right away.
+      if (/^(checkout\.session\.completed|payment_intent\.succeeded|charge\.(succeeded|refunded)|invoice\.paid|payment_link\.paid|payment\.captured|refund\.processed)$/.test(p.eventType)) {
+        await db().integrationConnection.updateMany({ where: { id: row.id, syncEnabled: true }, data: { nextSyncAt: new Date() } });
+        return { status: "processed", resultRef: `integration_connection:${row.id}` };
       }
       return { status: "stored" };
     }
@@ -316,12 +346,12 @@ async function apply(row: Row, p: Parsed, body: Record<string, unknown>): Promis
 }
 
 /** Apply one Calendly invitee (webhook or the calendly.events sync) to CRM meetings. */
-export function upsertCalendlyInvitee(row: Row, type: "invitee.created" | "invitee.canceled", payload: Record<string, unknown>) {
+export function upsertCalendlyInvitee(row: ProviderEventRow, type: "invitee.created" | "invitee.canceled", payload: Record<string, unknown>) {
   return applyCalendlyInvitee(row, type, payload);
 }
 
 /** Calendly invitee.created → a SCHEDULED CRM meeting (linked to the contact with that email); invitee.canceled → CANCELLED. */
-async function applyCalendlyInvitee(row: Row, type: string, payload: Record<string, unknown>): Promise<{ status: string; resultRef?: string | null }> {
+async function applyCalendlyInvitee(row: ProviderEventRow, type: string, payload: Record<string, unknown>): Promise<{ status: string; resultRef?: string | null }> {
   const inviteeUri = s(payload.uri, 300);
   const ev = obj(payload.scheduled_event);
   if (!inviteeUri) return { status: "ignored" };
@@ -374,6 +404,15 @@ async function applyCalendlyInvitee(row: Row, type: string, payload: Record<stri
     await writeAudit(tx, ctx, { category: "TENANT", organizationId: row.organizationId, action: "crm.meeting_scheduled", resourceType: "crm_meeting", resourceId: meeting.id, newValue: { source: "calendly", startsAt: startsAt.toISOString(), contactId: contact?.id ?? null } });
     return { status: "processed", resultRef: `crm_meeting:${meeting.id}` };
   });
+}
+
+/**
+ * Store (deduplicated) and apply one event that arrived on a platform-level webhook (Stripe Connect, Razorpay Partner,
+ * WhatsApp app) and was routed to this connection by the account id it names (own-account-webhooks.ts). The caller has
+ * verified the signature with the platform's signing secret.
+ */
+export async function receiveRoutedProviderEvent(row: ProviderEventRow, body: Record<string, unknown>, raw: string): Promise<{ duplicate: boolean }> {
+  return handle(row, body, raw);
 }
 
 // ───────────────────────────── Read (connection page) ─────────────────────────────

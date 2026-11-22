@@ -84,6 +84,24 @@ const schema = z.object({
   TIKTOK_ADS_APP_SECRET: optional,
   MAILCHIMP_CLIENT_ID: optional,
   MAILCHIMP_CLIENT_SECRET: optional,
+  // The customer's OWN payment and messaging accounts (docs/integrations.md §7 "Customer's own accounts"), connected
+  // through Realy's platform apps. Stripe Connect reuses STRIPE_SECRET_KEY as the platform secret.
+  /** Stripe Connect platform client id (ca_…), Stripe Dashboard → Settings → Connect → Onboarding options → OAuth. */
+  STRIPE_CONNECT_CLIENT_ID: optional,
+  /** Signing secret of the Connect webhook endpoint ("Events on connected accounts"). */
+  STRIPE_CONNECT_WEBHOOK_SECRET: optional,
+  /** Razorpay Partner OAuth app (Partner dashboard → Applications). */
+  RAZORPAY_CLIENT_ID: optional,
+  RAZORPAY_CLIENT_SECRET: optional,
+  RAZORPAY_OAUTH_MODE: z.enum(["live", "test"]).optional().or(z.literal("").transform(() => undefined)),
+  /** Secret of the Razorpay partner webhook (events of every connected account, routed by account_id). */
+  RAZORPAY_WEBHOOK_SECRET: optional,
+  /** Meta app for WhatsApp Embedded Signup (Facebook Login for Business configuration with the WhatsApp product). */
+  WHATSAPP_APP_ID: optional,
+  WHATSAPP_APP_SECRET: optional,
+  WHATSAPP_CONFIG_ID: optional,
+  /** Verify token of the app-level WhatsApp webhook (Meta app → WhatsApp → Configuration). */
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: optional,
   /** Google Ads API developer token of the platform's manager account (a company may override it on its connection). */
   GOOGLE_ADS_DEVELOPER_TOKEN: optional,
   GOOGLE_ADS_API_VERSION: z.string().regex(/^v\d{2}$/).default("v21"),

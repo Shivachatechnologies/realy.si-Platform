@@ -3561,7 +3561,9 @@
         "errorTracking": "Fehlerverfolgung",
         "tracing": "Tracing",
         "firstAdmin": "Registrierung des ersten Super-Admins",
-        "platformProviders": "Plattformverwaltete Anbieter für Kunden"
+        "platformProviders": "Plattformverwaltete Anbieter für Kunden",
+        "ownAccounts": "Kunden verbinden eigene Zahlungs-, WhatsApp- und Mailchimp-Konten",
+        "ownAccountWebhooks": "Webhooks der eigenen Kundenkonten"
       },
       "groups": {
         "ai": {
@@ -3625,6 +3627,33 @@
       "providerUnavailable": "Für Kunden nicht verfügbar (Pflichtschlüssel fehlt)",
       "managedTitle": "Plattformverwaltete Anbieter",
       "managedBody": "Jeder Anbieter läuft über Realys eigene Konten: KI, Recherche, Kreativ, Sprache, Video, Telefonie, E-Mail, Messaging, Speicher und Zahlungen. Nur diese Schlüssel versorgen sie. Kunden sehen oder erfassen nie Schlüssel, sehen jeden Anbieter nur als Verfügbar oder Nicht verfügbar, und ihre Nutzung zählt gegen ihre Tariflimits und das Kostenbuch. Früher von Unternehmen gespeicherte Schlüssel bleiben erhalten, werden aber nicht mehr genutzt."
+    },
+    "ownAccounts": {
+      "title": "Eigene Konten · {name}",
+      "subtitle": "Die eigenen Stripe-, Razorpay-, WhatsApp-Business- und Mailchimp-Konten der Organisation. Kunden verbinden sie mit „Verbinden mit …“; wenn das nicht möglich ist, richtet das Realy-Team sie hier ein. Schlüssel werden beim Anbieter geprüft, verschlüsselt gespeichert und nie wieder angezeigt.",
+      "allConnections": "Alle Verbindungen",
+      "readOnly": "Sie können den Status sehen. Zum Einrichten, Rotieren oder Entfernen von Zugangsdaten brauchen Sie Plattformsteuerung oder Sicherheitsverwaltung (mit frischer MFA-Prüfung).",
+      "noCompanies": "Diese Organisation hat noch keine Unternehmen.",
+      "companyHint": "Geld aus Zahlungslinks geht auf das eigene Konto des Unternehmens.",
+      "account": "Konto",
+      "setupBy": "Eingerichtet von",
+      "lastTested": "Zuletzt geprüft",
+      "connectReady": "Kundenanmeldung verfügbar",
+      "connectMissing": "Kundenanmeldung nicht konfiguriert (Plattformschlüssel)",
+      "notConnected": "Nicht verbunden",
+      "by": {
+        "realy_team": "Realy-Team",
+        "customer": "Kunde (Verbinden)"
+      },
+      "remove": "Entfernen",
+      "removeHint": "Trennt das Konto: entzieht Realy den Zugriff beim Anbieter, wo möglich, und löscht die gespeicherten Zugangsdaten. Datensätze und Verlauf bleiben erhalten.",
+      "keysHint": "Die Anmelde-Apps (Stripe Connect, Razorpay Partner, Meta WhatsApp, Mailchimp) werden konfiguriert unter",
+      "rotate": "Rotieren",
+      "setUp": "Einrichten",
+      "dialogHint": "Geben Sie die eigenen {name}-Zugangsdaten der Organisation ein. Sie werden vor dem Speichern bei {name} geprüft; lehnt {name} sie ab, wird nichts gespeichert.",
+      "verifyAndSave": "Prüfen und speichern",
+      "neverShown": "Werte sind nur schreibbar: Sie werden nie wieder angezeigt, nie protokolliert und nie an den Kunden gesendet. Im Audit-Log stehen nur die Feldnamen.",
+      "optional": "optional"
     }
   },
   "platformModules": {
@@ -8609,6 +8638,12 @@
       "legacyConnection": "Ihre bestehende {name}-Verbindung funktioniert weiter. Ihre Zugangsdaten verwaltet Realy; sie können hier nicht geändert werden.",
       "reconnectHint": "{name} meldet ein Problem mit dieser Verbindung. Verbinden Sie sich erneut, um sich noch einmal anzumelden.",
       "failingHint": "Diese Verbindung schlägt fehl. Realy wurde benachrichtigt."
+    },
+    "ownAccount": {
+      "setUpByRealy": "Vom Realy-Team eingerichtet",
+      "setUpByRealyBody": "Das Realy-Team hat Ihr eigenes {name}-Konto für Sie eingerichtet. Es funktioniert wie eine selbst hergestellte Verbindung, und Sie können sie jederzeit trennen.",
+      "help": "Verbinden Sie Ihr eigenes {name}-Konto: Melden Sie sich an und bestätigen Sie Realy. Hier geben Sie nie Schlüssel ein. Auf Wunsch richtet das Realy-Team es für Sie ein.",
+      "notReady": "Die Anmeldung mit {name} ist noch nicht freigeschaltet. Wenden Sie sich an Realy, dann richtet unser Team Ihr eigenes {name}-Konto für Sie ein."
     }
   },
   "workflows": {

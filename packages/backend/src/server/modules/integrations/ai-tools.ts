@@ -1,8 +1,39 @@
 import { z } from "zod";
 import { db } from "@/server/core/db";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
+import { customerConnectMode, isOwnAccountProvider, isSetUpByRealy, OWN_ACCOUNT_PROVIDERS, PROVIDERS } from "./catalog";
 import { listIntegrations, listSyncRuns } from "./service";
 import { webSearch } from "./services/research";
+
+/** Providers a customer connects to their OWN account with "Connect with X" (own-account providers + OAuth providers). */
+export const CONNECTABLE_PROVIDERS = PROVIDERS.filter((p) => customerConnectMode(p) === "oauth").map((p) => p.key);
+
+/** Plain-language steps of each own-account "Connect with X" login (what the person sees at the provider). */
+const OWN_ACCOUNT_STEPS: Record<(typeof OWN_ACCOUNT_PROVIDERS)[number], string[]> = {
+  stripe: [
+    "Open Integrations → Stripe in Realy.",
+    "Click \"Connect with Stripe\". Stripe opens in the same window.",
+    "Sign in to your own Stripe account (or create one) and approve Realy's access.",
+    "Stripe sends you back to Realy. Payment links and invoices are then paid into your own Stripe account; Realy never holds your money.",
+  ],
+  razorpay: [
+    "Open Integrations → Razorpay in Realy.",
+    "Click \"Connect with Razorpay\" and sign in to your own Razorpay account.",
+    "Review and allow the access Realy asks for.",
+    "Razorpay sends you back to Realy. Payment links are then paid into your own Razorpay account.",
+  ],
+  whatsapp: [
+    "Open Integrations → WhatsApp Business in Realy.",
+    "Click \"Connect with WhatsApp Business\". Facebook opens; log in with the Facebook account that manages your business.",
+    "Choose (or create) your Meta business portfolio and WhatsApp Business account, then add the phone number you want to use and confirm it with the code Meta sends by SMS or call.",
+    "Approve the access. Realy then sends and receives WhatsApp messages from that number in your own WhatsApp Business account.",
+  ],
+  mailchimp: [
+    "Open Integrations → Mailchimp in Realy.",
+    "Click \"Connect with Mailchimp\" and log in to your own Mailchimp account.",
+    "Click \"Allow\". Mailchimp sends you back to Realy and your audiences appear there.",
+  ],
+};
 
 const activeName = (config: unknown): string | null => {
   const c = (config && typeof config === "object" ? config : {}) as { accounts?: { id: string; name: string }[]; activeAccountId?: string };
@@ -54,6 +85,74 @@ export const INTEGRATIONS_TOOLS: Record<string, ToolDefinition> = {
       if (!data.length) return { content: "No sync runs.", count: 0 };
       const lines = data.map((r) => `- ${r.startedAt.toISOString()} ${r.provider} ${r.kind} ${r.status}: read ${r.itemsRead}, created ${r.itemsCreated}, updated ${r.itemsUpdated}, errors ${r.errorCount}${r.errorCount ? ` (${JSON.stringify(r.errors).slice(0, 300)})` : ""}`);
       return { content: lines.join("\n"), count: data.length, records: data.map((r) => `integration_sync_run:${r.id}`) };
+    },
+  }),
+  guide_account_connection: def({
+    name: "guide_account_connection",
+    version: 1,
+    description:
+      "Guides the person through connecting the company's OWN accounts (Stripe, Razorpay, WhatsApp Business, Mailchimp, and other accounts with a Connect button such as Google, Slack or HubSpot). Reports which accounts are connected (and whether the Realy team set one up), explains the steps in plain words, and returns the in-app page and \"Connect with X\" button to use, or says the Realy team can set it up instead. It never takes, asks for or stores keys, tokens or passwords: connecting is the person's own action through the Connect button.",
+    input: z.object({ provider: z.enum(CONNECTABLE_PROVIDERS as [string, ...string[]]).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: { provider: { type: "string", enum: CONNECTABLE_PROVIDERS, description: "The account to connect, e.g. stripe, razorpay, whatsapp, mailchimp. Omit for an overview." } },
+      required: [],
+      additionalProperties: false,
+    },
+    permissions: ["integrations.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    summarize: ({ provider }) => (provider ? `Guide connecting ${provider}` : "Guide connecting the company's accounts"),
+    async execute({ provider }, { ctx, organizationId, companyId }) {
+      const list = await listIntegrations(ctx, organizationId, companyId);
+      const rules =
+        "Rules: never ask for, accept, repeat or store API keys, tokens, passwords or secrets in chat. If the person pastes one, say it was not stored, ask them to delete it and rotate it at the provider, and point them to the Connect button. You cannot connect or disconnect accounts yourself: the person clicks the button and signs in at the provider.";
+      const stateOf = (i: (typeof list)[number]) =>
+        i.status === "CONNECTED" || i.status === "ERROR"
+          ? `${i.status === "ERROR" ? "connected but failing" : "connected"}${i.connection?.externalAccount ? ` (${i.connection.externalAccount})` : ""}${isSetUpByRealy(i.connection?.config) ? ", set up by the Realy team" : ""}`
+          : "not connected";
+      if (!provider) {
+        const own = list.filter((i) => isOwnAccountProvider(i.info.key)).map((i) => `- ${i.info.name} (${i.info.key}): ${stateOf(i)}`);
+        const other = list.filter((i) => !isOwnAccountProvider(i.info.key) && customerConnectMode(i.info) === "oauth" && i.status).map((i) => `- ${i.info.name} (${i.info.key}): ${stateOf(i)}`);
+        return {
+          content: [
+            "The company's own payment, messaging and email-marketing accounts:",
+            ...own,
+            other.length ? "\nOther accounts connected with Connect:" : "",
+            ...other,
+            "\nTo connect one, the person opens Integrations → <provider> (page path /integrations/<provider>) and clicks \"Connect with <provider>\". If they cannot, the Realy team can set the account up for them from Realy's admin: they contact Realy support.",
+            rules,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          count: own.length + other.length,
+        };
+      }
+      const item = list.find((i) => i.info.key === provider);
+      if (!item) return { content: `Unknown account "${provider}".\n${rules}`, count: 0 };
+      const name = item.info.name;
+      const connected = item.status === "CONNECTED" || item.status === "ERROR";
+      const available = !item.disabled && item.oauthAvailable && !item.plan.locked;
+      const steps = isOwnAccountProvider(provider)
+        ? OWN_ACCOUNT_STEPS[provider]
+        : [`Open Integrations → ${name} in Realy.`, `Click "Connect with ${name}" and sign in to your own ${name} account.`, "Approve the access Realy asks for; you are sent back to Realy."];
+      const lines = [
+        `${name}: ${stateOf(item)}.`,
+        connected && item.status === "ERROR" ? `The connection reports a problem${item.connection?.lastError ? ` (${item.connection.lastError})` : ""}. ${isSetUpByRealy(item.connection?.config) ? "The Realy team set it up; they can fix it, or the person can connect again with the button." : "Connecting again with the button usually fixes it."}` : "",
+        `In-app page: /integrations/${provider} (Integrations → ${name}).`,
+        available
+          ? `Button: "${connected ? "Reconnect" : `Connect with ${name}`}" on that page (it opens /api/v1/integrations/oauth/${provider}/start?orgId=${organizationId}&companyId=${companyId}). Only a person who can manage integrations sees it.`
+          : item.disabled
+            ? `${name} is turned off on the platform right now, so the Connect button is not shown.`
+            : item.plan.locked
+              ? `${name} needs a higher plan (${item.plan.minPlan}) before it can be connected.`
+              : `The "Connect with ${name}" sign-in is not switched on by Realy yet.`,
+        connected ? "" : `Steps:\n${steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}`,
+        isOwnAccountProvider(provider) ? `Alternative: the Realy team can set up ${name} for the company from Realy's admin (useful when the sign-in is not available or does not work). The person contacts Realy support; they never send keys through chat or email.` : "",
+        rules,
+      ];
+      return { content: lines.filter(Boolean).join("\n"), count: 1 };
     },
   }),
   web_research: def({

@@ -9,7 +9,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { workerHealth } from "@/server/core/job-admin";
 import { integrationsHealth, listIntegrations, usageSummary } from "@/server/modules/integrations/service";
-import { customerConnectMode } from "@/server/modules/integrations/catalog";
+import { customerConnectMode, isSetUpByRealy } from "@/server/modules/integrations/catalog";
 import { formatCostMicros } from "@/components/integrations/usage-format";
 import { formatNumber, formatRelativeTime } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
@@ -81,6 +81,8 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/[lo
       capabilities: i.info.capabilities,
       verifiedLabel: state === "verified" && verifiedAt ? t("integrations.marketplace.verifiedAgo", { time: formatRelativeTime(verifiedAt, locale, now) }) : null,
       plan: i.plan,
+      connect: customerConnectMode(i.info),
+      setupByRealy: i.status ? isSetUpByRealy(i.connection?.config) : false,
     };
   });
   const verified = items.filter((i) => i.state === "verified" || i.state === "configured").length;

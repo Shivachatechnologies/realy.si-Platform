@@ -47,6 +47,10 @@ export interface MarketplaceItem {
   verifiedLabel?: string | null;
   /** Plan restriction of the provider's category: cheapest plan that unlocks it, and whether this organization's plan lacks it. */
   plan?: { minPlan: string; locked: boolean };
+  /** How the customer gets this provider (catalog customerConnectMode): "oauth" = Connect with their own account. */
+  connect?: "platform" | "oauth" | "unavailable";
+  /** The customer's own account was set up by the Realy team (admin app), not by the customer's Connect login. */
+  setupByRealy?: boolean;
 }
 
 type Filter = "all" | "connected" | "attention" | "available";
@@ -228,7 +232,9 @@ function ProviderCard({ locale, item: i, state }: { locale: string; item: Market
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium">{i.name}</p>
-            <p className="text-xs text-muted-foreground">{isPlatformState(state) ? t("integrations.platform.managedBy") : i.authType === "oauth2" ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}</p>
+            <p className="text-xs text-muted-foreground">
+              {isPlatformState(state) ? t("integrations.platform.managedBy") : i.setupByRealy ? t("integrations.ownAccount.setUpByRealy") : i.connect === "oauth" || i.authType === "oauth2" ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}
+            </p>
           </div>
         </div>
         <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", style.tone)}>

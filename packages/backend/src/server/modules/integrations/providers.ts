@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac } from "node:crypto";
+import { createHmac, randomInt } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { env } from "@/server/core/env";
@@ -27,7 +27,8 @@ export interface OAuthDef {
   extraAuthorizeParams?: Record<string, string>;
   /** Name of the client id parameter (TikTok: client_key, TikTok for Business: app_id). */
   clientIdParam?: string;
-  revoke?: (token: string, client: OAuthClient) => Promise<void>;
+  /** Revoke the grant at the provider; `config` is the connection's stored (non-secret) config (e.g. Stripe's account id). */
+  revoke?: (token: string, client: OAuthClient, config: Record<string, unknown>) => Promise<void>;
   /** Non-standard code exchange (TikTok for Business). */
   exchange?: (code: string, client: OAuthClient) => Promise<TokenSet>;
   /** Runs after the code exchange, e.g. to swap a short-lived token for a long-lived one (Meta, Threads) or read metadata. */
@@ -43,6 +44,8 @@ export interface TokenSet {
   scopes: string[] | null;
   /** Provider-specific non-secret details captured at token time (instance URL, team...). */
   extra: Record<string, unknown>;
+  /** Provider-specific secrets captured at token time (e.g. the WhatsApp two-step PIN); stored encrypted, never in config. */
+  secrets?: Record<string, string>;
 }
 
 export interface ConnectionCredentials {
@@ -96,6 +99,12 @@ export function oauthClient(provider: string): OAuthClient | null {
     pinterest: [e.PINTEREST_CLIENT_ID, e.PINTEREST_CLIENT_SECRET],
     tiktok_ads: [e.TIKTOK_ADS_APP_ID, e.TIKTOK_ADS_APP_SECRET],
     mailchimp: [e.MAILCHIMP_CLIENT_ID, e.MAILCHIMP_CLIENT_SECRET],
+    // The customer's own accounts through Realy's platform apps (docs/integrations.md §7). Stripe Connect authenticates
+    // the token call with the platform's secret key (the same STRIPE_SECRET_KEY as Realy's billing, a separate use).
+    stripe: [e.STRIPE_CONNECT_CLIENT_ID, e.STRIPE_SECRET_KEY],
+    razorpay: [e.RAZORPAY_CLIENT_ID, e.RAZORPAY_CLIENT_SECRET],
+    // Embedded Signup also needs the Facebook Login for Business configuration id.
+    whatsapp: e.WHATSAPP_CONFIG_ID ? [e.WHATSAPP_APP_ID, e.WHATSAPP_APP_SECRET] : [undefined, undefined],
   };
   const pair = pairs[provider];
   return pair?.[0] && pair[1] ? { clientId: pair[0], clientSecret: pair[1] } : null;
@@ -301,7 +310,119 @@ export function oauthDef(provider: string): OAuthDef | null {
       return { accessToken: body.data.access_token, refreshToken: null, expiresAt: null, scopes: null, extra: { advertiserIds: body.data.advertiser_ids ?? [] } };
     },
   };
+  // ── The customer's own accounts (Stripe Connect, Razorpay Partner OAuth, WhatsApp Embedded Signup) ──
+  defs.stripe = {
+    authorizeUrl: "https://connect.stripe.com/oauth/authorize",
+    tokenUrl: "https://connect.stripe.com/oauth/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "basic",
+    // Stripe authenticates /oauth/token with the platform's secret key (HTTP Basic, key as the user name).
+    exchange: (code, c) => stripeToken({ grant_type: "authorization_code", code }, c),
+    refresh: (refreshToken, c) => stripeToken({ grant_type: "refresh_token", refresh_token: refreshToken }, c),
+    // Disconnect detaches the connected account from Realy's platform (POST /oauth/deauthorize).
+    revoke: async (_token, c, config) => {
+      const account = str(config.stripeAccountId);
+      if (!account || !/^acct_[A-Za-z0-9]{6,64}$/.test(account)) throw new ProviderError("Stripe account id missing");
+      await revokeForm("https://connect.stripe.com/oauth/deauthorize", { client_id: c.clientId, stripe_user_id: account }, { authorization: stripeBasic(c) });
+    },
+  };
+  defs.razorpay = {
+    authorizeUrl: "https://auth.razorpay.com/authorize",
+    tokenUrl: "https://auth.razorpay.com/token",
+    scopeSeparator: " ",
+    pkce: false,
+    tokenAuth: "body",
+    // Access tokens last 90 days and are refreshed with the refresh token (standard grant). "test" mode for sandboxes.
+    exchange: async (code, c) => {
+      const r = await postForm("https://auth.razorpay.com/token", { grant_type: "authorization_code", code, redirect_uri: integrationRedirectUri("razorpay"), client_id: c.clientId, client_secret: c.clientSecret, mode: e.RAZORPAY_OAUTH_MODE ?? "live" });
+      if (!r.ok) throw new ProviderError(`token exchange failed (${r.status})`, r.status);
+      return toTokenSet("razorpay", r.body);
+    },
+    revoke: (token, c) => revokeForm("https://auth.razorpay.com/revoke", { client_id: c.clientId, client_secret: c.clientSecret, token_type_hint: "access_token", token }),
+  };
+  defs.whatsapp = {
+    authorizeUrl: "https://www.facebook.com/v21.0/dialog/oauth",
+    tokenUrl: `${graph}/oauth/access_token`,
+    scopeSeparator: ",",
+    pkce: false,
+    tokenAuth: "body",
+    // Facebook Login for Business with the Embedded Signup configuration (WhatsApp product, business token).
+    extraAuthorizeParams: {
+      ...(e.WHATSAPP_CONFIG_ID ? { config_id: e.WHATSAPP_CONFIG_ID } : {}),
+      override_default_response_type: "true",
+      extras: JSON.stringify({ setup: {}, featureType: "", sessionInfoVersion: "3" }),
+    },
+    // After the code exchange: find the WhatsApp Business account and phone number the customer shared, subscribe
+    // Realy's app to the account's webhooks and register the number for the Cloud API (docs/integrations.md §7).
+    upgrade: (tokens, c) => whatsappEmbeddedSignup(tokens, c),
+    revoke: async (token) => {
+      const res = await fetch(`${graph}/me/permissions`, { method: "DELETE", headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(TIMEOUT) });
+      if (!res.ok) throw new ProviderError(`revoke failed (${res.status})`, res.status);
+    },
+  };
   return defs[provider] ?? null;
+}
+
+const stripeBasic = (c: OAuthClient) => `Basic ${Buffer.from(`${c.clientSecret}:`).toString("base64")}`;
+
+/** Stripe Connect token call (authorization code or refresh); returns the connected account's token and its id. */
+async function stripeToken(form: Record<string, string>, c: OAuthClient): Promise<TokenSet> {
+  const r = await postForm("https://connect.stripe.com/oauth/token", form, { authorization: stripeBasic(c) });
+  if (!r.ok) throw new ProviderError(`token exchange failed (${r.status}${typeof r.body.error === "string" ? `: ${r.body.error}` : ""})`, r.status);
+  return toTokenSet("stripe", r.body, form.refresh_token ?? null);
+}
+
+const GRAPH = "https://graph.facebook.com/v21.0";
+
+/**
+ * WhatsApp Embedded Signup, server side: the business token's granular scopes name the WhatsApp Business account(s)
+ * the customer shared (debug_token); its phone numbers are listed, Realy's app is subscribed to the account (so its
+ * webhooks reach Realy's app-level callback, routed by phone_number_id) and the number is registered for the Cloud API
+ * with a random two-step PIN (kept encrypted; registration is skipped when the number is already registered).
+ */
+export async function whatsappEmbeddedSignup(tokens: TokenSet, c: OAuthClient): Promise<TokenSet> {
+  const token = tokens.accessToken;
+  const app = `${c.clientId}|${c.clientSecret}`;
+  const debug = await getJson(`${GRAPH}/debug_token?${new URLSearchParams({ input_token: token })}`, { authorization: `Bearer ${app}` });
+  const data = (debug.data ?? {}) as { granular_scopes?: { scope?: string; target_ids?: string[] }[]; expires_at?: number };
+  const wabaIds = [...new Set((data.granular_scopes ?? []).filter((g) => g.scope === "whatsapp_business_management" || g.scope === "whatsapp_business_messaging").flatMap((g) => g.target_ids ?? []))].filter((id) => /^\d{5,25}$/.test(id));
+  if (!wabaIds.length) throw new ProviderError("No WhatsApp Business account was shared during sign-up", 403);
+  const bearer = { authorization: `Bearer ${token}` };
+  let waba: string | null = null;
+  let phones: { id: string; name: string }[] = [];
+  for (const id of wabaIds) {
+    const list = await getJson(`${GRAPH}/${id}/phone_numbers?fields=id,display_phone_number,verified_name`, bearer).catch(() => ({}) as Record<string, unknown>);
+    const items = (Array.isArray(list.data) ? list.data : []) as { id?: unknown; display_phone_number?: unknown; verified_name?: unknown }[];
+    const found = items.filter((p) => typeof p.id === "string" && /^\d{5,25}$/.test(p.id)).map((p) => ({ id: String(p.id), name: [str(p.verified_name), str(p.display_phone_number)].filter(Boolean).join(" · ") || String(p.id) }));
+    if (found.length) {
+      waba = id;
+      phones = found;
+      break;
+    }
+  }
+  if (!waba || !phones.length) throw new ProviderError("The WhatsApp Business account has no phone number yet", 409);
+  // Webhooks of this account go to Realy's app (app-level callback URL); routing happens by phone_number_id.
+  await postJsonChecked(`${GRAPH}/${waba}/subscribed_apps`, bearer, {}).catch(() => null);
+  const pin = String(randomInt(100000, 1000000));
+  const registered = await postJsonChecked(`${GRAPH}/${phones[0]!.id}/register`, bearer, { messaging_product: "whatsapp", pin }).then(
+    () => true,
+    () => false,
+  );
+  const expiresAt = typeof data.expires_at === "number" && data.expires_at > 0 ? new Date(data.expires_at * 1000) : tokens.expiresAt;
+  return {
+    ...tokens,
+    expiresAt,
+    extra: {
+      ...tokens.extra,
+      authMode: "embedded_signup",
+      businessAccountId: waba,
+      phoneNumberId: phones[0]!.id,
+      accounts: phones.map((p) => ({ id: p.id, name: p.name, type: "phone" })),
+      activeAccountId: phones[0]!.id,
+    },
+    ...(registered ? { secrets: { ...(tokens.secrets ?? {}), registrationPin: pin } } : {}),
+  };
 }
 
 export const integrationRedirectUri = (provider: string) => `${env().APP_URL}/api/v1/integrations/oauth/${provider}/callback`;
@@ -322,6 +443,17 @@ function toTokenSet(provider: string, body: Record<string, unknown>, previousRef
   if (provider === "hubspot" && body.hub_id) extra.hubId = String(body.hub_id);
   if (provider === "tiktok" && typeof body.open_id === "string") extra.openId = body.open_id;
   if (provider === "threads" && body.user_id) extra.userId = String(body.user_id);
+  // Stripe Connect: the connected account id routes Connect webhooks (account field) to this connection.
+  if (provider === "stripe") {
+    if (typeof body.stripe_user_id === "string") extra.stripeAccountId = body.stripe_user_id;
+    if (typeof body.livemode === "boolean") extra.livemode = body.livemode;
+    extra.authMode = "connect";
+  }
+  // Razorpay Partner OAuth: the merchant's account id routes partner webhooks (account_id) to this connection.
+  if (provider === "razorpay") {
+    if (typeof body.razorpay_account_id === "string") extra.razorpayAccountId = body.razorpay_account_id;
+    extra.authMode = "oauth";
+  }
   return {
     accessToken,
     refreshToken: typeof body.refresh_token === "string" ? body.refresh_token : previousRefresh,
@@ -367,11 +499,11 @@ export async function refreshAccessToken(provider: string, refreshToken: string)
   return toTokenSet(provider, r.body, refreshToken);
 }
 
-export async function revokeToken(provider: string, token: string): Promise<boolean> {
+export async function revokeToken(provider: string, token: string, config: Record<string, unknown> = {}): Promise<boolean> {
   const def = oauthDef(provider);
   const client = oauthClient(provider);
   if (!def?.revoke || !client) return false;
-  await def.revoke(token, client);
+  await def.revoke(token, client, config);
   return true;
 }
 
@@ -489,7 +621,8 @@ export function authHeaders(provider: string, token: string, config: Record<stri
     case "twilio":
       return { authorization: `Basic ${b64(`${str(config.accountSid) ?? ""}:${token}`)}` };
     case "razorpay":
-      return { authorization: `Basic ${b64(`${str(config.keyId) ?? ""}:${token}`)}` };
+      // Partner OAuth tokens are bearer tokens; a key id / secret set up by the Realy team uses Basic auth.
+      return config.authMode === "oauth" ? bearer : { authorization: `Basic ${b64(`${str(config.keyId) ?? ""}:${token}`)}` };
     case "mailchimp":
       return config.authMode === "oauth" ? bearer : { authorization: `Basic ${b64(`realy:${token}`)}` };
     case "tiktok_ads":
@@ -576,7 +709,8 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       await getJson("https://api.stripe.com/v1/balance", bearer);
       const acct = await getJson("https://api.stripe.com/v1/account", bearer).catch(() => ({}) as Record<string, unknown>);
       const settings = acct.settings as { dashboard?: { display_name?: string } } | undefined;
-      return { account: str(settings?.dashboard?.display_name) ?? str(acct.email) ?? str(acct.id) ?? "Stripe" };
+      const id = str(acct.id);
+      return { account: str(settings?.dashboard?.display_name) ?? str(acct.email) ?? id ?? "Stripe", extra: id && /^acct_[A-Za-z0-9]{6,64}$/.test(id) ? { stripeAccountId: id } : undefined };
     }
     case "whatsapp": {
       const id = str(config.phoneNumberId);
@@ -791,6 +925,7 @@ export async function testConnection({ provider, token, config }: TestTarget): P
       return (await import("@/server/modules/voice/providers")).testVoiceConnection(provider, token);
     case "razorpay": {
       await getJson("https://api.razorpay.com/v1/payments?count=1", authHeaders(provider, token, config));
+      if (config.authMode === "oauth") return { account: `Razorpay · ${str(config.razorpayAccountId) ?? "connected account"}` };
       const keyId = str(config.keyId) ?? "";
       return { account: `Razorpay · ${keyId.startsWith("rzp_test_") ? "test" : "live"} mode` };
     }

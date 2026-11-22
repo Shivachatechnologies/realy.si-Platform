@@ -3561,7 +3561,9 @@
         "errorTracking": "错误跟踪",
         "tracing": "链路追踪",
         "firstAdmin": "首个超级管理员注册",
-        "platformProviders": "面向客户的平台托管提供商"
+        "platformProviders": "面向客户的平台托管提供商",
+        "ownAccounts": "客户连接自己的支付、WhatsApp 和 Mailchimp 账户",
+        "ownAccountWebhooks": "客户自有账户的 Webhook"
       },
       "groups": {
         "ai": {
@@ -3625,6 +3627,33 @@
       "providerUnavailable": "客户不可用（缺少必需密钥）",
       "managedTitle": "平台托管提供商",
       "managedBody": "每个提供商都通过 Realy 自己的账户运行：AI、研究、创意、语音、视频、电话、邮件、消息、存储和支付，仅由这些密钥驱动。客户从不查看或输入密钥，只看到每个提供商“可用”或“不可用”，其用量计入套餐限额和成本账本。公司此前保存的这些提供商密钥会保留，但不再使用。"
+    },
+    "ownAccounts": {
+      "title": "自有账户 · {name}",
+      "subtitle": "该组织自己的 Stripe、Razorpay、WhatsApp Business 和 Mailchimp 账户。客户通过“使用…连接”进行连接；无法连接时，由 Realy 团队在此设置。密钥会经服务商验证、加密存储，且不再显示。",
+      "allConnections": "所有连接",
+      "readOnly": "您可以查看状态。设置、轮换或移除凭据需要“平台控制”或“安全管理”权限（并需新近完成 MFA 验证）。",
+      "noCompanies": "该组织还没有公司。",
+      "companyHint": "付款链接的款项直接进入该公司自己的账户。",
+      "account": "账户",
+      "setupBy": "设置方",
+      "lastTested": "上次验证",
+      "connectReady": "客户登录可用",
+      "connectMissing": "客户登录未配置（平台密钥）",
+      "notConnected": "未连接",
+      "by": {
+        "realy_team": "Realy 团队",
+        "customer": "客户（连接）"
+      },
+      "remove": "移除",
+      "removeHint": "断开该账户：在可能的情况下撤销 Realy 在服务商处的访问权限，并删除已存储的凭据。记录和历史会保留。",
+      "keysHint": "登录应用（Stripe Connect、Razorpay Partner、Meta WhatsApp、Mailchimp）的配置位于",
+      "rotate": "轮换",
+      "setUp": "设置",
+      "dialogHint": "输入该组织自己的 {name} 凭据。保存前会通过 {name} 验证；如果 {name} 拒绝，则不会存储任何内容。",
+      "verifyAndSave": "验证并保存",
+      "neverShown": "这些值仅可写入：不会再次显示、不会记录日志，也不会发送给客户。审计日志中只记录字段名称。",
+      "optional": "可选"
     }
   },
   "platformModules": {
@@ -8609,6 +8638,12 @@
       "legacyConnection": "您现有的 {name} 连接将继续工作。其凭据由 Realy 管理，无法在此更改。",
       "reconnectHint": "{name} 报告此连接有问题。请重新连接以再次登录。",
       "failingHint": "此连接出现故障，已通知 Realy。"
+    },
+    "ownAccount": {
+      "setUpByRealy": "由 Realy 团队设置",
+      "setUpByRealyBody": "Realy 团队已为您设置了您自己的 {name} 账户。它与您自己建立的连接一样运作，您可以随时断开连接。",
+      "help": "连接您自己的 {name} 账户：登录并授权 Realy。您无需在此输入任何密钥。如您愿意，也可以由 Realy 团队为您设置。",
+      "notReady": "使用 {name} 登录尚未开通。请联系 Realy，我们的团队可以为您设置您自己的 {name} 账户。"
     }
   },
   "workflows": {

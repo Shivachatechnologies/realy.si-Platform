@@ -20,17 +20,18 @@ describe("platform-managed providers", () => {
     for (const p of ["openai", "gemini", "openrouter", "openai_compatible", "tavily", "exa", "serpapi", "apollo", "hunter", "pdl", "stability", "replicate", "runway", "elevenlabs", "deepgram", "jamendo", "luma", "kling", "shotstack", "creatomate", "twilio_voice", "sip_trunk", "vapi", "retell"]) {
       expect(isPlatformManaged(p)).toBe(true);
     }
-    // Email, messaging, storage and payments also run on Realy's accounts.
-    for (const p of ["sendgrid", "mailchimp", "twilio", "whatsapp", "s3", "cloudflare", "stripe", "razorpay"]) expect(isPlatformManaged(p)).toBe(true);
-    // The customer's OWN accounts are not platform-managed.
-    for (const p of ["google", "slack", "hubspot", "quickbooks", "notion", "shopify", "webhook"]) expect(isPlatformManaged(p)).toBe(false);
+    // Transactional email, Twilio messaging and storage also run on Realy's accounts.
+    for (const p of ["sendgrid", "twilio", "s3", "cloudflare"]) expect(isPlatformManaged(p)).toBe(true);
+    // The customer's OWN accounts are not platform-managed (payments, WhatsApp and Mailchimp included).
+    for (const p of ["google", "slack", "hubspot", "quickbooks", "notion", "shopify", "webhook", "stripe", "razorpay", "whatsapp", "mailchimp"]) expect(isPlatformManaged(p)).toBe(false);
   });
 
   it("lets customers connect only their own accounts through OAuth", () => {
     expect(customerConnectMode(providerInfo("slack")!)).toBe("oauth");
     expect(customerConnectMode(providerInfo("google_ads")!)).toBe("oauth");
     expect(customerConnectMode(providerInfo("openai")!)).toBe("platform");
-    expect(customerConnectMode(providerInfo("mailchimp")!)).toBe("platform");
+    expect(customerConnectMode(providerInfo("mailchimp")!)).toBe("oauth");
+    expect(customerConnectMode(providerInfo("stripe")!)).toBe("oauth");
     expect(customerConnectMode(providerInfo("notion")!)).toBe("unavailable");
     expect(customerConnectMode(providerInfo("custom_api")!)).toBe("unavailable");
   });

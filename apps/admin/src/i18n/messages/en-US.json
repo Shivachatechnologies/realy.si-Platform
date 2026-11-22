@@ -3561,7 +3561,9 @@
         "errorTracking": "Error tracking",
         "tracing": "Tracing",
         "firstAdmin": "First super admin sign-up",
-        "platformProviders": "Platform-managed providers for customers"
+        "platformProviders": "Platform-managed providers for customers",
+        "ownAccounts": "Customers connecting their own payment, WhatsApp and Mailchimp accounts",
+        "ownAccountWebhooks": "Webhooks of customers' own accounts"
       },
       "groups": {
         "ai": {
@@ -3625,6 +3627,33 @@
       "providerUnavailable": "Not available to customers (required key missing)",
       "managedTitle": "Platform-managed providers",
       "managedBody": "Every provider runs on Realy's own accounts: AI, research, creative, voice, video, telephony, email, messaging, storage and payments. Only these keys power them. Customers never see or enter keys, see each provider only as Available or Not available, and their usage counts against their plan limits and the cost ledger. Keys companies stored earlier for these providers are kept but no longer used."
+    },
+    "ownAccounts": {
+      "title": "Own accounts · {name}",
+      "subtitle": "The organization's own Stripe, Razorpay, WhatsApp Business and Mailchimp accounts. Customers connect them with “Connect with …”; when that is not possible, the Realy team sets them up here. Keys are verified with the provider, stored encrypted and never shown again.",
+      "allConnections": "All connections",
+      "readOnly": "You can view the status. Setting up, rotating or removing credentials needs Platform controls or Security management (with a fresh MFA check).",
+      "noCompanies": "This organization has no companies yet.",
+      "companyHint": "Money from payment links goes to the company's own account.",
+      "account": "Account",
+      "setupBy": "Set up by",
+      "lastTested": "Last verified",
+      "connectReady": "Customer sign-in available",
+      "connectMissing": "Customer sign-in not configured (Platform keys)",
+      "notConnected": "Not connected",
+      "by": {
+        "realy_team": "Realy team",
+        "customer": "Customer (Connect)"
+      },
+      "remove": "Remove",
+      "removeHint": "Disconnects the account: revokes Realy's access at the provider where possible and deletes the stored credentials. Records and history are kept.",
+      "keysHint": "The sign-in apps (Stripe Connect, Razorpay Partner, Meta WhatsApp, Mailchimp) are configured in",
+      "rotate": "Rotate",
+      "setUp": "Set up",
+      "dialogHint": "Enter the organization's own {name} credentials. They are tested with {name} before saving; nothing is stored if {name} rejects them.",
+      "verifyAndSave": "Verify and save",
+      "neverShown": "Values are write-only: they are never shown again, never logged and never sent to the customer. Only the field names are recorded in the audit log.",
+      "optional": "optional"
     }
   },
   "platformModules": {
@@ -8609,6 +8638,12 @@
       "legacyConnection": "Your existing {name} connection keeps working. Its credentials are managed by Realy and cannot be changed here.",
       "reconnectHint": "{name} reported a problem with this connection. Connect again to sign in once more.",
       "failingHint": "This connection is failing. Realy has been notified."
+    },
+    "ownAccount": {
+      "setUpByRealy": "Set up by Realy team",
+      "setUpByRealyBody": "The Realy team set up your own {name} account for you. It works like a connection you made yourself, and you can disconnect it at any time.",
+      "help": "Connect your own {name} account: sign in and approve Realy. You never enter keys here. If you prefer, the Realy team can set it up for you.",
+      "notReady": "Signing in with {name} is not switched on yet. Contact Realy and our team can set up your own {name} account for you."
     }
   },
   "workflows": {
