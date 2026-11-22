@@ -21,10 +21,15 @@ export function localParts(now: Date, timeZone: string): LocalParts {
 }
 
 export interface SlotSpec {
-  frequency: "HOURLY" | "DAILY" | "WEEKLY" | null;
+  frequency: "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | null;
   timeOfDay: string | null;
   weekday: number | null;
+  /** 1 … 31 (MONTHLY); a day past the month's end means its last day. */
+  dayOfMonth?: number | null;
 }
+
+/** Days in a month (month 1 … 12). */
+const daysIn = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 
 /** The slot due at `now` (once its local time has passed), or null. One task is created per slot. */
 export function dueSlot(s: SlotSpec, now: Date, timeZone: string): string | null {
@@ -38,6 +43,13 @@ export function dueSlot(s: SlotSpec, now: Date, timeZone: string): string | null
       return minutes >= hh * 60 + mm ? p.date : null;
     case "WEEKLY":
       return p.weekday === s.weekday && minutes >= hh * 60 + mm ? `W${p.date}` : null;
+    case "MONTHLY": {
+      // One slot per calendar month: due from the chosen day (clamped to the month's last day) and time onwards, so a
+      // slot missed while the worker was down still runs later that month.
+      const [y, mo, d] = p.date.split("-").map(Number) as [number, number, number];
+      const day = Math.min(Math.max(s.dayOfMonth ?? 1, 1), daysIn(y, mo));
+      return d > day || (d === day && minutes >= hh * 60 + mm) ? `M${p.date.slice(0, 7)}` : null;
+    }
     default:
       return null;
   }

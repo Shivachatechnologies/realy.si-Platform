@@ -22,6 +22,7 @@ import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { AUTONOMY_CHANNELS, MONEY_CLASSES, NEVER_AUTO, PAYMENT_HARD_CAP_MAJOR, type ActionClass } from "@/server/modules/workforce/autonomy-classes";
 import { getAutonomyRoom, type AutonomyRoom, type WireRule } from "@/server/modules/workforce/autonomy-service";
+import { unifiedAutonomy, type UnifiedLevel } from "@/server/modules/workforce/autonomy-unified";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -99,6 +100,9 @@ export default async function AutonomyPage() {
   const levelLabels = { OFF: t("autonomy.levels.OFF"), SUGGEST: t("autonomy.levels.SUGGEST"), ASK: t("autonomy.levels.ASK"), AUTO: t("autonomy.levels.AUTO") };
   const hasRules = room.departments.some((d) => d.rules.some((r) => !r.rule.inherited));
   const external = room.trust.filter((l) => l.actionClass !== "read");
+  // One autonomy model (B23): the three settings mapped to Manual · Assisted · Approval · Autonomous, most restrictive wins.
+  const unified = await unifiedAutonomy({ organizationId: org.id, companyId: company.id }, room);
+  const UNIFIED_TONE: Record<UnifiedLevel, "danger" | "neutral" | "info" | "warning" | "success"> = { PAUSED: "danger", MANUAL: "neutral", ASSISTED: "info", APPROVAL: "warning", AUTONOMOUS: "success" };
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-5">
@@ -136,6 +140,58 @@ export default async function AutonomyPage() {
         <StatTile index={1} label={t("autonomy.stats.recommendations")} value={room.recommendations.length} icon={<Sparkles />} hint={t("autonomy.stats.recommendationsHint")} />
         <StatTile index={2} label={t("autonomy.stats.employees")} value={room.departments[0]?.employees ?? 0} icon={<Users />} hint={t("autonomy.stats.employeesHint", { count: room.departments.length - 1 })} />
       </StatGrid>
+
+      <Card>
+        <CardHeader title={t("autonomy.unified.title")} description={t("autonomy.unified.description")} icon={<Lock />} />
+        <CardBody className="grid gap-4">
+          <ol className="grid gap-2 text-sm sm:grid-cols-2 xl:grid-cols-4">
+            {(["platform", "autopilot", "rules", "employees"] as const).map((k, i) => (
+              <li key={k} className="rounded-lg border bg-surface-2/40 p-3">
+                <p className="font-medium">
+                  {i + 1}. {t(`autonomy.unified.order.${k}`)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{t(`autonomy.unified.order.${k}Hint`)}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="flex flex-wrap gap-2 text-xs">
+            {(["MANUAL", "ASSISTED", "APPROVAL", "AUTONOMOUS"] as const).map((l) => (
+              <span key={l} className="inline-flex items-center gap-1.5">
+                <Badge tone={UNIFIED_TONE[l]}>{t(`autonomy.unified.levels.${l}`)}</Badge>
+                <span className="text-muted-foreground">{t(`autonomy.unified.levels.${l}Hint`)}</span>
+              </span>
+            ))}
+          </div>
+          <Table>
+            <THead>
+              <Tr>
+                <Th>{t("autonomy.unified.department")}</Th>
+                <Th>{t("autonomy.unified.effective")}</Th>
+                <Th>{t("autonomy.unified.autopilot")}</Th>
+                <Th>{t("autonomy.unified.rules")}</Th>
+                <Th>{t("autonomy.unified.employees")}</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {unified.map((u) => (
+                <Tr key={u.department}>
+                  <Td className="font-medium">{dept(u.department)}</Td>
+                  <Td>
+                    <Badge tone={UNIFIED_TONE[u.level]}>{t(`autonomy.unified.levels.${u.level}`)}</Badge>
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">{t(`autonomy.unified.decidedBy.${u.decidedBy}`)}</div>
+                  </Td>
+                  <Td className="text-xs">{t(`autonomy.unified.levels.${u.autopilot.level}`)}</Td>
+                  <Td className="text-xs">{t(`autonomy.unified.levels.${u.rules.level}`)}</Td>
+                  <Td className="text-xs">{u.employees.level ? `${t(`autonomy.unified.levels.${u.employees.level}`)} · ${u.employees.count}` : "—"}</Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+          <Link href={`/${locale}/autopilot`} className="text-xs font-medium text-primary hover:underline">
+            {t("autonomy.unified.autopilotLink")}
+          </Link>
+        </CardBody>
+      </Card>
 
       {!hasRules && !room.settings.autoModeEnabled ? (
         <Card variant="immersive">

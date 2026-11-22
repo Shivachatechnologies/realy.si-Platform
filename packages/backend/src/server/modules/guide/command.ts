@@ -13,60 +13,11 @@ import { isUuid, resolveGuidePage, stripLocale } from "./pages";
 import { countMetrics, onboardingState } from "./state";
 import { recommend, REC_METRICS } from "./recommendations";
 import { advanceRun, cancelRun, deriveStages, MAX_STEP_ATTEMPTS, retryStep, STAGES, startRun, type Understanding } from "./command-run";
+import { FALLBACK, routeCommand } from "./command-intents";
+import { understandCommand } from "./command-intent";
 
 
-/**
- * Deterministic intent map for AI Command: words (in all five shipped languages) → the department's AI employee
- * profile. A command that matches several departments fans out to each; one that matches none goes to the AI CEO,
- * who decides and delegates (the AI fallback).
- */
-export const COMMAND_INTENTS = [
-  { key: "prospecting", profile: "sdr", words: ["customer", "prospect", "lead", "outreach", "cold email", "kunde", "interessent", "客户", "潜在", "线索", "ग्राहक", "लीड", "عملاء", "عميل", "زبائن"] },
-  { key: "sales", profile: "account_executive", words: ["deal", "proposal", "pipeline", "close the", "quote", "sales", "selling", "verkauf", "销售", "बिक्री", "مبيعات", "angebot", "abschluss", "交易", "报价", "सौदा", "प्रस्ताव", "صفقة", "عرض سعر"] },
-  { key: "marketing", profile: "cmo", words: ["marketing", "campaign", "brand", "advertis", "social media", "launch", "kampagne", "werbung", "营销", "推广", "活动", "विपणन", "अभियान", "تسويق", "حملة"] },
-  { key: "content", profile: "content_writer", words: ["blog", "article", "newsletter", "copywrit", "linkedin post", "artikel", "文章", "博客", "लेख", "ब्लॉग", "مقال", "مدونة"] },
-  { key: "seo", profile: "seo_specialist", words: ["seo", "keyword", "ranking", "suchmaschine", "搜索引擎", "कीवर्ड", "الكلمات المفتاحية"] },
-  { key: "product", profile: "product_manager", words: ["product", "feature", "roadmap", "prd", "specification", "produkt", "funktion", "产品", "功能", "उत्पाद", "फ़ीचर", "منتج", "ميزة"] },
-  { key: "finance", profile: "ai_cfo", words: ["financ", "invoice", "cash", "budget", "revenue", "expense", "profit", "p&l", "forecast", "finanz", "rechnung", "umsatz", "财务", "发票", "预算", "收入", "वित्त", "चालान", "बजट", "مالي", "فاتورة", "ميزانية", "إيرادات"] },
-  { key: "recruiting", profile: "recruiter", words: ["hire", "hiring", "recruit", "job post", "candidate", "vacancy", "einstell", "stelle", "bewerber", "招聘", "候选人", "भर्ती", "उम्मीदवार", "توظيف", "مرشح", "وظيفة"] },
-  { key: "people", profile: "people_analyst", words: ["employee", "headcount", "payroll", "leave", "onboard", "mitarbeiter", "员工", "कर्मचारी", "موظف"] },
-  { key: "support", profile: "support_lead", words: ["support", "ticket", "complaint", "helpdesk", "help desk", "kundendienst", "客服", "工单", "सहायता", "टिकट", "دعم", "تذكرة"] },
-  { key: "projects", profile: "ai_project_manager", words: ["project", "sprint", "milestone", "deadline", "task list", "projekt", "项目", "里程碑", "परियोजना", "مشروع"] },
-  { key: "automation", profile: "automation_architect", words: ["automat", "workflow", "zap", "自动", "工作流", "स्वचालित", "वर्कफ़्लो", "أتمتة", "سير العمل"] },
-  { key: "analytics", profile: "bi_analyst", words: ["kpi", "metric", "analytics", "dashboard", "trend", "why ", "declin", "dropping", "falling", "warum", "rückgang", "为什么", "下降", "क्यों", "गिरावट", "لماذا", "انخفاض", "kennzahl", "指标", "仪表板", "मीट्रिक", "مؤشر", "لوحة"] },
-  { key: "operations", profile: "operations_assistant", words: ["process", "checklist", "sop", "vendor", "supplier", "prozess", "lieferant", "流程", "供应商", "प्रक्रिया", "आपूर्तिकर्ता", "عملية", "مورد"] },
-  { key: "knowledge", profile: "brain_answerer", words: ["document", "policy", "knowledge", "dokument", "richtlinie", "文档", "政策", "दस्तावेज़", "नीति", "وثيقة", "سياسة"] },
-] as const;
-const FALLBACK = { key: "fallback", profile: "ai_ceo" } as const;
-const MAX_FANOUT = 3;
-
-export interface RoutedIntent {
-  key: string;
-  profile: string;
-  score: number;
-}
-
-/** Route a command to up to three department profiles (most matched words first); none → the AI CEO fallback. */
-export function routeCommand(text: string): RoutedIntent[] {
-  const lower = ` ${text.toLowerCase()} `;
-  const hits = COMMAND_INTENTS.map((i) => ({ key: i.key, profile: i.profile, score: i.words.filter((w) => lower.includes(w)).length }))
-    .filter((i) => i.score > 0 && profileByKey(i.profile))
-    .sort((a, b) => b.score - a.score);
-  // One department per profile family: "content" and "seo" fold into "marketing" when both match.
-  const picked: RoutedIntent[] = [];
-  for (const h of hits) {
-    if ((h.key === "content" || h.key === "seo") && picked.some((p) => p.key === "marketing")) continue;
-    if (h.key === "marketing" && picked.some((p) => p.key === "content" || p.key === "seo")) {
-      const i = picked.findIndex((p) => p.key === "content" || p.key === "seo");
-      picked[i] = h;
-      continue;
-    }
-    if (!picked.some((p) => p.profile === h.profile)) picked.push(h);
-  }
-  if (picked.length) return picked.slice(0, MAX_FANOUT);
-  const fb = profileByKey(FALLBACK.profile) ? FALLBACK.profile : "research_analyst";
-  return [{ key: FALLBACK.key, profile: fb, score: 0 }];
-}
+export { COMMAND_INTENTS, routeCommand, type RoutedIntent } from "./command-intents";
 
 async function authorize(ctx: RequestContext, organizationId: string, companyId: string): Promise<ScopeChain> {
   const chain = await companyChain(db(), organizationId, companyId);
@@ -109,7 +60,15 @@ export async function runCommand(ctx: RequestContext, organizationId: string, co
   if (input.sessionId && !existing) throw notFound("Command session");
 
   const parent = input.parentRunId ? await db().commandRun.findFirst({ where: { ...scope, id: input.parentRunId }, select: { id: true } }) : null;
-  const team = input.mode === "ceo" && profileByKey(FALLBACK.profile) ? [{ key: FALLBACK.key, profile: FALLBACK.profile, score: 0 }] : routeCommand(input.text);
+  // Understanding (B26): the fast-tier classifier with the keyword map as fallback; "ceo" mode always goes to the AI CEO.
+  const understood =
+    input.mode === "ceo" && profileByKey(FALLBACK.profile)
+      ? { intents: [{ key: FALLBACK.key, profile: FALLBACK.profile, score: 0 }], research: null, dependsOn: {}, source: "keywords" as const }
+      : (await can(ctx, "agents.run", chain))
+        ? await understandCommand(scope, input.text, `${uid}:${input.sessionId ?? "new"}:${Date.now()}`)
+        : // Without permission to run AI work, no AI spend: route by keywords (the steps then report the missing permission).
+          { intents: routeCommand(input.text), research: null, dependsOn: {}, source: "keywords" as const };
+  const team = understood.intents;
   const counts = await countMetrics(ctx, scope, chain, REC_METRICS);
   const facts = Object.fromEntries(Object.entries(counts).filter((e): e is [string, number] => typeof e[1] === "number"));
   const page = input.path ? resolveGuidePage(stripLocale(input.path, LOCALES)).path || "/" : null;
@@ -129,7 +88,7 @@ export async function runCommand(ctx: RequestContext, organizationId: string, co
     });
     return { session: s, message: m };
   });
-  await startRun(ctx, scope, { sessionId: session.id, messageId: message.id, userId: uid, text: input.text, locale, intents: team, facts, page, parentRunId: parent?.id ?? null });
+  await startRun(ctx, scope, { sessionId: session.id, messageId: message.id, userId: uid, text: input.text, locale, intents: team, facts, page, parentRunId: parent?.id ?? null, plan: { research: understood.research, dependsOn: understood.dependsOn, source: understood.source } });
   return getCommandSession(ctx, organizationId, companyId, session.id);
 }
 
@@ -187,7 +146,7 @@ export async function getCommandSession(ctx: RequestContext, organizationId: str
   const allIds = [...taskIds, ...children.map((c) => c.id)];
   const [approvals, canDecide, canRun] = await Promise.all([
     allIds.length
-      ? db().approval.findMany({ where: { ...scope, taskId: { in: allIds } }, orderBy: { createdAt: "asc" }, select: { id: true, taskId: true, tool: true, summary: true, status: true, risk: true, error: true, createdAt: true } })
+      ? db().approval.findMany({ where: { ...scope, taskId: { in: allIds } }, orderBy: { createdAt: "asc" }, select: { id: true, taskId: true, tool: true, summary: true, status: true, risk: true, error: true, attempts: true, createdAt: true } })
       : [],
     can(ctx, "approvals.decide", chain),
     can(ctx, "agents.run", chain),
@@ -248,7 +207,7 @@ export async function getCommandSession(ctx: RequestContext, organizationId: str
       parentRunId: r.parentRunId,
       createdAt: r.createdAt,
       completedAt: r.completedAt,
-      understanding: { intents: u.intents ?? [], research: !!u.research, facts: u.facts ?? {}, sources: u.sources ?? [], page: u.page ?? null, brief: u.brief ?? null },
+      understanding: { intents: u.intents ?? [], research: !!u.research, facts: u.facts ?? {}, sources: u.sources ?? [], page: u.page ?? null, brief: u.brief ?? null, classifier: u.classifier ?? "keywords" },
       stages: deriveStages(r, steps.map((st) => ({ kind: st.kind, status: st.status, task: st.task ? { status: st.task.status, approvals: st.task.approvals, children: st.children } : null }))),
       steps,
     };

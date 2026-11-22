@@ -166,4 +166,42 @@ export const WORKFORCE_TOOLS: Record<string, ToolDefinition> = {
       return { content: `Escalated to ${r.to}${r.notified ? " (notified)" : ""}. Mention the escalation in your deliverable.`, records: [`ai_employee_report:${r.id}`] };
     },
   }),
+
+  // ── G1 (B25): security posture for the AI CISO ──
+  read_security_posture: def({
+    name: "read_security_posture",
+    version: 1,
+    description:
+      "Reads the company's security posture from real records: members and how many use two-factor authentication, active API keys (unused or never expiring), broken integration connections, security events in the audit log over the last 30 days, and whether all AI is paused. Use it before advising on security; never guess figures it does not return.",
+    input: z.object({}).strict(),
+    modelSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    permissions: ["audit.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    summarize: () => "Read the security posture",
+    async execute(_input, { organizationId, companyId }) {
+      const since = new Date(Date.now() - 30 * 86_400_000);
+      const stale = new Date(Date.now() - 90 * 86_400_000);
+      const [members, keys, connections, events, paused] = await Promise.all([
+        db().membership.findMany({ where: { organizationId, status: "ACTIVE" }, select: { userId: true } }),
+        db().apiKey.findMany({ where: { organizationId, revokedAt: null }, select: { lastUsedAt: true, expiresAt: true, createdAt: true } }),
+        db().integrationConnection.groupBy({ by: ["status"], where: { organizationId, companyId }, _count: { _all: true } }),
+        db().auditLog.groupBy({ by: ["action"], where: { organizationId, category: "SECURITY", createdAt: { gte: since } }, _count: { _all: true }, orderBy: { _count: { action: "desc" } }, take: 15 }),
+        (await import("./autonomy-policy")).isCompanyAiPaused(organizationId, companyId),
+      ]);
+      const ids = members.map((m) => m.userId);
+      const withMfa = ids.length ? (await db().mfaFactor.groupBy({ by: ["userId"], where: { userId: { in: ids }, confirmedAt: { not: null } } })).length : 0;
+      const active = keys.filter((k) => !k.expiresAt || k.expiresAt > new Date());
+      const conn = Object.fromEntries(connections.map((c) => [c.status, c._count._all]));
+      const lines = [
+        `Members: ${ids.length}; with two-factor authentication: ${withMfa}${ids.length ? ` (${Math.round((withMfa / ids.length) * 100)}%)` : ""}.`,
+        `Active API keys: ${active.length}; never expiring: ${active.filter((k) => !k.expiresAt).length}; unused for 90+ days: ${active.filter((k) => (k.lastUsedAt ?? k.createdAt) < stale).length}.`,
+        `Integration connections — connected: ${conn.CONNECTED ?? 0}, in error: ${conn.ERROR ?? 0}, disconnected: ${conn.DISCONNECTED ?? 0}.`,
+        events.length ? `Security events (last 30 days): ${events.map((e) => `${e.action} ×${e._count._all}`).join(", ")}.` : "Security events (last 30 days): none recorded.",
+        `All AI paused (kill switch): ${paused ? "yes" : "no"}.`,
+      ];
+      return { content: lines.join("\n"), count: lines.length };
+    },
+  }),
 };

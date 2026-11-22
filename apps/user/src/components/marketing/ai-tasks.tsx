@@ -9,7 +9,7 @@ import { StatusBadge } from "./status-badge";
 export interface AiTaskRow {
   id: string;
   title: string;
-  status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "WAITING_APPROVAL";
   createdAt: Date;
   output: string | null;
   errorCode: string | null;

@@ -7,7 +7,7 @@ export interface CalendarPlan {
   name: string;
   enabled: boolean;
   kind: "RECURRING" | "EVENT";
-  frequency: "HOURLY" | "DAILY" | "WEEKLY" | null;
+  frequency: "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | null;
   timeOfDay: string | null;
   weekday: number | null;
   eventLabel: string | null;

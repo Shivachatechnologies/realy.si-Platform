@@ -56,6 +56,7 @@ enum AiScheduleFrequency {
   HOURLY
   DAILY
   WEEKLY
+  MONTHLY
 }
 
 enum AiBriefingMode {
@@ -175,6 +176,8 @@ model AiSchedule {
   timeOfDay      String?              @map("time_of_day")
   /// 0 = Sunday … 6 = Saturday (WEEKLY).
   weekday        Int?
+  /// 1 … 31 (MONTHLY); a day past the month's end runs on its last day.
+  dayOfMonth     Int?                 @map("day_of_month")
   /// Domain event type (EVENT).
   eventType      String?              @map("event_type")
   /// Instructions template; {{date}}, {{event}} and {{data.<field>}} are filled in.

@@ -1,7 +1,7 @@
 import type { RequestContext } from "@/server/core/context";
 import { db } from "@/server/core/db";
 import type { Translate } from "@/i18n/translate";
-import { profileByKey } from "@/server/modules/agents/profiles";
+import { resolveProfile } from "@/server/modules/agents/role-profiles";
 import { visibleMetrics } from "@/server/modules/bi/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
@@ -27,7 +27,7 @@ export async function profileOptions(ctx: RequestContext, organizationId: string
     models: allowedModels(),
     defaultModel: defaultModel(),
     metrics: metrics.map((m) => ({ key: m.key, label: t(m.labelKey) })).sort((a, b) => a.label.localeCompare(b.label)),
-    tools: (profileByKey(e.profileKey)?.tools ?? []).flatMap((name) => {
+    tools: ((await resolveProfile({ organizationId, companyId }, e.profileKey))?.tools ?? []).flatMap((name) => {
       const d = getTool(name);
       return d ? [{ name, label: label(name), needsApproval: d.autonomy !== "AUTONOMOUS" }] : [];
     }),

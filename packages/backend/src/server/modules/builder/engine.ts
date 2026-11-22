@@ -335,11 +335,29 @@ async function applyEffect(run: RunRow, step: StepRow, def: StepDef, data: unkno
         await createBudget(ctx, org, co, { name: b.name, periodStart: addMonthsIso(0), periodEnd: end.toISOString().slice(0, 10), amount: money(b.amount) });
         budgets++;
       }
-      return { status: "done", result: { cashPlanItems: items, budgets } };
+      // B15: the founder's starting budget from the brief becomes a real 12-month company budget (once; only in the
+      // company's base currency — amounts are never converted without an exchange rate).
+      const startingBudget = await persistBriefBudget(ctx, run, org, co);
+      return { status: "done", result: { cashPlanItems: items, budgets, startingBudget } };
     }
     default:
       return { status: "done" };
   }
+}
+
+const STARTING_BUDGET = "Starting budget (from your brief)";
+
+async function persistBriefBudget(ctx: RequestContext, run: RunRow, org: string, co: string): Promise<"created" | "exists" | "none" | "currency_mismatch"> {
+  const brief = parseBrief(run.brief);
+  if (!brief.budgetAmount || brief.budgetAmount <= 0) return "none";
+  const company = await db().company.findFirst({ where: { id: co, organizationId: org }, select: { baseCurrency: true } });
+  if (!company) return "none";
+  if (brief.budgetCurrency && brief.budgetCurrency !== company.baseCurrency) return "currency_mismatch";
+  if (await db().financeBudget.findFirst({ where: { organizationId: org, companyId: co, name: STARTING_BUDGET }, select: { id: true } })) return "exists";
+  const end = new Date(`${addMonthsIso(12)}T00:00:00Z`);
+  end.setUTCDate(end.getUTCDate() - 1);
+  await createBudget(ctx, org, co, { name: STARTING_BUDGET, periodStart: addMonthsIso(0), periodEnd: end.toISOString().slice(0, 10), amount: money(brief.budgetAmount) });
+  return "created";
 }
 
 async function processCompletedTask(run: RunRow, step: StepRow, def: StepDef, output: string | null) {

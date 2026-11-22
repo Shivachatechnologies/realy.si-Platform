@@ -48,13 +48,14 @@ export function OwnerSelect({ base, objectiveId, value, employees }: { base: str
 }
 
 /** Add an initiative (optionally tied to one key result). */
-export function AddInitiativeForm({ base, objectiveId, keyResults }: { base: string; objectiveId: string; keyResults: { id: string; title: string }[] }) {
+export function AddInitiativeForm({ base, objectiveId, keyResults, currency }: { base: string; objectiveId: string; keyResults: { id: string; title: string }[]; /** Budget currency (the company's base currency). */ currency: string }) {
   const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [kr, setKr] = useState("");
+  const [budget, setBudget] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   if (!open) {
@@ -73,8 +74,9 @@ export function AddInitiativeForm({ base, objectiveId, keyResults }: { base: str
         setBusy(true);
         setError(null);
         try {
-          await api(`${base}/objectives/${objectiveId}/initiatives`, { body: { title, description: description || undefined, keyResultId: kr || null } });
+          await api(`${base}/objectives/${objectiveId}/initiatives`, { body: { title, description: description || undefined, keyResultId: kr || null, budget: budget.trim() ? { amount: budget.trim(), currency } : null } });
           setTitle("");
+          setBudget("");
           setDescription("");
           setKr("");
           setOpen(false);
@@ -93,6 +95,10 @@ export function AddInitiativeForm({ base, objectiveId, keyResults }: { base: str
       <label className="grid gap-1 text-xs font-medium">
         {t("objectives.execution.initiativeDescription")}
         <Textarea rows={2} maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+      </label>
+      <label className="grid gap-1 text-xs font-medium">
+        {t("objectives.budget.initiativeAmount", { currency })}
+        <Input inputMode="decimal" pattern={"^\\d{1,12}(\\.\\d{1,4})?$"} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="1000" />
       </label>
       {keyResults.length ? (
         <label className="grid gap-1 text-xs font-medium">

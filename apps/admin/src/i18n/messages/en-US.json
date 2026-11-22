@@ -2487,7 +2487,8 @@
         "RUNNING": "Running",
         "COMPLETED": "Completed",
         "FAILED": "Failed",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "WAITING_APPROVAL": "Waiting for approval"
       },
       "tasksSubtitle": "Every AI task on the platform. Search by id or title, filter failures, cancel or retry.",
       "failures": "Failures (7 days)",
@@ -2958,7 +2959,32 @@
       "organizationIdHint": "Copy it from the organization page.",
       "removeOverride": "Remove override for {name}",
       "noOverrides": "No organization overrides.",
-      "costByOrg": "Cost by organization"
+      "costByOrg": "Cost by organization",
+      "tiers": "Tier routing",
+      "tiersHint": "Which model each AI run uses by complexity. Empty cells inherit: class → all classes → built-in default. Other providers with a key are used as fallback.",
+      "tiersOff": "Tier routing is off: every run uses the class or platform default model.",
+      "tierClass": "Profile class",
+      "tier": {
+        "simple": "Simple",
+        "standard": "Standard",
+        "complex": "Complex"
+      },
+      "tierAllClasses": "All classes",
+      "tierSet": "set here",
+      "tierInherited": "inherited",
+      "tiersEdit": "Edit tiers",
+      "tiersEditTitle": "Tier models · {name}",
+      "tiersEditHint": "Pick a model per complexity tier or leave it to inherit. Only enabled models are offered.",
+      "tiersInherit": "Inherit",
+      "tiersDisable": "Turn tier routing off",
+      "tiersEnable": "Turn tier routing on",
+      "health": "Provider health",
+      "healthHint": "Platform keys and the shared circuit breaker of every model that failed recently (all workers).",
+      "breakersOpen": "{count, plural, one {# model paused} other {# models paused}}",
+      "noBreakers": "No model has failed recently.",
+      "breakerFailures": "{count, plural, one {# failure} other {# failures}}",
+      "breakerOpen": "Paused",
+      "breakerDegraded": "Degraded"
     },
     "aiWorkforce": {
       "subtitle": "AI employees across every organization: role, model, autonomy, budget and usage.",
@@ -4211,7 +4237,10 @@
       "handoff_video_to_publishing": "Hand a video to publishing",
       "start_calling_campaign": "Start an AI calling run",
       "read_calling_runs": "Read AI calling runs",
-      "send_meeting_follow_up_email": "Send a meeting follow-up email"
+      "send_meeting_follow_up_email": "Send a meeting follow-up email",
+      "book_crm_meeting": "Book a meeting",
+      "read_crm_meetings": "Read meetings",
+      "read_security_posture": "Read security posture"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -5027,6 +5056,23 @@
       "hint": "People who manage AI employees directly.",
       "openNetwork": "See the live network",
       "counts": "{ai} AI reports · {humans} human reports"
+    },
+    "roles": {
+      "title": "Your company's own roles",
+      "hint": "Define a role the built-in list does not have: what it does, which tools it may use and how many steps a task may take. Actions still follow your approvals, autonomy and budgets.",
+      "empty": "No custom roles yet.",
+      "create": "Create a role",
+      "name": "Role name",
+      "department": "Department",
+      "description": "Short description",
+      "instructions": "What this role does",
+      "instructionsHint": "Write it like a job description: goals, how to work, what to report. The AI follows it inside the platform's safety rules.",
+      "tools": "{count, plural, one {Tools (# selected)} other {Tools (# selected)}}",
+      "maxTurns": "Steps per task",
+      "maxTurnsHint": "1–15. More steps allow longer research but cost more.",
+      "save": "Save role",
+      "archive": "Archive",
+      "archiveConfirm": "Archive the role “{name}”? AI employees must not hold it anymore."
     }
   },
   "profiles": {
@@ -5281,6 +5327,18 @@
     "voice_assistant": {
       "name": "Realy Voice Assistant",
       "summary": "Answers your questions and small talk in Realy from live company data."
+    },
+    "ai_clo": {
+      "name": "AI Chief Legal Officer",
+      "summary": "Reviews contracts and policies from your documents and flags legal and compliance risk."
+    },
+    "ai_ciso": {
+      "name": "AI Chief Information Security Officer",
+      "summary": "Checks two-factor coverage, API keys, integrations and security events, and proposes fixes."
+    },
+    "ai_cdo": {
+      "name": "AI Chief Data Officer",
+      "summary": "Finds missing or stale data and broken sources, and proposes the fixes that matter most."
     }
   },
   "projects": {
@@ -5319,7 +5377,12 @@
       "HIGH": "High risk",
       "CRITICAL": "Critical"
     },
-    "messagePreview": "Message to be sent"
+    "messagePreview": "Message to be sent",
+    "retry": "Retry action",
+    "retrying": "Retrying…",
+    "retryFailed": "The retry could not start",
+    "retryLimit": "Retried too often — reject it or ask the AI for a new proposal.",
+    "attempts": "Attempt {count} of {max}"
   },
   "objectives": {
     "subtitle": "Set objectives, break them into milestones, link milestones to projects, and let AI employees propose milestones for your approval.",
@@ -5552,6 +5615,17 @@
       "noInitiatives": "No initiatives yet. Plan them with AI or add your own.",
       "runsTitle": "AI work for this objective",
       "runsHint": "Every command run started for it."
+    },
+    "budget": {
+      "amount": "Budget",
+      "hint": "Optional. Actual spend is the real AI and provider cost of the work on this goal.",
+      "currency": "Currency",
+      "column": "Budget vs actual",
+      "of": "{actual} of {budget}",
+      "spentNoBudget": "{actual} spent · no budget",
+      "over": "Over budget ({pct}%)",
+      "otherCurrency": "Actual AI spend is in USD; compare manually.",
+      "initiativeAmount": "Budget ({currency}, optional)"
     }
   },
   "notifications": {

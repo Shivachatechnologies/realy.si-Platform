@@ -6,6 +6,7 @@ import { ApiButton } from "@/components/command/api-button";
 import { LiveRefresh } from "@/components/command/live-refresh";
 import { AddInitiativeForm, InitiativeStatusSelect, OwnerSelect } from "@/components/objectives/execution-controls";
 import { KrStatusBadge, ProgressBar } from "@/components/objectives/progress";
+import { BudgetCell } from "@/components/objectives/budget-cell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
@@ -166,7 +167,7 @@ export default async function ObjectiveExecutionPage({ params }: PageProps<"/[lo
           icon={<Sparkles />}
           title={t("objectives.execution.initiativesTitle")}
           description={t("objectives.execution.initiativesHint")}
-          actions={data.canManage ? <AddInitiativeForm base={base} objectiveId={o.id} keyResults={data.keyResults.map((k) => ({ id: k.id, title: k.title }))} /> : null}
+          actions={data.canManage ? <AddInitiativeForm base={base} objectiveId={o.id} keyResults={data.keyResults.map((k) => ({ id: k.id, title: k.title }))} currency={company.baseCurrency} /> : null}
         />
         <CardBody>
           {data.initiatives.length ? (
@@ -180,6 +181,11 @@ export default async function ObjectiveExecutionPage({ params }: PageProps<"/[lo
                       <div className="min-w-0">
                         <p className="text-sm font-semibold">{i.title}</p>
                         {i.description ? <p className="mt-0.5 text-xs text-muted-foreground">{i.description}</p> : null}
+                        {i.budget.budget || i.budget.actual.micros > 0 ? (
+                          <div className="mt-1 max-w-64 text-xs">
+                            <BudgetCell status={i.budget} locale={locale} t={t} />
+                          </div>
+                        ) : null}
                         <p className="mt-1 flex flex-wrap gap-1.5">
                           <Badge>{t(`objectives.execution.source.${i.source === "ai" || i.source === "ceo" ? i.source : "manual"}`)}</Badge>
                           {kr ? <Badge tone="accent">{kr.title}</Badge> : null}

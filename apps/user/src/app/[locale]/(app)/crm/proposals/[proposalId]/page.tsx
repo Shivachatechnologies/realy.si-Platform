@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("crm.tabs.proposals") };
 }
 
-const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral" } as const;
+const TASK_TONE = { QUEUED: "neutral", RUNNING: "accent", COMPLETED: "success", FAILED: "danger", CANCELLED: "neutral", WAITING_APPROVAL: "warning" } as const;
 
 export default async function ProposalPage({ params }: { params: Promise<{ proposalId: string }> }) {
   const { proposalId } = await params;

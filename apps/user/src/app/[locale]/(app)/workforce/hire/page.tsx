@@ -12,7 +12,9 @@ import { db } from "@/server/core/db";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { getTool, loadTools } from "@/server/modules/tools/registry";
-import { listMembers, rolesByDepartment } from "@/server/modules/workforce/service";
+import { DEPARTMENTS, listMembers, rolesByDepartment } from "@/server/modules/workforce/service";
+import { assignableTools, listRoles } from "@/server/modules/workforce/roles";
+import { ArchiveRoleButton, CustomRoleForm } from "@/components/workforce/custom-role-form";
 import { requireOrgContext } from "@/server/workspace";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -44,6 +46,9 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
     const label = t(`workforce.toolNames.${name}`);
     return label === `workforce.toolNames.${name}` ? name.replace(/_/g, " ") : label;
   };
+  // The company's own roles (B24): defined as data, hired like any built-in role.
+  const [customRoles, assignable] = await Promise.all([listRoles(viewer.ctx, org.id, company.id), canManage ? assignableTools() : Promise.resolve([])]);
+  const departments = DEPARTMENTS.map((d) => ({ key: d, label: t(`workforce.departments.${d}`) }));
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
@@ -57,6 +62,45 @@ export default async function HirePage({ searchParams }: PageProps<"/[locale]/wo
           </CardBody>
         </Card>
       ) : null}
+      <Card>
+        <CardHeader title={t("workforce.roles.title")} description={t("workforce.roles.hint")} actions={canManage ? <CustomRoleForm apiBase={apiBase} departments={departments} tools={assignable.map((x) => ({ name: x.name, label: toolLabel(x.name), needsApproval: x.needsApproval }))} /> : null} />
+        <CardBody>
+          {customRoles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("workforce.roles.empty")}</p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {customRoles.map((r) => {
+                const tools = r.tools.flatMap((name) => {
+                  const d = getTool(name);
+                  return d ? [{ name, label: toolLabel(name), needsApproval: d.autonomy !== "AUTONOMOUS" }] : [];
+                });
+                return (
+                  <Card key={r.id} className="flex flex-col">
+                    <CardHeader title={r.name} description={r.description ?? t(`workforce.departments.${r.department}`)} />
+                    <CardBody className="grid flex-1 content-start gap-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {tools.map((tool) => (
+                          <Badge key={tool.name} tone={tool.needsApproval ? "warning" : "neutral"}>
+                            {tool.label}
+                            {tool.needsApproval ? ` · ${t("workforce.needsApproval")}` : ""}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{t("workforce.limits", { turns: r.maxTurns })}</p>
+                    </CardBody>
+                    {canManage ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3">
+                        <HireDialog apiBase={apiBase} profileKey={r.key} roleName={r.name} defaultName={r.name} tools={tools} members={members} defaultOpen={preselect === r.key} />
+                        <ArchiveRoleButton apiBase={apiBase} roleId={r.id} name={r.name} />
+                      </div>
+                    ) : null}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardBody>
+      </Card>
       <details className="grid gap-4">
         <summary className="cursor-pointer text-sm font-medium text-muted-foreground">{t("workforce.jobs.advanced")}</summary>
         <div className="mt-3 grid gap-4">

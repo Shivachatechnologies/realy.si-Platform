@@ -13,16 +13,18 @@ export interface ScheduleValues {
   aiEmployeeId: string;
   name: string;
   kind: "RECURRING" | "EVENT";
-  frequency: "HOURLY" | "DAILY" | "WEEKLY";
+  frequency: "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY";
   timeOfDay: string;
   weekday: number;
+  dayOfMonth: number;
   eventType: string;
   instructions: string;
   briefingMode: "" | "DAILY" | "WEEKLY" | "MONTHLY" | "TREND_RISK";
   enabled: boolean;
 }
 
-const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst"];
+const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst", "ai_cfo"];
+
 
 /** Create or edit an AI schedule (recurring job or event trigger). */
 export function ScheduleForm({
@@ -49,6 +51,7 @@ export function ScheduleForm({
     frequency: "DAILY",
     timeOfDay: "09:00",
     weekday: 1,
+    dayOfMonth: 1,
     eventType: eventTypes[0] ?? "",
     instructions: "",
     briefingMode: "",
@@ -74,6 +77,7 @@ export function ScheduleForm({
       frequency: v.kind === "RECURRING" ? v.frequency : null,
       timeOfDay: v.kind === "RECURRING" ? v.timeOfDay : null,
       weekday: v.kind === "RECURRING" && v.frequency === "WEEKLY" ? v.weekday : null,
+      dayOfMonth: v.kind === "RECURRING" && v.frequency === "MONTHLY" ? v.dayOfMonth : null,
       eventType: v.kind === "EVENT" ? v.eventType : null,
       instructions: v.instructions,
       briefingMode: canBrief && v.briefingMode ? v.briefingMode : null,
@@ -122,7 +126,7 @@ export function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label={t("plans.form.frequency")} htmlFor={`${id}-frequency`}>
             <Select id={`${id}-frequency`} value={v.frequency} onChange={(e) => set("frequency", e.target.value as ScheduleValues["frequency"])}>
-              {(["HOURLY", "DAILY", "WEEKLY"] as const).map((f) => (
+              {(["HOURLY", "DAILY", "WEEKLY", "MONTHLY"] as const).map((f) => (
                 <option key={f} value={f}>
                   {t(`plans.frequencies.${f}`)}
                 </option>
@@ -148,6 +152,17 @@ export function ScheduleForm({
                 {[1, 2, 3, 4, 5, 6, 0].map((d) => (
                   <option key={d} value={d}>
                     {t(`plans.weekdays.${d}`)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
+          {v.frequency === "MONTHLY" ? (
+            <Field label={t("plans.form.dayOfMonth")} htmlFor={`${id}-dom`} hint={t("plans.form.dayOfMonthHint")} error={fields.dayOfMonth}>
+              <Select id={`${id}-dom`} value={v.dayOfMonth} onChange={(e) => set("dayOfMonth", Number(e.target.value))}>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
                   </option>
                 ))}
               </Select>
