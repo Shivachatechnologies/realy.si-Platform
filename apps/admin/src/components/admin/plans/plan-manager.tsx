@@ -10,6 +10,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { useI18n } from "@/i18n/client";
 import { formatDate, formatMoney, formatNumber } from "@/i18n/format";
 import { ActionDialog, useAdminAction } from "@/components/admin/action-dialog";
+import { AddPriceButton, PlanLifecycleActions } from "@/components/admin/billing/actions";
 import { ADDON_KEYS, ADDONS, FEATURE_KEYS, LIMIT_KEYS, LIMITS, isHighCostLimit, type LimitKey } from "@/server/modules/entitlements/catalog";
 
 // ───────────── DTOs (server pages → client) ─────────────
@@ -22,6 +23,8 @@ export interface PlanEditDTO {
   status: string;
   public: boolean;
   defaultTrialDays: number;
+  /** Live (ACTIVE / TRIALING / PAST_DUE) subscriptions on this plan. */
+  liveSubscriptions: number;
   entitlements: { featureKey: string; enabled: boolean; limitValue: string | null }[];
   prices: { id: string; interval: string; marketType: string; marketCode: string; currency: string; status: string; current: { version: number; amountMinor: string; trialDays: number | null; effectiveFrom: string } | null }[];
 }
@@ -82,9 +85,12 @@ export function PlanEditor({ plan, canManage }: { plan: PlanEditDTO; canManage: 
             {!plan.public ? <Badge tone="neutral">{t("admin.plans.manager.hidden")}</Badge> : null}
           </span>
         }
-        description={t("admin.plans.trial", { count: plan.defaultTrialDays })}
+        description={`${t("admin.plans.trial", { count: plan.defaultTrialDays })} · ${t("admin.plans.lifecycle.live", { count: plan.liveSubscriptions })}`}
         actions={
           canManage ? (
+            <div className="flex flex-wrap items-center gap-2">
+            <PlanLifecycleActions planId={plan.id} planKey={plan.key} status={plan.status} liveSubscriptions={plan.liveSubscriptions} />
+            <AddPriceButton planId={plan.id} />
             <ActionDialog
               trigger={<Button size="sm" variant="secondary">{t("admin.plans.manager.editPlan")}</Button>}
               title={t("admin.plans.manager.editPlan")}
@@ -116,6 +122,7 @@ export function PlanEditor({ plan, canManage }: { plan: PlanEditDTO; canManage: 
                 {t("admin.plans.manager.public")}
               </label>
             </ActionDialog>
+            </div>
           ) : null
         }
       />
@@ -472,47 +479,5 @@ export function GrantAddonButton({ organizationId }: { organizationId: string })
         <Input id="ad-packs" type="number" min={1} max={100} value={packs} onChange={(e) => setPacks(e.target.value)} />
       </Field>
     </ActionDialog>
-  );
-}
-
-export function SubscriptionActions({ organizationId, planKeys, hasSubscription, cancelAtPeriodEnd }: { organizationId: string; planKeys: string[]; hasSubscription: boolean; cancelAtPeriodEnd: boolean }) {
-  const { t } = useI18n();
-  const run = useAdminAction();
-  const [planKey, setPlanKey] = useState(planKeys[0] ?? "");
-  const [interval, setInterval] = useState<"MONTH" | "YEAR">("MONTH");
-  if (!hasSubscription) return <p className="text-sm text-muted-foreground">{t("admin.plans.manager.noSubscription")}</p>;
-  return (
-    <div className="flex flex-wrap gap-2">
-      <ActionDialog
-        trigger={<Button size="sm">{t("admin.plans.manager.changeSubscription")}</Button>}
-        title={t("admin.plans.manager.changeSubscription")}
-        description={t("admin.plans.manager.changeSubscriptionHint")}
-        confirmLabel={t("admin.plans.manager.apply")}
-        onConfirm={(reason) => run(`/api/v1/admin/entitlements/organizations/${organizationId}/subscription`, "POST", { planKey, interval, reason })}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t("admin.plans.manager.plan")} htmlFor="sc-plan">
-            <Select id="sc-plan" value={planKey} onChange={(e) => setPlanKey(e.target.value)}>
-              {planKeys.map((k) => (
-                <option key={k}>{k}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={t("admin.plans.manager.interval")} htmlFor="sc-int">
-            <Select id="sc-int" value={interval} onChange={(e) => setInterval(e.target.value as "MONTH" | "YEAR")}>
-              <option value="MONTH">{t("admin.plans.manager.intervals.MONTH")}</option>
-              <option value="YEAR">{t("admin.plans.manager.intervals.YEAR")}</option>
-            </Select>
-          </Field>
-        </div>
-      </ActionDialog>
-      <ActionDialog
-        trigger={<Button size="sm" variant={cancelAtPeriodEnd ? "secondary" : "danger"}>{cancelAtPeriodEnd ? t("admin.plans.manager.resume") : t("admin.plans.manager.cancelAtEnd")}</Button>}
-        title={cancelAtPeriodEnd ? t("admin.plans.manager.resume") : t("admin.plans.manager.cancelAtEnd")}
-        confirmLabel={t("admin.plans.manager.apply")}
-        danger={!cancelAtPeriodEnd}
-        onConfirm={(reason) => run(`/api/v1/admin/entitlements/organizations/${organizationId}/cancellation`, "POST", { cancel: !cancelAtPeriodEnd, reason })}
-      />
-    </div>
   );
 }

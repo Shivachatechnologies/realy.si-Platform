@@ -15,6 +15,10 @@ import { closestLocale } from "@/i18n/config";
 import { billingConfig, verifyStripeWebhook, type GatewaySubscription, type PaymentGateway } from "./gateway";
 import { quote, quoteInput } from "./service";
 import { ADDONS, invalidateEntitlements, isAddonKey, monthlyWindow, getEntitlements, type AddonKey, type FeatureKey } from "@/server/modules/entitlements/service";
+import { meterOfLimit, writeLedgerEntry } from "@/server/modules/entitlements/ledger";
+import { isLimitKey } from "@/server/modules/entitlements/catalog";
+import { notifyAdmins } from "@/server/modules/admin/notifications";
+import { syncStripeEvent, type SyncResult } from "./stripe-sync";
 
 export const BILLING_NOT_CONFIGURED = "Billing is not configured.";
 
@@ -54,7 +58,7 @@ async function ensureStripePrice(gateway: PaymentGateway, priceVersionId: string
   return (await db().priceVersion.findUniqueOrThrow({ where: { id: version.id } })).stripePriceId!;
 }
 
-async function ensureStripeCoupon(gateway: PaymentGateway, promotionId: string): Promise<string> {
+export async function ensureStripeCoupon(gateway: PaymentGateway, promotionId: string): Promise<string> {
   const p = await db().promotion.findUniqueOrThrow({ where: { id: promotionId } });
   if (p.stripeCouponId) return p.stripeCouponId;
   const id = await gateway.createCoupon(
@@ -273,6 +277,8 @@ const ts = (s: number | null | undefined) => (s ? new Date(s * 1000) : null);
 interface MinimalEvent {
   id: string;
   type: string;
+  /** Unix seconds; orders updates of the platform_* mirror rows. */
+  created?: number;
   livemode: boolean;
   data: { object: Record<string, unknown> };
 }
@@ -460,6 +466,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   const subscriptionId = HANDLED.has(event.type) ? subscriptionIdOf(event) : null;
   if (subscriptionId) sub = await config.gateway.retrieveSubscription(subscriptionId);
 
+  let synced: SyncResult | null = null;
   try {
     const outcome = await transaction(async (tx) => {
       await tx.stripeEvent.create({ data: { id: event.id, type: event.type, livemode: event.livemode, outcome: "processing" } });
@@ -488,11 +495,18 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
         const recovered = !failed && !!before?.lastPaymentFailedAt && (!before.lastPaymentSucceededAt || before.lastPaymentSucceededAt < before.lastPaymentFailedAt);
         if ((failed || recovered) && result.organizationId) await notifyBillingManagers(tx, result.organizationId, failed ? "billing.payment_failed" : "billing.payment_recovered");
       }
+      // Control Center mirror (platform_invoices / payments / refunds / disputes). Same transaction as the event row.
+      synced = await syncStripeEvent(tx, event as unknown as Parameters<typeof syncStripeEvent>[1]);
+      if (synced?.applied && result.outcome === "ignored") result = { outcome: "applied", organizationId: synced.organizationId };
       await tx.stripeEvent.update({ where: { id: event.id }, data: { outcome: result.outcome, organizationId: result.organizationId } });
       return result;
-    }).then((r) => {
+    }).then(async (r) => {
       // Plan, status or add-on balance may have changed: entitlements are re-resolved on the next check.
       if (r.organizationId) invalidateEntitlements(r.organizationId);
+      const s = synced as SyncResult | null;
+      if (s?.kind === "dispute" && s.created && s.id) {
+        await notifyAdmins(null, { permission: "platform.billing.refund", type: "billing.dispute_opened", severity: "CRITICAL", title: "Payment dispute opened", href: `/payments/disputes/${s.id}`, dedupeKey: `dispute:${s.id}` }).catch(() => undefined);
+      }
       return r.outcome;
     });
     if (outcome !== "applied" && outcome !== "ignored") logger.warn({ eventId: event.id, type: event.type, outcome }, "stripe webhook not applied");
@@ -522,7 +536,7 @@ async function liveStripeSubscription(organizationId: string) {
   return sub;
 }
 
-function requireGatewayMethod<K extends keyof PaymentGateway>(gateway: PaymentGateway, key: K): NonNullable<PaymentGateway[K]> {
+export function requireGatewayMethod<K extends keyof PaymentGateway>(gateway: PaymentGateway, key: K): NonNullable<PaymentGateway[K]> {
   const fn = gateway[key];
   if (!fn) throw new AppError("not_configured", BILLING_NOT_CONFIGURED);
   return (fn as (...a: unknown[]) => unknown).bind(gateway) as NonNullable<PaymentGateway[K]>;
@@ -535,7 +549,7 @@ export const changePlanInput = z.object({ planKey: z.string().min(1).max(41), in
  * price version comes from the same regional quote as checkout; Stripe prorates. The local subscription changes
  * only when the verified webhook arrives (never optimistically). `ctx` may be a platform admin (admin console).
  */
-export async function changeSubscriptionPlan(ctx: RequestContext, organizationId: string, raw: z.input<typeof changePlanInput>, opts: { asPlatform?: boolean } = {}) {
+export async function changeSubscriptionPlan(ctx: RequestContext, organizationId: string, raw: z.input<typeof changePlanInput>, opts: { asPlatform?: boolean; reason?: string } = {}) {
   const input = changePlanInput.parse(raw);
   if (!opts.asPlatform) await requirePermission(ctx, "billing.manage", orgChain(organizationId));
   const gateway = requireGateway();
@@ -557,6 +571,7 @@ export async function changeSubscriptionPlan(ctx: RequestContext, organizationId
       resourceId: sub.id,
       oldValue: { plan: sub.plan.key, interval: sub.interval, priceVersionId: item.priceVersionId },
       newValue: { plan: input.planKey, interval: input.interval, priceVersionId: q.price.priceVersionId },
+      reason: opts.reason,
     }),
   );
   return { ok: true, pending: true };
@@ -698,5 +713,9 @@ async function applyAddonCheckout(tx: Tx, event: MinimalEvent): Promise<string |
     resourceId: purchase.id,
     newValue: { addonKey: purchase.addonKey, quantity: purchase.quantity, windowEnd: window.end, stripeEventId: event.id },
   });
+  const meter = isLimitKey(purchase.limitKey) ? meterOfLimit(purchase.limitKey) : null;
+  if (meter) {
+    await writeLedgerEntry(tx, { organizationId: purchase.organizationId, meter, kind: "PURCHASE", delta: purchase.quantity, period: window, sourceType: "addon_purchase", sourceId: purchase.id, reason: purchase.addonKey });
+  }
   return purchase.organizationId;
 }

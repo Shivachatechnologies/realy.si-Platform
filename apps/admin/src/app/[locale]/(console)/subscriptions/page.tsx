@@ -100,7 +100,7 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
                 return (
                   <Tr key={s.id}>
                     <Td>
-                      <Link href={`/${locale}/organizations/${s.organization.id}`} className="font-medium hover:underline">
+                      <Link href={`/${locale}/subscriptions/${s.id}`} className="font-medium hover:underline">
                         {s.organization.name}
                       </Link>
                       <div className="font-mono text-[11px] text-muted-foreground">{s.billingCountryCode}</div>
