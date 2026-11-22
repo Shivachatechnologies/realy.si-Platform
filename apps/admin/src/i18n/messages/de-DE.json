@@ -563,8 +563,8 @@
       "marketing_email_variants_max": "Höchstens vier Varianten.",
       "marketing_generation_failed": "Der KI-Anbieter hat kein Ergebnis geliefert.",
       "marketing_gsc_not_connected": "Google Search Console ist nicht verbunden.",
-      "marketing_image_not_connected": "Verbinden Sie zuerst einen Bildanbieter (OpenAI oder Stability).",
-      "marketing_video_not_connected": "Verbinden Sie zuerst einen Videoanbieter (Runway oder Replicate).",
+      "marketing_image_not_connected": "Auf der Plattform ist noch kein Bildanbieter verfügbar.",
+      "marketing_video_not_connected": "Auf der Plattform ist noch kein Videoanbieter verfügbar.",
       "marketing_journey_incomplete": "Beantworten Sie zuerst die vorherigen Fragen.",
       "marketing_journey_product": "Dieses Produkt wurde nicht gefunden.",
       "marketing_outreach_incomplete": "Fügen Sie zuerst E-Mail-Adresse, Betreff und Nachricht hinzu.",
@@ -575,7 +575,7 @@
       "marketing_reply_failed": "Die Plattform hat die Antwort abgelehnt.",
       "marketing_reply_not_connected": "Das Konto ist nicht verbunden.",
       "marketing_seo_no_keywords": "Fügen Sie zuerst Keywords hinzu.",
-      "assets_image_not_connected": "Kein Bildanbieter verbunden. Verbinden Sie OpenAI, Stability AI oder Replicate unter Integrationen.",
+      "assets_image_not_connected": "Auf der Plattform ist noch kein Bildanbieter verfügbar. Es wurde nichts erzeugt.",
       "assets_provider_rate_limited": "Der Bildanbieter ist ausgelastet (Ratenlimit). Bitte in einer Minute erneut versuchen.",
       "assets_provider_failed": "Der Bildanbieter konnte das Bild nicht erstellen.",
       "assets_scope_required": "Wählen Sie, für welchen Datensatz das Artwork ist.",
@@ -656,7 +656,7 @@
       "voice_campaign_empty": "Niemand auf dieser Liste kann angerufen werden (fehlende oder ungültige Nummern oder Sperrliste).",
       "voice_campaign_state": "Das ist im aktuellen Zustand der Kampagne nicht möglich.",
       "voice_recording_unavailable": "Die Sprachplattform hat die Aufzeichnung nicht geliefert.",
-      "crm_contacts_not_connected": "Verbinden Sie zuerst einen Kontaktdaten-Dienst (Apollo.io, Hunter.io oder People Data Labs). Es wurde nichts abgefragt.",
+      "crm_contacts_not_connected": "Auf der Plattform ist noch kein Kontaktdatendienst verfügbar. Es wurde nichts abgefragt.",
       "crm_contacts_failed": "Der Kontaktdaten-Dienst konnte nicht antworten. Bitte später erneut versuchen.",
       "crm_autopilot_confirm_auto_send": "Bitte bestätigen Sie, dass der Autopilot innerhalb seiner Tageslimits selbstständig E-Mails senden darf.",
       "crm_autopilot_not_active": "Schalten Sie den Autopiloten zuerst ein.",
@@ -719,7 +719,7 @@
       "creative_invalid_input": "Der Anbieter konnte diese Eingabe nicht annehmen. Prüfen Sie sie und versuchen Sie es erneut.",
       "creative_rate_limited": "Der Anbieter ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
       "creative_provider_failed": "Der Anbieter konnte die Anfrage nicht abschließen. Nichts wurde als fertig verbucht.",
-      "creative_image_not_connected": "Verbinden Sie zuerst einen Bildanbieter (OpenAI, Stability AI oder Replicate).",
+      "creative_image_not_connected": "Auf der Plattform ist noch kein Bildanbieter verfügbar.",
       "creative_image_invalid_input": "Die Bildanfrage wurde nicht angenommen. Passen Sie den Prompt an und versuchen Sie es erneut.",
       "creative_image_rate_limited": "Der Bildanbieter ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
       "creative_image_provider_failed": "Der Bildanbieter hat kein Bild zurückgegeben.",
@@ -731,7 +731,7 @@
       "creative_upscale_invalid_input": "Dieses Bild kann nicht hochskaliert werden (zu groß oder nicht unterstützt).",
       "creative_upscale_rate_limited": "Der Anbieter zum Hochskalieren ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
       "creative_upscale_provider_failed": "Der Anbieter zum Hochskalieren hat kein Bild zurückgegeben.",
-      "creative_music_not_connected": "Keine lizenzierte Musikquelle verbunden. Verbinden Sie Jamendo oder laden Sie einen lizenzierten Titel hoch.",
+      "creative_music_not_connected": "Auf der Plattform ist noch keine lizenzierte Musikquelle verfügbar. Laden Sie einen Titel hoch, für den Sie eine Lizenz haben.",
       "creative_music_invalid_input": "Die Musikquelle hat diese Anfrage nicht angenommen.",
       "creative_music_rate_limited": "Die Musikquelle ist ausgelastet. Versuchen Sie es in einer Minute erneut.",
       "creative_music_provider_failed": "Die lizenzierte Musikquelle war nicht erreichbar.",
@@ -939,7 +939,7 @@
         "manual": "Ohne KI fortfahren",
         "noResearch": {
           "title": "Keine Live-Websuche",
-          "body": "Kein Rechercheanbieter (Tavily, Exa oder SerpApi) ist verbunden. Die KI arbeitet mit Allgemeinwissen und Ihren Dokumenten und kennzeichnet Zahlen als Schätzungen.",
+          "body": "Auf der Plattform ist noch kein Recherchedienst verfügbar. Die KI arbeitet daher mit ihrem Allgemeinwissen und Ihren Dokumenten und kennzeichnet Zahlen als Schätzungen.",
           "connect": "Anbieter verbinden"
         },
         "draft": "Die Recherche startet, sobald Ihre Dokumente da sind.",
@@ -2798,7 +2798,25 @@
       "why": "Sehen, welche Anbieter Unternehmen verbinden, welche Verbindungen fehlschlagen und wer die API nutzt.",
       "providersHint": "Verbindungen pro Anbieter über alle Organisationen.",
       "noConnectionsHint": "Unternehmen verbinden Anbieter auf ihrer Integrationsseite.",
-      "noFailuresHint": "Alle Webhook-Zustellungen waren zuletzt erfolgreich."
+      "noFailuresHint": "Alle Webhook-Zustellungen waren zuletzt erfolgreich.",
+      "customerTitle": "Von Kunden verbundene Integrationen",
+      "customerHint": "Kunden melden sich nur mit Realys OAuth-Apps bei ihren eigenen Konten an (Client-IDs und Secrets unter Plattformschlüssel). Anbieter ohne OAuth können Kunden nicht verbinden; bestehende Verbindungen funktionieren weiter. Schalten Sie einen Anbieter aus, um ihn plattformweit vor Kunden zu verbergen.",
+      "managedTitle": "Plattformverwaltete Anbieter",
+      "managedHint": "Laufen über die Plattformschlüssel. Verfügbar, sobald alle Pflichtschlüssel unter Plattformschlüssel gesetzt sind.",
+      "managedKeys": "Plattformschlüssel",
+      "managedState": {
+        "available": "Verfügbar",
+        "awaiting_platform": "Schlüssel fehlen",
+        "disabled": "Ausgeschaltet"
+      },
+      "disconnect": "Trennen",
+      "disconnectHint": "Widerruft das Token beim Anbieter, sofern unterstützt, und löscht die gespeicherten Zugangsdaten dieser Verbindung. Der Kunde kann sich per OAuth erneut verbinden, wenn der Anbieter das erlaubt.",
+      "legacyUnused": "Erhalten, ungenutzt (Plattformschlüssel)",
+      "connectMode": {
+        "oauth": "Kunden-OAuth",
+        "unavailable": "Nicht verbindbar (kein OAuth)",
+        "platform": "Plattformschlüssel"
+      }
     },
     "security": {
       "subtitle": "Sicherheitsereignisse, Plattformadministratoren und ihre Sitzungen.",
@@ -3032,7 +3050,7 @@
       "unpublishedChanges": "Unveröffentlichte Änderungen",
       "empty": "Noch keine Seiten",
       "emptyHint": "Erstellen Sie eine Seite, einen Blogbeitrag oder eine Landingpage; sie bleibt ein Entwurf, bis Sie sie veröffentlichen.",
-      "footerHint": "Bilder liegen in der Medienbibliothek; öffentliche Seiten werden unter /pages/<adresse> ausgeliefert.",
+      "footerHint": "Bilder liegen in der Medienbibliothek; öffentliche Seiten werden unter /pages/'<adresse>' ausgeliefert.",
       "viewLive": "Live ansehen",
       "edit": "Bearbeiten",
       "preview": "Vorschau",
@@ -3392,7 +3410,8 @@
         "overview": "Übersicht",
         "members": "Mitglieder & Rollen",
         "activity": "Aktivität",
-        "entitlements": "Berechtigungen & Kontingente"
+        "entitlements": "Berechtigungen & Kontingente",
+        "integrations": "Integrationen"
       },
       "membersTitle": "Mitglieder von {name}",
       "membersHint": "Inhaber, Admins und Mitglieder. Eine Organisation behält immer mindestens einen Inhaber.",
@@ -3541,7 +3560,8 @@
         "integrations": "Integrationsverbindungen",
         "errorTracking": "Fehlerverfolgung",
         "tracing": "Tracing",
-        "firstAdmin": "Registrierung des ersten Super-Admins"
+        "firstAdmin": "Registrierung des ersten Super-Admins",
+        "platformProviders": "Plattformverwaltete Anbieter für Kunden"
       },
       "groups": {
         "ai": {
@@ -3550,11 +3570,11 @@
         },
         "email": {
           "title": "E-Mail",
-          "hint": "Anbieter und Absender für Transaktions-E-Mails."
+          "hint": "Anbieter für Transaktions-E-Mails (Resend, Postmark oder SMTP wie Google Workspace) und Absender."
         },
         "payments": {
           "title": "Zahlungen",
-          "hint": "Stripe-Schlüssel und Webhook-Signaturgeheimnis."
+          "hint": "Stripe-Schlüssel für die Realy-Abrechnung und Webhook-Signatur sowie die Stripe- und Razorpay-Konten für Zahlungslinks der Kunden."
         },
         "login": {
           "title": "Anmeldung mit Google, GitHub, Microsoft",
@@ -3571,8 +3591,40 @@
         "platform": {
           "title": "Plattform",
           "hint": "Erster Admin und Durchsetzung der Tariflimits."
+        },
+        "research": {
+          "title": "Recherche",
+          "hint": "Websuche- und Kontaktdatenanbieter, die jedes Unternehmen über das Plattformkonto nutzt."
+        },
+        "creative": {
+          "title": "Kreativ",
+          "hint": "Bild- und Videogenerierung für das Studio, genutzt über das Plattformkonto."
+        },
+        "voice": {
+          "title": "Sprache",
+          "hint": "Text-zu-Sprache und Sprache-zu-Text für Voice OS und Sprachaufnahmen."
+        },
+        "video": {
+          "title": "Video",
+          "hint": "Videogenerierung, Rendering und lizenzierte Musik."
+        },
+        "telephony": {
+          "title": "Telefonie",
+          "hint": "Sprachagenten, Nummern und Anrufe. Nummern und Minuten laufen über das Plattformkonto und zählen gegen die Sprachminuten jedes Unternehmens."
+        },
+        "messaging": {
+          "title": "Messaging",
+          "hint": "Twilio-SMS und WhatsApp über Realys Konten, von jedem Unternehmen genutzt und pro Unternehmen abgerechnet."
+        },
+        "storage": {
+          "title": "Speicher",
+          "hint": "S3-kompatibler Bucket und Cloudflare-Konto. Objekte werden pro Unternehmen unter companies/COMPANY_ID/ gespeichert."
         }
-      }
+      },
+      "providerAvailable": "Für Kunden verfügbar",
+      "providerUnavailable": "Für Kunden nicht verfügbar (Pflichtschlüssel fehlt)",
+      "managedTitle": "Plattformverwaltete Anbieter",
+      "managedBody": "Jeder Anbieter läuft über Realys eigene Konten: KI, Recherche, Kreativ, Sprache, Video, Telefonie, E-Mail, Messaging, Speicher und Zahlungen. Nur diese Schlüssel versorgen sie. Kunden sehen oder erfassen nie Schlüssel, sehen jeden Anbieter nur als Verfügbar oder Nicht verfügbar, und ihre Nutzung zählt gegen ihre Tariflimits und das Kostenbuch. Früher von Unternehmen gespeicherte Schlüssel bleiben erhalten, werden aber nicht mehr genutzt."
     }
   },
   "platformModules": {
@@ -3881,7 +3933,7 @@
         "fts": "Nur Stichwortsuche (Volltext). Treffer passen zu Ihren Wörtern, nicht zu deren Bedeutung.",
         "hybridBadge": "Semantisch + Stichwort",
         "ftsBadge": "Nur Stichwort",
-        "noProvider": "Um Fakten auch nach Bedeutung zu finden, verbinden Sie OpenAI, Google Gemini oder Voyage AI – das Gedächtnis wird dann automatisch eingebettet.",
+        "noProvider": "Für die Suche nach Bedeutung braucht die Plattform einen Embedding-Anbieter. Sobald einer verfügbar ist, wird das Gedächtnis automatisch eingebettet.",
         "connect": "Integrationen öffnen",
         "noPgvector": "{provider} ist verbunden, aber die Datenbank dieser Plattform hat noch keine Vektor-Erweiterung (pgvector), daher bleibt die Suche stichwortbasiert. Bitten Sie den Plattformbetreiber, sie zu aktivieren.",
         "coverage": "Bisher eingebettet",
@@ -6509,8 +6561,8 @@
         "calendar": "Kalendereinladungen",
         "on": "Aktiv · {detail}",
         "off": {
-          "research": "Nicht verbunden – verbinde Tavily, Exa oder SerpApi, um Leads zu finden und zu recherchieren.",
-          "ai": "Nicht verbunden – verbinde OpenAI oder Gemini, damit KI E-Mails entwirft und Leads bewertet.",
+          "research": "Noch nicht verfügbar — die Lead-Recherche startet, sobald auf der Plattform ein Recherchedienst verfügbar ist.",
+          "ai": "Noch nicht verfügbar — KI-Entwürfe und Lead-Bewertung starten, sobald auf der Plattform ein KI-Textanbieter verfügbar ist.",
           "email": "Nicht verbunden – verbinde Gmail, Outlook oder SendGrid, um E-Mails zu senden.",
           "calendar": "Nicht verbunden – Termine werden gespeichert und du erhältst stattdessen eine Kalenderdatei."
         }
@@ -6704,7 +6756,7 @@
         "search": "Im Web suchen",
         "searching": "Suche läuft…",
         "honest": "Es werden nur echte Ergebnisse deines Recherchedienstes gezeigt. Nichts ist erfunden.",
-        "noProvider": "Um Leads zu suchen, verbinde einen Recherchedienst (Tavily, Exa oder SerpApi).",
+        "noProvider": "Die Lead-Suche startet, sobald auf der Plattform ein Recherchedienst verfügbar ist.",
         "results": "{count, plural, =0 {Keine Ergebnisse} one {# Ergebnis} other {# Ergebnisse}}",
         "resultsMeta": "„{query}“ · {provider} · {date} · {fresh} noch nicht geprüft",
         "noResults": "Die Suche hat nichts ergeben. Beschreibe deine Kunden anders.",
@@ -6754,7 +6806,7 @@
         "draftWithAi": "Mit KI entwerfen",
         "drafting": "Schreibt…",
         "aiNote": "Die KI nutzt nur, was im Datensatz steht. Du prüfst vor dem Senden.",
-        "aiMissing": "Verbinde OpenAI oder Gemini, damit die KI E-Mails entwirft. Du kannst trotzdem selbst schreiben.",
+        "aiMissing": "KI-Entwürfe sind auf der Plattform noch nicht verfügbar. Sie können die E-Mail trotzdem selbst schreiben.",
         "writeYourself": "Selbst schreiben",
         "subject": "Betreff",
         "body": "Nachricht",
@@ -6938,7 +6990,7 @@
       "eyebrow": "Akquise-Autopilot",
       "title": "Ihr KI-Vertriebsentwickler",
       "subtitle": "Beschreiben Sie Ihren idealen Kunden einmal. Jeden Tag findet der Autopilot Entscheider, prüft ihre E-Mail-Adressen, schreibt eine persönliche erste E-Mail und fasst nach – innerhalb Ihrer Grenzen.",
-      "noProvider": "Um Personen und ihre geschäftlichen E-Mails zu finden, verbinden Sie einen Kontaktdaten-Dienst (Apollo.io, Hunter.io oder People Data Labs). Bis dahin wird nichts abgefragt.",
+      "noProvider": "Um Personen und ihre geschäftlichen E-Mails zu finden, braucht es einen Kontaktdatendienst, der auf der Plattform noch nicht verfügbar ist. Bis dahin wird nichts abgefragt.",
       "emptyReadOnly": "Noch kein Autopilot eingerichtet. Jemand mit Vertriebsverwaltungsrechten kann einen anlegen.",
       "new": "Neuer Autopilot",
       "edit": "Einstellungen bearbeiten",
@@ -7065,7 +7117,7 @@
       },
       "notes": {
         "no_contact_provider": "Kein Kontaktdaten-Dienst verbunden, daher wurden keine Personen gesucht.",
-        "no_research_provider": "Kein Recherchedienst verbunden, daher wurden keine neuen Firmen gefunden. Fügen Sie Firmen-Websites zur Zielliste hinzu oder verbinden Sie Tavily, Exa oder SerpApi.",
+        "no_research_provider": "Auf der Plattform ist noch kein Recherchedienst verfügbar, daher wurden keine neuen Unternehmen gefunden. Fügen Sie der Zielliste Unternehmenswebsites hinzu.",
         "research_failed": "Der Recherchedienst konnte nicht antworten",
         "no_new_companies": "Die Websuche fand keine neuen Firmen; beschreiben Sie Ihre Kunden anders oder fügen Sie Regionen hinzu",
         "provider_rate_limited": "Der Kontaktdaten-Dienst hat um eine Pause gebeten; der Rest folgt beim nächsten Lauf",
@@ -7079,7 +7131,7 @@
       },
       "providers": {
         "title": "Daten und Verbindungen",
-        "help": "Jede Abfrage nutzt Ihr eigenes Anbieterkonto; Nutzung und geschätzte Kosten werden pro Aufruf erfasst.",
+        "help": "Abfragen laufen über die Datendienste der Plattform; Nutzung und geschätzte Kosten werden pro Aufruf gegen Ihren Tarif erfasst.",
         "connect": "Verbinden",
         "manage": "Verwalten",
         "failing": "Verbindung fehlerhaft: {error}",
@@ -7096,7 +7148,8 @@
           "research": "Nicht verbunden: Es wird nur Ihre Zielliste an Firmen verwendet.",
           "ai": "Nicht verbunden: Ihr eigener Text für die erste E-Mail wird verwendet.",
           "email": "Nicht verbunden: E-Mails können geschrieben, aber nicht gesendet werden."
-        }
+        },
+        "details": "Details"
       },
       "dnc": {
         "title": "Nicht-kontaktieren-Liste",
@@ -7167,7 +7220,7 @@
         "tryHint": "Eine Live-Abfrage bei Ihrem Anbieter (verbraucht ein Guthaben). Nichts wird gespeichert.",
         "tryNone": "{provider} hat dort keine passenden Personen gefunden.",
         "trySource": "Quelle: {provider}. Nur verifizierte Adressen werden kontaktiert.",
-        "tryNeedsProvider": "Verbinden Sie Apollo.io, Hunter.io oder People Data Labs, um eine Abfrage auszuprobieren.",
+        "tryNeedsProvider": "Abfragen sind verfügbar, sobald auf der Plattform ein Kontaktdatendienst aktiviert ist.",
         "messageIntro": "Die KI schreibt für jede Person eine kurze, persönliche erste E-Mail aus echten Fakten über deren Firma. Sagen Sie ihr, was Sie anbieten.",
         "pitch": "Was Sie anbieten und warum es für sie wichtig ist",
         "pitchHint": "Ein bis drei Sätze. Die KI erfindet nie Preise, Ergebnisse oder Kunden.",
@@ -7216,7 +7269,9 @@
           "fu1Body": "Hallo '{{firstName}}',\n\nich wollte meine Nachricht noch einmal nach oben holen. Wäre ein kurzes Gespräch sinnvoll?\n\nViele Grüße\n'{{sender}}'",
           "fu2Subject": "Soll ich das Thema abschließen?",
           "fu2Body": "Hallo '{{firstName}}',\n\nich habe nichts von Ihnen gehört und gehe davon aus, dass es gerade nicht passt. Falls sich das ändert, antworten Sie einfach auf diese E-Mail.\n\nAlles Gute\n'{{sender}}'"
-        }
+        },
+        "back": "Zurück",
+        "next": "Weiter"
       }
     }
   },
@@ -8089,7 +8144,7 @@
     "permissions": "Angeforderte Berechtigungen",
     "permissionsHelp": "Bereiche, die Realy beim Anbieter anfordert.",
     "security": "Sicherheit",
-    "securityBody": "Tokens und Schlüssel werden mit AES-256-GCM verschlüsselt, nie an den Browser zurückgegeben und nie protokolliert. Verbinden, Trennen und Synchronisierungen werden im Audit-Log erfasst.",
+    "securityBody": "Realy verwaltet alle API-Schlüssel. Konten, die Sie per Anmeldung verbinden, werden als verschlüsselte Tokens (AES-256-GCM) gespeichert, nie an den Browser zurückgegeben und nie protokolliert. Verbinden und Trennen werden im Audit-Log festgehalten.",
     "applyFilters": "Anwenden",
     "firstPage": "← Erste Seite",
     "fields": {
@@ -8394,16 +8449,24 @@
         "credentials_required": "Zugangsdaten ausstehend",
         "platform_setup": "Konfiguration erforderlich",
         "configured": "Konfiguriert",
-        "awaiting_docs": "Demnächst"
+        "awaiting_docs": "Demnächst",
+        "platform_available": "Verfügbar",
+        "platform_unavailable": "Noch nicht verfügbar",
+        "disabled": "Nicht verfügbar",
+        "unavailable": "Nicht verfügbar"
       },
       "unlocks": "Ermöglicht",
       "powering": "Treibt an",
       "hints": {
         "ready": "Ein Klick – Sie bestätigen beim Anbieter",
         "credentials_required": "Eigenen API-Schlüssel verwenden",
-        "platform_setup": "Der Plattform-Admin muss zuerst die OAuth-App hinterlegen",
+        "platform_setup": "Die Anmeldung ist auf der Plattform noch nicht aktiviert",
         "awaiting_docs": "Adapter wartet auf offiziellen API-Zugang",
-        "configured": "Gespeichert – bestätigt durch den ersten echten Anruf"
+        "configured": "Gespeichert – bestätigt durch den ersten echten Anruf",
+        "platform_available": "Inklusive — läuft über das Plattformkonto",
+        "platform_unavailable": "Wartet auf Einrichtung durch die Plattform",
+        "disabled": "Von der Plattform ausgeschaltet",
+        "unavailable": "Verbindung des eigenen Kontos noch nicht verfügbar"
       },
       "cta": {
         "verified": "Verwalten",
@@ -8413,7 +8476,11 @@
         "credentials_required": "Zugangsdaten hinzufügen",
         "platform_setup": "Voraussetzungen ansehen",
         "configured": "Verwalten",
-        "awaiting_docs": "Details"
+        "awaiting_docs": "Details",
+        "platform_available": "Details",
+        "platform_unavailable": "Details",
+        "disabled": "Details",
+        "unavailable": "Details"
       },
       "verifiedAgo": "Geprüft {time}",
       "verifiedStat": "Verbunden & geprüft",
@@ -8442,7 +8509,7 @@
     },
     "guide": {
       "whatTitle": "Was ist das",
-      "what": "Die Verbindungen Ihres Unternehmens zu externen Tools – KI, E-Mail, Zahlungen, CRM, Werbung und mehr – jeweils mit eigenen verschlüsselten Zugangsdaten.",
+      "what": "Die Verbindungen Ihres Unternehmens zu externen Tools — E-Mail, Zahlungen, CRM, Werbung und mehr. KI-, Recherche-, Sprach- und Medienanbieter sind inklusive und laufen über das Plattformkonto.",
       "whyTitle": "Warum es wichtig ist",
       "why": "Jede Verbindung wird beim Anbieter geprüft und täglich auf ihren Zustand kontrolliert, damit Funktionen nie vortäuschen, zu senden, zu synchronisieren oder abzurechnen.",
       "aiTitle": "Was die KI tut",
@@ -8524,6 +8591,24 @@
       "noTransactions": "Noch keine Umsätze bereitgestellt. Sie erscheinen nach der ersten Synchronisierung.",
       "reconcileHint": "Bereitgestellte Umsätze werden in Finanzen mit Ihrer Buchhaltung abgeglichen.",
       "openFinance": "Umsätze öffnen"
+    },
+    "platform": {
+      "managedBy": "Von Realy verwaltet",
+      "title": "Verfügbarkeit",
+      "available": "Verfügbar",
+      "unavailable": "Noch nicht verfügbar",
+      "availableBody": "{name} läuft über das Konto der Plattform. Es muss nichts verbunden oder eingerichtet werden: Funktionen, die es nutzen, arbeiten sofort.",
+      "unavailableBody": "{name} ist noch nicht verfügbar. Die Plattform-Administration hat es noch nicht aktiviert; Funktionen, die es brauchen, bleiben bis dahin aus.",
+      "disabledBody": "{name} ist auf der Plattform derzeit ausgeschaltet.",
+      "usageBody": "Ihre Nutzung zählt gegen die Limits Ihres Tarifs und erscheint in Ihren Nutzungs- und Kostenberichten. Ein eigener API-Schlüssel ist nie nötig.",
+      "providerDisabled": "{name} ist auf der Plattform derzeit ausgeschaltet und kann nicht verbunden werden. Eine bestehende Verbindung wird erst wieder genutzt, wenn es eingeschaltet ist.",
+      "oauthLogin": "Anmeldung mit Ihrem Konto",
+      "oauthHelp": "Verbinden Sie Ihr eigenes {name}-Konto, indem Sie sich anmelden. Schlüssel oder Passwörter geben Sie hier nie ein.",
+      "oauthNotReady": "Die Verbindung mit {name} ist noch nicht verfügbar. Die Plattform hat die Anmeldung dafür noch nicht aktiviert.",
+      "notConnectable": "Die Verbindung Ihres eigenen {name}-Kontos ist noch nicht verfügbar.",
+      "legacyConnection": "Ihre bestehende {name}-Verbindung funktioniert weiter. Ihre Zugangsdaten verwaltet Realy; sie können hier nicht geändert werden.",
+      "reconnectHint": "{name} meldet ein Problem mit dieser Verbindung. Verbinden Sie sich erneut, um sich noch einmal anzumelden.",
+      "failingHint": "Diese Verbindung schlägt fehl. Realy wurde benachrichtigt."
     }
   },
   "workflows": {
@@ -9443,7 +9528,7 @@
       "sourceRules": "Vom regelbasierten Parser erstellt",
       "aiStatus": {
         "used": "Ihr verbundener KI-Anbieter hat dies aus Ihren Worten entworfen, und es hat alle Prüfungen bestanden.",
-        "not_connected": "Kein KI-Textanbieter verbunden, daher hat der eingebaute regelbasierte Parser dies erstellt. Er versteht nur gängige Formulierungen (auf Englisch) – verbinden Sie OpenAI oder Gemini unter Integrationen für volles Verständnis.",
+        "not_connected": "Auf der Plattform ist noch kein KI-Textanbieter verfügbar, daher hat der eingebaute regelbasierte Parser dies erstellt. Er versteht nur gängige Formulierungen.",
         "paused": "KI ist auf dieser Plattform gerade pausiert, daher hat der eingebaute regelbasierte Parser dies erstellt.",
         "invalid_design": "Der Entwurf der KI hat die Prüfung nicht bestanden, daher hat stattdessen der regelbasierte Parser dies erstellt.",
         "error": "Der KI-Anbieter hat nicht geantwortet, daher hat stattdessen der regelbasierte Parser dies erstellt."
@@ -12420,7 +12505,7 @@
         "usePosts": "Diese Beiträge zu meinen Inhalten hinzufügen",
         "editPost": "Bearbeiten",
         "makeImage": "Bild erstellen",
-        "noImageProvider": "Verbinden Sie einen Bildanbieter (OpenAI oder Stability), um Bilder für Ihre Beiträge zu erstellen.",
+        "noImageProvider": "Bildgenerierung ist auf der Plattform noch nicht verfügbar.",
         "howOften": "Wie oft sollen wir posten?",
         "pace": {
           "gentle": "Ruhig",
@@ -12557,7 +12642,7 @@
         "generate": "Erzeugen",
         "generating": "Wird erzeugt…",
         "with": "Mit {provider}",
-        "notConnected": "Verbinden Sie OpenAI oder Stability, um Bilder zu erzeugen.",
+        "notConnected": "Bildgenerierung ist auf der Plattform noch nicht verfügbar.",
         "connectImages": "Bilderzeugung braucht einen verbundenen Anbieter:",
         "styles": {
           "photo": "Foto",
@@ -12591,7 +12676,7 @@
         "vertical": "Hochformat (9:16)",
         "horizontal": "Querformat (16:9)",
         "makeVideo": "Video erzeugen",
-        "videoNotConnected": "Verbinden Sie Runway oder Replicate, um Videos zu erzeugen.",
+        "videoNotConnected": "Videogenerierung ist auf der Plattform noch nicht verfügbar.",
         "uploadTitle": "Medien hochladen",
         "file": "Datei (max. 10 MB)",
         "kind": "Typ",
@@ -12995,7 +13080,7 @@
     "intelligence": {
       "title": "Marketing-Marktwissen",
       "subtitle": "Markt-, Wettbewerbs-, Zielgruppen-, Trend-, Keyword- und Markenrecherche – aus echten Webquellen, als Berichte gespeichert.",
-      "credentialRequired": "Kein Recherche-Anbieter verbunden (Tavily, Exa oder SerpApi). Recherche benötigt einen – ohne ihn wird nichts erfunden.",
+      "credentialRequired": "Auf der Plattform ist noch kein Recherchedienst verfügbar. Recherche braucht einen — ohne ihn wird nichts erfunden.",
       "aiNotConfigured": "KI ist nicht eingerichtet, daher behalten Berichte ihre Quellen ohne KI-Zusammenfassung.",
       "readOnly": "Sie können Berichte lesen. Bitten Sie jemanden mit Marketing-Verwaltungsrechten, neue Recherchen zu starten.",
       "atlas": "Recherche-Bibliothek",
@@ -17202,7 +17287,7 @@
           "deals": "Deals",
           "tickets": "offene Tickets"
         },
-        "notConnected": "Kein KI-Textanbieter (OpenAI oder Gemini) verbunden, daher wurde kein Entwurf geschrieben. Sie können weiterhin den Chief of Staff an der Seite fragen.",
+        "notConnected": "Auf der Plattform ist noch kein KI-Textanbieter verfügbar, daher wurde kein Entwurf geschrieben. Sie können trotzdem den Chief of Staff an der Seite fragen.",
         "paused": "KI ist auf dieser Plattform gerade pausiert – es wurde kein Entwurf geschrieben.",
         "failed": "Der KI-Anbieter ist fehlgeschlagen: {error}"
       },
@@ -18964,7 +19049,7 @@
     "connectedVia": "Erzeugt mit {providers}",
     "notConnected": {
       "title": "Kein Bildanbieter verbunden",
-      "body": "Verbinden Sie OpenAI, Stability AI oder Replicate unter Integrationen, um Artwork zu erzeugen. Ohne verbundenen Anbieter wird nichts erzeugt.",
+      "body": "Bildgenerierung ist auf der Plattform noch nicht verfügbar. Bis dahin wird nichts erzeugt.",
       "action": "Anbieter verbinden"
     },
     "scopes": {

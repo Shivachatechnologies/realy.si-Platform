@@ -277,10 +277,9 @@ async function isReviewer(ctx: RequestContext) {
 
 export async function getListing(ctx: RequestContext, organizationId: string, key: string, text?: CatalogText) {
   await requirePermission(ctx, "marketplace.read", orgChain(organizationId));
-  const listing = await resolveListing(db(), key, organizationId, {
-    reviewer: await isReviewer(ctx),
-    text,
-  });
+  // Customer view (user app): a listing is visible to its own organization or once live. Reviewing unpublished
+  // listings of other organizations is a platform-admin function (Control Center → Marketplace).
+  const listing = await resolveListing(db(), key, organizationId, { text });
   if (!listing) throw notFound("Listing");
   const [withAgg] = await withStats(db(), [listing]);
   const reviews = await db().marketplaceReview.findMany({

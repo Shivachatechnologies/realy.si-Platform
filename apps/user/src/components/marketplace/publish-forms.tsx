@@ -392,31 +392,3 @@ export function ListingActions({ orgId, listingId, canSubmit, canArchive }: { or
     </div>
   );
 }
-
-export function ReviewDecision({ listingId }: { listingId: string }) {
-  const { t } = useI18n();
-  const [note, setNote] = useState("");
-  const s = useSubmit();
-  const decide = (decision: "approve" | "reject") =>
-    void s.run(() =>
-      api(`/api/v1/admin/marketplace/listings/${listingId}/review`, {
-        body: { decision, note: note || undefined },
-      }),
-    );
-  return (
-    <div className="grid gap-2">
-      <Field label={t("marketplace.review.note")} htmlFor={`note-${listingId}`} hint={t("marketplace.review.noteHint")}>
-        <Textarea id={`note-${listingId}`} rows={2} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} />
-      </Field>
-      <FormError error={s.error} />
-      <div className="flex gap-2">
-        <Button size="sm" disabled={s.busy} onClick={() => decide("approve")}>
-          {t("marketplace.review.approve")}
-        </Button>
-        <Button size="sm" variant="danger" disabled={s.busy || !note.trim()} onClick={() => decide("reject")}>
-          {t("marketplace.review.reject")}
-        </Button>
-      </div>
-    </div>
-  );
-}

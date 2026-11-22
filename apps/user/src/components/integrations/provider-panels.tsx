@@ -1,62 +1,16 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Notice } from "@/components/ui/notice";
-import { CopyText } from "@/components/integrations/webhook-managers";
 import { PlaidLinkButton, PlaidLinkCompletion, RemoveBankButton } from "@/components/integrations/bank-link";
 import { formatDate, formatDateTime, formatMoney } from "@/i18n/format";
-import type { ProviderInfo } from "@/server/modules/integrations/catalog";
 import type { getT } from "@/i18n/server";
 
 type T = Awaited<ReturnType<typeof getT>>;
 
 /**
- * Server-rendered panels of the integration page for the providers added in round 3: the provider-webhook URL (with
- * the verification scheme and auto-registration status), the provider events log and the read-only bank feed.
+ * Server-rendered panels of the integration page: the provider events log and the read-only bank feed. (Provider
+ * webhook URLs are not shown to customers: webhooks are managed by Realy.)
  */
-
-export function ProviderWebhookCard({ t, info, url, config }: { t: T; info: ProviderInfo; url: string; config: Record<string, unknown> }) {
-  const hook = info.inboundWebhooks!;
-  const token = url.split("/").pop() ?? "";
-  const autoRegistered = info.key === "calendly" && typeof config.calendlyWebhookUri === "string";
-  const webhookError = typeof config.webhookError === "string" ? config.webhookError : null;
-  return (
-    <Card>
-      <CardHeader title={t("integrations.providerWebhook.title")} description={t(`integrations.providerWebhook.how.${hook.scheme}`)} />
-      <CardBody className="grid gap-3 text-sm">
-        {autoRegistered ? <Notice tone="success">{t("integrations.providerWebhook.autoRegistered")}</Notice> : null}
-        {webhookError ? <Notice tone="warning">{webhookError}</Notice> : null}
-        <div className="grid gap-1">
-          <p className="text-xs text-muted-foreground">{t("integrations.providerWebhook.url")}</p>
-          <div dir="ltr">
-            <CopyText value={url} label={t("integrations.webhooks.copy")} />
-          </div>
-        </div>
-        {hook.scheme === "META" ? (
-          <div className="grid gap-1">
-            <p className="text-xs text-muted-foreground">{t("integrations.providerWebhook.verifyToken")}</p>
-            <div dir="ltr">
-              <CopyText value={token} label={t("integrations.webhooks.copy")} />
-            </div>
-          </div>
-        ) : null}
-        <div>
-          <p className="text-xs text-muted-foreground">{t("integrations.providerWebhook.events")}</p>
-          <ul className="mt-1 flex flex-wrap gap-1">
-            {hook.events.map((e) => (
-              <li key={e}>
-                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs" dir="ltr">
-                  {e}
-                </code>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="text-xs text-muted-foreground">{t(`integrations.providerWebhook.security.${hook.scheme === "token" ? "token" : "signed"}`)}</p>
-      </CardBody>
-    </Card>
-  );
-}
 
 interface EventRow {
   id: string;

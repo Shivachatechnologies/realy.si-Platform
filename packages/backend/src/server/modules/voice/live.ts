@@ -7,7 +7,7 @@ import { AppError, conflict, invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { getConnection, type Connection } from "@/server/modules/integrations/connections";
-import { actorId, authorize, calleeTimeZone, inWindow, isUuid, LIVE_STATUSES, maskNumber, minutesLabel, OUTCOMES, PROVIDER_KEY, safeTz, toE164, type TranscriptLine } from "./common";
+import { actorId, authorize, calleeTimeZone, companyTwilioNumbers, TWILIO_VOICE, inWindow, isUuid, LIVE_STATUSES, maskNumber, minutesLabel, OUTCOMES, PROVIDER_KEY, safeTz, toE164, type TranscriptLine } from "./common";
 import { fileCallApproval } from "./calls";
 import { ensureSettings, isDoNotCall } from "./service";
 import type { LiveTranscriptEvent } from "./providers";
@@ -185,7 +185,8 @@ export const controlInput = z
   .strict();
 
 async function layerConnection(organizationId: string, companyId: string, layer: TelephonyKey): Promise<Connection | null> {
-  const conn = await getConnection(organizationId, companyId, layer);
+  // The "twilio" layer is the platform's Twilio Voice account (platform-managed twilio_voice).
+  const conn = await getConnection(organizationId, companyId, layer === "twilio" ? TWILIO_VOICE : layer);
   return conn?.accessToken ? conn : null;
 }
 
@@ -202,9 +203,11 @@ export async function controlCall(ctx: RequestContext, organizationId: string, c
   if (!layer || !supports(ref, action)) throw notSupported(layer, action);
   const settings = await ensureSettings(db(), organizationId, companyId);
   const conn = layer === "vapi" ? null : await layerConnection(organizationId, companyId, layer);
-  if (layer === "twilio" && !conn) throw invalid("Reconnect Twilio in Integrations to control this call", { reason: "voice_credential_required" });
+  if (layer === "twilio" && !conn) throw invalid("Telephony is not available on the platform right now", { reason: "voice_credential_required" });
   const provider = TELEPHONY[layer];
-  const cx = { ref, conn, callerId: layer === "twilio" ? twilioCallerId(conn, settings.twilioFromNumber) : null };
+  // Platform account: a configured caller id is used only when it is one of this company's numbers.
+  const own = layer === "twilio" ? await companyTwilioNumbers(organizationId, companyId) : new Set<string>();
+  const cx = { ref, conn, callerId: layer === "twilio" ? twilioCallerId(conn, settings.twilioFromNumber && own.has(settings.twilioFromNumber) ? settings.twilioFromNumber : null) : null };
   let target: string | null = null;
   if (action === "transfer" || action === "takeover") {
     target = toE164(input.number ?? (action === "takeover" ? settings.humanTransferNumber : null));

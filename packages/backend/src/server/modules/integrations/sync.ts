@@ -5,7 +5,7 @@ import { invalid, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
-import { providerInfo } from "./catalog";
+import { isPlatformManaged, PLATFORM_MANAGED_PROVIDERS, providerInfo } from "./catalog";
 import { getConnection, markConnectionError, recordSync, type Connection } from "./connections";
 import { providerJson } from "./client";
 import { ProviderError } from "./providers";
@@ -289,6 +289,9 @@ const SYNCERS: Record<string, (ctx: RequestContext, conn: ConnRow, api: Connecti
 export async function runConnectionSync(connectionId: string, trigger: "manual" | "scheduled") {
   const conn = await db().integrationConnection.findUnique({ where: { id: connectionId } });
   if (!conn || conn.status === "DISCONNECTED") return [];
+  // A legacy company row of a platform-managed provider must never sync: getConnection would hand back Realy's own
+  // account, and its data (payments, audiences…) must not be copied into a tenant.
+  if (isPlatformManaged(conn.provider)) return [];
   const info = providerInfo(conn.provider);
   const kinds = info?.syncKinds ?? [];
   const ctx = systemContext();
@@ -367,7 +370,7 @@ export async function runScheduledSync(connectionId: string): Promise<number> {
 /** Periodic job: run syncs whose time has come (a few per tick; more when the worker queues run them in parallel). */
 export async function runDueSyncs(limit = 5): Promise<number> {
   const due = await db().integrationConnection.findMany({
-    where: { syncEnabled: true, status: { in: ["CONNECTED", "ERROR"] }, nextSyncAt: { lte: new Date() } },
+    where: { syncEnabled: true, status: { in: ["CONNECTED", "ERROR"] }, nextSyncAt: { lte: new Date() }, provider: { notIn: [...PLATFORM_MANAGED_PROVIDERS] } },
     orderBy: { nextSyncAt: "asc" },
     take: limit,
     select: { id: true, nextSyncAt: true },

@@ -1,10 +1,13 @@
 import { LIMITS } from "@/server/core/limits";
 import { route } from "@/server/core/http";
-import { syncNow } from "@/server/modules/integrations/sync";
+import { adminManaged } from "@/server/modules/integrations/customer-access";
 
 type P = { orgId: string; companyId: string; provider: string };
 
-export const POST = route<P>(
-  { auth: "required", name: "POST /organizations/:orgId/companies/:companyId/integrations/:provider/sync", rateLimits: LIMITS.tenantWrite, idempotent: true },
-  async ({ ctx }, { orgId, companyId, provider }) => ({ data: await syncNow(ctx, orgId, companyId, provider) }),
-);
+/**
+ * Customer settings are not managed in the user app (docs/integrations.md "Who manages what"): every request is
+ * refused with 403 and a clear message. The backend service is kept; nothing stored is deleted.
+ */
+export const POST = route<P>({ auth: "required", name: "POST /organizations/:orgId/companies/:companyId/integrations/:provider/sync", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("settings");
+});

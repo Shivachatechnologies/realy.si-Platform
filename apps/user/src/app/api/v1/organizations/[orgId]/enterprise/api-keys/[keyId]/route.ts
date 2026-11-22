@@ -1,17 +1,13 @@
 import { LIMITS } from "@/server/core/limits";
 import { route } from "@/server/core/http";
-import { revokeApiKey } from "@/server/modules/enterprise/api-keys";
+import { adminManaged } from "@/server/modules/integrations/customer-access";
 
 type P = { orgId: string; keyId: string };
 
-export const DELETE = route<P>(
-  {
-    auth: "required",
-    name: "DELETE /organizations/:orgId/enterprise/api-keys/:keyId",
-    rateLimits: LIMITS.tenantWrite,
-  },
-  async ({ ctx }, { orgId, keyId }) => {
-    await revokeApiKey(ctx, orgId, keyId);
-    return { ok: true };
-  },
-);
+/**
+ * Customer API keys are not managed in the user app (docs/integrations.md "Who manages what"): every request is
+ * refused with 403 and a clear message. The backend service is kept; nothing stored is deleted.
+ */
+export const DELETE = route<P>({ auth: "required", name: "DELETE /organizations/:orgId/enterprise/api-keys/:keyId", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("api_keys");
+});

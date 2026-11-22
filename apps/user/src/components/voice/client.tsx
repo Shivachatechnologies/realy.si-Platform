@@ -146,7 +146,7 @@ export function SettingsForm({ base, value, members, completeSetup = false, canM
 }
 
 /** Choose the voice platform (Vapi or Retell AI). */
-export function ProviderPicker({ base, current, states, locale, canManage, canConnect }: { base: string; current: "VAPI" | "RETELL" | null; states: Record<"vapi" | "retell", string>; locale: string; canManage: boolean; canConnect: boolean }) {
+export function ProviderPicker({ base, current, states, canManage }: { base: string; current: "VAPI" | "RETELL" | null; states: Record<"vapi" | "retell", string>; canManage: boolean }) {
   const t = useT();
   const { busy, error, run } = useAction();
   return (
@@ -166,11 +166,6 @@ export function ProviderPicker({ base, current, states, locale, canManage, canCo
                 <span className={cn("rounded-sm border px-1.5 py-0.5 text-[11px]", state === "connected" ? "border-success/30 text-success" : state === "error" ? "border-danger/40 text-danger" : "text-muted-foreground")}>{t(`voice.connection.${state}`)}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {state !== "connected" && state !== "disabled" && canConnect ? (
-                  <Link href={`/${locale}/integrations/${key}`} className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium hover:bg-muted">
-                    {t("voice.setup.connect")}
-                  </Link>
-                ) : null}
                 {canManage ? (
                   <Button type="button" size="sm" variant={selected ? "soft" : "secondary"} disabled={busy || selected} onClick={() => void run(() => api(`${base}/voice/settings`, { method: "PATCH", body: { provider: p } }))}>
                     {selected ? (
@@ -325,7 +320,7 @@ interface TwilioOptions {
   available: { number: string; label: string | null; locality: string | null }[];
 }
 
-export function GetNumber({ base, locale, provider, twilioConnected }: { base: string; locale: string; provider: "VAPI" | "RETELL"; twilioConnected: boolean }) {
+export function GetNumber({ base, provider, twilioConnected }: { base: string; locale?: string; provider: "VAPI" | "RETELL"; twilioConnected: boolean }) {
   const t = useT();
   const [mode, setMode] = useState<"provider" | "twilio">(provider === "VAPI" && twilioConnected ? "twilio" : "provider");
   const [areaCode, setAreaCode] = useState("");
@@ -364,7 +359,7 @@ export function GetNumber({ base, locale, provider, twilioConnected }: { base: s
           </Button>
         </form>
       ) : !twilioConnected ? (
-        <Notice tone="info" action={<Link className="text-sm font-medium text-primary hover:underline" href={`/${locale}/integrations/twilio`}>{t("voice.setup.connect")}</Link>}>
+        <Notice tone="info">
           {t("voice.numbers.twilioMissing")}
         </Notice>
       ) : (

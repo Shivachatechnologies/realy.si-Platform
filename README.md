@@ -38,12 +38,17 @@ pnpm dev:admin                  # Control Center on http://localhost:3001 (docs/
 pnpm worker                     # worker: outbox relay + password-reset email queue (required)
 ```
 
-Create the first platform administrator (there is deliberately no UI path to this):
+Create the first platform administrator. Signing up never grants platform roles on its own: the first account on an
+empty database is an ordinary user. Either grant the role explicitly with the audited CLI:
 
 ```bash
 pnpm realy:grant-role you@example.com SUPER_ADMIN
 pnpm realy:grant-role uae-ops@example.com REGION_ADMIN REGION MIDDLE_EAST
 ```
+
+or set `REALY_BOOTSTRAP_ADMIN_EMAIL` before first run: while no SUPER_ADMIN exists, the account with exactly that email
+becomes SUPER_ADMIN when it signs up or signs in (audited as `platform.bootstrap_admin`). Nothing else qualifies, and
+it stops applying once any SUPER_ADMIN exists.
 
 Administrative changes (pricing, flags, countries, role grants) require two-factor authentication —
 enable it under **Settings → Security**.

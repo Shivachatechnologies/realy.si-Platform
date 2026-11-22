@@ -31,7 +31,7 @@ export default async function VoiceSettingsPage() {
         <Card>
           <CardHeader title={t("voice.settings.platform")} description={t("voice.settings.platformHint")} />
           <CardBody>
-            <ProviderPicker base={base} current={o.settings.provider} states={{ vapi: o.connections.vapi, retell: o.connections.retell }} locale={locale} canManage={perms.manage} canConnect={perms.integrations} />
+            <ProviderPicker base={base} current={o.settings.provider} states={{ vapi: o.connections.vapi, retell: o.connections.retell }} canManage={perms.manage} />
           </CardBody>
         </Card>
         <Card>

@@ -7,10 +7,12 @@
  * Labels/help are short English technical text (env var names, provider console paths); the UI chrome is translated.
  */
 
-export type PlatformKeyGroup = "ai" | "email" | "payments" | "login" | "integrations" | "observability" | "platform";
+import { PLATFORM_MANAGED_PROVIDERS, platformCredentialFields, providerInfo, type PlatformManagedProvider } from "@/server/modules/integrations/catalog";
+
+export type PlatformKeyGroup = "ai" | "research" | "creative" | "voice" | "video" | "telephony" | "messaging" | "storage" | "email" | "payments" | "login" | "integrations" | "observability" | "platform";
 
 /** Feature ids (translated under admin.keys.features.*) that stop working while the key is missing. */
-export type PlatformFeature = "aiTasks" | "liveChatAi" | "email" | "billing" | "billingWebhooks" | "socialLogin" | "integrations" | "errorTracking" | "tracing" | "firstAdmin";
+export type PlatformFeature = "aiTasks" | "liveChatAi" | "email" | "billing" | "billingWebhooks" | "socialLogin" | "integrations" | "errorTracking" | "tracing" | "firstAdmin" | "platformProviders";
 
 export interface PlatformKeyDef {
   key: string;
@@ -27,12 +29,22 @@ export interface PlatformKeyDef {
   validate: (value: string, all: (key: string) => string | undefined) => string | null;
   /** Features blocked while the key has no value (from the admin or the host env). */
   blocks?: PlatformFeature[];
+  /** The key only matters in this configuration (e.g. SMTP_* only with EMAIL_PROVIDER=smtp); otherwise it blocks nothing. */
+  appliesWhen?: (all: (key: string) => string | undefined) => boolean;
   /** Only takes effect after a restart / redeploy (initialised once per process). */
   restart?: boolean;
   /** A provider check is available (POST …/test). */
   testable?: boolean;
   /** Placeholder shown in the input (a format hint, never a real value). */
   placeholder?: string;
+  /**
+   * Platform-managed integration provider this key belongs to (modules/integrations/catalog.ts
+   * PLATFORM_MANAGED_PROVIDERS): customers use the provider through the platform's account. The live test reuses the
+   * integration's own connection test.
+   */
+  provider?: string;
+  /** The provider is "Available" to customers only when every required key of it has a value. */
+  required?: boolean;
 }
 
 /** Variables that must stay in the host environment (Vercel / worker). Never accepted by the admin API. */
@@ -99,6 +111,77 @@ function oauthPair(
   ];
 }
 
+/** Platform-keys group of each platform-managed provider (Vapi and Retell are "messaging" in the integrations catalog). */
+const PROVIDER_GROUP: Record<PlatformManagedProvider, PlatformKeyGroup> = {
+  openai: "ai",
+  gemini: "ai",
+  openrouter: "ai",
+  openai_compatible: "ai",
+  tavily: "research",
+  exa: "research",
+  serpapi: "research",
+  apollo: "research",
+  hunter: "research",
+  pdl: "research",
+  stability: "creative",
+  replicate: "creative",
+  runway: "creative",
+  elevenlabs: "voice",
+  deepgram: "voice",
+  jamendo: "video",
+  luma: "video",
+  kling: "video",
+  shotstack: "video",
+  creatomate: "video",
+  twilio_voice: "telephony",
+  sip_trunk: "telephony",
+  vapi: "telephony",
+  retell: "telephony",
+  sendgrid: "email",
+  mailchimp: "email",
+  twilio: "messaging",
+  whatsapp: "messaging",
+  s3: "storage",
+  cloudflare: "storage",
+  stripe: "payments",
+  razorpay: "payments",
+};
+
+const words = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase()).replace(/\bApi\b/g, "API").replace(/\bUrl\b/g, "URL").replace(/\bId\b/g, "ID").replace(/\bSip\b/g, "SIP");
+
+/**
+ * One platform key per credential / setting field of every platform-managed provider, derived from the integrations
+ * catalog so the formats stay identical to what the connection test expects (OPENAI_API_KEY, TWILIO_VOICE_AUTH_TOKEN…).
+ */
+function providerKeys(): PlatformKeyDef[] {
+  const out: PlatformKeyDef[] = [];
+  for (const provider of PLATFORM_MANAGED_PROVIDERS) {
+    const info = providerInfo(provider);
+    if (!info) continue;
+    for (const f of platformCredentialFields(info)) {
+      const re = f.pattern ? new RegExp(f.pattern) : null;
+      const label = `${info.name} ${words(f.labelKey ?? f.key)}`;
+      out.push({
+        key: f.envKey,
+        group: PROVIDER_GROUP[provider],
+        kind: f.secret ? "secret" : "plain",
+        label,
+        help: f.required
+          ? `Required for ${info.name}. Used for every company's ${info.name} calls through the platform account; usage counts against each company's plan limits and cost ledger.`
+          : `Optional ${info.name} setting. Applies platform-wide.`,
+        docsUrl: info.docsUrl,
+        validate: re ? pattern(re, `Does not match the expected ${label} format`) : nonEmpty,
+        blocks: f.required ? ["platformProviders"] : undefined,
+        testable: f.key === "apiKey",
+        placeholder: f.placeholder,
+        provider,
+        required: f.required,
+      });
+    }
+  }
+  return out;
+}
+
 export const PLATFORM_KEYS: PlatformKeyDef[] = [
   // ───── AI ─────
   {
@@ -147,8 +230,8 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     group: "email",
     kind: "plain",
     label: "Email provider",
-    help: "resend or postmark. Transactional email (password resets, invitations, notifications) is sent through it.",
-    validate: oneOf(["resend", "postmark"]),
+    help: "resend, postmark or smtp (e.g. Google Workspace). Transactional email (password resets, invitations, notifications) is sent through it.",
+    validate: oneOf(["resend", "postmark", "smtp"]),
     blocks: ["email"],
     placeholder: "resend",
   },
@@ -157,12 +240,14 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     group: "email",
     kind: "secret",
     label: "Email API key",
-    help: "Resend API key (re_…) or Postmark server token (a UUID), matching the provider above.",
+    help: "Resend API key (re_…) or Postmark server token (a UUID), matching the provider above. Not used with smtp.",
     docsUrl: "https://resend.com/api-keys",
+    appliesWhen: (all) => all("EMAIL_PROVIDER") !== "smtp",
     validate: (v, all) => {
       const e = nonEmpty(v);
       if (e) return e;
       const provider = all("EMAIL_PROVIDER");
+      if (provider === "smtp") return "EMAIL_PROVIDER is smtp: set SMTP_PASSWORD instead of an API key";
       const resend = /^re_[A-Za-z0-9_]{10,}$/.test(v);
       const postmark = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
       if (provider === "resend" && !resend) return "Resend keys start with re_";
@@ -178,10 +263,40 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     group: "email",
     kind: "plain",
     label: "From address",
-    help: 'Sender, e.g. "Realy <no-reply@realy.si>". The domain must be verified with the provider.',
+    help: 'Sender, e.g. "Realy <no-reply@realy.si>". The domain must be verified with the provider. With Gmail SMTP it must be SMTP_USER or a verified "Send mail as" alias.',
     validate: (v) => nonEmpty(v) ?? (/^([^<>\r\n]{1,100}<[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>|[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/.test(v) ? ok : 'Use "Name <email>" or an email address'),
     blocks: ["email"],
     placeholder: "Realy <no-reply@realy.si>",
+  },
+  // SMTP (EMAIL_PROVIDER=smtp), e.g. Google Workspace: docs/deployment.md "Email through Google Workspace".
+  {
+    key: "SMTP_HOST",
+    group: "email",
+    kind: "plain",
+    label: "SMTP host",
+    help: "smtp.gmail.com (Gmail / Google Workspace mailbox) or smtp-relay.gmail.com (Workspace SMTP relay). Only used when EMAIL_PROVIDER is smtp.",
+    docsUrl: "https://support.google.com/a/answer/176600",
+    validate: pattern(/^(?=.{1,253}$)[A-Za-z0-9]([A-Za-z0-9-]{0,62}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,62}[A-Za-z0-9])?)*$/, "Host name, e.g. smtp.gmail.com"),
+    blocks: ["email"],
+    appliesWhen: (all) => all("EMAIL_PROVIDER") === "smtp",
+    testable: true,
+    placeholder: "smtp.gmail.com",
+  },
+  { key: "SMTP_PORT", group: "email", kind: "plain", label: "SMTP port", help: "587 (STARTTLS, default) or 465 (implicit TLS). 25 is often blocked by hosting providers.", validate: pattern(/^([1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/, "Port number 1–65535"), placeholder: "587" },
+  { key: "SMTP_SECURE", group: "email", kind: "plain", label: "SMTP implicit TLS", help: "true for port 465 (implicit TLS), false for STARTTLS. Leave empty to derive it from the port.", validate: oneOf(["true", "false"]), placeholder: "false" },
+  { key: "SMTP_USER", group: "email", kind: "plain", label: "SMTP username", help: "The full mailbox address (e.g. no-reply@yourdomain.com). Leave empty only for an SMTP relay that authenticates by IP address.", validate: pattern(/^[^\s]{1,254}$/, "Username without spaces (usually the mailbox address)"), placeholder: "no-reply@yourdomain.com" },
+  {
+    key: "SMTP_PASSWORD",
+    group: "email",
+    kind: "secret",
+    label: "SMTP password",
+    help: "For Google: an App Password of SMTP_USER (Google Account → Security → 2-Step Verification → App passwords), not the account password.",
+    docsUrl: "https://support.google.com/accounts/answer/185833",
+    validate: pattern(/^[\x20-\x7e]{1,512}$/, "1–512 printable characters"),
+    appliesWhen: (all) => all("EMAIL_PROVIDER") === "smtp" && !!all("SMTP_USER"),
+    blocks: ["email"],
+    testable: true,
+    placeholder: "xxxx xxxx xxxx xxxx",
   },
   // ───── Payments ─────
   {
@@ -284,9 +399,11 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     blocks: ["firstAdmin"],
   },
   { key: "ENTITLEMENTS_ENFORCEMENT", group: "platform", kind: "plain", label: "Plan limits enforcement", help: "enforce (default) or off to disable plan limit checks platform-wide.", validate: oneOf(["enforce", "off"]), placeholder: "enforce" },
+  // ───── Platform-managed providers (AI, research, creative, voice, video, telephony) ─────
+  ...providerKeys(),
 ];
 
-export const PLATFORM_KEY_GROUPS: PlatformKeyGroup[] = ["ai", "email", "payments", "login", "integrations", "observability", "platform"];
+export const PLATFORM_KEY_GROUPS: PlatformKeyGroup[] = ["ai", "research", "creative", "voice", "video", "telephony", "messaging", "storage", "email", "payments", "login", "integrations", "observability", "platform"];
 
 const BY_KEY = new Map(PLATFORM_KEYS.map((d) => [d.key, d]));
 

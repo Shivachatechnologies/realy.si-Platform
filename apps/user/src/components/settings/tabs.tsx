@@ -13,7 +13,6 @@ const TABS = [
   { href: "/settings/roles", label: "enterprise.tabs.roles" },
   { href: "/settings/access", label: "enterprise.tabs.access" },
   { href: "/settings/audit", label: "enterprise.tabs.audit" },
-  { href: "/settings/developers", label: "enterprise.tabs.developers" },
   { href: "/settings/usage", label: "enterprise.tabs.usage" },
   { href: "/settings/billing", label: "settings.tabs.billing" },
   { href: "/settings/sso", label: "enterprise.tabs.sso" },

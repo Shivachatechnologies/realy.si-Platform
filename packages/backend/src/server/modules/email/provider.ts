@@ -2,6 +2,7 @@ import { env } from "@/server/core/env";
 import { providerFetch } from "@/server/modules/integrations/client";
 import { getConnection, type Connection } from "@/server/modules/integrations/connections";
 import { recordUsage } from "@/server/modules/integrations/usage";
+import { smtpProvider, smtpSettings } from "./smtp";
 
 export interface OutboundEmail {
   to: string;
@@ -117,8 +118,8 @@ function parseFrom(from: string): { email: string; name?: string } {
 
 /**
  * Email provider for a company's own sends (campaigns, invoices, notifications to its customers): the company's
- * connected SendGrid account when present (from its configured sender), else the platform provider (Resend/Postmark
- * from env), else null = NOT CONFIGURED.
+ * connected SendGrid account when present (from its configured sender), else the platform provider (Resend, Postmark
+ * or SMTP from env / Admin → Platform keys), else null = NOT CONFIGURED.
  */
 export async function companyEmailProvider(organizationId: string, companyId: string): Promise<{ provider: EmailProvider; from: string; scope: "company" | "platform" } | null> {
   if (override !== undefined) return override ? { provider: override, from: "Realy <test@realy.si>", scope: "platform" } : null;
@@ -126,6 +127,9 @@ export async function companyEmailProvider(organizationId: string, companyId: st
   const fromEmail = conn && typeof conn.config.fromEmail === "string" ? conn.config.fromEmail : null;
   if (conn && conn.accessToken && conn.status !== "DISCONNECTED" && fromEmail) {
     const name = typeof conn.config.fromName === "string" && conn.config.fromName ? conn.config.fromName.replace(/[<>"\r\n]/g, "") : null;
+    // SendGrid is platform-managed (Realy's account, Admin → Platform keys) and serves as the sending channel for the
+    // company's customer email (campaigns, outreach, support), metered per company: it keeps the "company" scope so
+    // companyOnly sends still use it rather than Realy's transactional provider.
     return { provider: sendgridProvider(conn as Connection & { accessToken: string }), from: name ? `${name} <${fromEmail}>` : fromEmail, scope: "company" };
   }
   const platform = emailProvider();
@@ -142,8 +146,24 @@ export function setEmailProviderForTests(p: EmailProvider | null | undefined) {
 /** The configured provider, or null when email delivery is NOT CONFIGURED. */
 export function emailProvider(): { provider: EmailProvider; from: string } | null {
   if (override !== undefined) return override ? { provider: override, from: "Realy <test@realy.si>" } : null;
-  const e = env();
-  if (!e.EMAIL_PROVIDER || !e.EMAIL_API_KEY || !e.EMAIL_FROM) return null;
+  return selectEmailProvider(env());
+}
+
+type EmailEnv = Pick<ReturnType<typeof env>, "EMAIL_PROVIDER" | "EMAIL_API_KEY" | "EMAIL_FROM" | "SMTP_HOST" | "SMTP_PORT" | "SMTP_SECURE" | "SMTP_USER" | "SMTP_PASSWORD">;
+
+/**
+ * Provider selection from settings (exported for tests): resend / postmark need EMAIL_API_KEY; smtp needs SMTP_HOST
+ * (SMTP_USER + SMTP_PASSWORD unless the relay authenticates by IP). EMAIL_FROM is always required.
+ */
+export function selectEmailProvider(e: EmailEnv): { provider: EmailProvider; from: string } | null {
+  if (!e.EMAIL_PROVIDER || !e.EMAIL_FROM) return null;
+  if (e.EMAIL_PROVIDER === "smtp") {
+    const s = smtpSettings(e);
+    // Half-configured credentials (user without password or the reverse) never fall back to an unauthenticated send.
+    if (!s || !!s.user !== !!s.password) return null;
+    return { provider: smtpProvider(s), from: e.EMAIL_FROM };
+  }
+  if (!e.EMAIL_API_KEY) return null;
   const provider = e.EMAIL_PROVIDER === "resend" ? resendProvider(e.EMAIL_API_KEY) : postmarkProvider(e.EMAIL_API_KEY);
   return { provider, from: e.EMAIL_FROM };
 }

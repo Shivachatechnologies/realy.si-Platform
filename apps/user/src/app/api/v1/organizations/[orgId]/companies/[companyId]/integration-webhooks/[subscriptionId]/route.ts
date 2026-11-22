@@ -1,17 +1,19 @@
 import { LIMITS } from "@/server/core/limits";
-import { body, route } from "@/server/core/http";
-import { deleteSubscription, getSubscriptionWithDeliveries, subscriptionUpdateInput, updateSubscription } from "@/server/modules/integrations/webhooks";
+import { route } from "@/server/core/http";
+import { adminManaged } from "@/server/modules/integrations/customer-access";
 
 type P = { orgId: string; companyId: string; subscriptionId: string };
 
-export const GET = route<P>({ auth: "required" }, async ({ req, ctx }, { orgId, companyId, subscriptionId }) =>
-  getSubscriptionWithDeliveries(ctx, orgId, companyId, subscriptionId, req.nextUrl.searchParams.get("status") ?? undefined),
-);
-export const PATCH = route<P>(
-  { auth: "required", name: "PATCH /organizations/:orgId/companies/:companyId/integration-webhooks/:subscriptionId", rateLimits: LIMITS.tenantWrite },
-  async ({ req, ctx }, { orgId, companyId, subscriptionId }) => updateSubscription(ctx, orgId, companyId, subscriptionId, await body(req, subscriptionUpdateInput)),
-);
-export const DELETE = route<P>(
-  { auth: "required", name: "DELETE /organizations/:orgId/companies/:companyId/integration-webhooks/:subscriptionId", rateLimits: LIMITS.tenantWrite },
-  async ({ ctx }, { orgId, companyId, subscriptionId }) => deleteSubscription(ctx, orgId, companyId, subscriptionId),
-);
+/**
+ * Customer webhooks are not managed in the user app (docs/integrations.md "Who manages what"): every request is
+ * refused with 403 and a clear message. The backend service is kept; nothing stored is deleted.
+ */
+export const GET = route<P>({ auth: "required", name: "GET /organizations/:orgId/companies/:companyId/integration-webhooks/:subscriptionId", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("webhooks");
+});
+export const PATCH = route<P>({ auth: "required", name: "PATCH /organizations/:orgId/companies/:companyId/integration-webhooks/:subscriptionId", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("webhooks");
+});
+export const DELETE = route<P>({ auth: "required", name: "DELETE /organizations/:orgId/companies/:companyId/integration-webhooks/:subscriptionId", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("webhooks");
+});

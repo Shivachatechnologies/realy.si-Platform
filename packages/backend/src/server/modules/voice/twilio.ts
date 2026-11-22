@@ -8,7 +8,7 @@ import { consume } from "@/server/core/rate-limit";
 import { getConnection, type Connection } from "@/server/modules/integrations/connections";
 import { verifyTwilioSignature } from "@/server/modules/integrations/services/whatsapp";
 import { recordUsage } from "@/server/modules/entitlements/service";
-import { isUuid, last10, toE164, type TranscriptLine } from "./common";
+import { isUuid, last10, toE164, TWILIO_VOICE, type TranscriptLine } from "./common";
 import { callingBlocked } from "./calls";
 import { storeTranscriptLines } from "./live";
 import { processCall } from "./outcomes";
@@ -49,7 +49,7 @@ export async function handleTwilioVoiceHook(key: string, event: string, search: 
   if (!rl.allowed) return { status: 429, twiml: emptyTwiml() };
   const settings = await db().voiceSettings.findUnique({ where: { webhookKey: key } });
   if (!settings) return { status: 404, twiml: emptyTwiml() };
-  const conn = await getConnection(settings.organizationId, settings.companyId, "twilio");
+  const conn = await getConnection(settings.organizationId, settings.companyId, TWILIO_VOICE);
   const url = `${env().APP_URL.replace(/\/+$/, "")}/api/v1/webhooks/voice/twilio/${key}/${event}${search}`;
   if (!conn?.accessToken || !verifyTwilioSignature(conn.accessToken, url, params, signature)) return { status: 403, twiml: emptyTwiml() };
   const callParam = new URLSearchParams(search.replace(/^\?/, "")).get("call");

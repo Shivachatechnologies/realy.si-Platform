@@ -88,6 +88,17 @@ string magic).
 | MEMBER | COMPANY / WORKSPACE / PROJECT | read business areas, manage projects, workflows.execute |
 | VIEWER | any tenant scope | *.read for tenant resources |
 
+### First platform administrator
+
+No sign-up grants a platform role on its own; the first account on an empty database is an ordinary user (owner of
+the organizations it creates). A platform SUPER_ADMIN comes from exactly one of:
+
+- `REALY_BOOTSTRAP_ADMIN_EMAIL`: while no SUPER_ADMIN exists, the account with that exact email is promoted when it
+  signs up or signs in (`maybeBootstrapPlatformAdmin` in `packages/backend/src/server/modules/auth/service.ts`,
+  audited as `platform.bootstrap_admin`). Unset, nothing is promoted.
+- An explicit grant: `pnpm realy:grant-role <email> SUPER_ADMIN` (SYSTEM actor, audited), or a grant by an existing
+  administrator in the console.
+
 ## 4. MFA-gated (critical) permissions
 `pricing.manage`, `globalization.manage`, `flags.manage`, `roles.assign`, `roles.manage`,
 `billing.manage`, `finance.transfer`, `ownership.modify`, `organizations.delete`,

@@ -22,7 +22,15 @@ by the admin API (`BOOTSTRAP_ONLY_KEYS` in `packages/backend/src/server/core/pla
 The allow-list in `platform-secrets-catalog.ts`, grouped on the page:
 
 - **AI**: `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_ALLOWED_MODELS`, `AI_DAILY_TOKEN_LIMIT`
-- **Email**: `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`
+- **Email**: `EMAIL_PROVIDER` (`resend` / `postmark` / `smtp`), `EMAIL_API_KEY`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`,
+  `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` (Google Workspace: docs/deployment.md), plus SendGrid and Mailchimp
+- **Platform-managed providers** (docs/integrations.md §7): one key per credential field of every provider that runs
+  on Realy's account, generated from the integrations catalog (`<PROVIDER>_<FIELD>`, e.g. `OPENAI_API_KEY`,
+  `OPENAI_MODEL`, `TAVILY_API_KEY`, `KLING_ACCESS_KEY` / `KLING_SECRET_KEY`, `TWILIO_VOICE_ACCOUNT_SID` /
+  `TWILIO_VOICE_AUTH_TOKEN`, `S3_BUCKET` / `S3_SECRET_ACCESS_KEY`, `STRIPE_API_KEY`), grouped as AI, Research,
+  Creative, Voice, Video, Telephony, Messaging, Storage, Email and Payments, with a per-provider "Available to
+  customers" status. A provider is available once every required key has a value. **Test** runs the integration's own
+  connection test with the candidate and the provider's other saved keys.
 - **Payments**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_AUTOMATIC_TAX`
 - **Sign-in OAuth**: `OAUTH_GOOGLE_*`, `OAUTH_GITHUB_*`, `OAUTH_MICROSOFT_*`, `OAUTH_MICROSOFT_TENANT`
 - **Integration OAuth apps**: `SLACK_*`, `HUBSPOT_*`, `SALESFORCE_*` (+ `SALESFORCE_LOGIN_URL`), `LINKEDIN_*`, `X_*`,
@@ -62,7 +70,8 @@ env) stay in effect.
 
 1. Create the new key at the provider (keep the old one active).
 2. Paste it in Platform keys → **Replace** → **Test** (side-effect-free check: Anthropic `GET /v1/models`, Resend
-   `GET /domains`, Postmark `GET /server`, Stripe `GET /v1/balance`; Sentry/OAuth: format only) → **Save** with a
+   `GET /domains`, Postmark `GET /server`, Stripe `GET /v1/balance`, SMTP connect + TLS + AUTH without sending,
+   platform-managed providers: the integration's connection test; Sentry/OAuth: format only) → **Save** with a
    reason.
 3. Wait ~1 minute for every instance to pick it up, then revoke the old key at the provider.
 

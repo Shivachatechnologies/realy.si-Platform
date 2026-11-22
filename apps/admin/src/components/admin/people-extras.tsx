@@ -124,6 +124,8 @@ export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId
     { key: "members", href: `${base}/members`, label: t("admin.people.tabs.members") },
     { key: "activity", href: `${base}/activity`, label: t("admin.people.tabs.activity") },
     { key: "entitlements", href: `/${locale}/plans/organizations/${orgId}`, label: t("admin.people.tabs.entitlements") },
+    // Connection status of the organization's integrations, with disconnect (Integrations & API page, filtered).
+    { key: "integrations", href: `/${locale}/integrations?org=${orgId}`, label: t("admin.people.tabs.integrations") },
   ];
   return (
     <nav aria-label={t("admin.people.tabs.label")} className="flex gap-1 overflow-x-auto border-b">

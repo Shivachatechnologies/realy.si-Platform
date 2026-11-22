@@ -19,7 +19,8 @@ const TWILIO = "https://api.twilio.com/2010-04-01";
 type Conn = Connection & { accessToken: string };
 
 export async function twilioVoiceConnection(organizationId: string, companyId: string): Promise<Conn | null> {
-  return (await usableConnection(organizationId, companyId, "twilio_voice")) ?? (await usableConnection(organizationId, companyId, "twilio"));
+  // Telephony runs only on the platform's Twilio Voice account (platform-managed), never the company's messaging account.
+  return usableConnection(organizationId, companyId, "twilio_voice");
 }
 
 function accountBase(conn: Conn) {
@@ -28,7 +29,7 @@ function accountBase(conn: Conn) {
   return `${TWILIO}/Accounts/${sid}`;
 }
 
-const notConnected = <T>(): ServiceResult<T> => ({ ok: false, code: "not_connected", error: "Connect Twilio Voice (or Twilio) in Integrations", providerId: null, attempts: [{ providerId: "twilio_voice", outcome: "not_connected" }] });
+const notConnected = <T>(): ServiceResult<T> => ({ ok: false, code: "not_connected", error: "Telephony is not available on the platform yet", providerId: null, attempts: [{ providerId: "twilio_voice", outcome: "not_connected" }] });
 const fail = <T>(conn: Conn, err: unknown): ServiceResult<T> => ({ ok: false, code: err instanceof ProviderError && err.status === 429 ? "rate_limited" : "provider_error", error: errorText(err), providerId: conn.provider, attempts: [{ providerId: conn.provider, outcome: "error", error: errorText(err) }] });
 const okRes = <T>(conn: Conn, data: T): ServiceResult<T> => ({ ok: true, data, providerId: conn.provider, attempts: [{ providerId: conn.provider, outcome: "ok" }] });
 
@@ -85,24 +86,28 @@ export async function placeTwilioCall(organizationId: string, companyId: string,
   if (await isDoNotCall(db(), companyId, input.to)) return { ok: false, code: "invalid_input", error: "This number is on the do-not-call list", providerId: null, attempts: [] };
   const conn = await twilioVoiceConnection(organizationId, companyId);
   if (!conn) return notConnected();
-  const active = typeof conn.config.activeAccountId === "string" ? conn.config.activeAccountId : null;
-  const from = (input.from && E164.test(input.from) ? input.from : null) ?? str(conn.config.fromNumber) ?? (active && E164.test(active) ? active : null);
-  if (!from) return { ok: false, code: "invalid_input", error: "Choose a caller number (set one on the Twilio Voice connection)", providerId: conn.provider, attempts: [] };
-  const callback = providerWebhookUrl(conn.provider, conn.id);
+  // Platform account: a caller number is accepted only when it is one of this company's numbers; otherwise the
+  // platform's default caller id is used.
+  const own = await db().voicePhoneNumber.findMany({ where: { organizationId, companyId, source: "TWILIO", releasedAt: null }, select: { number: true } });
+  const from = (input.from && E164.test(input.from) && own.some((n) => n.number === input.from) ? input.from : null) ?? str(conn.config.fromNumber);
+  if (!from) return { ok: false, code: "invalid_input", error: "No caller number: get a number in the call center first", providerId: conn.provider, attempts: [] };
+  // Platform connections have no connection row for provider webhooks; call status is tracked by the call center.
+  const callback = conn.platform ? null : providerWebhookUrl(conn.provider, conn.id);
   const form: Record<string, string> = {
     To: input.to,
     From: from,
-    StatusCallback: callback,
-    StatusCallbackMethod: "POST",
+    ...(callback ? { StatusCallback: callback, StatusCallbackMethod: "POST" } : {}),
     Timeout: String(Math.min(Math.max(5, input.timeoutSeconds ?? 30), 120)),
     ...(input.twiml ? { Twiml: input.twiml } : { Url: input.url! }),
   };
   const body = new URLSearchParams(form);
-  for (const e of ["initiated", "ringing", "answered", "completed"]) body.append("StatusCallbackEvent", e);
+  if (callback) for (const e of ["initiated", "ringing", "answered", "completed"]) body.append("StatusCallbackEvent", e);
   if (input.record) {
     body.set("Record", "true");
-    body.set("RecordingStatusCallback", callback);
-    body.set("RecordingStatusCallbackMethod", "POST");
+    if (callback) {
+      body.set("RecordingStatusCallback", callback);
+      body.set("RecordingStatusCallbackMethod", "POST");
+    }
   }
   try {
     const res = await providerFetch<{ sid?: string; status?: string; to?: string; from?: string }>(conn, `${accountBase(conn)}/Calls.json`, {

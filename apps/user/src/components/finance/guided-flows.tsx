@@ -19,14 +19,12 @@ import { useI18n } from "@/i18n/client";
 import { formatMoney } from "@/i18n/format";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { FLOWS, type Flow } from "./guided-flow-keys";
 
 /**
  * Finance OS beginner flows: six short guided flows (2–4 steps) with recommended choices preselected and jargon explained
  * inline. Each saves through the existing finance API and then shows what changed in plain words.
  */
-
-export const FLOWS = ["income", "expense", "invoice", "payments", "bills", "profit"] as const;
-export type Flow = (typeof FLOWS)[number];
 
 export interface Snapshot {
   currency: string;

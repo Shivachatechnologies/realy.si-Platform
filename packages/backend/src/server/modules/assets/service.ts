@@ -152,11 +152,12 @@ export async function scopeArtwork(ctx: RequestContext, organizationId: string, 
 
 /** Whether image generation can run: a connected image provider (the service tries OpenAI → Stability → Replicate). */
 export async function imageProviderStatus(organizationId: string, companyId: string) {
-  const conns = await db().integrationConnection.findMany({
-    where: { organizationId, companyId, provider: { in: ["openai", "stability", "replicate"] }, status: { not: "DISCONNECTED" } },
-    select: { provider: true, status: true },
-  });
-  return { connected: conns.map((c) => c.provider), any: conns.length > 0 };
+  // Platform-managed providers: available when the platform configured them (Admin → Platform keys).
+  void organizationId;
+  void companyId;
+  const { availablePlatformProviders } = await import("@/server/modules/integrations/platform-managed");
+  const connected: string[] = await availablePlatformProviders(["openai", "stability", "replicate"]);
+  return { connected, any: connected.length > 0 };
 }
 
 function stylePrompt(preset: string, prompt: string, companyName: string) {

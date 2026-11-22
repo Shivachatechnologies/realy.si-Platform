@@ -9,6 +9,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { db } from "@/server/core/db";
 import { workerHealth } from "@/server/core/job-admin";
 import { integrationsHealth, listIntegrations, usageSummary } from "@/server/modules/integrations/service";
+import { customerConnectMode } from "@/server/modules/integrations/catalog";
 import { formatCostMicros } from "@/components/integrations/usage-format";
 import { formatNumber, formatRelativeTime } from "@/i18n/format";
 import { can } from "@/server/modules/rbac/service";
@@ -27,7 +28,13 @@ type Listed = Awaited<ReturnType<typeof listIntegrations>>[number];
 
 /** Connected only when the provider accepted the credentials (test, health check or a successful call) with no error pending. */
 function stateOf(i: Listed): MarketplaceState {
+  // Platform-managed providers are read-only for customers: available on the platform's account, or not yet.
+  if (i.platform) return i.platform === "available" ? "platform_available" : "platform_unavailable";
   if (i.info.availability === "awaiting_docs") return "awaiting_docs";
+  // Switched off platform-wide by the admin: not connectable (an existing connection is not used either).
+  if (i.disabled) return "disabled";
+  // Customers only connect their own accounts with OAuth; other providers show the status of an existing connection.
+  const mode = customerConnectMode(i.info);
   if (i.status === "ERROR") return "failing";
   if (i.status === "CONNECTED") {
     if (i.info.key === "webhook") return "verified";
@@ -36,9 +43,8 @@ function stateOf(i: Listed): MarketplaceState {
     // Providers without an identity API (SIP trunks) can only be "configured", never "verified".
     return tested ? (i.info.verification === "config_only" ? "configured" : "verified") : "unverified";
   }
-  if (i.info.authType === "oauth2") return i.oauthAvailable ? "ready" : "platform_setup";
-  if (i.info.authType === "api_key") return "credentials_required";
-  return "ready";
+  if (mode === "oauth") return i.oauthAvailable ? "ready" : "platform_setup";
+  return "unavailable";
 }
 
 const latest = (a: Date | null | undefined, b: Date | null | undefined) => (a && b ? (a > b ? a : b) : (a ?? b ?? null));

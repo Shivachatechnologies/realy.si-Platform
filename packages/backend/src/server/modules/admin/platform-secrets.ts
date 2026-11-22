@@ -8,6 +8,9 @@ import { logger } from "@/server/core/logger";
 import { hostEnvValue, isOverridden, loadPlatformSecrets, markPlatformSecretsStale, PLATFORM_SECRET_PURPOSE } from "@/server/core/platform-secrets";
 import { isPlatformKey, PLATFORM_KEY_GROUPS, PLATFORM_KEYS, platformKeyDef, type PlatformFeature, type PlatformKeyDef, type PlatformKeyGroup } from "@/server/core/platform-secrets-catalog";
 import { emailProvider } from "@/server/modules/email/provider";
+import { smtpSettings, verifySmtp } from "@/server/modules/email/smtp";
+import { platformCredentialFields, providerInfo } from "@/server/modules/integrations/catalog";
+import { ProviderError, testConnection } from "@/server/modules/integrations/providers";
 import { writeAudit } from "@/server/modules/audit/service";
 import { reasonSchema, requireAnyPlatform, canPlatform } from "./access";
 
@@ -37,6 +40,9 @@ export interface PlatformKeyStatus {
   blocks: PlatformFeature[];
   restart: boolean;
   testable: boolean;
+  /** Platform-managed integration provider of this key (grouping on the page). */
+  provider: string | null;
+  providerName: string | null;
   source: PlatformKeySource;
   /** Host env has a value too (shown when the admin value overrides it). */
   hostSet: boolean;
@@ -84,9 +90,12 @@ export async function listPlatformSecrets(ctx: RequestContext) {
       docsUrl: def.docsUrl ?? null,
       placeholder: def.placeholder ?? null,
       register: def.register ? { kind: def.register.kind, urls: def.register.paths.map((p) => `${base}${p}`) } : null,
-      blocks: def.blocks ?? [],
+      // A key that does not apply to the current configuration (SMTP_* without EMAIL_PROVIDER=smtp) blocks nothing.
+      blocks: def.appliesWhen && !def.appliesWhen(effective) ? [] : (def.blocks ?? []),
       restart: !!def.restart,
       testable: !!def.testable,
+      provider: def.provider ?? null,
+      providerName: def.provider ? (providerInfo(def.provider)?.name ?? def.provider) : null,
       source,
       hostSet: !!host,
       last4: source === "admin" && row ? row.last4 || null : lastFour(def, active),
@@ -217,6 +226,43 @@ function describe(status: number): { ok: boolean; message: string } {
   return { ok: false, message: `Provider answered ${status}.` };
 }
 
+/**
+ * Platform-managed integration providers: reuse the integration's own connection test (a read-only identity / list
+ * call) with the candidate value and the provider's other saved platform keys.
+ */
+async function platformProviderCheck(def: PlatformKeyDef, value: string): Promise<PlatformKeyTestResult> {
+  const provider = def.provider!;
+  const info = providerInfo(provider);
+  const fields = info ? platformCredentialFields(info) : [];
+  const values: Record<string, string> = {};
+  for (const f of fields) {
+    const v = f.envKey === def.key ? value : process.env[f.envKey]?.trim();
+    if (v) values[f.key] = v;
+  }
+  const missing = fields.filter((f) => f.required && !values[f.key]).map((f) => f.envKey);
+  if (missing.length) return { key: def.key, ok: false, kind: "format", status: null, message: `Set ${missing.join(", ")} first, then test again.` };
+  const { apiKey, ...config } = values;
+  try {
+    const r = await testConnection({ provider, token: apiKey ?? "", config });
+    // The account label can name the provider account: report only that the provider accepted the key.
+    void r;
+    return { key: def.key, ok: true, kind: info?.verification === "config_only" ? "format" : "provider", status: 200, message: info?.verification === "config_only" ? "Configuration looks valid (this provider has no API to prove the password)." : "Provider accepted the key." };
+  } catch (err) {
+    const status = err instanceof ProviderError ? (err.status ?? null) : null;
+    return { key: def.key, ok: false, kind: "provider", status, message: status ? describe(status).message : "Could not reach the provider or it rejected the configuration." };
+  }
+}
+
+/** SMTP: connect, negotiate TLS and authenticate with the candidate and the other saved SMTP settings (nothing is sent). */
+async function smtpCheck(key: "SMTP_HOST" | "SMTP_PASSWORD", value: string): Promise<PlatformKeyTestResult> {
+  const get = (k: string) => (k === key ? value : process.env[k]?.trim() || undefined);
+  const settings = smtpSettings({ SMTP_HOST: get("SMTP_HOST"), SMTP_PORT: get("SMTP_PORT"), SMTP_SECURE: get("SMTP_SECURE"), SMTP_USER: get("SMTP_USER"), SMTP_PASSWORD: get("SMTP_PASSWORD") });
+  if (!settings) return { key, ok: false, kind: "format", status: null, message: "Set SMTP_HOST first, then test again." };
+  if (!!settings.user !== !!settings.password) return { key, ok: false, kind: "format", status: null, message: "Set both SMTP_USER and SMTP_PASSWORD (or neither, for an SMTP relay that authenticates by IP address)." };
+  const r = await verifySmtp(settings, get("EMAIL_FROM") ?? null);
+  return { key, ok: r.ok, kind: "provider", status: null, message: r.message };
+}
+
 /** Free, side-effect-free provider call per key (no tokens generated, no money moved). */
 async function providerCheck(key: string, value: string): Promise<{ status: number } | null> {
   switch (key) {
@@ -249,12 +295,18 @@ export async function testPlatformSecret(ctx: RequestContext, key: string, raw: 
     if (problem) {
       result = { key, ok: false, kind: "format", status: null, message: problem };
     } else {
-      try {
-        const r = await providerCheck(key, candidate);
-        result = r ? { key, kind: "provider", status: r.status, ...describe(r.status) } : { key, ok: true, kind: "format", status: null, message: "Format looks right. This key is verified when the feature first uses it." };
-      } catch (err) {
-        const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
-        result = { key, ok: false, kind: "provider", status: null, message: timeout ? "Provider did not answer in time." : "Could not reach the provider." };
+      if (def.provider) {
+        result = await platformProviderCheck(def, candidate);
+      } else if (key === "SMTP_HOST" || key === "SMTP_PASSWORD") {
+        result = await smtpCheck(key, candidate);
+      } else {
+        try {
+          const r = await providerCheck(key, candidate);
+          result = r ? { key, kind: "provider", status: r.status, ...describe(r.status) } : { key, ok: true, kind: "format", status: null, message: "Format looks right. This key is verified when the feature first uses it." };
+        } catch (err) {
+          const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+          result = { key, ok: false, kind: "provider", status: null, message: timeout ? "Provider did not answer in time." : "Could not reach the provider." };
+        }
       }
     }
   }

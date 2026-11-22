@@ -703,8 +703,8 @@
       "marketing_email_variants_max": "最多四个版本。",
       "marketing_generation_failed": "AI 服务未返回结果。",
       "marketing_gsc_not_connected": "Google Search Console 未连接。",
-      "marketing_image_not_connected": "请先连接图片服务（OpenAI 或 Stability）。",
-      "marketing_video_not_connected": "请先连接视频服务（Runway 或 Replicate）。",
+      "marketing_image_not_connected": "平台上暂无可用的图像提供商。",
+      "marketing_video_not_connected": "平台上暂无可用的视频提供商。",
       "marketing_journey_incomplete": "请先回答前面的问题。",
       "marketing_journey_product": "未找到该产品。",
       "marketing_outreach_incomplete": "请先添加邮箱地址、主题和消息。",
@@ -715,7 +715,7 @@
       "marketing_reply_failed": "平台拒绝了该回复。",
       "marketing_reply_not_connected": "该账号未连接。",
       "marketing_seo_no_keywords": "请先添加关键词。",
-      "assets_image_not_connected": "未连接图像服务商。请在集成中连接 OpenAI、Stability AI 或 Replicate。",
+      "assets_image_not_connected": "平台上暂无可用的图像提供商。未生成任何内容。",
       "assets_provider_rate_limited": "图像服务商繁忙（触发限流），请一分钟后重试。",
       "assets_provider_failed": "图像服务商未能生成图片。",
       "assets_scope_required": "请选择作品对应的记录。",
@@ -796,7 +796,7 @@
       "voice_campaign_empty": "名单中没有可拨打的人（号码缺失、无效或在免打扰名单中）。",
       "voice_campaign_state": "活动当前状态下无法执行此操作。",
       "voice_recording_unavailable": "语音平台未返回录音。",
-      "crm_contacts_not_connected": "请先连接联系人数据服务（Apollo.io、Hunter.io 或 People Data Labs）。未进行任何查询。",
+      "crm_contacts_not_connected": "平台上暂无可用的联系人数据服务。未进行任何查询。",
       "crm_contacts_failed": "联系人数据服务无法响应。请稍后再试。",
       "crm_autopilot_confirm_auto_send": "请确认自动拓客可以在每日限额内自行发送邮件。",
       "crm_autopilot_not_active": "请先开启自动拓客。",
@@ -859,7 +859,7 @@
       "creative_invalid_input": "服务商无法接受此输入。请检查后重试。",
       "creative_rate_limited": "服务商繁忙，请一分钟后重试。",
       "creative_provider_failed": "服务商未能完成请求。没有任何内容被记为已完成。",
-      "creative_image_not_connected": "请先连接图片服务商（OpenAI、Stability AI 或 Replicate）。",
+      "creative_image_not_connected": "平台上暂无可用的图像提供商。",
       "creative_image_invalid_input": "图片请求未被接受。请调整提示词后重试。",
       "creative_image_rate_limited": "图片服务商繁忙，请一分钟后重试。",
       "creative_image_provider_failed": "图片服务商未返回图片。",
@@ -871,7 +871,7 @@
       "creative_upscale_invalid_input": "此图片无法放大（过大或不受支持）。",
       "creative_upscale_rate_limited": "放大服务商繁忙，请一分钟后重试。",
       "creative_upscale_provider_failed": "放大服务商未返回图片。",
-      "creative_music_not_connected": "未连接授权音乐来源。请连接 Jamendo 或上传授权曲目。",
+      "creative_music_not_connected": "平台上暂无可用的授权音乐来源。请上传您拥有授权的曲目。",
       "creative_music_invalid_input": "音乐来源未接受此请求。",
       "creative_music_rate_limited": "音乐来源繁忙，请一分钟后重试。",
       "creative_music_provider_failed": "无法访问授权音乐来源。",
@@ -1079,7 +1079,7 @@
         "manual": "不使用 AI 继续",
         "noResearch": {
           "title": "没有实时网络研究",
-          "body": "未连接研究服务（Tavily、Exa 或 SerpApi），因此 AI 基于通用知识和你的文档工作，并将数据标注为估算。",
+          "body": "平台上暂无可用的研究服务，因此 AI 依据其通用知识和您的文档工作，并将数据标记为估算值。",
           "connect": "连接服务"
         },
         "draft": "文档到位后研究即开始。",
@@ -2116,7 +2116,7 @@
         "fts": "仅关键词（全文）搜索。结果匹配您使用的词语，而非其含义。",
         "hybridBadge": "语义 + 关键词",
         "ftsBadge": "仅关键词",
-        "noProvider": "如需按含义查找事实，请连接 OpenAI、Google Gemini 或 Voyage AI——记忆将自动生成向量。",
+        "noProvider": "按语义查找事实需要平台提供嵌入服务。一旦可用，记忆会自动嵌入。",
         "connect": "打开集成",
         "noPgvector": "{provider} 已连接，但本平台数据库尚未启用向量扩展（pgvector），因此搜索仍仅限关键词。请联系平台运营方启用。",
         "coverage": "已生成向量",
@@ -4879,8 +4879,8 @@
         "calendar": "日历邀请",
         "on": "已开启 · {detail}",
         "off": {
-          "research": "未连接——连接 Tavily、Exa 或 SerpApi 以寻找和调研线索。",
-          "ai": "未连接——连接 OpenAI 或 Gemini，让 AI 起草邮件并为线索评分。",
+          "research": "暂不可用——平台提供研究服务后，线索研究将自动开启。",
+          "ai": "暂不可用——平台提供 AI 文本服务后，AI 起草和线索评分将自动开启。",
           "email": "未连接——连接 Gmail、Outlook 或 SendGrid 以发送邮件。",
           "calendar": "未连接——会议会被保存，并改为提供日历文件。"
         }
@@ -5074,7 +5074,7 @@
         "search": "网络搜索",
         "searching": "搜索中…",
         "honest": "只显示调研服务返回的真实结果，绝不编造。",
-        "noProvider": "要搜索线索，请连接调研服务（Tavily、Exa 或 SerpApi）。",
+        "noProvider": "平台提供研究服务后，线索搜索将自动开启。",
         "results": "{count, plural, =0 {没有结果} other {# 条结果}}",
         "resultsMeta": "“{query}” · {provider} · {date} · {fresh} 条未处理",
         "noResults": "搜索没有返回结果。试试换一种方式描述你的客户。",
@@ -5124,7 +5124,7 @@
         "draftWithAi": "用 AI 起草",
         "drafting": "撰写中…",
         "aiNote": "AI 只使用记录中的信息。发送前由你检查。",
-        "aiMissing": "连接 OpenAI 或 Gemini 后 AI 才能起草邮件。你仍可自己撰写。",
+        "aiMissing": "平台暂不提供 AI 起草。您仍可以自己撰写邮件。",
         "writeYourself": "自己撰写",
         "subject": "主题",
         "body": "正文",
@@ -5308,7 +5308,7 @@
       "eyebrow": "自动拓客",
       "title": "您的 AI 销售开发代表",
       "subtitle": "只需描述一次理想客户。自动拓客每天寻找决策人、核实邮箱地址、撰写个性化的第一封邮件并跟进——始终在您设定的限额内。",
-      "noProvider": "要查找联系人及其工作邮箱，请连接一项联系人数据服务（Apollo.io、Hunter.io 或 People Data Labs）。连接之前不会进行任何查询。",
+      "noProvider": "查找人员及其工作邮箱需要联系人数据服务，平台暂未提供。在此之前不会进行任何查询。",
       "emptyReadOnly": "尚未设置自动拓客。拥有销售管理权限的人可以创建一个。",
       "new": "新建自动拓客",
       "edit": "编辑设置",
@@ -5435,7 +5435,7 @@
       },
       "notes": {
         "no_contact_provider": "未连接联系人数据服务，因此未查找任何人。",
-        "no_research_provider": "未连接调研服务，因此未找到新公司。请将公司网站添加到目标名单，或连接 Tavily、Exa 或 SerpApi。",
+        "no_research_provider": "平台上暂无可用的研究服务，因此未找到新公司。请将公司网站添加到目标列表。",
         "research_failed": "调研服务无法响应",
         "no_new_companies": "网络调研未找到新公司；请换种方式描述您的客户或添加地区",
         "provider_rate_limited": "联系人数据服务要求降低频率；其余部分将在下次运行时继续",
@@ -5449,7 +5449,7 @@
       },
       "providers": {
         "title": "数据与连接",
-        "help": "每次查询都使用您自己的服务商账户；每次调用的用量和预估费用都会被记录。",
+        "help": "查询通过平台的数据服务运行；每次调用的用量和预估成本都会按您的套餐记录。",
         "connect": "连接",
         "manage": "管理",
         "failing": "连接失败：{error}",
@@ -5466,7 +5466,8 @@
           "research": "未连接：仅使用您的目标公司名单。",
           "ai": "未连接：使用您自己的第一封邮件文本。",
           "email": "未连接：可以撰写邮件，但无法发送。"
-        }
+        },
+        "details": "详情"
       },
       "dnc": {
         "title": "免打扰名单",
@@ -5537,7 +5538,7 @@
         "tryHint": "通过您的服务商实时查询（消耗一次额度）。不会保存任何内容。",
         "tryNone": "{provider} 在那里没有找到匹配的人。",
         "trySource": "来源：{provider}。仅联系已验证地址。",
-        "tryNeedsProvider": "连接 Apollo.io、Hunter.io 或 People Data Labs 即可试用查询。",
+        "tryNeedsProvider": "平台启用联系人数据服务后即可查询。",
         "messageIntro": "AI 会根据对方公司的真实信息，为每个人撰写一封简短的个性化首封邮件。告诉它您提供什么。",
         "pitch": "您提供什么，以及为什么对他们重要",
         "pitchHint": "一到三句话。AI 绝不会编造价格、成果或客户。",
@@ -5586,7 +5587,9 @@
           "fu1Body": "'{{firstName}}'，您好：\n\n想把我之前的邮件再提到您收件箱的顶部。简短聊一聊是否值得？\n\n祝好，\n'{{sender}}'",
           "fu2Subject": "这件事是否就此结束？",
           "fu2Body": "'{{firstName}}'，您好：\n\n一直没有收到回复，我想现在可能不是合适的时机。如有变化，直接回复这封邮件即可。\n\n祝一切顺利，\n'{{sender}}'"
-        }
+        },
+        "back": "返回",
+        "next": "下一步"
       }
     }
   },
@@ -6611,7 +6614,7 @@
     "permissions": "请求的权限",
     "permissionsHelp": "Realy 向服务商申请的权限范围。",
     "security": "安全",
-    "securityBody": "令牌和密钥使用 AES-256-GCM 加密，绝不返回浏览器，也绝不写入日志。连接、断开和同步均记录在审计日志中。",
+    "securityBody": "所有 API 密钥均由 Realy 持有。您通过登录连接的账户以加密令牌（AES-256-GCM）存储，绝不返回给浏览器，也不会写入日志。连接和断开操作会记录在审计日志中。",
     "applyFilters": "应用",
     "firstPage": "← 第一页",
     "fields": {
@@ -6916,16 +6919,24 @@
         "credentials_required": "等待凭据",
         "platform_setup": "需要配置",
         "configured": "已配置",
-        "awaiting_docs": "即将推出"
+        "awaiting_docs": "即将推出",
+        "platform_available": "可用",
+        "platform_unavailable": "暂不可用",
+        "disabled": "不可用",
+        "unavailable": "不可用"
       },
       "unlocks": "可解锁",
       "powering": "正在驱动",
       "hints": {
         "ready": "一键连接——在服务商处授权",
         "credentials_required": "使用您自己的 API 密钥",
-        "platform_setup": "平台管理员需先添加 OAuth 应用",
+        "platform_setup": "平台尚未启用登录",
         "awaiting_docs": "适配器正在等待官方 API 访问",
-        "configured": "已保存——首次真实通话后确认"
+        "configured": "已保存——首次真实通话后确认",
+        "platform_available": "已包含——通过平台账户运行",
+        "platform_unavailable": "等待平台配置",
+        "disabled": "已被平台关闭",
+        "unavailable": "暂不支持连接您自己的账户"
       },
       "cta": {
         "verified": "管理",
@@ -6935,7 +6946,11 @@
         "credentials_required": "添加凭据",
         "platform_setup": "查看要求",
         "configured": "管理",
-        "awaiting_docs": "详情"
+        "awaiting_docs": "详情",
+        "platform_available": "详情",
+        "platform_unavailable": "详情",
+        "disabled": "详情",
+        "unavailable": "详情"
       },
       "verifiedAgo": "{time}已验证",
       "verifiedStat": "已连接并验证",
@@ -6964,7 +6979,7 @@
     },
     "guide": {
       "whatTitle": "这是什么",
-      "what": "贵公司与外部工具的连接——AI、邮件、支付、CRM、广告等——每个连接都有独立的加密凭据。",
+      "what": "贵公司与外部工具的连接——邮件、支付、CRM、广告等。AI、研究、语音和媒体提供商已包含在内，通过平台账户运行。",
       "whyTitle": "为什么重要",
       "why": "每个连接都经服务商验证并每日进行健康检查，功能绝不会在无法发送、同步或收费时假装成功。",
       "aiTitle": "AI 做什么",
@@ -7046,6 +7061,24 @@
       "noTransactions": "尚无待处理交易。首次同步后将显示。",
       "reconcileHint": "待处理交易会在财务模块中与您的账簿进行匹配。",
       "openFinance": "打开交易"
+    },
+    "platform": {
+      "managedBy": "由 Realy 管理",
+      "title": "可用性",
+      "available": "可用",
+      "unavailable": "暂不可用",
+      "availableBody": "{name} 通过平台账户运行。无需连接或配置：使用它的功能可立即工作。",
+      "unavailableBody": "{name} 暂不可用。平台管理员尚未启用它，需要它的功能在此之前保持关闭。",
+      "disabledBody": "{name} 目前已在平台上关闭。",
+      "usageBody": "您的用量计入套餐限额，并显示在用量和成本报告中。您无需自己的 API 密钥。",
+      "providerDisabled": "{name} 目前已在平台上关闭，因此无法连接。现有连接在重新开启前不会被使用。",
+      "oauthLogin": "使用您的账户登录",
+      "oauthHelp": "登录即可连接您自己的 {name} 账户。您无需在此输入任何密钥或密码。",
+      "oauthNotReady": "暂无法连接 {name}。平台尚未为其启用登录。",
+      "notConnectable": "暂不支持连接您自己的 {name} 账户。",
+      "legacyConnection": "您现有的 {name} 连接将继续工作。其凭据由 Realy 管理，无法在此更改。",
+      "reconnectHint": "{name} 报告此连接有问题。请重新连接以再次登录。",
+      "failingHint": "此连接出现故障，已通知 Realy。"
     }
   },
   "workflows": {
@@ -7965,7 +7998,7 @@
       "sourceRules": "由规则解析器生成",
       "aiStatus": {
         "used": "你已连接的 AI 服务商根据你的描述设计了此自动化，并通过了所有检查。",
-        "not_connected": "未连接 AI 文本服务商，因此由内置的规则解析器生成。它只能理解常见（英文）表达——在集成中连接 OpenAI 或 Gemini 以获得完整理解。",
+        "not_connected": "平台上暂无可用的 AI 文本提供商，因此由内置的规则解析器生成。它只能理解常见表达。",
         "paused": "此平台的 AI 目前已暂停，因此由内置的规则解析器生成。",
         "invalid_design": "AI 的设计未通过校验，因此改由规则解析器生成。",
         "error": "AI 服务商没有响应，因此改由规则解析器生成。"
@@ -10942,7 +10975,7 @@
         "usePosts": "把这些帖子加入我的内容",
         "editPost": "编辑",
         "makeImage": "生成图片",
-        "noImageProvider": "连接图片服务（OpenAI 或 Stability）即可为帖子生成图片。",
+        "noImageProvider": "平台暂不提供图像生成。",
         "howOften": "我们应该多久发一次？",
         "pace": {
           "gentle": "轻松",
@@ -11079,7 +11112,7 @@
         "generate": "生成",
         "generating": "生成中…",
         "with": "使用 {provider}",
-        "notConnected": "连接 OpenAI 或 Stability 以生成图片。",
+        "notConnected": "平台暂不提供图像生成。",
         "connectImages": "图片生成需要已连接的服务：",
         "styles": {
           "photo": "照片",
@@ -11113,7 +11146,7 @@
         "vertical": "竖屏 (9:16)",
         "horizontal": "横屏 (16:9)",
         "makeVideo": "生成视频",
-        "videoNotConnected": "连接 Runway 或 Replicate 以生成视频。",
+        "videoNotConnected": "平台暂不提供视频生成。",
         "uploadTitle": "上传素材",
         "file": "文件（最大 10 MB）",
         "kind": "类型",
@@ -11517,7 +11550,7 @@
     "intelligence": {
       "title": "营销洞察",
       "subtitle": "市场、竞争对手、受众、趋势、关键词和品牌调研——来自真实网络来源，保存为报告。",
-      "credentialRequired": "未连接调研服务（Tavily、Exa 或 SerpApi）。调研需要其中之一——没有它就不会编造任何内容。",
+      "credentialRequired": "平台上暂无可用的研究服务。研究需要它——没有它不会编造任何内容。",
       "aiNotConfigured": "AI 未配置，因此报告只保留来源，没有 AI 摘要。",
       "readOnly": "你可以阅读调研报告。如需运行新调研，请联系拥有营销管理权限的人。",
       "atlas": "调研库",
@@ -15724,7 +15757,7 @@
           "deals": "商机",
           "tickets": "未关闭工单"
         },
-        "notConnected": "未连接 AI 文本服务商（OpenAI 或 Gemini），因此未生成草稿。你仍可在侧边栏询问幕僚长。",
+        "notConnected": "平台上暂无可用的 AI 文本提供商，因此未撰写草稿。您仍可在侧边询问幕僚长。",
         "paused": "此平台的 AI 目前已暂停——未生成草稿。",
         "failed": "AI 服务商失败：{error}"
       },
@@ -17220,7 +17253,7 @@
       },
       "research": {
         "unsourcedTitle": "未使用实时来源撰写",
-        "unsourced": "撰写时未连接调研服务商，因此内容基于通用知识。连接 Tavily、Exa 或 SerpApi 并重新生成，即可获得带引用的来源。"
+        "unsourced": "撰写时没有可用的研究服务，因此基于通用知识。研究可用后重新生成即可获得引用来源。"
       },
       "logo": {
         "setupTitle": "连接图像生成服务以创建标志",
@@ -19358,7 +19391,7 @@
     "connectedVia": "使用 {providers} 生成",
     "notConnected": {
       "title": "未连接图像服务商",
-      "body": "请在集成中连接 OpenAI、Stability AI 或 Replicate 以生成作品。连接服务商之前不会生成任何内容。",
+      "body": "平台暂不提供图像生成。在此之前不会生成任何内容。",
       "action": "连接服务商"
     },
     "scopes": {
@@ -21267,7 +21300,7 @@
       "retentionHint": "已结束的聊天及其访客会在此期限后删除。",
       "saved": "已保存",
       "step6": "6 · 安装并上线",
-      "step6Hint": "将这行代码粘贴到网站结束 </body> 标签之前（或网站搭建工具的自定义代码字段中）。",
+      "step6Hint": "将这行代码粘贴到网站结束 '</body>' 标签之前（或网站搭建工具的自定义代码字段中）。",
       "copy": "复制代码",
       "copied": "已复制",
       "rotate": "新密钥",
@@ -21902,17 +21935,17 @@
       "settings": "设置",
       "live": "实时"
     },
-    "credentialRequired": "{provider} 未连接，因此无法拨打或接听电话。请在“集成”中连接。",
+    "credentialRequired": "{provider} 暂未在平台上提供，因此无法拨打或接听电话。",
     "connection": {
-      "connected": "已连接",
+      "connected": "可用",
       "error": "异常",
-      "missing": "未连接",
+      "missing": "暂不可用",
       "disabled": "已被平台关闭"
     },
     "providers": {
       "vapi": {
         "name": "Vapi",
-        "pitch": "灵活的语音助手。可使用您自己的 Twilio 号码，或 Vapi 提供的免费美国号码。"
+        "pitch": "灵活的语音代理。使用平台的 Twilio 号码，或 Vapi 提供的免费美国号码。"
       },
       "retell": {
         "name": "Retell AI",
@@ -22024,7 +22057,7 @@
     },
     "setup": {
       "title": "设置您的电话团队",
-      "intro": "只需五个简短步骤。您需要一个 Vapi 或 Retell AI 账户（两者都提供试用额度）。除非您赋予 AI 更多自主权，否则每通呼出电话仍需您的审批。",
+      "intro": "五个简短步骤。通话通过平台的语音和电话账户进行，并计入您套餐的语音分钟数。除非您赋予 AI 更多自主权，每个外拨电话仍需您的批准。",
       "readOnly": "您可以查看设置，但只有管理沟通的人员可以修改。",
       "cardTitle": "完成电话团队设置",
       "cardBody": "已完成 {done}/{total} 步。",
@@ -22043,7 +22076,7 @@
       "steps": {
         "provider": {
           "title": "选择语音平台",
-          "body": "承载通话的服务。在“集成”中连接 API 密钥，然后在此选择。"
+          "body": "承载通话的服务。它通过平台账户运行——只需选择您想要的服务。"
         },
         "rules": {
           "title": "设置通话规则",
@@ -22160,7 +22193,7 @@
       "buy": "购买",
       "buyConfirm": "在您的语音平台账户上获取此号码？服务商可能会收费。",
       "buyTwilioConfirm": "在您的 Twilio 账户上购买 {number}？Twilio 会收取月费。",
-      "twilioMissing": "连接 Twilio 以使用或购买 Twilio 号码。",
+      "twilioMissing": "平台暂不提供 Twilio 号码。",
       "country": "国家",
       "search": "搜索",
       "owned": "您的 Twilio 号码",
@@ -22590,12 +22623,12 @@
       "title": "电话",
       "description": "通话如何接入电话网络、谁来接管通话，以及未接通话如何重拨。",
       "layer": "电话网络",
-      "layerHint": "使用语音平台的号码，或将您自己的 Twilio 账户桥接到 AI 代理。",
+      "layerHint": "使用语音平台的号码，或与 AI 代理桥接的平台 Twilio 账户。",
       "layers": {
         "PROVIDER": "语音平台号码（Vapi / Retell）",
         "TWILIO": "我的 Twilio 账户（Programmable Voice）"
       },
-      "twilioMissing": "请在集成中连接 Twilio，以通过它拨打和接听电话。",
+      "twilioMissing": "平台暂不提供 Twilio 通话。",
       "bridge": "桥接到 AI 代理",
       "bridges": {
         "PROVIDER_SIP": "通过 SIP 连接 Retell（自动）",
@@ -22617,7 +22650,7 @@
       "callerId": "主叫号码（Twilio 号码）",
       "liveTranscription": "实时转录",
       "liveTranscriptionHint": "Twilio 对双方进行实时转录。",
-      "webhooksHint": "Realy 可以为您在 Twilio 号码上设置这些地址（连接号码），也可以粘贴到 Twilio 控制台。",
+      "webhooksHint": "连接号码时，Realy 会自动为其设置这些地址。",
       "voiceUrl": "语音 URL（来电）",
       "statusUrl": "状态回调 URL",
       "copy": "复制",
@@ -23503,7 +23536,7 @@
       "notHeard": "我没有听到声音。说话时请按住按钮。",
       "micDenied": "麦克风访问被阻止。请在浏览器设置中允许此网站使用麦克风。",
       "micUnsupported": "此浏览器无法录音，请改为输入命令。",
-      "noRecognizer": "未连接语音服务商，且此浏览器不支持语音识别。请在集成中连接 OpenAI、ElevenLabs 或 Deepgram，或改为输入。",
+      "noRecognizer": "平台上暂无可用的语音提供商，且此浏览器不支持语音识别。请改为输入文字。",
       "sttFallback": "语音服务商没有响应，已切换为浏览器语音识别。",
       "sttLimit": "你的套餐语音分钟数已用完，已切换为浏览器语音识别。",
       "ttsFallback": "语音合成服务商没有响应，正在使用浏览器的声音。",
@@ -23662,7 +23695,7 @@
         "browser": "浏览器（内置）"
       },
       "notConnected": "未连接",
-      "connectHint": "连接 OpenAI、ElevenLabs 或 Deepgram，可获得更准确的识别和更自然的声音。",
+      "connectHint": "平台提供语音服务后，将开启更准确的识别和自然的语音。",
       "openIntegrations": "打开集成",
       "askAdmin": "请管理员在集成中连接一个服务。",
       "minutes": "本月语音分钟数：{used} / {limit}（仅计服务商语音；浏览器语音免费）。",
@@ -23985,32 +24018,32 @@
       "text": {
         "title": "创意概念与脚本",
         "ready": "已连接 AI 文本服务商。",
-        "missing": "连接 OpenAI 或 Gemini，以撰写概念、脚本和分镜。"
+        "missing": "平台暂未提供：创意、脚本和分镜需要 AI 文本提供商。"
       },
       "image": {
         "title": "图片",
         "ready": "已连接图片生成。",
-        "missing": "连接 OpenAI、Stability AI 或 Replicate 以生成图片。"
+        "missing": "平台暂不提供图像生成。"
       },
       "video": {
         "title": "视频片段",
         "ready": "已连接视频生成。",
-        "missing": "可选：连接 Runway、Luma、Kling 或 Replicate 以生成动态镜头。未连接时镜头使用静态图片。"
+        "missing": "可选，平台暂未提供：动态场景。没有它时，场景使用静态图片。"
       },
       "voice": {
         "title": "配音",
         "ready": "已连接文字转语音。",
-        "missing": "连接 ElevenLabs 或 OpenAI 以录制配音。"
+        "missing": "平台暂不提供配音。"
       },
       "music": {
         "title": "授权音乐",
         "ready": "已连接授权音乐来源。",
-        "missing": "连接 Jamendo 获取授权曲目，或上传您已获授权的音乐。"
+        "missing": "平台暂不提供授权音乐。请上传您拥有授权的音乐。"
       },
       "render": {
         "title": "最终渲染",
         "ready": "已连接渲染服务商——将生成成品 MP4。",
-        "missing": "连接 Shotstack 或 Creatomate 以渲染成品视频。未连接时您将获得可编辑的时间线。"
+        "missing": "平台暂不提供视频渲染。您将获得可编辑的时间线。"
       }
     },
     "projects": {
@@ -24165,7 +24198,7 @@
       "searchTitle": "授权曲目",
       "search": "搜索",
       "searchPlaceholder": "情绪或风格，例如：轻快原声",
-      "notConnected": "未连接授权音乐来源。请连接 Jamendo，或上传您已获授权的曲目。",
+      "notConnected": "平台上暂无可用的授权音乐来源。请上传您拥有授权的曲目。",
       "noResults": "没有匹配的可商用授权曲目。",
       "license": "授权协议",
       "attributionRequired": "署名信息会加入导出文件",
@@ -24185,7 +24218,7 @@
       "edl": "剪辑列表（EDL）",
       "mp4": "MP4",
       "notes": {
-        "render_requires_provider": "可编辑时间线已就绪。成品视频需要渲染服务商（Shotstack 或 Creatomate）。",
+        "render_requires_provider": "可编辑时间线已就绪。成品视频需要渲染服务，平台暂未提供。",
         "media_missing": "部分镜头尚无素材——请先生成镜头素材。",
         "render_limit_reached": "本月套餐的视频额度已用完；时间线已就绪。",
         "render_failed": "渲染服务商无法渲染此画幅；时间线已就绪。"
@@ -24270,7 +24303,7 @@
       "generating": "生成中…",
       "done": "{count, plural, other {已创建 # 张图片}}——请在下方查看。",
       "costHint": "使用您已连接的服务商，并计入本月图片额度。",
-      "notConnected": "请连接图片服务商（OpenAI、Stability AI 或 Replicate）以生成图片。",
+      "notConnected": "平台暂不提供图像生成。",
       "recent": "最近的图片",
       "allInLibrary": "在媒体库查看全部",
       "empty": "还没有图片。在上方描述一张，创建您的第一张图片。"
@@ -24310,7 +24343,7 @@
       },
       "logoNote": {
         "no_logo": "请在品牌套件中添加标志 URL，以检查标志使用。",
-        "vision_not_connected": "连接 OpenAI 以检查标志和文字。",
+        "vision_not_connected": "徽标和文字检查需要 AI 视觉提供商，平台暂未提供。",
         "vision_failed": "本次标志检查未能运行。"
       }
     },

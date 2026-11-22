@@ -22,11 +22,9 @@ export interface RevenueChannels {
 }
 
 export async function revenueChannels(organizationId: string, companyId: string): Promise<RevenueChannels> {
-  const rows = await db().integrationConnection.findMany({
-    where: { organizationId, companyId, provider: { in: ["tavily", "exa", "serpapi", "openai", "gemini", "apollo", "hunter", "pdl"] }, status: { not: "DISCONNECTED" }, credentialsEnc: { not: null } },
-    select: { provider: true },
-  });
-  const have = new Set(rows.map((r) => r.provider));
+  // Research, AI text and contact data run on the platform's keys (platform-managed providers).
+  const { availablePlatformProviders } = await import("@/server/modules/integrations/platform-managed");
+  const have = new Set<string>(await availablePlatformProviders(["tavily", "exa", "serpapi", "openai", "gemini", "apollo", "hunter", "pdl"]));
   const [mailbox, sendgrid, calendar] = await Promise.all([connectedMailbox(organizationId, companyId), companyEmailProvider(organizationId, companyId), connectedCalendar(organizationId, companyId)]);
   return {
     research: ["tavily", "exa", "serpapi"].filter((p) => have.has(p)),

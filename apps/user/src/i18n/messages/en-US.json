@@ -703,8 +703,8 @@
       "marketing_email_variants_max": "At most four variants.",
       "marketing_generation_failed": "The AI provider did not return a result.",
       "marketing_gsc_not_connected": "Google Search Console is not connected.",
-      "marketing_image_not_connected": "Connect an image provider (OpenAI or Stability) first.",
-      "marketing_video_not_connected": "Connect a video provider (Runway or Replicate) first.",
+      "marketing_image_not_connected": "No image provider is available on the platform yet.",
+      "marketing_video_not_connected": "No video provider is available on the platform yet.",
       "marketing_journey_incomplete": "Answer the previous questions first.",
       "marketing_journey_product": "That product was not found.",
       "marketing_outreach_incomplete": "Add an email address, subject and message first.",
@@ -715,7 +715,7 @@
       "marketing_reply_failed": "The platform refused the reply.",
       "marketing_reply_not_connected": "The account is not connected.",
       "marketing_seo_no_keywords": "Add keywords first.",
-      "assets_image_not_connected": "No image provider is connected. Connect OpenAI, Stability AI or Replicate in Integrations.",
+      "assets_image_not_connected": "No image provider is available on the platform yet. Nothing was generated.",
       "assets_provider_rate_limited": "The image provider is busy (rate limited). Try again in a minute.",
       "assets_provider_failed": "The image provider could not create the image.",
       "assets_scope_required": "Choose which record the artwork is for.",
@@ -796,7 +796,7 @@
       "voice_campaign_empty": "Nobody on this list can be called (missing or invalid numbers, or do-not-call).",
       "voice_campaign_state": "The campaign can't do that in its current state.",
       "voice_recording_unavailable": "The voice platform did not return the recording.",
-      "crm_contacts_not_connected": "Connect a contact-data service (Apollo.io, Hunter.io or People Data Labs) first. Nothing was looked up.",
+      "crm_contacts_not_connected": "No contact-data service is available on the platform yet. Nothing was looked up.",
       "crm_contacts_failed": "The contact-data service could not answer. Please try again later.",
       "crm_autopilot_confirm_auto_send": "Please confirm that the autopilot may send emails on its own within its daily limits.",
       "crm_autopilot_not_active": "Turn the autopilot on first.",
@@ -859,7 +859,7 @@
       "creative_invalid_input": "The provider could not accept this input. Check it and try again.",
       "creative_rate_limited": "The provider is busy. Try again in a minute.",
       "creative_provider_failed": "The provider could not complete the request. Nothing was charged as finished.",
-      "creative_image_not_connected": "Connect an image provider (OpenAI, Stability AI or Replicate) first.",
+      "creative_image_not_connected": "No image provider is available on the platform yet.",
       "creative_image_invalid_input": "The image request was not accepted. Adjust the prompt and try again.",
       "creative_image_rate_limited": "The image provider is busy. Try again in a minute.",
       "creative_image_provider_failed": "The image provider did not return an image.",
@@ -871,7 +871,7 @@
       "creative_upscale_invalid_input": "This image cannot be upscaled (too large or unsupported).",
       "creative_upscale_rate_limited": "The upscaling provider is busy. Try again in a minute.",
       "creative_upscale_provider_failed": "The upscaling provider did not return an image.",
-      "creative_music_not_connected": "No licensed music source is connected. Connect Jamendo or upload a licensed track.",
+      "creative_music_not_connected": "No licensed music source is available on the platform yet. Upload a track you hold a license for.",
       "creative_music_invalid_input": "The music source did not accept this request.",
       "creative_music_rate_limited": "The music source is busy. Try again in a minute.",
       "creative_music_provider_failed": "The licensed music source could not be reached.",
@@ -1079,7 +1079,7 @@
         "manual": "Continue without AI",
         "noResearch": {
           "title": "No live web research",
-          "body": "No research provider (Tavily, Exa or SerpApi) is connected, so the AI works from its general knowledge and your documents and marks figures as estimates.",
+          "body": "No research service is available on the platform yet, so the AI works from its general knowledge and your documents and marks figures as estimates.",
           "connect": "Connect a provider"
         },
         "draft": "The research starts once your documents are in.",
@@ -2116,7 +2116,7 @@
         "fts": "Keyword (full-text) search only. Results match the words you use, not their meaning.",
         "hybridBadge": "Semantic + keyword",
         "ftsBadge": "Keyword only",
-        "noProvider": "To also find facts by meaning, connect OpenAI, Google Gemini or Voyage AI — memory is then embedded automatically.",
+        "noProvider": "Finding facts by meaning needs an embedding provider on the platform. Memory is embedded automatically once one is available.",
         "connect": "Open Integrations",
         "noPgvector": "{provider} is connected, but this platform's database has no vector extension (pgvector) yet, so search stays keyword-only. Ask the platform operator to enable it.",
         "coverage": "Embedded so far",
@@ -4879,8 +4879,8 @@
         "calendar": "Calendar invites",
         "on": "On · {detail}",
         "off": {
-          "research": "Not connected — connect Tavily, Exa or SerpApi to find and research leads.",
-          "ai": "Not connected — connect OpenAI or Gemini so AI can draft emails and score leads.",
+          "research": "Not available yet — lead research turns on once a research service is available on the platform.",
+          "ai": "Not available yet — AI drafting and lead scoring turn on once an AI text provider is available on the platform.",
           "email": "Not connected — connect Gmail, Outlook or SendGrid to send emails.",
           "calendar": "Not connected — meetings are saved and you get a calendar file instead."
         }
@@ -5074,7 +5074,7 @@
         "search": "Search the web",
         "searching": "Searching…",
         "honest": "Only real results from your research provider are shown. Nothing is made up.",
-        "noProvider": "To search for leads, connect a research service (Tavily, Exa or SerpApi).",
+        "noProvider": "Lead search turns on once a research service is available on the platform.",
         "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
         "resultsMeta": "“{query}” · {provider} · {date} · {fresh} not reviewed yet",
         "noResults": "The search returned nothing. Try describing your customers differently.",
@@ -5124,7 +5124,7 @@
         "draftWithAi": "Draft with AI",
         "drafting": "Writing…",
         "aiNote": "AI uses only what's in the record. You review before sending.",
-        "aiMissing": "Connect OpenAI or Gemini to let AI draft emails. You can still write one yourself.",
+        "aiMissing": "AI drafting is not available on the platform yet. You can still write the email yourself.",
         "writeYourself": "Write it yourself",
         "subject": "Subject",
         "body": "Message",
@@ -5308,7 +5308,7 @@
       "eyebrow": "Prospecting autopilot",
       "title": "Your AI sales development rep",
       "subtitle": "Describe your ideal customer once. Every day the autopilot finds decision makers, checks their email addresses, writes a personal first email and follows up, within the limits you set.",
-      "noProvider": "To find people and their work emails, connect a contact-data service (Apollo.io, Hunter.io or People Data Labs). Nothing is looked up until one is connected.",
+      "noProvider": "Finding people and their work emails needs a contact-data service, which is not available on the platform yet. Nothing is looked up until it is.",
       "emptyReadOnly": "No autopilot is set up yet. Someone with sales management access can create one.",
       "new": "New autopilot",
       "edit": "Edit settings",
@@ -5435,7 +5435,7 @@
       },
       "notes": {
         "no_contact_provider": "No contact-data service is connected, so no people were looked up.",
-        "no_research_provider": "No research service is connected, so no new companies were found. Add company websites to the target list or connect Tavily, Exa or SerpApi.",
+        "no_research_provider": "No research service is available on the platform yet, so no new companies were found. Add company websites to the target list.",
         "research_failed": "The research service could not answer",
         "no_new_companies": "Web research found no new companies; try describing your customers differently or add regions",
         "provider_rate_limited": "The contact-data service asked us to slow down; the rest continues on the next run",
@@ -5449,7 +5449,7 @@
       },
       "providers": {
         "title": "Data and connections",
-        "help": "Each lookup uses your own provider account; usage and estimated costs are tracked per call.",
+        "help": "Lookups run on the platform's data services; usage and estimated costs are tracked per call against your plan.",
         "connect": "Connect",
         "manage": "Manage",
         "failing": "Connection failing: {error}",
@@ -5466,7 +5466,8 @@
           "research": "Not connected: only your target list of companies is used.",
           "ai": "Not connected: your own first-email text is used.",
           "email": "Not connected: emails can be written but not sent."
-        }
+        },
+        "details": "Details"
       },
       "dnc": {
         "title": "Do-not-contact list",
@@ -5537,7 +5538,7 @@
         "tryHint": "A live lookup with your provider (uses a credit). Nothing is saved.",
         "tryNone": "{provider} found no matching people there.",
         "trySource": "Source: {provider}. Only verified addresses are contacted.",
-        "tryNeedsProvider": "Connect Apollo.io, Hunter.io or People Data Labs to try a lookup.",
+        "tryNeedsProvider": "Lookups are available once a contact-data service is enabled on the platform.",
         "messageIntro": "The AI writes a short personal first email for each person from real facts about their company. Tell it what you offer.",
         "pitch": "What you offer and why it matters to them",
         "pitchHint": "One to three sentences. The AI never invents prices, results or customers.",
@@ -5586,7 +5587,9 @@
           "fu1Body": "Hi '{{firstName}}',\n\nI wanted to bring my note back to the top of your inbox. Would it be worth a short chat?\n\nBest,\n'{{sender}}'",
           "fu2Subject": "Should I close the loop?",
           "fu2Body": "Hi '{{firstName}}',\n\nI haven't heard back, so I'll assume now isn't the right time. If that changes, just reply to this email.\n\nAll the best,\n'{{sender}}'"
-        }
+        },
+        "back": "Back",
+        "next": "Next"
       }
     }
   },
@@ -6611,7 +6614,7 @@
     "permissions": "Permissions requested",
     "permissionsHelp": "Scopes Realy asks the provider for.",
     "security": "Security",
-    "securityBody": "Tokens and keys are encrypted with AES-256-GCM, never returned to the browser and never logged. Connecting, disconnecting and syncs are recorded in the audit log.",
+    "securityBody": "Realy holds every API key. Accounts you connect by signing in are stored as encrypted tokens (AES-256-GCM), never returned to the browser and never logged. Connecting and disconnecting are recorded in the audit log.",
     "applyFilters": "Apply",
     "firstPage": "← First page",
     "fields": {
@@ -6916,16 +6919,24 @@
         "credentials_required": "Awaiting credentials",
         "platform_setup": "Configuration required",
         "configured": "Configured",
-        "awaiting_docs": "Coming soon"
+        "awaiting_docs": "Coming soon",
+        "platform_available": "Available",
+        "platform_unavailable": "Not available yet",
+        "disabled": "Unavailable",
+        "unavailable": "Not available"
       },
       "unlocks": "Unlocks",
       "powering": "Powering",
       "hints": {
         "ready": "One click — you approve at the provider",
         "credentials_required": "Bring your own API key",
-        "platform_setup": "The platform admin must add the OAuth app first",
+        "platform_setup": "Sign-in is not enabled on the platform yet",
         "awaiting_docs": "Adapter waiting for official API access",
-        "configured": "Saved — proven by the first real call"
+        "configured": "Saved — proven by the first real call",
+        "platform_available": "Included — runs on the platform account",
+        "platform_unavailable": "Awaiting platform configuration",
+        "disabled": "Turned off by the platform",
+        "unavailable": "Connecting your own account is not available yet"
       },
       "cta": {
         "verified": "Manage",
@@ -6935,7 +6946,11 @@
         "credentials_required": "Add credentials",
         "platform_setup": "See requirements",
         "configured": "Manage",
-        "awaiting_docs": "Details"
+        "awaiting_docs": "Details",
+        "platform_available": "Details",
+        "platform_unavailable": "Details",
+        "disabled": "Details",
+        "unavailable": "Details"
       },
       "verifiedAgo": "Verified {time}",
       "verifiedStat": "Connected & verified",
@@ -6964,7 +6979,7 @@
     },
     "guide": {
       "whatTitle": "What is this",
-      "what": "Your company's connections to outside tools — AI, email, payments, CRM, ads and more — each with its own encrypted credentials.",
+      "what": "Your company's connections to outside tools — email, payments, CRM, ads and more. AI, research, voice and media providers are included and run on the platform account.",
       "whyTitle": "Why it matters",
       "why": "Every connection is verified with the provider and health-checked daily, so features never pretend to send, sync or charge when they cannot.",
       "aiTitle": "What AI does",
@@ -7046,6 +7061,24 @@
       "noTransactions": "No transactions staged yet. They appear after the first sync.",
       "reconcileHint": "Staged transactions are matched against your books in Finance.",
       "openFinance": "Open transactions"
+    },
+    "platform": {
+      "managedBy": "Managed by Realy",
+      "title": "Availability",
+      "available": "Available",
+      "unavailable": "Not available yet",
+      "availableBody": "{name} runs on the platform account. There is nothing to connect or configure: features that use it work right away.",
+      "unavailableBody": "{name} is not available yet. The platform administrator has not enabled it, so features that need it stay off until then.",
+      "disabledBody": "{name} is turned off on the platform right now.",
+      "usageBody": "Your usage counts against your plan limits and appears in your usage and cost reports. You never need your own API key.",
+      "providerDisabled": "{name} is turned off on the platform right now, so it cannot be connected. An existing connection is not used until it is turned back on.",
+      "oauthLogin": "Sign in with your account",
+      "oauthHelp": "Connect your own {name} account by signing in. You never enter keys or passwords here.",
+      "oauthNotReady": "Connecting {name} is not available yet. The platform has not enabled sign-in for it.",
+      "notConnectable": "Connecting your own {name} account is not available yet.",
+      "legacyConnection": "Your existing {name} connection keeps working. Its credentials are managed by Realy and cannot be changed here.",
+      "reconnectHint": "{name} reported a problem with this connection. Connect again to sign in once more.",
+      "failingHint": "This connection is failing. Realy has been notified."
     }
   },
   "workflows": {
@@ -7965,7 +7998,7 @@
       "sourceRules": "Built by the rule-based parser",
       "aiStatus": {
         "used": "Your connected AI provider designed this from your words and it passed every check.",
-        "not_connected": "No AI text provider is connected, so the built-in rule-based parser built this. It understands common phrases only — connect OpenAI or Gemini in Integrations for full understanding.",
+        "not_connected": "No AI text provider is available on the platform yet, so the built-in rule-based parser built this. It understands common phrases only.",
         "paused": "AI is paused on this platform right now, so the built-in rule-based parser built this.",
         "invalid_design": "The AI's design didn't pass validation, so the built-in rule-based parser built this instead.",
         "error": "The AI provider didn't answer, so the built-in rule-based parser built this instead."
@@ -10942,7 +10975,7 @@
         "usePosts": "Add these posts to my content",
         "editPost": "Edit",
         "makeImage": "Create image",
-        "noImageProvider": "Connect an image provider (OpenAI or Stability) to create images for your posts.",
+        "noImageProvider": "Image generation is not available on the platform yet.",
         "howOften": "How often should we post?",
         "pace": {
           "gentle": "Gently",
@@ -11079,7 +11112,7 @@
         "generate": "Generate",
         "generating": "Generating…",
         "with": "Using {provider}",
-        "notConnected": "Connect OpenAI or Stability to generate images.",
+        "notConnected": "Image generation is not available on the platform yet.",
         "connectImages": "Image generation needs a connected provider:",
         "styles": {
           "photo": "Photo",
@@ -11113,7 +11146,7 @@
         "vertical": "Vertical (9:16)",
         "horizontal": "Horizontal (16:9)",
         "makeVideo": "Generate video",
-        "videoNotConnected": "Connect Runway or Replicate to generate videos.",
+        "videoNotConnected": "Video generation is not available on the platform yet.",
         "uploadTitle": "Upload media",
         "file": "File (max 10 MB)",
         "kind": "Type",
@@ -11517,7 +11550,7 @@
     "intelligence": {
       "title": "Marketing intelligence",
       "subtitle": "Market, competitor, audience, trend, keyword and brand research — from real web sources, saved as reports.",
-      "credentialRequired": "No research provider is connected (Tavily, Exa or SerpApi). Research needs one — nothing is made up without it.",
+      "credentialRequired": "No research service is available on the platform yet. Research needs one — nothing is made up without it.",
       "aiNotConfigured": "AI is not configured, so reports keep their sources without an AI summary.",
       "readOnly": "You can read research reports. Ask someone with marketing management rights to run new research.",
       "atlas": "Research library",
@@ -15724,7 +15757,7 @@
           "deals": "deals",
           "tickets": "open tickets"
         },
-        "notConnected": "No AI text provider (OpenAI or Gemini) is connected, so no draft was written. You can still ask the Chief of Staff on the side.",
+        "notConnected": "No AI text provider is available on the platform yet, so no draft was written. You can still ask the Chief of Staff on the side.",
         "paused": "AI is paused on this platform right now — no draft was written.",
         "failed": "The AI provider failed: {error}"
       },
@@ -17220,7 +17253,7 @@
       },
       "research": {
         "unsourcedTitle": "Written without live sources",
-        "unsourced": "No research provider was connected when this was written, so it is based on general knowledge. Connect Tavily, Exa or SerpApi and regenerate to get cited sources."
+        "unsourced": "No research service was available when this was written, so it is based on general knowledge. Regenerate once research is available to get cited sources."
       },
       "logo": {
         "setupTitle": "Connect an image generator to create your logo",
@@ -19358,7 +19391,7 @@
     "connectedVia": "Generates with {providers}",
     "notConnected": {
       "title": "No image provider connected",
-      "body": "Connect OpenAI, Stability AI or Replicate in Integrations to generate artwork. Nothing is generated until a provider is connected.",
+      "body": "Image generation is not available on the platform yet. Nothing is generated until it is.",
       "action": "Connect a provider"
     },
     "scopes": {
@@ -21267,7 +21300,7 @@
       "retentionHint": "Closed chats and their visitors are deleted after this period.",
       "saved": "Saved",
       "step6": "6 · Install and go live",
-      "step6Hint": "Paste this line before the closing </body> tag of your website (or into your site builder’s custom code field).",
+      "step6Hint": "Paste this line before the closing '</body>' tag of your website (or into your site builder’s custom code field).",
       "copy": "Copy code",
       "copied": "Copied",
       "rotate": "New key",
@@ -21902,17 +21935,17 @@
       "settings": "Settings",
       "live": "Live"
     },
-    "credentialRequired": "{provider} is not connected, so no calls can be placed or received. Connect it in Integrations.",
+    "credentialRequired": "{provider} is not available on the platform yet, so no calls can be placed or received.",
     "connection": {
-      "connected": "Connected",
+      "connected": "Available",
       "error": "Failing",
-      "missing": "Not connected",
+      "missing": "Not available yet",
       "disabled": "Turned off by the platform"
     },
     "providers": {
       "vapi": {
         "name": "Vapi",
-        "pitch": "Flexible voice agents. Can use your own Twilio numbers, or a free US number from Vapi."
+        "pitch": "Flexible voice agents. Uses the platform's Twilio numbers, or a free US number from Vapi."
       },
       "retell": {
         "name": "Retell AI",
@@ -22024,7 +22057,7 @@
     },
     "setup": {
       "title": "Set up your phone team",
-      "intro": "Five short steps. You need an account with Vapi or Retell AI (both offer free trial credit). Every outbound call still needs your approval unless you give your AI more autonomy.",
+      "intro": "Five short steps. Calls run on the platform's voice and telephony accounts and count against your plan's voice minutes. Every outbound call still needs your approval unless you give your AI more autonomy.",
       "readOnly": "You can view the setup, but only people who manage communication can change it.",
       "cardTitle": "Finish setting up your phone team",
       "cardBody": "{done} of {total} steps done.",
@@ -22043,7 +22076,7 @@
       "steps": {
         "provider": {
           "title": "Choose your voice platform",
-          "body": "The service that carries the calls. Connect your API key in Integrations, then pick it here."
+          "body": "The service that carries the calls. It runs on the platform account — just pick the one you want."
         },
         "rules": {
           "title": "Set calling rules",
@@ -22160,7 +22193,7 @@
       "buy": "Buy",
       "buyConfirm": "Get this number on your voice platform account? The provider may charge for it.",
       "buyTwilioConfirm": "Buy {number} on your Twilio account? Twilio charges a monthly fee.",
-      "twilioMissing": "Connect Twilio to use or buy Twilio numbers.",
+      "twilioMissing": "Twilio numbers are not available on the platform yet.",
       "country": "Country",
       "search": "Search",
       "owned": "Your Twilio numbers",
@@ -22590,12 +22623,12 @@
       "title": "Telephony",
       "description": "How calls reach the phone network, who takes calls over, and how unanswered calls are retried.",
       "layer": "Phone network",
-      "layerHint": "Use your voice platform's numbers, or your own Twilio account bridged to the AI agent.",
+      "layerHint": "Use your voice platform's numbers, or the platform's Twilio account bridged to the AI agent.",
       "layers": {
         "PROVIDER": "Voice platform numbers (Vapi / Retell)",
         "TWILIO": "My Twilio account (Programmable Voice)"
       },
-      "twilioMissing": "Connect Twilio in Integrations to place and receive calls through it.",
+      "twilioMissing": "Twilio calling is not available on the platform yet.",
       "bridge": "Bridge to the AI agent",
       "bridges": {
         "PROVIDER_SIP": "Retell over SIP (automatic)",
@@ -22617,7 +22650,7 @@
       "callerId": "Caller ID (Twilio number)",
       "liveTranscription": "Live transcript",
       "liveTranscriptionHint": "Twilio real-time transcription of both sides.",
-      "webhooksHint": "Realy sets these on a Twilio number for you (Connect number), or paste them in the Twilio console.",
+      "webhooksHint": "Realy sets these on your number when you connect it.",
       "voiceUrl": "Voice URL (incoming calls)",
       "statusUrl": "Status callback URL",
       "copy": "Copy",
@@ -23503,7 +23536,7 @@
       "notHeard": "I didn’t hear anything. Hold the button while you speak.",
       "micDenied": "Microphone access is blocked. Allow the microphone for this site in your browser settings.",
       "micUnsupported": "This browser can’t record audio. Type your command instead.",
-      "noRecognizer": "No speech provider is connected and this browser has no speech recognition. Connect OpenAI, ElevenLabs or Deepgram in Integrations, or type.",
+      "noRecognizer": "No speech provider is available on the platform yet and this browser has no speech recognition. Please type instead.",
       "sttFallback": "The speech provider didn’t respond, so I switched to your browser’s speech recognition.",
       "sttLimit": "Your plan’s voice minutes are used up, so I switched to your browser’s speech recognition.",
       "ttsFallback": "The voice provider didn’t respond, so I’m using your browser’s voice.",
@@ -23662,7 +23695,7 @@
         "browser": "Browser (built-in)"
       },
       "notConnected": "not connected",
-      "connectHint": "Connect OpenAI, ElevenLabs or Deepgram for more accurate recognition and natural voices.",
+      "connectHint": "More accurate recognition and natural voices turn on once a speech provider is available on the platform.",
       "openIntegrations": "Open Integrations",
       "askAdmin": "Ask an admin to connect one in Integrations.",
       "minutes": "Voice minutes this month: {used} of {limit} (provider speech only; browser speech is free).",
@@ -23985,32 +24018,32 @@
       "text": {
         "title": "Concepts & scripts",
         "ready": "AI text provider connected.",
-        "missing": "Connect OpenAI or Gemini to write concepts, scripts and storyboards."
+        "missing": "Not available on the platform yet: concepts, scripts and storyboards need an AI text provider."
       },
       "image": {
         "title": "Images",
         "ready": "Image generation connected.",
-        "missing": "Connect OpenAI, Stability AI or Replicate to generate images."
+        "missing": "Image generation is not available on the platform yet."
       },
       "video": {
         "title": "Video clips",
         "ready": "Video generation connected.",
-        "missing": "Optional: connect Runway, Luma, Kling or Replicate for moving scenes. Without it, scenes use stills."
+        "missing": "Optional, not available on the platform yet: moving scenes. Without it, scenes use stills."
       },
       "voice": {
         "title": "Voiceover",
         "ready": "Text-to-speech connected.",
-        "missing": "Connect ElevenLabs or OpenAI to record voiceovers."
+        "missing": "Voiceovers are not available on the platform yet."
       },
       "music": {
         "title": "Licensed music",
         "ready": "Licensed music source connected.",
-        "missing": "Connect Jamendo for licensed tracks, or upload music you hold a license for."
+        "missing": "Licensed music is not available on the platform yet. Upload music you hold a license for."
       },
       "render": {
         "title": "Final render",
         "ready": "Rendering provider connected — finished MP4s are produced.",
-        "missing": "Connect Shotstack or Creatomate to render finished videos. Without it you get an editable timeline."
+        "missing": "Video rendering is not available on the platform yet. You get an editable timeline."
       }
     },
     "projects": {
@@ -24165,7 +24198,7 @@
       "searchTitle": "Licensed tracks",
       "search": "Search",
       "searchPlaceholder": "Mood or genre, e.g. upbeat acoustic",
-      "notConnected": "No licensed music source is connected. Connect Jamendo, or upload a track you hold a license for.",
+      "notConnected": "No licensed music source is available on the platform yet. Upload a track you hold a license for.",
       "noResults": "No tracks with a commercial-use license matched.",
       "license": "License",
       "attributionRequired": "attribution is added to the export",
@@ -24185,7 +24218,7 @@
       "edl": "Edit list (EDL)",
       "mp4": "MP4",
       "notes": {
-        "render_requires_provider": "Editable timeline ready. A finished video requires a rendering provider (Shotstack or Creatomate).",
+        "render_requires_provider": "Editable timeline ready. A finished video needs a rendering provider, which is not available on the platform yet.",
         "media_missing": "Some scenes have no media yet — generate scene assets first.",
         "render_limit_reached": "Your plan's video limit for this month is reached; the timeline is ready.",
         "render_failed": "The render provider could not render this format; the timeline is ready."
@@ -24270,7 +24303,7 @@
       "generating": "Generating…",
       "done": "{count, plural, one {# image created} other {# images created}} — see them below.",
       "costHint": "Uses your connected provider and counts toward this month's image limit.",
-      "notConnected": "Connect an image provider (OpenAI, Stability AI or Replicate) to generate images.",
+      "notConnected": "Image generation is not available on the platform yet.",
       "recent": "Recent images",
       "allInLibrary": "All in library",
       "empty": "No images yet. Describe one above to create your first."
@@ -24310,7 +24343,7 @@
       },
       "logoNote": {
         "no_logo": "Add a logo URL to the brand kit to check logo usage.",
-        "vision_not_connected": "Connect OpenAI to check logo and text.",
+        "vision_not_connected": "Logo and text checks need an AI vision provider, which is not available on the platform yet.",
         "vision_failed": "The logo check could not run this time."
       }
     },
