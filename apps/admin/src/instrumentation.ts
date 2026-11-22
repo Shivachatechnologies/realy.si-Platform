@@ -3,10 +3,16 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   // Platform keys set in the Control Center (docs/platform-keys.md) are overlaid onto process.env first, so
   // observability and every env() reader see them. Never throws; falls back to the host env.
-  const { ensurePlatformSecretsFresh } = await import("@/server/core/platform-secrets");
-  await ensurePlatformSecretsFresh();
-  const { initObservability } = await import("@/server/core/observability");
-  await initObservability("realy-admin");
+  // Not awaited: Next.js holds the first request of a cold instance until register() resolves, and this needs the
+  // database (Prisma init + connection + query), which /api/health and public pages do not. Request paths that read
+  // platform keys await the same single-flight load themselves (route(), getSession()). Observability starts as soon
+  // as the keys are in.
+  void (async () => {
+    const { ensurePlatformSecretsFresh } = await import("@/server/core/platform-secrets");
+    await ensurePlatformSecretsFresh();
+    const { initObservability } = await import("@/server/core/observability");
+    await initObservability("realy-admin");
+  })().catch(() => {});
 }
 
 /** Server errors from rendering, route handlers and the proxy. Only path/route metadata is attached — never headers or bodies. */

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { RequestContext } from "@/server/core/context";
 import type { MetricDefinition, MetricRange, MetricScope } from "@/server/core/metrics";
 import { db } from "@/server/core/db";
@@ -69,8 +70,24 @@ export async function visibleMetrics(ctx: RequestContext, chain: ScopeChain): Pr
   return all.filter((m) => allowed.has(m.permission));
 }
 
+/**
+ * Per-request memo of metric results. One Command Center render asks for the same metric and period from several
+ * widgets (KPI ribbon, business health, CEO strip, company universe): ~45% of its ~800 queries were repeats.
+ * React's cache() scopes the Map to the current server request; outside a request (worker) it is a fresh Map per
+ * call, i.e. no memoization.
+ */
+const requestMetricMemo = cache(() => new Map<string, Promise<number | null>>());
+
 /** Compute one metric; failures and timeouts become null (one broken module never breaks a dashboard). */
-export async function computeMetric(m: MetricDefinition, scope: MetricScope, range: MetricRange): Promise<number | null> {
+export function computeMetric(m: MetricDefinition, scope: MetricScope, range: MetricRange): Promise<number | null> {
+  const memo = requestMetricMemo();
+  const key = `${m.key}|${scope.organizationId}|${scope.companyId}|${scope.currency}|${range.from.getTime()}|${range.to.getTime()}`;
+  let result = memo.get(key);
+  if (!result) memo.set(key, (result = computeMetricUncached(m, scope, range)));
+  return result;
+}
+
+async function computeMetricUncached(m: MetricDefinition, scope: MetricScope, range: MetricRange): Promise<number | null> {
   let timer: NodeJS.Timeout | undefined;
   try {
     const v = await Promise.race([m.compute(scope, range), new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error("timeout")), METRIC_TIMEOUT_MS)))]);

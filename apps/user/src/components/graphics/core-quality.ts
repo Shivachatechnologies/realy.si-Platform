@@ -109,6 +109,9 @@ export function useCoreMode(ref: RefObject<HTMLElement | null>, { priority = 1, 
   const hidden = useSyncExternalStore(subscribeVisibility, () => document.visibilityState === "hidden", () => false);
   const [tier, setTier] = useState<CoreTier | null>(null);
   const [onScreen, setOnScreen] = useState(true);
+  // Laid out at all? A core inside a `hidden lg:flex` column (auth hero on phones) must not take the WebGL slot or
+  // download three.js for a 0×0 canvas. ResizeObserver reports the box once it appears (resize, rotation).
+  const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -119,14 +122,17 @@ export function useCoreMode(ref: RefObject<HTMLElement | null>, { priority = 1, 
     const idle = hasIdle ? window.requestIdleCallback(decide, { timeout: 1500 }) : window.setTimeout(decide, 400);
     const io = new IntersectionObserver(([e]) => setOnScreen(!!e?.isIntersecting), { rootMargin: "120px" });
     io.observe(el);
+    const ro = new ResizeObserver(([e]) => setRendered(!!e && e.contentRect.width > 0 && e.contentRect.height > 0));
+    ro.observe(el);
     return () => {
       if (hasIdle) window.cancelIdleCallback(idle);
       else clearTimeout(idle);
       io.disconnect();
+      ro.disconnect();
     };
   }, [ref]);
 
-  const wants3d = allow3d && !reduced && tier !== null && tier !== "css";
+  const wants3d = allow3d && rendered && !reduced && tier !== null && tier !== "css";
   const granted = useGlSlot(wants3d, priority);
   const mode: CoreMode = reduced ? { kind: "reduced" } : granted && tier && tier !== "css" ? { kind: "3d", tier } : { kind: "css" };
   return { mode, paused: hidden || !onScreen, reduced };

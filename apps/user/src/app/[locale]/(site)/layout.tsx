@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { getT } from "@/i18n/server";
 import { Suspense } from "react";
 import { PlatformBanner } from "@/components/cms/platform-banner";
+import { ClientMessages } from "@/components/i18n/client-messages";
 
 /**
  * Public website chrome (homepage, platform, AI workforce, pricing, journal, docs, help, waitlist). No session needed;
@@ -16,21 +17,23 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const t = await getT(locale);
   const signedIn = !!(await cookies()).get("realy_session")?.value;
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground" data-site data-jarvis>
-      <a
-        href="#site-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow-elev-3"
-      >
-        {t("common.skipToContent")}
-      </a>
-      <Suspense fallback={null}>
-        <PlatformBanner />
-      </Suspense>
-      <SiteHeader signedIn={signedIn} />
-      <main id="site-main" className="relative flex-1">
-        {children}
-      </main>
-      <SiteFooter locale={locale} />
-    </div>
+    <ClientMessages scope="[locale]/(site)">
+      <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground" data-site data-jarvis>
+        <a
+          href="#site-main"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow-elev-3"
+        >
+          {t("common.skipToContent")}
+        </a>
+        <Suspense fallback={null}>
+          <PlatformBanner />
+        </Suspense>
+        <SiteHeader signedIn={signedIn} />
+        <main id="site-main" className="relative flex-1">
+          {children}
+        </main>
+        <SiteFooter locale={locale} />
+      </div>
+    </ClientMessages>
   );
 }

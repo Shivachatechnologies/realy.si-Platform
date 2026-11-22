@@ -43,7 +43,7 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("flex items-start justify-between gap-4 border-b px-4 py-3", className)}>
+    <header className={cn("flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b px-4 py-3", className)}>
       <div className="flex min-w-0 items-start gap-2.5">
         {icon ? (
           <span aria-hidden className="mt-px grid size-6 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground [&_svg]:size-3.5">
@@ -55,7 +55,8 @@ export function CardHeader({
           {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
         </div>
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {/* Actions wrap under the title on narrow screens instead of widening the page (filters, period pickers). */}
+      {actions ? <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }

@@ -51,7 +51,7 @@ export function PipelineBoard({ base, locale, columns, canManage }: { base: stri
   return (
     <div className="grid gap-2">
       <FormError error={error} />
-      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:snap-none sm:px-0" aria-busy={busy}>
+      <div className="-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-2 sm:mx-0 sm:snap-none sm:px-0" aria-busy={busy}>
         {columns.map((col, ci) => (
           <section
             key={col.id}

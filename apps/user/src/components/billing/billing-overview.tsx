@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
-import { useI18n } from "@/i18n/client";
+import { useI18n, usePrefetchMessages } from "@/i18n/client";
 import { formatDate, formatMoney } from "@/i18n/format";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ export interface InvoiceWire {
  */
 export function BillingOverview({ initial, invoices, invoicesConfigured, timeZone }: { initial: OverviewWire; invoices: InvoiceWire[]; invoicesConfigured: boolean; timeZone: string }) {
   const { t, locale } = useI18n();
+  usePrefetchMessages("errors.reasons"); // specific reasons for failed billing actions (lazy subtree)
   const router = useRouter();
   const qc = useQueryClient();
   const search = new URLSearchParams(useLocationSearch());

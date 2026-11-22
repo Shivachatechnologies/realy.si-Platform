@@ -224,7 +224,7 @@ export function CopyValue({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <span className="inline-flex max-w-full items-center gap-1">
-      <code dir="ltr" className="truncate rounded bg-muted px-1.5 py-0.5 text-xs">
+      <code dir="ltr" className="min-w-0 truncate rounded bg-muted px-1.5 py-0.5 text-xs">
         {value}
       </code>
       <button
