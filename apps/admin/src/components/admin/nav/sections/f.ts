@@ -1,4 +1,4 @@
-import { Globe2, Plug, Settings, ShieldCheck, SlidersHorizontal, Store } from "lucide-react";
+import { Globe2, LifeBuoy, Plug, Settings, ShieldCheck, SlidersHorizontal, Store } from "lucide-react";
 import type { NavSection } from "../types";
 
 const CONTENT = ["platform.content.manage"];
@@ -6,6 +6,13 @@ const AUDIT = ["platform.audit.read", "platform.security.read"];
 const INTEGRATIONS = ["platform.security.read", "platform.organizations.read", "platform.controls.manage"];
 const KEYS = ["platform.controls.manage", "platform.security.manage", "platform.security.read"];
 const SETTINGS = ["platform.controls.manage", "platform.audit.read"];
+// Mirrors of the console-gate SECTIONS entries (BE/admin/console-gate.ts).
+const SUPPORT = ["platform.support.read", "platform.support.manage"];
+const EMAIL = ["platform.controls.manage", "platform.security.read", "platform.audit.read", "platform.content.manage", "platform.support.read"];
+const TELEPHONY = ["platform.organizations.read", "platform.security.read", "platform.controls.manage"];
+const FILES = ["platform.organizations.read", "platform.security.read", "platform.content.manage"];
+const WEBHOOKS = ["platform.security.read", "platform.security.manage"];
+const API_LOGS = ["platform.logs.read", "platform.security.read"];
 
 /** Stream F — content, marketplace, controls and flags, integrations, security and audit, settings and keys. */
 export const sectionsF: NavSection[] = [
@@ -42,12 +49,19 @@ export const sectionsF: NavSection[] = [
     label: "admin.nav.integrations",
     icon: Plug,
     order: 90,
-    perms: INTEGRATIONS,
+    perms: [...new Set([...INTEGRATIONS, ...WEBHOOKS, ...API_LOGS, ...EMAIL, ...TELEPHONY, ...FILES])],
     children: [
       { id: "integrations", href: "/integrations", label: "admin.nav.integrations", perms: INTEGRATIONS },
+      { id: "integrationHealth", href: "/integrations/providers", label: "admin.integrations.nav", perms: INTEGRATIONS },
       { id: "developers", href: "/developers", label: "admin.nav.developers", perms: INTEGRATIONS },
+      { id: "webhooks", href: "/webhooks", label: "admin.webhooks.nav", perms: WEBHOOKS },
+      { id: "apiLogs", href: "/api-logs", label: "admin.apiLogs.nav", perms: API_LOGS },
+      { id: "email", href: "/email", label: "admin.email.nav", perms: EMAIL },
+      { id: "telephony", href: "/telephony", label: "admin.telephony.nav", perms: TELEPHONY },
+      { id: "files", href: "/files", label: "admin.files.nav", perms: FILES },
     ],
   },
+  { id: "support", href: "/support", label: "admin.support.nav", icon: LifeBuoy, order: 107, perms: SUPPORT },
   {
     id: "securityAudit",
     href: "/audit",
@@ -58,6 +72,7 @@ export const sectionsF: NavSection[] = [
     children: [
       { id: "audit", href: "/audit", label: "admin.nav.audit", perms: AUDIT },
       { id: "security", href: "/security", label: "admin.nav.security", perms: AUDIT },
+      { id: "securityPosture", href: "/security/posture", label: "admin.security.posture.nav", perms: AUDIT },
       { id: "securityAccess", href: "/security/access", label: "admin.nav.securityAccess", perms: AUDIT },
     ],
   },

@@ -5,7 +5,7 @@ import { notFound } from "@/server/core/errors";
 import { getControls } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
 import { revokeApiKey } from "@/server/modules/enterprise/api-keys";
-import { isPlatformManaged } from "@/server/modules/integrations/catalog";
+import { PROVIDERS, PROVIDER_CATEGORIES, customerConnectMode, isPlatformManaged, platformCredentialFields, providerInfo, type CustomerConnectMode, type ProviderInfo } from "@/server/modules/integrations/catalog";
 import { disconnectIntegration } from "@/server/modules/integrations/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
@@ -102,4 +102,146 @@ export async function adminDisconnectIntegration(ctx: RequestContext, connection
     writeAudit(tx, ctx, { category: "ADMIN", organizationId: row.organizationId, action: "platform.integration_disconnected", resourceType: "integration_connection", resourceId: connectionId, oldValue: { provider: row.provider, status: row.status }, reason }),
   );
   return result;
+}
+
+// ───────────── Integration center v2 (stream F) ─────────────
+
+/**
+ * Credential state of a provider WITHOUT values: platform-managed providers read their platform keys (presence of every
+ * required field), OAuth providers their app credentials (`envVars`), own-account / customer providers have
+ * per-connection credentials (counted by connection status, never decrypted).
+ */
+export function providerCredentialState(info: ProviderInfo): { mode: CustomerConnectMode; platformKeys: "configured" | "partial" | "missing" | "not_applicable"; missingKeys: string[] } {
+  const mode = customerConnectMode(info);
+  if (isPlatformManaged(info.key)) {
+    const fields = platformCredentialFields(info).filter((f) => f.required);
+    const missing = fields.filter((f) => !process.env[f.envKey]?.trim()).map((f) => f.envKey);
+    return { mode, platformKeys: fields.length === 0 ? "not_applicable" : missing.length === 0 ? "configured" : missing.length === fields.length ? "missing" : "partial", missingKeys: missing };
+  }
+  if (info.authType === "oauth2" || info.oauthAlternative) {
+    const missing = info.envVars.filter((k) => !process.env[k]?.trim());
+    return { mode, platformKeys: info.envVars.length === 0 ? "not_applicable" : missing.length === 0 ? "configured" : missing.length === info.envVars.length ? "missing" : "partial", missingKeys: missing };
+  }
+  return { mode, platformKeys: "not_applicable", missingKeys: [] };
+}
+
+const providerFilters = z.object({
+  category: z.enum(PROVIDER_CATEGORIES).optional().catch(undefined),
+  health: z.enum(["failing", "configured", "missing", "disabled"]).optional().catch(undefined),
+  q: z.string().trim().max(60).optional().catch(undefined),
+});
+
+/**
+ * Every catalog provider with category, connect mode, credential state, platform availability (kill switch),
+ * connections by status, last success / failure, 30-day usage and cost, 7-day request errors, inbound webhooks
+ * (scheme and 7-day provider events). Health is derived only from these recorded facts.
+ */
+export async function integrationProviders(ctx: RequestContext, raw: Partial<Record<keyof z.input<typeof providerFilters>, unknown>> = {}) {
+  await requireAnyPlatform(ctx, READ);
+  const f = providerFilters.parse(raw);
+  const d7 = daysAgo(7);
+  const d30 = daysAgo(30);
+  const [conns, last, usage, reqErrors, reqTotal, events, controls] = await Promise.all([
+    db().integrationConnection.groupBy({ by: ["provider", "status"], _count: { _all: true } }),
+    db().integrationConnection.groupBy({ by: ["provider"], _max: { lastSuccessAt: true, lastFailureAt: true }, _sum: { errorStreak: true } }),
+    db().integrationUsage.groupBy({ by: ["provider"], where: { createdAt: { gte: d30 } }, _sum: { units: true, estimatedCostMicros: true }, _count: { _all: true } }),
+    db().integrationRequestLog.groupBy({ by: ["provider"], where: { createdAt: { gte: d7 }, OR: [{ status: null }, { status: { gte: 400 } }] }, _count: { _all: true } }),
+    db().integrationRequestLog.groupBy({ by: ["provider"], where: { createdAt: { gte: d7 } }, _count: { _all: true } }),
+    db().integrationProviderEvent.groupBy({ by: ["provider", "status"], where: { receivedAt: { gte: d7 } }, _count: { _all: true } }),
+    getControls(),
+  ]);
+  const rows = PROVIDERS.map((info) => {
+    const cred = providerCredentialState(info);
+    const c = (s: string) => conns.find((x) => x.provider === info.key && x.status === s)?._count._all ?? 0;
+    const l = last.find((x) => x.provider === info.key);
+    const u = usage.find((x) => x.provider === info.key);
+    const errors = reqErrors.find((x) => x.provider === info.key)?._count._all ?? 0;
+    const total = reqTotal.find((x) => x.provider === info.key)?._count._all ?? 0;
+    const ev = events.filter((x) => x.provider === info.key);
+    const disabled = controls.disabledIntegrations.includes(info.key);
+    const health: "disabled" | "failing" | "degraded" | "healthy" | "idle" | "unconfigured" = disabled
+      ? "disabled"
+      : cred.platformKeys === "missing" || cred.platformKeys === "partial"
+        ? "unconfigured"
+        : c("ERROR") > 0 && c("CONNECTED") === 0
+          ? "failing"
+          : c("ERROR") > 0 || (total >= 20 && errors / total > 0.1)
+            ? "degraded"
+            : total > 0 || c("CONNECTED") > 0
+              ? "healthy"
+              : "idle";
+    return {
+      key: info.key,
+      name: info.name,
+      category: info.category,
+      authType: info.authType,
+      availability: info.availability ?? "live",
+      managed: isPlatformManaged(info.key),
+      credentials: cred,
+      disabled,
+      connections: { connected: c("CONNECTED"), error: c("ERROR"), disconnected: c("DISCONNECTED") },
+      lastSuccessAt: l?._max.lastSuccessAt ?? null,
+      lastFailureAt: l?._max.lastFailureAt ?? null,
+      usage30d: u ? { calls: u._count._all, units: u._sum.units ?? 0, costMicros: u._sum.estimatedCostMicros ?? 0 } : null,
+      requests7d: { total, errors },
+      webhooks: info.inboundWebhooks ? { scheme: info.inboundWebhooks.scheme, events7d: ev.reduce((n, e) => n + e._count._all, 0), failed7d: ev.filter((e) => /fail|error/i.test(e.status)).reduce((n, e) => n + e._count._all, 0) } : null,
+      health,
+      scopes: info.scopes,
+    };
+  });
+  const filtered = rows.filter((r) => (!f.category || r.category === f.category) && (!f.q || r.key.includes(f.q.toLowerCase()) || r.name.toLowerCase().includes(f.q.toLowerCase())) && (!f.health || (f.health === "failing" ? r.health === "failing" || r.health === "degraded" : f.health === "configured" ? r.credentials.platformKeys === "configured" : f.health === "missing" ? r.health === "unconfigured" : r.disabled)));
+  return { filters: f, providers: filtered, categories: PROVIDER_CATEGORIES, totals: { providers: rows.length, failing: rows.filter((r) => r.health === "failing" || r.health === "degraded").length, unconfigured: rows.filter((r) => r.health === "unconfigured").length, disabled: rows.filter((r) => r.disabled).length } };
+}
+
+/** One provider: everything above plus recent connections (no credentials), sync runs, request log and events. */
+export async function integrationProviderDetail(ctx: RequestContext, provider: string) {
+  await requireAnyPlatform(ctx, READ);
+  const info = providerInfo(provider);
+  if (!info) throw notFound("Integration");
+  const [list, connections, syncRuns, requests, events, audit] = await Promise.all([
+    integrationProviders(ctx, { q: provider }),
+    db().integrationConnection.findMany({ where: { provider }, orderBy: [{ status: "asc" }, { updatedAt: "desc" }], take: 50, select: { id: true, organizationId: true, status: true, scopes: true, externalAccount: true, lastSyncAt: true, lastSuccessAt: true, lastFailureAt: true, lastError: true, errorStreak: true, tokenExpiresAt: true, connectedAt: true, company: { select: { name: true } } } }),
+    db().integrationSyncRun.findMany({ where: { provider }, orderBy: { startedAt: "desc" }, take: 20, select: { id: true, organizationId: true, kind: true, trigger: true, status: true, itemsRead: true, errorCount: true, startedAt: true, finishedAt: true } }),
+    db().integrationRequestLog.findMany({ where: { provider }, orderBy: { id: "desc" }, take: 30, select: { id: true, organizationId: true, method: true, url: true, status: true, durationMs: true, attempts: true, error: true, createdAt: true } }),
+    db().integrationProviderEvent.findMany({ where: { provider }, orderBy: { id: "desc" }, take: 20, select: { id: true, organizationId: true, eventType: true, status: true, error: true, receivedAt: true } }),
+    db().auditLog.findMany({ where: { OR: [{ resourceType: "platform_control", resourceId: "disabledIntegrations" }, { action: "platform.integration_disconnected", newValue: { path: ["provider"], equals: provider } }] }, orderBy: { id: "desc" }, take: 10, select: { id: true, action: true, actorId: true, reason: true, createdAt: true } }),
+  ]);
+  const orgIds = [...new Set([...connections, ...syncRuns, ...requests, ...events].map((r) => r.organizationId))];
+  const orgs = orgIds.length ? await db().organization.findMany({ where: { id: { in: orgIds } }, select: { id: true, name: true } }) : [];
+  const orgName = (id: string) => orgs.find((o) => o.id === id)?.name ?? id.slice(0, 8);
+  const tokenSoon = connections.filter((c) => c.tokenExpiresAt && c.tokenExpiresAt < new Date(Date.now() + 7 * 86_400_000) && c.status === "CONNECTED").length;
+  return {
+    provider: list.providers.find((p) => p.key === provider) ?? null,
+    info: { key: info.key, name: info.name, category: info.category, docsUrl: info.docsUrl, capabilities: info.capabilities, envVars: info.envVars, inboundWebhooks: info.inboundWebhooks ?? null, verification: info.verification ?? null },
+    oauthIssues: { errorConnections: connections.filter((c) => c.status === "ERROR").length, tokensExpiringIn7d: tokenSoon },
+    connections: connections.map((c) => ({ ...c, organizationName: orgName(c.organizationId) })),
+    syncRuns: syncRuns.map((r) => ({ ...r, organizationName: orgName(r.organizationId) })),
+    requests: requests.map((r) => ({ ...r, organizationName: orgName(r.organizationId) })),
+    events: events.map((e) => ({ ...e, organizationName: orgName(e.organizationId) })),
+    audit,
+  };
+}
+
+const requestLogFilters = z.object({
+  provider: z.string().regex(/^[a-z0-9_.-]{1,60}$/).optional().catch(undefined),
+  org: z.string().uuid().optional().catch(undefined),
+  outcome: z.enum(["errors", "ok"]).optional().catch(undefined),
+  cursor: z.string().uuid().optional().catch(undefined),
+});
+
+/** Cross-organization integration request log (30-day retention; summaries only, never bodies or credentials). */
+export async function integrationRequestLogExplorer(ctx: RequestContext, raw: Partial<Record<keyof z.input<typeof requestLogFilters>, unknown>> = {}) {
+  await requireAnyPlatform(ctx, READ);
+  const f = requestLogFilters.parse(raw);
+  const rows = await db().integrationRequestLog.findMany({
+    where: { ...(f.provider ? { provider: f.provider } : {}), ...(f.org ? { organizationId: f.org } : {}), ...(f.outcome === "errors" ? { OR: [{ status: null }, { status: { gte: 400 } }] } : f.outcome === "ok" ? { status: { lt: 400 } } : {}) },
+    orderBy: { id: "desc" },
+    take: 51,
+    ...(f.cursor ? { cursor: { id: f.cursor }, skip: 1 } : {}),
+    select: { id: true, organizationId: true, provider: true, method: true, url: true, status: true, durationMs: true, attempts: true, requestSummary: true, responseSummary: true, error: true, createdAt: true },
+  });
+  const more = rows.length > 50;
+  const data = more ? rows.slice(0, 50) : rows;
+  const orgs = data.length ? await db().organization.findMany({ where: { id: { in: [...new Set(data.map((r) => r.organizationId))] } }, select: { id: true, name: true } }) : [];
+  return { filters: f, data: data.map((r) => ({ ...r, organizationName: orgs.find((o) => o.id === r.organizationId)?.name ?? r.organizationId.slice(0, 8) })), nextCursor: more ? data[data.length - 1]!.id : null };
 }

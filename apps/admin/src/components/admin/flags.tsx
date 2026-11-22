@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -21,7 +21,8 @@ interface Rule {
 
 const TARGETS = ["GLOBAL", "REGION", "COUNTRY", "PLAN", "ORGANIZATION", "COMPANY", "USER"] as const;
 
-export function FlagCard({ flag, editable }: { flag: { id: string; key: string; description: string; defaultEnabled: boolean; rules: Rule[] }; editable: boolean }) {
+/** `extra`: v2 rollout state and actions rendered by the page (server) above the targeting rules. */
+export function FlagCard({ flag, editable, extra }: { flag: { id: string; key: string; description: string; defaultEnabled: boolean; rules: Rule[] }; editable: boolean; extra?: ReactNode }) {
   const t = useT();
   const router = useRouter();
   const [targetType, setTargetType] = useState<string>("PLAN");
@@ -53,6 +54,7 @@ export function FlagCard({ flag, editable }: { flag: { id: string; key: string; 
         }
       />
       <CardBody className="grid gap-3">
+        {extra}
         {flag.rules.length === 0 ? (
           <p className="text-xs text-muted-foreground">{t("admin.flags.noRules")}</p>
         ) : (

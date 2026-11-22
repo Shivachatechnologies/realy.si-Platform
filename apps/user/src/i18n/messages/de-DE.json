@@ -24892,5 +24892,54 @@
       "notConnected": "nicht verbunden"
     },
     "nav": "Kreativstudio"
+  },
+  "platformSupport": {
+    "back": "Alle meine Tickets",
+    "categories": {
+      "account": "Konto",
+      "ai": "KI",
+      "billing": "Abrechnung",
+      "bug": "Etwas funktioniert nicht",
+      "integration": "Integration",
+      "other": "Sonstiges"
+    },
+    "category": "Thema",
+    "closedNotice": "Dieses Ticket ist geschlossen. Eröffnen Sie ein neues Ticket, wenn Sie weitere Hilfe brauchen.",
+    "conversation": "Verlauf",
+    "markSolved": "Als gelöst markieren",
+    "message": "Nachricht",
+    "messageHint": "Beschreiben Sie, was passiert ist, was Sie erwartet haben und eventuelle Fehlermeldungen. Senden Sie nie Passwörter oder Schlüssel.",
+    "myTickets": "Meine Tickets",
+    "newTicket": "Neues Ticket",
+    "newTicketHint": "Unser Team antwortet per E-Mail und hier.",
+    "noOrganization": "Betrifft keine Organisation",
+    "noTickets": "Sie haben noch kein Ticket eröffnet.",
+    "organization": "Organisation",
+    "priorities": {
+      "HIGH": "Hoch",
+      "LOW": "Niedrig",
+      "NORMAL": "Normal"
+    },
+    "priority": "Dringlichkeit",
+    "priorityHint": "Hoch ist für blockierte Arbeit.",
+    "realyTeam": "Realy-Team",
+    "reply": "Ihre Antwort",
+    "send": "Senden",
+    "statuses": {
+      "CLOSED": "Geschlossen",
+      "NEW": "Eingegangen",
+      "ON_HOLD": "Zurückgestellt",
+      "OPEN": "In Bearbeitung",
+      "PENDING_CUSTOMER": "Wartet auf Sie",
+      "SOLVED": "Gelöst"
+    },
+    "subject": "Betreff",
+    "submit": "An den Realy-Support senden",
+    "subtitle": "Fragen oder Probleme mit Realy selbst? Schreiben Sie dem Realy-Team.",
+    "system": "Update",
+    "ticketMeta": "Ticket #{number} · eröffnet {created}",
+    "title": "Realy-Support kontaktieren",
+    "updated": "Aktualisiert {when}",
+    "you": "Sie"
   }
 }

@@ -186,3 +186,56 @@ export async function settingRows() {
     .platformSetting.findMany({ where: { NOT: { key: { startsWith: "org:" } } }, orderBy: { updatedAt: "desc" } })
     .catch(() => []);
 }
+
+// ───────────── Settings center (stream F) ─────────────
+
+/**
+ * Organized settings groups for /settings. Keys are platform controls (CONTROL_DEFS); `links` point to the console page
+ * that owns a topic (AI → stream C pages, billing → stream D pages). Secrets are never part of settings: platform keys
+ * live in /keys (write-only).
+ */
+export const SETTINGS_GROUPS = [
+  { id: "general", keys: ["platformName", "supportEmail", "defaultLocale", "maintenanceMessage"], links: [] },
+  { id: "authentication", keys: ["registrationsEnabled", "signupDomainAllowlist"], links: ["/security", "/security/access"] },
+  { id: "ai", keys: ["aiWorkforceEnabled", "aiExecutionPaused", "aiDefaultModel", "aiAutonomyCeiling", "aiRequireApprovalForWrites", "aiDailyTokenBudget", "aiMonthlyTokenBudget"], links: ["/ai", "/ai/models"] },
+  { id: "billing", keys: [], links: ["/plans", "/pricing", "/subscriptions", "/countries"] },
+  { id: "integrations", keys: ["disabledIntegrations"], links: ["/integrations", "/developers", "/webhooks", "/keys"] },
+  { id: "notifications", keys: ["supportEmail"], links: ["/email", "/email-templates", "/announcements"] },
+  { id: "security", keys: ["readOnlyMode"], links: ["/security", "/controls", "/keys", "/audit"] },
+  { id: "operations", keys: ["maintenanceMode", "backgroundJobsPaused", "automationsEnabled", "companyCreationEnabled", "disabledModules"], links: ["/controls", "/system", "/ops"] },
+] as const satisfies readonly { id: string; keys: readonly ControlKey[]; links: readonly string[] }[];
+
+/** Settings grouped for the center, with current value, default, last change and the 10 latest changes per key. */
+export async function settingsCenter(ctx: RequestContext, raw: { q?: string } = {}) {
+  await requireAnyPlatform(ctx, ["platform.controls.manage", "platform.audit.read"]);
+  const [controls, meta] = await Promise.all([getControls(), controlMeta()]);
+  const keys = [...new Set(SETTINGS_GROUPS.flatMap((g) => g.keys as readonly ControlKey[]))];
+  const history = await db().auditLog.findMany({ where: { action: "platform.control.changed", resourceType: "platform_control", resourceId: { in: keys } }, orderBy: { id: "desc" }, take: 200, select: { id: true, resourceId: true, actorId: true, oldValue: true, newValue: true, reason: true, createdAt: true } });
+  const actorIds = [...new Set(history.map((h) => h.actorId).filter((x): x is string => !!x))];
+  const users = actorIds.length ? await db().user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true } }) : [];
+  const q = raw.q?.trim().toLowerCase();
+  return {
+    groups: SETTINGS_GROUPS.map((g) => ({
+      id: g.id,
+      links: g.links,
+      keys: (g.keys as readonly ControlKey[])
+        .filter((k) => !q || k.toLowerCase().includes(q) || g.id.includes(q))
+        .map((k) => ({
+          key: k,
+          group: CONTROL_DEFS[k].group,
+          value: controls[k],
+          default: CONTROL_DEFS[k].default,
+          meta: meta.get(k) ?? null,
+          history: history.filter((h) => h.resourceId === k).slice(0, 10).map((h) => ({ ...h, who: users.find((u) => u.id === h.actorId)?.name ?? null })),
+        })),
+    })),
+  };
+}
+
+/** JSON export of every platform control value (no secrets: platform keys are not settings). */
+export async function exportSettings(ctx: RequestContext) {
+  await requireAnyPlatform(ctx, ["platform.controls.manage", "platform.audit.read"]);
+  const controls = await getControls();
+  const values = Object.fromEntries((Object.keys(CONTROL_DEFS) as ControlKey[]).map((k) => [k, controls[k]]));
+  return JSON.stringify({ exportedAt: new Date().toISOString(), note: "Platform controls only. Platform keys (secrets) are never exported.", controls: values }, null, 2);
+}

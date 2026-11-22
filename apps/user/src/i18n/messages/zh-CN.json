@@ -24892,5 +24892,54 @@
       "notConnected": "未连接"
     },
     "nav": "创意工作室"
+  },
+  "platformSupport": {
+    "back": "我的全部工单",
+    "categories": {
+      "account": "账号",
+      "ai": "AI",
+      "billing": "计费",
+      "bug": "出现故障",
+      "integration": "集成",
+      "other": "其他"
+    },
+    "category": "主题",
+    "closedNotice": "此工单已关闭。如需更多帮助，请新建工单。",
+    "conversation": "对话",
+    "markSolved": "标记为已解决",
+    "message": "消息",
+    "messageHint": "请描述发生了什么、您期望的结果以及任何错误信息。切勿发送密码或密钥。",
+    "myTickets": "我的工单",
+    "newTicket": "新建工单",
+    "newTicketHint": "我们的团队会通过邮件和此处回复。",
+    "noOrganization": "与组织无关",
+    "noTickets": "您还没有提交过工单。",
+    "organization": "组织",
+    "priorities": {
+      "HIGH": "高",
+      "LOW": "低",
+      "NORMAL": "普通"
+    },
+    "priority": "紧急程度",
+    "priorityHint": "“高”用于工作被阻塞的情况。",
+    "realyTeam": "Realy 团队",
+    "reply": "您的回复",
+    "send": "发送",
+    "statuses": {
+      "CLOSED": "已关闭",
+      "NEW": "已收到",
+      "ON_HOLD": "挂起",
+      "OPEN": "处理中",
+      "PENDING_CUSTOMER": "等待您回复",
+      "SOLVED": "已解决"
+    },
+    "subject": "主题",
+    "submit": "发送给 Realy 支持",
+    "subtitle": "对 Realy 本身有疑问或问题？请写信给 Realy 团队。",
+    "system": "更新",
+    "ticketMeta": "工单 #{number} · 创建于 {created}",
+    "title": "联系 Realy 支持",
+    "updated": "更新于 {when}",
+    "you": "您"
   }
 }

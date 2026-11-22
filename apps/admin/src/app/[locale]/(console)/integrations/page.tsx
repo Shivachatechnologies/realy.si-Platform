@@ -36,7 +36,13 @@ export default async function AdminIntegrationsPage({ searchParams }: PageProps<
   const providerName = (k: string) => PROVIDERS.find((p) => p.key === k)?.name ?? k;
   return (
     <div className="grid gap-4">
-      <AdminHeader icon={<Network />} title={t("admin.nav.integrations")} description={t("admin.integrations.subtitle")} why={t("admin.integrations.why")} actions={<SectionLink href={`/${locale}/controls`}>{t("admin.integrations.manageProviders")}</SectionLink>} />
+      <AdminHeader icon={<Network />} title={t("admin.nav.integrations")} description={t("admin.integrations.subtitle")} why={t("admin.integrations.why")} actions={
+          <>
+            <SectionLink href={`${base}/providers`}>{t("admin.integrations.healthCenter")}</SectionLink>
+            <SectionLink href={`${base}/requests`}>{t("admin.integrations.requestLog")}</SectionLink>
+            <SectionLink href={`/${locale}/controls`}>{t("admin.integrations.manageProviders")}</SectionLink>
+          </>
+        } />
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader icon={<ToggleRight />} title={t("admin.integrations.customerTitle")} description={t("admin.integrations.customerHint")} />
