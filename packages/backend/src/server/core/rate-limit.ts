@@ -26,6 +26,25 @@ export function redis(): Redis {
   return client;
 }
 
+const PING_CACHE_MS = 15_000;
+let lastPing: { at: number; ok: boolean } | null = null;
+
+/**
+ * Is Redis reachable? One PING per process every 15 s at most: the readiness endpoint is public and polled by uptime
+ * monitors, and managed Redis bills per command, so callers must not be able to turn requests into Redis commands.
+ */
+export async function redisReachable(now = Date.now()): Promise<boolean> {
+  if (lastPing && now - lastPing.at < PING_CACHE_MS) return lastPing.ok;
+  let ok = false;
+  try {
+    ok = (await redis().ping()) === "PONG";
+  } catch {
+    ok = false;
+  }
+  lastPing = { at: now, ok };
+  return ok;
+}
+
 export interface RateLimitRule {
   /** Stable bucket name, e.g. "sign-in:ip". */
   name: string;
