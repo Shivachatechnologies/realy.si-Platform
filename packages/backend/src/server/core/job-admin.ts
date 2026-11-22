@@ -29,7 +29,7 @@ import { reasonSchema, requireAnyPlatform, requirePlatform } from "@/server/modu
 export const JOB_MONITOR_PERMS = ["platform.security.read", "platform.organizations.read", "platform.controls.manage"];
 export const JOB_MANAGE_PERM = "platform.controls.manage";
 
-/** A worker is alive when its heartbeat is newer than this (it beats every 30 s). */
+/** A worker is alive when its heartbeat is newer than this (it beats every WORKER_HEARTBEAT_MS, default 60 s). */
 export const WORKER_STALE_MS = 3 * 60_000;
 
 export const WORKER_JOB_STATUSES = ["ACTIVE", "RETRYING", "SUCCEEDED", "FAILED", "DEAD", "REQUEUED"] as const;

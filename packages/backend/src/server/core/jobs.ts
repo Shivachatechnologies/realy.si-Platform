@@ -90,7 +90,10 @@ export async function enqueueAgentTask(taskId: string, jobId: string): Promise<v
 
 /** Per-handler processing of published domain events and module tasks (integration syncs, health checks...). */
 export const MODULE_JOBS_QUEUE = "module-jobs";
-/** Recurring work (module periodic jobs: recurring plans, workflow schedules, syncs...) driven by BullMQ job schedulers. */
+/**
+ * Recurring work (module periodic jobs: recurring plans, workflow schedules, syncs...). Run in-process by the worker's
+ * periodic runner (src/worker/schedules.ts); this queue receives dead-lettered runs requeued by administrators.
+ */
 export const SCHEDULES_QUEUE = "schedules";
 /** Outbound webhook deliveries (signed POSTs to subscriber URLs). */
 export const WEBHOOKS_QUEUE = "webhooks";

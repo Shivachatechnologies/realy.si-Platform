@@ -1,5 +1,5 @@
 import { db } from "@/server/core/db";
-import { redis, redisConfigured } from "@/server/core/rate-limit";
+import { redisConfigured, redisReachable } from "@/server/core/rate-limit";
 import { workerHealth } from "@/server/core/job-admin";
 
 type Check = "ok" | "fail" | "missing" | "not_configured" | "stale";
@@ -27,11 +27,8 @@ export async function GET() {
   }
   if (!redisConfigured()) checks.redis = "not_configured";
   else {
-    try {
-      checks.redis = (await redis().ping()) === "PONG" ? "ok" : "fail";
-    } catch {
-      checks.redis = "fail";
-    }
+    // Cached for 15 s per instance (a public endpoint must not cost a Redis command per request).
+    checks.redis = (await redisReachable()) ? "ok" : "fail";
   }
   let workerLastSeenAt: string | null = null;
   if (checks.database === "ok") {

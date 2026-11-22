@@ -127,6 +127,12 @@ keys under Integrations; they are verified with the provider before the connecti
 | `WORKER_EMAIL_CONCURRENCY` | 5 | Parallel password-reset emails. |
 | `WORKER_AI_LOCK_MS` | 60000 | Lock duration of AI jobs (renewed while running). |
 | `WORKER_SHUTDOWN_TIMEOUT_MS` | 25000 | Graceful drain on SIGTERM; keep below the platform's kill timeout. |
+| `WORKER_DRAIN_DELAY_S` | 60 | Seconds an idle BullMQ worker blocks on its empty queue before polling again (BullMQ default 5). A new job wakes it at once, so this only sets the idle Redis rate, not job latency. See §4 "Redis command budget". |
+| `WORKER_STALLED_INTERVAL_MS` | 120000 | How often each worker checks its queue for stalled jobs (BullMQ default 30000). A job whose worker died is recovered within its lock duration + this. |
+| `WORKER_MAX_STALLED_COUNT` | 1 | Recoveries from a stall before a job fails. |
+| `WORKER_SCHEDULE_TICK_MS` | 15000 | How often each replica claims due recurring jobs (one Redis script call). Also the schedule resolution: a recurring job starts at most this late. |
+| `WORKER_HEARTBEAT_MS` | 60000 | Heartbeat interval (Postgres row + Redis key); a worker counts as alive for 3 minutes. Max 90000. |
+| `WORKER_RELAY_IDLE_MAX_MS` | 2000 | Longest pause of an idle outbox relay between database polls (it backs off from 500 ms when there is nothing to relay and returns to 500 ms as soon as events come). No Redis involved. |
 | `REALY_SERVICE` | `web` | Log field; set `worker` on the worker. |
 
 ## 3. Web on Vercel
@@ -152,9 +158,47 @@ keys under Integrations; they are verified with the provider before the connecti
 
 * Managed Redis 7 with persistence, TLS and **`noeviction`** (BullMQ data must never be evicted). Size: a few hundred MB
   is plenty; completed jobs are trimmed automatically (bounded `removeOnComplete` / `removeOnFail`).
-* Key prefixes: `realy:*` (queues, schedule locks, heartbeats), `bull:events:*` (domain events), `rl:*` (rate limits).
+* Key prefixes: `realy:*` (queues, recurring-job state `realy:schedule-state`, schedule locks, heartbeats), `bull:events:*` (domain events), `rl:*` (rate limits).
   Use a separate Redis (or database index) per environment.
 * Serverless Redis products that do not support blocking commands and Lua scripts are not suitable for BullMQ.
+
+### Redis command budget
+
+Per-command billing (Upstash and similar) charges the worker even when nobody uses the platform: BullMQ workers poll
+their queues and run Lua scripts, and a script is billed by the commands it runs. Upstash's **free tier (500 000
+commands) is not suitable** for the worker, even after the tuning below (≈ 3.5 M commands a month idle for one
+replica): use pay-as-you-go or a fixed plan, or a Redis billed by memory/instance (Render Key Value, Redis Cloud,
+ElastiCache), which suits BullMQ better.
+
+Idle commands per minute and worker replica (counting the commands inside Lua scripts; measured with
+`redis-cli INFO commandstats`):
+
+```
+idle/min ≈ W × 8 × 60 / D          blocking poll: BZPOPMIN + moveToActive script (~6 commands) per D seconds
+         + W × 7 × 60 000 / S      stalled-job check script per S ms
+         + 3 × 60 000 / T + ~5     recurring-job claim script per T ms (+ extra claims when many jobs are due at once)
+         + 60 000 / H              heartbeat key per H ms
+W = BullMQ workers in the replica (6 with WORKER_ROLES=all: agent-tasks, auth-email, events, module-jobs,
+    webhooks, schedules), D = WORKER_DRAIN_DELAY_S (a queue holding delayed jobs, e.g. retries waiting for their
+    backoff, wakes at least every 10 s: use D = 10 for it), S = WORKER_STALLED_INTERVAL_MS,
+    T = WORKER_SCHEDULE_TICK_MS, H = WORKER_HEARTBEAT_MS
+per month ≈ idle/min × 43 200, plus the work itself (roughly 50 commands per processed job, ~10 per relayed event
+batch, 1 per rate-limited web request; the web app's readiness check pings Redis at most every 15 s per instance).
+```
+
+Defaults: 6 × 8 + 6 × 3.5 + 12 + 5 + 1 ≈ **85 commands/min ≈ 3.7 M/month** per idle replica.
+
+Measured idle (all roles, empty queues, local Redis 7, 3-minute window after start-up):
+
+| | commands / 3 min | / min | / month (× 43 200) |
+|---|---|---|---|
+| Before (BullMQ defaults: drainDelay 5 s, stalled check 30 s; 77 BullMQ job schedulers, ~31 ticks/min at ~55 commands each) | 6 860 | 2 287 | ≈ 99 M |
+| After (defaults above, periodic runner) | 243 | 81 | ≈ 3.5 M |
+
+Before, ~75 % of the idle traffic was recurring-job ticks (each a full BullMQ job), ~22 % idle polling with a 5 s
+drain delay. Recurring jobs now run in-process: one script call per tick claims the due ones (§5). Job pickup is
+unchanged — an idle worker's BZPOPMIN returns the moment a job is added (measured: 1–22 ms from enqueue to start;
+outbox event to fan-out job ≤ 1.6 s with the idle relay back-off).
 
 ## 5. Worker service
 
@@ -181,7 +225,7 @@ What it runs:
 | `auth-email` | web | password-reset email | 5 × from 2 s; data deleted after 24 h, never dead-lettered |
 | `events` | outbox relay (worker) | fan-out of each domain event to one `module-jobs` job per handler | 10 × from 1 s |
 | `module-jobs` | worker | event handlers (automation engine, notifications, outbound webhooks…), integration syncs and connection health checks | 5 × from 5 s (syncs 2) |
-| `schedules` | BullMQ job schedulers | every module's recurring job (recurring invoices, scheduled posts, workflow and AI schedules, campaigns, syncs, maintenance…) — one run per tick across all replicas, Redis lock against overlap | 3 × from 15 s |
+| `schedules` | periodic runner (worker), admins requeuing | every module's recurring job (recurring invoices, scheduled posts, workflow and AI schedules, campaigns, syncs, maintenance…). Each replica's periodic runner (`src/worker/schedules.ts`) claims due jobs every `WORKER_SCHEDULE_TICK_MS` through one Redis hash (`realy:schedule-state`: per job the last finished slot and a lease) and runs them in-process — one run per slot across all replicas, never overlapping (the lease is renewed while a run lasts; a run lost with its replica is claimed again by another once the lease lapses, ≤ 2 min). The BullMQ queue only runs dead-lettered runs requeued by an administrator. | 3 × from 15 s (in-process), then dead-lettered |
 | `webhooks` | worker | outbound webhook deliveries (signed; HTTP failures follow the delivery's own 1 min…6 h schedule) | 3 × from 10 s |
 | `dead-letter` | worker | copies of jobs whose last attempt failed (kept 30 days) | – |
 
@@ -192,7 +236,7 @@ What it runs:
   `GET /api/v1/admin/jobs?status=DEAD`, `GET /api/v1/admin/jobs/{runId}`,
   `POST /api/v1/admin/jobs/{runId}/requeue|discard` `{ "reason": "…" }` (read: `platform.security.read`,
   `platform.organizations.read` or `platform.controls.manage`; actions: `platform.controls.manage`).
-* **Heartbeat:** every 30 s a `platform_heartbeats` row and an expiring Redis key. A worker is alive when its heartbeat is
+* **Heartbeat:** every `WORKER_HEARTBEAT_MS` (60 s) a `platform_heartbeats` row and an expiring Redis key. A worker is alive when its heartbeat is
   younger than 3 minutes; shown in Admin → System and in `/api/health/ready`.
 * **Platform controls:** "pause background jobs" pauses event, module and webhook processing and skips recurring
   jobs; "pause AI execution" pauses `agent-tasks`; "automations off" skips automation handlers and schedules.
@@ -224,8 +268,10 @@ to start without `REDIS_URL`.
 ## 7. Scaling
 
 * **Web:** automatic on Vercel. Use a pooled `DATABASE_URL` (PgBouncer/Prisma Accelerate) sized for concurrent functions.
-* **Worker:** scale replicas horizontally — every queue is safe to consume from many replicas, schedulers run each tick
-  once, and the outbox relay claims rows with `SKIP LOCKED`. Start with one replica (2 vCPU / 1 GB). Raise
+* **Worker:** scale replicas horizontally — every queue is safe to consume from many replicas, each recurring-job slot
+  runs once (claimed atomically through Redis), and the outbox relay claims rows with `SKIP LOCKED`. Each replica adds
+  its own idle Redis commands (§4 "Redis command budget"): prefer fewer replicas, and give dedicated pools only the
+  roles they need (`WORKER_ROLES`), which also lowers `W`. Start with one replica (2 vCPU / 1 GB). Raise
   `WORKER_AI_CONCURRENCY` with your AI provider limits; split heavy AI load into a dedicated pool with
   `WORKER_ROLES=agents` and run the rest with `WORKER_ROLES=relay,events,modules,schedules,webhooks,email`.
 * **Database connections:** each worker replica holds one Prisma pool plus one Redis connection per queue; budget

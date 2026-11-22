@@ -9,9 +9,11 @@
  *   auth-email    password-reset email (kept off the request path)
  *   events        domain events published by the outbox relay; fanned out to one module-jobs job per handler
  *   module-jobs   event handler runs and module tasks (integration syncs, connection health checks...)
- *   schedules     recurring module work via BullMQ job schedulers (one run per tick across all replicas)
+ *   schedules     recurring module work: claimed per slot through one Redis hash and run in-process by the periodic
+ *                 runner (./schedules.ts, one run per slot across all replicas); the BullMQ queue only runs requeued runs
  *   webhooks      outbound webhook deliveries
  * Plus the outbox relay loop, platform-control pauses and a heartbeat (Postgres row + Redis key).
+ * Idle Redis use is kept low on purpose (managed Redis bills per command): see the WORKER_* knobs in ./config.ts.
  *
  * Environment: DATABASE_URL, REDIS_URL, ENCRYPTION_KEY (+ provider keys); concurrency and roles in ./config.ts.
  * SIGTERM/SIGINT: stop taking jobs, wait up to WORKER_SHUTDOWN_TIMEOUT_MS for running ones, then exit.
@@ -57,8 +59,9 @@ import { getControls } from "@/server/core/platform-controls";
 import { MODULE_JOBS } from "./modules";
 import { workerConfig, type WorkerRole } from "./config";
 import { errorMessage, tracked, WORKER_ID, type DeadLetterSink } from "./tracking";
-import { registerSchedulers, scheduleProcessor } from "./schedules";
+import { PeriodicRunner, removeLegacySchedulers, scheduleProcessor } from "./schedules";
 
+/** Outbox relay: poll interval while events keep coming; an idle relay backs off up to WORKER_RELAY_IDLE_MAX_MS. */
 const POLL_MS = 500;
 let stopping = false;
 const log = logger.child({ component: "worker" });
@@ -116,7 +119,13 @@ async function main() {
   const conn = () => new Redis(env().REDIS_URL, { maxRetriesPerRequest: null });
   const redis = conn();
   const prefix = queuePrefix();
-  log.info({ roles: [...cfg.roles], concurrency: cfg.concurrency, workerId: WORKER_ID }, "worker starting");
+  log.info(
+    { roles: [...cfg.roles], concurrency: cfg.concurrency, workerId: WORKER_ID, drainDelayS: cfg.drainDelayS, stalledIntervalMs: cfg.stalledIntervalMs, scheduleTickMs: cfg.scheduleTickMs },
+    "worker starting",
+  );
+  // Every BullMQ worker: an idle one blocks up to drainDelay on its queue (a new job wakes it at once) and checks for
+  // stalled jobs every stalledInterval. These two set the idle Redis command rate (docs/deployment.md §4).
+  const polling = { drainDelay: cfg.drainDelayS, stalledInterval: cfg.stalledIntervalMs, maxStalledCount: cfg.maxStalledCount };
 
   // Producers.
   const eventsQueue = new Queue(EVENTS_QUEUE, { connection: redis });
@@ -167,7 +176,7 @@ async function main() {
       tracked({ queue: AUTH_EMAIL_QUEUE, persist: "always", redactErrors: true }, async (job: Job<PasswordResetJob>) => {
         await withSpan("worker.auth_email", { job: job.name }, () => processPasswordResetRequest(job.data));
       }),
-      { connection: conn(), prefix, concurrency: cfg.concurrency.authEmail },
+      { ...polling, connection: conn(), prefix, concurrency: cfg.concurrency.authEmail },
     );
     // Never log job data (it contains an email address).
     w.on("failed", (job, err) => {
@@ -184,7 +193,7 @@ async function main() {
         const finalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
         await withSpan("worker.agent_task", { job: job.name }, () => processAgentTask(job.data.taskId, job.id!, { finalAttempt }));
       }),
-      { connection: conn(), prefix, concurrency: cfg.concurrency.agentTasks, lockDuration: cfg.agentLockMs },
+      { ...polling, connection: conn(), prefix, concurrency: cfg.concurrency.agentTasks, lockDuration: cfg.agentLockMs },
     );
     w.on("failed", onFailed(AGENT_TASK_QUEUE));
     workers.push({ name: AGENT_TASK_QUEUE, worker: w });
@@ -208,7 +217,7 @@ async function main() {
         );
         return matching.length;
       },
-      { connection: conn(), concurrency: cfg.concurrency.events },
+      { ...polling, connection: conn(), concurrency: cfg.concurrency.events },
     );
     w.on("failed", (job, err) => {
       log.warn({ jobId: job?.id, type: job?.name, err: err.message }, "event fan-out failed");
@@ -240,7 +249,7 @@ async function main() {
     const w = new Worker<ModuleTaskJob>(
       MODULE_JOBS_QUEUE,
       tracked({ queue: MODULE_JOBS_QUEUE, persist: "always", organizationOf: orgOf, deadLetter: deadLetter(MODULE_JOBS_QUEUE) }, runTask),
-      { connection: conn(), prefix, concurrency: cfg.concurrency.moduleJobs, lockDuration: 120_000 },
+      { ...polling, connection: conn(), prefix, concurrency: cfg.concurrency.moduleJobs, lockDuration: 120_000 },
     );
     w.on("failed", (job, err) => {
       onFailed(MODULE_JOBS_QUEUE)(job, err);
@@ -253,19 +262,25 @@ async function main() {
     const w = new Worker<ModuleTaskJob>(
       WEBHOOKS_QUEUE,
       tracked({ queue: WEBHOOKS_QUEUE, persist: "always", organizationOf: orgOf, deadLetter: deadLetter(WEBHOOKS_QUEUE) }, runTask),
-      { connection: conn(), prefix, concurrency: cfg.concurrency.webhooks },
+      { ...polling, connection: conn(), prefix, concurrency: cfg.concurrency.webhooks },
     );
     w.on("failed", onFailed(WEBHOOKS_QUEUE));
     workers.push({ name: WEBHOOKS_QUEUE, worker: w });
   }
 
+  let runner: PeriodicRunner | null = null;
   if (has("schedules")) {
-    await registerSchedulers(schedulesQueue, periodic);
+    // Recurring jobs: claimed per slot and run in-process (./schedules.ts). The BullMQ job schedulers earlier versions
+    // registered are removed: each of their ticks cost a full BullMQ job (~55 Redis commands), ~30 a minute when idle.
+    await removeLegacySchedulers(schedulesQueue);
+    runner = new PeriodicRunner({ redis, jobs: periodic, tickMs: cfg.scheduleTickMs, concurrency: cfg.concurrency.schedules, deadLetter: deadLetter(SCHEDULES_QUEUE) });
+    log.info({ periodicJobs: periodic.length, tickMs: cfg.scheduleTickMs }, "periodic runner registered");
+    // The queue itself only receives runs requeued from the dead-letter queue (and ticks a legacy scheduler left behind).
     const run = scheduleProcessor(periodic, redis);
     const w = new Worker(
       SCHEDULES_QUEUE,
       tracked({ queue: SCHEDULES_QUEUE, persist: "work_or_failure", deadLetter: deadLetter(SCHEDULES_QUEUE) }, (job: Job) => withSpan("worker.periodic", { job: job.name }, () => run(job))),
-      { connection: conn(), prefix, concurrency: cfg.concurrency.schedules, lockDuration: 300_000 },
+      { ...polling, connection: conn(), prefix, concurrency: cfg.concurrency.schedules, lockDuration: 300_000 },
     );
     w.on("failed", (job, err) => {
       log.error({ job: job?.name, err: err.message }, "periodic job failed");
@@ -342,8 +357,10 @@ async function main() {
     await (await import("@/server/modules/voiceos/stream-bus")).publishStreamEvents(redis, events); // G5: live-stream fan-out (B20); never throws
   };
 
-  log.info({ queues: workers.map((w) => w.name), relay: has("relay") }, "worker started");
+  runner?.start();
+  log.info({ queues: workers.map((w) => w.name), relay: has("relay"), periodicRunner: !!runner }, "worker started");
   let nextHeartbeat = 0;
+  let relayIdleMs = POLL_MS;
   while (!stopping) {
     try {
       await applyPauses();
@@ -360,8 +377,14 @@ async function main() {
     }
     try {
       const n = await withSpan("worker.outbox_relay", {}, () => relayBatch(publish));
-      if (n > 0) relayLog.info({ published: n }, "relayed events");
-      if (n === 0) await sleep(POLL_MS);
+      if (n > 0) {
+        relayLog.info({ published: n }, "relayed events");
+        relayIdleMs = POLL_MS;
+      } else {
+        // Nothing to relay: back off (500 ms → WORKER_RELAY_IDLE_MAX_MS), back to 500 ms as soon as events come.
+        await sleep(relayIdleMs);
+        relayIdleMs = Math.min(relayIdleMs * 2, cfg.relayIdleMaxMs);
+      }
     } catch (err) {
       relayLog.error({ err }, "relay batch failed");
       captureException(err, { job: "outbox-relay" });
@@ -372,13 +395,16 @@ async function main() {
   // Graceful shutdown: stop fetching, let running jobs finish (bounded), then release connections.
   log.info({ timeoutMs: cfg.shutdownTimeoutMs }, "worker stopping; waiting for running jobs");
   setJobDispatcher(null);
-  const closing = Promise.all(workers.map((w) => w.worker.close()));
+  // The periodic runner stops claiming, waits for its runs (same bound) and reports them before Redis closes.
+  const runnerStopped = runner?.stop(cfg.shutdownTimeoutMs);
+  const closing = Promise.all([...workers.map((w) => w.worker.close()), runnerStopped]);
   const timedOut = await Promise.race([closing.then(() => false), sleep(cfg.shutdownTimeoutMs).then(() => true)]);
   if (timedOut) {
     // Jobs still running are released; BullMQ's stalled-job check hands them to another worker.
     log.warn("shutdown timeout reached; closing workers forcefully");
     await Promise.all(workers.map((w) => w.worker.close(true).catch(() => undefined)));
   }
+  await runnerStopped; // bounded by the same timeout; its last report needs the Redis connection
   await Promise.all(producers.map((q) => q.close().catch(() => undefined)));
   await db().platformHeartbeat.delete({ where: { id: heartbeatId } }).catch(() => undefined);
   await redis.del(workerHeartbeatKey(WORKER_ID)).catch(() => undefined);
