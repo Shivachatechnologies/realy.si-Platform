@@ -189,6 +189,8 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     docsUrl: "https://console.anthropic.com/settings/keys",
     validate: pattern(/^sk-ant-[A-Za-z0-9_-]{20,}$/, "Anthropic keys start with sk-ant-"),
     blocks: ["aiTasks", "liveChatAi"],
+    // The agent runtime also runs on OpenAI or Gemini: Anthropic only blocks AI when neither of them is set.
+    appliesWhen: (all) => !all("OPENAI_API_KEY") && !all("GEMINI_API_KEY"),
     testable: true,
     placeholder: "sk-ant-…",
   },

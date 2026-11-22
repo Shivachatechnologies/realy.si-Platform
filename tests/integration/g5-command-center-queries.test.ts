@@ -33,7 +33,7 @@ async function setup() {
   const org = await createOrganization(owner.ctx, { name: `CC ${Math.random()}` });
   await raiseLimits(org.id, { "companies.max": 2 });
   const company = await createCompany(owner.ctx, org.id, { name: "Snapshot Co", incorporationCountryCode: "GB" });
-  await db().lead.createMany({ data: Array.from({ length: 3 }, (_, i) => ({ organizationId: org.id, companyId: company.id, name: `Lead ${i}`, createdById: owner.user.id })) }).catch(() => undefined);
+  await db().lead.createMany({ data: Array.from({ length: 3 }, (_, i) => ({ organizationId: org.id, companyId: company.id, name: `Lead ${i}`, email: `lead${i}@example.com`, currency: "GBP", score: 0, scoreLabel: "NURTURE" as const, createdById: owner.user.id })) }).catch(() => undefined);
   const chain = await companyChain(db(), org.id, company.id);
   return { owner, org, company, chain };
 }

@@ -69,7 +69,7 @@ describe("Voice OS dispatch honesty", () => {
       expect(msgs.jarvis.reply.queuedWorkerDown as string).toContain("{team}");
       expect(typeof msgs.jarvis.reply.queuedNoWorkerSetup).toBe("string");
     }
-    const en = (await import("@/i18n/messages/en-US.json")).default as { jarvis: { reply: Record<string, string> } };
+    const en = (await import("@/i18n/messages/en-US.json")).default as unknown as { jarvis: { reply: Record<string, string> } };
     expect(en.jarvis.reply.queuedWorkerDown).toMatch(/isn’t running/);
     expect(en.jarvis.reply.queuedWorkerDown).not.toMatch(/I’ll tell you when/);
   });
