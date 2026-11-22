@@ -7,7 +7,7 @@ import { activateSubscription, quote, upsertBillingProfile } from "@/server/modu
 import { isEnabled } from "@/server/modules/flags/service";
 import { formatMoney } from "@/i18n/format";
 import { directionOf } from "@/i18n/config";
-import { expectCode, grant, makeUser, resetDb, system } from "../helpers";
+import { expectCode, grant, makeUser, raiseLimits, resetDb, system } from "../helpers";
 
 async function priceId(planKey: string, marketType: "GLOBAL" | "REGION" | "COUNTRY", marketCode: string, interval: "MONTH" | "YEAR" = "MONTH") {
   const p = await db().price.findFirstOrThrow({ where: { plan: { key: planKey }, marketType, marketCode, interval } });
@@ -65,11 +65,18 @@ describe("global persona matrix (docs/globalization.md §8)", () => {
   });
 
   it("public pricing reports unavailable plans honestly", async () => {
+    // The public catalog: Starter $99 / Growth $199 / Scale $999 (entitlements/catalog.ts), GLOBAL USD for India.
     const plans = await getPublicPricing("IN", "MONTH");
-    const founder = plans.find((p) => p.key === "founder")!;
-    const enterprise = plans.find((p) => p.key === "enterprise")!;
-    expect(founder.resolution.available).toBe(true);
-    expect(enterprise.resolution.available).toBe(false);
+    expect(plans.map((p) => p.key)).toEqual(["starter", "growth", "scale"]);
+    expect(plans.map((p) => p.resolution.available && p.resolution.price.money.amountMinor)).toEqual([9900n, 19900n, 99900n]);
+    // A public plan without any price is reported as unavailable, never as $0.
+    await db().plan.update({ where: { key: "enterprise" }, data: { public: true } });
+    try {
+      const enterprise = (await getPublicPricing("IN", "MONTH")).find((p) => p.key === "enterprise")!;
+      expect(enterprise.resolution).toEqual({ available: false, reason: "no_price_for_market" });
+    } finally {
+      await db().plan.update({ where: { key: "enterprise" }, data: { public: false } });
+    }
   });
 });
 
@@ -196,6 +203,8 @@ describe("independent country dimensions + regional checkout", () => {
   it("founder in India, company in UAE, billing UAE, market USA, Dubai time, Middle East data", async () => {
     const { ctx, user } = await makeUser({ countryCode: "IN", locale: "en-US" });
     const org = await createOrganization(ctx, { name: "Gulf Ventures" });
+    // More companies and members than the Growth trial allows (1 company, 3 seats).
+    await raiseLimits(org.id, { "companies.max": 2, "seats.max": 5 });
     const company = await createCompany(ctx, org.id, {
       name: "Gulf Ventures FZ-LLC",
       incorporationCountryCode: "AE",

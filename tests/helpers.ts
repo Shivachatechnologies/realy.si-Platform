@@ -3,10 +3,13 @@ import { assertDisposableDatabase } from "./db-guard";
 import { userContext, systemContext, type RequestContext } from "@/server/core/context";
 import { hashPassword } from "@/server/modules/auth/password";
 import { seedDevCatalog, seedReferenceData } from "@/server/modules/seed";
+import { seedPlanCatalog } from "@/server/modules/entitlements/seed";
 import { systemRoleId } from "@/server/modules/rbac/service";
 import type { ScopeType } from "@/generated/prisma/enums";
 import { authEmailQueue } from "@/server/core/jobs";
 import { processPasswordResetRequest } from "@/server/modules/auth/recovery";
+import { invalidateEntitlements } from "@/server/modules/entitlements/service";
+import type { LimitKey } from "@/server/modules/entitlements/catalog";
 
 const TENANT_TABLES = [
   "stripe_events",
@@ -59,7 +62,7 @@ const TENANT_TABLES = [
 
 let referenceSeeded = false;
 
-/** Clean slate for one test file: tenant data and catalog wiped (TRUNCATE bypasses append-only row triggers). */
+/** Clean slate for one test file: tenant data and catalog wiped and re-seeded (TRUNCATE bypasses append-only row triggers). */
 export async function resetDb(): Promise<void> {
   assertDisposableDatabase(process.env.DATABASE_URL, ["_test"], "resetDb");
   const client = db();
@@ -69,7 +72,10 @@ export async function resetDb(): Promise<void> {
     await seedReferenceData(client);
     referenceSeeded = true;
   }
+  // Same order as packages/database/prisma/seed.ts: the Starter / Growth / Scale catalog, then the legacy dev plans.
+  await seedPlanCatalog(client);
   await seedDevCatalog(client);
+  invalidateEntitlements();
 }
 
 let counter = 0;
@@ -131,4 +137,15 @@ export async function runQueuedPasswordResets(): Promise<number> {
 /** Drop queued test jobs (the test queue prefix keeps these apart from any development worker). */
 export async function clearJobQueues(): Promise<void> {
   await authEmailQueue().obliterate({ force: true });
+}
+
+/**
+ * New organizations run on the 7-day Growth trial (1 company, 3 seats; entitlements/catalog.ts). Tests whose subject
+ * is not plan limits raise the limits they need the way an administrator would: an entitlement override.
+ */
+export async function raiseLimits(organizationId: string, limits: Partial<Record<LimitKey, number>>): Promise<void> {
+  await db().entitlementOverride.createMany({
+    data: Object.entries(limits).map(([key, value]) => ({ organizationId, key, enabled: true, limitValue: BigInt(value), reason: "test fixture" })),
+  });
+  invalidateEntitlements(organizationId);
 }

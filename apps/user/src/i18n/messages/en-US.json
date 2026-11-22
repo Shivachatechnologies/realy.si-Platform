@@ -21267,7 +21267,7 @@
       "retentionHint": "Closed chats and their visitors are deleted after this period.",
       "saved": "Saved",
       "step6": "6 · Install and go live",
-      "step6Hint": "Paste this line before the closing </body> tag of your website (or into your site builder’s custom code field).",
+      "step6Hint": "Paste this line before the closing '</body>' tag of your website (or into your site builder’s custom code field).",
       "copy": "Copy code",
       "copied": "Copied",
       "rotate": "New key",

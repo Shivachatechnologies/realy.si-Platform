@@ -110,7 +110,8 @@ export function CompanyProfileForm({
         </Field>
         <Field label={t("onboarding.timezone")} htmlFor="cp-tz">
           <Select id="cp-tz" value={f.timezone} onChange={set("timezone")}>
-            {timezones.map((tz) => (
+            {/* Intl lists legacy zone names (Asia/Calcutta); keep the stored canonical one (Asia/Kolkata) selectable. */}
+            {(timezones.includes(f.timezone) ? timezones : [f.timezone, ...timezones]).map((tz) => (
               <option key={tz} value={tz}>
                 {tz}
               </option>

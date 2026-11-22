@@ -101,19 +101,37 @@ describe("rate limiting under concurrency and store failure", () => {
     expect(statuses.filter((s) => s === 429)).toHaveLength(15);
   });
 
-  it("when the store is down, production fails closed for sensitive buckets and open for the rest", async () => {
+  it("when Redis is down, production keeps enforcing limits with the shared Postgres counters", async () => {
     redis().disconnect();
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     resetEnvCache();
-    const sensitive = await consume({ name: "test-down-auth", limit: 5, windowMs: 60_000, sensitive: true }, "s");
-    expect(sensitive).toMatchObject({ allowed: false, degraded: true });
-    const normal = await consume({ name: "test-down-public", limit: 5, windowMs: 60_000 }, "s");
-    expect(normal).toMatchObject({ allowed: true, degraded: true });
-    // The route reports a retryable 503, not a fake "wrong password" or a silent pass.
-    const res = await signInRoute(req("/api/v1/auth/sign-in", { body: { email: "x@example.test", password: "x" }, xff: "198.18.1.1" }), noParams);
-    expect(res.status).toBe(503);
-    expect((await res.json()).error.code).toBe("service_unavailable");
+    const rule = { name: "test-down-auth-db", limit: 3, windowMs: 60_000, sensitive: true };
+    const now = Date.now();
+    const results = [];
+    for (let i = 0; i < 5; i++) results.push(await consume(rule, `s-${now}`, now));
+    expect(results.map((r) => r.allowed)).toEqual([true, true, true, false, false]);
+    expect(results.every((r) => r.degraded)).toBe(true);
+  });
+
+  it("when every store is down, production fails closed for sensitive buckets and open for the rest", async () => {
+    redis().disconnect();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    resetEnvCache();
+    const dbDown = vi.spyOn(db(), "$queryRaw").mockRejectedValue(new Error("database unavailable"));
+    try {
+      const sensitive = await consume({ name: "test-down-auth", limit: 5, windowMs: 60_000, sensitive: true }, "s");
+      expect(sensitive).toMatchObject({ allowed: false, degraded: true });
+      const normal = await consume({ name: "test-down-public", limit: 5, windowMs: 60_000 }, "s");
+      expect(normal).toMatchObject({ allowed: true, degraded: true });
+      // The route reports a retryable 503, not a fake "wrong password" or a silent pass.
+      const res = await signInRoute(req("/api/v1/auth/sign-in", { body: { email: "x@example.test", password: "x" }, xff: "198.18.1.1" }), noParams);
+      expect(res.status).toBe(503);
+      expect((await res.json()).error.code).toBe("service_unavailable");
+    } finally {
+      dbDown.mockRestore();
+    }
   });
 
   it("production refuses to start without an explicit proxy topology (TRUSTED_PROXY_HOPS)", async () => {

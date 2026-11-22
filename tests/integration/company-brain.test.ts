@@ -8,7 +8,7 @@ import { deleteDocument, getDocument, ingestDocument, listDocuments, searchDocum
 import { GET as listRoute, POST as ingestRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/brain/documents/route";
 import { GET as documentRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/brain/documents/[documentId]/route";
 import { GET as searchRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/brain/search/route";
-import { expectCode, makeUser, resetDb } from "../helpers";
+import { expectCode, makeUser, raiseLimits, resetDb } from "../helpers";
 import { params, req } from "../http";
 import { makePdf } from "../pdf";
 
@@ -27,6 +27,8 @@ const PLAN = "Launch plan\n\nWe launch in the United Arab Emirates first, then e
 async function setup() {
   const owner = await makeUser({ name: "Owner" });
   const org = await createOrganization(owner.ctx, { name: `Brain ${Math.random()}` });
+  // More companies and members than the Growth trial allows (1 company, 3 seats).
+  await raiseLimits(org.id, { "companies.max": 2, "seats.max": 5 });
   const company = await createCompany(owner.ctx, org.id, { name: "Brain Co", incorporationCountryCode: "US" });
   return { owner, org, company };
 }

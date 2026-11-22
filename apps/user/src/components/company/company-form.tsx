@@ -149,7 +149,8 @@ export function CompanyForm({
         </Field>
         <Field label={t("onboarding.timezone")} htmlFor="timezone">
           <Select id="timezone" value={timezone} onChange={(e) => (setTimezone(e.target.value), setTouched((x) => ({ ...x, timezone: true })))}>
-            {timezones.map((tz) => (
+            {/* Intl lists legacy zone names (Asia/Calcutta); keep the suggested canonical one (Asia/Kolkata) selectable. */}
+            {(timezones.includes(timezone) ? timezones : [timezone, ...timezones]).map((tz) => (
               <option key={tz} value={tz}>
                 {tz}
               </option>

@@ -67,7 +67,9 @@ describe("HTTP API conventions (docs/api.md)", () => {
   it("serves public pricing with money as string minor units", async () => {
     const res = await pricingRoute(req("/api/v1/catalog/pricing?country=IN&interval=MONTH"), noParams);
     const body = await res.json();
-    const founder = body.plans.find((p: { key: string }) => p.key === "founder");
-    expect(founder.resolution.price.money).toEqual({ amountMinor: "499900", currency: "INR" });
+    // The public catalog is Starter / Growth / Scale; India has no own price, so the GLOBAL USD price applies.
+    expect(body.plans.map((p: { key: string }) => p.key)).toEqual(["starter", "growth", "scale"]);
+    const starter = body.plans.find((p: { key: string }) => p.key === "starter");
+    expect(starter.resolution.price.money).toEqual({ amountMinor: "9900", currency: "USD" });
   });
 });

@@ -205,5 +205,10 @@ model BrainEmbedding {
 
   @@unique([targetType, targetId, model])
   @@index([companyId, model, targetType])
+  /// The real index is `USING hnsw (embedding vector_cosine_ops)`, created with raw SQL in migration
+  /// 20261122130000_voiceos_org_creative_costs_memory_calls. Prisma cannot express HNSW; this is how `prisma db pull`
+  /// represents it, so `migrate diff` (CI drift check) sees no drift instead of proposing DROP INDEX. Never generate a
+  /// migration that recreates this index from the schema: it must stay the hand-written HNSW index.
+  @@index([embedding], map: "brain_embeddings_hnsw")
   @@map("brain_embeddings")
 }

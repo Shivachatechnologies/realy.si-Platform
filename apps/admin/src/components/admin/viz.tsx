@@ -216,29 +216,32 @@ export function TrendChart({ days, series, title, height = 180, className }: { d
         <span>{days[Math.floor(days.length / 2)] ? dayLabel(days[Math.floor(days.length / 2)]!) : ""}</span>
         <span>{days.length ? dayLabel(days[days.length - 1]!) : ""}</span>
       </div>
-      <table className="sr-only">
-        <caption>{title}</caption>
-        <thead>
-          <tr>
-            <th scope="col">—</th>
-            {series.map((s) => (
-              <th key={s.label} scope="col">
-                {s.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {days.map((d, i) => (
-            <tr key={d}>
-              <th scope="row">{dayLabel(d)}</th>
+      {/* A table ignores width:1px, so the screen-reader copy is clipped by a wrapper (no RTL overflow). */}
+      <div className="sr-only">
+        <table>
+          <caption>{title}</caption>
+          <thead>
+            <tr>
+              <th scope="col">—</th>
               {series.map((s) => (
-                <td key={s.label}>{fmt(s.values[i] ?? 0, s.format)}</td>
+                <th key={s.label} scope="col">
+                  {s.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {days.map((d, i) => (
+              <tr key={d}>
+                <th scope="row">{dayLabel(d)}</th>
+                {series.map((s) => (
+                  <td key={s.label}>{fmt(s.values[i] ?? 0, s.format)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
