@@ -232,7 +232,8 @@ export async function createPost(ctx: RequestContext, organizationId: string, co
         status: scheduledAt ? "SCHEDULED" : "DRAFT",
         scheduledAt,
         createdById: actorId(ctx, organizationId),
-        targets: { create: targets.map((t) => ({ organizationId, companyId, accountId: t.accountId, text: t.text })) },
+        // companyId comes from the post (composite relation [postId, companyId]); passing it here is rejected by Prisma.
+        targets: { create: targets.map((t) => ({ organizationId, accountId: t.accountId, text: t.text })) },
       },
     });
     await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "marketing.social_post.created", resourceType: "marketing_social_post", resourceId: p.id, newValue: { title: p.title, status: p.status, scheduledAt, targets: targets.length } });
