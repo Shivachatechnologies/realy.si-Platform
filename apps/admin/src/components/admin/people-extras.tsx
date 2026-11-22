@@ -1,38 +1,25 @@
 import Link from "next/link";
-import { BarChart3, History, KeyRound, Network, NotebookPen, Settings2 } from "lucide-react";
+import { BarChart3, History, KeyRound, Network, NotebookPen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Facts } from "@/components/admin/kit";
-import { EditOrganization, EditUserProfile, NotesPanel, ResetAccess } from "@/components/admin/people-actions";
+import { EditOrganization, NotesPanel } from "@/components/admin/people-actions";
 import { getT } from "@/i18n/server";
 import { formatMoney, formatNumber, formatRelativeTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { listNotes, userInsights } from "@/server/modules/admin/people";
 import type { RequestContext } from "@/server/core/context";
 
-/** Extra admin sections on the user detail page: profile edit, access reset, usage, activity timeline, notes. */
+/** Extra admin sections on the user detail page (Activity tab): usage, notes, activity timeline, login history. */
 export async function UserAdminExtras({ ctx, locale, user }: { ctx: RequestContext; locale: string; user: { id: string; name: string; email: string; locale: string; timezone: string } }) {
   const t = await getT(locale as Parameters<typeof getT>[0]);
-  const [ins, notes, canManage, canNote] = await Promise.all([
+  const [ins, notes, canNote] = await Promise.all([
     userInsights(ctx, user.id),
     listNotes(ctx, "user", user.id),
-    canPlatform(ctx, "platform.users.manage"),
     Promise.all([canPlatform(ctx, "platform.support.manage"), canPlatform(ctx, "platform.users.manage")]).then((x) => x.some(Boolean)),
   ]);
   return (
     <>
-      {canManage ? (
-        <Card>
-          <CardHeader icon={<Settings2 />} title={t("admin.people.manageUser")} description={t("admin.people.manageUserHint")} />
-          <CardBody className="flex flex-wrap items-center gap-2">
-            <EditUserProfile userId={user.id} initial={{ name: user.name, email: user.email, locale: user.locale, timezone: user.timezone }} />
-            <ResetAccess userId={user.id} email={user.email} />
-            <Link href={`/${locale}/roles/view-as?user=${user.id}`} className="text-xs font-medium text-primary hover:underline">
-              {t("admin.nav.viewAs")}
-            </Link>
-          </CardBody>
-        </Card>
-      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader icon={<BarChart3 />} title={t("admin.people.usage")} />
@@ -116,13 +103,16 @@ export async function UserAdminExtras({ ctx, locale, user }: { ctx: RequestConte
 }
 
 /** Tabs of the organization detail area (overview, members, activity, entitlements — the latter owned by Plans). */
-export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId: string; active: "overview" | "members" | "activity" | "integrations" }) {
+export async function OrgTabs({ locale, orgId, active }: { locale: string; orgId: string; active: "overview" | "members" | "activity" | "integrations" | "security" | "ai" | "access" }) {
   const t = await getT(locale as Parameters<typeof getT>[0]);
   const base = `/${locale}/organizations/${orgId}`;
   const tabs = [
     { key: "overview", href: base, label: t("admin.people.tabs.overview") },
     { key: "members", href: `${base}/members`, label: t("admin.people.tabs.members") },
     { key: "activity", href: `${base}/activity`, label: t("admin.people.tabs.activity") },
+    { key: "security", href: `${base}/security`, label: t("admin.access.org.tabs.security") },
+    { key: "ai", href: `${base}/ai`, label: t("admin.access.org.tabs.ai") },
+    { key: "access", href: `${base}/access`, label: t("admin.access.org.tabs.access") },
     { key: "entitlements", href: `/${locale}/plans/organizations/${orgId}`, label: t("admin.people.tabs.entitlements") },
     // The organization's own payment / WhatsApp / Mailchimp accounts (status, Realy-team setup) and a link to all of
     // its connections on the Integrations & API page.

@@ -9,3 +9,87 @@
 //   - Relations between this stream's own new tables are fine.
 //   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
 //   - At most one migration per PR, timestamp minute reserved for stream B: …_20xx.
+
+// ───────────── Audited impersonation (BE/admin/impersonation.ts) ─────────────
+// An admin starts a time-boxed session as a user (platform.impersonate, fresh MFA, reason). The admin app mints a
+// one-time token (only its SHA-256 is stored); the user app redeems it at /[locale]/impersonate/[token] into a
+// Session row with impersonatorId / impersonationId. READ_ONLY sessions are refused every write in rbac.
+
+enum ImpersonationMode {
+  READ_ONLY
+  FULL
+}
+
+model AdminImpersonation {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  adminUserId    String            @map("admin_user_id") @db.Uuid
+  targetUserId   String            @map("target_user_id") @db.Uuid
+  organizationId String?           @map("organization_id") @db.Uuid
+  mode           ImpersonationMode @default(READ_ONLY)
+  reason         String
+  ticketRef      String?           @map("ticket_ref")
+  // One-time redemption token (SHA-256), valid for a few minutes; cleared once redeemed.
+  tokenHash      String?           @unique @map("token_hash")
+  tokenExpiresAt DateTime?         @map("token_expires_at") @db.Timestamptz(3)
+  redeemedAt     DateTime?         @map("redeemed_at") @db.Timestamptz(3)
+  sessionId      String?           @map("session_id") @db.Uuid
+  startedAt      DateTime          @default(now()) @map("started_at") @db.Timestamptz(3)
+  // At most 60 minutes after startedAt.
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(3)
+  endedAt        DateTime?         @map("ended_at") @db.Timestamptz(3)
+  // "admin" | "target" | "expiry" | "revoked"
+  endedBy        String?           @map("ended_by")
+  requestCount   Int               @default(0) @map("request_count")
+
+  @@index([adminUserId, startedAt(sort: Desc)])
+  @@index([targetUserId, startedAt(sort: Desc)])
+  @@index([endedAt, expiresAt])
+  @@map("admin_impersonations")
+}
+
+// ───────────── Platform access reviews (BE/admin/access-reviews.ts) ─────────────
+
+enum AccessReviewStatus {
+  OPEN
+  COMPLETED
+  CANCELED
+}
+
+enum AccessReviewDecision {
+  KEEP
+  REVOKE
+}
+
+model PlatformAccessReview {
+  id          String             @id @default(uuid(7)) @db.Uuid
+  title       String
+  status      AccessReviewStatus @default(OPEN)
+  createdById String             @map("created_by_id") @db.Uuid
+  dueAt       DateTime?          @map("due_at") @db.Timestamptz(3)
+  completedAt DateTime?          @map("completed_at") @db.Timestamptz(3)
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  items PlatformAccessReviewItem[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("platform_access_reviews")
+}
+
+model PlatformAccessReviewItem {
+  id           String                @id @default(uuid(7)) @db.Uuid
+  reviewId     String                @map("review_id") @db.Uuid
+  assignmentId String                @map("assignment_id") @db.Uuid
+  principalId  String                @map("principal_id") @db.Uuid
+  roleKey      String                @map("role_key")
+  scope        String
+  decision     AccessReviewDecision?
+  decidedById  String?               @map("decided_by_id") @db.Uuid
+  decidedAt    DateTime?             @map("decided_at") @db.Timestamptz(3)
+  note         String?
+
+  review PlatformAccessReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, assignmentId])
+  @@index([principalId])
+  @@map("platform_access_review_items")
+}

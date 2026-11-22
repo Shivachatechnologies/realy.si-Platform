@@ -94,7 +94,8 @@ const SECTIONS: Record<string, string[]> = {
   // A — shell: "", search, actions, notifications and me need only a platform role (OPEN_SECTIONS below).
   // B — people and access
   "access-reviews": ACCESS,
-  impersonation: ["platform.impersonate"],
+  // Starting one needs platform.impersonate (checked in the handler); security and audit readers see the history.
+  impersonation: ["platform.impersonate", "platform.security.read", "platform.security.manage", "platform.audit.read"],
   // C — AI platform
   workflows: AI,
   knowledge: AI,

@@ -68,12 +68,81 @@ export function invalidateGrants(ctx: RequestContext) {
  */
 const isActiveMemberThisRender = cache((organizationId: string, userId: string) => isActiveMember(db(), organizationId, userId));
 
+/** An ACTIVE membership of an organization that is not archived (CLOSED organizations grant nothing to anyone). */
 async function isActiveMember(client: Tx | Db, organizationId: string, userId: string): Promise<boolean> {
   const m = await client.membership.findUnique({
     where: { organizationId_userId: { organizationId, userId } },
-    select: { status: true },
+    select: { status: true, organization: { select: { status: true } } },
   });
-  return m?.status === "ACTIVE";
+  return m?.status === "ACTIVE" && m.organization.status !== "CLOSED";
+}
+
+// ───────────── Write restrictions (impersonation, platform-set user restrictions) ─────────────
+
+/**
+ * Restrictions that narrow what a signed-in person may change, whatever their roles grant:
+ *   - an audited impersonation session (admin_impersonations, stream B) in READ_ONLY mode may not write at all, and no
+ *     impersonation session ever exercises platform permissions;
+ *   - platform-set user restrictions (users.restrictions): `readOnly` (no writes) and `aiDisabled` (no AI runs).
+ * Read permissions (`*.read`) are never restricted. Loaded lazily (only for write checks) and memoized per request.
+ */
+export interface WriteGuard {
+  impersonation: { id: string; mode: "READ_ONLY" | "FULL"; live: boolean } | null;
+  readOnly: boolean;
+  aiDisabled: boolean;
+}
+
+export const AI_RUN_PERMISSIONS: ReadonlySet<string> = new Set(["agents.run", "agents.manage", "workflows.execute"]);
+export const isReadPermission = (permission: string) => permission.endsWith(".read");
+
+const guardCache = new WeakMap<RequestContext, Promise<WriteGuard>>();
+
+async function loadWriteGuard(ctx: RequestContext): Promise<WriteGuard> {
+  const userId = ctx.actor.id!;
+  const session = ctx.sessionId
+    ? await db().session.findUnique({ where: { id: ctx.sessionId }, select: { userId: true, impersonationId: true, user: { select: { restrictions: true } } } })
+    : null;
+  const restrictions = (session && session.userId === userId ? session.user.restrictions : (await db().user.findUnique({ where: { id: userId }, select: { restrictions: true } }))?.restrictions) as
+    | { readOnly?: unknown; aiDisabled?: unknown }
+    | null
+    | undefined;
+  let impersonation: WriteGuard["impersonation"] = null;
+  if (session?.impersonationId) {
+    const imp = await db().adminImpersonation.findUnique({ where: { id: session.impersonationId }, select: { id: true, mode: true, endedAt: true, expiresAt: true } });
+    // A missing, ended or expired impersonation record leaves the session read-only (fail closed).
+    const live = !!imp && !imp.endedAt && imp.expiresAt.getTime() > Date.now();
+    impersonation = { id: session.impersonationId, mode: imp && live ? imp.mode : "READ_ONLY", live };
+  }
+  return { impersonation, readOnly: restrictions?.readOnly === true, aiDisabled: restrictions?.aiDisabled === true };
+}
+
+/** The write guard of a USER actor (null for SYSTEM / service accounts / agents / anonymous). */
+export function writeGuardFor(ctx: RequestContext): Promise<WriteGuard> | null {
+  if (ctx.actor.type !== "USER" || !ctx.actor.id) return null;
+  let g = guardCache.get(ctx);
+  if (!g) {
+    g = loadWriteGuard(ctx);
+    guardCache.set(ctx, g);
+  }
+  return g;
+}
+
+/** Why a guard refuses `permission` (null = allowed). Pure, unit-tested. */
+export function restrictionReason(guard: WriteGuard, permission: string): string | null {
+  if (guard.impersonation && PLATFORM_ONLY.has(permission)) return "impersonation_platform";
+  if (isReadPermission(permission)) return null;
+  if (guard.impersonation?.mode === "READ_ONLY") return "impersonation_read_only";
+  if (guard.readOnly) return "user_read_only";
+  if (guard.aiDisabled && AI_RUN_PERMISSIONS.has(permission)) return "user_ai_disabled";
+  return null;
+}
+
+async function restricted(ctx: RequestContext, permission: string): Promise<string | null> {
+  const g = writeGuardFor(ctx);
+  if (!g) return null;
+  // Read checks of non-impersonated sessions skip the lookup entirely (the hot path of every page render).
+  if (isReadPermission(permission) && !PLATFORM_ONLY.has(permission)) return null;
+  return restrictionReason(await g, permission);
 }
 
 export function grantsAllow(grants: Grant[], permission: string, chain: ScopeChain): boolean {
@@ -95,7 +164,8 @@ export async function can(ctx: RequestContext, permission: string, chain: ScopeC
   if (orgId && ctx.actor.type === "USER" && !(await (client ? isActiveMember(client, orgId, ctx.actor.id!) : isActiveMemberThisRender(orgId, ctx.actor.id!)))) {
     return false;
   }
-  return grantsAllow(await grantsFor(ctx, client), permission, chain);
+  if (!grantsAllow(await grantsFor(ctx, client), permission, chain)) return false;
+  return !(await restricted(ctx, permission));
 }
 
 export function mfaSatisfied(ctx: RequestContext): boolean {
@@ -120,6 +190,13 @@ export async function requirePermission(
   if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(client ?? db(), orgId, ctx.actor.id))) {
     throw notFound("Organization");
   }
+  const restriction = ctx.actor.type === "USER" ? await restricted(ctx, permission) : null;
+  if (restriction) {
+    throw forbidden(
+      restriction === "impersonation_read_only" ? "This is a read-only impersonation session: changes are not allowed" : restriction === "impersonation_platform" ? "Impersonation sessions cannot use platform permissions" : "Your account is restricted by the platform",
+      { permission, reason: restriction },
+    );
+  }
   if (!(await can(ctx, permission, chain, client))) {
     const where = chain[0] ? `${chain[0].type}:${chain[0].id}` : "?";
     throw forbidden(`Missing permission ${permission} at ${where}`, { permission });
@@ -136,7 +213,11 @@ export async function effectivePermissions(ctx: RequestContext, chain: ScopeChai
   const orgId = chainOrganization(chain);
   if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(db(), orgId, ctx.actor.id!))) return [];
   const grants = await grantsFor(ctx);
-  return [...PERMISSION_KEYS].filter((p) => grantsAllow(grants, p, chain));
+  const allowed = [...PERMISSION_KEYS].filter((p) => grantsAllow(grants, p, chain));
+  const g = writeGuardFor(ctx);
+  if (!g || !allowed.some((p) => !isReadPermission(p) || PLATFORM_ONLY.has(p))) return allowed;
+  const guard = await g;
+  return allowed.filter((p) => !restrictionReason(guard, p));
 }
 
 // ───────────── Role assignment ─────────────
