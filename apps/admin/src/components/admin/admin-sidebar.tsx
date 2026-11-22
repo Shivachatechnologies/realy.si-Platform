@@ -1,290 +1,339 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Dialog as D } from "radix-ui";
-import { ArrowRight, CornerDownLeft, Loader2, Search } from "lucide-react";
-import { dialogOverlayClass } from "@/components/ui/dialog";
+import { ChevronDown, ChevronsLeft, ChevronsRight, Clock, Search, Star, X } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import type { AdminSearchResult } from "@/server/modules/admin/search";
-import { ADMIN_NAV } from "./nav/registry";
-import { PALETTE_SOURCES, type PaletteHit } from "./palette/registry";
+import { isTyping, useShell } from "@/components/shell/shell-context";
+import { NAV_GROUPS, navAllowed, navEntryFor, navGroup, visibleNav, type NavGroup, type NavItem, type NavSection } from "./nav/registry";
 
-function isActive(pathname: string | null, base: string, href: string) {
-  if (pathname === null) return false;
-  const full = `${base}${href}`;
-  return href === "" ? pathname === base : pathname === full || pathname.startsWith(`${full}/`);
+export { CommandPalette as AdminSearchBox } from "./palette/command-palette";
+
+const LABEL_KEY = /^admin\.[\w.]+$/;
+
+function activeHref(pathname: string, base: string, sections: NavSection[]): string | null {
+  const rel = pathname.startsWith(base) ? pathname.slice(base.length) || "" : pathname;
+  let best: string | null = null;
+  for (const s of sections)
+    for (const item of [s, ...(s.children ?? [])]) {
+      const h = item.href;
+      const hit = h === "" ? rel === "" : rel === h || rel.startsWith(`${h}/`);
+      if (hit && (best === null || h.length > best.length)) best = h;
+    }
+  return best;
 }
 
-function SidebarBase({ pathname }: { pathname: string | null }) {
-  const { t, locale } = useI18n();
-  const base = `/${locale}`;
-  return (
-    <ul className="flex gap-1 overflow-x-auto pb-1 lg:grid lg:gap-0.5 lg:overflow-visible lg:pb-0">
-      {ADMIN_NAV.map((s) => {
-        const sectionActive = isActive(pathname, base, s.href) || !!s.children?.some((c) => isActive(pathname, base, c.href));
-        const Icon = s.icon;
-        return (
-          <li key={s.id} className="shrink-0">
-            <Link
-              href={`${base}${s.href}`}
-              aria-current={sectionActive && !s.children ? "page" : undefined}
-              className={cn(
-                "relative flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2",
-                sectionActive && "bg-accent font-medium text-accent-foreground",
-              )}
-            >
-              {sectionActive ? <span aria-hidden className="absolute inset-y-2 start-0 hidden w-0.5 rounded-full bg-primary lg:block" /> : null}
-              <Icon className={cn("size-4 shrink-0", sectionActive && "text-primary")} aria-hidden />
-              <span>{t(s.label)}</span>
-            </Link>
-            {s.children && sectionActive ? (
-              <ul className="ms-6 mt-0.5 hidden gap-0.5 border-s ps-2 lg:grid">
-                {s.children.map((c) => {
-                  const longer = s.children!.some((o) => o.href !== c.href && o.href.startsWith(`${c.href}/`) && isActive(pathname, base, o.href));
-                  const active = pathname === `${base}${c.href}` || (!longer && c.href !== s.href && isActive(pathname, base, c.href)) || (!longer && c.href === s.href && isActive(pathname, base, c.href) && !s.children!.some((o) => o.href !== c.href && isActive(pathname, base, o.href)));
-                  return (
-                    <li key={c.href}>
-                      <Link
-                        href={`${base}${c.href}`}
-                        aria-current={active ? "page" : undefined}
-                        className={cn("block rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2", active && "font-medium text-foreground")}
-                      >
-                        {t(c.label)}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
+function Count({ n, collapsed }: { n: number | undefined; collapsed?: boolean }) {
+  if (!n) return null;
+  const text = n > 99 ? "99+" : String(n);
+  return collapsed ? (
+    <span aria-hidden className="absolute end-1 top-1 size-2 rounded-full bg-danger ring-2 ring-background" />
+  ) : (
+    <span className="ms-auto rounded-full bg-danger/12 px-1.5 text-[10px] leading-4 font-semibold text-danger tabular-nums">{text}</span>
   );
-}
-
-function SidebarWithPath() {
-  return <SidebarBase pathname={usePathname()} />;
-}
-
-export function AdminSidebar() {
-  const { t } = useI18n();
-  return (
-    <nav aria-label={t("admin.title")} className="lg:sticky lg:top-4">
-      <Suspense fallback={<SidebarBase pathname={null} />}>
-        <SidebarWithPath />
-      </Suspense>
-    </nav>
-  );
-}
-
-// ───────────── Command palette (⌘K) ─────────────
-
-interface Hit extends PaletteHit {
-  group: string;
 }
 
 /**
- * Global admin search: a ⌘K / Ctrl+K / "/" command palette with sections ("Go to") and live results grouped by type
- * (users, organizations, companies, AI tasks, switches, integrations). Arrow keys move, Enter opens, Esc closes.
- * `controls` lists the switches the admin may see (matched on their translated labels too).
+ * Console navigation v2 (stream A): permission-filtered registry (sections the admin cannot open are hidden),
+ * grouped, nested and collapsible sections, a filter box, favorites and recents (persisted per admin), badge counts,
+ * icon-only collapse (persisted; `[` toggles) and keyboard navigation (↑ ↓ Home End move, → ← expand/collapse).
+ * Renders inline on large screens and inside the mobile drawer (`drawer`).
  */
-export function AdminSearchBox({ controls = [] }: { controls?: { key: string; group: string }[] }) {
+function SidebarPanel({ drawer = false }: { drawer?: boolean }) {
   const { t, locale } = useI18n();
-  const router = useRouter();
+  const shell = useShell();
+  const pathname = usePathname() ?? "";
   const base = `/${locale}`;
-  const listId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-  const [res, setRes] = useState<{ q: string; data: AdminSearchResult | null } | null>(null);
-  const [active, setActive] = useState(0);
+  const collapsed = !drawer && shell.prefs.collapsed;
+  const [filter, setFilter] = useState("");
+  const navRef = useRef<HTMLDivElement>(null);
+  const sections = useMemo(() => visibleNav(shell.perms), [shell.perms]);
+  const current = activeHref(pathname, base, sections);
+  const low = filter.trim().toLowerCase();
+  const badge = (item: NavItem) => (item.badge ? shell.badges[item.badge] : undefined);
+  const sectionBadge = (s: NavSection) => badge(s) ?? (s.children ?? []).reduce((a, c) => a + (badge(c) ?? 0), 0);
+  const label = (l: string) => (LABEL_KEY.test(l) ? t(l) : l);
 
+  // Recents: remember registry pages the admin opens (own row; a repeat of the newest entry writes nothing).
+  const lastSent = useRef<string | null>(null);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
-      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || (e.key === "/" && !typing)) {
+    if (drawer || current === null) return;
+    const rel = pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+    if (rel !== current || lastSent.current === current) return;
+    const entry = navEntryFor(current);
+    if (!entry) return;
+    lastSent.current = current;
+    void api("/api/v1/admin/me/recents", { method: "POST", body: { href: current || "/", label: entry.item.label } }).catch(() => undefined);
+  }, [current, pathname, base, drawer]);
+
+  // "[" toggles the icon-only sidebar (not while typing).
+  const { setCollapsed, prefs } = shell;
+  useEffect(() => {
+    if (drawer) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "[" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping(e.target)) {
         e.preventDefault();
-        setOpen(true);
+        setCollapsed(!prefs.collapsed);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [drawer, setCollapsed, prefs.collapsed]);
 
-  const needle = q.trim();
-  const searching = open && needle.length >= 2;
-  // Results belong to the query they were fetched for; anything else is still loading.
-  const data = searching && res?.q === needle ? res.data : null;
-  const loading = searching && res?.q !== needle;
-  useEffect(() => {
-    if (!searching) return;
-    let cancelled = false;
-    const timer = window.setTimeout(() => {
-      api<AdminSearchResult>(`/api/v1/admin/search?q=${encodeURIComponent(needle)}`)
-        .then((r) => !cancelled && setRes({ q: needle, data: r }))
-        .catch(() => !cancelled && setRes({ q: needle, data: null }));
-    }, 180);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
+  const onNavKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const items = [...(navRef.current?.querySelectorAll<HTMLElement>("[data-nav-item]") ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (i < 0) return;
+    const move = (n: number) => {
+      e.preventDefault();
+      items[Math.max(0, Math.min(items.length - 1, n))]?.focus();
     };
-  }, [needle, searching]);
-
-  const hits = useMemo<Hit[]>(() => {
-    const low = needle.toLowerCase();
-    const nav: Hit[] = ADMIN_NAV.flatMap((s): Hit[] => [
-      { id: `nav:${s.id}`, group: "nav", label: t(s.label), href: `${base}${s.href}`, icon: s.icon },
-      ...(s.children ?? [])
-        .filter((c) => c.href !== s.href)
-        .map((c) => ({ id: `nav:${c.id}`, group: "nav", label: t(c.label), sub: t(s.label), href: `${base}${c.href}`, icon: s.icon })),
-    ]).filter((h) => !low || h.label.toLowerCase().includes(low) || h.sub?.toLowerCase().includes(low));
-    const out: Hit[] = low ? nav.slice(0, 5) : nav;
-    // Stream sources (palette/sources/<stream>.ts): live search groups and static commands, in registry order.
-    if (low) {
-      const ctx = { t, base, needle, low, data, controls };
-      for (const src of PALETTE_SOURCES) for (const h of src.hits(ctx)) out.push({ ...h, group: src.group });
+    if (e.key === "ArrowDown") move(i + 1);
+    else if (e.key === "ArrowUp") move(i - 1);
+    else if (e.key === "Home") move(0);
+    else if (e.key === "End") move(items.length - 1);
+    else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const id = items[i]!.dataset.section;
+      if (id && !collapsed) {
+        e.preventDefault();
+        shell.setGroupOpen(id, e.key === "ArrowRight");
+      }
     }
-    if (low.length >= 2) out.push({ id: "all", group: "all", label: t("admin.search.seeAll", { q: needle }), href: `${base}/search?q=${encodeURIComponent(needle)}`, icon: Search });
-    return out;
-  }, [needle, data, controls, base, t]);
-
-  const current = Math.min(active, Math.max(0, hits.length - 1));
-
-  const go = useCallback(
-    (h: Hit | undefined) => {
-      if (!h) return;
-      setOpen(false);
-      router.push(h.href);
-    },
-    [router],
-  );
-
-  const groupLabel: Record<string, string> = {
-    nav: t("admin.search.groups.nav"),
-    ...Object.fromEntries(PALETTE_SOURCES.map((src) => [src.group, t(src.label)])),
-    all: t("admin.search.groups.more"),
   };
-  const groups = [...new Set(hits.map((h) => h.group))];
-  const activeId = hits[current] ? `${listId}-${current}` : undefined;
+
+  const matches = (item: NavItem, s?: NavSection) => !low || label(item.label).toLowerCase().includes(low) || (s ? label(s.label).toLowerCase().includes(low) : false);
+  const linkCls = (active: boolean) =>
+    cn(
+      "group/nav relative flex h-8 min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 text-[13px] whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2",
+      active && "bg-accent font-medium text-accent-foreground",
+      collapsed && "justify-center px-0",
+    );
+  const close = () => {
+    if (drawer) shell.setDrawerOpen(false);
+  };
+
+  const star = (href: string, name: string) => {
+    const on = shell.prefs.favorites.includes(href);
+    const text = on ? t("admin.shell.unfavorite", { name }) : t("admin.shell.favorite", { name });
+    return (
+      <button
+        type="button"
+        onClick={() => shell.toggleFavorite(href)}
+        aria-pressed={on}
+        aria-label={text}
+        title={text}
+        className={cn(
+          "grid size-6 shrink-0 place-items-center rounded text-muted-foreground opacity-0 transition-opacity group-hover/row:opacity-100 hover:text-warning focus-visible:opacity-100 focus-visible:outline-2 pointer-coarse:opacity-100",
+          on && "text-warning opacity-100",
+        )}
+      >
+        <Star className={cn("size-3.5", on && "fill-current")} aria-hidden />
+      </button>
+    );
+  };
+
+  const favorites = shell.prefs.favorites
+    .map((href) => ({ href, entry: navEntryFor(href === "/" ? "" : href) }))
+    .filter((f) => f.entry && navAllowed(f.entry.section, shell.perms) && navAllowed(f.entry.item, shell.perms));
+  const recents = shell.prefs.recents.filter((r) => !shell.prefs.favorites.includes(r.href) && navEntryFor(r.href === "/" ? "" : r.href)).slice(0, 5);
+  const grouped = NAV_GROUPS.map((g) => ({ g, items: sections.filter((s) => navGroup(s) === g) })).filter((x) => x.items.length);
+  const anyMatch = grouped.some(({ items }) => items.some((s) => matches(s) || (s.children ?? []).some((c) => matches(c, s))));
+
+  const groupTitle = (g: NavGroup | "favorites" | "recents") =>
+    collapsed ? <div aria-hidden className="mx-auto my-2 h-px w-6 bg-border" /> : <div className="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{t(`admin.shell.groups.${g}`)}</div>;
 
   return (
-    <D.Root
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o);
-        if (!o) setQ("");
-      }}
-    >
-      <D.Trigger asChild>
+    <div className="flex h-full w-full flex-col gap-1">
+      {!collapsed ? (
+        <label className="relative block px-0.5">
+          <span className="sr-only">{t("admin.shell.filterNav")}</span>
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <input
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                navRef.current?.querySelector<HTMLElement>("[data-nav-item]")?.focus();
+              } else if (e.key === "Escape") setFilter("");
+            }}
+            placeholder={t("admin.shell.filterNav")}
+            maxLength={60}
+            className="h-8 w-full rounded-md border bg-surface ps-8 pe-2 text-xs placeholder:text-muted-foreground focus-visible:outline-2"
+          />
+        </label>
+      ) : null}
+      <div ref={navRef} onKeyDown={onNavKey} className="min-h-0 flex-1 overflow-y-auto pb-2">
+        {!low && favorites.length ? (
+          <section aria-label={t("admin.shell.groups.favorites")}>
+            {groupTitle("favorites")}
+            <ul className="grid gap-0.5">
+              {favorites.map(({ href, entry }) => {
+                const Icon = entry!.section.icon;
+                const h = href === "/" ? "" : href;
+                const name = label(entry!.item.label);
+                return (
+                  <li key={`fav:${href}`} className="group/row flex items-center">
+                    <Link data-nav-item href={`${base}${h}`} onClick={close} aria-current={current === h ? "page" : undefined} title={collapsed ? name : undefined} aria-label={collapsed ? name : undefined} className={linkCls(current === h)}>
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                      {!collapsed ? <span className="truncate">{name}</span> : null}
+                      <Count n={badge(entry!.item)} collapsed={collapsed} />
+                    </Link>
+                    {!collapsed ? star(href, name) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
+        {!low && !collapsed && recents.length ? (
+          <section aria-label={t("admin.shell.groups.recents")}>
+            {groupTitle("recents")}
+            <ul className="grid gap-0.5">
+              {recents.map((r) => (
+                <li key={`rec:${r.href}`} className="flex">
+                  <Link data-nav-item href={`${base}${r.href === "/" ? "" : r.href}`} onClick={close} className={linkCls(false)}>
+                    <Clock className="size-3.5 shrink-0" aria-hidden />
+                    <span className="truncate text-xs">{label(r.label)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        {grouped.map(({ g, items }) => {
+          const shown = items.filter((s) => matches(s) || (s.children ?? []).some((c) => matches(c, s)));
+          if (!shown.length) return null;
+          return (
+            <section key={g} aria-label={t(`admin.shell.groups.${g}`)}>
+              {groupTitle(g)}
+              <ul className="grid gap-0.5">
+                {shown.map((s) => {
+                  const Icon = s.icon;
+                  const kids = s.children ?? [];
+                  const hasKids = kids.length > 1 || (kids.length === 1 && kids[0]!.href !== s.href);
+                  const inSection = current !== null && (current === s.href || kids.some((c) => c.href === current));
+                  const open = hasKids && !collapsed && (low ? true : (shell.prefs.groups[s.id] ?? inSection));
+                  const name = t(s.label);
+                  const count = sectionBadge(s);
+                  return (
+                    <li key={s.id}>
+                      <div className="group/row flex items-center">
+                        <Link
+                          data-nav-item
+                          data-section={hasKids ? s.id : undefined}
+                          href={`${base}${s.href}`}
+                          onClick={close}
+                          aria-current={current === s.href && !hasKids ? "page" : undefined}
+                          title={collapsed ? name : undefined}
+                          aria-label={collapsed ? (count ? `${name} (${count})` : name) : undefined}
+                          className={linkCls(inSection && (collapsed || !open))}
+                        >
+                          {inSection ? <span aria-hidden className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-primary" /> : null}
+                          <Icon className={cn("size-4 shrink-0", inSection && "text-primary")} aria-hidden />
+                          {!collapsed ? <span className="truncate">{name}</span> : null}
+                          <Count n={count} collapsed={collapsed} />
+                        </Link>
+                        {!collapsed && hasKids ? (
+                          <button
+                            type="button"
+                            onClick={() => shell.setGroupOpen(s.id, !open)}
+                            aria-label={open ? t("admin.shell.collapseSection", { name }) : t("admin.shell.expandSection", { name })}
+                            aria-expanded={open}
+                            className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2"
+                          >
+                            <ChevronDown className={cn("size-3.5 transition-transform motion-reduce:transition-none", !open && "-rotate-90 rtl:rotate-90")} aria-hidden />
+                          </button>
+                        ) : !collapsed ? (
+                          star(s.href || "/", name)
+                        ) : null}
+                      </div>
+                      {open ? (
+                        <ul className="ms-4 mt-0.5 mb-1 grid gap-0.5 border-s ps-2">
+                          {kids
+                            .filter((c) => matches(c, s))
+                            .map((c) => {
+                              const active = current === c.href;
+                              const cname = t(c.label);
+                              return (
+                                <li key={c.id + c.href} className="group/row flex items-center">
+                                  <Link
+                                    data-nav-item
+                                    href={`${base}${c.href}`}
+                                    onClick={close}
+                                    aria-current={active ? "page" : undefined}
+                                    className={cn("flex h-7 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2", active && "bg-muted font-medium text-foreground")}
+                                  >
+                                    <span className="truncate">{cname}</span>
+                                    <Count n={badge(c)} />
+                                  </Link>
+                                  {star(c.href || "/", cname)}
+                                </li>
+                              );
+                            })}
+                        </ul>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          );
+        })}
+        {low && !anyMatch ? <p className="px-2 py-4 text-xs text-muted-foreground">{t("admin.shell.noNavMatch")}</p> : null}
+      </div>
+      {!drawer ? (
         <button
           type="button"
-          className="group relative flex h-8 w-full max-w-xs items-center gap-2 rounded-md border bg-surface ps-2.5 pe-2 text-xs text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground focus-visible:outline-2"
-          aria-keyshortcuts="Meta+K Control+K /"
+          onClick={() => shell.setCollapsed(!collapsed)}
+          aria-keyshortcuts="["
+          aria-label={collapsed ? t("admin.shell.expandSidebar") : t("admin.shell.collapseSidebar")}
+          title={`${collapsed ? t("admin.shell.expandSidebar") : t("admin.shell.collapseSidebar")} ([)`}
+          className={cn("flex h-8 items-center gap-2 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2", collapsed && "justify-center px-0")}
         >
-          <Search className="size-3.5 shrink-0" aria-hidden />
-          <span className="truncate">{t("admin.search.placeholder")}</span>
-          <kbd className="ms-auto hidden rounded border bg-muted px-1 font-mono text-[10px] sm:inline">⌘K</kbd>
+          {collapsed ? <ChevronsRight className="size-4 rtl:-scale-x-100" aria-hidden /> : <ChevronsLeft className="size-4 rtl:-scale-x-100" aria-hidden />}
+          {!collapsed ? <span>{t("admin.shell.collapseSidebar")}</span> : null}
         </button>
-      </D.Trigger>
+      ) : null}
+    </div>
+  );
+}
+
+/** Large screens: the sticky inline sidebar (full width or icon-only). Small screens use <AdminNavDrawer>. */
+export function AdminSidebar() {
+  const { t } = useI18n();
+  const { prefs } = useShell();
+  return (
+    <nav aria-label={t("admin.shell.navigation")} className={cn("sticky top-16 hidden h-[calc(100dvh-5rem)] shrink-0 lg:block", prefs.collapsed ? "w-12" : "w-[220px]")}>
+      <SidebarPanel />
+    </nav>
+  );
+}
+
+/** Small screens: the same navigation in a slide-in drawer, opened from the top bar menu button. */
+export function AdminNavDrawer() {
+  const { t } = useI18n();
+  const shell = useShell();
+  return (
+    <D.Root open={shell.drawerOpen} onOpenChange={shell.setDrawerOpen}>
       <D.Portal>
-        <D.Overlay className={dialogOverlayClass} />
-        <D.Content
-          className="fixed start-1/2 top-[10vh] z-50 grid max-h-[75vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-xl border glass-strong shadow-elev-4 outline-none rtl:translate-x-1/2 data-[state=open]:animate-dialog-in data-[state=closed]:animate-dialog-out"
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            inputRef.current?.focus();
-          }}
-        >
-          <D.Title className="sr-only">{t("admin.search.title")}</D.Title>
-          <D.Description className="sr-only">{t("admin.search.paletteHint")}</D.Description>
-          <div className="flex items-center gap-2 border-b px-3">
-            {loading ? <Loader2 className="size-4 shrink-0 animate-spin text-primary" aria-hidden /> : <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
-            <input
-              ref={inputRef}
-              role="combobox"
-              aria-expanded
-              aria-controls={listId}
-              aria-activedescendant={activeId}
-              aria-autocomplete="list"
-              aria-label={t("admin.search.placeholder")}
-              value={q}
-              maxLength={200}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setActive(Math.min(hits.length - 1, current + 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setActive(Math.max(0, current - 1));
-                } else if (e.key === "Home") {
-                  setActive(0);
-                } else if (e.key === "End") {
-                  setActive(hits.length - 1);
-                } else if (e.key === "Enter") {
-                  e.preventDefault();
-                  go(hits[current]);
-                }
-              }}
-              placeholder={t("admin.search.palettePlaceholder")}
-              className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <kbd className="hidden shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">Esc</kbd>
+        <D.Overlay className="fixed inset-0 z-50 bg-[oklch(0.12_0.02_275/0.45)] backdrop-blur-[2px] lg:hidden" />
+        <D.Content className="fixed inset-y-0 start-0 z-50 flex w-[min(20rem,85vw)] flex-col gap-2 border-e bg-background p-3 shadow-elev-4 outline-none lg:hidden">
+          <div className="flex items-center justify-between">
+            <D.Title className="text-sm font-semibold">{t("admin.shell.navigation")}</D.Title>
+            <D.Description className="sr-only">{t("admin.shell.navigationHint")}</D.Description>
+            <D.Close aria-label={t("common.close")} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2">
+              <X className="size-4" aria-hidden />
+            </D.Close>
           </div>
-          <div id={listId} role="listbox" aria-label={t("admin.search.title")} className="overflow-y-auto p-2">
-            {groups.map((g) => (
-              <div key={g} role="group" aria-label={groupLabel[g]} className="mb-1">
-                <div className="px-2 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{groupLabel[g]}</div>
-                {hits.map((h, i) =>
-                  h.group === g ? (
-                    <div
-                      key={h.id}
-                      id={`${listId}-${i}`}
-                      role="option"
-                      aria-selected={i === current}
-                      onMouseMove={() => setActive(i)}
-                      onClick={() => go(h)}
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm",
-                        i === current ? "bg-accent text-accent-foreground" : "text-foreground",
-                      )}
-                    >
-                      <span aria-hidden className={cn("grid size-7 shrink-0 place-items-center rounded-md border bg-surface [&_svg]:size-3.5", i === current && "border-primary/40 text-primary")}>
-                        <h.icon />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{h.label}</span>
-                        {h.sub ? <span className="block truncate text-xs text-muted-foreground">{h.sub}</span> : null}
-                      </span>
-                      {i === current ? <ArrowRight className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden /> : null}
-                    </div>
-                  ) : null,
-                )}
-              </div>
-            ))}
-            {needle.length >= 2 && !loading && data && hits.every((h) => h.group === "nav" || h.group === "all") ? (
-              <p className="px-2 py-6 text-center text-sm text-muted-foreground">{t("common.noResults")}</p>
-            ) : null}
-            {needle.length === 1 ? <p className="px-2 py-2 text-xs text-muted-foreground">{t("admin.search.tooShort")}</p> : null}
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t bg-surface-2/60 px-3 py-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <kbd className="rounded border px-1 font-mono">↑</kbd>
-              <kbd className="rounded border px-1 font-mono">↓</kbd>
-              {t("admin.search.keyMove")}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <CornerDownLeft className="size-3" aria-hidden />
-              {t("admin.search.keyOpen")}
-            </span>
-            <span className="ms-auto">{t("admin.search.scopeNote")}</span>
-          </div>
+          <nav aria-label={t("admin.shell.navigation")} className="min-h-0 flex-1">
+            <SidebarPanel drawer />
+          </nav>
         </D.Content>
       </D.Portal>
     </D.Root>

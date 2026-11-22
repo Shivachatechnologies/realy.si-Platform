@@ -19,6 +19,10 @@ export interface PaletteContext {
   data: AdminSearchResult | null;
   /** Switches the admin may see (from the console layout). */
   controls: { key: string; group: string }[];
+  /** UI hint: does the admin hold ANY of these platform permissions? (`[]` → true). Never enforcement. */
+  can: (perms: readonly string[]) => boolean;
+  /** The current locale-relative path ("/users/…"), for context-aware hits. */
+  path: string;
 }
 
 export interface PaletteHit {
@@ -46,7 +50,7 @@ export interface PaletteCommand {
   /** Locale-relative href. */
   href: string;
   icon: LucideIcon;
-  /** Platform permissions of which ANY shows the command (stream A filters once capabilities reach the client). */
+  /** Platform permissions of which ANY shows the command (`[]`: every admin). The palette hides the rest. */
   perms: readonly string[];
   /** Extra lower-case match words. */
   keywords?: readonly string[];
@@ -58,8 +62,9 @@ export function commandSource(def: { group: string; label: string; order: number
     group: def.group,
     label: def.label,
     order: def.order,
-    hits: ({ t, base, low }) =>
+    hits: ({ t, base, low, can }) =>
       def.commands
+        .filter((c) => can(c.perms))
         .filter((c) => !low || t(c.label).toLowerCase().includes(low) || c.keywords?.some((k) => k.includes(low)))
         .map((c) => ({ id: `cmd:${c.id}`, label: t(c.label), href: `${base}${c.href}`, icon: c.icon })),
   };

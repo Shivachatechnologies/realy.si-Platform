@@ -39,3 +39,46 @@ export function navTrail(path: string): Crumb[] {
   if (best.child && best.child.label !== best.section.label) trail.push({ label: best.child.label, href: best.child.href });
   return trail;
 }
+
+/** Sidebar groups, in display order (message keys under admin.shell.groups). */
+export const NAV_GROUPS = ["monitor", "customers", "ai", "revenue", "platform", "govern", "other"] as const;
+export type NavGroup = (typeof NAV_GROUPS)[number];
+
+const DEFAULT_GROUP: Record<string, NavGroup> = {
+  overview: "monitor",
+  system: "monitor",
+  users: "customers",
+  companies: "customers",
+  ai: "ai",
+  billing: "revenue",
+  content: "platform",
+  marketplace: "platform",
+  features: "platform",
+  integrations: "platform",
+  securityAudit: "govern",
+  settings: "govern",
+};
+
+export function navGroup(section: NavSection): NavGroup {
+  const g = (section.group ?? DEFAULT_GROUP[section.id]) as NavGroup | undefined;
+  return g && (NAV_GROUPS as readonly string[]).includes(g) ? g : "other";
+}
+
+/** Does an admin holding `allowed` see this entry? Empty `perms` = every platform admin. */
+export const navAllowed = (item: { perms: readonly string[] }, allowed: ReadonlySet<string>) => item.perms.length === 0 || item.perms.some((p) => allowed.has(p));
+
+/** The registry filtered to what the admin may open (sections with no visible child keep only their own link). */
+export function visibleNav(allowed: ReadonlySet<string>): NavSection[] {
+  return ADMIN_NAV.filter((s) => navAllowed(s, allowed)).map((s) => (s.children ? { ...s, children: s.children.filter((c) => navAllowed(c, allowed)) } : s));
+}
+
+/** Every nav entry (sections and children) with its section, for lookups by href. */
+export function navEntries(): { item: NavItem; section: NavSection }[] {
+  return ADMIN_NAV.flatMap((section) => [{ item: section as NavItem, section }, ...(section.children ?? []).filter((c) => c.href !== section.href || c.label !== section.label).map((item) => ({ item, section }))]);
+}
+
+/** The nav entry whose href is exactly `href` (child entries win over their section). */
+export function navEntryFor(href: string) {
+  const all = navEntries();
+  return all.filter((e) => e.item.href === href).pop() ?? null;
+}

@@ -1,50 +1,50 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { ArrowUpRight, Bot, Building2, Plug, Search, SearchX, ToggleRight, User } from "lucide-react";
+import { ArrowUpRight, Search, SearchX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { AdminHeader, EmptyState, sp } from "@/components/admin/kit";
+import { visibleNav } from "@/components/admin/nav/registry";
+import { PALETTE_SOURCES, type PaletteContext, type PaletteHit } from "@/components/admin/palette/registry";
 import { getLocale, getT } from "@/i18n/server";
-import { CONTROL_KEYS, CONTROL_DEFS } from "@/server/core/platform-controls";
-import { canPlatform } from "@/server/modules/admin/access";
+import { CONTROL_DEFS, CONTROL_KEYS } from "@/server/core/platform-controls";
 import { adminSearch } from "@/server/modules/admin/search";
+import { consolePermissions } from "@/server/modules/admin/preferences";
 import { requireViewer } from "@/server/session";
 
-const CONTROL_PAGE: Record<string, string> = { ai: "/ai", kill: "/controls", settings: "/settings" };
-
-/** Global admin search results (the full page behind the ⌘K palette), grouped by type. */
+/**
+ * Global admin search results (the full page behind the ⌘K palette), registry-driven: matching console sections, then
+ * every stream's palette source over the live result of every search provider (BE/admin/search/providers/*), in
+ * registry order. Groups the admin may not read are empty on the server and do not render.
+ */
 export default async function AdminSearchPage({ searchParams }: PageProps<"/[locale]/search">) {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
   const q = sp((await searchParams).q) ?? "";
-  const r = await adminSearch(viewer.ctx, q);
+  const [data, perms] = await Promise.all([adminSearch(viewer.ctx, q), consolePermissions(viewer.ctx)]);
+  const allowed = new Set(perms);
   const base = `/${locale}`;
-  // Switches/settings also match on their translated label.
-  const needle = q.trim().toLowerCase();
-  const controls =
-    needle.length >= 2 && (await canPlatform(viewer.ctx, "platform.audit.read"))
-      ? CONTROL_KEYS.filter((k) => r.controls.includes(k) || t(`admin.controls.keys.${k}.label`).toLowerCase().includes(needle))
-      : [];
-  const total = r.users.length + r.organizations.length + r.companies.length + r.tasks.length + controls.length + r.integrations.length;
-  const group = (title: string, icon: ReactNode, items: ReactNode[]) =>
-    items.length ? (
-      <Card className="reveal">
-        <CardHeader icon={icon} title={title} actions={<Badge>{items.length}</Badge>} />
-        <ul className="divide-y">{items}</ul>
-      </Card>
-    ) : null;
-  const row = (key: string, href: string, main: ReactNode, sub?: ReactNode) => (
-    <li key={key}>
-      <Link href={href} className="group flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 focus-visible:outline-2">
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{main}</span>
-          {sub ? <span className="block truncate text-xs text-muted-foreground">{sub}</span> : null}
-        </span>
-        <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 rtl:-scale-x-100" aria-hidden />
-      </Link>
-    </li>
-  );
+  const needle = q.trim();
+  const low = needle.toLowerCase();
+  const controls = allowed.has("platform.audit.read") ? CONTROL_KEYS.map((key) => ({ key, group: CONTROL_DEFS[key].group })) : [];
+  const ctx: PaletteContext = { t, base, needle, low, data, controls, can: (p) => p.length === 0 || p.some((k) => allowed.has(k)), path: "/search" };
+
+  const groups: { id: string; title: string; hits: PaletteHit[] }[] = [];
+  if (low.length >= 2) {
+    const nav = visibleNav(allowed).flatMap((s): PaletteHit[] => [
+      { id: `nav:${s.id}`, label: t(s.label), href: `${base}${s.href}`, icon: s.icon },
+      ...(s.children ?? []).filter((c) => c.href !== s.href).map((c) => ({ id: `nav:${s.id}:${c.id}`, label: t(c.label), sub: t(s.label), href: `${base}${c.href}`, icon: s.icon })),
+    ]);
+    const navHits = nav.filter((h) => h.label.toLowerCase().includes(low) || h.sub?.toLowerCase().includes(low));
+    if (navHits.length) groups.push({ id: "nav", title: t("admin.search.groups.nav"), hits: navHits });
+    for (const src of PALETTE_SOURCES) {
+      if (src.group === "quick") continue;
+      const hits = src.hits(ctx);
+      if (hits.length) groups.push({ id: src.group, title: t(src.label), hits });
+    }
+  }
+  const total = groups.filter((g) => g.id !== "nav").reduce((a, g) => a + g.hits.length, 0);
+
   return (
     <div className="grid gap-4">
       <AdminHeader icon={<Search />} title={t("admin.search.title")} description={q ? t("admin.search.resultsFor", { q, count: total }) : t("admin.search.hint")} />
@@ -58,42 +58,33 @@ export default async function AdminSearchPage({ searchParams }: PageProps<"/[loc
           {t("admin.users.searchButton")}
         </button>
       </form>
-      {q.trim().length < 2 ? (
+      {needle.length < 2 ? (
         <EmptyState icon={<Search />} title={t("admin.search.tooShort")} body={t("admin.search.tip")} />
-      ) : total === 0 ? (
+      ) : groups.length === 0 ? (
         <EmptyState icon={<SearchX />} title={t("common.noResults")} body={t("admin.search.noResultsHint")} />
       ) : null}
       <div className="grid gap-4 xl:grid-cols-2">
-        {group(
-          t("admin.nav.users"),
-          <User />,
-          r.users.map((u) => row(u.id, `${base}/users/${u.id}`, u.name, <>{u.email} · {t(`admin.users.status.${u.status}`)}</>)),
-        )}
-        {group(
-          t("admin.search.organizations"),
-          <Building2 />,
-          r.organizations.map((o) => row(o.id, `${base}/organizations/${o.id}`, o.name, <>{o.slug} · {t(`admin.organizations.status.${o.status}`)}</>)),
-        )}
-        {group(
-          t("admin.search.companies"),
-          <Building2 />,
-          r.companies.map((c) => row(c.id, `${base}/organizations/${c.organizationId}`, c.name, c.organization.name)),
-        )}
-        {group(
-          t("admin.nav.aiTasks"),
-          <Bot />,
-          r.tasks.map((task) => row(task.id, `${base}/ai/tasks?q=${task.id}`, task.title, <><span className="font-mono">{task.id.slice(0, 8)}</span> · {t(`admin.ai.status.${task.status}`)}</>)),
-        )}
-        {group(
-          t("admin.search.controls"),
-          <ToggleRight />,
-          controls.map((k) => row(k, `${base}${CONTROL_PAGE[CONTROL_DEFS[k].group]}`, t(`admin.controls.keys.${k}.label`), <span className="font-mono">{k}</span>)),
-        )}
-        {group(
-          t("admin.nav.integrations"),
-          <Plug />,
-          r.integrations.map((i) => row(i.provider, `${base}/integrations?provider=${i.provider}`, i.provider, t("admin.search.connections", { count: i.connections }))),
-        )}
+        {groups.map((g) => (
+          <Card key={g.id} className="reveal">
+            <CardHeader title={g.title} actions={<Badge>{g.hits.length}</Badge>} />
+            <ul className="divide-y">
+              {g.hits.map((h) => (
+                <li key={h.id}>
+                  <Link href={h.href} className="group flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 focus-visible:outline-2">
+                    <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md border bg-surface text-muted-foreground [&_svg]:size-3.5">
+                      <h.icon />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{h.label}</span>
+                      {h.sub ? <span className="block truncate text-xs text-muted-foreground">{h.sub}</span> : null}
+                    </span>
+                    <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 rtl:-scale-x-100" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ))}
       </div>
     </div>
   );

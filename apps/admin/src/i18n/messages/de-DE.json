@@ -1702,7 +1702,11 @@
       "ops": "Plattformbetrieb",
       "securityAccess": "Anmeldungen & Sitzungen",
       "plans": "Pläne & Limits",
-      "keys": "Plattformschlüssel"
+      "keys": "Plattformschlüssel",
+      "commandCenter": "Kommandozentrale",
+      "actionCenter": "Aufgabenzentrale",
+      "notifications": "Benachrichtigungen",
+      "me": "Ihre Einstellungen"
     },
     "overviewSubtitle": "Plattformkonfiguration. Jede Änderung wird berechtigungsgeprüft, eingegrenzt und protokolliert.",
     "yourAccess": "Ihr Plattformzugang",
@@ -2223,7 +2227,110 @@
       "queuesTitle": "Job-Warteschlangen",
       "queueSub": "{active} aktiv · {failed} fehlgeschlagen",
       "offline": "Offline",
-      "activityEmptyHint": "Änderungen von Administratoren (Schalter, Sperrungen, Rollen) erscheinen hier mit ihrer Begründung."
+      "activityEmptyHint": "Änderungen von Administratoren (Schalter, Sperrungen, Rollen) erscheinen hier mit ihrer Begründung.",
+      "cc": {
+        "title": "Kommandozentrale",
+        "subtitle": "Der Zustand der gesamten Plattform im gewählten Zeitraum, verglichen mit dem Zeitraum davor.",
+        "why": "Jede Kachel ist eine echte Zählung aus der Datenbank und öffnet die Liste dahinter. Kennzahlen ohne Datenquelle sagen das, statt null zu zeigen.",
+        "range": "Zeitraum",
+        "ranges": {
+          "24h": "24 Std.",
+          "7d": "7 Tage",
+          "30d": "30 Tage",
+          "90d": "90 Tage"
+        },
+        "vsPrevious": {
+          "24h": "ggü. vorherigen 24 Std.",
+          "7d": "ggü. vorherigen 7 Tagen",
+          "30d": "ggü. vorherigen 30 Tagen",
+          "90d": "ggü. vorherigen 90 Tagen"
+        },
+        "period": "Zeitraum:",
+        "source": "Quelle",
+        "new": "neu",
+        "cache": {
+          "memory": "zwischengespeichert",
+          "redis": "zwischengespeichert (geteilt)",
+          "fresh": "gerade berechnet"
+        },
+        "status": "Plattformstatus",
+        "platform": "Plattform",
+        "workers": "Worker {alive}/{total}",
+        "incidents": "Vorfälle",
+        "alerts": "Warnungen",
+        "notTracked": "Noch nicht erfasst",
+        "needs": "Benötigt {needs} (Stream {stream})",
+        "approvals": "KI-Freigaben",
+        "approvalsWaiting": "{count, plural, one {# wartet} other {# warten}}",
+        "approvalsHint": "KI-Aktionen, die auf eine Entscheidung des Mandanten warten",
+        "oldest": "älteste",
+        "none": "Keine",
+        "failedJobs": "Fehlgeschlagene Jobs",
+        "deadLetters": "{count, plural, one {# Dead Letter} other {# Dead Letters}}",
+        "queueFailed": "{count} fehlgeschlagen in Warteschlangen · {waiting} wartend",
+        "risks": "Risiken",
+        "riskCount": "{count, plural, one {# erfordert Aufmerksamkeit} other {# erfordern Aufmerksamkeit}}",
+        "noRisks": "Keine offenen Risiken",
+        "risksHint": "Aus der Aufgabenzentrale",
+        "attentionHint": "Die dringendsten Punkte der Plattform. Jeder öffnet die zugehörigen Zeilen.",
+        "noData": "Keine Daten",
+        "noMoney": "Keine zahlenden Abos",
+        "noHistory": "Kein Verlauf: benötigt {needs} (Stream {stream})",
+        "noSections": "Keine Kennzahlen für Ihre Rolle",
+        "noSectionsHint": "Ihre Admin-Rolle umfasst keinen Lesezugriff auf Benutzer, Organisationen, Abrechnung, KI oder System.",
+        "chartHint": {
+          "hourly": "Pro Stunde im gewählten Zeitraum (UTC).",
+          "daily": "Pro Tag im gewählten Zeitraum (UTC)."
+        },
+        "sections": {
+          "users": "Benutzer",
+          "organizations": "Organisationen",
+          "revenue": "Umsatz",
+          "subscriptions": "Abonnements",
+          "ai": "KI",
+          "system": "System"
+        },
+        "sectionHints": {
+          "users": "Konten, Registrierungen und Anmeldungen.",
+          "organizations": "Mandanten und ihre Unternehmen.",
+          "revenue": "Wiederkehrender Umsatz aus laufenden Abos, je Währung.",
+          "subscriptions": "Lebenszyklus der Abonnements.",
+          "ai": "KI-Arbeit, Fehler und geschätzte Kosten.",
+          "system": "Jobs, Zustellungen und Zuverlässigkeit."
+        },
+        "kpis": {
+          "totalUsers": "Benutzer",
+          "newUsers": "Neue Registrierungen",
+          "signIns": "Angemeldete Benutzer",
+          "activeUsers": "Aktiv im Zeitraum",
+          "totalOrgs": "Organisationen",
+          "newOrgs": "Neue Organisationen",
+          "suspendedOrgs": "Gesperrt",
+          "companies": "Unternehmen",
+          "mrr": "MRR",
+          "arr": "ARR",
+          "failedPayments": "Fehlgeschlagene Zahlungen",
+          "refunds": "Erstattungen & Rückbuchungen",
+          "liveSubscriptions": "Laufende Abos",
+          "newSubscriptions": "Neue Abos",
+          "canceledSubscriptions": "Kündigungen",
+          "pastDue": "Überfällig",
+          "trialsEnding": "Testphasen enden in 7 Tagen",
+          "tasksCreated": "KI-Aufgaben",
+          "tasksFailed": "Fehlgeschlagene KI-Aufgaben",
+          "failureRate": "Fehlerquote",
+          "aiTokens": "KI-Tokens",
+          "aiCost": "Geschätzte KI-Kosten",
+          "employeesActive": "Aktive KI-Mitarbeiter",
+          "aiLatency": "KI-Latenz & Anbieterfehler",
+          "deadJobs": "Dead-Letter-Jobs",
+          "failedJobs": "Fehlgeschlagene Jobläufe",
+          "webhookFailures": "Fehlgeschlagene Webhook-Zustellungen",
+          "emailFailures": "Fehlgeschlagene E-Mails",
+          "uptime": "Verfügbarkeit",
+          "latencyP95": "Antwortzeit (p95)"
+        }
+      }
     },
     "health": {
       "database": "Datenbank",
@@ -3715,12 +3822,315 @@
         "production": "Produktion",
         "preview": "Vorschau",
         "development": "Entwicklung"
+      },
+      "navigation": "Konsolennavigation",
+      "navigationHint": "Bereiche des Control Centers, die Sie öffnen können.",
+      "openNavigation": "Navigation öffnen",
+      "filterNav": "Bereiche filtern…",
+      "noNavMatch": "Kein Bereich passt.",
+      "collapseSidebar": "Seitenleiste einklappen",
+      "expandSidebar": "Seitenleiste ausklappen",
+      "collapseSection": "{name} einklappen",
+      "expandSection": "{name} ausklappen",
+      "favorite": "{name} zu Favoriten hinzufügen",
+      "unfavorite": "{name} aus Favoriten entfernen",
+      "groups": {
+        "favorites": "Favoriten",
+        "recents": "Zuletzt",
+        "monitor": "Überwachung",
+        "customers": "Kunden",
+        "ai": "KI",
+        "revenue": "Umsatz",
+        "platform": "Plattform",
+        "govern": "Governance",
+        "other": "Weitere"
+      },
+      "skipToContent": "Zum Inhalt springen",
+      "details": "Details",
+      "retry": "Erneut versuchen",
+      "updated": "Aktualisiert",
+      "staleRefresh": "Daten evtl. veraltet: aktualisieren",
+      "online": "Verbunden",
+      "offline": "Offline: Änderungen können nicht gespeichert werden",
+      "profile": "Kontomenü von {name}",
+      "status": {
+        "operational": "Betriebsbereit",
+        "degraded": "Beeinträchtigt",
+        "incidentsNotTracked": "Vorfälle: noch nicht erfasst (Stream E ergänzt Plattform-Vorfälle)"
+      },
+      "create": {
+        "title": "Erstellen",
+        "organization": "Organisation",
+        "role": "Admin-Rolle vergeben",
+        "plan": "Tarif oder Aktion",
+        "page": "Seite oder Beitrag",
+        "announcement": "Ankündigung",
+        "key": "Plattformschlüssel"
+      },
+      "error": {
+        "title": "Diese Seite konnte nicht geladen werden",
+        "body": "Beim Laden dieser Seite ist ein Fehler aufgetreten. Der Rest der Konsole funktioniert weiter. Versuchen Sie es erneut; wenn es weiter fehlschlägt, senden Sie die Referenz unten an das Engineering-Team.",
+        "reference": "Referenz",
+        "home": "Zurück zur Kommandozentrale"
+      },
+      "table": {
+        "columns": "Spalten",
+        "resetColumns": "Standardspalten wiederherstellen",
+        "export": "CSV exportieren",
+        "exportPage": "Seite exportieren",
+        "exportPageHint": "Lädt die Zeilen dieser Seite als CSV herunter.",
+        "exported": "{count, plural, one {# Zeile exportiert} other {# Zeilen exportiert}}",
+        "bulk": "Massenaktionen",
+        "selected": "{count, plural, one {# ausgewählt} other {# ausgewählt}}",
+        "clearSelection": "Auswahl aufheben",
+        "selectAll": "Alle Zeilen dieser Seite auswählen",
+        "selectRow": "Zeile auswählen",
+        "source": "Datenquelle",
+        "total": "{count, plural, one {# Zeile} other {# Zeilen}}",
+        "pageSize": "Zeilen",
+        "pagination": "Seitennavigation",
+        "first": "Erste Seite",
+        "previous": "Zurück",
+        "next": "Weiter"
+      },
+      "views": {
+        "title": "Ansichten",
+        "none": "Noch keine gespeicherten Ansichten.",
+        "loadFailed": "Gespeicherte Ansichten konnten nicht geladen werden.",
+        "saveCurrent": "Aktuelle Ansicht speichern…",
+        "saveHint": "Speichert die aktuellen Filter und sichtbaren Spalten unter einem Namen. Nur Sie sehen sie, außer Sie teilen sie.",
+        "name": "Name",
+        "shareWithAdmins": "Mit anderen Admins teilen (für sie schreibgeschützt)",
+        "saved": "Ansicht „{name}“ gespeichert",
+        "saveFailed": "Die Ansicht konnte nicht gespeichert werden.",
+        "deleted": "Ansicht „{name}“ gelöscht",
+        "delete": "{name} löschen",
+        "confirmDelete": "Gespeicherte Ansicht „{name}“ löschen?",
+        "shared": "Geteilt",
+        "sharedByYou": "Von Ihnen geteilt",
+        "share": "Teilen",
+        "unshare": "Nicht mehr teilen"
       }
     },
-    "actions": {},
-    "notifications": {},
-    "me": {},
-    "palette": {},
+    "actions": {
+      "title": "Aufgabenzentrale",
+      "subtitle": "Alles auf der Plattform, das einen Administrator braucht, das Schwerwiegendste zuerst.",
+      "why": "Jeder Punkt zählt echte Zeilen, mit der ältesten, einem Beispiel und dem nächsten Schritt. Sie sehen nur Punkte zu Bereichen, die Sie öffnen dürfen.",
+      "cacheNote": "höchstens einmal pro Minute neu berechnet",
+      "filterLabel": "Nach Bereich filtern",
+      "allClear": "Nichts erfordert Aufmerksamkeit",
+      "allClearHint": "Derzeit keine Dead-Letter-Jobs, überfälligen Abos, fehlgeschlagenen Zahlungen, offenen Breaker oder anderen offenen Punkte.",
+      "investigate": "Untersuchen",
+      "nextStep": "Nächster Schritt:",
+      "waitingSince": "älteste",
+      "someUnavailable": "{count, plural, one {# Quelle konnte diesmal nicht gelesen werden:} other {# Quellen konnten diesmal nicht gelesen werden:}}",
+      "notTrackedTitle": "Noch nicht erfasst",
+      "notTrackedHint": "Diese Quellen brauchen Tabellen, die andere Streams hinzufügen. Sie werden nicht als null gezählt.",
+      "severity": {
+        "critical": "Kritisch",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig"
+      },
+      "domains": {
+        "ops": "Betrieb",
+        "billing": "Abrechnung",
+        "security": "Sicherheit",
+        "ai": "KI",
+        "integrations": "Integrationen",
+        "content": "Inhalte"
+      },
+      "pending": {
+        "alerts.open": "Offene Warnungen",
+        "incidents.open": "Offene Vorfälle",
+        "support.tickets": "Wartende Support-Tickets",
+        "billing.disputes": "Rückbuchungen und Erstattungsanfragen",
+        "access.reviews": "Fällige Zugriffsprüfungen",
+        "ai.budgets": "KI-Budgets nahe am Limit"
+      },
+      "kinds": {
+        "jobs.dead": {
+          "title": "{count, plural, one {# Job in der Dead-Letter-Queue} other {# Jobs in der Dead-Letter-Queue}}",
+          "next": "Jeden Lauf öffnen, Ursache beheben, dann erneut einreihen oder verwerfen."
+        },
+        "billing.pastDue": {
+          "title": "{count, plural, one {# Abo überfällig oder unbezahlt} other {# Abos überfällig oder unbezahlt}}",
+          "next": "Zahlungsmethode mit dem Kunden klären; Tarif bei Bedarf ändern oder kündigen."
+        },
+        "billing.failedPayments": {
+          "title": "{count, plural, one {# fehlgeschlagene Zahlung in 7 Tagen} other {# fehlgeschlagene Zahlungen in 7 Tagen}}",
+          "next": "Fehlgeschlagene Zahlungen unter Plattformbetrieb prüfen und die Organisationen kontaktieren."
+        },
+        "marketplace.review": {
+          "title": "{count, plural, one {# Marketplace-Eintrag wartet auf Prüfung} other {# Marketplace-Einträge warten auf Prüfung}}",
+          "next": "Jeden Eintrag mit Begründung freigeben oder ablehnen."
+        },
+        "security.adminsWithoutMfa": {
+          "title": "{count, plural, one {# Plattform-Admin ohne Zwei-Faktor} other {# Plattform-Admins ohne Zwei-Faktor}}",
+          "next": "Zwei-Faktor-Authentifizierung einfordern oder die Plattformrolle entziehen."
+        },
+        "ai.breakers": {
+          "title": "{count, plural, one {# KI-Modell-Breaker offen} other {# KI-Modell-Breaker offen}}",
+          "next": "Anbieter prüfen, dann auf die Fallback-Kette setzen oder das Modell deaktivieren."
+        },
+        "ai.failedTasks": {
+          "title": "{count, plural, one {# KI-Aufgabe in 24 Std. fehlgeschlagen} other {# KI-Aufgaben in 24 Std. fehlgeschlagen}}",
+          "next": "Fehler nach Fehlercode gruppieren und erneut ausführen oder Ursache beheben."
+        },
+        "integrations.webhookFailures": {
+          "title": "{count, plural, one {# Webhook-Zustellung in 7 Tagen fehlgeschlagen} other {# Webhook-Zustellungen in 7 Tagen fehlgeschlagen}}",
+          "next": "Fehlerhafte Endpunkte prüfen und dauerhaft fehlschlagende Abos pausieren."
+        },
+        "integrations.connectionErrors": {
+          "title": "{count, plural, one {# Integrationsverbindung mit Fehler} other {# Integrationsverbindungen mit Fehler}}",
+          "next": "Organisation um erneute Verbindung bitten oder die defekte Verbindung trennen."
+        },
+        "ops.workersDown": {
+          "title": "Hintergrund-Worker melden sich nicht mehr",
+          "next": "Worker-Deployment prüfen; Jobs werden nicht verarbeitet."
+        },
+        "ops.emergency": {
+          "title": "{count, plural, one {# Notfallschalter ist aktiv} other {# Notfallschalter sind aktiv}}",
+          "next": "Prüfen, ob jeder Schalter noch nötig ist, und ihn nach Behebung ausschalten."
+        },
+        "email.failed": {
+          "title": "{count, plural, one {# E-Mail in 24 Std. nicht gesendet} other {# E-Mails in 24 Std. nicht gesendet}}",
+          "next": "Status des E-Mail-Anbieters und das Zustellprotokoll prüfen."
+        }
+      }
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "subtitle": "Für Sie oder Ihre Admin-Rollen ausgelöst. Neueste zuerst; 90 Tage aufbewahrt.",
+      "bell": "Benachrichtigungen",
+      "bellUnread": "{count, plural, one {Benachrichtigungen, # ungelesen} other {Benachrichtigungen, # ungelesen}}",
+      "empty": "Keine Benachrichtigungen",
+      "emptyHint": "Warnungen, Jobfehler und andere Ereignisse für Ihre Rollen erscheinen hier.",
+      "loadFailed": "Benachrichtigungen konnten nicht geladen werden.",
+      "markAllRead": "Alle als gelesen markieren",
+      "markRead": "Als gelesen markieren",
+      "markUnread": "Als ungelesen markieren",
+      "markedAll": "Alle Benachrichtigungen als gelesen markiert",
+      "marked": "{count, plural, one {# Benachrichtigung aktualisiert} other {# Benachrichtigungen aktualisiert}}",
+      "read": "Gelesen",
+      "unread": "Ungelesen",
+      "viewAll": "Alle Benachrichtigungen anzeigen",
+      "preferences": "Benachrichtigungseinstellungen",
+      "filter": "Lesestatus",
+      "severityLabel": "Schweregrad",
+      "anySeverity": "Jeder Schweregrad",
+      "roleWide": "Ihre Rolle",
+      "personal": "Sie",
+      "severity": {
+        "INFO": "Info",
+        "WARNING": "Warnung",
+        "CRITICAL": "Kritisch"
+      },
+      "cols": {
+        "title": "Benachrichtigung",
+        "severity": "Schweregrad",
+        "type": "Typ",
+        "audience": "Gesendet an",
+        "occurrences": "Anzahl",
+        "raised": "Ausgelöst",
+        "status": "Status"
+      }
+    },
+    "me": {
+      "title": "Ihre Einstellungen",
+      "subtitle": "Wie die Konsole für Sie funktioniert, {name}. Änderungen gelten nur für Ihr Konto.",
+      "preferences": "Einstellungen",
+      "preferencesHint": "In Ihrem Admin-Konto gespeichert, auf jedem Gerät.",
+      "saved": "Einstellungen gespeichert",
+      "density": "Dichte",
+      "densityHint": "Der Kompaktmodus zeigt mehr Zeilen und Kacheln.",
+      "comfortable": "Komfortabel",
+      "compact": "Kompaktmodus",
+      "timeRange": "Standardzeitraum",
+      "timeRangeHint": "Wird von der Kommandozentrale genutzt, wenn kein Zeitraum gewählt ist.",
+      "sidebar": "Seitenleiste",
+      "sidebarExpanded": "Ausgeklappt",
+      "sidebarCollapsed": "Nur Symbole",
+      "minSeverity": "Benachrichtigungen anzeigen ab",
+      "minSeverityHint": "Niedrigere Schweregrade werden in Glocke und Liste ausgeblendet.",
+      "muted": "Stummgeschaltete Benachrichtigungstypen",
+      "mutedHint": "Stummgeschaltete Typen sind für Sie ausgeblendet; andere Admins erhalten sie weiterhin.",
+      "noTypes": "Noch keine Benachrichtigungstypen erhalten.",
+      "roles": "Ihre Plattformrollen",
+      "rolesHint": "Von einem Super-Admin vergeben; jede Änderung wird protokolliert.",
+      "noRoles": "Keine Plattformrollen.",
+      "expires": "läuft ab",
+      "since": "seit",
+      "favorites": "Favoriten",
+      "favoritesHint": "Markieren Sie Seiten in der Seitenleiste mit einem Stern, um sie hier und oben in der Seitenleiste anzuheften.",
+      "noFavorites": "Noch keine Favoriten.",
+      "savedViews": "Gespeicherte Ansichten",
+      "savedViewsHint": "Benannte Filter und Spalten von Konsolentabellen.",
+      "noSavedViews": "Noch keine gespeicherten Ansichten. Nutzen Sie „Ansichten“ über einer Tabelle.",
+      "viewName": "Name",
+      "viewTable": "Tabelle",
+      "viewFilters": "Filter",
+      "viewUpdated": "Aktualisiert",
+      "sessions": "Ihre aktiven Sitzungen",
+      "sessionsHint": "Noch gültige Anmeldungen im Control Center.",
+      "noSessions": "Keine aktiven Sitzungen.",
+      "unknownDevice": "Unbekanntes Gerät",
+      "thisSession": "Diese Sitzung",
+      "lastSeen": "zuletzt gesehen",
+      "signedIn": "angemeldet",
+      "myActions": "Ihre letzten Admin-Aktionen",
+      "myActionsHint": "Aus dem Audit-Log, neueste zuerst.",
+      "noActions": "Noch keine Admin-Aktionen erfasst.",
+      "history": "Verlauf",
+      "historyHint": "Zuletzt geöffnete Bereiche und Palettensuchen.",
+      "noRecents": "Noch nichts geöffnet.",
+      "noSearches": "Noch keine Suchen.",
+      "clearHistory": "Verlauf löschen",
+      "historyCleared": "Verlauf gelöscht"
+    },
+    "palette": {
+      "groups": {
+        "quick": "Schnellbefehle",
+        "recent": "Letzte Suchen",
+        "context": "Diese Seite"
+      },
+      "cmd": {
+        "actions": "Aufgabenzentrale öffnen",
+        "notifications": "Benachrichtigungen öffnen",
+        "me": "Ihre Einstellungen",
+        "last24h": "Kommandozentrale: letzte 24 Stunden",
+        "last7d": "Kommandozentrale: letzte 7 Tage",
+        "deadLetters": "Dead-Letter-Jobs",
+        "failedTasks": "Fehlgeschlagene KI-Aufgaben",
+        "pastDue": "Überfällige Abos",
+        "marketplaceReview": "Marketplace-Prüfwarteschlange",
+        "controls": "Notfallschalter"
+      },
+      "ctx": {
+        "copyLink": "Link zu dieser Seite kopieren",
+        "copyId": "Datensatz-ID kopieren",
+        "auditTrail": "Audit-Verlauf dieses Datensatzes anzeigen",
+        "favorite": "Diese Seite zu Favoriten hinzufügen",
+        "unfavorite": "Diese Seite aus Favoriten entfernen",
+        "compact": "Zum Kompaktmodus wechseln",
+        "comfortable": "Zur komfortablen Dichte wechseln",
+        "shortcuts": "Tastenkürzel"
+      },
+      "copyFailed": "Kopieren in die Zwischenablage nicht möglich.",
+      "searchFailed": "Die Suche ist gerade nicht verfügbar. Bereiche und Befehle funktionieren weiter.",
+      "keys": {
+        "title": "Tastenkürzel",
+        "hint": "Einzeltasten-Kürzel funktionieren, wenn kein Textfeld fokussiert ist.",
+        "palette": "Befehlspalette öffnen",
+        "search": "Suchen",
+        "help": "Diese Liste anzeigen",
+        "sidebar": "Seitenleiste ein- oder ausklappen",
+        "move": "In Listen und Seitenleiste bewegen",
+        "expand": "Bereich der Seitenleiste auf- oder zuklappen",
+        "open": "Ausgewähltes Element öffnen",
+        "close": "Dialoge und Menüs schließen"
+      }
+    },
     "access": {},
     "aiRequests": {},
     "aiBudgets": {},

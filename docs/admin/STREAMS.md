@@ -27,7 +27,9 @@ Path abbreviations:
 | Global search (server) | A: `BE/admin/search/index.ts`, `BE/admin/search/types.ts`, `AAPI/search/route.ts` | `BE/admin/search/providers/{people,ai,billing,ops,platform}.ts` (B, C, D, E, F) | `defineSearchProvider({group, perms, empty, search(ctx, q)})`; result keys unique across providers |
 | ⌘K palette (client) | A: `AC/palette/registry.ts`, `AC/palette/types.ts` | `AC/palette/sources/<a…f>.ts` | `PaletteSource {group, label, order, hits(ctx)}`; static commands via `commandSource({…, commands})` |
 | Status badge tones | A: `AC/status-badge.tsx` (`StatusBadge`, `statusTone`) | `AC/status/<a…f>.ts` | `{ <domain>: { <ENUM_VALUE>: tone } }`; domain names unique |
-| Admin notifications | A: `BE/admin/notifications.ts` (`notifyAdmins`, a no-op until A8) | (call it) | `notifyAdmins(ctx, {permission \| userId, type, severity, title, href, dedupeKey})` |
+| Admin notifications | A: `BE/admin/notifications.ts` (`notifyAdmins`, writes `platform_notifications`) | (call it) | `notifyAdmins(ctx, {permission \| userId, type, severity, title, href, dedupeKey})` — see § Admin notifications |
+| Action Center sources | A: `BE/admin/action-center.ts` (`SOURCES`, `PENDING_SOURCES`) | export an `ActionSource` from your module; ask A to add one line to `SOURCES` | `{id, load() → ActionItem[]}` — see § Action Center |
+| Sidebar badges | A: `BE/admin/action-center.ts#actionBadges` | set `badge: "<id>"` on your nav item | ids: `actions.open`, `notifications.unread`, or any Action Center item id |
 | Prisma schema | each stream | `SCH/admin-<a…f>.prisma` | see the schema rules below |
 | i18n | each stream | its own `admin.<group>` objects (table below) | all 5 locales in one commit |
 
@@ -50,7 +52,86 @@ controls 10 (F), users 20, organizations 30, companies 40 (B), tasks 50 (C), int
 | `StatusBadge`, `statusTone`, `STATUS_TONES` | `AC/status-badge.tsx` |
 | `EnvBadge`, `environmentInfo()` (`VERCEL_ENV` / `NODE_ENV`, `VERCEL_GIT_COMMIT_SHA`) | `AC/env-badge.tsx` |
 
+| `DataTable`, `useDataTableSelection` | `AC/data-table/data-table.tsx` (see § DataTable) |
+| `tableParams`, `filterParams`, `hrefWith`, `toCsv`, `csvCell` | `AC/data-table/params.ts` |
+| `KpiTile`, `kpiDelta` | `AC/kpi-tile.tsx`, `AC/kpi-delta.ts` |
+| `PageCrumbs` (set entity breadcrumbs from a page), `AdminBreadcrumbs`, `useCrumbs` | `AC/nav/breadcrumbs.tsx` |
+| `Avatar` (client-safe; also re-exported from `kit.tsx`) | `AC/avatar.tsx` |
+| `useShell()` (permissions hint `can(perms)`, preferences, density) | `apps/admin/src/components/shell/shell-context.tsx` |
+| Console `loading.tsx` / `error.tsx` (skeleton, error boundary with retry and digest) | `AA/loading.tsx`, `AA/error.tsx` |
+
 Kit strings live in `admin.shell` (A).
+
+## Shell conventions (stream A, after A1–A11)
+
+- **Breadcrumbs are automatic.** The console layout renders the trail on every page from the nav registry; paths deeper
+  than a registered entry get a trailing crumb per segment (uuids read "Details"). To name the entity, render
+  `<PageCrumbs items={[{ label: user.name }]} />` anywhere in your page; do not render your own breadcrumb `<nav>`.
+- **Permission-aware chrome.** Sidebar, palette, create menu and the command center hide what the admin cannot open,
+  using the nav `perms`, `PaletteCommand.perms` and the console-gate section of each link. This is a UI hint only: keep
+  `requirePlatform` in every backend function.
+- **Compact mode.** `data-density="compact"` is set on the console root from the admin's preference; `DataTable`
+  switches its table density automatically. Prefer the kit's spacing utilities so compact mode applies to your page.
+- **Palette.** `PaletteContext` now also carries `can(perms)` and `path` (the locale-relative path, for context
+  hits). `commandSource` hides commands whose `perms` the admin lacks.
+- **Caching heavy aggregates.** `cachedAggregate(key, ttlMs, compute)` in `BE/admin/overview.ts`: process memory first
+  (no Redis command), then one Redis GET, then compute once (in-flight dedupe). Viewer-independent values only; filter
+  per viewer after reading.
+
+## DataTable (stream A; adopt it for every console list)
+
+```tsx
+// Server page
+const raw = await searchParams;
+const { cursor, pageSize, sort } = tableParams(raw, { sortable: ["createdAt", "name"], defaultSort: { by: "createdAt", dir: "desc" } });
+const r = await listThings(ctx, { ...filterParams(raw, ["q", "status"]), cursor, limit: pageSize, sort });
+<DataTable
+  id="things"                                   // stable, lower-case: saved views and column memory key
+  columns={[{ id: "name", header: t("…"), sortable: true, hideable: false }, { id: "status", header: t("…") }, { id: "id", header: "ID", defaultHidden: true }]}
+  rows={r.data.map((x) => ({ id: x.id, href: `${base}/things/${x.id}`, cells: { name: x.name, status: <StatusBadge … /> }, csv: { name: x.name, status: x.status } }))}
+  query={filterParams(raw, ["q", "status"])} filterKeys={["q", "status"]}
+  pagination={{ nextCursor: r.nextCursor, pageSize, total: r.total }}  // total optional (bounded count)
+  sort={sort}
+  exportOptions={{ allowed: caps["platform.data.export"], href: "/api/v1/admin/things/export" }}  // omit href: current page as CSV
+  selectable bulkBar={<MyBulkActions />}       // client component reading useDataTableSelection() → { ids, clear }
+  meta={{ source: "things", loadedAt: requestTime(), staleAfterMs: 5 * 60_000 }}
+  toolbar={<FilterBar … />} empty={<EmptyState … />}
+/>
+```
+
+| Prop | Meaning |
+|---|---|
+| `id` | Table id (`[a-z0-9._-]`). Saved views are stored per id (`admin_saved_views.page`); column choice per browser. |
+| `columns` | `{id, header, align?, sortable?, hideable? (default true), defaultHidden?, className?}`. Headers are translated strings. |
+| `rows` | `{id, cells: Record<colId, ReactNode>, csv?: Record<colId, primitive>, href?, disabled?}`. Server pages may build cells as JSX (they serialize). `csv` is what export writes (never put secrets there). The first visible cell links to `href`; clicking the row opens it. |
+| `query`, `filterKeys` | Current filter values (no `cursor`/`pageSize`/`sort`/`dir`). Reset clears them; saved views store them. |
+| `pagination` | Keyset: `nextCursor` (null on the last page), `pageSize` (`PAGE_SIZES` 10/25/50/100), optional `total`. URL params: `cursor`, `pageSize`. "Previous" is browser history; "First" drops the cursor. |
+| `sort` | Current sort; sortable headers link to `?sort=<id>&dir=asc|desc` (validate with `tableParams({sortable})`). |
+| `exportOptions` | Render export only when `allowed` is decided on the server with your export permission. `href` gets the current filters as query string; your route must enforce the permission, cap rows, audit if sensitive and mask secrets. |
+| `selectable`, `bulkBar` | Checkbox column and a bar shown while rows are selected. Bulk components call their own API (reason dialogs, audit). |
+| `meta` | Data-source label, "Updated …" time and a stale marker (with refresh) after `staleAfterMs`. |
+| `savedViews` | Default true. Views are private unless the owner shares them (others get them read-only). |
+
+API behind it: `GET/POST /api/v1/admin/me/saved-views`, `PATCH/DELETE /api/v1/admin/me/saved-views/:id` (own rows only).
+
+## Admin notifications
+
+`notifyAdmins(ctx | null, { permission | userId, type, severity?, title, body?, href?, dedupeKey?, payload? })`
+(`BE/admin/notifications.ts`). Exactly one of `permission` (a platform permission; holders see it when they read,
+so later role holders see it too) or `userId`. `href` is a locale-relative console path. A repeated `dedupeKey`
+bumps the existing row (occurrences + 1, raised again, unread again). Invalid input throws; database errors are
+logged and swallowed. Title, body and payload must hold no secrets. Admins filter by severity and mute types on `/me`.
+Kept 90 days in the UI. Tables: `platform_notifications`, `admin_notification_reads`.
+
+## Action Center
+
+`BE/admin/action-center.ts`: `ActionSource = { id, load(): Promise<ActionItem[]> }`, `ActionItem = { id, domain,
+severity, count, href, oldestAt?, samples[] }`. Items are computed for all admins once a minute at most (cache) and
+shown only to admins who may open `href` (console-gate section). A source that throws is listed as unavailable,
+never as zero. To add one when your table ships: export an `ActionSource` from your own module (e.g.
+`alertsActionSource` in `BE/admin/alerts.ts`), add strings `admin.actions.kinds.<id>.{title,next}` via stream A, and
+ask A to add it to `SOURCES` and remove the matching `PENDING_SOURCES` entry (`alerts.open`, `incidents.open`,
+`support.tickets`, `billing.disputes`, `access.reviews`, `ai.budgets`).
 
 ## Permissions and section gate (Step 0 added every key; later changes go through B)
 
@@ -112,7 +193,7 @@ function still calls `requirePlatform` / `requireAnyPlatform`).
 ## Stream A — shell, design system, palette, command center, action center, notifications, personalization
 
 - Pages: `AA/layout.tsx`, `AA/page.tsx`, `AA/search/page.tsx`, `AA/loading.tsx`, `AA/error.tsx`, `AA/actions/**`, `AA/notifications/**`, `AA/me/**`
-- Components: `AC/admin-sidebar.tsx`, `AC/nav/registry.ts`, `AC/nav/types.ts`, `AC/nav/breadcrumbs.tsx`, `AC/nav/sections/a.ts`, `AC/palette/registry.ts`, `AC/palette/types.ts`, `AC/palette/sources/a.ts`, `AC/palette/**` (new), `AC/kit.tsx`, `AC/viz.tsx`, `AC/drawer.tsx`, `AC/action-dialog.tsx`, `AC/reason-dialog.tsx`, `AC/data-table/**`, `AC/copy-button.tsx`, `AC/timestamp.tsx`, `AC/status-badge.tsx`, `AC/status/types.ts`, `AC/status/a.ts`, `AC/env-badge.tsx`, `AUI/**`, `apps/admin/src/components/shell/**`, `apps/admin/src/components/providers.tsx`, `apps/admin/src/app/globals.css`
+- Components: `AC/admin-sidebar.tsx`, `AC/nav/registry.ts`, `AC/nav/types.ts`, `AC/nav/breadcrumbs.tsx`, `AC/nav/sections/a.ts`, `AC/palette/registry.ts`, `AC/palette/types.ts`, `AC/palette/sources/a.ts`, `AC/palette/**` (new), `AC/kit.tsx`, `AC/avatar.tsx`, `AC/kpi-tile.tsx`, `AC/kpi-delta.ts`, `AC/me/**`, `AC/notifications/**`, `AC/viz.tsx`, `AC/drawer.tsx`, `AC/action-dialog.tsx`, `AC/reason-dialog.tsx`, `AC/data-table/**`, `AC/copy-button.tsx`, `AC/timestamp.tsx`, `AC/status-badge.tsx`, `AC/status/types.ts`, `AC/status/a.ts`, `AC/env-badge.tsx`, `AUI/**`, `apps/admin/src/components/shell/**`, `apps/admin/src/components/providers.tsx`, `apps/admin/src/app/globals.css`
 - Backend: `BE/admin/overview.ts`, `BE/admin/trends.ts`, `BE/admin/search/index.ts`, `BE/admin/search/types.ts`, `BE/admin/action-center.ts`, `BE/admin/notifications.ts`, `BE/admin/preferences.ts`
 - API: `AAPI/search/**`, `AAPI/me/**`, `AAPI/notifications/**`
 - Schema: `SCH/admin-a.prisma`

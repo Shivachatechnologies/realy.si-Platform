@@ -9,3 +9,97 @@
 //   - Relations between this stream's own new tables are fine.
 //   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
 //   - At most one migration per PR, timestamp minute reserved for stream A: …_10xx.
+
+/// Severity of an admin notification (the bell shows CRITICAL first).
+enum PlatformNotificationSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+/// Per-admin console personalization: favorites, recents, sidebar state, density, default time range, notification
+/// preferences. One row per admin (created on first write). `userId` is a plain users.id (no relation by rule).
+model AdminPreference {
+  userId            String   @id @map("user_id") @db.Uuid
+  /// Locale-relative nav hrefs ("/users", "/ai/models"), in the admin's order. At most 30.
+  favorites         String[] @default([])
+  /// [{href, label, at}] newest first, at most 20 (labels are message keys or entity names).
+  recents           Json     @default("[]")
+  /// Palette queries, newest first, at most 10.
+  recentSearches    String[] @default([]) @map("recent_searches")
+  /// {collapsed: boolean, groups: {<sectionId>: boolean}}
+  sidebar           Json     @default("{}")
+  /// "comfortable" | "compact"
+  density           String   @default("comfortable")
+  /// Default command-center range: "24h" | "7d" | "30d" | "90d"
+  timeRange         String   @default("30d") @map("time_range")
+  /// {minSeverity: "INFO"|"WARNING"|"CRITICAL", muted: string[] (notification types)}
+  notificationPrefs Json     @default("{}") @map("notification_prefs")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("admin_preferences")
+}
+
+/// A named set of filters (and visible columns) for one console list ("users", "audit", …). Private unless `shared`.
+model AdminSavedView {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// DataTable id, e.g. "users", "audit", "notifications".
+  page      String
+  name      String
+  /// Filter query parameters ({status: "ACTIVE", q: "acme"}); string values only.
+  query     Json     @default("{}")
+  /// Visible column ids, in order ([] = the table's defaults).
+  columns   Json     @default("[]")
+  shared    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId, page])
+  @@index([page, shared])
+  @@map("admin_saved_views")
+}
+
+/// Console notification for platform admins: to one admin (`userId`) or to every holder of `permission`.
+/// Written by `notifyAdmins` (BE/admin/notifications.ts); a repeated `dedupeKey` bumps the existing row instead.
+model PlatformNotification {
+  id           String                       @id @default(uuid(7)) @db.Uuid
+  userId       String?                      @map("user_id") @db.Uuid
+  permission   String?
+  /// "alert.raised", "support.ticket_created", "job.dead_letter", …
+  type         String
+  severity     PlatformNotificationSeverity @default(INFO)
+  title        String
+  body         String?
+  /// Locale-relative console link ("/alerts/<id>").
+  href         String?
+  dedupeKey    String?                      @unique @map("dedupe_key")
+  /// Non-secret context for the UI.
+  payload      Json                         @default("{}")
+  /// How many times the same `dedupeKey` was raised.
+  occurrences  Int                          @default(1)
+  createdAt    DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Last time it was raised (ordering key; equals createdAt until a deduplicated repeat).
+  lastRaisedAt DateTime                     @default(now()) @map("last_raised_at") @db.Timestamptz(3)
+
+  reads PlatformNotificationRead[]
+
+  @@index([userId, lastRaisedAt(sort: Desc)])
+  @@index([permission, lastRaisedAt(sort: Desc)])
+  @@index([lastRaisedAt])
+  @@map("platform_notifications")
+}
+
+/// Read receipts, one per admin and notification (also for role-targeted rows). A repeat raise clears them.
+model PlatformNotificationRead {
+  notificationId String   @map("notification_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  readAt         DateTime @default(now()) @map("read_at") @db.Timestamptz(3)
+
+  notification PlatformNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@id([notificationId, userId])
+  @@index([userId, readAt])
+  @@map("admin_notification_reads")
+}

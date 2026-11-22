@@ -1702,7 +1702,11 @@
       "ops": "平台运维",
       "securityAccess": "登录与会话",
       "plans": "套餐与限额",
-      "keys": "平台密钥"
+      "keys": "平台密钥",
+      "commandCenter": "指挥中心",
+      "actionCenter": "待办中心",
+      "notifications": "通知",
+      "me": "我的偏好"
     },
     "overviewSubtitle": "平台配置。每项更改都经过权限检查、范围限定并记录审计。",
     "yourAccess": "您的平台权限",
@@ -2223,7 +2227,110 @@
       "queuesTitle": "作业队列",
       "queueSub": "{active} 运行中 · {failed} 失败",
       "offline": "离线",
-      "activityEmptyHint": "管理员所做的更改（开关、停用、角色）会连同原因显示在这里。"
+      "activityEmptyHint": "管理员所做的更改（开关、停用、角色）会连同原因显示在这里。",
+      "cc": {
+        "title": "指挥中心",
+        "subtitle": "所选时间段内整个平台的状态，并与上一时间段对比。",
+        "why": "每个卡片都是数据库中的真实计数，并可打开其背后的列表。没有数据来源的指标会明确说明，而不是显示为零。",
+        "range": "时间范围",
+        "ranges": {
+          "24h": "24 小时",
+          "7d": "7 天",
+          "30d": "30 天",
+          "90d": "90 天"
+        },
+        "vsPrevious": {
+          "24h": "较前 24 小时",
+          "7d": "较前 7 天",
+          "30d": "较前 30 天",
+          "90d": "较前 90 天"
+        },
+        "period": "时间段：",
+        "source": "来源",
+        "new": "新增",
+        "cache": {
+          "memory": "已缓存",
+          "redis": "已缓存（共享）",
+          "fresh": "刚刚计算"
+        },
+        "status": "平台状态",
+        "platform": "平台",
+        "workers": "工作进程 {alive}/{total}",
+        "incidents": "事件",
+        "alerts": "告警",
+        "notTracked": "尚未跟踪",
+        "needs": "需要 {needs}（{stream} 流）",
+        "approvals": "AI 审批",
+        "approvalsWaiting": "{count} 项等待中",
+        "approvalsHint": "等待租户决定的 AI 操作",
+        "oldest": "最早",
+        "none": "无",
+        "failedJobs": "失败的任务",
+        "deadLetters": "{count} 个死信",
+        "queueFailed": "队列中 {count} 个失败 · {waiting} 个等待",
+        "risks": "风险",
+        "riskCount": "{count} 项需要关注",
+        "noRisks": "没有未处理的风险",
+        "risksHint": "来自待办中心",
+        "attentionHint": "平台上最紧急的事项。每一项都可打开其背后的数据行。",
+        "noData": "无数据",
+        "noMoney": "没有付费订阅",
+        "noHistory": "无历史：需要 {needs}（{stream} 流）",
+        "noSections": "你的角色没有可用的指标",
+        "noSectionsHint": "你的管理员角色不包含用户、组织、计费、AI 或系统的读取权限。",
+        "chartHint": {
+          "hourly": "所选时间段内每小时（UTC）。",
+          "daily": "所选时间段内每天（UTC）。"
+        },
+        "sections": {
+          "users": "用户",
+          "organizations": "组织",
+          "revenue": "收入",
+          "subscriptions": "订阅",
+          "ai": "AI",
+          "system": "系统"
+        },
+        "sectionHints": {
+          "users": "账户、注册和登录。",
+          "organizations": "租户及其公司。",
+          "revenue": "来自有效订阅的经常性收入（按币种）。",
+          "subscriptions": "订阅生命周期。",
+          "ai": "AI 工作、失败和预估费用。",
+          "system": "任务、投递和可靠性。"
+        },
+        "kpis": {
+          "totalUsers": "用户",
+          "newUsers": "新注册",
+          "signIns": "登录用户",
+          "activeUsers": "期间活跃",
+          "totalOrgs": "组织",
+          "newOrgs": "新组织",
+          "suspendedOrgs": "已暂停",
+          "companies": "公司",
+          "mrr": "MRR",
+          "arr": "ARR",
+          "failedPayments": "失败的付款",
+          "refunds": "退款与争议",
+          "liveSubscriptions": "有效订阅",
+          "newSubscriptions": "新订阅",
+          "canceledSubscriptions": "取消",
+          "pastDue": "逾期",
+          "trialsEnding": "7 天内结束的试用",
+          "tasksCreated": "AI 任务",
+          "tasksFailed": "失败的 AI 任务",
+          "failureRate": "失败率",
+          "aiTokens": "AI 令牌",
+          "aiCost": "预估 AI 费用",
+          "employeesActive": "在岗 AI 员工",
+          "aiLatency": "AI 延迟与供应商错误",
+          "deadJobs": "死信任务",
+          "failedJobs": "失败的任务运行",
+          "webhookFailures": "失败的 Webhook 投递",
+          "emailFailures": "失败的邮件",
+          "uptime": "可用率",
+          "latencyP95": "请求延迟（p95）"
+        }
+      }
     },
     "health": {
       "database": "数据库",
@@ -3715,12 +3822,315 @@
         "production": "生产环境",
         "preview": "预览环境",
         "development": "开发环境"
+      },
+      "navigation": "控制台导航",
+      "navigationHint": "你可以打开的控制中心栏目。",
+      "openNavigation": "打开导航",
+      "filterNav": "筛选栏目…",
+      "noNavMatch": "没有匹配的栏目。",
+      "collapseSidebar": "收起侧边栏",
+      "expandSidebar": "展开侧边栏",
+      "collapseSection": "收起{name}",
+      "expandSection": "展开{name}",
+      "favorite": "将{name}加入收藏",
+      "unfavorite": "将{name}移出收藏",
+      "groups": {
+        "favorites": "收藏",
+        "recents": "最近",
+        "monitor": "监控",
+        "customers": "客户",
+        "ai": "AI",
+        "revenue": "收入",
+        "platform": "平台",
+        "govern": "治理",
+        "other": "更多"
+      },
+      "skipToContent": "跳到内容",
+      "details": "详情",
+      "retry": "重试",
+      "updated": "更新于",
+      "staleRefresh": "数据可能已过期：刷新",
+      "online": "已连接",
+      "offline": "离线：无法保存更改",
+      "profile": "{name} 的账户菜单",
+      "status": {
+        "operational": "运行正常",
+        "degraded": "性能下降",
+        "incidentsNotTracked": "事件：尚未跟踪（E 流将添加平台事件）"
+      },
+      "create": {
+        "title": "新建",
+        "organization": "组织",
+        "role": "授予管理员角色",
+        "plan": "套餐或促销",
+        "page": "页面或文章",
+        "announcement": "公告",
+        "key": "平台密钥"
+      },
+      "error": {
+        "title": "此页面无法加载",
+        "body": "加载此页面时出错。控制台的其余部分仍可使用。请重试；如果仍然失败，请将下面的参考编号发给工程团队。",
+        "reference": "参考编号",
+        "home": "返回指挥中心"
+      },
+      "table": {
+        "columns": "列",
+        "resetColumns": "恢复默认列",
+        "export": "导出 CSV",
+        "exportPage": "导出本页",
+        "exportPageHint": "将本页的行下载为 CSV。",
+        "exported": "已导出 {count} 行",
+        "bulk": "批量操作",
+        "selected": "已选择 {count} 项",
+        "clearSelection": "清除选择",
+        "selectAll": "选择本页所有行",
+        "selectRow": "选择行",
+        "source": "数据来源",
+        "total": "共 {count} 行",
+        "pageSize": "每页行数",
+        "pagination": "分页",
+        "first": "第一页",
+        "previous": "上一页",
+        "next": "下一页"
+      },
+      "views": {
+        "title": "视图",
+        "none": "还没有保存的视图。",
+        "loadFailed": "无法加载保存的视图。",
+        "saveCurrent": "保存当前视图…",
+        "saveHint": "以名称保存当前筛选条件和可见列。除非你共享，否则只有你能看到。",
+        "name": "名称",
+        "shareWithAdmins": "与其他管理员共享（对他们只读）",
+        "saved": "已保存视图“{name}”",
+        "saveFailed": "无法保存视图。",
+        "deleted": "已删除视图“{name}”",
+        "delete": "删除{name}",
+        "confirmDelete": "删除保存的视图“{name}”？",
+        "shared": "已共享",
+        "sharedByYou": "由你共享",
+        "share": "共享",
+        "unshare": "停止共享"
       }
     },
-    "actions": {},
-    "notifications": {},
-    "me": {},
-    "palette": {},
+    "actions": {
+      "title": "待办中心",
+      "subtitle": "平台上所有需要管理员处理的事项，最严重的排在前面。",
+      "why": "每一项都是真实数据行的计数，附带最早的一行、示例和下一步。你只会看到自己有权打开的栏目中的事项。",
+      "cacheNote": "最多每分钟重新计算一次",
+      "filterLabel": "按领域筛选",
+      "allClear": "没有需要关注的事项",
+      "allClearHint": "目前没有死信任务、逾期订阅、失败付款、打开的熔断器或其他未处理事项。",
+      "investigate": "调查",
+      "nextStep": "下一步：",
+      "waitingSince": "最早",
+      "someUnavailable": "本次有 {count} 个来源无法读取：",
+      "notTrackedTitle": "尚未跟踪",
+      "notTrackedHint": "这些来源需要其他流正在添加的数据表。它们不会被计为零。",
+      "severity": {
+        "critical": "严重",
+        "high": "高",
+        "medium": "中",
+        "low": "低"
+      },
+      "domains": {
+        "ops": "运维",
+        "billing": "计费",
+        "security": "安全",
+        "ai": "AI",
+        "integrations": "集成",
+        "content": "内容"
+      },
+      "pending": {
+        "alerts.open": "未处理的告警",
+        "incidents.open": "未解决的事件",
+        "support.tickets": "等待中的支持工单",
+        "billing.disputes": "争议与退款请求",
+        "access.reviews": "到期的访问审查",
+        "ai.budgets": "接近上限的 AI 预算"
+      },
+      "kinds": {
+        "jobs.dead": {
+          "title": "死信队列中有 {count} 个任务",
+          "next": "打开每次运行，修复原因，然后重新排队或丢弃。"
+        },
+        "billing.pastDue": {
+          "title": "{count} 个订阅逾期或未付款",
+          "next": "与客户核实付款方式；必要时更改或取消套餐。"
+        },
+        "billing.failedPayments": {
+          "title": "7 天内有 {count} 笔付款失败",
+          "next": "在平台运维中查看失败的付款并联系相关组织。"
+        },
+        "marketplace.review": {
+          "title": "{count} 个市场上架项等待审核",
+          "next": "逐一批准或拒绝，并说明理由。"
+        },
+        "security.adminsWithoutMfa": {
+          "title": "{count} 名平台管理员未启用双重验证",
+          "next": "要求他们启用双重验证，或撤销其平台角色。"
+        },
+        "ai.breakers": {
+          "title": "{count} 个 AI 模型熔断器处于打开状态",
+          "next": "检查供应商，然后依赖备用链或停用该模型。"
+        },
+        "ai.failedTasks": {
+          "title": "24 小时内有 {count} 个 AI 任务失败",
+          "next": "按错误代码分组失败项，然后重试或修复原因。"
+        },
+        "integrations.webhookFailures": {
+          "title": "7 天内有 {count} 次 Webhook 投递失败",
+          "next": "检查失败的端点，并暂停持续失败的订阅。"
+        },
+        "integrations.connectionErrors": {
+          "title": "{count} 个集成连接出错",
+          "next": "请组织重新连接，或断开损坏的连接。"
+        },
+        "ops.workersDown": {
+          "title": "后台工作进程已停止上报",
+          "next": "检查工作进程部署；任务未被处理。"
+        },
+        "ops.emergency": {
+          "title": "{count} 个紧急开关已开启",
+          "next": "确认每个开关是否仍有必要，问题解决后将其关闭。"
+        },
+        "email.failed": {
+          "title": "24 小时内有 {count} 封邮件发送失败",
+          "next": "检查邮件服务商状态和投递日志。"
+        }
+      }
+    },
+    "notifications": {
+      "title": "通知",
+      "subtitle": "发给你或你的管理员角色的通知。最新的在前；保留 90 天。",
+      "bell": "通知",
+      "bellUnread": "通知，{count} 条未读",
+      "empty": "没有通知",
+      "emptyHint": "与你的角色相关的告警、任务失败和其他事件会显示在这里。",
+      "loadFailed": "无法加载通知。",
+      "markAllRead": "全部标为已读",
+      "markRead": "标为已读",
+      "markUnread": "标为未读",
+      "markedAll": "所有通知已标为已读",
+      "marked": "已更新 {count} 条通知",
+      "read": "已读",
+      "unread": "未读",
+      "viewAll": "查看所有通知",
+      "preferences": "通知偏好",
+      "filter": "阅读状态",
+      "severityLabel": "严重程度",
+      "anySeverity": "任意严重程度",
+      "roleWide": "你的角色",
+      "personal": "你",
+      "severity": {
+        "INFO": "信息",
+        "WARNING": "警告",
+        "CRITICAL": "严重"
+      },
+      "cols": {
+        "title": "通知",
+        "severity": "严重程度",
+        "type": "类型",
+        "audience": "发送给",
+        "occurrences": "次数",
+        "raised": "触发时间",
+        "status": "状态"
+      }
+    },
+    "me": {
+      "title": "我的偏好",
+      "subtitle": "{name}，控制台为你如何工作。更改只适用于你的账户。",
+      "preferences": "偏好设置",
+      "preferencesHint": "保存在你的管理员账户中，所有设备通用。",
+      "saved": "偏好已保存",
+      "density": "密度",
+      "densityHint": "紧凑模式可在屏幕上显示更多行和卡片。",
+      "comfortable": "舒适",
+      "compact": "紧凑模式",
+      "timeRange": "默认时间范围",
+      "timeRangeHint": "未选择时间范围时，指挥中心使用此设置。",
+      "sidebar": "侧边栏",
+      "sidebarExpanded": "展开",
+      "sidebarCollapsed": "仅图标",
+      "minSeverity": "显示的最低通知级别",
+      "minSeverityHint": "较低级别的通知不会出现在铃铛和列表中。",
+      "muted": "已静音的通知类型",
+      "mutedHint": "静音的类型只对你隐藏；其他管理员仍会收到。",
+      "noTypes": "尚未收到任何通知类型。",
+      "roles": "你的平台角色",
+      "rolesHint": "由超级管理员授予；每次更改都会被审计。",
+      "noRoles": "没有平台角色。",
+      "expires": "到期",
+      "since": "始于",
+      "favorites": "收藏",
+      "favoritesHint": "在侧边栏中为页面加星标，即可固定在这里和侧边栏顶部。",
+      "noFavorites": "还没有收藏。",
+      "savedViews": "保存的视图",
+      "savedViewsHint": "控制台表格的命名筛选条件和列。",
+      "noSavedViews": "还没有保存的视图。可使用任意表格上方的“视图”。",
+      "viewName": "名称",
+      "viewTable": "表格",
+      "viewFilters": "筛选条件",
+      "viewUpdated": "更新于",
+      "sessions": "你的活动会话",
+      "sessionsHint": "仍然有效的控制中心登录。",
+      "noSessions": "没有活动会话。",
+      "unknownDevice": "未知设备",
+      "thisSession": "当前会话",
+      "lastSeen": "最近活动",
+      "signedIn": "登录于",
+      "myActions": "你最近的管理操作",
+      "myActionsHint": "来自审计日志，最新的在前。",
+      "noActions": "尚未记录管理操作。",
+      "history": "历史",
+      "historyHint": "最近打开的栏目和命令面板搜索。",
+      "noRecents": "尚未打开任何内容。",
+      "noSearches": "还没有搜索。",
+      "clearHistory": "清除历史",
+      "historyCleared": "历史已清除"
+    },
+    "palette": {
+      "groups": {
+        "quick": "快捷命令",
+        "recent": "最近搜索",
+        "context": "当前页面"
+      },
+      "cmd": {
+        "actions": "打开待办中心",
+        "notifications": "打开通知",
+        "me": "我的偏好",
+        "last24h": "指挥中心：最近 24 小时",
+        "last7d": "指挥中心：最近 7 天",
+        "deadLetters": "死信任务",
+        "failedTasks": "失败的 AI 任务",
+        "pastDue": "逾期订阅",
+        "marketplaceReview": "市场审核队列",
+        "controls": "紧急开关"
+      },
+      "ctx": {
+        "copyLink": "复制此页面链接",
+        "copyId": "复制记录 ID",
+        "auditTrail": "查看此记录的审计轨迹",
+        "favorite": "将此页面加入收藏",
+        "unfavorite": "将此页面移出收藏",
+        "compact": "切换到紧凑模式",
+        "comfortable": "切换到舒适密度",
+        "shortcuts": "键盘快捷键"
+      },
+      "copyFailed": "无法复制到剪贴板。",
+      "searchFailed": "搜索暂时不可用。栏目和命令仍可使用。",
+      "keys": {
+        "title": "键盘快捷键",
+        "hint": "单键快捷键在没有文本框获得焦点时可用。",
+        "palette": "打开命令面板",
+        "search": "搜索",
+        "help": "显示此列表",
+        "sidebar": "收起或展开侧边栏",
+        "move": "在列表和侧边栏中移动",
+        "expand": "展开或收起侧边栏栏目",
+        "open": "打开所选项",
+        "close": "关闭对话框和菜单"
+      }
+    },
     "access": {},
     "aiRequests": {},
     "aiBudgets": {},

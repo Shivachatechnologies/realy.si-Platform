@@ -1702,7 +1702,11 @@
       "ops": "Platform ops",
       "securityAccess": "Logins & sessions",
       "plans": "Plans & limits",
-      "keys": "Platform keys"
+      "keys": "Platform keys",
+      "commandCenter": "Command center",
+      "actionCenter": "Action center",
+      "notifications": "Notifications",
+      "me": "Your preferences"
     },
     "overviewSubtitle": "Platform configuration. Every change is permission-checked, scoped and audited.",
     "yourAccess": "Your platform access",
@@ -2223,7 +2227,110 @@
       "queuesTitle": "Job queues",
       "queueSub": "{active} active · {failed} failed",
       "offline": "Offline",
-      "activityEmptyHint": "Changes made by administrators (switches, suspensions, roles) appear here with their reason."
+      "activityEmptyHint": "Changes made by administrators (switches, suspensions, roles) appear here with their reason.",
+      "cc": {
+        "title": "Command center",
+        "subtitle": "The state of the whole platform for the selected period, compared with the period before it.",
+        "why": "Every tile is a real count from the database and opens the list behind it. Metrics without a data source say so instead of showing zero.",
+        "range": "Time range",
+        "ranges": {
+          "24h": "24 h",
+          "7d": "7 days",
+          "30d": "30 days",
+          "90d": "90 days"
+        },
+        "vsPrevious": {
+          "24h": "vs previous 24 h",
+          "7d": "vs previous 7 days",
+          "30d": "vs previous 30 days",
+          "90d": "vs previous 90 days"
+        },
+        "period": "Period:",
+        "source": "Source",
+        "new": "new",
+        "cache": {
+          "memory": "cached",
+          "redis": "cached (shared)",
+          "fresh": "just computed"
+        },
+        "status": "Platform status",
+        "platform": "Platform",
+        "workers": "workers {alive}/{total}",
+        "incidents": "Incidents",
+        "alerts": "Alerts",
+        "notTracked": "Not yet tracked",
+        "needs": "Needs {needs} (stream {stream})",
+        "approvals": "AI approvals",
+        "approvalsWaiting": "{count, plural, one {# waiting} other {# waiting}}",
+        "approvalsHint": "AI actions waiting for a tenant's decision",
+        "oldest": "oldest",
+        "none": "None",
+        "failedJobs": "Failed jobs",
+        "deadLetters": "{count, plural, one {# dead letter} other {# dead letters}}",
+        "queueFailed": "{count} failed in queues · {waiting} waiting",
+        "risks": "Risks",
+        "riskCount": "{count, plural, one {# needs attention} other {# need attention}}",
+        "noRisks": "No open risks",
+        "risksHint": "From the Action Center",
+        "attentionHint": "The most urgent items across the platform. Each opens the rows behind it.",
+        "noData": "No data",
+        "noMoney": "No paying subscriptions",
+        "noHistory": "No history: needs {needs} (stream {stream})",
+        "noSections": "No KPI sets for your role",
+        "noSectionsHint": "Your admin role does not include users, organizations, billing, AI or system read access.",
+        "chartHint": {
+          "hourly": "Per hour in the selected period (UTC).",
+          "daily": "Per day in the selected period (UTC)."
+        },
+        "sections": {
+          "users": "Users",
+          "organizations": "Organizations",
+          "revenue": "Revenue",
+          "subscriptions": "Subscriptions",
+          "ai": "AI",
+          "system": "System"
+        },
+        "sectionHints": {
+          "users": "Accounts, registrations and sign-ins.",
+          "organizations": "Tenants and their companies.",
+          "revenue": "Recurring revenue from live subscriptions, per currency.",
+          "subscriptions": "Subscription lifecycle.",
+          "ai": "AI work, failures and estimated spend.",
+          "system": "Jobs, deliveries and reliability."
+        },
+        "kpis": {
+          "totalUsers": "Users",
+          "newUsers": "New registrations",
+          "signIns": "Users signing in",
+          "activeUsers": "Active in period",
+          "totalOrgs": "Organizations",
+          "newOrgs": "New organizations",
+          "suspendedOrgs": "Suspended",
+          "companies": "Companies",
+          "mrr": "MRR",
+          "arr": "ARR",
+          "failedPayments": "Failed payments",
+          "refunds": "Refunds & disputes",
+          "liveSubscriptions": "Live subscriptions",
+          "newSubscriptions": "New subscriptions",
+          "canceledSubscriptions": "Cancellations",
+          "pastDue": "Past due",
+          "trialsEnding": "Trials ending in 7 days",
+          "tasksCreated": "AI tasks",
+          "tasksFailed": "Failed AI tasks",
+          "failureRate": "Failure rate",
+          "aiTokens": "AI tokens",
+          "aiCost": "Estimated AI cost",
+          "employeesActive": "Active AI employees",
+          "aiLatency": "AI latency & provider errors",
+          "deadJobs": "Dead-letter jobs",
+          "failedJobs": "Failed job runs",
+          "webhookFailures": "Failed webhook deliveries",
+          "emailFailures": "Failed emails",
+          "uptime": "Uptime",
+          "latencyP95": "Request latency (p95)"
+        }
+      }
     },
     "health": {
       "database": "Database",
@@ -3715,12 +3822,315 @@
         "production": "Production",
         "preview": "Preview",
         "development": "Development"
+      },
+      "navigation": "Console navigation",
+      "navigationHint": "Sections of the Control Center you can open.",
+      "openNavigation": "Open navigation",
+      "filterNav": "Filter sections…",
+      "noNavMatch": "No section matches.",
+      "collapseSidebar": "Collapse sidebar",
+      "expandSidebar": "Expand sidebar",
+      "collapseSection": "Collapse {name}",
+      "expandSection": "Expand {name}",
+      "favorite": "Add {name} to favorites",
+      "unfavorite": "Remove {name} from favorites",
+      "groups": {
+        "favorites": "Favorites",
+        "recents": "Recent",
+        "monitor": "Monitor",
+        "customers": "Customers",
+        "ai": "AI",
+        "revenue": "Revenue",
+        "platform": "Platform",
+        "govern": "Governance",
+        "other": "More"
+      },
+      "skipToContent": "Skip to content",
+      "details": "Details",
+      "retry": "Retry",
+      "updated": "Updated",
+      "staleRefresh": "Data may be stale: refresh",
+      "online": "Connected",
+      "offline": "Offline: changes cannot be saved",
+      "profile": "Account menu for {name}",
+      "status": {
+        "operational": "Operational",
+        "degraded": "Degraded",
+        "incidentsNotTracked": "Incidents: not yet tracked (stream E adds platform incidents)"
+      },
+      "create": {
+        "title": "Create",
+        "organization": "Organization",
+        "role": "Admin role grant",
+        "plan": "Plan or promotion",
+        "page": "Page or post",
+        "announcement": "Announcement",
+        "key": "Platform key"
+      },
+      "error": {
+        "title": "This page could not be loaded",
+        "body": "Something went wrong while loading this page. The rest of the console still works. Try again, and if it keeps failing, send the reference below to engineering.",
+        "reference": "Reference",
+        "home": "Back to the command center"
+      },
+      "table": {
+        "columns": "Columns",
+        "resetColumns": "Reset to default columns",
+        "export": "Export CSV",
+        "exportPage": "Export page",
+        "exportPageHint": "Downloads the rows on this page as CSV.",
+        "exported": "{count, plural, one {Exported # row} other {Exported # rows}}",
+        "bulk": "Bulk actions",
+        "selected": "{count, plural, one {# selected} other {# selected}}",
+        "clearSelection": "Clear selection",
+        "selectAll": "Select all rows on this page",
+        "selectRow": "Select row",
+        "source": "Data source",
+        "total": "{count, plural, one {# row} other {# rows}}",
+        "pageSize": "Rows",
+        "pagination": "Pagination",
+        "first": "First page",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "views": {
+        "title": "Views",
+        "none": "No saved views yet.",
+        "loadFailed": "Saved views could not be loaded.",
+        "saveCurrent": "Save current view…",
+        "saveHint": "Saves the current filters and visible columns under a name. Only you see it unless you share it.",
+        "name": "Name",
+        "shareWithAdmins": "Share with other admins (read-only for them)",
+        "saved": "Saved view “{name}”",
+        "saveFailed": "The view could not be saved.",
+        "deleted": "Deleted view “{name}”",
+        "delete": "Delete {name}",
+        "confirmDelete": "Delete the saved view “{name}”?",
+        "shared": "Shared",
+        "sharedByYou": "Shared by you",
+        "share": "Share",
+        "unshare": "Stop sharing"
       }
     },
-    "actions": {},
-    "notifications": {},
-    "me": {},
-    "palette": {},
+    "actions": {
+      "title": "Action center",
+      "subtitle": "Everything on the platform that needs an administrator, most severe first.",
+      "why": "Each item is a count of real rows with the oldest one, a sample and the next step. You only see items for sections you can open.",
+      "cacheNote": "recomputed at most once a minute",
+      "filterLabel": "Filter by area",
+      "allClear": "Nothing needs attention",
+      "allClearHint": "No dead-letter jobs, past-due subscriptions, failed payments, open breakers or other open items right now.",
+      "investigate": "Investigate",
+      "nextStep": "Next step:",
+      "waitingSince": "oldest",
+      "someUnavailable": "{count, plural, one {# source could not be read this time:} other {# sources could not be read this time:}}",
+      "notTrackedTitle": "Not yet tracked",
+      "notTrackedHint": "These sources need tables other streams are adding. They are not counted as zero.",
+      "severity": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "domains": {
+        "ops": "Operations",
+        "billing": "Billing",
+        "security": "Security",
+        "ai": "AI",
+        "integrations": "Integrations",
+        "content": "Content"
+      },
+      "pending": {
+        "alerts.open": "Open alerts",
+        "incidents.open": "Open incidents",
+        "support.tickets": "Support tickets waiting",
+        "billing.disputes": "Disputes and refund requests",
+        "access.reviews": "Access reviews due",
+        "ai.budgets": "AI budgets near their limit"
+      },
+      "kinds": {
+        "jobs.dead": {
+          "title": "{count, plural, one {# job in the dead-letter queue} other {# jobs in the dead-letter queue}}",
+          "next": "Open each run, fix the cause, then requeue or discard it."
+        },
+        "billing.pastDue": {
+          "title": "{count, plural, one {# subscription past due or unpaid} other {# subscriptions past due or unpaid}}",
+          "next": "Check the payment method with the customer; change or cancel the plan if needed."
+        },
+        "billing.failedPayments": {
+          "title": "{count, plural, one {# failed payment in 7 days} other {# failed payments in 7 days}}",
+          "next": "Review the failed payments on Platform ops and contact the organizations."
+        },
+        "marketplace.review": {
+          "title": "{count, plural, one {# marketplace listing waiting for review} other {# marketplace listings waiting for review}}",
+          "next": "Approve or reject each listing with a reason."
+        },
+        "security.adminsWithoutMfa": {
+          "title": "{count, plural, one {# platform admin without two-factor} other {# platform admins without two-factor}}",
+          "next": "Ask them to enable two-factor authentication or revoke their platform role."
+        },
+        "ai.breakers": {
+          "title": "{count, plural, one {# AI model circuit breaker open} other {# AI model circuit breakers open}}",
+          "next": "Check the provider, then rely on the fallback chain or disable the model."
+        },
+        "ai.failedTasks": {
+          "title": "{count, plural, one {# AI task failed in 24 h} other {# AI tasks failed in 24 h}}",
+          "next": "Group the failures by error code and retry or fix the cause."
+        },
+        "integrations.webhookFailures": {
+          "title": "{count, plural, one {# webhook delivery failed in 7 days} other {# webhook deliveries failed in 7 days}}",
+          "next": "Check the failing endpoints and pause subscriptions that keep failing."
+        },
+        "integrations.connectionErrors": {
+          "title": "{count, plural, one {# integration connection in error} other {# integration connections in error}}",
+          "next": "Ask the organization to reconnect, or disconnect the broken connection."
+        },
+        "ops.workersDown": {
+          "title": "Background workers have stopped reporting",
+          "next": "Check the worker deployment; jobs are not being processed."
+        },
+        "ops.emergency": {
+          "title": "{count, plural, one {# emergency switch is on} other {# emergency switches are on}}",
+          "next": "Confirm each switch is still needed and turn it off when the issue is resolved."
+        },
+        "email.failed": {
+          "title": "{count, plural, one {# email failed to send in 24 h} other {# emails failed to send in 24 h}}",
+          "next": "Check the email provider status and the delivery log."
+        }
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Raised for you or for your admin roles. Newest first; kept for 90 days.",
+      "bell": "Notifications",
+      "bellUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}",
+      "empty": "No notifications",
+      "emptyHint": "Alerts, job failures and other events for your roles appear here.",
+      "loadFailed": "Notifications could not be loaded.",
+      "markAllRead": "Mark all read",
+      "markRead": "Mark read",
+      "markUnread": "Mark unread",
+      "markedAll": "All notifications marked read",
+      "marked": "{count, plural, one {# notification updated} other {# notifications updated}}",
+      "read": "Read",
+      "unread": "Unread",
+      "viewAll": "View all notifications",
+      "preferences": "Notification preferences",
+      "filter": "Read state",
+      "severityLabel": "Severity",
+      "anySeverity": "Any severity",
+      "roleWide": "Your role",
+      "personal": "You",
+      "severity": {
+        "INFO": "Info",
+        "WARNING": "Warning",
+        "CRITICAL": "Critical"
+      },
+      "cols": {
+        "title": "Notification",
+        "severity": "Severity",
+        "type": "Type",
+        "audience": "Sent to",
+        "occurrences": "Times",
+        "raised": "Raised",
+        "status": "Status"
+      }
+    },
+    "me": {
+      "title": "Your preferences",
+      "subtitle": "How the console works for you, {name}. Changes apply only to your account.",
+      "preferences": "Preferences",
+      "preferencesHint": "Saved to your admin account, on every device.",
+      "saved": "Preferences saved",
+      "density": "Density",
+      "densityHint": "Compact mode fits more rows and tiles on screen.",
+      "comfortable": "Comfortable",
+      "compact": "Compact mode",
+      "timeRange": "Default time range",
+      "timeRangeHint": "Used by the command center when no range is chosen.",
+      "sidebar": "Sidebar",
+      "sidebarExpanded": "Expanded",
+      "sidebarCollapsed": "Icons only",
+      "minSeverity": "Show notifications from",
+      "minSeverityHint": "Lower severities are hidden from the bell and list.",
+      "muted": "Muted notification types",
+      "mutedHint": "Muted types are hidden for you; they still reach other admins.",
+      "noTypes": "No notification types received yet.",
+      "roles": "Your platform roles",
+      "rolesHint": "Granted by a super admin; every change is audited.",
+      "noRoles": "No platform roles.",
+      "expires": "expires",
+      "since": "since",
+      "favorites": "Favorites",
+      "favoritesHint": "Star pages in the sidebar to pin them here and on top of the sidebar.",
+      "noFavorites": "No favorites yet.",
+      "savedViews": "Saved views",
+      "savedViewsHint": "Named filters and columns of console tables.",
+      "noSavedViews": "No saved views yet. Use “Views” above any table.",
+      "viewName": "Name",
+      "viewTable": "Table",
+      "viewFilters": "Filters",
+      "viewUpdated": "Updated",
+      "sessions": "Your active sessions",
+      "sessionsHint": "Control Center sign-ins that are still valid.",
+      "noSessions": "No active sessions.",
+      "unknownDevice": "Unknown device",
+      "thisSession": "This session",
+      "lastSeen": "last seen",
+      "signedIn": "signed in",
+      "myActions": "Your recent admin actions",
+      "myActionsHint": "From the audit log, newest first.",
+      "noActions": "No admin actions recorded yet.",
+      "history": "History",
+      "historyHint": "Recently opened sections and palette searches.",
+      "noRecents": "Nothing opened yet.",
+      "noSearches": "No searches yet.",
+      "clearHistory": "Clear history",
+      "historyCleared": "History cleared"
+    },
+    "palette": {
+      "groups": {
+        "quick": "Quick commands",
+        "recent": "Recent searches",
+        "context": "This page"
+      },
+      "cmd": {
+        "actions": "Open the Action center",
+        "notifications": "Open notifications",
+        "me": "Your preferences",
+        "last24h": "Command center: last 24 hours",
+        "last7d": "Command center: last 7 days",
+        "deadLetters": "Dead-letter jobs",
+        "failedTasks": "Failed AI tasks",
+        "pastDue": "Past-due subscriptions",
+        "marketplaceReview": "Marketplace review queue",
+        "controls": "Emergency switches"
+      },
+      "ctx": {
+        "copyLink": "Copy link to this page",
+        "copyId": "Copy record id",
+        "auditTrail": "View the audit trail of this record",
+        "favorite": "Add this page to favorites",
+        "unfavorite": "Remove this page from favorites",
+        "compact": "Switch to compact mode",
+        "comfortable": "Switch to comfortable density",
+        "shortcuts": "Keyboard shortcuts"
+      },
+      "copyFailed": "Could not copy to the clipboard.",
+      "searchFailed": "Search is unavailable right now. Sections and commands still work.",
+      "keys": {
+        "title": "Keyboard shortcuts",
+        "hint": "Single-key shortcuts work when no text field has focus.",
+        "palette": "Open the command palette",
+        "search": "Search",
+        "help": "Show this list",
+        "sidebar": "Collapse or expand the sidebar",
+        "move": "Move in lists and the sidebar",
+        "expand": "Expand or collapse a sidebar section",
+        "open": "Open the selected item",
+        "close": "Close dialogs and menus"
+      }
+    },
     "access": {},
     "aiRequests": {},
     "aiBudgets": {},

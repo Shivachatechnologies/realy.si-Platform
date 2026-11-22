@@ -1,8 +1,12 @@
-import { db } from "@/server/core/db";
+import { db, Prisma } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
+import { logger } from "@/server/core/logger";
+import { redis, redisConfigured } from "@/server/core/rate-limit";
+import { breakerSnapshot } from "@/server/modules/agents/router";
 import { costMicros } from "@/server/modules/workforce/pricing";
-import { daysAgo, requireAnyPlatform, utcMonthStart } from "./access";
-import { platformHealth, queueCounts } from "./monitoring";
+import { capabilitiesFor, daysAgo, requireAnyPlatform, utcMonthStart } from "./access";
+import { HEARTBEAT_STALE_MS, platformHealth, queueCounts } from "./monitoring";
+import { requireConsoleUser } from "./preferences";
 
 const LIVE_SUBSCRIPTION = ["ACTIVE", "TRIALING", "PAST_DUE"] as const;
 
@@ -123,4 +127,427 @@ export async function platformOverview(ctx: RequestContext) {
     queues,
     recentAdmin: recentAdmin.map((a) => ({ ...a, actorEmail: actors.find((u) => u.id === a.actorId)?.email ?? null })),
   };
+}
+
+// ───────────── Aggregate cache ─────────────
+
+interface Cached<T> {
+  value: T;
+  computedAt: number;
+}
+const memory = new Map<string, { expires: number; entry: Promise<Cached<unknown>> }>();
+const REDIS_PREFIX = "realy:admin:agg:";
+
+/**
+ * Cache for heavy, viewer-independent console aggregates (command center, action center). Order: this process's
+ * memory (no Redis command at all), then Redis (one GET; shared by every admin instance), then compute once
+ * (concurrent callers share the in-flight promise) and store in both. Redis TTL is twice the memory TTL, so a busy
+ * console costs about one GET per key per instance per `ttlMs` and one SET per key per `2 × ttlMs` platform-wide.
+ * Values must be JSON (no bigint). Never cache anything viewer-specific here: filter per viewer AFTER reading.
+ */
+export async function cachedAggregate<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<Cached<T> & { cache: "memory" | "redis" | "fresh" }> {
+  const now = Date.now();
+  const hit = memory.get(key);
+  if (hit && hit.expires > now) return { ...((await hit.entry) as Cached<T>), cache: "memory" };
+  let source: "redis" | "fresh" = "fresh";
+  const entry = (async (): Promise<Cached<T>> => {
+    if (redisConfigured()) {
+      try {
+        const raw = await redis().get(REDIS_PREFIX + key);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Cached<T>;
+          if (typeof parsed?.computedAt === "number" && Date.now() - parsed.computedAt < ttlMs * 2) {
+            source = "redis";
+            return parsed;
+          }
+        }
+      } catch (err) {
+        logger.debug({ err: err instanceof Error ? err.message : String(err) }, "aggregate cache read skipped");
+      }
+    }
+    const fresh: Cached<T> = { value: await compute(), computedAt: Date.now() };
+    if (redisConfigured()) {
+      redis()
+        .set(REDIS_PREFIX + key, JSON.stringify(fresh), "PX", ttlMs * 2)
+        .catch(() => undefined);
+    }
+    return fresh;
+  })();
+  memory.set(key, { expires: now + ttlMs, entry });
+  try {
+    const value = await entry;
+    return { ...value, cache: source };
+  } catch (err) {
+    memory.delete(key); // never cache a failure
+    throw err;
+  }
+}
+
+/** Test seam / manual refresh: forget cached aggregates in this process (Redis entries expire on their own). */
+export function clearAggregateCache(key?: string) {
+  if (key) memory.delete(key);
+  else memory.clear();
+}
+
+// ───────────── Command Center v2 ─────────────
+
+export const RANGES = { "24h": 86_400_000, "7d": 7 * 86_400_000, "30d": 30 * 86_400_000, "90d": 90 * 86_400_000 } as const;
+export type RangeKey = keyof typeof RANGES;
+export const isRange = (v: unknown): v is RangeKey => typeof v === "string" && v in RANGES;
+
+/**
+ * One KPI. `value`/`previous` are real counts for the selected period and the one before it; `previous` is null when
+ * the history does not exist (then `missing` names the source that would provide it). `status` "not_tracked" means
+ * the metric itself has no source yet: the UI says so and links to the owning stream's page; it never shows 0.
+ */
+export interface Kpi {
+  key: string;
+  value: number | null;
+  previous: number | null;
+  format: "count" | "usdMicros" | "percent" | "money";
+  /** Per-currency amounts (minor units as strings) for `format: "money"`. */
+  money?: { currency: string; amountMinor: string }[];
+  /** Locale-relative drill-down link. */
+  href: string;
+  /** Where the number comes from (shown on hover: "users.created_at"). */
+  source: string;
+  status: "ok" | "not_tracked" | "not_configured";
+  /** What is missing for `previous` or for the metric (and which stream adds it). */
+  missing?: { needs: string; stream: "A" | "B" | "C" | "D" | "E" | "F" };
+  /** "up" is good (registrations), "down" is good (failures). Default "up". */
+  better?: "up" | "down";
+  /** Per-bucket series over the period (hours for 24h, days otherwise). */
+  series?: number[];
+}
+
+export interface KpiSection {
+  id: "users" | "organizations" | "revenue" | "subscriptions" | "ai" | "system";
+  kpis: Kpi[];
+}
+
+export interface StatusStrip {
+  health: { database: boolean; redis: boolean; email: boolean; ai: boolean; stripe: boolean };
+  queues: { available: boolean; waiting: number; active: number; failed: number };
+  workers: { total: number; alive: number };
+  deadJobs: number;
+  approvalsPending: number;
+  approvalsOldestAt: string | null;
+  breakersOpen: number;
+}
+
+export interface CommandCenterData {
+  range: RangeKey;
+  from: string;
+  to: string;
+  buckets: string[];
+  sections: KpiSection[];
+  status: StatusStrip;
+}
+
+/** Who may see which KPI set (any one permission). The status strip follows the system set. */
+export const SECTION_PERMS: Record<KpiSection["id"], readonly string[]> = {
+  users: ["platform.users.read", "platform.support.read"],
+  organizations: ["platform.organizations.read", "platform.support.read"],
+  revenue: ["platform.subscriptions.read", "pricing.read"],
+  subscriptions: ["platform.subscriptions.read", "pricing.read"],
+  ai: ["platform.ai.read"],
+  // Same as monitoring.ts MONITOR_PERMS (a literal: that module is in an import cycle with this one, so it must not
+  // be read at load time).
+  system: ["platform.security.read", "platform.organizations.read", "platform.controls.manage"],
+};
+
+type PairRow = { cur: bigint | null; prev: bigint | null };
+const num = (v: bigint | number | null | undefined) => Number(v ?? 0);
+
+/**
+ * Count rows of `table` whose `column` falls in the current period and in the previous one, in one query.
+ * Identifiers come from the constant call sites below only (never from input).
+ */
+async function pair(table: string, column: string, from: Date, prevFrom: Date, where = Prisma.empty, distinct?: string): Promise<{ value: number; previous: number }> {
+  const t = Prisma.raw(`"${table}"`);
+  const c = Prisma.raw(`"${column}"`);
+  const what = distinct ? Prisma.raw(`DISTINCT "${distinct}"`) : Prisma.raw("*");
+  const rows = await db().$queryRaw<PairRow[]>(Prisma.sql`
+    SELECT COUNT(${what}) FILTER (WHERE ${c} >= ${from})::bigint AS cur,
+           COUNT(${what}) FILTER (WHERE ${c} < ${from})::bigint AS prev
+    FROM ${t} WHERE ${c} >= ${prevFrom} ${where}`);
+  return { value: num(rows[0]?.cur), previous: num(rows[0]?.prev) };
+}
+
+/** Bucket keys (ISO hour or day starts, UTC) from `from` to now. */
+function bucketKeys(range: RangeKey, from: Date) {
+  const hourly = range === "24h";
+  const step = hourly ? 3_600_000 : 86_400_000;
+  const start = new Date(from);
+  if (hourly) start.setUTCMinutes(0, 0, 0);
+  else start.setUTCHours(0, 0, 0, 0);
+  const out: string[] = [];
+  for (let t = start.getTime(); t <= Date.now(); t += step) out.push(new Date(t).toISOString());
+  return out;
+}
+
+async function series(range: RangeKey, buckets: string[], table: string, column: string, from: Date, where = Prisma.empty): Promise<number[]> {
+  const unit = Prisma.raw(range === "24h" ? "'hour'" : "'day'");
+  const t = Prisma.raw(`"${table}"`);
+  const c = Prisma.raw(`"${column}"`);
+  const rows = await db().$queryRaw<{ b: Date; n: bigint }[]>(Prisma.sql`
+    SELECT date_trunc(${unit}, ${c} AT TIME ZONE 'UTC') AS b, COUNT(*)::bigint AS n FROM ${t} WHERE ${c} >= ${from} ${where} GROUP BY 1`);
+  const m = new Map(rows.map((r) => [r.b.toISOString(), Number(r.n)]));
+  // date_trunc(… AT TIME ZONE 'UTC') is a UTC wall-clock timestamp, read back as that UTC instant (as in ./trends).
+  return buckets.map((k) => m.get(k) ?? 0);
+}
+
+const kpi = (k: Omit<Kpi, "status"> & { status?: Kpi["status"] }): Kpi => ({ status: "ok", ...k });
+const notTracked = (key: string, href: string, needs: string, stream: NonNullable<Kpi["missing"]>["stream"], format: Kpi["format"] = "count"): Kpi => ({
+  key,
+  value: null,
+  previous: null,
+  format,
+  href,
+  source: needs,
+  status: "not_tracked",
+  missing: { needs, stream },
+});
+
+/** AI tokens and estimated cost (agent_tasks, priced per model) for the period and the previous one. */
+async function aiSpendPair(from: Date, prevFrom: Date) {
+  const rows = await db().$queryRaw<{ model: string | null; cur: boolean; input: bigint | null; output: bigint | null }[]>(Prisma.sql`
+    SELECT model, started_at >= ${from} AS cur, SUM(input_tokens)::bigint AS input, SUM(output_tokens)::bigint AS output
+    FROM agent_tasks WHERE started_at >= ${prevFrom} GROUP BY 1, 2`);
+  const acc = { cur: { tokens: 0, micros: 0 }, prev: { tokens: 0, micros: 0 } };
+  for (const r of rows) {
+    const i = num(r.input);
+    const o = num(r.output);
+    const slot = r.cur ? acc.cur : acc.prev;
+    slot.tokens += i + o;
+    slot.micros += costMicros(r.model, i, o);
+  }
+  return acc;
+}
+
+/**
+ * Compute every KPI set for a period (viewer-independent; cached by `commandCenter`). About 30 bounded queries plus
+ * the queue counts and health checks, all in parallel. Periods compare [now - range, now) with the range before it.
+ */
+export async function computeCommandCenter(range: RangeKey): Promise<CommandCenterData> {
+  const span = RANGES[range];
+  const to = new Date();
+  const from = new Date(to.getTime() - span);
+  const prevFrom = new Date(from.getTime() - span);
+  const buckets = bucketKeys(range, from);
+  const sFrom = new Date(buckets[0]!);
+  const active = (since: Date) => db().$queryRaw<{ n: bigint }[]>`SELECT COUNT(DISTINCT user_id)::bigint AS n FROM sessions WHERE last_seen_at >= ${since}`.then((r) => num(r[0]?.n));
+  const [
+    totalUsers,
+    newUsers,
+    signIns,
+    activeNow,
+    usersSeries,
+    signInSeries,
+    orgCounts,
+    newOrgs,
+    orgSeries,
+    mrr,
+    subsByStatus,
+    newSubs,
+    canceledSubs,
+    failedPay,
+    trialsEnding,
+    subsSeries,
+    tasksCreated,
+    tasksFailed,
+    tasksCompleted,
+    taskSeries,
+    failSeries,
+    spend,
+    employees,
+    approvals,
+    health,
+    queues,
+    deadJobs,
+    failedRuns,
+    webhookFails,
+    emailFails,
+    beats,
+    breakers,
+  ] = await Promise.all([
+    db().user.count({ where: { status: { not: "DELETED" } } }),
+    pair("users", "created_at", from, prevFrom),
+    pair("sessions", "created_at", from, prevFrom, Prisma.empty, "user_id"),
+    active(from),
+    series(range, buckets, "users", "created_at", sFrom),
+    db().$queryRaw<{ b: Date; n: bigint }[]>(Prisma.sql`
+      SELECT date_trunc(${Prisma.raw(range === "24h" ? "'hour'" : "'day'")}, created_at AT TIME ZONE 'UTC') AS b, COUNT(DISTINCT user_id)::bigint AS n
+      FROM sessions WHERE created_at >= ${sFrom} GROUP BY 1`),
+    db().$queryRaw<{ orgs: bigint; suspended: bigint; companies: bigint }[]>`
+      SELECT (SELECT COUNT(*) FROM organizations)::bigint AS orgs,
+             (SELECT COUNT(*) FROM organizations WHERE status = 'SUSPENDED')::bigint AS suspended,
+             (SELECT COUNT(*) FROM companies WHERE deleted_at IS NULL)::bigint AS companies`,
+    pair("organizations", "created_at", from, prevFrom),
+    series(range, buckets, "organizations", "created_at", sFrom),
+    mrrByCurrency(),
+    db().subscription.groupBy({ by: ["status"], _count: { _all: true } }),
+    pair("subscriptions", "created_at", from, prevFrom),
+    pair("subscriptions", "canceled_at", from, prevFrom),
+    pair("subscriptions", "last_payment_failed_at", from, prevFrom),
+    db().subscription.count({ where: { status: "TRIALING", trialEndsAt: { gte: to, lt: new Date(to.getTime() + 7 * 86_400_000) } } }),
+    series(range, buckets, "subscriptions", "created_at", sFrom),
+    pair("agent_tasks", "created_at", from, prevFrom),
+    pair("agent_tasks", "completed_at", from, prevFrom, Prisma.sql`AND status = 'FAILED'`),
+    pair("agent_tasks", "completed_at", from, prevFrom, Prisma.sql`AND status = 'COMPLETED'`),
+    series(range, buckets, "agent_tasks", "created_at", sFrom),
+    series(range, buckets, "agent_tasks", "completed_at", sFrom, Prisma.sql`AND status = 'FAILED'`),
+    aiSpendPair(from, prevFrom),
+    db().aiEmployee.groupBy({ by: ["status"], where: { archivedAt: null }, _count: { _all: true } }),
+    db().approval.aggregate({ where: { status: "PENDING" }, _count: { _all: true }, _min: { createdAt: true } }),
+    platformHealth(),
+    queueCounts(),
+    db().workerJobRun.count({ where: { status: "DEAD" } }),
+    pair("worker_job_runs", "updated_at", from, prevFrom, Prisma.sql`AND status IN ('FAILED', 'DEAD')`),
+    pair("integration_webhook_deliveries", "updated_at", from, prevFrom, Prisma.sql`AND status = 'FAILED'`),
+    pair("email_messages", "created_at", from, prevFrom, Prisma.sql`AND status = 'FAILED'`),
+    db().platformHeartbeat.findMany({ orderBy: { lastSeenAt: "desc" }, take: 20, select: { lastSeenAt: true } }).catch(() => []),
+    breakerSnapshot().catch(() => null),
+  ]);
+
+  const signInMap = new Map(signInSeries.map((r) => [r.b.toISOString(), num(r.n)]));
+  const status = (s: string) => subsByStatus.find((r) => r.status === s)?._count._all ?? 0;
+  const live = status("ACTIVE") + status("TRIALING") + status("PAST_DUE");
+  const employeesBy = (s: string) => employees.find((r) => r.status === s)?._count._all ?? 0;
+  const finished = { value: tasksFailed.value + tasksCompleted.value, previous: tasksFailed.previous + tasksCompleted.previous };
+  const rate = (f: number, all: number) => (all ? (f / all) * 100 : null);
+  const mrrMicro = mrr.map((m) => ({ currency: m.currency, amountMinor: m.amountMinor.toString() }));
+  const arr = mrr.map((m) => ({ currency: m.currency, amountMinor: (m.amountMinor * 12n).toString() }));
+  const upQueues = queues.filter((q) => q.available);
+  const alive = beats.filter((b) => Date.now() - b.lastSeenAt.getTime() < HEARTBEAT_STALE_MS).length;
+  const snap = (key: string, value: number, href: string, source: string, needs: string, stream: NonNullable<Kpi["missing"]>["stream"], extra: Partial<Kpi> = {}) =>
+    kpi({ key, value, previous: null, format: "count", href, source, missing: { needs, stream }, ...extra });
+  const DAILY = "platform_daily_metrics snapshots";
+
+  const sections: KpiSection[] = [
+    {
+      id: "users",
+      kpis: [
+        snap("totalUsers", totalUsers, "/users", "users (not deleted)", DAILY, "D"),
+        kpi({ key: "newUsers", ...newUsers, format: "count", href: `/users?created=${range === "24h" ? "7d" : range === "90d" ? "30d" : range}`, source: "users.created_at", series: usersSeries }),
+        kpi({ key: "signIns", ...signIns, format: "count", href: "/security/access", source: "sessions.created_at (distinct users)", series: buckets.map((b) => signInMap.get(b) ?? 0) }),
+        snap("activeUsers", activeNow, "/users?login=7d", "sessions.last_seen_at", DAILY, "D"),
+      ],
+    },
+    {
+      id: "organizations",
+      kpis: [
+        snap("totalOrgs", num(orgCounts[0]?.orgs), "/organizations", "organizations", DAILY, "D"),
+        kpi({ key: "newOrgs", ...newOrgs, format: "count", href: "/organizations", source: "organizations.created_at", series: orgSeries }),
+        snap("suspendedOrgs", num(orgCounts[0]?.suspended), "/organizations?status=SUSPENDED", "organizations.status", "status history", "B", { better: "down" }),
+        snap("companies", num(orgCounts[0]?.companies), "/organizations", "companies (not deleted)", DAILY, "D"),
+      ],
+    },
+    {
+      id: "revenue",
+      kpis: [
+        kpi({ key: "mrr", value: null, previous: null, format: "money", money: mrrMicro, href: "/revenue", source: "subscription_items (ACTIVE, PAST_DUE)", missing: { needs: "MRR snapshots", stream: "D" } }),
+        kpi({ key: "arr", value: null, previous: null, format: "money", money: arr, href: "/revenue", source: "MRR × 12", missing: { needs: "MRR snapshots", stream: "D" } }),
+        kpi({ key: "failedPayments", ...failedPay, format: "count", href: "/ops", source: "subscriptions.last_payment_failed_at (latest attempt per subscription)", better: "down" }),
+        notTracked("refunds", "/payments", "platform_payments / platform_refunds", "D"),
+      ],
+    },
+    {
+      id: "subscriptions",
+      kpis: [
+        snap("liveSubscriptions", live, "/subscriptions", "subscriptions (ACTIVE, TRIALING, PAST_DUE)", "subscription snapshots", "D"),
+        kpi({ key: "newSubscriptions", ...newSubs, format: "count", href: "/subscriptions", source: "subscriptions.created_at", series: subsSeries }),
+        kpi({ key: "canceledSubscriptions", ...canceledSubs, format: "count", href: "/subscriptions?status=CANCELED", source: "subscriptions.canceled_at", better: "down" }),
+        snap("pastDue", status("PAST_DUE") + status("UNPAID"), "/subscriptions?status=PAST_DUE", "subscriptions (PAST_DUE, UNPAID)", "subscription snapshots", "D", { better: "down" }),
+        snap("trialsEnding", trialsEnding, "/subscriptions?status=TRIALING", "subscriptions.trial_ends_at (next 7 days)", "trial conversion snapshots", "D"),
+      ],
+    },
+    {
+      id: "ai",
+      kpis: [
+        kpi({ key: "tasksCreated", ...tasksCreated, format: "count", href: "/ai/tasks", source: "agent_tasks.created_at", series: taskSeries }),
+        kpi({ key: "tasksFailed", ...tasksFailed, format: "count", href: "/ai/tasks?status=FAILED", source: "agent_tasks (FAILED, completed_at)", better: "down", series: failSeries }),
+        kpi({ key: "failureRate", value: rate(tasksFailed.value, finished.value), previous: rate(tasksFailed.previous, finished.previous), format: "percent", href: "/ai/errors", source: "failed ÷ finished agent_tasks", better: "down" }),
+        kpi({ key: "aiTokens", value: spend.cur.tokens, previous: spend.prev.tokens, format: "count", href: "/ai/usage", source: "agent_tasks input + output tokens" }),
+        kpi({ key: "aiCost", value: spend.cur.micros, previous: spend.prev.micros, format: "usdMicros", href: "/ai/usage", source: "agent_tasks tokens × model list price (estimate)", better: "down" }),
+        snap("employeesActive", employeesBy("ACTIVE"), "/ai/workforce?status=ACTIVE", "ai_employees (ACTIVE)", "workforce snapshots", "C"),
+        notTracked("aiLatency", "/ai", "ai_request_logs (latency, provider errors)", "C"),
+      ],
+    },
+    {
+      id: "system",
+      kpis: [
+        snap("deadJobs", deadJobs, "/system/jobs?status=DEAD", "worker_job_runs (DEAD)", "dead-letter history", "E", { better: "down" }),
+        kpi({ key: "failedJobs", ...failedRuns, format: "count", href: "/system/jobs?status=FAILED", source: "worker_job_runs (FAILED, DEAD)", better: "down" }),
+        kpi({ key: "webhookFailures", ...webhookFails, format: "count", href: "/developers", source: "integration_webhook_deliveries (FAILED)", better: "down" }),
+        kpi({ key: "emailFailures", ...emailFails, format: "count", href: "/ops", source: "email_messages (FAILED)", better: "down" }),
+        notTracked("uptime", "/health", "service_health_checks", "E", "percent"),
+        notTracked("latencyP95", "/infra", "OTEL / request telemetry backend", "E"),
+      ],
+    },
+  ];
+
+  return {
+    range,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    buckets,
+    sections,
+    status: {
+      health,
+      queues: {
+        available: upQueues.length > 0,
+        waiting: upQueues.reduce((a, q) => a + q.waiting + q.delayed, 0),
+        active: upQueues.reduce((a, q) => a + q.active, 0),
+        failed: upQueues.reduce((a, q) => a + q.failed, 0),
+      },
+      workers: { total: beats.length, alive },
+      deadJobs,
+      approvalsPending: approvals._count._all,
+      approvalsOldestAt: approvals._min.createdAt?.toISOString() ?? null,
+      breakersOpen: breakers ? breakers.filter((b) => b.open).length : 0,
+    },
+  };
+}
+
+/** Cache TTL of the command center (per range; see cachedAggregate). */
+export const COMMAND_CENTER_TTL_MS = 30_000;
+
+/**
+ * The command center for one viewer: cached KPI sets for the period, each set kept only when the viewer holds one of
+ * its permissions (SECTION_PERMS); the status strip only for monitoring roles. Requires a platform role.
+ */
+export async function commandCenter(ctx: RequestContext, range: RangeKey) {
+  const keys = [...new Set(Object.values(SECTION_PERMS).flat())];
+  const caps = await capabilitiesFor(ctx, keys);
+  const allowed = (id: KpiSection["id"]) => SECTION_PERMS[id].some((p) => caps[p]);
+  await requireConsoleUser(ctx);
+  const { value, computedAt, cache } = await cachedAggregate(`cc:v2:${range}`, COMMAND_CENTER_TTL_MS, () => computeCommandCenter(range));
+  return {
+    ...value,
+    sections: value.sections.filter((s) => allowed(s.id)),
+    status: allowed("system") ? value.status : null,
+    computedAt,
+    cache,
+  };
+}
+
+/** Top-bar health indicator: the live DB / Redis checks and configured services, cached 30 s (no per-page probes). */
+export async function shellHealth() {
+  const { value, computedAt } = await cachedAggregate("shell:health:v1", 30_000, () => platformHealth());
+  return { ...value, computedAt };
+}
+
+/** The last platform-level admin and security actions (10), for holders of platform.audit.read. */
+export async function recentAdminActivity(ctx: RequestContext, take = 10) {
+  await requireAnyPlatform(ctx, ["platform.audit.read", "platform.security.read"]);
+  const rows = await db().auditLog.findMany({
+    where: { category: { in: ["ADMIN", "SECURITY"] }, organizationId: null },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(take, 50),
+    select: { id: true, action: true, category: true, reason: true, actorId: true, actorType: true, createdAt: true, resourceType: true, resourceId: true },
+  });
+  const ids = [...new Set(rows.map((a) => a.actorId).filter((x): x is string => !!x))];
+  const actors = ids.length ? await db().user.findMany({ where: { id: { in: ids } }, select: { id: true, email: true } }) : [];
+  return rows.map((a) => ({ ...a, actorEmail: actors.find((u) => u.id === a.actorId)?.email ?? null }));
 }
