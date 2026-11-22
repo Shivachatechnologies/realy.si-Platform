@@ -3,6 +3,7 @@ import { Layers } from "lucide-react";
 import { AdminHeader, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
 import { CreatePlanButton, CreatePromotionButton, PlanEditor, type PlanEditDTO } from "@/components/admin/plans/plan-manager";
 import { Badge } from "@/components/ui/badge";
+import { PromotionToggle } from "@/components/admin/billing/actions";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -30,9 +31,10 @@ export default async function PlansManagerPage({ searchParams }: PageProps<"/[lo
   const [catalog, revenue] = await Promise.all([guard(listCatalog(viewer.ctx), t("errors.forbidden")), guard(planRevenueSummary(viewer.ctx), t("errors.forbidden"))]);
   if (!catalog.ok) return catalog.node;
   const canManage = await canPlatform(viewer.ctx, "pricing.manage");
-  const [promotions, orgs] = await Promise.all([
+  const [promotions, orgs, liveByPlan] = await Promise.all([
     db().promotion.findMany({ orderBy: { createdAt: "desc" }, take: 25, include: { coupons: true } }),
     q ? searchOrganizations(viewer.ctx, q).catch(() => []) : Promise.resolve([]),
+    db().subscription.groupBy({ by: ["planId"], where: { status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } }, _count: { _all: true } }),
   ]);
   const now = new Date();
   const plans: PlanEditDTO[] = catalog.value.map((p) => ({
@@ -43,6 +45,7 @@ export default async function PlansManagerPage({ searchParams }: PageProps<"/[lo
     status: p.status,
     public: p.public,
     defaultTrialDays: p.defaultTrialDays,
+    liveSubscriptions: liveByPlan.find((l) => l.planId === p.id)?._count._all ?? 0,
     entitlements: p.entitlements.map((e) => ({ featureKey: e.featureKey, enabled: e.enabled, limitValue: e.limitValue?.toString() ?? null })),
     prices: p.prices.map((pr) => {
       const v = pr.versions.find((x) => x.effectiveFrom <= now && (!x.effectiveTo || x.effectiveTo > now)) ?? pr.versions[0] ?? null;
@@ -154,6 +157,7 @@ export default async function PlansManagerPage({ searchParams }: PageProps<"/[lo
                 <Th>{t("admin.plans.manager.couponCode")}</Th>
                 <Th>{t("admin.plans.manager.appliesTo")}</Th>
                 <Th>{t("admin.plans.manager.window")}</Th>
+                <Th>{t("admin.plans.manager.status")}</Th>
               </Tr>
             </THead>
             <TBody>
@@ -170,6 +174,7 @@ export default async function PlansManagerPage({ searchParams }: PageProps<"/[lo
                   <Td className="text-xs">
                     {formatDate(p.startsAt, locale, viewer.user.timezone)} – {p.endsAt ? formatDate(p.endsAt, locale, viewer.user.timezone) : "∞"}
                   </Td>
+                  <Td>{canManage ? <PromotionToggle promotionId={p.id} active={p.status === "ACTIVE"} /> : <Badge tone={p.status === "ACTIVE" ? "success" : "neutral"}>{p.status}</Badge>}</Td>
                 </Tr>
               ))}
             </TBody>

@@ -38,6 +38,7 @@ import {
   type MeterKey,
   type PlanKey,
 } from "./catalog";
+import { ledgerAllowance } from "./ledger";
 
 export * from "./catalog";
 
@@ -69,6 +70,8 @@ export interface Entitlements {
   limits: Record<LimitKey, number | null>;
   /** Add-on quantity active in the current window, per limit. */
   addons: Partial<Record<LimitKey, number>>;
+  /** Signed admin credit changes (credit ledger REFUND / ADJUSTMENT / PROMOTION) active now, per limit. */
+  ledger: Partial<Record<LimitKey, number>>;
   overrides: { id: string; key: string; enabled: boolean; limitValue: number | null; reason: string; expiresAt: Date | null }[];
   /** false when ENTITLEMENTS_ENFORCEMENT=off (e2e / self-hosted): checks report but never block. */
   enforced: boolean;
@@ -213,13 +216,14 @@ async function resolve(organizationId: string): Promise<Entitlements> {
   }
 
   const window = monthlyWindow(sub?.currentPeriodStart ?? null, now);
-  const [overrideRows, addonRows] = await Promise.all([
+  const [overrideRows, addonRows, ledger] = await Promise.all([
     client.entitlementOverride
       .findMany({ where: { organizationId, revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, orderBy: { createdAt: "asc" } })
       .catch(() => []),
     client.entitlementAddonPurchase
       .groupBy({ by: ["limitKey"], where: { organizationId, status: "PAID", windowStart: { lte: now }, windowEnd: { gt: now } }, _sum: { quantity: true } })
       .catch(() => []),
+    ledgerAllowance(client, organizationId, now).catch((): Partial<Record<LimitKey, number>> => ({})),
   ]);
   for (const o of overrideRows) {
     if (isFeatureKey(o.key)) features[o.key] = o.enabled;
@@ -254,6 +258,7 @@ async function resolve(organizationId: string): Promise<Entitlements> {
     features,
     limits,
     addons,
+    ledger,
     overrides: overrideRows.map((o) => ({ id: o.id, key: o.key, enabled: o.enabled, limitValue: o.limitValue === null ? null : Number(o.limitValue), reason: o.reason, expiresAt: o.expiresAt })),
     enforced: enforcementEnabled(),
   };
@@ -268,10 +273,10 @@ export async function getEntitlements(organizationId: string): Promise<Entitleme
   return value;
 }
 
-/** Limit including active add-on packs (null = unlimited). */
+/** Limit including active add-on packs and admin credit-ledger changes (null = unlimited; never below 0). */
 export const effectiveLimit = (ent: Entitlements, key: LimitKey): number | null => {
   const base = ent.limits[key];
-  return base === null ? null : base + (ent.addons[key] ?? 0);
+  return base === null ? null : Math.max(0, base + (ent.addons[key] ?? 0) + (ent.ledger?.[key] ?? 0));
 };
 
 // ───────────── Usage ─────────────
@@ -488,11 +493,43 @@ export function limitReachedError(c: LimitCheck, organizationId: string) {
   });
 }
 
+const QUOTA_EVENT_THROTTLE_MS = 60_000;
+const quotaSeen = new Map<string, number>();
+
+/**
+ * Persist a blocked limit check (quota_events, Control Center → Usage). At most one row per organization and limit per
+ * minute and process, so a client hammering a full quota cannot flood the table. Never throws.
+ */
+export async function recordQuotaEvent(organizationId: string, c: LimitCheck, increment: number): Promise<void> {
+  const key = `${organizationId}:${c.limitKey}`;
+  const now = Date.now();
+  if ((quotaSeen.get(key) ?? 0) > now - QUOTA_EVENT_THROTTLE_MS) return;
+  quotaSeen.set(key, now);
+  if (quotaSeen.size > 5_000) for (const [k, at] of quotaSeen) if (at <= now - QUOTA_EVENT_THROTTLE_MS) quotaSeen.delete(k);
+  try {
+    await db().quotaEvent.create({
+      data: {
+        organizationId,
+        limitKey: c.limitKey,
+        used: BigInt(Math.max(0, Math.round(c.used))),
+        limit: c.limit === null ? null : BigInt(Math.max(0, Math.round(c.limit))),
+        increment: BigInt(Math.max(0, Math.ceil(increment))),
+        blocked: true,
+        reason: c.state === "trial_expired" ? "plan_trial_expired" : "plan_limit_reached",
+        plan: c.currentPlan,
+      },
+    });
+  } catch (err) {
+    logger.warn({ organizationId, limitKey: c.limitKey, err: err instanceof Error ? err.message : String(err) }, "quota event not recorded");
+  }
+}
+
 /** Throw plan_limit_reached (or plan_trial_expired) when `increment` more would exceed the limit. */
 export async function assertLimit(ctx: RequestContext | null, organizationId: string, limitKey: LimitKey, increment = 1): Promise<LimitCheck> {
   const c = await checkLimit(organizationId, limitKey, increment);
   if (!c.allowed) {
     logger.info({ organizationId, limitKey, used: c.used, limit: c.limit, requestId: ctx?.requestId }, "plan limit reached");
+    await recordQuotaEvent(organizationId, c, increment);
     throw limitReachedError(c, organizationId);
   }
   return c;
@@ -512,6 +549,8 @@ export interface UsageRow {
   /** Plan limit (with overrides), before add-ons. */
   planLimit: number | null;
   addon: number;
+  /** Admin credit-ledger change (REFUND / ADJUSTMENT / PROMOTION) in the current window. */
+  ledger: number;
   limit: number | null;
   /** 0–1 (null when unlimited). */
   ratio: number | null;
@@ -531,6 +570,7 @@ export async function usageSummary(organizationId: string) {
       used: used[i]!,
       planLimit: ent.limits[key],
       addon: ent.addons[key] ?? 0,
+      ledger: ent.ledger[key] ?? 0,
       limit,
       ratio: limit === null ? null : limit === 0 ? (used[i]! > 0 ? 1 : 0) : Math.min(1, used[i]! / limit),
       addons: addonsForLimit(key).filter((a) => {

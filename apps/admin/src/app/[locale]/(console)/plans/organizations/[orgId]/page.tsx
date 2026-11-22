@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
-import { AdminHeader, guard } from "@/components/admin/kit";
-import { GrantAddonButton, GrantOverrideButton, RevokeOverrideButton, SubscriptionActions } from "@/components/admin/plans/plan-manager";
+import { AdminHeader, SectionLink, guard } from "@/components/admin/kit";
+import { GrantAddonButton, GrantOverrideButton, RevokeOverrideButton } from "@/components/admin/plans/plan-manager";
+import { CreditAdjustButton } from "@/components/admin/billing/actions";
+import { LEDGER_METERS } from "@/server/modules/entitlements/ledger";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -9,7 +11,6 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { organizationEntitlements } from "@/server/modules/entitlements/admin";
-import { PLAN_KEYS } from "@/server/modules/entitlements/catalog";
 import { requireViewer } from "@/server/session";
 
 /** One organization's effective plan, usage of every limit, overrides, add-on grants and subscription actions. */
@@ -39,6 +40,7 @@ export default async function OrgEntitlementsPage({ params }: PageProps<"/[local
             <div className="flex flex-wrap gap-2">
               <GrantAddonButton organizationId={org.id} />
               <GrantOverrideButton organizationId={org.id} />
+              {canSubs ? <CreditAdjustButton organizationId={org.id} meters={[...LEDGER_METERS]} /> : null}
             </div>
           ) : null
         }
@@ -46,12 +48,11 @@ export default async function OrgEntitlementsPage({ params }: PageProps<"/[local
 
       <Card>
         <CardHeader title={t("admin.plans.manager.subscription")} description={ent.subscription ? `${ent.subscription.planName} · ${ent.subscription.status} · ${ent.subscription.interval}${ent.subscription.currentPeriodEnd ? ` · ${formatDate(ent.subscription.currentPeriodEnd, locale, tz)}` : ""}` : ent.trialEndsAt ? t("admin.plans.manager.trialUntil", { date: formatDate(ent.trialEndsAt, locale, tz) }) : undefined} />
-        <CardBody>
-          {canSubs ? (
-            <SubscriptionActions organizationId={org.id} planKeys={[...PLAN_KEYS]} hasSubscription={!!ent.subscription} cancelAtPeriodEnd={!!ent.subscription?.cancelAtPeriodEnd} />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("errors.forbidden")}</p>
-          )}
+        <CardBody className="flex flex-wrap gap-3">
+          {ent.subscription ? <SectionLink href={`/${locale}/subscriptions/${ent.subscription.id}`}>{t("admin.subscriptions.detail.manage")}</SectionLink> : <p className="text-sm text-muted-foreground">{t("admin.plans.manager.noSubscription")}</p>}
+          <SectionLink href={`/${locale}/credits?org=${org.id}`}>{t("admin.credits.open")}</SectionLink>
+          <SectionLink href={`/${locale}/invoices?org=${org.id}`}>{t("admin.invoices.title")}</SectionLink>
+          <SectionLink href={`/${locale}/payments?org=${org.id}`}>{t("admin.payments.title")}</SectionLink>
         </CardBody>
       </Card>
 
@@ -73,7 +74,10 @@ export default async function OrgEntitlementsPage({ params }: PageProps<"/[local
                 <Td className="font-mono text-xs">{r.key}</Td>
                 <Td className="tabular">{fmt(r.used)}</Td>
                 <Td className="tabular">{fmt(r.planLimit)}</Td>
-                <Td className="tabular">{r.addon ? `+${fmt(r.addon)}` : "—"}</Td>
+                <Td className="tabular">
+                  {r.addon ? `+${fmt(r.addon)}` : "—"}
+                  {r.ledger ? <div className="text-[11px] text-muted-foreground">{t("admin.credits.ledgerChange", { value: `${r.ledger > 0 ? "+" : ""}${fmt(r.ledger)}` })}</div> : null}
+                </Td>
                 <Td className="tabular">
                   {fmt(r.limit)} {r.ratio !== null && r.ratio >= 1 ? <Badge tone="danger">{t("admin.plans.manager.atLimit")}</Badge> : null}
                 </Td>

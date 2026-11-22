@@ -9,3 +9,232 @@
 //   - Relations between this stream's own new tables are fine.
 //   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
 //   - At most one migration per PR, timestamp minute reserved for stream D: …_40xx.
+
+// ───────────── Stripe mirror (written only by the verified webhook and the admin backfill; never moves money) ─────────────
+// Rows are upserted by Stripe id. `stripeUpdatedAt` is the `created` time of the newest Stripe event (or the fetch
+// time of a backfill) applied to the row: an older event that arrives later never overwrites newer state.
+
+model PlatformInvoice {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  organizationId       String?   @map("organization_id") @db.Uuid
+  /// Local subscriptions.id when the invoice belongs to a known subscription.
+  subscriptionId       String?   @map("subscription_id") @db.Uuid
+  stripeInvoiceId      String    @unique @map("stripe_invoice_id")
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  number               String?
+  /// draft | open | paid | uncollectible | void
+  status               String
+  /// subscription_create | subscription_cycle | subscription_update | manual | ...
+  billingReason        String?   @map("billing_reason")
+  currency             String    @db.Char(3)
+  subtotalMinor        BigInt    @map("subtotal_minor")
+  discountMinor        BigInt    @default(0) @map("discount_minor")
+  /// Only meaningful when `taxKnown` (Stripe reported tax amounts on the invoice).
+  taxMinor             BigInt    @default(0) @map("tax_minor")
+  taxKnown             Boolean   @default(false) @map("tax_known")
+  totalMinor           BigInt    @map("total_minor")
+  amountPaidMinor      BigInt    @default(0) @map("amount_paid_minor")
+  amountDueMinor       BigInt    @default(0) @map("amount_due_minor")
+  amountRemainingMinor BigInt    @default(0) @map("amount_remaining_minor")
+  attemptCount         Int       @default(0) @map("attempt_count")
+  periodStart          DateTime? @map("period_start") @db.Timestamptz(3)
+  periodEnd            DateTime? @map("period_end") @db.Timestamptz(3)
+  dueAt                DateTime? @map("due_at") @db.Timestamptz(3)
+  paidAt               DateTime? @map("paid_at") @db.Timestamptz(3)
+  voidedAt             DateTime? @map("voided_at") @db.Timestamptz(3)
+  hostedUrl            String?   @map("hosted_url")
+  pdfUrl               String?   @map("pdf_url")
+  livemode             Boolean   @default(false)
+  /// Stripe's creation time of the invoice.
+  createdAt            DateTime  @map("created_at") @db.Timestamptz(3)
+  stripeUpdatedAt      DateTime  @map("stripe_updated_at") @db.Timestamptz(3)
+  syncedAt             DateTime  @default(now()) @updatedAt @map("synced_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([stripeSubscriptionId])
+  @@index([number])
+  @@map("platform_invoices")
+}
+
+model PlatformPayment {
+  id                    String   @id @default(uuid(7)) @db.Uuid
+  organizationId        String?  @map("organization_id") @db.Uuid
+  stripeCustomerId      String?  @map("stripe_customer_id")
+  /// Linked through the charge payload (older API versions) or `invoice_payment.paid`.
+  stripeInvoiceId       String?  @map("stripe_invoice_id")
+  stripePaymentIntentId String?  @unique @map("stripe_payment_intent_id")
+  stripeChargeId        String?  @unique @map("stripe_charge_id")
+  /// succeeded | failed | pending | refunded | partially_refunded | disputed
+  status                String
+  amountMinor           BigInt   @map("amount_minor")
+  refundedMinor         BigInt   @default(0) @map("refunded_minor")
+  currency              String   @db.Char(3)
+  failureCode           String?  @map("failure_code")
+  failureMessage        String?  @map("failure_message")
+  paymentMethodType     String?  @map("payment_method_type")
+  paymentMethodBrand    String?  @map("payment_method_brand")
+  last4                 String?
+  disputed              Boolean  @default(false)
+  livemode              Boolean  @default(false)
+  createdAt             DateTime @map("created_at") @db.Timestamptz(3)
+  stripeUpdatedAt       DateTime @map("stripe_updated_at") @db.Timestamptz(3)
+  syncedAt              DateTime @default(now()) @updatedAt @map("synced_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([stripeInvoiceId])
+  @@map("platform_payments")
+}
+
+model PlatformRefund {
+  id                    String   @id @default(uuid(7)) @db.Uuid
+  /// Local platform_payments.id once the charge is known.
+  paymentId             String?  @map("payment_id") @db.Uuid
+  organizationId        String?  @map("organization_id") @db.Uuid
+  stripeRefundId        String   @unique @map("stripe_refund_id")
+  stripeChargeId        String?  @map("stripe_charge_id")
+  stripePaymentIntentId String?  @map("stripe_payment_intent_id")
+  amountMinor           BigInt   @map("amount_minor")
+  currency              String   @db.Char(3)
+  /// Stripe's reason code (duplicate | fraudulent | requested_by_customer | ...).
+  reason                String?
+  /// pending | requires_action | succeeded | failed | canceled
+  status                String
+  failureReason         String?  @map("failure_reason")
+  /// The admin who issued it from the Control Center (null for refunds made elsewhere, e.g. the Stripe dashboard).
+  createdById           String?  @map("created_by_id") @db.Uuid
+  livemode              Boolean  @default(false)
+  createdAt             DateTime @map("created_at") @db.Timestamptz(3)
+  stripeUpdatedAt       DateTime @map("stripe_updated_at") @db.Timestamptz(3)
+  syncedAt              DateTime @default(now()) @updatedAt @map("synced_at") @db.Timestamptz(3)
+
+  @@index([paymentId])
+  @@index([stripeChargeId])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("platform_refunds")
+}
+
+model PlatformDispute {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  paymentId          String?   @map("payment_id") @db.Uuid
+  organizationId     String?   @map("organization_id") @db.Uuid
+  stripeDisputeId    String    @unique @map("stripe_dispute_id")
+  stripeChargeId     String?   @map("stripe_charge_id")
+  amountMinor        BigInt    @map("amount_minor")
+  currency           String    @db.Char(3)
+  reason             String
+  /// warning_needs_response | warning_under_review | warning_closed | needs_response | under_review | won | lost | prevented
+  status             String
+  evidenceDueBy      DateTime? @map("evidence_due_by") @db.Timestamptz(3)
+  isChargeRefundable Boolean   @default(false) @map("is_charge_refundable")
+  livemode           Boolean   @default(false)
+  createdAt          DateTime  @map("created_at") @db.Timestamptz(3)
+  stripeUpdatedAt    DateTime  @map("stripe_updated_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, evidenceDueBy])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([stripeChargeId])
+  @@map("platform_disputes")
+}
+
+// ───────────── Snapshots (low-frequency worker jobs; history exists only from the first run on) ─────────────
+
+/// Daily MRR per currency. Movement compares `orgMrr` with the previous snapshot; the first snapshot is a baseline.
+model MrrSnapshot {
+  day               DateTime @db.Date
+  currency          String   @db.Char(3)
+  mrrMinor          BigInt   @map("mrr_minor")
+  newMinor          BigInt   @default(0) @map("new_minor")
+  expansionMinor    BigInt   @default(0) @map("expansion_minor")
+  contractionMinor  BigInt   @default(0) @map("contraction_minor")
+  churnMinor        BigInt   @default(0) @map("churn_minor")
+  reactivationMinor BigInt   @default(0) @map("reactivation_minor")
+  activeSubs        Int      @map("active_subs")
+  trialingSubs      Int      @map("trialing_subs")
+  pastDueSubs       Int      @default(0) @map("past_due_subs")
+  payingOrgs        Int      @default(0) @map("paying_orgs")
+  newOrgs           Int      @default(0) @map("new_orgs")
+  churnedOrgs       Int      @default(0) @map("churned_orgs")
+  /// True when no earlier snapshot existed: the movement columns are zero because they are unknown.
+  baseline          Boolean  @default(false)
+  /// { planKey: mrrMinor } (strings) for plan distribution over time.
+  byPlan            Json     @default("{}") @map("by_plan")
+  /// { organizationId: mrrMinor } (strings) of paying organizations, the input of the next day's movement.
+  orgMrr            Json     @default("{}") @map("org_mrr")
+  computedAt        DateTime @default(now()) @updatedAt @map("computed_at") @db.Timestamptz(3)
+
+  @@id([day, currency])
+  @@map("mrr_snapshots")
+}
+
+/// One platform metric per UTC day ("users.dau", "users.mau", "orgs.active", "trials.started", ...).
+model PlatformDailyMetric {
+  day        DateTime @db.Date
+  key        String
+  value      BigInt
+  computedAt DateTime @default(now()) @updatedAt @map("computed_at") @db.Timestamptz(3)
+
+  @@id([day, key])
+  @@index([key, day(sort: Desc)])
+  @@map("platform_daily_metrics")
+}
+
+// ───────────── Credits ledger and quota events ─────────────
+
+/// Signed, append-only credit ledger per organization and meter. kind: GRANT | PURCHASE | USAGE | EXPIRY | REFUND |
+/// ADJUSTMENT | PROMOTION. ADJUSTMENT, PROMOTION and REFUND rows change the allowance the backend enforces for their
+/// period; the other kinds mirror their source of truth (plan limits, add-on purchases, usage_records).
+model CreditLedgerEntry {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  companyId      String?  @map("company_id") @db.Uuid
+  /// Usage meter, e.g. "ai.credits".
+  meter          String
+  kind           String
+  /// Signed quantity in the meter's unit.
+  delta          BigInt
+  /// Usage window start (YYYY-MM-DD) the entry counts toward.
+  periodKey      String   @map("period_key")
+  periodStart    DateTime @map("period_start") @db.Timestamptz(3)
+  periodEnd      DateTime @map("period_end") @db.Timestamptz(3)
+  sourceType     String?  @map("source_type")
+  sourceId       String?  @map("source_id")
+  reason         String?
+  /// Admin (or user) who caused the entry; null for webhook / job entries.
+  actorId        String?  @map("actor_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([sourceType, sourceId, kind])
+  @@index([organizationId, meter, periodStart])
+  @@index([kind, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("credit_ledger_entries")
+}
+
+/// A plan limit check that blocked work (persisted from assertLimit; throttled per organization and limit).
+model QuotaEvent {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  limitKey       String   @map("limit_key")
+  used           BigInt
+  /// Effective limit incl. add-ons; null when unlimited (blocked only because the trial ended).
+  limit          BigInt?
+  increment      BigInt   @default(1)
+  blocked        Boolean
+  /// plan_limit_reached | plan_trial_expired
+  reason         String
+  plan           String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([limitKey, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("quota_events")
+}

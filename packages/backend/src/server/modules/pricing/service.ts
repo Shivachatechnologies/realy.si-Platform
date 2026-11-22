@@ -197,7 +197,112 @@ export async function updatePlan(ctx: RequestContext, planId: string, raw: z.inp
     await writeAudit(tx, ctx, { category: "ADMIN", action: "pricing.plan.updated", resourceType: "plan", resourceId: planId, oldValue: before, newValue: after, reason });
     await emitEvent(tx, ctx, "pricing.plan.updated", { planId, key: after.key }, { aggregateType: "plan", aggregateId: planId });
     return after;
+  }).then(async (after) => {
+    // Plan name / status feed the cached plan table behind every organization's entitlements.
+    (await import("@/server/modules/entitlements/service")).invalidateEntitlements();
+    return after;
   });
+}
+
+// ───────────── Plan lifecycle (Control Center: clone, publish, archive) ─────────────
+
+export const clonePlanInput = z.object({
+  key: planKey,
+  name: z.string().trim().min(1).max(80),
+  /** Copy the source's market prices (current amounts become version 1 of new prices). */
+  withPrices: z.boolean().default(true),
+  reason: z.string().trim().min(3).max(500),
+});
+
+/**
+ * Copy a plan (description, trial days, every entitlement row, and optionally its active market prices at their
+ * current amounts) into a new DRAFT, hidden plan. Stripe objects are never copied: the new plan gets its own on first
+ * checkout. Subscriptions stay on the source plan.
+ */
+export async function clonePlan(ctx: RequestContext, sourcePlanId: string, raw: z.input<typeof clonePlanInput>) {
+  const input = clonePlanInput.parse(raw);
+  return transaction(async (tx) => {
+    await requirePermission(ctx, "pricing.manage", platformChain(), tx);
+    const src = await tx.plan.findUnique({ where: { id: sourcePlanId }, include: { entitlements: true, prices: { where: { status: "ACTIVE" }, include: { versions: { orderBy: { version: "desc" } } } } } });
+    if (!src) throw notFound("Plan");
+    if (await tx.plan.findUnique({ where: { key: input.key } })) throw conflict(`Plan ${input.key} already exists`);
+    const plan = await tx.plan.create({
+      data: { key: input.key, name: input.name, description: src.description, productId: src.productId, public: false, sortOrder: src.sortOrder + 1, defaultTrialDays: src.defaultTrialDays, status: "DRAFT" },
+    });
+    if (src.entitlements.length) {
+      await tx.planEntitlement.createMany({ data: src.entitlements.map((e) => ({ planId: plan.id, featureKey: e.featureKey, enabled: e.enabled, limitValue: e.limitValue })) });
+    }
+    const now = new Date();
+    let prices = 0;
+    if (input.withPrices) {
+      for (const pr of src.prices) {
+        const current = pr.versions.find((v) => v.effectiveFrom <= now && (!v.effectiveTo || v.effectiveTo > now));
+        if (!current) continue;
+        await tx.price.create({
+          data: {
+            planId: plan.id,
+            interval: pr.interval,
+            marketType: pr.marketType,
+            marketCode: pr.marketCode,
+            currency: pr.currency,
+            usageType: pr.usageType,
+            versions: { create: { version: 1, amountMinor: current.amountMinor, currency: current.currency, effectiveFrom: now, trialDays: current.trialDays, reason: `cloned from ${src.key}: ${input.reason}`, createdById: ctx.actor.id } },
+          },
+        });
+        prices++;
+      }
+    }
+    await writeAudit(tx, ctx, { category: "ADMIN", action: "pricing.plan.cloned", resourceType: "plan", resourceId: plan.id, oldValue: { sourcePlanId: src.id, sourceKey: src.key }, newValue: { ...plan, entitlements: src.entitlements.length, prices }, reason: input.reason });
+    await emitEvent(tx, ctx, "pricing.plan.created", { planId: plan.id, key: plan.key }, { aggregateType: "plan", aggregateId: plan.id });
+    return { plan, entitlements: src.entitlements.length, prices };
+  });
+}
+
+export const planLifecycleInput = z.object({ reason: z.string().trim().min(3).max(500), confirm: z.string().max(100).optional() });
+
+/**
+ * Publish: DRAFT / DISABLED → ACTIVE (sellable). Requires at least one active price with a version in effect, so a
+ * published plan can always be quoted.
+ */
+export async function publishPlan(ctx: RequestContext, planId: string, raw: z.input<typeof planLifecycleInput>) {
+  const { reason } = planLifecycleInput.parse(raw);
+  const after = await transaction(async (tx) => {
+    await requirePermission(ctx, "pricing.manage", platformChain(), tx);
+    const before = await tx.plan.findUnique({ where: { id: planId }, include: { prices: { where: { status: "ACTIVE" }, include: { versions: true } } } });
+    if (!before) throw notFound("Plan");
+    if (before.status === "ACTIVE") throw conflict("The plan is already published", { reason: "plan_already_active" });
+    const now = new Date();
+    const quotable = before.prices.some((p) => p.versions.some((v) => v.effectiveFrom <= now && (!v.effectiveTo || v.effectiveTo > now)));
+    if (!quotable) throw invalid("Add at least one active price before publishing", { reason: "plan_no_price" });
+    const updated = await tx.plan.update({ where: { id: planId }, data: { status: "ACTIVE" } });
+    await writeAudit(tx, ctx, { category: "ADMIN", action: "pricing.plan.published", resourceType: "plan", resourceId: planId, oldValue: { status: before.status }, newValue: { status: "ACTIVE" }, reason });
+    await emitEvent(tx, ctx, "pricing.plan.updated", { planId, key: updated.key }, { aggregateType: "plan", aggregateId: planId });
+    return updated;
+  });
+  (await import("@/server/modules/entitlements/service")).invalidateEntitlements();
+  return after;
+}
+
+/**
+ * Archive: → DISABLED and hidden. New checkouts stop immediately; existing subscriptions keep their plan and price
+ * version until changed. Typed confirmation (the plan key) because it removes the plan from sale.
+ */
+export async function archivePlan(ctx: RequestContext, planId: string, raw: z.input<typeof planLifecycleInput>) {
+  const { reason, confirm } = planLifecycleInput.parse(raw);
+  const after = await transaction(async (tx) => {
+    await requirePermission(ctx, "pricing.manage", platformChain(), tx);
+    const before = await tx.plan.findUnique({ where: { id: planId } });
+    if (!before) throw notFound("Plan");
+    if (before.status === "DISABLED") throw conflict("The plan is already archived", { reason: "plan_already_archived" });
+    if ((confirm ?? "").trim() !== before.key) throw invalid("Type the confirmation phrase exactly to continue", { reason: "confirmation_mismatch" });
+    const live = await tx.subscription.count({ where: { planId, status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } });
+    const updated = await tx.plan.update({ where: { id: planId }, data: { status: "DISABLED", public: false } });
+    await writeAudit(tx, ctx, { category: "ADMIN", action: "pricing.plan.archived", resourceType: "plan", resourceId: planId, oldValue: { status: before.status, public: before.public }, newValue: { status: "DISABLED", public: false, liveSubscriptions: live }, reason });
+    await emitEvent(tx, ctx, "pricing.plan.updated", { planId, key: updated.key }, { aggregateType: "plan", aggregateId: planId });
+    return { ...updated, liveSubscriptions: live };
+  });
+  (await import("@/server/modules/entitlements/service")).invalidateEntitlements();
+  return after;
 }
 
 const amountMinor = z.union([z.string().regex(/^\d{1,15}$/), z.number().int().nonnegative(), z.bigint().nonnegative()]).transform((v) => BigInt(v));
@@ -459,3 +564,22 @@ export async function findApplicableCoupon(
   return { coupon, promotion: p };
 }
 
+
+export const promotionStatusInput = z.object({ status: z.enum(["ACTIVE", "INACTIVE"]), reason: z.string().trim().min(3).max(500) });
+
+/**
+ * Disable (or re-enable) a promotion: its coupon codes stop validating at checkout immediately. Already-applied Stripe
+ * discounts are not touched (they run their course in Stripe).
+ */
+export async function setPromotionStatus(ctx: RequestContext, promotionId: string, raw: z.input<typeof promotionStatusInput>) {
+  const input = promotionStatusInput.parse(raw);
+  return transaction(async (tx) => {
+    await requirePermission(ctx, "pricing.manage", platformChain(), tx);
+    const before = await tx.promotion.findUnique({ where: { id: promotionId } });
+    if (!before) throw notFound("Promotion");
+    if (before.status === input.status) return before;
+    const after = await tx.promotion.update({ where: { id: promotionId }, data: { status: input.status } });
+    await writeAudit(tx, ctx, { category: "ADMIN", action: input.status === "ACTIVE" ? "pricing.promotion.enabled" : "pricing.promotion.disabled", resourceType: "promotion", resourceId: promotionId, oldValue: { status: before.status }, newValue: { status: after.status }, reason: input.reason });
+    return after;
+  });
+}
