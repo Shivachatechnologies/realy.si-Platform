@@ -188,7 +188,7 @@ export default async function WorkflowPage({ params }: PageProps<"/[locale]/work
           {canManage && !archived ? (
             <Card>
               <CardHeader title={t("workflows.settings")} />
-              <WorkflowSettingsForm base={base} workflowId={wf.id} name={wf.name} description={wf.description ?? ""} ownerId={wf.ownerId} users={opts.users} />
+              <WorkflowSettingsForm base={base} workflowId={wf.id} name={wf.name} description={wf.description ?? ""} ownerId={wf.ownerId} autonomyMode={wf.autonomyMode} users={opts.users} />
             </Card>
           ) : null}
         </div>

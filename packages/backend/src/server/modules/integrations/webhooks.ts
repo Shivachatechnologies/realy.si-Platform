@@ -1,11 +1,10 @@
 import "server-only";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import { z } from "zod";
 import { db, transaction, type Prisma } from "@/server/core/db";
 import { systemContext, type RequestContext } from "@/server/core/context";
 import { decryptSecret, encryptSecret, hmacSha256, randomToken } from "@/server/core/crypto";
 import { env } from "@/server/core/env";
+import { assertOutboundUrl, assertPublicTarget, guardedFetch } from "@/server/core/outbound";
 import { conflict, invalid, notFound } from "@/server/core/errors";
 import { toJson } from "@/server/core/json";
 import { logger } from "@/server/core/logger";
@@ -214,38 +213,17 @@ export const subscriptionInput = z.object({
 });
 export const subscriptionUpdateInput = subscriptionInput.partial().extend({ active: z.boolean().optional() });
 
-const PRIVATE_V4 = [/^10\./, /^127\./, /^169\.254\./, /^192\.168\./, /^172\.(1[6-9]|2\d|3[01])\./, /^0\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./];
-function isPrivateAddress(addr: string): boolean {
-  if (isIP(addr) === 4) return PRIVATE_V4.some((r) => r.test(addr));
-  const a = addr.toLowerCase();
-  return a === "::1" || a === "::" || a.startsWith("fc") || a.startsWith("fd") || a.startsWith("fe80") || a.startsWith("::ffff:127.") || a.startsWith("::ffff:10.") || a.startsWith("::ffff:192.168.");
-}
-
-/** Outbound targets must be public HTTPS endpoints (HTTP is allowed outside production for local testing). */
+/** Outbound targets must be public HTTPS endpoints (HTTP and private hosts are allowed outside production for local testing). */
 export function validateTargetUrl(value: string): URL {
-  let url: URL;
   try {
-    url = new URL(value);
-  } catch {
-    throw invalid("Invalid URL", { reason: "integrations_url_invalid" });
+    return assertOutboundUrl(value);
+  } catch (err) {
+    throw invalid(err instanceof Error ? err.message : "Invalid URL", { reason: "integrations_url_invalid" });
   }
-  const prod = env().NODE_ENV === "production";
-  if (url.protocol !== "https:" && !(url.protocol === "http:" && !prod)) throw invalid("The URL must use HTTPS", { reason: "integrations_url_invalid" });
-  if (url.username || url.password) throw invalid("Credentials in URLs are not allowed", { reason: "integrations_url_invalid" });
-  const host = url.hostname.replace(/^\[|\]$/g, "");
-  if (prod && (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal") || (isIP(host) && isPrivateAddress(host)))) {
-    throw invalid("Private network addresses are not allowed", { reason: "integrations_url_invalid" });
-  }
-  return url;
 }
 
-/** At send time: the resolved address must be public too (DNS rebinding protection), in production. */
-async function assertPublicTarget(url: URL) {
-  if (env().NODE_ENV !== "production") return;
-  const host = url.hostname.replace(/^\[|\]$/g, "");
-  const addrs = isIP(host) ? [{ address: host }] : await lookup(host, { all: true });
-  if (addrs.some((a) => isPrivateAddress(a.address))) throw new Error("target resolves to a private address");
-}
+/** At send time: the resolved address must be public too (DNS rebinding protection), in production. Re-exported from core/outbound. */
+export { assertPublicTarget };
 
 const subSelect = { id: true, name: true, url: true, eventTypes: true, active: true, createdAt: true, updatedAt: true } satisfies Prisma.IntegrationWebhookSubscriptionSelect;
 
@@ -362,9 +340,9 @@ export async function attemptDelivery(deliveryId: string) {
   let error: string | null = null;
   try {
     const url = validateTargetUrl(d.subscription.url);
-    await assertPublicTarget(url);
     const secret = decryptSecret(d.subscription.secretEnc, subPurpose(d.subscription.id));
-    const res = await fetch(url, {
+    // Pinned connection: the resolved address is checked at connect time; redirects are not followed.
+    const res = await guardedFetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", "user-agent": "Realy-Webhooks/1", "x-realy-event": d.eventType, "x-realy-delivery": d.id, "x-realy-signature": signPayload(secret, body) },
       body,

@@ -41,6 +41,9 @@ The allow-list in `platform-secrets-catalog.ts`, grouped on the page:
 - **Integration OAuth apps**: `SLACK_*`, `HUBSPOT_*`, `SALESFORCE_*` (+ `SALESFORCE_LOGIN_URL`), `LINKEDIN_*`, `X_*`,
   `FACEBOOK_APP_*`, `THREADS_APP_*`, `TIKTOK_CLIENT_*`, `TIKTOK_ADS_APP_*`, `PINTEREST_*`, `MAILCHIMP_*` (customers' own
   Mailchimp accounts),
+  `CALENDLY_CLIENT_*`, `ZENDESK_CLIENT_*` (a Zendesk global OAuth client), `INTERCOM_CLIENT_*` (also signs Intercom app
+  webhooks), `SHOPIFY_CLIENT_*` (also verifies the OAuth callback HMAC), `NOTION_CLIENT_*`, `WEBFLOW_CLIENT_*`,
+  `CLICKUP_CLIENT_*`,
   `QUICKBOOKS_*` (+ `QUICKBOOKS_ENVIRONMENT`), `XERO_*`, `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_API_VERSION`
 - **Observability**: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `LOG_LEVEL`
 - **Platform**: `REALY_BOOTSTRAP_ADMIN_EMAIL`, `ENTITLEMENTS_ENFORCEMENT`

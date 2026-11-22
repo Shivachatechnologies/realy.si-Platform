@@ -18,7 +18,7 @@ import { asConfig, assertConnectionEntitled, decryptCredentials, encryptCredenti
 import { logProviderCall, providerFetch } from "./client";
 import { buildAuthorizeUrl, type IntegrationOAuthState } from "./oauth";
 import { validateTargetUrl } from "./webhooks";
-import { exchangeCode, integrationRedirectUri, missingEnvVars, oauthClient, postConnectDetails, ProviderError, revokeToken, testConnection } from "./providers";
+import { exchangeCode, integrationRedirectUri, missingEnvVars, OAUTH_CONNECT_PARAMS, oauthClient, oauthConnectParams, postConnectDetails, ProviderError, revokeToken, testConnection, verifyShopifyCallback } from "./providers";
 
 type Perm = "integrations.read" | "integrations.manage";
 
@@ -272,30 +272,42 @@ export async function saveApiKeyConnection(ctx: RequestContext, organizationId: 
 }
 
 /** Start the OAuth flow (returns the provider URL and the signed state cookie). */
-export async function startOAuthConnection(ctx: RequestContext, organizationId: string, companyId: string, provider: string, locale: string) {
+export async function startOAuthConnection(ctx: RequestContext, organizationId: string, companyId: string, provider: string, locale: string, rawParams: Record<string, unknown> = {}) {
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
   await assertCustomerProvider(provider, true);
   const info = requireInfo(provider);
   if (info.authType !== "oauth2" && !info.oauthAlternative) throw invalid("This integration does not use OAuth");
   await assertConnectionEntitled(ctx, organizationId, companyId, provider);
   if (!oauthClient(provider)) throw new AppError("not_configured", "OAuth app not configured", { reason: "integrations_not_configured", envVars: info.envVars });
-  return buildAuthorizeUrl(provider, { organizationId, companyId, userId: ctx.actor.id!, locale });
+  let params: Record<string, string>;
+  try {
+    params = oauthConnectParams(provider, rawParams);
+  } catch {
+    throw invalid("Enter your account address to connect", { reason: "integrations_connect_param_invalid", param: OAUTH_CONNECT_PARAMS[provider]?.key });
+  }
+  return buildAuthorizeUrl(provider, { organizationId, companyId, userId: ctx.actor.id!, locale, params });
 }
 
 /** Finish the OAuth flow: exchange the code, verify the token with a test call and store it encrypted. */
-export async function completeOAuthConnection(ctx: RequestContext, state: IntegrationOAuthState, code: string, extras: { realmId?: string | null }) {
+export async function completeOAuthConnection(ctx: RequestContext, state: IntegrationOAuthState, code: string, extras: { realmId?: string | null; query?: URLSearchParams }) {
   const { organizationId, companyId, provider } = state;
   if (ctx.actor.id !== state.userId) throw new AppError("forbidden", "Signed-in user changed during the OAuth flow");
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
   await assertCustomerProvider(provider, true);
   const info = requireInfo(provider);
-  const tokens = await exchangeCode(provider, code, state.verifier);
+  const params = state.params ?? {};
+  if (provider === "shopify") {
+    // Shopify signs its callback; the shop must be the one the flow was started for.
+    const client = oauthClient("shopify");
+    if (!client || !extras.query || !verifyShopifyCallback(extras.query, client.clientSecret, params.shopDomain ?? "")) throw new AppError("forbidden", "The Shopify callback signature is invalid", { reason: "integrations_oauth_signature" });
+  }
+  const tokens = await exchangeCode(provider, code, state.verifier, params);
   const existing = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider }, select: { config: true, credentialsEnc: true } });
   const previousConfig = existing ? asConfig(existing.config) : {};
   const previousSecrets = existing ? (decryptCredentials(companyId, provider, existing.credentialsEnc).secrets ?? {}) : {};
   // Settings the user entered (configFields) survive a reconnect.
   const kept = Object.fromEntries((info.configFields ?? []).filter((f) => !f.secret && previousConfig[f.key] !== undefined).map((f) => [f.key, previousConfig[f.key]]));
-  const config: Record<string, unknown> = { ...kept, ...tokens.extra };
+  const config: Record<string, unknown> = { ...kept, ...params, ...tokens.extra };
   if (provider === "quickbooks" && extras.realmId && /^\d{1,30}$/.test(extras.realmId)) config.realmId = extras.realmId;
   Object.assign(config, await postConnectDetails(provider, tokens.accessToken).catch(() => ({})));
   // A WhatsApp number routes inbound messages to exactly one company (own-accounts.ts).

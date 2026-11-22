@@ -3654,6 +3654,29 @@
       "verifyAndSave": "Verify and save",
       "neverShown": "Values are write-only: they are never shown again, never logged and never sent to the customer. Only the field names are recorded in the audit log.",
       "optional": "optional"
+    },
+    "requestLog": {
+      "title": "Integration request log",
+      "subtitle": "Outbound provider calls of this organization: host and path (no query), status, duration and secret-free summaries. Newest first.",
+      "company": "Company",
+      "allCompanies": "All companies",
+      "allProviders": "All providers",
+      "outcome": "Outcome",
+      "outcomes": {
+        "all": "All requests",
+        "errors": "Errors only"
+      },
+      "apply": "Apply",
+      "empty": "No provider requests recorded for this filter.",
+      "when": "When",
+      "request": "Request",
+      "status": "Status",
+      "duration": "Duration",
+      "result": "Response / error",
+      "noResponse": "No response",
+      "attempts": "{count} attempts",
+      "ms": "{ms} ms",
+      "older": "Older requests"
     }
   },
   "platformModules": {
@@ -5749,6 +5772,10 @@
         "review_requested": "Video ready for review: {title}",
         "approved": "Video approved: {title}",
         "changes_requested": "Changes requested on video: {title}"
+      },
+      "billing": {
+        "payment_failed": "Payment failed for {title}: update the payment method",
+        "payment_recovered": "Payment received for {title}: billing is back in good standing"
       }
     },
     "viewAll": "View all"
@@ -8269,7 +8296,8 @@
       "access_denied": "Access was denied at the provider.",
       "forbidden": "You don't have permission to manage integrations for this company.",
       "invalid_request": "The connection request was invalid.",
-      "rate_limited": "Too many attempts. Please wait a minute and try again."
+      "rate_limited": "Too many attempts. Please wait a minute and try again.",
+      "invalid_account": "Enter a valid account address to connect."
     },
     "webhooks": {
       "incoming": "Incoming webhooks",
@@ -8648,7 +8676,12 @@
       "setUpByRealyBody": "The Realy team set up your own {name} account for you. It works like a connection you made yourself, and you can disconnect it at any time.",
       "help": "Connect your own {name} account: sign in and approve Realy. You never enter keys here. If you prefer, the Realy team can set it up for you.",
       "notReady": "Signing in with {name} is not switched on yet. Contact Realy and our team can set up your own {name} account for you."
-    }
+    },
+    "connectParams": {
+      "subdomain": "Zendesk subdomain (yourcompany.zendesk.com)",
+      "shopDomain": "Shopify store address"
+    },
+    "grantedScopes": "Access granted"
   },
   "workflows": {
     "subtitle": "Automate repetitive work: when something happens, Realy runs the steps for you — with approvals, retries and a full log.",
@@ -8856,7 +8889,8 @@
       "rerunConfirm": "The chosen step and every later step run again, including their actions (records, messages). Continue?",
       "rerunHelp": "Re-run this run from any step; earlier steps keep their results.",
       "deadNotice": "This run failed permanently and is on the dead-letter list. The workflow owner was notified.",
-      "deadSummary": "{count, plural, one {# run failed permanently.} other {# runs failed permanently.}}"
+      "deadSummary": "{count, plural, one {# run failed permanently.} other {# runs failed permanently.}}",
+      "waiting_company_paused": "Held: all AI is paused for this company"
     },
     "approvals": {
       "pending": "Waiting for a decision",
@@ -9249,7 +9283,10 @@
       "creative_changes_requested": "Changes requested on a creative",
       "creative_handed_off": "Creative handed to marketing",
       "autopilot_mode_changed": "Autopilot mode changed",
-      "costs_budget_reached": "AI budget reached"
+      "costs_budget_reached": "AI budget reached",
+      "comms_email_received": "Email received",
+      "integration_whatsapp_message_received": "WhatsApp message received",
+      "approval_retry_requested": "Approved action retry requested"
     },
     "compare": {
       "title": "Compare versions",
@@ -9636,6 +9673,15 @@
     "flowCard": {
       "title": "How it works, in plain words",
       "hint": "The current draft as a flow. Edit it in the builder; publish and turn it on when it reads right."
+    },
+    "autonomy": {
+      "label": "External actions",
+      "hint": "Emails, Slack and Teams messages, webhooks and Custom API calls in runs this workflow starts on its own. A run a person starts counts as that person's action. “Pause all AI” holds every run.",
+      "modes": {
+        "OFF": "Off: external actions are refused",
+        "APPROVAL_REQUIRED": "Approval: a person approves each one",
+        "AUTONOMOUS": "Autonomous: within the company's autonomy policy"
+      }
     }
   },
   "marketplace": {

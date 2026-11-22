@@ -393,6 +393,13 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
   ...oauthPair("integrations", "TIKTOK_ADS_APP_ID", "TIKTOK_ADS_APP_SECRET", "TikTok Ads", "https://business-api.tiktok.com/portal/apps", [OAUTH_INT("tiktok_ads")], ["integrations"]),
   ...oauthPair("integrations", "PINTEREST_CLIENT_ID", "PINTEREST_CLIENT_SECRET", "Pinterest", "https://developers.pinterest.com/apps/", [OAUTH_INT("pinterest")], ["integrations"]),
   ...oauthPair("integrations", "MAILCHIMP_CLIENT_ID", "MAILCHIMP_CLIENT_SECRET", "Mailchimp", "https://admin.mailchimp.com/account/oauth2/", [OAUTH_INT("mailchimp")], ["integrations", "ownAccounts"]),
+  ...oauthPair("integrations", "CALENDLY_CLIENT_ID", "CALENDLY_CLIENT_SECRET", "Calendly", "https://developer.calendly.com/create-a-developer-account", [OAUTH_INT("calendly")], ["integrations"]), // G6
+  ...oauthPair("integrations", "ZENDESK_CLIENT_ID", "ZENDESK_CLIENT_SECRET", "Zendesk (global OAuth client)", "https://developer.zendesk.com/documentation/marketplace/building-a-marketplace-app/set-up-a-global-oauth-client/", [OAUTH_INT("zendesk")], ["integrations"]), // G6
+  ...oauthPair("integrations", "INTERCOM_CLIENT_ID", "INTERCOM_CLIENT_SECRET", "Intercom", "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth", [OAUTH_INT("intercom")], ["integrations"]), // G6
+  ...oauthPair("integrations", "SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET", "Shopify", "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant", [OAUTH_INT("shopify")], ["integrations"]), // G6
+  ...oauthPair("integrations", "NOTION_CLIENT_ID", "NOTION_CLIENT_SECRET", "Notion (public integration)", "https://developers.notion.com/docs/authorization", [OAUTH_INT("notion")], ["integrations"]), // G6
+  ...oauthPair("integrations", "WEBFLOW_CLIENT_ID", "WEBFLOW_CLIENT_SECRET", "Webflow", "https://developers.webflow.com/data/reference/oauth-app", [OAUTH_INT("webflow")], ["integrations"]), // G6
+  ...oauthPair("integrations", "CLICKUP_CLIENT_ID", "CLICKUP_CLIENT_SECRET", "ClickUp", "https://developer.clickup.com/docs/authentication", [OAUTH_INT("clickup")], ["integrations"]), // G6
   // Customers' OWN WhatsApp Business accounts (Meta Embedded Signup on Realy's Meta app).
   {
     key: "WHATSAPP_APP_ID",

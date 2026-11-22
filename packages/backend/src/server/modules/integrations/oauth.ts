@@ -27,6 +27,8 @@ export interface IntegrationOAuthState {
   userId: string;
   locale: string;
   exp: number;
+  /** Per-account endpoint parameters (Zendesk subdomain, Shopify shop), validated (providers.ts OAUTH_CONNECT_PARAMS). */
+  params?: Record<string, string>;
 }
 
 const stateSchema = z.object({
@@ -38,6 +40,7 @@ const stateSchema = z.object({
   userId: z.string().uuid(),
   locale: z.string(),
   exp: z.number(),
+  params: z.record(z.string(), z.string().max(200)).optional(),
 });
 
 export class IntegrationOAuthError extends Error {
@@ -48,9 +51,9 @@ export class IntegrationOAuthError extends Error {
 
 const challengeOf = (verifier: string) => createHash("sha256").update(verifier).digest("base64url");
 
-export function buildAuthorizeUrl(provider: string, ctx: { organizationId: string; companyId: string; userId: string; locale: string }) {
+export function buildAuthorizeUrl(provider: string, ctx: { organizationId: string; companyId: string; userId: string; locale: string; params?: Record<string, string> }) {
   const info = providerInfo(provider);
-  const def = oauthDef(provider);
+  const def = oauthDef(provider, ctx.params ?? {});
   const client = oauthClient(provider);
   if (!info || (info.authType !== "oauth2" && !info.oauthAlternative) || !def || !client) throw new IntegrationOAuthError("not_configured");
   const payload: IntegrationOAuthState = {
@@ -62,13 +65,14 @@ export function buildAuthorizeUrl(provider: string, ctx: { organizationId: strin
     userId: ctx.userId,
     locale: closestLocale(ctx.locale),
     exp: Date.now() + TTL_MS,
+    ...(ctx.params && Object.keys(ctx.params).length ? { params: ctx.params } : {}),
   };
   const url = new URL(def.authorizeUrl);
   const params: Record<string, string> = {
     [def.clientIdParam ?? "client_id"]: client.clientId,
     redirect_uri: integrationRedirectUri(provider),
     response_type: "code",
-    scope: info.scopes.join(def.scopeSeparator),
+    ...(info.scopes.length ? { scope: info.scopes.join(def.scopeSeparator) } : {}),
     state: payload.state,
     ...(def.pkce ? { code_challenge: challengeOf(payload.verifier), code_challenge_method: "S256" } : {}),
     ...(def.extraAuthorizeParams ?? {}),

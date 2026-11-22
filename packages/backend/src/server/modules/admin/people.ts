@@ -273,12 +273,15 @@ export async function organizationActivity(ctx: RequestContext, organizationId: 
 }
 
 /** Members with their organization roles, for the members editor. */
+/** Upper bound of members listed in one admin view (B35); larger organizations are searched in Users. */
+const MEMBER_CAP = 1000;
+
 export async function organizationMembers(ctx: RequestContext, organizationId: string) {
   await requireAnyPlatform(ctx, ["platform.organizations.read", "platform.support.read"]);
   if (!isUuid(organizationId)) throw notFound("Organization");
   const [members, grants] = await Promise.all([
-    db().membership.findMany({ where: { organizationId }, orderBy: { createdAt: "asc" }, select: { status: true, createdAt: true, user: { select: { id: true, name: true, email: true, status: true, mfaEnabled: true } } } }),
-    db().roleAssignment.findMany({ where: { organizationId, principalType: "USER" }, select: { principalId: true, scopeType: true, role: { select: { key: true } } } }),
+    db().membership.findMany({ where: { organizationId }, orderBy: { createdAt: "asc" }, take: MEMBER_CAP, select: { status: true, createdAt: true, user: { select: { id: true, name: true, email: true, status: true, mfaEnabled: true } } } }),
+    db().roleAssignment.findMany({ where: { organizationId, principalType: "USER" }, take: MEMBER_CAP * 10, select: { principalId: true, scopeType: true, role: { select: { key: true } } } }),
   ]);
   if (!members.length && !(await db().organization.findUnique({ where: { id: organizationId }, select: { id: true } }))) throw invalid("Unknown organization");
   return members.map((m) => ({ ...m, roles: [...new Set(grants.filter((g) => g.principalId === m.user.id).map((g) => g.role.key))] }));

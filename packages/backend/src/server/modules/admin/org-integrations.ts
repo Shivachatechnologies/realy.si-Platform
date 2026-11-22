@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { db, transaction } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { notFound } from "@/server/core/errors";
+import { AppError, notFound } from "@/server/core/errors";
+import { pageInput, prismaPage, toPage } from "@/server/core/pagination";
+import { hasTenantViewGrant } from "./tenants";
 import { isOwnAccountProvider } from "@/server/modules/integrations/catalog";
 import { adminCredentialsInput, ownAccountStatus, storeOwnAccountCredentials } from "@/server/modules/integrations/own-accounts";
 import { isUuid, reasonSchema, requireAnyPlatform } from "./access";
@@ -56,4 +58,42 @@ export async function adminRemoveOwnAccount(ctx: RequestContext, organizationId:
     writeAudit(tx, ctx, { category: "ADMIN", organizationId, action: "platform.integration_credentials_removed", resourceType: "integration_connection", resourceId: connectionId, oldValue: { provider: row.provider, companyId: row.companyId, status: row.status }, reason }),
   );
   return result;
+}
+
+// ───────────── Integration request log (B34) ─────────────
+
+export const requestLogFilters = pageInput.extend({
+  companyId: z.string().uuid().optional().catch(undefined),
+  provider: z.string().regex(/^[a-z0-9_]{2,40}$/).optional().catch(undefined),
+  /** "errors": no response or HTTP >= 400. */
+  outcome: z.enum(["all", "errors"]).default("all").catch("all"),
+});
+
+/**
+ * The organization's outbound provider calls (IntegrationRequestLog: method, host + path without query, status,
+ * duration, attempts, secret-free summaries), newest first, cursor-paginated. Cross-tenant data: needs a platform
+ * read permission AND the audited tenant-view grant of this session (opened with a reason on the organization page).
+ */
+export async function adminIntegrationRequestLogs(ctx: RequestContext, organizationId: string, raw: Record<string, unknown> = {}) {
+  await requireAnyPlatform(ctx, READ);
+  if (!isUuid(organizationId)) throw notFound("Organization");
+  if (!(await hasTenantViewGrant(ctx, organizationId))) throw new AppError("forbidden", "Open the organization with a reason first", { reason: "admin_tenant_view_required" });
+  const f = requestLogFilters.parse(raw);
+  const where = {
+    organizationId,
+    ...(f.companyId ? { companyId: f.companyId } : {}),
+    ...(f.provider ? { provider: f.provider } : {}),
+    ...(f.outcome === "errors" ? { OR: [{ status: null }, { status: { gte: 400 } }] } : {}),
+  };
+  const [rows, providers, companies] = await Promise.all([
+    db().integrationRequestLog.findMany({
+      where,
+      orderBy: { id: "desc" },
+      ...prismaPage(f),
+      select: { id: true, companyId: true, connectionId: true, provider: true, method: true, url: true, status: true, durationMs: true, attempts: true, requestSummary: true, responseSummary: true, error: true, createdAt: true },
+    }),
+    db().integrationRequestLog.findMany({ where: { organizationId }, distinct: ["provider"], select: { provider: true }, take: 100 }),
+    db().company.findMany({ where: { organizationId }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 500 }),
+  ]);
+  return { ...toPage(rows, f), filters: f, providers: providers.map((p) => p.provider).sort(), companies };
 }

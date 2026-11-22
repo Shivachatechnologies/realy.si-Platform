@@ -31,7 +31,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/v1/integrati
     const session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
     if (!session || session.mfaPending || session.userId !== state.userId) return done("oauthError=state_mismatch");
     const requestCtx = userContext(session.userId, { ip: clientIp(req), userAgent: req.headers.get("user-agent"), sessionId: session.id, mfaVerifiedAt: session.mfaVerifiedAt });
-    await completeOAuthConnection(requestCtx, state, code, { realmId: q.get("realmId") });
+    await completeOAuthConnection(requestCtx, state, code, { realmId: q.get("realmId"), query: q });
     return done("connected=1");
   } catch (err) {
     if (err instanceof IntegrationOAuthError) return done(`oauthError=${err.code}`);

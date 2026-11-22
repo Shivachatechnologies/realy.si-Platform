@@ -8,6 +8,7 @@ import { env } from "@/server/core/env";
 import { logger } from "@/server/core/logger";
 import { securityEvent } from "@/server/core/telemetry";
 import { writeAudit } from "@/server/modules/audit/service";
+import { notifyUsers } from "@/server/modules/notifications/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { orgChain } from "@/server/modules/rbac/scope";
 import { closestLocale } from "@/i18n/config";
@@ -403,6 +404,23 @@ async function applySubscription(tx: Tx, sub: GatewaySubscription, event: Minima
   return { outcome: "applied", organizationId };
 }
 
+/** In-app notice to everyone who manages billing for the organization (organization-scoped billing.manage). */
+export async function notifyBillingManagers(tx: Tx, organizationId: string, type: "billing.payment_failed" | "billing.payment_recovered") {
+  const holders = await tx.roleAssignment.findMany({
+    where: {
+      organizationId,
+      principalType: "USER",
+      scopeType: "ORGANIZATION",
+      scopeId: organizationId,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      role: { permissions: { some: { permission: { key: "billing.manage" } } } },
+    },
+    select: { principalId: true },
+  });
+  const org = await tx.organization.findUnique({ where: { id: organizationId }, select: { name: true } });
+  return notifyUsers(tx, organizationId, holders.map((h) => h.principalId), type, { title: org?.name ?? "", href: "/settings/billing" });
+}
+
 const HANDLED = new Set([
   "checkout.session.completed",
   "checkout.session.async_payment_succeeded",
@@ -461,8 +479,14 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
       }
       if (sub) result = await applySubscription(tx, sub, event);
       if (sub && result.outcome === "applied" && event.type.startsWith("invoice.")) {
-        const field = event.type === "invoice.payment_failed" ? "lastPaymentFailedAt" : "lastPaymentSucceededAt";
+        const failed = event.type === "invoice.payment_failed";
+        const before = await tx.subscription.findUnique({ where: { stripeSubscriptionId: sub.id }, select: { lastPaymentFailedAt: true, lastPaymentSucceededAt: true } });
+        const field = failed ? "lastPaymentFailedAt" : "lastPaymentSucceededAt";
         await tx.subscription.update({ where: { stripeSubscriptionId: sub.id }, data: { [field]: new Date() } });
+        // Customer notice (B19): the organization's billing managers hear about a failed payment in the app (Stripe's
+        // own dunning email is not the only signal), and again when a later payment recovers it.
+        const recovered = !failed && !!before?.lastPaymentFailedAt && (!before.lastPaymentSucceededAt || before.lastPaymentSucceededAt < before.lastPaymentFailedAt);
+        if ((failed || recovered) && result.organizationId) await notifyBillingManagers(tx, result.organizationId, failed ? "billing.payment_failed" : "billing.payment_recovered");
       }
       await tx.stripeEvent.update({ where: { id: event.id }, data: { outcome: result.outcome, organizationId: result.organizationId } });
       return result;

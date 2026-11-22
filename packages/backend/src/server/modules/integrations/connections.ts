@@ -90,7 +90,7 @@ export async function getConnection(organizationId: string, companyId: string, p
         if (fresh.tokenExpiresAt && fresh.tokenExpiresAt.getTime() - Date.now() >= REFRESH_WINDOW_MS) {
           return { ...base, config: withSecrets(fresh.config), status: fresh.status as ConnectionStatus, accessToken: current.accessToken ?? null };
         }
-        const tokens = await refreshAccessToken(providerKey, current.refreshToken ?? creds.refreshToken!);
+        const tokens = await refreshAccessToken(providerKey, current.refreshToken ?? creds.refreshToken!, asConfig(fresh.config));
         await tx.integrationConnection.update({
           where: { id: row.id },
           data: {

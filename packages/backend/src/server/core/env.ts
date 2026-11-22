@@ -84,6 +84,21 @@ const schema = z.object({
   TIKTOK_ADS_APP_SECRET: optional,
   MAILCHIMP_CLIENT_ID: optional,
   MAILCHIMP_CLIENT_SECRET: optional,
+  // B33: OAuth apps for providers customers connect with Connect (G6)
+  CALENDLY_CLIENT_ID: optional,
+  CALENDLY_CLIENT_SECRET: optional,
+  ZENDESK_CLIENT_ID: optional,
+  ZENDESK_CLIENT_SECRET: optional,
+  INTERCOM_CLIENT_ID: optional,
+  INTERCOM_CLIENT_SECRET: optional,
+  SHOPIFY_CLIENT_ID: optional,
+  SHOPIFY_CLIENT_SECRET: optional,
+  NOTION_CLIENT_ID: optional,
+  NOTION_CLIENT_SECRET: optional,
+  WEBFLOW_CLIENT_ID: optional,
+  WEBFLOW_CLIENT_SECRET: optional,
+  CLICKUP_CLIENT_ID: optional,
+  CLICKUP_CLIENT_SECRET: optional,
   // The customer's OWN payment and messaging accounts (docs/integrations.md §7 "Customer's own accounts"), connected
   // through Realy's platform apps. Stripe Connect reuses STRIPE_SECRET_KEY as the platform secret.
   /** Stripe Connect platform client id (ca_…), Stripe Dashboard → Settings → Connect → Onboarding options → OAuth. */

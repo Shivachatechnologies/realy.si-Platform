@@ -26,7 +26,7 @@ export interface OverviewWire {
   state: "subscribed" | "past_due" | "trial" | "trial_expired";
   plan: string;
   planName: string;
-  subscription: { id: string; planKey: string; planName: string; status: string; interval: "MONTH" | "YEAR"; currentPeriodEnd: string | null; cancelAtPeriodEnd: boolean } | null;
+  subscription: { id: string; planKey: string; planName: string; status: string; interval: "MONTH" | "YEAR"; currentPeriodEnd: string | null; cancelAtPeriodEnd: boolean; lastPaymentFailedAt?: string | null; lastPaymentSucceededAt?: string | null } | null;
   trialEndsAt: string | null;
   window: { start: string; end: string };
   enforced: boolean;

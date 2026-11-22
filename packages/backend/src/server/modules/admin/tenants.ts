@@ -101,8 +101,8 @@ export async function getPlatformOrganization(ctx: RequestContext, organizationI
   if (!org) throw notFound("Organization");
   const [memberships, grants, companies, subscriptions, modules, tasks30, tasksFailed30, recentTasks, aiMonth, usage, activity, override, plan] = await Promise.all([
     db().membership.findMany({ where: { organizationId }, orderBy: { createdAt: "asc" }, take: 100, select: { status: true, createdAt: true, user: { select: { id: true, email: true, name: true, status: true } } } }),
-    db().roleAssignment.findMany({ where: { organizationId, principalType: "USER" }, select: { principalId: true, role: { select: { key: true } } } }),
-    db().company.findMany({ where: { organizationId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, status: true, stage: true, deletedAt: true, createdAt: true } }),
+    db().roleAssignment.findMany({ where: { organizationId, principalType: "USER" }, take: 5000, select: { principalId: true, role: { select: { key: true } } } }),
+    db().company.findMany({ where: { organizationId }, orderBy: { createdAt: "asc" }, take: 500, select: { id: true, name: true, status: true, stage: true, deletedAt: true, createdAt: true } }),
     db().subscription.findMany({
       where: { organizationId },
       orderBy: { createdAt: "desc" },

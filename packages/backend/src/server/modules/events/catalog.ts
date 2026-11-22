@@ -67,6 +67,9 @@ export const DOMAIN_EVENTS = [
   // Company websites & landing pages (modules/sites).
   "site.published",
   "site.form_submitted",
+  "comms.email.received", // G6 (requested by GAP-MATRIX §4.3 for G3 B8)
+  "integration.whatsapp.message_received", // G6 (for G3 B9)
+  "approval.retry_requested", // G6 (for G1 B3)
 ] as const;
 export type DomainEventType = (typeof DOMAIN_EVENTS)[number];
 const scalar = z.union([z.string(), z.number(), z.boolean(), z.null()]);
