@@ -19,6 +19,8 @@ type Perm = "workflows.read" | "workflows.manage" | "workflows.execute";
 const uuid = z.string().uuid();
 const isUuid = (v: string) => uuid.safeParse(v).success;
 
+/** Workflow autonomy modes (AutopilotMode), see ./governance.ts. */
+export const WORKFLOW_AUTONOMY_MODES = ["OFF", "MANUAL", "ASSISTED", "APPROVAL_REQUIRED", "AUTONOMOUS"] as const;
 export const WORKFLOW_STATUSES = ["DRAFT", "ACTIVE", "PAUSED", "ARCHIVED"] as const;
 export const RUN_STATUSES = ["QUEUED", "RUNNING", "WAITING", "SUCCEEDED", "FAILED", "CANCELLED"] as const;
 
@@ -67,7 +69,7 @@ export async function listWorkflows(ctx: RequestContext, organizationId: string,
     },
     orderBy: [{ updatedAt: "desc" }],
     take: 300,
-    select: { id: true, name: true, description: true, status: true, currentVersion: true, triggerType: true, triggerKey: true, ownerId: true, updatedAt: true, draft: true },
+    select: { id: true, name: true, description: true, status: true, currentVersion: true, triggerType: true, triggerKey: true, ownerId: true, updatedAt: true, draft: true, autonomyMode: true },
   });
   const ids = rows.map((r) => r.id);
   const [stats, owners] = await Promise.all([
@@ -143,6 +145,8 @@ export const updateWorkflowInput = z.object({
   /** The working definition. Drafts are structurally validated; publishing validates fully. */
   draft: z.unknown().optional(),
   ownerId: uuid.optional(),
+  /** Autonomy of external actions in runs the workflow starts itself (./governance.ts). */
+  autonomyMode: z.enum(WORKFLOW_AUTONOMY_MODES).optional(),
 });
 
 async function findWorkflow(tx: Tx | Db, organizationId: string, companyId: string, workflowId: string) {
@@ -179,10 +183,11 @@ export async function updateWorkflow(ctx: RequestContext, organizationId: string
         ...(input.description !== undefined ? { description: input.description || null } : {}),
         ...(draft ? { draft: draft as unknown as Prisma.InputJsonValue } : {}),
         ...(input.ownerId ? { ownerId: input.ownerId } : {}),
+        ...(input.autonomyMode ? { autonomyMode: input.autonomyMode } : {}),
       },
-      select: { id: true, name: true, status: true, updatedAt: true },
+      select: { id: true, name: true, status: true, updatedAt: true, autonomyMode: true },
     });
-    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "workflow.updated", resourceType: "workflow", resourceId: wf.id, oldValue: { name: wf.name, ownerId: wf.ownerId }, newValue: { name: updated.name, ownerId: input.ownerId, draftChanged: !!draft } });
+    await writeAudit(tx, ctx, { category: "TENANT", organizationId, action: "workflow.updated", resourceType: "workflow", resourceId: wf.id, oldValue: { name: wf.name, ownerId: wf.ownerId, autonomyMode: wf.autonomyMode }, newValue: { name: updated.name, ownerId: input.ownerId, draftChanged: !!draft, autonomyMode: input.autonomyMode } });
     return updated;
   });
 }
@@ -516,10 +521,13 @@ export async function decideWorkflowApproval(ctx: RequestContext, organizationId
 export async function compareVersions(ctx: RequestContext, organizationId: string, companyId: string, workflowId: string, left: string, right: string) {
   await authorizeWorkflows(ctx, organizationId, companyId, "workflows.read");
   const wf = await findWorkflow(db(), organizationId, companyId, workflowId);
-  const versions = await db().workflowVersion.findMany({ where: { workflowId: wf.id }, orderBy: { version: "desc" }, select: { version: true, definition: true, createdAt: true, createdById: true } });
+  // B35: the version list (numbers only, newest 200) and just the two compared definitions.
+  const versions = await db().workflowVersion.findMany({ where: { workflowId: wf.id }, orderBy: { version: "desc" }, take: 200, select: { version: true, createdAt: true } });
+  const wanted = [left, right].filter((k) => /^\d{1,6}$/.test(k)).map(Number);
+  const defs = wanted.length ? await db().workflowVersion.findMany({ where: { workflowId: wf.id, version: { in: wanted } }, select: { version: true, definition: true, createdAt: true } }) : [];
   const pick = (key: string) => {
     if (key === "draft") return { key, label: "draft", definition: draftOf(wf.draft), createdAt: wf.updatedAt };
-    const v = versions.find((x) => String(x.version) === key);
+    const v = defs.find((x) => String(x.version) === key);
     return v ? { key, label: `v${v.version}`, definition: draftOf(v.definition), createdAt: v.createdAt } : null;
   };
   return { workflow: { id: wf.id, name: wf.name, currentVersion: wf.currentVersion }, versions: versions.map((v) => ({ version: v.version, createdAt: v.createdAt })), left: pick(left), right: pick(right) };

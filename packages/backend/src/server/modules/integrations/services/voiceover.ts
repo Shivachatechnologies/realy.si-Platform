@@ -1,7 +1,7 @@
 import "server-only";
 import { providerFetch } from "../client";
 import { recordUsage } from "../usage";
-import { ensureOk, errorText, str, withFallback, type ServiceResult } from "./common";
+import { ensureOk, errorText, spendBlocked, str, withFallback, type ServiceResult } from "./common";
 import { newObjectKey, putObject, type StoredObject } from "./storage";
 
 /**
@@ -109,6 +109,9 @@ export async function generateVoiceover(organizationId: string, companyId: strin
   const text = input.text.replace(/\s+/g, " ").trim();
   if (!text) return { ok: false, code: "invalid_input", error: "Script is empty", providerId: null, attempts: [] };
   if (text.length > 4096) return { ok: false, code: "invalid_input", error: "Script is too long for one voiceover (max 4096 characters)", providerId: null, attempts: [] };
+
+  const blocked = await spendBlocked(organizationId, companyId);
+  if (blocked) return blocked;
 
   return withFallback(organizationId, companyId, input.providers ?? VOICEOVER_PROVIDERS, async (conn) => {
     const provider = conn.provider as VoiceoverProvider;

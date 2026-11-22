@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { guardedFetch } from "@/server/core/outbound";
 import { resolveTxt } from "node:dns/promises";
 import { z } from "zod";
 import { db, transaction } from "@/server/core/db";
@@ -92,7 +93,7 @@ interface Discovery {
 
 async function discover(issuer: string): Promise<Discovery> {
   const url = `${issuer.replace(/\/$/, "")}/.well-known/openid-configuration`;
-  const res = await fetch(url, {
+  const res = await guardedFetch(url, {
     headers: { accept: "application/json" },
     signal: AbortSignal.timeout(10_000),
   }).catch(() => null);
@@ -463,7 +464,7 @@ export async function completeSso(ctx: RequestContext, state: StatePayload, code
   const d = await discover(c.issuer).catch(() => {
     throw new SsoError("provider_error");
   });
-  const tokenRes = await fetch(d.token_endpoint, {
+  const tokenRes = await guardedFetch(d.token_endpoint, {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
@@ -481,7 +482,7 @@ export async function completeSso(ctx: RequestContext, state: StatePayload, code
   }).catch(() => null);
   const tokens = (await tokenRes?.json().catch(() => ({}))) as { access_token?: string } | undefined;
   if (!tokenRes?.ok || !tokens?.access_token) throw new SsoError("provider_error");
-  const infoRes = await fetch(d.userinfo_endpoint, {
+  const infoRes = await guardedFetch(d.userinfo_endpoint, {
     headers: {
       authorization: `Bearer ${tokens.access_token}`,
       accept: "application/json",

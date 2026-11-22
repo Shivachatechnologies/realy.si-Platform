@@ -57,6 +57,9 @@ export interface Entitlements {
     interval: "MONTH" | "YEAR";
     currentPeriodEnd: Date | null;
     cancelAtPeriodEnd: boolean;
+    /** Last failed payment (Stripe invoice.payment_failed) and last successful one; drive the failed-payment notice. */
+    lastPaymentFailedAt: Date | null;
+    lastPaymentSucceededAt: Date | null;
   } | null;
   trialEndsAt: Date | null;
   /** Monthly usage window for metered limits (anchored on the subscription period; calendar month otherwise). */
@@ -179,6 +182,8 @@ async function resolve(organizationId: string): Promise<Entitlements> {
         currentPeriodStart: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
+        lastPaymentFailedAt: true,
+        lastPaymentSucceededAt: true,
         plan: { select: { key: true, name: true, entitlements: { select: { featureKey: true, enabled: true, limitValue: true } } } },
       },
     }),
@@ -240,6 +245,8 @@ async function resolve(organizationId: string): Promise<Entitlements> {
           interval: sub.interval,
           currentPeriodEnd: sub.currentPeriodEnd,
           cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+          lastPaymentFailedAt: sub.lastPaymentFailedAt,
+          lastPaymentSucceededAt: sub.lastPaymentSucceededAt,
         }
       : null,
     trialEndsAt,

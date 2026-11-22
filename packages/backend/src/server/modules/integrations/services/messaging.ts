@@ -2,7 +2,7 @@ import "server-only";
 import { providerFetch } from "../client";
 import { providerWebhookUrl } from "../provider-webhooks";
 import { FLAT_COST_MICROS, recordUsage } from "../usage";
-import { ensureOk, errorText, str, usableConnection, type ServiceResult } from "./common";
+import { ensureOk, errorText, spendBlocked, str, usableConnection, type ServiceResult } from "./common";
 
 /**
  * SMS (Twilio) and WhatsApp (Twilio WhatsApp sender, or the WhatsApp Business Cloud API connection). The status is the
@@ -18,6 +18,8 @@ export interface SentMessage {
 const E164 = /^\+[1-9]\d{6,14}$/;
 
 async function twilioSend(organizationId: string, companyId: string, channel: "sms" | "whatsapp", to: string, body: string): Promise<ServiceResult<SentMessage>> {
+  const blocked = await spendBlocked(organizationId, companyId, FLAT_COST_MICROS[`twilio.${channel}`] ?? 0);
+  if (blocked) return blocked;
   const conn = await usableConnection(organizationId, companyId, "twilio");
   if (!conn) return { ok: false, code: "not_connected", error: "Twilio is not connected", providerId: "twilio", attempts: [{ providerId: "twilio", outcome: "not_connected" }] };
   const sid = str(conn.config.accountSid);
@@ -62,6 +64,8 @@ export async function sendWhatsApp(organizationId: string, companyId: string, in
   if (bad) return { ok: false, code: "invalid_input", error: bad, providerId: null, attempts: [] };
   const twilio = await usableConnection(organizationId, companyId, "twilio");
   if (twilio && str(twilio.config.whatsappFrom)) return twilioSend(organizationId, companyId, "whatsapp", input.to, input.body);
+  const blocked = await spendBlocked(organizationId, companyId);
+  if (blocked) return blocked;
   const conn = await usableConnection(organizationId, companyId, "whatsapp");
   if (!conn) return { ok: false, code: "not_connected", error: "Connect WhatsApp Business or a Twilio WhatsApp sender", providerId: null, attempts: [{ providerId: "twilio", outcome: "not_connected" }, { providerId: "whatsapp", outcome: "not_connected" }] };
   const phoneId = str(conn.config.phoneNumberId);

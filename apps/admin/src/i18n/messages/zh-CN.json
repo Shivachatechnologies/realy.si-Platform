@@ -3654,6 +3654,29 @@
       "verifyAndSave": "验证并保存",
       "neverShown": "这些值仅可写入：不会再次显示、不会记录日志，也不会发送给客户。审计日志中只记录字段名称。",
       "optional": "可选"
+    },
+    "requestLog": {
+      "title": "集成请求日志",
+      "subtitle": "本组织对外部提供方的调用：主机和路径（不含查询参数）、状态、耗时及不含机密的摘要。最新的在前。",
+      "company": "公司",
+      "allCompanies": "所有公司",
+      "allProviders": "所有提供方",
+      "outcome": "结果",
+      "outcomes": {
+        "all": "所有请求",
+        "errors": "仅错误"
+      },
+      "apply": "应用",
+      "empty": "此筛选条件下没有记录的提供方请求。",
+      "when": "时间",
+      "request": "请求",
+      "status": "状态",
+      "duration": "耗时",
+      "result": "响应 / 错误",
+      "noResponse": "无响应",
+      "attempts": "{count} 次尝试",
+      "ms": "{ms} 毫秒",
+      "older": "更早的请求"
     }
   },
   "platformModules": {
@@ -5749,6 +5772,10 @@
         "review_requested": "视频待审核：{title}",
         "approved": "视频已批准：{title}",
         "changes_requested": "视频需修改：{title}"
+      },
+      "billing": {
+        "payment_failed": "{title} 付款失败：请更新付款方式",
+        "payment_recovered": "已收到 {title} 的付款：账单已恢复正常"
       }
     },
     "viewAll": "查看全部"
@@ -8296,7 +8323,8 @@
       "access_denied": "服务商拒绝了授权。",
       "forbidden": "您无权管理此公司的集成。",
       "invalid_request": "连接请求无效。",
-      "rate_limited": "尝试次数过多，请稍等一分钟后重试。"
+      "rate_limited": "尝试次数过多，请稍等一分钟后重试。",
+      "invalid_account": "请输入有效的账户地址以连接。"
     },
     "webhooks": {
       "incoming": "传入 Webhook",
@@ -8675,7 +8703,12 @@
       "setUpByRealyBody": "Realy 团队已为您设置了您自己的 {name} 账户。它与您自己建立的连接一样运作，您可以随时断开连接。",
       "help": "连接您自己的 {name} 账户：登录并授权 Realy。您无需在此输入任何密钥。如您愿意，也可以由 Realy 团队为您设置。",
       "notReady": "使用 {name} 登录尚未开通。请联系 Realy，我们的团队可以为您设置您自己的 {name} 账户。"
-    }
+    },
+    "connectParams": {
+      "subdomain": "Zendesk 子域名（yourcompany.zendesk.com）",
+      "shopDomain": "Shopify 店铺地址"
+    },
+    "grantedScopes": "已授予的权限"
   },
   "workflows": {
     "subtitle": "自动化重复性工作：当事件发生时，Realy 替您执行步骤——包含审批、重试和完整日志。",
@@ -8883,7 +8916,8 @@
       "rerunConfirm": "所选步骤及其后所有步骤将再次运行，包括它们的操作（记录、消息）。是否继续？",
       "rerunHelp": "可从任意步骤重新运行；之前的步骤保留其结果。",
       "deadNotice": "此运行已永久失败并在失败列表中。已通知工作流负责人。",
-      "deadSummary": "{count, plural, other {# 次运行已永久失败。}}"
+      "deadSummary": "{count, plural, other {# 次运行已永久失败。}}",
+      "waiting_company_paused": "已暂停：本公司的所有 AI 已暂停"
     },
     "approvals": {
       "pending": "待决定",
@@ -9276,7 +9310,10 @@
       "creative_changes_requested": "创意已要求修改",
       "creative_handed_off": "创意已交给市场部",
       "autopilot_mode_changed": "自动驾驶模式已更改",
-      "costs_budget_reached": "已达到 AI 预算"
+      "costs_budget_reached": "已达到 AI 预算",
+      "comms_email_received": "收到电子邮件",
+      "integration_whatsapp_message_received": "收到 WhatsApp 消息",
+      "approval_retry_requested": "已请求重试已批准的操作"
     },
     "compare": {
       "title": "比较版本",
@@ -9663,6 +9700,15 @@
     "flowCard": {
       "title": "运作方式（通俗说明）",
       "hint": "以流程形式展示当前草稿。在构建器中编辑；确认无误后发布并启用。"
+    },
+    "autonomy": {
+      "label": "外部操作",
+      "hint": "此工作流自行启动的运行中的电子邮件、Slack 和 Teams 消息、Webhook 及 Custom API 调用。由人员启动的运行视为该人员的操作。“暂停所有 AI”会挂起每次运行。",
+      "modes": {
+        "OFF": "关闭：拒绝外部操作",
+        "APPROVAL_REQUIRED": "审批：每项均需人员批准",
+        "AUTONOMOUS": "自主：在公司的自主策略范围内"
+      }
     }
   },
   "marketplace": {

@@ -130,7 +130,14 @@ export async function receiveProviderWebhook(
   if (scheme === "PLAID") failure = await verifyPlaid(row, raw, headers);
   else if (scheme !== "token") {
     const secret =
-      scheme === "TWILIO" ? creds.apiKey : scheme === "CALENDLY" ? secrets.calendlyWebhookKey : scheme === "META" ? secrets.appSecret : secrets.webhookSecret;
+      scheme === "TWILIO"
+        ? creds.apiKey
+        : scheme === "CALENDLY"
+          ? secrets.calendlyWebhookKey
+          : scheme === "META"
+            ? secrets.appSecret
+            : // Intercom signs app webhooks with the app's client secret: Realy's app for an OAuth connection (B33).
+              (secrets.webhookSecret ?? (scheme === "INTERCOM" && (row.config as Record<string, unknown> | null)?.authMode === "oauth" ? env().INTERCOM_CLIENT_SECRET : undefined));
     if (!secret) failure = `no ${scheme.toLowerCase()} signing secret is configured for this connection`;
     else {
       const qs = query.toString();

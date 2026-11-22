@@ -2,7 +2,7 @@ import "server-only";
 import { providerFetch } from "../client";
 import { FLAT_COST_MICROS, recordUsage } from "../usage";
 import { klingBase } from "../providers";
-import { ensureOk, errorText, str, usableConnection, withFallback, type ServiceResult } from "./common";
+import { ensureOk, errorText, spendBlocked, str, usableConnection, withFallback, type ServiceResult } from "./common";
 
 /**
  * Asynchronous video generation: Runway → Replicate → Luma Dream Machine → Kling. startVideoJob returns a job id "<provider>:<id>"; pollVideoJob
@@ -53,6 +53,9 @@ export async function startVideoJob(organizationId: string, companyId: string, i
   if (input.imageUrl && !/^(https:\/\/|data:image\/)/.test(input.imageUrl)) return { ok: false, code: "invalid_input", error: "Image must be an HTTPS URL or data URI", providerId: null, attempts: [] };
   const duration = input.durationSeconds ?? 5;
   const ratio = input.ratio ?? "1280:720";
+
+  const blocked = await spendBlocked(organizationId, companyId);
+  if (blocked) return blocked;
 
   return withFallback(organizationId, companyId, input.providers ?? VIDEO_PROVIDERS, async (conn) => {
     let model = "";

@@ -2,7 +2,7 @@ import "server-only";
 import { providerFetch } from "../client";
 import { compatibleBase } from "../providers";
 import { estimateTokenCostMicros, recordUsage } from "../usage";
-import { ensureOk, errorText, str, withFallback, type ServiceResult } from "./common";
+import { ensureOk, errorText, spendBlocked, str, withFallback, type ServiceResult } from "./common";
 
 /**
  * Quick text generation for module features (rewrites, summaries, translations) with provider fallback
@@ -47,6 +47,9 @@ export async function generateText(organizationId: string, companyId: string, in
   if (prompt.length > 100_000) return { ok: false, code: "invalid_input", error: "Prompt is too long", providerId: null, attempts: [] };
   const maxTokens = Math.min(Math.max(16, Math.floor(input.maxOutputTokens ?? 1024)), 8192);
   const temperature = input.temperature === undefined ? undefined : Math.min(Math.max(0, input.temperature), 2);
+
+  const blocked = await spendBlocked(organizationId, companyId);
+  if (blocked) return blocked;
 
   return withFallback(organizationId, companyId, input.providers ?? AI_TEXT_PROVIDERS, async (conn) => {
     const provider = conn.provider as AiTextProvider;

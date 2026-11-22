@@ -3654,6 +3654,29 @@
       "verifyAndSave": "Prüfen und speichern",
       "neverShown": "Werte sind nur schreibbar: Sie werden nie wieder angezeigt, nie protokolliert und nie an den Kunden gesendet. Im Audit-Log stehen nur die Feldnamen.",
       "optional": "optional"
+    },
+    "requestLog": {
+      "title": "Integrations-Anfrageprotokoll",
+      "subtitle": "Ausgehende Provider-Aufrufe dieser Organisation: Host und Pfad (ohne Query), Status, Dauer und Zusammenfassungen ohne Geheimnisse. Neueste zuerst.",
+      "company": "Unternehmen",
+      "allCompanies": "Alle Unternehmen",
+      "allProviders": "Alle Anbieter",
+      "outcome": "Ergebnis",
+      "outcomes": {
+        "all": "Alle Anfragen",
+        "errors": "Nur Fehler"
+      },
+      "apply": "Anwenden",
+      "empty": "Für diesen Filter wurden keine Provider-Anfragen aufgezeichnet.",
+      "when": "Wann",
+      "request": "Anfrage",
+      "status": "Status",
+      "duration": "Dauer",
+      "result": "Antwort / Fehler",
+      "noResponse": "Keine Antwort",
+      "attempts": "{count} Versuche",
+      "ms": "{ms} ms",
+      "older": "Ältere Anfragen"
     }
   },
   "platformModules": {
@@ -5749,6 +5772,10 @@
         "review_requested": "Video bereit zur Prüfung: {title}",
         "approved": "Video freigegeben: {title}",
         "changes_requested": "Änderungen am Video angefordert: {title}"
+      },
+      "billing": {
+        "payment_failed": "Zahlung für {title} fehlgeschlagen: Zahlungsmethode aktualisieren",
+        "payment_recovered": "Zahlung für {title} eingegangen: die Abrechnung ist wieder in Ordnung"
       }
     },
     "viewAll": "Alle anzeigen"
@@ -8296,7 +8323,8 @@
       "access_denied": "Der Zugriff wurde beim Anbieter verweigert.",
       "forbidden": "Sie dürfen die Integrationen dieses Unternehmens nicht verwalten.",
       "invalid_request": "Die Verbindungsanfrage war ungültig.",
-      "rate_limited": "Zu viele Versuche. Bitte eine Minute warten und erneut versuchen."
+      "rate_limited": "Zu viele Versuche. Bitte eine Minute warten und erneut versuchen.",
+      "invalid_account": "Geben Sie eine gültige Kontoadresse ein, um zu verbinden."
     },
     "webhooks": {
       "incoming": "Eingehende Webhooks",
@@ -8675,7 +8703,12 @@
       "setUpByRealyBody": "Das Realy-Team hat Ihr eigenes {name}-Konto für Sie eingerichtet. Es funktioniert wie eine selbst hergestellte Verbindung, und Sie können sie jederzeit trennen.",
       "help": "Verbinden Sie Ihr eigenes {name}-Konto: Melden Sie sich an und bestätigen Sie Realy. Hier geben Sie nie Schlüssel ein. Auf Wunsch richtet das Realy-Team es für Sie ein.",
       "notReady": "Die Anmeldung mit {name} ist noch nicht freigeschaltet. Wenden Sie sich an Realy, dann richtet unser Team Ihr eigenes {name}-Konto für Sie ein."
-    }
+    },
+    "connectParams": {
+      "subdomain": "Zendesk-Subdomain (ihrefirma.zendesk.com)",
+      "shopDomain": "Shopify-Shop-Adresse"
+    },
+    "grantedScopes": "Gewährter Zugriff"
   },
   "workflows": {
     "subtitle": "Automatisieren Sie wiederkehrende Arbeit: Wenn etwas passiert, führt Realy die Schritte aus – mit Freigaben, Wiederholungen und vollständigem Protokoll.",
@@ -8883,7 +8916,8 @@
       "rerunConfirm": "Der gewählte Schritt und alle folgenden laufen erneut, einschließlich ihrer Aktionen (Datensätze, Nachrichten). Fortfahren?",
       "rerunHelp": "Führen Sie diesen Lauf ab einem beliebigen Schritt erneut aus; frühere Schritte behalten ihre Ergebnisse.",
       "deadNotice": "Dieser Lauf ist endgültig fehlgeschlagen und steht auf der Fehlerliste. Die verantwortliche Person des Workflows wurde benachrichtigt.",
-      "deadSummary": "{count, plural, one {# Lauf ist endgültig fehlgeschlagen.} other {# Läufe sind endgültig fehlgeschlagen.}}"
+      "deadSummary": "{count, plural, one {# Lauf ist endgültig fehlgeschlagen.} other {# Läufe sind endgültig fehlgeschlagen.}}",
+      "waiting_company_paused": "Angehalten: alle KI ist für dieses Unternehmen pausiert"
     },
     "approvals": {
       "pending": "Warten auf Entscheidung",
@@ -9276,7 +9310,10 @@
       "creative_changes_requested": "Änderungen an Kreativ angefordert",
       "creative_handed_off": "Kreativ an Marketing übergeben",
       "autopilot_mode_changed": "Autopilot-Modus geändert",
-      "costs_budget_reached": "KI-Budget erreicht"
+      "costs_budget_reached": "KI-Budget erreicht",
+      "comms_email_received": "E-Mail empfangen",
+      "integration_whatsapp_message_received": "WhatsApp-Nachricht empfangen",
+      "approval_retry_requested": "Erneute Ausführung einer freigegebenen Aktion angefordert"
     },
     "compare": {
       "title": "Versionen vergleichen",
@@ -9663,6 +9700,15 @@
     "flowCard": {
       "title": "So funktioniert es, in einfachen Worten",
       "hint": "Der aktuelle Entwurf als Ablauf. Bearbeiten Sie ihn im Builder; veröffentlichen und einschalten, wenn er stimmt."
+    },
+    "autonomy": {
+      "label": "Externe Aktionen",
+      "hint": "E-Mails, Slack- und Teams-Nachrichten, Webhooks und Custom-API-Aufrufe in Läufen, die dieser Workflow selbst startet. Ein von einer Person gestarteter Lauf gilt als Aktion dieser Person. „Alle KI pausieren“ hält jeden Lauf an.",
+      "modes": {
+        "OFF": "Aus: externe Aktionen werden abgelehnt",
+        "APPROVAL_REQUIRED": "Freigabe: eine Person gibt jede einzeln frei",
+        "AUTONOMOUS": "Autonom: im Rahmen der Autonomie-Richtlinie des Unternehmens"
+      }
     }
   },
   "marketplace": {

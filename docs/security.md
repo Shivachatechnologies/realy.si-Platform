@@ -191,3 +191,61 @@ one owner role, and requests use pooled connections without per-request transact
 now would be silently bypassed — security theatre. Plan (Phase 2): a separate `realy_app` role without
 `BYPASSRLS`, a request-scoped transaction wrapper that sets `realy.org_id`, policies on tenant
 tables, and tests that prove a query without the setting returns nothing.
+
+**RLS design, reviewed again for B36 (G6, 2026-11-23): still not enabled; the design below is the plan.** A SQL-only
+migration with policies was evaluated and deliberately not shipped, because it cannot be made safe *and* effective
+inside this change:
+
+- *Effective* needs a default-deny policy (`organization_id = current_setting('app.org_id')::uuid`, no fallback) on a
+  role without `BYPASSRLS`, with `FORCE ROW LEVEL SECURITY` (production connects as the table owner). Every request
+  would then have to run inside a transaction that sets `app.org_id`. Today most reads are plain pooled queries
+  (`db().model.findMany` outside `transaction()`), so default-deny would break the app on deploy.
+- *Safe* (permissive when the setting is absent) would change nothing for those queries and protect only the few code
+  paths converted. That is the security theatre this section already rejects.
+- Legitimate cross-tenant readers need a separate path anyway: the worker (every queue handler resolves the tenant from
+  the job), the admin console (platform staff, audited tenant-view grant), the outbox relay, Stripe/provider webhooks
+  (tenant derived from the event), and `tests/helpers.ts#resetDb` (TRUNCATE across tenants).
+
+Plan, in order (each step shippable on its own):
+
+1. `CORE/db.ts`: `tenantDb(organizationId)` = a Prisma client extension whose every operation runs as
+   `BEGIN; SELECT set_config('app.org_id', $1, true); <query>; COMMIT` (the `$extends({ query })` +
+   `$transaction` pattern), plus `transaction(fn, { organizationId })`. `set_config(..., true)` is transaction-local, so
+   it is safe on Neon's pooled (transaction-mode) connections.
+2. Route every tenant service through it: `route()` resolves the organization from the URL and passes the scoped client
+   via the request context; the worker resolves it from the job payload. A lint rule (or `check:boundaries` rule) bans
+   `db()` in tenant modules once converted.
+3. A second role `realy_app` (no `BYPASSRLS`, not the owner) for the web apps and the worker; migrations keep the owner
+   role. The admin app and the relay use a third role `realy_platform` with `BYPASSRLS`, so cross-tenant reads are an
+   explicit, separately credentialed path.
+4. SQL-only migration: `ALTER TABLE … ENABLE ROW LEVEL SECURITY` + `CREATE POLICY tenant_isolation … USING
+   (organization_id = current_setting('app.org_id', true)::uuid) WITH CHECK (same)` on the core tenant tables
+   (companies, memberships, role_assignments, workspaces, projects, agent_tasks, approvals, brain_*, leads/crm_*,
+   finance_*, integration_connections, workflow_*), and `GRANT` to `realy_app`.
+5. Tests: with `realy_app`, a query without `app.org_id` returns no rows, a query with another organization's id returns
+   none and an insert with a foreign `organization_id` fails; the existing suites run with `realy_app` in CI.
+
+## 11. Outbound requests to customer-configured hosts (SSRF, B2)
+
+Every request to a host a customer or a provider response chose goes through `CORE/outbound.ts`:
+
+- `guardedFetch()` connects with `node:http(s)` through a **checking DNS lookup**: the addresses the socket actually
+  connects to are classified, so DNS rebinding between a check and the connect is impossible. Literal IPs are checked
+  before connecting.
+- Blocked: loopback, private (RFC 1918), CGNAT, link-local and cloud metadata (169.254.169.254, `fd00:ec2::254` is in
+  fc00::/7), "this network", benchmarking, documentation, multicast and reserved ranges, IPv6 unique-local / link-local /
+  site-local / multicast, and IPv4 embedded in IPv6 (mapped, compatible, NAT64, 6to4; Teredo refused). Names such as
+  `localhost`, `*.internal`, `*.local`, single-label hosts and `metadata.google.internal` are refused before DNS.
+- Redirects are never followed by the platform fetch: each hop is re-validated and re-resolved (`maxRedirects` 5),
+  credentials and API-key headers are dropped on a cross-origin hop, 303 (and 301/302 after POST) become GET.
+- Response bodies are capped (25 MB default; 1 MB for workflow webhooks).
+- Enforced in production; outside production the address checks are off so local test endpoints work (syntax checks
+  stay on). Tests pass an explicit policy.
+
+Call sites: workflow `http_webhook` and `custom_api` (`automation/actions.ts`), `providerFetch` for customer-configured
+hosts (`custom_api`, `openai_compatible`, `wordpress`, `n8n`, `zapier`, `make`, `webhook`, `s3` with a custom endpoint;
+fixed provider hosts use `fetch` with the per-hop redirect check), connection tests of those providers, outbound webhook
+deliveries (`integrations/webhooks.ts`), enterprise OIDC discovery / token / userinfo (`enterprise/sso.ts`) and
+provider-returned download URLs (`integrations/services/images.ts`). Marketing's SEO audit (`marketing/seo-audit.ts`, G2)
+has its own resolver check.
+

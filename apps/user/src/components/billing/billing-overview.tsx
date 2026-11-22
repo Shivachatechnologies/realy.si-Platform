@@ -80,6 +80,15 @@ export function BillingOverview({ initial, invoices, invoicesConfigured, timeZon
     });
 
   const stateTone = o.state === "subscribed" ? "success" : o.state === "trial" ? "info" : "warning";
+  // Failed payment (B19): past due, or a failed invoice newer than the last successful payment.
+  const lastFailed = o.subscription?.lastPaymentFailedAt ? Date.parse(o.subscription.lastPaymentFailedAt) : null;
+  const lastOk = o.subscription?.lastPaymentSucceededAt ? Date.parse(o.subscription.lastPaymentSucceededAt) : null;
+  const paymentFailed = o.state === "past_due" || (lastFailed !== null && (lastOk === null || lastOk < lastFailed));
+  const openPortal = () =>
+    run("portal", async () => {
+      const r = await api<{ url: string }>(`/api/v1/organizations/${o.organizationId}/billing/portal`, { body: { locale } });
+      window.location.assign(r.url);
+    });
   const currentKey = o.subscription ? o.plan : null;
 
   return (
@@ -90,6 +99,23 @@ export function BillingOverview({ initial, invoices, invoicesConfigured, timeZon
       {!o.enforced ? <Notice>{t("billing.notEnforced")}</Notice> : null}
       {notice ? <Notice tone="success">{notice}</Notice> : null}
       {error ? <Notice tone="danger">{error}</Notice> : null}
+      {paymentFailed ? (
+        <Notice tone="danger" title={t("billing.paymentFailed.title")}>
+          <div className="grid gap-2">
+            <p>{o.subscription?.lastPaymentFailedAt ? t("billing.paymentFailed.bodyOn", { date: date(o.subscription.lastPaymentFailedAt) }) : t("billing.paymentFailed.body")}</p>
+            {o.billing.canManage && o.billing.configured ? (
+              <div>
+                <Button size="sm" disabled={busy !== null} onClick={openPortal}>
+                  <ExternalLink aria-hidden />
+                  {t("billing.paymentFailed.update")}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs">{t("billing.paymentFailed.askManager")}</p>
+            )}
+          </div>
+        </Notice>
+      ) : null}
 
       {/* Plan */}
       <Card>

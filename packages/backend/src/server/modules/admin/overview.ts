@@ -52,7 +52,10 @@ export async function platformOverview(ctx: RequestContext) {
   const d30 = daysAgo(30);
   const h24 = daysAgo(1);
   const sessionActive = (since: Date) =>
-    db().session.findMany({ where: { lastSeenAt: { gte: since } }, distinct: ["userId"], select: { userId: true } }).then((r) => r.length);
+    // Counted in SQL (B35): never loads every active session row.
+    db()
+      .$queryRaw<{ n: bigint }[]>`SELECT COUNT(DISTINCT user_id)::bigint AS n FROM sessions WHERE last_seen_at >= ${since}`
+      .then((r) => Number(r[0]?.n ?? 0));
   const [
     users,
     organizations,

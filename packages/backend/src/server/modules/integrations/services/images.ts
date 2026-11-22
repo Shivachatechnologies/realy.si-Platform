@@ -1,7 +1,8 @@
 import "server-only";
+import { guardedFetch } from "@/server/core/outbound";
 import { providerFetch } from "../client";
 import { FLAT_COST_MICROS, recordUsage } from "../usage";
-import { ensureOk, errorText, str, withFallback, type ServiceResult } from "./common";
+import { ensureOk, errorText, spendBlocked, str, withFallback, type ServiceResult } from "./common";
 import { newObjectKey, putObject, type StoredObject } from "./storage";
 
 /**
@@ -33,7 +34,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Download a provider-hosted output (Replicate delivery URLs) with a size cap. */
 async function download(url: string): Promise<{ bytes: Uint8Array; contentType: string }> {
   if (!/^https:\/\//.test(url)) throw new Error("provider returned a non-HTTPS output URL");
-  const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  // The URL comes from a provider response: every hop is checked (core/outbound), the body is capped.
+  const res = await guardedFetch(url, { signal: AbortSignal.timeout(60_000) }, { maxBytes: 50 * 1024 * 1024 });
   if (!res.ok) throw new Error(`output download failed (${res.status})`);
   const len = Number(res.headers.get("content-length") ?? 0);
   if (len > 50 * 1024 * 1024) throw new Error("output too large");
@@ -48,6 +50,9 @@ export async function generateImage(organizationId: string, companyId: string, i
   if (!prompt || prompt.length > 4000) return { ok: false, code: "invalid_input", error: prompt ? "Prompt is too long" : "Prompt is empty", providerId: null, attempts: [] };
   const size: ImageSize = input.size && (IMAGE_SIZES as readonly string[]).includes(input.size) ? input.size : "1024x1024";
   const n = Math.min(Math.max(1, Math.floor(input.n ?? 1)), 4);
+
+  const blocked = await spendBlocked(organizationId, companyId, (FLAT_COST_MICROS["openai.image"] ?? 0) * n);
+  if (blocked) return blocked;
 
   return withFallback(organizationId, companyId, input.providers ?? IMAGE_PROVIDERS, async (conn) => {
     let model = "";

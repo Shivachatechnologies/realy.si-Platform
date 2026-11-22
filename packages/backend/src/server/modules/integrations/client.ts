@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
+import { guardedFetch, OutboundBlockedError } from "@/server/core/outbound";
 import { consume } from "@/server/core/rate-limit";
 import type { Connection } from "./connections";
 import { recordCallOutcome } from "./health";
@@ -247,6 +248,30 @@ export async function providerFetch<T = unknown>(conn: Connection, url: string, 
   }
 }
 
+/** Providers whose request host comes from the customer's own configuration (base URL, site URL, hook URL, S3 endpoint). */
+const CUSTOMER_HOST_PROVIDERS = new Set(["custom_api", "openai_compatible", "wordpress", "n8n", "zapier", "make", "webhook"]);
+
+export function isCustomerHost(conn: Pick<Connection, "provider" | "config">): boolean {
+  return CUSTOMER_HOST_PROVIDERS.has(conn.provider) || (conn.provider === "s3" && typeof conn.config?.endpoint === "string" && conn.config.endpoint !== "");
+}
+
+const safeHost = (url: string) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "endpoint";
+  }
+};
+
+/**
+ * SSRF guard (core/outbound): customer-configured hosts connect through the pinned, address-checking transport; fixed
+ * provider hosts use fetch. Either way redirects are followed manually and every hop is checked (credentials are
+ * dropped on a cross-origin hop).
+ */
+function outboundFetch(conn: Connection, url: string, init: { method: string; headers: Record<string, string>; body: BodyInit | undefined; signal: AbortSignal }) {
+  return guardedFetch(url, { ...init, redirect: "follow" }, isCustomerHost(conn) ? { maxBytes: 100 * 1024 * 1024 } : { transport: "fetch", trustFirstHop: true });
+}
+
 async function providerFetchInner<T>(conn: Connection, url: string, req: ProviderRequest, onAttempt: () => void): Promise<ProviderResponse<T>> {
   if (!conn.accessToken && !req.noAuth) throw new ProviderError("connection has no usable credentials", 401);
   const retries = req.retries ?? 3;
@@ -267,7 +292,7 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
     onAttempt();
     await throttle(conn.id, conn.provider);
     try {
-      const res = await fetch(url, { method: req.method ?? (body !== undefined ? "POST" : "GET"), headers, body: body as BodyInit | undefined, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000), redirect: "follow" });
+      const res = await outboundFetch(conn, url, { method: req.method ?? (body !== undefined ? "POST" : "GET"), headers, body: body as BodyInit | undefined, signal: AbortSignal.timeout(req.timeoutMs ?? 15_000) });
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
         await sleep(retryAfterMs(res, attempt));
         continue;
@@ -285,6 +310,8 @@ async function providerFetchInner<T>(conn: Connection, url: string, req: Provide
       }
       return { status: res.status, ok: res.ok, data: data as T, text: text.slice(0, 20_000), headers: res.headers };
     } catch (err) {
+      // A refused target (private address, bad redirect) is permanent: never retried.
+      if (err instanceof OutboundBlockedError) throw new ProviderError(`request to ${safeHost(url)} refused: ${err.message}`, 400);
       lastError = err;
       if (attempt < retries) {
         await sleep(Math.min(500 * 2 ** attempt, MAX_BACKOFF_MS));

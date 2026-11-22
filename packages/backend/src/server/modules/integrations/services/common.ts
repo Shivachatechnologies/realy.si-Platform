@@ -8,7 +8,7 @@ import { ProviderError } from "../providers";
  * truthful result: `ok: true` only when a provider accepted the request.
  */
 
-export type ServiceErrorCode = "not_connected" | "provider_error" | "rate_limited" | "invalid_input" | "unsupported";
+export type ServiceErrorCode = "not_connected" | "provider_error" | "rate_limited" | "invalid_input" | "unsupported" | "budget_reached";
 
 export type ServiceResult<T> =
   | { ok: true; data: T; providerId: string; attempts: ProviderAttempt[] }
@@ -24,6 +24,21 @@ export interface ProviderAttempt {
 export async function usableConnection(organizationId: string, companyId: string, provider: string): Promise<(Connection & { accessToken: string }) | null> {
   const c = await getConnection(organizationId, companyId, provider);
   return c && c.status !== "DISCONNECTED" && c.accessToken ? (c as Connection & { accessToken: string }) : null;
+}
+
+/**
+ * Spend hard stop (B29) for provider spend outside agent tasks (images, video, voice, SMS / WhatsApp, module AI text):
+ * before the paid call, refuse when one of the company's hard-stop cost budgets (Costs) is reached or would be exceeded
+ * by `estimateMicros`. The same budgets and cost ledger as agent spend (costs/service.ts) decide. Returns null to go on.
+ */
+export async function spendBlocked(organizationId: string, companyId: string, estimateMicros = 0): Promise<{ ok: false; error: string; code: "budget_reached"; providerId: null; attempts: ProviderAttempt[] } | null> {
+  // Imported lazily: costs/service sits above the integration services in the module graph.
+  const { checkSpend, evaluateAlerts } = await import("@/server/modules/costs/service");
+  const scope = { organizationId, companyId };
+  const r = await checkSpend(scope, Math.max(0, Math.ceil(estimateMicros)));
+  if (r.ok) return null;
+  await evaluateAlerts(scope).catch(() => undefined);
+  return { ok: false, code: "budget_reached", error: `${r.message}; nothing was spent. Raise the budget in Costs or wait for the next period.`, providerId: null, attempts: [] };
 }
 
 export const errorText = (err: unknown) => (err instanceof Error ? err.message : "provider request failed").slice(0, 300);
