@@ -63,6 +63,7 @@
     "integrations": "Integrations",
     "marketplace": "Marketplace",
     "settings": "Settings",
+    "contactRealy": "Contact Realy support",
     "admin": "Admin Console",
     "commandPalette": "Command palette",
     "phaseShort": "P{phase}"
@@ -2635,14 +2636,20 @@
           "aiTokens": "AI tokens",
           "aiCost": "Estimated AI cost",
           "employeesActive": "Active AI employees",
-          "aiLatency": "AI latency & provider errors",
+          "aiLatency": "AI provider error rate",
           "deadJobs": "Dead-letter jobs",
           "failedJobs": "Failed job runs",
           "webhookFailures": "Failed webhook deliveries",
           "emailFailures": "Failed emails",
           "uptime": "Uptime",
           "latencyP95": "Request latency (p95)"
-        }
+        },
+        "incidentsActive": "{count, plural, one {# active} other {# active}}",
+        "incidentsMajor": "{count, plural, one {# SEV1–2} other {# SEV1–2}}",
+        "alertsOpen": "{count, plural, one {# open} other {# open}}",
+        "alertsCritical": "{count, plural, one {# critical} other {# critical}}",
+        "opsSource": "platform_incidents · platform_alerts",
+        "unavailable": "Unavailable"
       }
     },
     "health": {
@@ -4766,7 +4773,9 @@
       "status": {
         "operational": "Operational",
         "degraded": "Degraded",
-        "incidentsNotTracked": "Incidents: not yet tracked (stream E adds platform incidents)"
+        "incidentsNone": "No active incidents",
+        "incidentsActive": "{count, plural, one {# active incident} other {# active incidents}}",
+        "incidentsUnavailable": "Incident status unavailable"
       },
       "create": {
         "title": "Create",
@@ -4851,12 +4860,7 @@
         "content": "Content"
       },
       "pending": {
-        "alerts.open": "Open alerts",
-        "incidents.open": "Open incidents",
-        "support.tickets": "Support tickets waiting",
-        "billing.disputes": "Disputes and refund requests",
-        "access.reviews": "Access reviews due",
-        "ai.budgets": "AI budgets near their limit"
+        "access.reviews": "Access reviews due"
       },
       "kinds": {
         "jobs.dead": {
@@ -4869,7 +4873,7 @@
         },
         "billing.failedPayments": {
           "title": "{count, plural, one {# failed payment in 7 days} other {# failed payments in 7 days}}",
-          "next": "Review the failed payments on Platform ops and contact the organizations."
+          "next": "Review the failed payments on Payments and contact the organizations."
         },
         "marketplace.review": {
           "title": "{count, plural, one {# marketplace listing waiting for review} other {# marketplace listings waiting for review}}",
@@ -4906,6 +4910,34 @@
         "email.failed": {
           "title": "{count, plural, one {# email failed to send in 24 h} other {# emails failed to send in 24 h}}",
           "next": "Check the email provider status and the delivery log."
+        },
+        "incidents.active": {
+          "title": "{count, plural, one {# active platform incident} other {# active platform incidents}}",
+          "next": "Open the incident, confirm the owner and post a status update."
+        },
+        "alerts.open": {
+          "title": "{count, plural, one {# open alert} other {# open alerts}}",
+          "next": "Acknowledge the alert, investigate the linked service and resolve or escalate it."
+        },
+        "support.slaBreached": {
+          "title": "{count, plural, one {# support ticket past its first-response SLA} other {# support tickets past their first-response SLA}}",
+          "next": "Reply to the oldest breached tickets first, or reassign them."
+        },
+        "support.tickets": {
+          "title": "{count, plural, one {# open support ticket} other {# open support tickets}}",
+          "next": "Assign unowned tickets and answer the ones waiting on Realy."
+        },
+        "billing.disputes": {
+          "title": "{count, plural, one {# open payment dispute} other {# open payment disputes}}",
+          "next": "Submit evidence in Stripe before the deadline, or accept the dispute."
+        },
+        "ai.budgets": {
+          "title": "{count, plural, one {# AI budget rule at or over its limit} other {# AI budget rules at or over their limit}}",
+          "next": "Review the spend, then raise the limit or pause the scope."
+        },
+        "access.reviews": {
+          "title": "{count, plural, one {# access review open} other {# access reviews open}}",
+          "next": "Decide keep or revoke for each grant, then complete the review."
         }
       }
     },

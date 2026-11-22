@@ -63,6 +63,7 @@
     "integrations": "इंटीग्रेशन",
     "marketplace": "मार्केटप्लेस",
     "settings": "सेटिंग्स",
+    "contactRealy": "Realy सहायता से संपर्क करें",
     "admin": "एडमिन कंसोल",
     "commandPalette": "कमांड पैलेट",
     "phaseShort": "च{phase}"
@@ -2635,14 +2636,20 @@
           "aiTokens": "AI टोकन",
           "aiCost": "अनुमानित AI लागत",
           "employeesActive": "सक्रिय AI कर्मचारी",
-          "aiLatency": "AI विलंबता और प्रदाता त्रुटियाँ",
+          "aiLatency": "AI प्रदाता त्रुटि दर",
           "deadJobs": "डेड-लेटर जॉब",
           "failedJobs": "विफल जॉब रन",
           "webhookFailures": "विफल वेबहुक डिलीवरी",
           "emailFailures": "विफल ईमेल",
           "uptime": "अपटाइम",
           "latencyP95": "अनुरोध विलंबता (p95)"
-        }
+        },
+        "incidentsActive": "{count, plural, one {# सक्रिय} other {# सक्रिय}}",
+        "incidentsMajor": "{count, plural, one {# SEV1–2} other {# SEV1–2}}",
+        "alertsOpen": "{count, plural, one {# खुला} other {# खुले}}",
+        "alertsCritical": "{count, plural, one {# गंभीर} other {# गंभीर}}",
+        "opsSource": "platform_incidents · platform_alerts",
+        "unavailable": "उपलब्ध नहीं"
       }
     },
     "health": {
@@ -4766,7 +4773,9 @@
       "status": {
         "operational": "चालू",
         "degraded": "प्रभावित",
-        "incidentsNotTracked": "घटनाएँ: अभी ट्रैक नहीं (स्ट्रीम E प्लेटफ़ॉर्म घटनाएँ जोड़ेगा)"
+        "incidentsNone": "कोई सक्रिय घटना नहीं",
+        "incidentsActive": "{count, plural, one {# सक्रिय घटना} other {# सक्रिय घटनाएँ}}",
+        "incidentsUnavailable": "घटना स्थिति उपलब्ध नहीं"
       },
       "create": {
         "title": "बनाएँ",
@@ -4851,12 +4860,7 @@
         "content": "सामग्री"
       },
       "pending": {
-        "alerts.open": "खुले अलर्ट",
-        "incidents.open": "खुली घटनाएँ",
-        "support.tickets": "प्रतीक्षारत सपोर्ट टिकट",
-        "billing.disputes": "विवाद और रिफ़ंड अनुरोध",
-        "access.reviews": "देय एक्सेस समीक्षाएँ",
-        "ai.budgets": "सीमा के पास AI बजट"
+        "access.reviews": "देय एक्सेस समीक्षाएँ"
       },
       "kinds": {
         "jobs.dead": {
@@ -4869,7 +4873,7 @@
         },
         "billing.failedPayments": {
           "title": "{count, plural, one {7 दिनों में # विफल भुगतान} other {7 दिनों में # विफल भुगतान}}",
-          "next": "प्लेटफ़ॉर्म ऑप्स पर विफल भुगतान देखें और संगठनों से संपर्क करें।"
+          "next": "भुगतान पेज पर विफल भुगतानों की समीक्षा करें और संगठनों से संपर्क करें।"
         },
         "marketplace.review": {
           "title": "{count, plural, one {# मार्केटप्लेस लिस्टिंग समीक्षा की प्रतीक्षा में} other {# मार्केटप्लेस लिस्टिंग समीक्षा की प्रतीक्षा में}}",
@@ -4906,6 +4910,34 @@
         "email.failed": {
           "title": "{count, plural, one {24 घंटे में # ईमेल नहीं भेजा जा सका} other {24 घंटे में # ईमेल नहीं भेजे जा सके}}",
           "next": "ईमेल प्रदाता की स्थिति और डिलीवरी लॉग जाँचें।"
+        },
+        "incidents.active": {
+          "title": "{count, plural, one {# सक्रिय प्लेटफ़ॉर्म घटना} other {# सक्रिय प्लेटफ़ॉर्म घटनाएँ}}",
+          "next": "घटना खोलें, ज़िम्मेदार व्यक्ति की पुष्टि करें और स्थिति अपडेट पोस्ट करें।"
+        },
+        "alerts.open": {
+          "title": "{count, plural, one {# खुला अलर्ट} other {# खुले अलर्ट}}",
+          "next": "अलर्ट स्वीकार करें, संबंधित सेवा की जाँच करें और हल करें या एस्केलेट करें।"
+        },
+        "support.slaBreached": {
+          "title": "{count, plural, one {# सपोर्ट टिकट पहली-प्रतिक्रिया SLA से बाहर} other {# सपोर्ट टिकट पहली-प्रतिक्रिया SLA से बाहर}}",
+          "next": "सबसे पुराने उल्लंघन वाले टिकटों का पहले जवाब दें, या उन्हें दोबारा असाइन करें।"
+        },
+        "support.tickets": {
+          "title": "{count, plural, one {# खुला सपोर्ट टिकट} other {# खुले सपोर्ट टिकट}}",
+          "next": "बिना मालिक वाले टिकट असाइन करें और Realy की प्रतीक्षा कर रहे टिकटों का जवाब दें।"
+        },
+        "billing.disputes": {
+          "title": "{count, plural, one {# खुला भुगतान विवाद} other {# खुले भुगतान विवाद}}",
+          "next": "समय सीमा से पहले Stripe में साक्ष्य जमा करें, या विवाद स्वीकार करें।"
+        },
+        "ai.budgets": {
+          "title": "{count, plural, one {# AI बजट नियम सीमा पर या उससे ऊपर} other {# AI बजट नियम सीमा पर या उससे ऊपर}}",
+          "next": "खर्च की समीक्षा करें, फिर सीमा बढ़ाएँ या दायरे को रोकें।"
+        },
+        "access.reviews": {
+          "title": "{count, plural, one {# एक्सेस समीक्षा खुली} other {# एक्सेस समीक्षाएँ खुली}}",
+          "next": "हर अनुमति के लिए रखें या रद्द करें तय करें, फिर समीक्षा पूरी करें।"
         }
       }
     },

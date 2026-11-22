@@ -156,7 +156,7 @@ export async function cachedAggregate<T>(key: string, ttlMs: number, compute: ()
         const raw = await redis().get(REDIS_PREFIX + key);
         if (raw) {
           const parsed = JSON.parse(raw) as Cached<T>;
-          if (typeof parsed?.computedAt === "number" && Date.now() - parsed.computedAt < ttlMs * 2) {
+          if (typeof parsed?.computedAt === "number" && Date.now() - parsed.computedAt < ttlMs * 2 && parsed.computedAt > (clearedAt.get(key) ?? clearedAt.get("*") ?? 0)) {
             source = "redis";
             return parsed;
           }
@@ -183,10 +183,23 @@ export async function cachedAggregate<T>(key: string, ttlMs: number, compute: ()
   }
 }
 
-/** Test seam / manual refresh: forget cached aggregates in this process (Redis entries expire on their own). */
+/** When this process last cleared a key ("*": all): shared Redis entries computed before that are ignored here. */
+const clearedAt = new Map<string, number>();
+
+/**
+ * Test seam / manual refresh: forget cached aggregates in this process. Redis entries expire on their own; this
+ * process ignores the ones computed before the clear, so the next read computes fresh values.
+ */
 export function clearAggregateCache(key?: string) {
-  if (key) memory.delete(key);
-  else memory.clear();
+  const now = Date.now();
+  if (key) {
+    memory.delete(key);
+    clearedAt.set(key, now);
+  } else {
+    memory.clear();
+    clearedAt.clear();
+    clearedAt.set("*", now);
+  }
 }
 
 // ───────────── Command Center v2 ─────────────
@@ -233,6 +246,8 @@ export interface StatusStrip {
   approvalsPending: number;
   approvalsOldestAt: string | null;
   breakersOpen: number;
+  /** Stream E (platform_alerts, platform_incidents, error_groups); null when the read failed. */
+  ops: { alertsOpen: number; alertsCritical: number; incidentsActive: number; incidentsMajor: number; errorsOpen: number } | null;
 }
 
 export interface CommandCenterData {
@@ -309,6 +324,46 @@ const notTracked = (key: string, href: string, needs: string, stream: NonNullabl
   missing: { needs, stream },
 });
 
+/**
+ * Stream D snapshots: the value of daily metrics at the start of the period (the latest platform_daily_metrics row on
+ * or before that UTC day, at most 2 days older). Missing keys mean no snapshot covers the period start yet.
+ */
+async function metricsAt(keys: string[], at: Date): Promise<Map<string, number>> {
+  const day = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
+  const rows = await db().platformDailyMetric.findMany({
+    where: { key: { in: keys }, day: { lte: day, gte: new Date(day.getTime() - 2 * 86_400_000) } },
+    orderBy: { day: "desc" },
+    select: { key: true, value: true },
+  });
+  const out = new Map<string, number>();
+  for (const r of rows) if (!out.has(r.key)) out.set(r.key, Number(r.value));
+  return out;
+}
+
+/** Stream C: AI provider error rate (ERROR ÷ attempts, cached answers excluded) for the period and the previous one. */
+async function aiErrorRatePair(from: Date, prevFrom: Date) {
+  const rows = await db().$queryRaw<{ cur: boolean; total: bigint; errors: bigint }[]>(Prisma.sql`
+    SELECT created_at >= ${from} AS cur, COUNT(*)::bigint AS total, COUNT(*) FILTER (WHERE status = 'ERROR')::bigint AS errors
+    FROM ai_request_logs WHERE created_at >= ${prevFrom} AND status <> 'CACHED' GROUP BY 1`);
+  const at = (cur: boolean) => rows.find((r) => r.cur === cur);
+  const rate = (r: (typeof rows)[number] | undefined) => (r && num(r.total) ? (num(r.errors) / num(r.total)) * 100 : null);
+  return { value: rate(at(true)), previous: rate(at(false)), attempts: num(at(true)?.total) };
+}
+
+/**
+ * Stream E: share of health probes (service_health_checks) that were up, for the period and the previous one.
+ * Not-configured and unknown probes are left out; maintenance counts as up.
+ */
+async function uptimePair(from: Date, prevFrom: Date) {
+  const rows = await db().$queryRaw<{ cur: boolean; total: bigint; up: bigint }[]>(Prisma.sql`
+    SELECT checked_at >= ${from} AS cur, COUNT(*)::bigint AS total,
+           COUNT(*) FILTER (WHERE status IN ('OPERATIONAL', 'HEALTHY', 'MAINTENANCE'))::bigint AS up
+    FROM service_health_checks WHERE checked_at >= ${prevFrom} AND status NOT IN ('NOT_CONFIGURED', 'UNKNOWN') GROUP BY 1`);
+  const at = (cur: boolean) => rows.find((r) => r.cur === cur);
+  const pct = (r: (typeof rows)[number] | undefined) => (r && num(r.total) ? (num(r.up) / num(r.total)) * 100 : null);
+  return { value: pct(at(true)), previous: pct(at(false)) };
+}
+
 /** AI tokens and estimated cost (agent_tasks, priced per model) for the period and the previous one. */
 async function aiSpendPair(from: Date, prevFrom: Date) {
   const rows = await db().$queryRaw<{ model: string | null; cur: boolean; input: bigint | null; output: bigint | null }[]>(Prisma.sql`
@@ -370,6 +425,12 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
     emailFails,
     beats,
     breakers,
+    snapshotsAtStart,
+    refunds,
+    disputes,
+    aiErrors,
+    uptime,
+    ops,
   ] = await Promise.all([
     db().user.count({ where: { status: { not: "DELETED" } } }),
     pair("users", "created_at", from, prevFrom),
@@ -408,6 +469,12 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
     pair("email_messages", "created_at", from, prevFrom, Prisma.sql`AND status = 'FAILED'`),
     db().platformHeartbeat.findMany({ orderBy: { lastSeenAt: "desc" }, take: 20, select: { lastSeenAt: true } }).catch(() => []),
     breakerSnapshot().catch(() => null),
+    metricsAt(["users.total", "orgs.total", "subscriptions.active", "subscriptions.trialing", "subscriptions.past_due"], from),
+    pair("platform_refunds", "created_at", from, prevFrom),
+    pair("platform_disputes", "created_at", from, prevFrom),
+    aiErrorRatePair(from, prevFrom),
+    uptimePair(from, prevFrom),
+    import("./alerts").then((m) => m.opsStatusCounts()).catch(() => null),
   ]);
 
   const signInMap = new Map(signInSeries.map((r) => [r.b.toISOString(), num(r.n)]));
@@ -423,12 +490,18 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
   const snap = (key: string, value: number, href: string, source: string, needs: string, stream: NonNullable<Kpi["missing"]>["stream"], extra: Partial<Kpi> = {}) =>
     kpi({ key, value, previous: null, format: "count", href, source, missing: { needs, stream }, ...extra });
   const DAILY = "platform_daily_metrics snapshots";
+  /** Previous value from D's daily snapshot at the period start; without one, `previous` stays null and says why. */
+  const fromSnapshot = (value: number, keys: string[]): Partial<Kpi> => {
+    const vals = keys.map((k) => snapshotsAtStart.get(k));
+    if (vals.some((v) => v === undefined)) return { missing: { needs: "platform_daily_metrics snapshot at period start", stream: "D" } };
+    return { previous: vals.reduce<number>((a, v) => a + (v ?? 0), 0), missing: undefined };
+  };
 
   const sections: KpiSection[] = [
     {
       id: "users",
       kpis: [
-        snap("totalUsers", totalUsers, "/users", "users (not deleted)", DAILY, "D"),
+        snap("totalUsers", totalUsers, "/users", "users (not deleted); previous: platform_daily_metrics users.total", DAILY, "D", fromSnapshot(totalUsers, ["users.total"])),
         kpi({ key: "newUsers", ...newUsers, format: "count", href: `/users?created=${range === "24h" ? "7d" : range === "90d" ? "30d" : range}`, source: "users.created_at", series: usersSeries }),
         kpi({ key: "signIns", ...signIns, format: "count", href: "/security/access", source: "sessions.created_at (distinct users)", series: buckets.map((b) => signInMap.get(b) ?? 0) }),
         snap("activeUsers", activeNow, "/users?login=7d", "sessions.last_seen_at", DAILY, "D"),
@@ -437,7 +510,7 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
     {
       id: "organizations",
       kpis: [
-        snap("totalOrgs", num(orgCounts[0]?.orgs), "/organizations", "organizations", DAILY, "D"),
+        snap("totalOrgs", num(orgCounts[0]?.orgs), "/organizations", "organizations; previous: platform_daily_metrics orgs.total", DAILY, "D", fromSnapshot(num(orgCounts[0]?.orgs), ["orgs.total"])),
         kpi({ key: "newOrgs", ...newOrgs, format: "count", href: "/organizations", source: "organizations.created_at", series: orgSeries }),
         snap("suspendedOrgs", num(orgCounts[0]?.suspended), "/organizations?status=SUSPENDED", "organizations.status", "status history", "B", { better: "down" }),
         snap("companies", num(orgCounts[0]?.companies), "/organizations", "companies (not deleted)", DAILY, "D"),
@@ -448,14 +521,14 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
       kpis: [
         kpi({ key: "mrr", value: null, previous: null, format: "money", money: mrrMicro, href: "/revenue", source: "subscription_items (ACTIVE, PAST_DUE)", missing: { needs: "MRR snapshots", stream: "D" } }),
         kpi({ key: "arr", value: null, previous: null, format: "money", money: arr, href: "/revenue", source: "MRR × 12", missing: { needs: "MRR snapshots", stream: "D" } }),
-        kpi({ key: "failedPayments", ...failedPay, format: "count", href: "/ops", source: "subscriptions.last_payment_failed_at (latest attempt per subscription)", better: "down" }),
-        notTracked("refunds", "/payments", "platform_payments / platform_refunds", "D"),
+        kpi({ key: "failedPayments", ...failedPay, format: "count", href: "/payments?status=failed", source: "subscriptions.last_payment_failed_at (latest attempt per subscription)", better: "down" }),
+        kpi({ key: "refunds", value: refunds.value + disputes.value, previous: refunds.previous + disputes.previous, format: "count", href: "/payments/refunds", source: "platform_refunds + platform_disputes (created_at, Stripe mirror)", better: "down" }),
       ],
     },
     {
       id: "subscriptions",
       kpis: [
-        snap("liveSubscriptions", live, "/subscriptions", "subscriptions (ACTIVE, TRIALING, PAST_DUE)", "subscription snapshots", "D"),
+        snap("liveSubscriptions", live, "/subscriptions", "subscriptions (ACTIVE, TRIALING, PAST_DUE); previous: platform_daily_metrics", "subscription snapshots", "D", fromSnapshot(live, ["subscriptions.active", "subscriptions.trialing", "subscriptions.past_due"])),
         kpi({ key: "newSubscriptions", ...newSubs, format: "count", href: "/subscriptions", source: "subscriptions.created_at", series: subsSeries }),
         kpi({ key: "canceledSubscriptions", ...canceledSubs, format: "count", href: "/subscriptions?status=CANCELED", source: "subscriptions.canceled_at", better: "down" }),
         snap("pastDue", status("PAST_DUE") + status("UNPAID"), "/subscriptions?status=PAST_DUE", "subscriptions (PAST_DUE, UNPAID)", "subscription snapshots", "D", { better: "down" }),
@@ -471,7 +544,9 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
         kpi({ key: "aiTokens", value: spend.cur.tokens, previous: spend.prev.tokens, format: "count", href: "/ai/usage", source: "agent_tasks input + output tokens" }),
         kpi({ key: "aiCost", value: spend.cur.micros, previous: spend.prev.micros, format: "usdMicros", href: "/ai/usage", source: "agent_tasks tokens × model list price (estimate)", better: "down" }),
         snap("employeesActive", employeesBy("ACTIVE"), "/ai/workforce?status=ACTIVE", "ai_employees (ACTIVE)", "workforce snapshots", "C"),
-        notTracked("aiLatency", "/ai", "ai_request_logs (latency, provider errors)", "C"),
+        aiErrors.attempts || aiErrors.previous !== null
+          ? kpi({ key: "aiLatency", value: aiErrors.value, previous: aiErrors.previous, format: "percent", href: "/ai/requests?status=ERROR", source: "ai_request_logs: ERROR ÷ attempts (cached excluded)", better: "down" })
+          : kpi({ key: "aiLatency", value: null, previous: null, format: "percent", href: "/ai/requests", source: "ai_request_logs", status: "not_configured", missing: { needs: "ai_request_logs rows (no AI calls in the period)", stream: "C" } }),
       ],
     },
     {
@@ -480,8 +555,10 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
         snap("deadJobs", deadJobs, "/system/jobs?status=DEAD", "worker_job_runs (DEAD)", "dead-letter history", "E", { better: "down" }),
         kpi({ key: "failedJobs", ...failedRuns, format: "count", href: "/system/jobs?status=FAILED", source: "worker_job_runs (FAILED, DEAD)", better: "down" }),
         kpi({ key: "webhookFailures", ...webhookFails, format: "count", href: "/developers", source: "integration_webhook_deliveries (FAILED)", better: "down" }),
-        kpi({ key: "emailFailures", ...emailFails, format: "count", href: "/ops", source: "email_messages (FAILED)", better: "down" }),
-        notTracked("uptime", "/health", "service_health_checks", "E", "percent"),
+        kpi({ key: "emailFailures", ...emailFails, format: "count", href: "/email", source: "email_messages (FAILED)", better: "down" }),
+        uptime.value !== null
+          ? kpi({ key: "uptime", value: uptime.value, previous: uptime.previous, format: "percent", href: "/health", source: "service_health_checks: up ÷ probes (not configured excluded)" })
+          : notTracked("uptime", "/health", "service_health_checks rows (ops.monitor worker job)", "E", "percent"),
         notTracked("latencyP95", "/infra", "OTEL / request telemetry backend", "E"),
       ],
     },
@@ -506,6 +583,7 @@ export async function computeCommandCenter(range: RangeKey): Promise<CommandCent
       approvalsPending: approvals._count._all,
       approvalsOldestAt: approvals._min.createdAt?.toISOString() ?? null,
       breakersOpen: breakers ? breakers.filter((b) => b.open).length : 0,
+      ops: ops ? { alertsOpen: ops["alerts.open"], alertsCritical: ops.alertsCritical, incidentsActive: ops["incidents.active"], incidentsMajor: ops.incidentsMajor, errorsOpen: ops.errorsOpen } : null,
     },
   };
 }
@@ -522,7 +600,7 @@ export async function commandCenter(ctx: RequestContext, range: RangeKey) {
   const caps = await capabilitiesFor(ctx, keys);
   const allowed = (id: KpiSection["id"]) => SECTION_PERMS[id].some((p) => caps[p]);
   await requireConsoleUser(ctx);
-  const { value, computedAt, cache } = await cachedAggregate(`cc:v2:${range}`, COMMAND_CENTER_TTL_MS, () => computeCommandCenter(range));
+  const { value, computedAt, cache } = await cachedAggregate(`cc:v3:${range}`, COMMAND_CENTER_TTL_MS, () => computeCommandCenter(range));
   return {
     ...value,
     sections: value.sections.filter((s) => allowed(s.id)),
@@ -536,6 +614,16 @@ export async function commandCenter(ctx: RequestContext, range: RangeKey) {
 export async function shellHealth() {
   const { value, computedAt } = await cachedAggregate("shell:health:v1", 30_000, () => platformHealth());
   return { ...value, computedAt };
+}
+
+/** Top-bar incident indicator (stream E counts, cached 30 s). Callers show it only to incident readers. */
+export async function shellIncidents() {
+  const { value } = await cachedAggregate("shell:incidents:v1", 30_000, async () => {
+    const { opsStatusCounts } = await import("./alerts");
+    const c = await opsStatusCounts();
+    return { active: c["incidents.active"], major: c.incidentsMajor };
+  });
+  return value;
 }
 
 /** The last platform-level admin and security actions (10), for holders of platform.audit.read. */

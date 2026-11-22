@@ -29,7 +29,7 @@ Each stream has one installer in `packages/backend/src/server/core/request-hooks
 |---|---|---|
 | `e.ts` | E | error grouping from `onError` and from final `onJobFailure` events; the warn+ `app_log_entries` sink (`core/logger.ts` `addLogSink`) |
 | `b.ts` | B (added by E at the integrator's request) | `impersonationRequestGate` (mutating requests only), `recordImpersonatedRequest` on completion |
-| `f.ts` | F | placeholder: register the API request logger with `onRequestComplete` |
+| `f.ts` | F | the sampled API request logger (`recordApiRequest`, `modules/admin/api-logs.ts`) on `onRequestComplete`; retention runs daily in the worker (`admin.api_logs_retention`) |
 
 `request-hooks/index.ts` (E) runs every installer once per process:
 

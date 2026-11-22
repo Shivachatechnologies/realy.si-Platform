@@ -14,9 +14,11 @@ import { consolePermissions } from "./preferences";
  * reviews, admins without MFA, open AI breakers, failed webhooks, connection errors, stale workers, emergency
  * switches, failed email). Nothing is estimated: every item is a count of real rows with a link to them.
  *
- * Sources that need tables other streams have not shipped yet (alerts, incidents, support tickets, disputes,
- * access reviews, AI budgets) are listed in PENDING_SOURCES and shown as "Not yet tracked" with the owning stream.
- * When a stream ships one, it exports an `ActionSource` from its own module and stream A adds it to SOURCES.
+ * Other streams' sources are adapted here from their modules: alerts and incidents (E, `opsActionRows` /
+ * `opsStatusCounts`), platform support tickets (F, `supportAttention`), open disputes (D, platform_disputes) and AI
+ * budget rules at their soft limit (C, `budgetRulesAtRisk`) and open access reviews (B, platform_access_reviews).
+ * Their modules load lazily (no import cycles). A future source without a table goes in PENDING_SOURCES ("Not yet
+ * tracked", with the owning stream).
  *
  * Every item is visible only to admins who may open its link (the console-gate section of `href`).
  * The whole queue is computed once per minute at most (cachedAggregate: memory, then Redis) and filtered per viewer.
@@ -62,14 +64,7 @@ export interface PendingSource {
   href: string;
 }
 
-export const PENDING_SOURCES: readonly PendingSource[] = [
-  { id: "alerts.open", domain: "ops", stream: "E", needs: "platform_alerts", href: "/alerts" },
-  { id: "incidents.open", domain: "ops", stream: "E", needs: "platform_incidents", href: "/incidents" },
-  { id: "support.tickets", domain: "content", stream: "F", needs: "platform_support_tickets", href: "/support" },
-  { id: "billing.disputes", domain: "billing", stream: "D", needs: "platform_disputes / platform_refunds", href: "/payments" },
-  { id: "access.reviews", domain: "security", stream: "B", needs: "access reviews", href: "/roles" },
-  { id: "ai.budgets", domain: "ai", stream: "C", needs: "ai budget thresholds", href: "/ai" },
-];
+export const PENDING_SOURCES: readonly PendingSource[] = [];
 
 const SEVERITY_RANK: Record<ActionSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 const iso = (d: Date | null | undefined) => d?.toISOString();
@@ -134,7 +129,7 @@ const failedPayments: ActionSource = {
       domain: "billing",
       severity: by(open.length, "high", 5),
       count: open.length,
-      href: "/ops",
+      href: "/payments?status=failed",
       oldestAt: iso(open[0]?.lastPaymentFailedAt),
       samples: open.slice(0, 5).map((r) => ({ id: r.id, label: r.organization.name, href: `/plans/organizations/${r.organizationId}`, at: iso(r.lastPaymentFailedAt) })),
     });
@@ -280,12 +275,144 @@ const failedEmail: ActionSource = {
   id: "email.failed",
   async load() {
     const count = await db().emailMessage.count({ where: { status: "FAILED", createdAt: { gte: daysAgo(1) } } });
-    return item({ id: "email.failed", domain: "ops", severity: by(count, "low", 20, 200), count, href: "/ops" });
+    return item({ id: "email.failed", domain: "ops", severity: by(count, "low", 20, 200), count, href: "/email" });
   },
 };
 
-/** Built-in sources, all from existing tables. Add another stream's `ActionSource` here once its table exists. */
-export const SOURCES: readonly ActionSource[] = [deadJobs, pastDue, failedPayments, marketplaceReview, adminsWithoutMfa, openBreakers, failedTasks, webhookFailures, connectionErrors, staleWorkers, emergency, failedEmail];
+const ALERT_SEVERITY: Record<string, ActionSeverity> = { CRITICAL: "critical", WARNING: "high", INFO: "medium" };
+
+/** Stream E: open and acknowledged alerts, and active incidents (badges `alerts.open`, `incidents.active`). */
+const opsAlertsAndIncidents: ActionSource = {
+  id: "ops.alertsIncidents",
+  async load() {
+    const { opsActionRows, opsStatusCounts } = await import("./alerts");
+    const [counts, rows] = await Promise.all([opsStatusCounts(), opsActionRows({ alerts: true, incidents: true }, 20)]);
+    const alerts = rows.filter((r) => r.kind === "alert");
+    const incidents = rows.filter((r) => r.kind === "incident");
+    const oldest = (list: typeof rows) => iso(list.reduce<Date | null>((m, r) => (!m || r.at < m ? r.at : m), null));
+    const sample = (r: (typeof rows)[number]): ActionSample => ({ id: r.id, label: r.title, sub: r.status, href: r.href, at: iso(r.at) });
+    return [
+      ...item({
+        id: "incidents.active",
+        domain: "ops",
+        severity: counts.incidentsMajor ? "critical" : "high",
+        count: counts["incidents.active"],
+        href: "/incidents",
+        oldestAt: oldest(incidents),
+        samples: incidents.slice(0, 5).map(sample),
+      }),
+      ...item({
+        id: "alerts.open",
+        domain: "ops",
+        severity: counts.alertsCritical ? "critical" : (ALERT_SEVERITY[alerts[0]?.severity ?? "INFO"] ?? "medium"),
+        count: counts["alerts.open"],
+        href: "/alerts",
+        oldestAt: oldest(alerts),
+        samples: alerts.slice(0, 5).map(sample),
+      }),
+    ];
+  },
+};
+
+/** Stream F: open platform support tickets; severity rises with tickets past their first-response SLA. */
+const supportTickets: ActionSource = {
+  id: "support.tickets",
+  async load() {
+    const { supportAttention } = await import("./support");
+    const s = await supportAttention();
+    return [
+      ...item({
+        id: "support.slaBreached",
+        domain: "content",
+        severity: by(s.breached, "high", 5, 20),
+        count: s.breached,
+        href: "/support?sla=breached",
+        samples: s.samples.map((t) => ({ id: t.id, label: `#${t.number} ${t.subject}`, sub: t.priority, href: `/support/${t.id}`, at: iso(t.slaDueAt) })),
+      }),
+      ...item({ id: "support.tickets", domain: "content", severity: by(s.open, "low", 25, 100), count: s.open, href: "/support", oldestAt: iso(s.oldestAt) }),
+    ];
+  },
+};
+
+/** Stream D: open Stripe disputes (platform_disputes), the nearest evidence deadline first. */
+const openDisputes: ActionSource = {
+  id: "billing.disputes",
+  async load() {
+    const { OPEN_DISPUTE_STATUSES } = await import("@/server/modules/billing/explorers");
+    const where = { status: { in: OPEN_DISPUTE_STATUSES } };
+    const [count, rows] = await Promise.all([
+      db().platformDispute.count({ where }),
+      db().platformDispute.findMany({ where, orderBy: [{ evidenceDueBy: { sort: "asc", nulls: "last" } }], take: 5, select: { id: true, reason: true, status: true, evidenceDueBy: true, createdAt: true } }),
+    ]);
+    const dueSoon = rows.some((r) => r.evidenceDueBy && r.evidenceDueBy.getTime() - Date.now() < 3 * 86_400_000);
+    return item({
+      id: "billing.disputes",
+      domain: "billing",
+      severity: dueSoon ? "critical" : "high",
+      count,
+      href: "/payments/disputes?open=1",
+      oldestAt: iso(rows.reduce<Date | null>((m, r) => (!m || r.createdAt < m ? r.createdAt : m), null)),
+      samples: rows.map((r) => ({ id: r.id, label: r.reason, sub: r.status, href: `/payments/disputes/${r.id}`, at: iso(r.evidenceDueBy ?? r.createdAt) })),
+    });
+  },
+};
+
+/** Stream C: platform AI budget rules at or over their soft limit this period. */
+const aiBudgets: ActionSource = {
+  id: "ai.budgets",
+  async load() {
+    const { budgetRulesAtRisk } = await import("./ai-budgets");
+    const rules = await budgetRulesAtRisk();
+    const over = rules.filter((r) => r.pct >= 1);
+    return item({
+      id: "ai.budgets",
+      domain: "ai",
+      severity: over.some((r) => r.hard) ? "critical" : over.length ? "high" : "medium",
+      count: rules.length,
+      href: "/ai/budgets",
+      samples: rules.slice(0, 5).map((r) => ({ id: r.id, label: `${r.level}: ${r.key}`, sub: `${Math.round(r.pct * 100)}% · ${r.period}` })),
+    });
+  },
+};
+
+/** Stream B: open platform access reviews; overdue ones (past `dueAt`) raise the severity. */
+const accessReviews: ActionSource = {
+  id: "access.reviews",
+  async load() {
+    const rows = await db().platformAccessReview.findMany({ where: { status: "OPEN" }, orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }], take: 50, select: { id: true, title: true, dueAt: true, createdAt: true } });
+    const overdue = rows.filter((r) => r.dueAt && r.dueAt.getTime() < Date.now()).length;
+    return item({
+      id: "access.reviews",
+      domain: "security",
+      severity: overdue ? "high" : "medium",
+      count: rows.length,
+      href: "/roles/reviews",
+      oldestAt: iso(rows.reduce<Date | null>((m, r) => (!m || r.createdAt < m ? r.createdAt : m), null)),
+      samples: rows.slice(0, 5).map((r) => ({ id: r.id, label: r.title, href: `/roles/reviews/${r.id}`, at: iso(r.dueAt ?? r.createdAt) })),
+    });
+  },
+};
+
+/** Every source. Another stream's module is adapted above and loaded lazily. */
+export const SOURCES: readonly ActionSource[] = [
+  opsAlertsAndIncidents,
+  deadJobs,
+  pastDue,
+  failedPayments,
+  openDisputes,
+  supportTickets,
+  marketplaceReview,
+  adminsWithoutMfa,
+  accessReviews,
+  openBreakers,
+  failedTasks,
+  aiBudgets,
+  webhookFailures,
+  connectionErrors,
+  staleWorkers,
+  emergency,
+  failedEmail,
+];
 
 export interface ActionQueue {
   items: ActionItem[];
@@ -315,7 +442,7 @@ export async function actionCenter(ctx: RequestContext): Promise<ActionQueue & {
     const need = itemPermissions(href);
     return !need || need.some((p) => perms.has(p));
   };
-  const { value, computedAt } = await cachedAggregate("actions:v1", 60_000, () => computeActionQueue());
+  const { value, computedAt } = await cachedAggregate("actions:v2", 60_000, () => computeActionQueue());
   return {
     items: value.items.filter((i) => visible(i.href)),
     failed: value.failed.filter((id) => {

@@ -30,8 +30,16 @@ async function integrity(): Promise<number> {
   return results.filter((r) => (r.count ?? 0) > 0).length;
 }
 
+/** Stream F: API request logs and rate-limit events past their 14-day retention (DB only). */
+async function apiLogsRetention(): Promise<number> {
+  const { purgeApiLogs } = await import("@/server/modules/admin/api-logs");
+  const r = await purgeApiLogs();
+  return r.logs + r.events;
+}
+
 export const OPS_JOBS: PeriodicJob[] = [
   { name: "ops.monitor", everyMs: 5 * 60_000, run: monitor },
   { name: "ops.retention", everyMs: 6 * 3_600_000, run: retention },
   { name: "ops.integrity", everyMs: 24 * 3_600_000, run: integrity },
+  { name: "admin.api_logs_retention", everyMs: 24 * 3_600_000, run: apiLogsRetention },
 ];

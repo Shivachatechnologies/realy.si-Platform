@@ -92,7 +92,17 @@ describe("command center performance", () => {
     const total = users.kpis.find((k) => k.key === "totalUsers")!;
     expect(total.previous).toBeNull();
     expect(total.missing?.stream).toBe("D");
+    // Uptime comes from stream E's probes when there are any, else it says what is missing.
     const uptime = d.sections.find((s) => s.id === "system")!.kpis.find((k) => k.key === "uptime")!;
-    expect(uptime).toMatchObject({ status: "not_tracked", value: null, missing: { stream: "E" } });
+    if (uptime.status === "not_tracked") expect(uptime).toMatchObject({ value: null, missing: { stream: "E" } });
+    else {
+      expect(uptime).toMatchObject({ status: "ok", format: "percent" });
+      expect(uptime.value).toBeGreaterThanOrEqual(0);
+      expect(uptime.value).toBeLessThanOrEqual(100);
+    }
+    const p95 = d.sections.find((s) => s.id === "system")!.kpis.find((k) => k.key === "latencyP95")!;
+    expect(p95).toMatchObject({ status: "not_tracked", value: null, missing: { stream: "E" } });
+    // Strip: stream E counts, real (zero here unless other files left rows), never "not tracked".
+    expect(d.status.ops).not.toBeNull();
   });
 });

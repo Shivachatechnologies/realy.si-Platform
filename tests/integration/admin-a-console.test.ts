@@ -133,6 +133,9 @@ describe("admin notifications (stream A)", () => {
 describe("action center (stream A)", () => {
   it("counts real rows, shows items only to admins who may open them, and feeds sidebar badges", async () => {
     await db().workerJobRun.create({ data: { queue: "webhooks", jobName: "deliver", jobId: `dead-${Date.now()}`, status: "DEAD", deadLetteredAt: new Date() } });
+    // Stream E's alerts feed the queue and the `alerts.open` badge (adapted from opsActionRows / opsStatusCounts).
+    await db().platformAlert.deleteMany();
+    await db().platformAlert.create({ data: { fingerprint: `test:${Date.now()}`, rule: "queue.backlog", groupKey: "queue.backlog:queues", service: "queues", severity: "CRITICAL", title: "Queue backlog" } });
     const superAdmin = await admin();
     const content = await admin("CONTENT_ADMIN");
     const q = await actionCenter(superAdmin.ctx);
@@ -141,14 +144,17 @@ describe("action center (stream A)", () => {
     expect(dead!.samples[0]).toMatchObject({ label: "deliver", sub: "webhooks" });
     // Super admins without MFA are themselves an item (makeUser creates users without TOTP).
     expect(q.items.find((i) => i.id === "security.adminsWithoutMfa")?.count).toBeGreaterThanOrEqual(1);
-    expect(q.pending.map((p) => p.id)).toContain("alerts.open");
+    expect(q.items.find((i) => i.id === "alerts.open")).toMatchObject({ count: 1, severity: "critical", href: "/alerts", domain: "ops" });
+    expect(q.items.find((i) => i.id === "alerts.open")!.samples[0]).toMatchObject({ label: "Queue backlog", sub: "OPEN" });
+    expect(q.pending).toEqual([]);
 
     const c = await actionCenter(content.ctx);
     expect(c.items.find((i) => i.id === "jobs.dead")).toBeUndefined(); // no ops section access
-    expect(c.pending.find((p) => p.id === "alerts.open")).toBeUndefined();
+    expect(c.items.find((i) => i.id === "alerts.open")).toBeUndefined(); // no alerts section access
 
     const badges = await actionBadges(superAdmin.ctx);
     expect(badges["jobs.dead"]).toBe(1);
+    expect(badges["alerts.open"]).toBe(1);
     expect(badges["actions.open"]).toBe(q.items.length);
     expect((await actionCenter((await makeUser()).ctx)).items).toEqual([]); // tenants see nothing
   });

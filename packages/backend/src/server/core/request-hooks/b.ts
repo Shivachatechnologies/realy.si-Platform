@@ -17,6 +17,6 @@ export async function installB(app: ProcessApp): Promise<void> {
   });
   onRequestComplete(async (e) => {
     if (!e.sessionId) return;
-    await recordImpersonatedRequest({ sessionId: e.sessionId, requestId: e.requestId, method: e.method, pathname: e.path, route: e.route, status: e.status, durationMs: e.durationMs, at: e.startedAt });
+    await recordImpersonatedRequest({ sessionId: e.sessionId, requestId: e.requestId, method: e.method, route: e.route, status: e.status, ip: e.ip, userAgent: e.userAgent });
   });
 }

@@ -119,6 +119,21 @@ async function cachedSpend(r: BudgetRule): Promise<bigint> {
   return micros;
 }
 
+/**
+ * Budget rules at or over their soft limit this period (Action Center `ai.budgets`, stream A). No permission check:
+ * the Action Center shows the item only to admins who may open /ai/budgets. Spend reads share the 60 s cache.
+ */
+export async function budgetRulesAtRisk(): Promise<{ id: string; level: BudgetRule["level"]; key: string; period: BudgetRule["period"]; pct: number; hard: boolean }[]> {
+  const out: { id: string; level: BudgetRule["level"]; key: string; period: BudgetRule["period"]; pct: number; hard: boolean }[] = [];
+  for (const r of await readRules()) {
+    const limit = Math.round(r.limitUsd * 1_000_000);
+    const pct = limit ? Number(await cachedSpend(r)) / limit : 0;
+    if (pct * 100 >= r.softPct) out.push({ id: r.id, level: r.level, key: r.key, period: r.period, pct, hard: r.hard });
+  }
+  return out.sort((a, b) => b.pct - a.pct);
+}
+
+
 export interface BudgetScope {
   organizationId?: string | null;
   department?: string | null;

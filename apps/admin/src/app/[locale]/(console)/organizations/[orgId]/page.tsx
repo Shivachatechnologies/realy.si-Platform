@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { AnimatedProgress } from "@/components/motion/animated-progress";
 import { CountUp } from "@/components/motion/count-up";
+import { PageCrumbs } from "@/components/admin/nav/breadcrumbs";
 import { AdminHeader, AuditTimeline, Avatar, EmptyState, Facts, SectionLink, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
 import { OrgRestrictions, OrgStatusButton, TenantViewGate } from "@/components/admin/org-actions";
 import { OrgAdminExtras, OrgTabs } from "@/components/admin/people-extras";
@@ -70,13 +71,7 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
   return (
     <div className="grid gap-5">
       <OrgTabs locale={locale} orgId={orgId} active="overview" />
-      <nav aria-label={t("admin.common.breadcrumb")} className="text-xs text-muted-foreground">
-        <Link href={`${base}/organizations`} className="hover:text-foreground hover:underline">
-          {t("admin.nav.companies")}
-        </Link>
-        <span aria-hidden> / </span>
-        <span>{o.name}</span>
-      </nav>
+      <PageCrumbs items={[{ label: o.name }]} />
       <AdminHeader
         icon={<Building2 />}
         title={o.name}

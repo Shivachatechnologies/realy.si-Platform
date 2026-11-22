@@ -23,7 +23,7 @@ export const sectionsC: NavSection[] = [
       { id: "aiUsage", href: "/ai/usage", label: "admin.nav.aiUsage", perms: AI },
     ],
   },
-  { id: "workflows", href: "/workflows", label: "admin.workflows.nav", icon: Workflow, order: 42, perms: AI },
-  { id: "knowledge", href: "/knowledge", label: "admin.knowledge.nav", icon: BrainCircuit, order: 44, perms: AI },
-  { id: "copilot", href: "/copilot", label: "admin.copilot.nav", icon: Sparkles, order: 46, perms: ["platform.copilot.use"] },
+  { id: "workflows", group: "ai", href: "/workflows", label: "admin.workflows.nav", icon: Workflow, order: 42, perms: AI },
+  { id: "knowledge", group: "ai", href: "/knowledge", label: "admin.knowledge.nav", icon: BrainCircuit, order: 44, perms: AI },
+  { id: "copilot", group: "ai", href: "/copilot", label: "admin.copilot.nav", icon: Sparkles, order: 46, perms: ["platform.copilot.use"] },
 ];

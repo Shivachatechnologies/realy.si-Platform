@@ -63,6 +63,7 @@
     "integrations": "Integrationen",
     "marketplace": "Marktplatz",
     "settings": "Einstellungen",
+    "contactRealy": "Realy-Support kontaktieren",
     "admin": "Admin-Konsole",
     "commandPalette": "Befehlspalette",
     "phaseShort": "P{phase}"
@@ -2635,14 +2636,20 @@
           "aiTokens": "KI-Tokens",
           "aiCost": "Geschätzte KI-Kosten",
           "employeesActive": "Aktive KI-Mitarbeiter",
-          "aiLatency": "KI-Latenz & Anbieterfehler",
+          "aiLatency": "Fehlerquote der KI-Anbieter",
           "deadJobs": "Dead-Letter-Jobs",
           "failedJobs": "Fehlgeschlagene Jobläufe",
           "webhookFailures": "Fehlgeschlagene Webhook-Zustellungen",
           "emailFailures": "Fehlgeschlagene E-Mails",
           "uptime": "Verfügbarkeit",
           "latencyP95": "Antwortzeit (p95)"
-        }
+        },
+        "incidentsActive": "{count, plural, one {# aktiv} other {# aktiv}}",
+        "incidentsMajor": "{count, plural, one {# SEV1–2} other {# SEV1–2}}",
+        "alertsOpen": "{count, plural, one {# offen} other {# offen}}",
+        "alertsCritical": "{count, plural, one {# kritisch} other {# kritisch}}",
+        "opsSource": "platform_incidents · platform_alerts",
+        "unavailable": "Nicht verfügbar"
       }
     },
     "health": {
@@ -4766,7 +4773,9 @@
       "status": {
         "operational": "Betriebsbereit",
         "degraded": "Beeinträchtigt",
-        "incidentsNotTracked": "Vorfälle: noch nicht erfasst (Stream E ergänzt Plattform-Vorfälle)"
+        "incidentsNone": "Keine aktiven Vorfälle",
+        "incidentsActive": "{count, plural, one {# aktiver Vorfall} other {# aktive Vorfälle}}",
+        "incidentsUnavailable": "Vorfallstatus nicht verfügbar"
       },
       "create": {
         "title": "Erstellen",
@@ -4851,12 +4860,7 @@
         "content": "Inhalte"
       },
       "pending": {
-        "alerts.open": "Offene Warnungen",
-        "incidents.open": "Offene Vorfälle",
-        "support.tickets": "Wartende Support-Tickets",
-        "billing.disputes": "Rückbuchungen und Erstattungsanfragen",
-        "access.reviews": "Fällige Zugriffsprüfungen",
-        "ai.budgets": "KI-Budgets nahe am Limit"
+        "access.reviews": "Fällige Zugriffsprüfungen"
       },
       "kinds": {
         "jobs.dead": {
@@ -4869,7 +4873,7 @@
         },
         "billing.failedPayments": {
           "title": "{count, plural, one {# fehlgeschlagene Zahlung in 7 Tagen} other {# fehlgeschlagene Zahlungen in 7 Tagen}}",
-          "next": "Fehlgeschlagene Zahlungen unter Plattformbetrieb prüfen und die Organisationen kontaktieren."
+          "next": "Fehlgeschlagene Zahlungen unter Zahlungen prüfen und die Organisationen kontaktieren."
         },
         "marketplace.review": {
           "title": "{count, plural, one {# Marketplace-Eintrag wartet auf Prüfung} other {# Marketplace-Einträge warten auf Prüfung}}",
@@ -4906,6 +4910,34 @@
         "email.failed": {
           "title": "{count, plural, one {# E-Mail in 24 Std. nicht gesendet} other {# E-Mails in 24 Std. nicht gesendet}}",
           "next": "Status des E-Mail-Anbieters und das Zustellprotokoll prüfen."
+        },
+        "incidents.active": {
+          "title": "{count, plural, one {# aktiver Plattform-Vorfall} other {# aktive Plattform-Vorfälle}}",
+          "next": "Vorfall öffnen, Verantwortlichen bestätigen und ein Status-Update veröffentlichen."
+        },
+        "alerts.open": {
+          "title": "{count, plural, one {# offener Alarm} other {# offene Alarme}}",
+          "next": "Alarm bestätigen, den betroffenen Dienst untersuchen und lösen oder eskalieren."
+        },
+        "support.slaBreached": {
+          "title": "{count, plural, one {# Support-Ticket über der Erstantwort-SLA} other {# Support-Tickets über der Erstantwort-SLA}}",
+          "next": "Zuerst die ältesten überfälligen Tickets beantworten oder neu zuweisen."
+        },
+        "support.tickets": {
+          "title": "{count, plural, one {# offenes Support-Ticket} other {# offene Support-Tickets}}",
+          "next": "Nicht zugewiesene Tickets zuweisen und die auf Realy wartenden beantworten."
+        },
+        "billing.disputes": {
+          "title": "{count, plural, one {# offene Zahlungsanfechtung} other {# offene Zahlungsanfechtungen}}",
+          "next": "Vor Fristablauf Belege in Stripe einreichen oder die Anfechtung akzeptieren."
+        },
+        "ai.budgets": {
+          "title": "{count, plural, one {# KI-Budgetregel am oder über dem Limit} other {# KI-Budgetregeln am oder über dem Limit}}",
+          "next": "Ausgaben prüfen, dann das Limit erhöhen oder den Bereich pausieren."
+        },
+        "access.reviews": {
+          "title": "{count, plural, one {# offene Zugriffsprüfung} other {# offene Zugriffsprüfungen}}",
+          "next": "Für jede Berechtigung Behalten oder Entziehen wählen und die Prüfung abschließen."
         }
       }
     },

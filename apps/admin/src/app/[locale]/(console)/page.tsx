@@ -173,8 +173,34 @@ async function StatusStrip({ cc, actions, base, t }: { cc: Promise<CC>; actions:
           tone={s.health.database && s.health.redis ? "ok" : "bad"}
         />
       ) : null}
-      <StripCell href={`${base}/system`} icon={<Siren />} label={t("admin.overview.cc.incidents")} value={t("admin.overview.cc.notTracked")} hint={t("admin.overview.cc.needs", { needs: "platform_incidents", stream: "E" })} tone="off" />
-      <StripCell href={`${base}/actions`} icon={<AlertTriangle />} label={t("admin.overview.cc.alerts")} value={t("admin.overview.cc.notTracked")} hint={t("admin.overview.cc.needs", { needs: "platform_alerts", stream: "E" })} tone="off" />
+      {s ? (
+        s.ops ? (
+          <StripCell
+            href={`${base}/incidents`}
+            icon={<Siren />}
+            label={t("admin.overview.cc.incidents")}
+            value={s.ops.incidentsActive ? t("admin.overview.cc.incidentsActive", { count: s.ops.incidentsActive }) : t("admin.overview.cc.none")}
+            hint={s.ops.incidentsMajor ? t("admin.overview.cc.incidentsMajor", { count: s.ops.incidentsMajor }) : t("admin.overview.cc.opsSource")}
+            tone={s.ops.incidentsMajor ? "bad" : s.ops.incidentsActive ? "warn" : "ok"}
+          />
+        ) : (
+          <StripCell href={`${base}/incidents`} icon={<Siren />} label={t("admin.overview.cc.incidents")} value={t("admin.overview.cc.unavailable")} hint={t("admin.overview.cc.opsSource")} tone="off" />
+        )
+      ) : null}
+      {s ? (
+        s.ops ? (
+          <StripCell
+            href={`${base}/alerts`}
+            icon={<AlertTriangle />}
+            label={t("admin.overview.cc.alerts")}
+            value={s.ops.alertsOpen ? t("admin.overview.cc.alertsOpen", { count: s.ops.alertsOpen }) : t("admin.overview.cc.none")}
+            hint={s.ops.alertsCritical ? t("admin.overview.cc.alertsCritical", { count: s.ops.alertsCritical }) : t("admin.overview.cc.opsSource")}
+            tone={s.ops.alertsCritical ? "bad" : s.ops.alertsOpen ? "warn" : "ok"}
+          />
+        ) : (
+          <StripCell href={`${base}/alerts`} icon={<AlertTriangle />} label={t("admin.overview.cc.alerts")} value={t("admin.overview.cc.unavailable")} hint={t("admin.overview.cc.opsSource")} tone="off" />
+        )
+      ) : null}
       {s ? (
         <StripCell
           href={`${base}/ai/tasks`}

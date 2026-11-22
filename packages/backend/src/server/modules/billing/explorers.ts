@@ -71,6 +71,34 @@ export async function mirrorStatus() {
   return { lastEventAt: lastEvent?.processedAt ?? null, lastEventType: lastEvent?.type ?? null, lastSyncedAt: synced, invoices, payments };
 }
 
+// ───────────── Failed-payment recovery (moved here from Platform ops) ─────────────
+
+/**
+ * Subscriptions in dunning (PAST_DUE, UNPAID, INCOMPLETE), latest failed payment first, with a link to the Stripe
+ * subscription or customer. Recovery itself happens in Stripe; this is the follow-up list. Bounded to 100 rows.
+ */
+export async function failedPaymentRecovery(ctx: RequestContext) {
+  await requireAnyPlatform(ctx, BILLING_READ);
+  const rows = await db().subscription.findMany({
+    where: { status: { in: ["PAST_DUE", "UNPAID", "INCOMPLETE"] } },
+    orderBy: [{ lastPaymentFailedAt: { sort: "desc", nulls: "last" } }, { id: "desc" }],
+    take: 100,
+    select: { id: true, organizationId: true, status: true, currency: true, lastPaymentFailedAt: true, currentPeriodEnd: true, stripeSubscriptionId: true, plan: { select: { name: true } }, organization: { select: { name: true, billingProfile: { select: { stripeCustomerId: true } } } }, items: { select: { quantity: true, unitAmountMinor: true } } },
+  });
+  return rows.map((s) => ({
+    id: s.id,
+    organizationId: s.organizationId,
+    organizationName: s.organization.name,
+    status: s.status,
+    plan: s.plan.name,
+    amountMinor: s.items.reduce((a, i) => a + i.unitAmountMinor * BigInt(i.quantity), 0n),
+    currency: s.currency,
+    lastPaymentFailedAt: s.lastPaymentFailedAt,
+    currentPeriodEnd: s.currentPeriodEnd,
+    stripeUrl: s.stripeSubscriptionId ? `https://dashboard.stripe.com/subscriptions/${s.stripeSubscriptionId}` : s.organization.billingProfile?.stripeCustomerId ? `https://dashboard.stripe.com/customers/${s.organization.billingProfile.stripeCustomerId}` : null,
+  }));
+}
+
 // ───────────── Invoices ─────────────
 
 export const invoiceFilters = z.object({ ...common, status: z.enum(INVOICE_STATUSES).optional().catch(undefined), overdue: z.enum(["1"]).optional().catch(undefined) });

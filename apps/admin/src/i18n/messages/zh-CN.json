@@ -63,6 +63,7 @@
     "integrations": "集成",
     "marketplace": "市场",
     "settings": "设置",
+    "contactRealy": "联系 Realy 支持",
     "admin": "管理控制台",
     "commandPalette": "命令面板",
     "phaseShort": "P{phase}"
@@ -2635,14 +2636,20 @@
           "aiTokens": "AI 令牌",
           "aiCost": "预估 AI 费用",
           "employeesActive": "在岗 AI 员工",
-          "aiLatency": "AI 延迟与供应商错误",
+          "aiLatency": "AI 提供商错误率",
           "deadJobs": "死信任务",
           "failedJobs": "失败的任务运行",
           "webhookFailures": "失败的 Webhook 投递",
           "emailFailures": "失败的邮件",
           "uptime": "可用率",
           "latencyP95": "请求延迟（p95）"
-        }
+        },
+        "incidentsActive": "{count, plural, other {# 个进行中}}",
+        "incidentsMajor": "{count, plural, other {# 个 SEV1–2}}",
+        "alertsOpen": "{count, plural, other {# 条未处理}}",
+        "alertsCritical": "{count, plural, other {# 条严重}}",
+        "opsSource": "platform_incidents · platform_alerts",
+        "unavailable": "不可用"
       }
     },
     "health": {
@@ -4766,7 +4773,9 @@
       "status": {
         "operational": "运行正常",
         "degraded": "性能下降",
-        "incidentsNotTracked": "事件：尚未跟踪（E 流将添加平台事件）"
+        "incidentsNone": "没有进行中的事件",
+        "incidentsActive": "{count, plural, other {# 个进行中的事件}}",
+        "incidentsUnavailable": "事件状态不可用"
       },
       "create": {
         "title": "新建",
@@ -4851,12 +4860,7 @@
         "content": "内容"
       },
       "pending": {
-        "alerts.open": "未处理的告警",
-        "incidents.open": "未解决的事件",
-        "support.tickets": "等待中的支持工单",
-        "billing.disputes": "争议与退款请求",
-        "access.reviews": "到期的访问审查",
-        "ai.budgets": "接近上限的 AI 预算"
+        "access.reviews": "到期的访问审查"
       },
       "kinds": {
         "jobs.dead": {
@@ -4869,7 +4873,7 @@
         },
         "billing.failedPayments": {
           "title": "7 天内有 {count} 笔付款失败",
-          "next": "在平台运维中查看失败的付款并联系相关组织。"
+          "next": "在“付款”页面查看失败的付款并联系相关组织。"
         },
         "marketplace.review": {
           "title": "{count} 个市场上架项等待审核",
@@ -4906,6 +4910,34 @@
         "email.failed": {
           "title": "24 小时内有 {count} 封邮件发送失败",
           "next": "检查邮件服务商状态和投递日志。"
+        },
+        "incidents.active": {
+          "title": "{count, plural, other {# 个进行中的平台事件}}",
+          "next": "打开事件，确认负责人并发布状态更新。"
+        },
+        "alerts.open": {
+          "title": "{count, plural, other {# 条未处理告警}}",
+          "next": "确认告警，排查关联服务，然后解决或升级。"
+        },
+        "support.slaBreached": {
+          "title": "{count, plural, other {# 个支持工单超出首次响应 SLA}}",
+          "next": "先回复最早超时的工单，或重新分配。"
+        },
+        "support.tickets": {
+          "title": "{count, plural, other {# 个未结支持工单}}",
+          "next": "分配无人负责的工单，并回复等待 Realy 处理的工单。"
+        },
+        "billing.disputes": {
+          "title": "{count, plural, other {# 个未结付款争议}}",
+          "next": "在截止日期前于 Stripe 提交证据，或接受争议。"
+        },
+        "ai.budgets": {
+          "title": "{count, plural, other {# 条 AI 预算规则已达到或超出限额}}",
+          "next": "查看支出，然后提高限额或暂停该范围。"
+        },
+        "access.reviews": {
+          "title": "{count, plural, other {# 个未完成的访问审查}}",
+          "next": "为每项授权决定保留或撤销，然后完成审查。"
         }
       }
     },

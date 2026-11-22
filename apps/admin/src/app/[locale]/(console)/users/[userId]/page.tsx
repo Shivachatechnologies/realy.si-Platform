@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { CountUp } from "@/components/motion/count-up";
 import { LiveDot } from "@/components/motion/live-dot";
+import { PageCrumbs } from "@/components/admin/nav/breadcrumbs";
 import { AdminHeader, AuditTimeline, Avatar, EmptyState, Facts, SectionLink, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
 import { CopyButton } from "@/components/admin/copy-button";
 import { Timestamp } from "@/components/admin/timestamp";
@@ -84,13 +85,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
 
   return (
     <div className="grid gap-5">
-      <nav aria-label={t("admin.common.breadcrumb")} className="text-xs text-muted-foreground">
-        <Link href={`${base}/users`} className="hover:text-foreground hover:underline">
-          {t("admin.nav.users")}
-        </Link>
-        <span aria-hidden> / </span>
-        <span>{u.name}</span>
-      </nav>
+      <PageCrumbs items={[{ label: u.name }]} />
       <AdminHeader
         icon={<CircleUser />}
         title={u.name}

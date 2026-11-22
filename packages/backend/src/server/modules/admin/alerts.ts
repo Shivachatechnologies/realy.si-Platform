@@ -636,9 +636,26 @@ export interface OpsActionItem {
 const INCIDENT_SEVERITY: Record<string, OpsActionItem["severity"]> = { SEV1: "CRITICAL", SEV2: "CRITICAL", SEV3: "WARNING", SEV4: "INFO" };
 
 /**
- * Stream E's action source for A's action center: open and acknowledged alerts (not snoozed) and active incidents,
- * most severe first. Each half is filtered by its own read permission. Annotate with A's `ActionSource` type at
- * merge time (`export const opsActionSource: ActionSource = …`); the shape is { key, perms, load(ctx, limit) }.
+ * Open and acknowledged alerts and active incidents, most severe first, without a permission check (callers gate:
+ * `opsActionSource` per viewer, A's Action Center through the console-gate section of each item's link).
+ */
+export async function opsActionRows(include: { alerts: boolean; incidents: boolean }, limit = 20): Promise<OpsActionItem[]> {
+  const [alerts, incidents] = await Promise.all([
+    include.alerts ? db().platformAlert.findMany({ where: { status: { in: ["OPEN", "ACKNOWLEDGED"] } }, orderBy: [{ severity: "desc" }, { lastSeenAt: "desc" }], take: limit, select: { id: true, title: true, severity: true, status: true, assigneeId: true, lastSeenAt: true } }) : [],
+    include.incidents ? db().platformIncident.findMany({ where: { status: { notIn: ["RESOLVED", "CLOSED"] } }, orderBy: [{ severity: "asc" }, { detectedAt: "desc" }], take: limit, select: { id: true, number: true, title: true, severity: true, status: true, ownerId: true, detectedAt: true } }) : [],
+  ]);
+  const rank = { CRITICAL: 2, WARNING: 1, INFO: 0 } as const;
+  return [
+    ...incidents.map((i) => ({ id: `incident:${i.id}`, kind: "incident" as const, severity: INCIDENT_SEVERITY[i.severity] ?? "WARNING", title: `#${i.number} ${i.title}`, href: `/incidents/${i.id}`, status: i.status, assigneeId: i.ownerId, at: i.detectedAt })),
+    ...alerts.map((a) => ({ id: `alert:${a.id}`, kind: "alert" as const, severity: a.severity, title: a.title, href: `/alerts/${a.id}`, status: a.status, assigneeId: a.assigneeId, at: a.lastSeenAt })),
+  ]
+    .sort((x, y) => rank[y.severity] - rank[x.severity] || y.at.getTime() - x.at.getTime())
+    .slice(0, limit);
+}
+
+/**
+ * Per-viewer variant of {@link opsActionRows}: each half is filtered by its own read permission. A's Action Center
+ * (`BE/admin/action-center.ts`) adapts the same rows into its `alerts.open` / `incidents.active` items.
  */
 export const opsActionSource = {
   key: "ops",
@@ -649,17 +666,7 @@ export const opsActionSource = {
       Promise.all(ALERT_READ.map((p) => canPlatform(ctx, p))).then((r) => r.some(Boolean)),
       canPlatform(ctx, "platform.incidents.read"),
     ]);
-    const [alerts, incidents] = await Promise.all([
-      alertsOk ? db().platformAlert.findMany({ where: { status: { in: ["OPEN", "ACKNOWLEDGED"] } }, orderBy: [{ severity: "desc" }, { lastSeenAt: "desc" }], take: limit, select: { id: true, title: true, severity: true, status: true, assigneeId: true, lastSeenAt: true } }) : [],
-      incidentsOk ? db().platformIncident.findMany({ where: { status: { notIn: ["RESOLVED", "CLOSED"] } }, orderBy: [{ severity: "asc" }, { detectedAt: "desc" }], take: limit, select: { id: true, number: true, title: true, severity: true, status: true, ownerId: true, detectedAt: true } }) : [],
-    ]);
-    const rank = { CRITICAL: 2, WARNING: 1, INFO: 0 } as const;
-    return [
-      ...incidents.map((i) => ({ id: `incident:${i.id}`, kind: "incident" as const, severity: INCIDENT_SEVERITY[i.severity] ?? "WARNING", title: `#${i.number} ${i.title}`, href: `/incidents/${i.id}`, status: i.status, assigneeId: i.ownerId, at: i.detectedAt })),
-      ...alerts.map((a) => ({ id: `alert:${a.id}`, kind: "alert" as const, severity: a.severity, title: a.title, href: `/alerts/${a.id}`, status: a.status, assigneeId: a.assigneeId, at: a.lastSeenAt })),
-    ]
-      .sort((x, y) => rank[y.severity] - rank[x.severity] || y.at.getTime() - x.at.getTime())
-      .slice(0, limit);
+    return opsActionRows({ alerts: alertsOk, incidents: incidentsOk }, limit);
   },
 };
 

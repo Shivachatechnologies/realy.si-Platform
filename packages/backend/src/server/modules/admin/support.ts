@@ -218,6 +218,21 @@ export async function supportQueue(ctx: RequestContext, raw: SupportQueueFilters
   };
 }
 
+/**
+ * Open platform tickets and those past their first-response SLA (Action Center `support.tickets`, stream A). No
+ * permission check: the Action Center shows the item only to admins who may open /support.
+ */
+export async function supportAttention(now = new Date()) {
+  const breachedWhere: Prisma.PlatformSupportTicketWhereInput = { firstResponseAt: null, slaDueAt: { lt: now }, status: { in: OPEN_STATUSES } };
+  const [open, breached, oldest, samples] = await Promise.all([
+    db().platformSupportTicket.count({ where: { status: { in: OPEN_STATUSES } } }),
+    db().platformSupportTicket.count({ where: breachedWhere }),
+    db().platformSupportTicket.findFirst({ where: { status: { in: OPEN_STATUSES } }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
+    db().platformSupportTicket.findMany({ where: breachedWhere, orderBy: { slaDueAt: "asc" }, take: 5, select: { id: true, number: true, subject: true, priority: true, slaDueAt: true } }),
+  ]);
+  return { open, breached, oldestAt: oldest?.createdAt ?? null, samples };
+}
+
 /** met (first response before due), breached, due (< 4 h left), ok, or none (no SLA / closed without response). */
 export function slaState(t: { slaDueAt: Date | null; firstResponseAt: Date | null; status: string }, now = new Date()) {
   if (!t.slaDueAt) return "none";

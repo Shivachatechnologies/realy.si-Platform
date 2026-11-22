@@ -61,7 +61,7 @@ export const sectionsF: NavSection[] = [
       { id: "files", href: "/files", label: "admin.files.nav", perms: FILES },
     ],
   },
-  { id: "support", href: "/support", label: "admin.support.nav", icon: LifeBuoy, order: 107, perms: SUPPORT },
+  { id: "support", group: "customers", href: "/support", label: "admin.support.nav", icon: LifeBuoy, order: 107, perms: SUPPORT },
   {
     id: "securityAudit",
     href: "/audit",

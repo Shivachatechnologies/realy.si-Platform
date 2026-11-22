@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { CreditCard, Download, SearchX } from "lucide-react";
+import { CreditCard, Download, ExternalLink, LifeBuoy, SearchX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AdminBreadcrumbs } from "@/components/admin/nav/breadcrumbs";
@@ -12,7 +12,7 @@ import { Timestamp } from "@/components/admin/timestamp";
 import { DataSource, SubNav } from "@/components/admin/billing/ui";
 import { getLocale, getT } from "@/i18n/server";
 import { formatMoney } from "@/i18n/format";
-import { PAYMENT_STATUSES, listPlatformPayments, mirrorStatus } from "@/server/modules/billing/explorers";
+import { PAYMENT_STATUSES, failedPaymentRecovery, listPlatformPayments, mirrorStatus } from "@/server/modules/billing/explorers";
 import { requireViewer } from "@/server/session";
 
 /** Payment (charge) explorer over the Stripe mirror. */
@@ -25,7 +25,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/[locale
   const res = await guard(listPlatformPayments(viewer.ctx, { ...params, cursor: sp(q.cursor) }), t("errors.forbidden"));
   if (!res.ok) return res.node;
   const { page, byStatus } = res.value;
-  const mirror = await mirrorStatus();
+  const [mirror, recovery] = await Promise.all([mirrorStatus(), failedPaymentRecovery(viewer.ctx)]);
   const base = `/${locale}/payments`;
   const exportQs = new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => !!e[1]));
   const anyFilter = Object.entries(params).some(([k, v]) => k !== "limit" && !!v);
@@ -54,6 +54,50 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/[locale
           { key: "disputes", href: `${base}/disputes`, label: t("admin.payments.disputes.title") },
         ]}
       />
+      <Card id="recovery">
+        <CardHeader icon={<LifeBuoy />} title={t("admin.ops.failedPayments")} description={t("admin.ops.failedPaymentsHint")} />
+        {recovery.length === 0 ? (
+          <EmptyState icon={<LifeBuoy />} title={t("admin.ops.noFailedPayments")} />
+        ) : (
+          <Table>
+            <THead>
+              <Tr>
+                <Th>{t("admin.invoices.common.organization")}</Th>
+                <Th>{t("admin.subscriptions.plan")}</Th>
+                <Th>{t("admin.pricing.amount")}</Th>
+                <Th>{t("admin.ops.lastFailure")}</Th>
+                <Th className="text-end">{t("admin.ops.recovery")}</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {recovery.map((f) => (
+                <Tr key={f.id}>
+                  <Td>
+                    <Link href={`/${locale}/subscriptions/${f.id}`} className="font-medium hover:underline">
+                      {f.organizationName}
+                    </Link>
+                  </Td>
+                  <Td className="text-xs">
+                    {f.plan} <StatusBadge domain="subscription" value={f.status}>{t(`admin.subscriptions.status.${f.status}`)}</StatusBadge>
+                  </Td>
+                  <Td className="tabular text-xs">{formatMoney({ amountMinor: f.amountMinor, currency: f.currency }, locale)}</Td>
+                  <Td className="text-xs whitespace-nowrap text-muted-foreground">{f.lastPaymentFailedAt ? <Timestamp value={f.lastPaymentFailedAt} mode="relative" /> : "—"}</Td>
+                  <Td className="text-end">
+                    {f.stripeUrl ? (
+                      <a href={f.stripeUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                        {t("admin.ops.openStripe")}
+                        <ExternalLink className="size-3" aria-hidden />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{t("admin.ops.noStripe")}</span>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </Card>
       <Card>
         <QuickFilters
           base={base}

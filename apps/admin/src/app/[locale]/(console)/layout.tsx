@@ -10,6 +10,8 @@ import { AdminNavDrawer, AdminSidebar } from "@/components/admin/admin-sidebar";
 import { EnvBadge, environmentInfo } from "@/components/admin/env-badge";
 import { ShellBreadcrumbs } from "@/components/admin/nav/breadcrumbs";
 import { CommandPalette } from "@/components/admin/palette/command-palette";
+import { CopilotPanel } from "@/components/admin/copilot/copilot-panel";
+import { SideDrawer } from "@/components/admin/drawer";
 import { CreateMenu } from "@/components/shell/create-menu";
 import { HealthIndicator } from "@/components/shell/health-indicator";
 import { LiveStatus } from "@/components/shell/live-status";
@@ -23,7 +25,7 @@ import { CONTROL_DEFS, CONTROL_KEYS, emergencyState } from "@/server/core/platfo
 import { actionBadges } from "@/server/modules/admin/action-center";
 import { MONITOR_PERMS } from "@/server/modules/admin/monitoring";
 import { unreadNotificationCount } from "@/server/modules/admin/notifications";
-import { shellHealth } from "@/server/modules/admin/overview";
+import { shellHealth, shellIncidents } from "@/server/modules/admin/overview";
 import { consolePermissions, preferencesFor } from "@/server/modules/admin/preferences";
 import { getSession, requireViewer } from "@/server/session";
 import { platformGrants } from "@/server/workspace";
@@ -79,12 +81,16 @@ export default async function AdminLayout({ children }: LayoutProps<"/[locale]">
   const perms = await consolePermissions(viewer.ctx);
   const permSet = new Set(perms);
   const monitor = MONITOR_PERMS.some((p) => permSet.has(p));
-  const [prefs, emergency, badges, unread, health] = await Promise.all([
+  // Stream C's read-only Admin Copilot as a shell side panel (the full page stays at /copilot).
+  const copilot = permSet.has("platform.copilot.use");
+  const incidentReader = permSet.has("platform.incidents.read") || permSet.has("platform.incidents.manage");
+  const [prefs, emergency, badges, unread, health, incidents] = await Promise.all([
     preferencesFor(viewer.user.id),
     soft(emergencyState(), { active: false, flags: [] as string[] }, "emergency"),
     soft(actionBadges(viewer.ctx), {} as Record<string, number>, "badges"),
     soft(unreadNotificationCount(viewer.ctx), 0, "notifications"),
     monitor ? soft(shellHealth(), null, "health") : Promise.resolve(null),
+    incidentReader ? soft<{ active: number; major: number } | null>(shellIncidents(), null, "incidents") : Promise.resolve(undefined),
   ]);
   // Switches are searchable (by key and translated label) for admins who may read them.
   const controls = permSet.has("platform.audit.read") ? CONTROL_KEYS.map((key) => ({ key, group: CONTROL_DEFS[key].group })) : [];
@@ -120,8 +126,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/[locale]">
                 <CommandPalette controls={controls} />
               </div>
               <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
-                <HealthIndicator base={base} health={health} />
+                <HealthIndicator base={base} health={health} incidents={incidents} />
                 <LiveStatus profileZone={viewer.user.timezone} />
+                {copilot ? (
+                  <SideDrawer label={t("admin.copilot.title")} title={t("admin.copilot.title")} description={t("admin.copilot.conversationHint")} triggerClassName="hidden md:inline-flex">
+                    <CopilotPanel base={base} suggestions={["health", "failedJobs", "spenders", "pastDue"].map((k) => t(`admin.copilot.suggestions.${k}`))} />
+                  </SideDrawer>
+                ) : null}
                 <CreateMenu />
                 <NotificationBell initialCount={unread} />
                 {appHref ? (

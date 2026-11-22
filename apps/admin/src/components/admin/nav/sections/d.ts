@@ -28,6 +28,7 @@ export const sectionsD: NavSection[] = [
   },
   {
     id: "growth",
+    group: "revenue",
     href: "/growth",
     label: "admin.growth.nav",
     icon: Rocket,

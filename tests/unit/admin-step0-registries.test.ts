@@ -66,7 +66,13 @@ describe("admin Step 0 registries", () => {
         for (const k of item.perms) expect(PERMISSION_KEYS.has(k), `${item.id}: ${k}`).toBe(true);
       }
     }
-    expect(ADMIN_NAV.map((s) => s.id)).toEqual(["overview", "users", "companies", "ai", "billing", "content", "marketplace", "features", "integrations", "system", "securityAudit", "settings"]);
+    // Streams may add sections; the Step 0 base sections stay, each once.
+    const ids = ADMIN_NAV.map((s) => s.id);
+    expect(ids).toEqual(expect.arrayContaining(["overview", "users", "companies", "ai", "billing", "content", "marketplace", "features", "integrations", "system", "securityAudit", "settings"]));
+    for (const s of ADMIN_NAV) {
+      const children = (s.children ?? []).map((c) => c.id);
+      expect(new Set(children).size, s.id).toBe(children.length);
+    }
   });
 
   it("derives breadcrumbs from the registry", () => {
@@ -87,6 +93,10 @@ describe("admin Step 0 registries", () => {
     expect(new Set(PALETTE_SOURCES.map((s) => s.group)).size).toBe(PALETTE_SOURCES.length);
     const keys = [peopleSearch, aiSearch, billingSearch, opsSearch, platformSearch].flatMap((p) => Object.keys(p.empty));
     expect(new Set(keys).size).toBe(keys.length);
-    expect(keys.sort()).toEqual(["companies", "controls", "integrations", "organizations", "tasks", "users"]);
+    // Streams may add result groups; the Step 0 base groups stay.
+    expect(keys).toEqual(expect.arrayContaining(["companies", "controls", "integrations", "organizations", "tasks", "users"]));
+    // The /search page renders every palette source: each provider result group needs one.
+    const groups = new Set(PALETTE_SOURCES.map((s) => s.group));
+    for (const k of keys) expect(groups.has(k), k).toBe(true);
   });
 });

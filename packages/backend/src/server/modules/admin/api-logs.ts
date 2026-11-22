@@ -10,9 +10,9 @@ import { daysAgo, requireAnyPlatform } from "./access";
  *
  * Writes: `recordApiRequest` is the cheap, sampled writer for `api_request_logs` (every non-2xx plus 10% of 2xx,
  * fire-and-forget, IP hashed, never bodies or headers). It is meant to be registered on the `CORE/http.ts`
- * request-complete hook that stream E owns; until that hook exists nothing calls it and the explorer says so.
+ * request-complete hook (registered in `CORE/request-hooks/f.ts`).
  * `rate_limit_events` are written by `CORE/rate-limit.ts` itself (one row per refused rule, subject and window).
- * Both tables are kept 14 days (opportunistic purge on write, plus `purgeApiLogs` for a scheduled job).
+ * Both tables are kept 14 days (opportunistic purge on write, plus `purgeApiLogs` daily in the worker, `admin.api_logs_retention`).
  */
 
 const READ = ["platform.security.read", "platform.logs.read", "platform.organizations.read", "platform.controls.manage"];

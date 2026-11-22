@@ -20,6 +20,7 @@ import { lockedNavHrefs } from "@/server/modules/entitlements/service";
 import { NAV } from "@/components/shell/nav";
 import { PlatformBanner } from "@/components/cms/platform-banner";
 import { ClientMessages } from "@/components/i18n/client-messages";
+import { ImpersonationBanner } from "../impersonate/[token]/banner";
 
 /** The admin console is a separate app (apps/admin); link to it only when ADMIN_URL is configured. */
 const adminReachable = () => !!process.env.ADMIN_URL;
@@ -126,10 +127,14 @@ function PageFallback() {
 export default async function AppLayout({ children }: LayoutProps<"/[locale]">) {
   // Authenticate before anything streams: a signed-out visitor (or an expired session cookie) is redirected to
   // sign-in by the server, instead of briefly seeing the app shell before a page-level redirect.
-  await requireViewer(await getLocale());
+  const locale = await getLocale();
+  await requireViewer(locale);
   const lockedHrefs = await lockedHrefsForViewer();
   return (
     <ClientMessages scope="[locale]/(app)">
+      <Suspense fallback={null}>
+        <ImpersonationBanner locale={locale} />
+      </Suspense>
       <Suspense fallback={null}>
         <OrgBranding />
       </Suspense>

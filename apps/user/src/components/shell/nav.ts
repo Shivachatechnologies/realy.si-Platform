@@ -13,6 +13,7 @@ import {
   Globe,
   Handshake,
   Headphones,
+  LifeBuoy,
   MessagesSquare,
   Clapperboard,
   Wallet,
@@ -123,6 +124,7 @@ export const NAV: NavSection[] = [
       item("nav.integrations", "/integrations", Blocks),
       item("nav.marketplace", "/marketplace", Store),
       item("nav.settings", "/settings", Settings),
+      item("nav.contactRealy", "/help/contact-realy", LifeBuoy),
     ],
   },
 ];

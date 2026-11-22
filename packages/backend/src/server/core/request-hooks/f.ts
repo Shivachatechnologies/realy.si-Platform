@@ -1,10 +1,25 @@
 import type { ProcessApp } from "../observability";
 
 /**
- * Stream F hooks (owned by stream F; placeholder from stream E). Register the API request logger here, e.g.
- *   const { onRequestComplete } = await import("../http");
- *   onRequestComplete((e) => recordApiRequest(e));
- * Skip HTTP hooks when `app === "worker"`.
+ * Stream F hooks: the sampled API request logger (modules/admin/api-logs.ts) on request completion. Web apps only;
+ * the worker serves no HTTP requests. Retention runs daily in the worker (`admin.api_logs_retention`, worker/ops-jobs.ts).
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- placeholder until stream F registers its hooks
-export async function installF(_app: ProcessApp): Promise<void> {}
+export async function installF(app: ProcessApp): Promise<void> {
+  if (app !== "user" && app !== "admin") return;
+  const { onRequestComplete } = await import("../http");
+  const { recordApiRequest } = await import("@/server/modules/admin/api-logs");
+  onRequestComplete((e) => {
+    recordApiRequest({
+      app,
+      method: e.method,
+      route: e.route,
+      status: e.status,
+      durationMs: e.durationMs,
+      requestId: e.requestId,
+      organizationId: e.organizationId,
+      ip: e.ip,
+      userAgent: e.userAgent,
+      errorCode: e.errorCode,
+    });
+  });
+}
