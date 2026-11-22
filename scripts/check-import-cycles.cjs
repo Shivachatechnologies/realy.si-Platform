@@ -26,7 +26,7 @@ for (const f of files) {
   G.set(f, edges);
   // top-level references (outside functions/classes methods)
   const used = new Set();
-  function visit(n, inFn){ if (ts.isFunctionLike(n) && n.body) { return; } if (ts.isIdentifier(n) && deps.has(n.text)) { const p = n.parent; if (!(p && ts.isPropertyAccessExpression(p) && p.name === n) && !(p && (ts.isImportSpecifier(p)||ts.isTypeReferenceNode(p)||ts.isTypeQueryNode(p)))) used.add(n.text); } ts.forEachChild(n, c => visit(c)); }
+  function visit(n){ if (ts.isFunctionLike(n) && n.body) { return; } if (ts.isIdentifier(n) && deps.has(n.text)) { const p = n.parent; if (!(p && ts.isPropertyAccessExpression(p) && p.name === n) && !(p && (ts.isImportSpecifier(p)||ts.isTypeReferenceNode(p)||ts.isTypeQueryNode(p)))) used.add(n.text); } ts.forEachChild(n, c => visit(c)); }
   for (const st of sf.statements) { if (ts.isImportDeclaration(st) || ts.isInterfaceDeclaration(st) || ts.isTypeAliasDeclaration(st)) continue; if (ts.isFunctionDeclaration(st)) continue; visit(st); }
   topUse.set(f, [...used].map(u => [u, deps.get(u)]));
 }

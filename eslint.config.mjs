@@ -30,6 +30,8 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // CommonJS tooling scripts (e.g. scripts/check-import-cycles.cjs) run directly under node and must use require().
+  { files: ["**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
   globalIgnores([".next/**", "**/.next/**", "out/**", "build/**", "**/next-env.d.ts", "packages/database/src/generated/**"]),
 ]);
 

@@ -14,6 +14,11 @@ export const test = base.extend<{ cspViolations: string[] }>({
         });
       };
       await context.addInitScript(() => {
+        // The informational cookie notice (components/legal/cookie-notice.tsx) is fixed to the bottom of the
+        // viewport and would intercept clicks there; start as a visitor who has already dismissed it.
+        try {
+          window.localStorage.setItem("realy_cookie_notice", "dismissed");
+        } catch {}
         document.addEventListener("securitypolicyviolation", (e) => {
           console.error(`Content Security Policy violation: ${e.violatedDirective} blocked ${e.blockedURI}`);
         });

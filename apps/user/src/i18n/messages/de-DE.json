@@ -21267,7 +21267,7 @@
       "retentionHint": "Abgeschlossene Chats und ihre Besucher werden nach diesem Zeitraum gelöscht.",
       "saved": "Gespeichert",
       "step6": "6 · Einbauen und live gehen",
-      "step6Hint": "Fügen Sie diese Zeile vor dem schließenden </body>-Tag Ihrer Website ein (oder in das Feld für eigenen Code Ihres Website-Baukastens).",
+      "step6Hint": "Fügen Sie diese Zeile vor dem schließenden '</body>'-Tag Ihrer Website ein (oder in das Feld für eigenen Code Ihres Website-Baukastens).",
       "copy": "Code kopieren",
       "copied": "Kopiert",
       "rotate": "Neuer Schlüssel",

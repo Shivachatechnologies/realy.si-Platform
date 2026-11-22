@@ -11,8 +11,9 @@ import { createEntity } from "@/server/modules/graph/service";
 import { createSession, SESSION_COOKIE } from "@/server/modules/auth/session";
 import { cancelTask, createTask, failStaleTasks, getTask, listTasks, processAgentTask, retryTask } from "@/server/modules/agents/service";
 import { setModelForTests } from "@/server/modules/agents/runtime";
+import { HIERARCHY_TOOLS, profileByKey } from "@/server/modules/agents/profiles";
 import { POST as createRoute, GET as listRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/tasks/route";
-import { expectCode, makeUser, resetDb } from "../helpers";
+import { expectCode, makeUser, raiseLimits, resetDb } from "../helpers";
 import { params, req } from "../http";
 
 beforeAll(resetDb);
@@ -45,6 +46,8 @@ const lastToolResult = (calls: MessageCreateParamsNonStreaming[], i: number) => 
 async function setup() {
   const owner = await makeUser({ name: "Founder" });
   const org = await createOrganization(owner.ctx, { name: `Tasks ${Math.random()}` });
+  // More companies and members than the Growth trial allows (1 company, 3 seats).
+  await raiseLimits(org.id, { "companies.max": 2, "seats.max": 5 });
   const company = await createCompany(owner.ctx, org.id, { name: "Acme Robotics", incorporationCountryCode: "US" });
   return { owner, org, company };
 }
@@ -90,9 +93,14 @@ describe("AI tasks", () => {
     expect(brainResult.content).not.toContain("secret");
     expect(lastToolResult(calls, 2).content).toContain("PRODUCT Acme Arm");
     // System prompt carries the role and the company; tools are the profile's.
-    expect(calls[0]!.system).toContain("sales researcher");
-    expect(calls[0]!.system).toContain("Acme Robotics");
-    expect(calls[0]!.tools!.map((t) => (t as { name: string }).name)).toEqual(["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity"]);
+    // The system prompt is sent as text blocks (the stable prefix is a prompt-cache block).
+    const system = (calls[0]!.system as { type: string; text: string }[]).map((b) => b.text).join("\n");
+    expect(system).toContain("sales researcher");
+    expect(system).toContain("Acme Robotics");
+    // Every role gets the org-chart tools (HIERARCHY_TOOLS) on top of its own.
+    const offered = calls[0]!.tools!.map((t) => (t as { name: string }).name);
+    expect(offered).toEqual(profileByKey("sales_researcher")!.tools);
+    expect(offered).toEqual(expect.arrayContaining(["search_company_brain", "read_company_graph", "read_objectives", "create_graph_entity", ...HIERARCHY_TOOLS]));
 
     const done = await getTask(owner.ctx, org.id, company.id, task.id);
     expect(done).toMatchObject({ status: "COMPLETED", attempts: 1, model: "claude-opus-5-5", inputTokens: 300, outputTokens: 150, errorCode: null });
@@ -202,11 +210,11 @@ describe("AI tasks", () => {
     const viewer = await joinAs(a.owner.ctx, a.org.id, a.company.id, "VIEWER");
     const member = await joinAs(a.owner.ctx, a.org.id, a.company.id, "MEMBER");
     const manager = await joinAs(a.owner.ctx, a.org.id, a.company.id, "MANAGER");
-    for (const u of [viewer, member]) {
-      expect((await listTasks(u.ctx, a.org.id, a.company.id)).data).toHaveLength(1);
-      await expectCode(createTask(u.ctx, a.org.id, a.company.id, { profile: "research_analyst", title: "x", instructions: "x" }), "forbidden");
-      await expectCode(cancelTask(u.ctx, a.org.id, a.company.id, task.id), "forbidden");
-    }
+    for (const u of [viewer, member]) expect((await listTasks(u.ctx, a.org.id, a.company.id)).data).toHaveLength(1);
+    await expectCode(createTask(viewer.ctx, a.org.id, a.company.id, { profile: "research_analyst", title: "x", instructions: "x" }), "forbidden");
+    await expectCode(cancelTask(viewer.ctx, a.org.id, a.company.id, task.id), "forbidden");
+    // Members run AI work too (MEMBER holds agents.run, rbac/catalog.ts).
+    expect(await createTask(member.ctx, a.org.id, a.company.id, { profile: "research_analyst", title: "x", instructions: "x" })).toMatchObject({ status: "QUEUED" });
     const mine = await createTask(manager.ctx, a.org.id, a.company.id, { profile: "product_manager", title: "PRD", instructions: "x" });
     // The manager loses the role before the task runs: it fails instead of running with stale authority.
     const assignment = await db().roleAssignment.findFirstOrThrow({ where: { organizationId: a.org.id, principalId: manager.user.id } });

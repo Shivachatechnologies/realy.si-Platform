@@ -11,6 +11,8 @@ import { currentStep, hotp } from "../../packages/backend/src/server/modules/aut
  * "not configured" states; and no horizontal page overflow from phone to desktop.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+/** The Control Center is a separate app (apps/admin) with its own session cookie. */
+const ADMIN = process.env.E2E_ADMIN_URL ?? "http://localhost:3001";
 const PASSWORD = "correct horse battery staple";
 const RUN = Date.now();
 
@@ -20,15 +22,17 @@ interface Persona {
   dir: "ltr" | "rtl";
   country: string;
   currency: string;
+  /** Currency of the Starter list price in the persona's market: GLOBAL USD, or the EU regional EUR price. */
+  planCurrency: string;
   timezone: string;
   targetMarkets: string[];
 }
 
 const PERSONAS: Persona[] = [
-  { key: "india", locale: "hi-IN", dir: "ltr", country: "IN", currency: "INR", timezone: "Asia/Kolkata", targetMarkets: ["IN"] },
-  { key: "uae", locale: "ar-AE", dir: "rtl", country: "AE", currency: "AED", timezone: "Asia/Dubai", targetMarkets: ["AE", "SA"] },
-  { key: "usa", locale: "en-US", dir: "ltr", country: "US", currency: "USD", timezone: "America/New_York", targetMarkets: ["US", "CA"] },
-  { key: "germany", locale: "de-DE", dir: "ltr", country: "DE", currency: "EUR", timezone: "Europe/Berlin", targetMarkets: ["DE", "FR"] },
+  { key: "india", locale: "hi-IN", dir: "ltr", country: "IN", currency: "INR", planCurrency: "USD", timezone: "Asia/Kolkata", targetMarkets: ["IN"] },
+  { key: "uae", locale: "ar-AE", dir: "rtl", country: "AE", currency: "AED", planCurrency: "USD", timezone: "Asia/Dubai", targetMarkets: ["AE", "SA"] },
+  { key: "usa", locale: "en-US", dir: "ltr", country: "US", currency: "USD", planCurrency: "USD", timezone: "America/New_York", targetMarkets: ["US", "CA"] },
+  { key: "germany", locale: "de-DE", dir: "ltr", country: "DE", currency: "EUR", planCurrency: "EUR", timezone: "Europe/Berlin", targetMarkets: ["DE", "FR"] },
 ];
 
 type Messages = Record<string, unknown>;
@@ -47,15 +51,17 @@ interface Account {
   orgId: string;
   companyId: string;
   companyName: string;
+  /** Single-use MFA recovery codes, for signing in to the Control Center. */
+  recoveryCodes: string[];
   state: Awaited<ReturnType<BrowserContext["storageState"]>>;
 }
 const accounts = new Map<string, Account>();
 
-async function api(request: APIRequestContext, method: "GET" | "POST" | "PUT", path: string, data?: unknown) {
-  const res = await request.fetch(`${BASE}${path}`, {
+async function api(request: APIRequestContext, method: "GET" | "POST" | "PUT", path: string, data?: unknown, base = BASE) {
+  const res = await request.fetch(`${base}${path}`, {
     method,
     data,
-    headers: { origin: BASE, ...(method === "POST" ? { "idempotency-key": `e2e-${RUN}-${Math.random()}` } : {}) },
+    headers: { origin: base, ...(method === "POST" ? { "idempotency-key": `e2e-${RUN}-${Math.random()}` } : {}) },
   });
   return { status: res.status(), body: await res.json().catch(() => null) };
 }
@@ -71,9 +77,9 @@ for (const p of PERSONAS) {
     const ctx = await personaContext(browser, p);
     const page = await ctx.newPage();
 
-    // First visit negotiates the persona's language and direction.
+    // First visit negotiates the persona's language and direction (the public site).
     await page.goto("/");
-    await expect(page).toHaveURL(new RegExp(`/${p.locale}/sign-in$`));
+    await expect(page).toHaveURL(new RegExp(`/${p.locale}$`));
     await expect(page.locator("html")).toHaveAttribute("lang", p.locale);
     await expect(page.locator("html")).toHaveAttribute("dir", p.dir);
 
@@ -105,41 +111,45 @@ for (const p of PERSONAS) {
     expect(company.body.targetMarketCodes).toEqual(p.targetMarkets);
 
     // Billing country is only ever what the user confirmed.
-    const unconfirmed = await api(ctx.request, "POST", `/api/v1/organizations/${org.body.id}/checkout/quote`, { planKey: "founder", interval: "MONTH" });
+    const unconfirmed = await api(ctx.request, "POST", `/api/v1/organizations/${org.body.id}/checkout/quote`, { planKey: "starter", interval: "MONTH" });
     expect(unconfirmed.status).toBeGreaterThanOrEqual(400);
     const profile = await api(ctx.request, "PUT", `/api/v1/organizations/${org.body.id}/billing-profile`, { billingCountryCode: p.country, confirmCountry: true });
     expect(profile.status, JSON.stringify(profile.body)).toBe(200);
-    const quote = await api(ctx.request, "POST", `/api/v1/organizations/${org.body.id}/checkout/quote`, { planKey: "founder", interval: "MONTH" });
+    const quote = await api(ctx.request, "POST", `/api/v1/organizations/${org.body.id}/checkout/quote`, { planKey: "starter", interval: "MONTH" });
     expect(quote.status, JSON.stringify(quote.body)).toBe(200);
     expect(quote.body.billingCountryCode).toBe(p.country);
-    expect(quote.body.total.currency).toBe(p.currency);
+    expect(quote.body.total.currency).toBe(p.planCurrency);
 
-    // Command Center renders in the persona's language with the company's country and timezone.
+    // Command Center renders in the persona's language; the company page shows its country and timezone.
     await page.goto(`/${p.locale}`);
+    await expect(page).toHaveURL(new RegExp(`/${p.locale}$`));
     await expect(page.locator("html")).toHaveAttribute("dir", p.dir);
-    await expect(page.getByRole("heading", { name: msg(p.locale, "nav.commandCenter") }).first()).toBeVisible();
-    await expect(page.getByText(displayName(p.country, "region", p.locale), { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(p.timezone).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: msg(p.locale, "nav.commandCenter"), exact: true }).first()).toBeVisible();
+    await page.goto(`/${p.locale}/company`);
+    await expect(page.getByRole("row").filter({ hasText: companyName })).toContainText(displayName(p.country, "region", p.locale));
+    await expect(page.getByLabel(msg(p.locale, "onboarding.timezone"), { exact: true })).toHaveValue(p.timezone);
 
-    // Public pricing: the persona's market price, formatted for the persona's locale.
+    // Public pricing: the persona's market price (Starter $99 / €99), formatted for the persona's locale.
     const pricing = await api(ctx.request, "GET", `/api/v1/catalog/pricing?country=${p.country}&interval=MONTH`);
-    const founder = pricing.body.plans.find((x: { key: string }) => x.key === "founder");
-    expect(founder.resolution.price.money.currency).toBe(p.currency);
+    const starter = pricing.body.plans.find((x: { key: string }) => x.key === "starter");
+    expect(starter.resolution.price.money).toEqual({ amountMinor: "9900", currency: p.planCurrency });
+    const money = { amountMinor: BigInt(starter.resolution.price.money.amountMinor), currency: p.planCurrency };
     await page.goto(`/${p.locale}/pricing`);
     await page.getByLabel(msg(p.locale, "pricing.country")).selectOption(p.country);
-    await expect(page.getByText(formatMoney(founder.resolution.price.money, p.locale), { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(formatMoney(money, p.locale), { exact: true }).first()).toBeVisible();
 
     // Billing settings: confirmed country, and Stripe honestly not configured.
     await page.goto(`/${p.locale}/settings/billing`);
     await expect(page.getByText(msg(p.locale, "settings.billing.notConfigured")).first()).toBeVisible();
 
-    // Not a platform admin: no admin data, and the admin API refuses.
+    // Administration lives in the separate Control Center: the user app has no admin pages or API, and the
+    // Control Center does not accept a user-app session.
     await page.goto(`/${p.locale}/admin`);
-    await expect(page.getByText(msg(p.locale, "admin.noAccess"))).toBeVisible();
-    const admin = await api(ctx.request, "GET", "/api/v1/admin/feature-flags");
-    expect(admin.status).toBe(403);
+    await expect(page).toHaveURL(new RegExp(`^${ADMIN}/[A-Za-z-]+/login`));
+    expect((await api(ctx.request, "GET", "/api/v1/admin/feature-flags")).status).toBe(404);
+    expect((await api(ctx.request, "GET", "/api/v1/admin/feature-flags", undefined, ADMIN)).status).toBe(401);
 
-    accounts.set(p.key, { persona: p, email, orgId: org.body.id, companyId: company.body.id, companyName, state: await ctx.storageState() });
+    accounts.set(p.key, { persona: p, email, orgId: org.body.id, companyId: company.body.id, companyName, recoveryCodes: confirm.body.recoveryCodes, state: await ctx.storageState() });
     await ctx.close();
 
     // OAuth providers without credentials are shown as not configured, never as working buttons.
@@ -195,6 +205,7 @@ let adminGranted = false;
 
 for (const vp of VIEWPORTS) {
   test(`no horizontal overflow at ${vp.width}px (LTR and Arabic RTL, app, admin, pricing, forms, tables)`, async ({ browser }) => {
+    test.setTimeout(180_000); // ~32 full page loads across the user app and the Control Center
     const usa = accounts.get("usa")!;
     // Platform admin view for the admin pages (read-only here; no changes are made).
     if (!adminGranted) {
@@ -212,11 +223,27 @@ for (const vp of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport: vp, storageState: usa.state });
     const page = await ctx.newPage();
     for (const locale of ["en-US", "ar-AE"]) {
-      for (const path of ["", "/company", "/settings", "/settings/members", "/settings/billing", "/settings/security", "/admin/pricing", "/admin/countries", "/admin/flags", "/admin/audit", "/admin/system"]) {
+      for (const path of ["", "/company", "/settings", "/settings/members", "/settings/billing", "/settings/security"]) {
         await assertNoHorizontalOverflow(page, `/${locale}${path}`, vp.width);
       }
     }
     await ctx.close();
+
+    // Control Center (separate app and session): sign in with a single-use recovery code as the second factor.
+    const adminCtx = await browser.newContext({ viewport: vp });
+    const signIn = await api(adminCtx.request, "POST", "/api/v1/auth/sign-in", { email: usa.email, password: PASSWORD }, ADMIN);
+    expect(signIn.status, JSON.stringify(signIn.body)).toBe(200);
+    expect(signIn.body.mfaRequired).toBe(true);
+    const mfa = await api(adminCtx.request, "POST", "/api/v1/auth/mfa/verify", { code: usa.recoveryCodes.shift() }, ADMIN);
+    expect(mfa.status, JSON.stringify(mfa.body)).toBe(200);
+    const adminPage = await adminCtx.newPage();
+    for (const locale of ["en-US", "ar-AE"]) {
+      for (const path of ["", "/pricing", "/countries", "/flags", "/audit", "/system"]) {
+        await assertNoHorizontalOverflow(adminPage, `${ADMIN}/${locale}${path}`, vp.width);
+        expect(adminPage.url(), "signed in to the Control Center").not.toContain("/login");
+      }
+    }
+    await adminCtx.close();
   });
 }
 

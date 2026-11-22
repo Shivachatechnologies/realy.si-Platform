@@ -19,6 +19,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 ARG APP=user
+# Types are a CI gate (`pnpm typecheck`); Next's in-build type pass does not fit the build's 4 GB heap (next.config.ts).
+ARG SKIP_BUILD_TYPECHECK=1
+ENV SKIP_BUILD_TYPECHECK=${SKIP_BUILD_TYPECHECK}
 COPY . .
 RUN pnpm --filter @realy/${APP} build
 

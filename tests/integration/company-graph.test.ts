@@ -8,7 +8,7 @@ import { createEdge, createEntity, deleteEdge, deleteEntity, getGraph, updateEnt
 import { GET as graphRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/graph/route";
 import { POST as entitiesRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/graph/entities/route";
 import { POST as edgesRoute } from "@/app/api/v1/organizations/[orgId]/companies/[companyId]/graph/edges/route";
-import { expectCode, makeUser, resetDb } from "../helpers";
+import { expectCode, makeUser, raiseLimits, resetDb } from "../helpers";
 import { params, req } from "../http";
 
 beforeAll(resetDb);
@@ -16,6 +16,8 @@ beforeAll(resetDb);
 async function setup() {
   const owner = await makeUser({ name: "Owner" });
   const org = await createOrganization(owner.ctx, { name: `Graph ${Math.random()}` });
+  // More companies and members than the Growth trial allows (1 company, 3 seats).
+  await raiseLimits(org.id, { "companies.max": 2, "seats.max": 5 });
   const company = await createCompany(owner.ctx, org.id, { name: "Graph Co", incorporationCountryCode: "US" });
   const add = (kind: "PERSON" | "TEAM" | "PRODUCT" | "CUSTOMER" | "VENDOR" | "PARTNER", name: string) => createEntity(owner.ctx, org.id, company.id, { kind, name });
   return { owner, org, company, add };
