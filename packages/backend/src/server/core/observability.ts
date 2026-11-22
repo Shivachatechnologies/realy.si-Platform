@@ -1,8 +1,7 @@
-import * as Sentry from "@sentry/node";
 import type { Configuration } from "@vercel/otel";
 import { env } from "./env";
 import { logger } from "./logger";
-import { sentryBeforeSend } from "./telemetry";
+import { registerSentry, sentryBeforeSend } from "./telemetry";
 
 export interface ObservabilityStatus {
   sentry: boolean;
@@ -50,6 +49,9 @@ export async function initObservability(serviceName: string): Promise<Observabil
   initialized = true;
   const e = env();
   if (e.SENTRY_DSN) {
+    // Loaded on demand: unconfigured instances never pay for the SDK at cold start.
+    const Sentry = await import("@sentry/node");
+    registerSentry(Sentry);
     Sentry.init({
       dsn: e.SENTRY_DSN,
       environment: e.SENTRY_ENVIRONMENT ?? e.NODE_ENV,

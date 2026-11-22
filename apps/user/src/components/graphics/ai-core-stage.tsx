@@ -17,9 +17,9 @@ const AiCore3D = dynamic(() => import("./ai-core-3d"), { ssr: false, loading: ()
  * animated CSS core at the same size (no layout shift); the still CSS core under reduced motion. Pauses rendering
  * when hidden or scrolled off-screen. Decorative: describe the data in surrounding text.
  */
-export function AiCoreStage({ activity = 0, nodes = 6, className, priority = 2 }: { activity?: number; nodes?: number; className?: string; priority?: number }) {
+export function AiCoreStage({ activity = 0, nodes = 6, className, priority = 2, allow3d = true }: { activity?: number; nodes?: number; className?: string; priority?: number; /** false: always the CSS core (never downloads three.js) — e.g. auth screens, where first paint matters most. */ allow3d?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { mode, paused } = useCoreMode(ref, { priority });
+  const { mode, paused } = useCoreMode(ref, { priority, allow3d });
   const [colors, setColors] = useState<{ a: [number, number, number]; b: [number, number, number] } | null>(null);
 
   useEffect(() => {

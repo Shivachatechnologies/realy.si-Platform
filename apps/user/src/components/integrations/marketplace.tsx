@@ -146,18 +146,19 @@ export function Marketplace({ locale, items, initialView }: { locale: string; it
           const group = shown.filter((i) => i.category === c);
           return (
             <section key={c} className="grid gap-3" aria-labelledby={`cat-${c}`}>
-              <div className="flex items-baseline gap-3 border-b pb-2">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b pb-2">
                 <span aria-hidden className="font-mono text-xs text-muted-foreground tabular-nums">
                   {String(idx + 1).padStart(2, "0")}
                 </span>
-                <h2 id={`cat-${c}`} className="font-display text-xl tracking-tight">
+                {/* Long single-word categories (de: "Automatisierungsplattformen") must wrap, not widen the page. */}
+                <h2 id={`cat-${c}`} className="min-w-0 font-display text-xl tracking-tight hyphens-auto [overflow-wrap:anywhere]">
                   {t(`integrations.categories.${c}`)}
                 </h2>
                 <span className="ms-auto text-xs text-muted-foreground">{t("integrations.marketplace.categoryCount", { count: group.length })}</span>
               </div>
               <Stagger as="ul" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {group.map((i) => (
-                  <StaggerItem as="li" key={i.key}>
+                  <StaggerItem as="li" key={i.key} className="min-w-0">
                     <ProviderCard locale={locale} item={i} state={i.s} />
                   </StaggerItem>
                 ))}

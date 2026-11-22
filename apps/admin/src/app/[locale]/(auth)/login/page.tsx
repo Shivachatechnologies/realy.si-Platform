@@ -21,7 +21,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps<"/[loca
   return (
     <div className="grid gap-5">
       <div className="grid gap-1.5">
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-sm border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-medium tracking-[0.08em] text-primary uppercase">
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-sm border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-medium tracking-[0.08em] text-accent-foreground uppercase">
           <ShieldCheck className="size-3.5" aria-hidden />
           {t("admin.title")}
         </span>

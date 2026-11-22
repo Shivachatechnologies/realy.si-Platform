@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { z } from "zod";
 import type { PrincipalType, ScopeType } from "@/generated/prisma/enums";
 import { db, transaction, type Tx, type Db } from "@/server/core/db";
@@ -60,6 +61,13 @@ export function invalidateGrants(ctx: RequestContext) {
   grantCache.delete(ctx);
 }
 
+/**
+ * Active-membership checks memoized per server render (React cache(): one signed-in page calls can() a dozen times
+ * for the same organization — 14 identical membership queries on /crm). Outside a React request (route handlers,
+ * the worker, tests) cache() does not memoize, so every check reads the database as before.
+ */
+const isActiveMemberThisRender = cache((organizationId: string, userId: string) => isActiveMember(db(), organizationId, userId));
+
 async function isActiveMember(client: Tx | Db, organizationId: string, userId: string): Promise<boolean> {
   const m = await client.membership.findUnique({
     where: { organizationId_userId: { organizationId, userId } },
@@ -84,7 +92,7 @@ export async function can(ctx: RequestContext, permission: string, chain: ScopeC
   if (ctx.actor.type === "SYSTEM") return true;
   if (!ctx.actor.id) return false; // anonymous
   const orgId = chainOrganization(chain);
-  if (orgId && ctx.actor.type === "USER" && !(await isActiveMember(client ?? db(), orgId, ctx.actor.id!))) {
+  if (orgId && ctx.actor.type === "USER" && !(await (client ? isActiveMember(client, orgId, ctx.actor.id!) : isActiveMemberThisRender(orgId, ctx.actor.id!)))) {
     return false;
   }
   return grantsAllow(await grantsFor(ctx, client), permission, chain);

@@ -2,19 +2,10 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { locale as localeParam } from "next/root-params";
 import { isAppLocale, type AppLocale } from "@/i18n/config";
-import { createTranslator, type Messages, type Translate } from "@/i18n/translate";
+import { createTranslator, type MessageTree, type Translate } from "@/i18n/translate";
+import { getMessages, getScopeMessages, LAZY_UNITS } from "./catalog";
 
-const loaders: Record<AppLocale, () => Promise<Messages>> = {
-  "en-US": () => import("./messages/en-US.json").then((m) => m.default),
-  "hi-IN": () => import("./messages/hi-IN.json").then((m) => m.default as Messages),
-  "ar-AE": () => import("./messages/ar-AE.json").then((m) => m.default as Messages),
-  "de-DE": () => import("./messages/de-DE.json").then((m) => m.default as Messages),
-  "zh-CN": () => import("./messages/zh-CN.json").then((m) => m.default as Messages),
-};
-
-export function getMessages(locale: AppLocale): Promise<Messages> {
-  return loaders[locale]();
-}
+export { getMessages, LAZY_UNITS };
 
 /** The active locale from the `[locale]` root segment (404 for unsupported locales). */
 export async function getLocale(): Promise<AppLocale> {
@@ -26,4 +17,12 @@ export async function getLocale(): Promise<AppLocale> {
 export async function getT(locale?: AppLocale): Promise<Translate> {
   const l = locale ?? (await getLocale());
   return createTranslator(l, await getMessages(l));
+}
+
+/**
+ * The namespaces one client-message scope sends to the browser (see components/i18n/client-messages.tsx). Server
+ * components keep the full catalog through getT/getMessages.
+ */
+export async function getClientMessages(scope: string, locale?: AppLocale): Promise<MessageTree> {
+  return getScopeMessages(locale ?? (await getLocale()), scope);
 }

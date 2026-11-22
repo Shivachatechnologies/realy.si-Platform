@@ -19,6 +19,7 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { lockedNavHrefs } from "@/server/modules/entitlements/service";
 import { NAV } from "@/components/shell/nav";
 import { PlatformBanner } from "@/components/cms/platform-banner";
+import { ClientMessages } from "@/components/i18n/client-messages";
 
 /** The admin console is a separate app (apps/admin); link to it only when ADMIN_URL is configured. */
 const adminReachable = () => !!process.env.ADMIN_URL;
@@ -128,7 +129,7 @@ export default async function AppLayout({ children }: LayoutProps<"/[locale]">) 
   await requireViewer(await getLocale());
   const lockedHrefs = await lockedHrefsForViewer();
   return (
-    <>
+    <ClientMessages scope="[locale]/(app)">
       <Suspense fallback={null}>
         <OrgBranding />
       </Suspense>
@@ -152,6 +153,6 @@ export default async function AppLayout({ children }: LayoutProps<"/[locale]">) 
           <GuideMount>{children}</GuideMount>
         </Suspense>
       </AppFrame>
-    </>
+    </ClientMessages>
   );
 }

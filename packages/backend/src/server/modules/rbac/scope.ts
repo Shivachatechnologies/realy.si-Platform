@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { ScopeType, MarketType } from "@/generated/prisma/enums";
 import type { Tx, Db } from "@/server/core/db";
 import { notFound } from "@/server/core/errors";
@@ -38,15 +39,19 @@ export async function marketChain(client: Tx | Db, marketType: MarketType, marke
   }
 }
 
-/** Resolves a company inside an organization; a company of another organization is "not found". */
-export async function companyChain(client: Tx | Db, organizationId: string, companyId: string): Promise<ScopeChain> {
+/**
+ * Resolves a company inside an organization; a company of another organization is "not found". Memoized per server
+ * render (React cache(), by argument identity: the shared db() client yes, a transaction never): pages resolve the
+ * same company chain from several widgets. Outside a React request it reads the database on every call.
+ */
+export const companyChain = cache(async function companyChain(client: Tx | Db, organizationId: string, companyId: string): Promise<ScopeChain> {
   const company = await client.company.findFirst({
     where: { id: companyId, organizationId, deletedAt: null },
     select: { id: true },
   });
   if (!company) throw notFound("Company");
   return [{ type: "COMPANY", id: companyId }, ...orgChain(organizationId)];
-}
+});
 
 export async function workspaceChain(client: Tx | Db, organizationId: string, workspaceId: string): Promise<ScopeChain> {
   const ws = await client.workspace.findFirst({

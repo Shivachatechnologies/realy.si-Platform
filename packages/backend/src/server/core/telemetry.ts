@@ -1,5 +1,5 @@
 import { SpanStatusCode, trace, type Attributes, type Span } from "@opentelemetry/api";
-import * as Sentry from "@sentry/node";
+import type * as SentryNode from "@sentry/node";
 import { logger } from "./logger";
 
 /**
@@ -50,13 +50,23 @@ export function securityEvent(name: string, attrs: Record<string, unknown> = {})
   trace.getActiveSpan()?.addEvent(`security.${name}`, safe);
 }
 
+/**
+ * The Sentry SDK is loaded only when SENTRY_DSN is configured (observability.ts imports it on demand and registers it
+ * here): importing @sentry/node costs ~200 ms of every serverless cold start. On globalThis so every copy of this
+ * module (route bundles) sees it.
+ */
+const g = globalThis as unknown as { realySentry?: typeof SentryNode };
+export function registerSentry(sdk: typeof SentryNode) {
+  g.realySentry = sdk;
+}
+
 export function sentryEnabled(): boolean {
-  return Sentry.getClient() !== undefined;
+  return g.realySentry?.getClient() !== undefined;
 }
 
 /** Report an unexpected error. No-op (besides logging) when Sentry is not configured. */
 export function captureException(err: unknown, context: Record<string, unknown> = {}) {
-  if (sentryEnabled()) Sentry.captureException(err, { extra: scrub(context) });
+  if (sentryEnabled()) g.realySentry!.captureException(err, { extra: scrub(context) });
 }
 
 /** Strip request data Sentry might attach (headers, cookies, bodies, user PII) before sending. */

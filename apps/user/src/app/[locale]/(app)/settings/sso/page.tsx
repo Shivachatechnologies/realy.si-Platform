@@ -35,7 +35,7 @@ export default async function SsoPage() {
       <Card>
         <CardHeader title={t("enterprise.sso.title")} description={t("enterprise.sso.subtitle")} />
         <CardBody className="grid gap-3 text-sm">
-          <p>
+          <p className="min-w-0">
             {t("enterprise.sso.redirectUri")} <CopyValue value={o.redirectUri} />
           </p>
           <p className="text-muted-foreground">{t("enterprise.sso.howItWorks")}</p>
