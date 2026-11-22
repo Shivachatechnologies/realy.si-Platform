@@ -14,7 +14,7 @@ export interface AiCore3DProps {
   colors: { a: [number, number, number]; b: [number, number, number] };
   /** Pause rendering (off-screen / tab hidden). */
   paused?: boolean;
-  /** "lite" on phones: fewer particles, ≤1.5 DPR, 30 fps, no MSAA. */
+  /** "lite" on phones: fewer particles, 1–2 DPR, 30 fps. */
   quality?: "full" | "lite";
 }
 
@@ -146,8 +146,8 @@ function Core({ colorA, colorB, activity }: { colorA: THREE.Color; colorB: THREE
   return (
     <group>
       <mesh ref={core}>
-        <icosahedronGeometry args={[0.82, 1]} />
-        <meshStandardMaterial ref={mat} color={colorA} emissive={colorA} emissiveIntensity={0.8} roughness={0.25} metalness={0.35} flatShading />
+        <icosahedronGeometry args={[0.82, 5]} />
+        <meshStandardMaterial ref={mat} color={colorA} emissive={colorA} emissiveIntensity={0.8} roughness={0.35} metalness={0.35} />
       </mesh>
       <mesh ref={halo}>
         <sphereGeometry args={[0.95, 32, 32]} />

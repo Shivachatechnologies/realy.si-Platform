@@ -151,7 +151,7 @@ export default async function CommandCenterPage() {
 
   return (
     <World name="command" ambient={false}>
-      <div className="mx-auto grid max-w-[1440px] gap-10">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-10">
         <CommandHero
           locale={locale}
           workload={workload}
@@ -160,7 +160,7 @@ export default async function CommandCenterPage() {
               {company ? company.name : t("command.title")}
               {company ? (
                 <span className="font-normal tracking-normal normal-case text-muted-foreground">
-                  · <LiveClock timeZone={company.timezone} />
+                  · <LiveClock timeZone={tz} />
                 </span>
               ) : null}
             </span>

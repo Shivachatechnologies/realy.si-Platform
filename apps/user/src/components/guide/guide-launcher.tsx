@@ -70,7 +70,7 @@ export function GuideLauncher() {
         aria-controls="ai-guide-panel"
         aria-keyshortcuts="Shift+?"
         className={cn(
-          "group fixed bottom-5 end-5 z-40 flex h-12 items-center gap-2 rounded-full bg-brand-gradient ps-3.5 pe-4 text-sm font-semibold text-primary-foreground shadow-glow transition-[transform,opacity] duration-300 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-safe:hover:-translate-y-0.5",
+          "group fixed end-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center gap-2 rounded-full bg-brand-gradient text-sm lg:end-5 lg:bottom-5 lg:w-auto lg:justify-start lg:ps-3.5 lg:pe-4 font-semibold text-primary-foreground shadow-glow transition-[transform,opacity] duration-300 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-safe:hover:-translate-y-0.5",
           open && "pointer-events-none translate-y-2 opacity-0",
         )}
       >
@@ -78,18 +78,21 @@ export function GuideLauncher() {
           <span className="absolute inset-0 rounded-full bg-primary-foreground/25 motion-safe:animate-live" />
           <Sparkles className="relative size-4" />
         </span>
-        <span>{t("guide.launcher")}</span>
+        <span className="sr-only lg:not-sr-only">{t("guide.launcher")}</span>
       </button>
 
-      <div
-        id="ai-guide-panel"
+      {/* Clipping layer: the closed panel sits translated off-screen; without it, mobile browsers widen the layout
+          viewport to include the panel (horizontal scroll on phones). */}
+      <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+        <div
+          id="ai-guide-panel"
         ref={panel}
         role="dialog"
         aria-modal="false"
         aria-labelledby={titleId}
         inert={!open}
         className={cn(
-          "glass-strong fixed inset-y-0 end-0 z-50 w-[min(26rem,100vw)] border-s shadow-elev-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+          "glass-strong pointer-events-auto absolute inset-y-0 end-0 w-[min(26rem,100%)] border-s shadow-elev-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
           open ? "translate-x-0" : "translate-x-full rtl:-translate-x-full",
         )}
       >
@@ -104,6 +107,7 @@ export function GuideLauncher() {
             }}
           />
         ) : null}
+        </div>
       </div>
     </>
   );

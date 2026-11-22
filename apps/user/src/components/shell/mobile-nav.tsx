@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowUp, CheckSquare, ClipboardCheck, LayoutDashboard, Menu, Sparkles, Users, X, type LucideIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { CheckSquare, ClipboardCheck, LayoutDashboard, Menu, Users, type LucideIcon } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { PlanLockBadge } from "@/components/billing/upgrade-prompt";
@@ -73,13 +73,13 @@ function RealyTab({ pathname }: { pathname: string | null }) {
   const onConsole = pathname !== null && isActive(pathname, locale, "/realy");
   const body = (
     <>
-      <span className={cn("jv-glass jv-talk-glow relative -mt-7 grid size-[3.75rem] place-items-center rounded-full shadow-elev-3", (open || onConsole) && "border-[var(--jarvis-cyan)]")}>
+      <span className={cn("jv-glass jv-talk-glow relative -mt-7 grid size-[3.75rem] transition-transform active:scale-95 place-items-center rounded-full shadow-elev-3", (open || onConsole) && "border-[var(--jarvis-cyan)]")}>
         <JarvisCore state="IDLE" level={silent} pulses={{}} activity={0} compact className="size-12" />
       </span>
       <span className={cn("max-w-full truncate leading-none", (open || onConsole) && "text-foreground")}>{t("jarvis.dock.title")}</span>
     </>
   );
-  const cls = "press relative flex min-h-14 min-w-0 flex-col items-center justify-end gap-1 px-1 pb-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  const cls = "relative flex min-h-14 min-w-0 flex-col items-center justify-end gap-1 px-1 pb-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
   if (onConsole)
     return (
       <Link href={`/${locale}/realy`} aria-current="page" aria-label={t("jarvis.dock.title")} className={cls}>
@@ -143,125 +143,5 @@ export function MobileTabBar({ onMore, moreOpen, lockedHrefs }: { onMore: () => 
         <TabsWithPath onMore={onMore} moreOpen={moreOpen} lockedHrefs={lockedHrefs} />
       </Suspense>
     </nav>
-  );
-}
-
-function CommandSheet({ hidden }: { hidden: boolean }) {
-  const { t, locale } = useI18n();
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-  const input = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const id = requestAnimationFrame(() => input.current?.focus());
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  function submit(e?: FormEvent) {
-    e?.preventDefault();
-    const text = q.trim();
-    setOpen(false);
-    setQ("");
-    router.push(`/${locale}/command${text ? `?q=${encodeURIComponent(text)}` : ""}`);
-  }
-
-  if (hidden) return null;
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        className="press fixed start-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-gradient ps-3.5 pe-4 text-sm font-medium text-primary-foreground shadow-glow lg:hidden"
-      >
-        <Sparkles className="size-4" aria-hidden />
-        {t("shell.askAi")}
-      </button>
-      <div
-        className={cn(
-          "fixed inset-0 z-40 bg-[oklch(0.12_0.02_275/0.45)] backdrop-blur-[2px] transition-opacity duration-200 lg:hidden",
-          open ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-        onClick={() => setOpen(false)}
-        aria-hidden
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("shell.askAiTitle")}
-        inert={!open}
-        className={cn(
-          "glass-strong fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-elev-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:hidden",
-          open ? "translate-y-0" : "translate-y-full",
-        )}
-      >
-        <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-border-strong" />
-        <div className="mb-2 flex items-center gap-2">
-          <span aria-hidden className="grid size-8 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-glow">
-            <Sparkles className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">{t("shell.askAiTitle")}</p>
-            <p className="truncate text-xs text-muted-foreground">{t("shell.askAiHint")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="ms-auto grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-            aria-label={t("common.close")}
-          >
-            <X className="size-5" aria-hidden />
-          </button>
-        </div>
-        <form onSubmit={submit} className="flex items-end gap-2 rounded-2xl border bg-surface p-2 focus-within:border-ring">
-          <label htmlFor="mobile-command" className="sr-only">
-            {t("shell.askAiTitle")}
-          </label>
-          <textarea
-            id="mobile-command"
-            ref={input}
-            value={q}
-            rows={2}
-            maxLength={2000}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) submit(e);
-            }}
-            placeholder={t("dna.command.entryPlaceholder")}
-            className="min-h-11 flex-1 resize-none bg-transparent px-2 py-2 text-base outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="submit"
-            className="grid size-11 shrink-0 place-items-center rounded-xl bg-foreground text-background"
-            aria-label={t("dna.command.entryGo")}
-          >
-            <ArrowUp className="size-5" aria-hidden />
-          </button>
-        </form>
-      </div>
-    </>
-  );
-}
-
-function CommandSheetWithPath() {
-  const { locale } = useI18n();
-  const pathname = usePathname();
-  return <CommandSheet hidden={pathname === `/${locale}/command` || pathname.startsWith(`/${locale}/command/`)} />;
-}
-
-/** Sticky AI command entry on phones: a floating "Ask AI" button above the tab bar that opens a bottom sheet → /command?q=. */
-export function MobileCommandEntry() {
-  return (
-    <Suspense fallback={null}>
-      <CommandSheetWithPath />
-    </Suspense>
   );
 }

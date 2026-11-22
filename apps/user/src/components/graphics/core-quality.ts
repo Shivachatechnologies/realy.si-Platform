@@ -7,7 +7,7 @@ import { useReducedMotion } from "@/components/motion/use-reduced-motion";
  * Adaptive quality for the AI Core visuals (AiCoreStage, JarvisCore).
  *
  *   "full" — desktop/laptop: 3D at up to 1.75 DPR, full particle field, 60 fps.
- *   "lite" — phones and small tablets with WebGL: 3D at ≤1.5 DPR, ~40% of the particles, 30 fps cap, no MSAA.
+ *   "lite" — phones and small tablets with WebGL: 3D at 1–2 DPR (sharp on retina), ~40% of the particles, 30 fps cap.
  *   "css"  — no WebGL, Data Saver, ≤2 GB device memory, or a 3D scene that could not hold 20 fps: the animated CSS core.
  *
  * Reduced motion is handled by the callers (a gentle, non-moving CSS core). Device signals that Safari does not expose
@@ -54,7 +54,7 @@ export function downgradeCoreTier() {
 
 export const TIER_SETTINGS: Record<Exclude<CoreTier, "css">, { dpr: [number, number]; fps: number; particles: number; antialias: boolean }> = {
   full: { dpr: [0.75, 1.75], fps: 60, particles: 1, antialias: true },
-  lite: { dpr: [0.75, 1.5], fps: 30, particles: 0.4, antialias: false },
+  lite: { dpr: [1, 2], fps: 30, particles: 0.4, antialias: true },
 };
 
 /* ── One WebGL context per page ──

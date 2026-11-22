@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Aurora } from "@/components/motion/aurora";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Sidebar } from "./sidebar";
-import { MobileCommandEntry, MobileTabBar } from "./mobile-nav";
+import { MobileTabBar } from "./mobile-nav";
 import { JarvisDock } from "@/components/jarvis/jarvis-dock";
 
 export { Aurora };
@@ -112,7 +112,7 @@ export function AppFrame({ topbar, adminSlot, activity, lockedHrefs, children }:
         <Sidebar adminSlot={adminSlot} lockedHrefs={lockedHrefs} onNavigate={() => setOpen(false)} touch />
       </aside>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-x-clip">
         <header className="glass sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-2 border-b ps-[max(0.75rem,env(safe-area-inset-left))] pe-[max(0.75rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] lg:px-5">
           <button
             type="button"
@@ -136,7 +136,6 @@ export function AppFrame({ topbar, adminSlot, activity, lockedHrefs, children }:
 
       {/* Phones and tablets: bottom tab bar (+ "More" opens the drawer) and the sticky AI command entry. */}
       <MobileTabBar onMore={() => setOpen(true)} moreOpen={open} lockedHrefs={lockedHrefs} />
-      <MobileCommandEntry />
       {/* Realy voice dock (components/jarvis): idle until opened or the "Hey Realy" wake word is switched on. */}
       <JarvisDock />
     </div>
