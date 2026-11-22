@@ -200,7 +200,7 @@ export async function allReports(client: Tx | Db, companyId: string, managerId: 
 
 export async function listSchedules(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().hrWorkSchedule.findMany({
+  return db().hrWorkSchedule.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
     include: { _count: { select: { employees: { where: { archivedAt: null } } } } },
@@ -238,7 +238,7 @@ export async function archiveSchedule(ctx: RequestContext, organizationId: strin
 
 export async function listLeaveTypes(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().hrLeaveType.findMany({ where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" } });
+  return db().hrLeaveType.findMany({ take: 500, where: { organizationId, companyId, archivedAt: null }, orderBy: { name: "asc" } });
 }
 
 const nameTaken = (e: { code?: string }) => {
@@ -282,7 +282,7 @@ export async function archiveLeaveType(ctx: RequestContext, organizationId: stri
 
 export async function listHolidays(ctx: RequestContext, organizationId: string, companyId: string, year: number) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().hrHoliday.findMany({ where: { organizationId, companyId, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } }, orderBy: { date: "asc" } });
+  return db().hrHoliday.findMany({ take: 500, where: { organizationId, companyId, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } }, orderBy: { date: "asc" } });
 }
 
 export async function createHoliday(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof holidayInput>) {

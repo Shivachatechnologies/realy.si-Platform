@@ -11061,7 +11061,8 @@
       "sprints": "Sprints",
       "templates": "Vorlagen",
       "timeline": "Zeitplan",
-      "start": "Projekt starten"
+      "start": "Projekt starten",
+      "execution": "Umsetzung"
     },
     "task": {
       "add": "Neue Aufgabe",
@@ -11439,6 +11440,51 @@
       "reassign": "Neu zuweisen",
       "balanced": "Die Auslastung ist ausgeglichen – keine Umverteilung nötig.",
       "export": "Statusbericht exportieren"
+    },
+    "execution": {
+      "intro": "Aus den Aufgaben und Abhängigkeiten des Projekts verfolgt: was bereit ist, was blockiert ist und wodurch – bis alle Aufgaben erledigt sind.",
+      "objectives": "Setzt das Ziel um",
+      "milestoneDone": "erledigt",
+      "complete": "Alle Aufgaben sind erledigt.",
+      "health": "Berechneter Zustand",
+      "manualHealth": "Von Menschen gesetzt: {health}",
+      "progress": "Fortschritt",
+      "doneOf": "{done} von {total} erledigt",
+      "ready": "Startbereit",
+      "blocked": "Blockiert",
+      "overdue": "Überfällig",
+      "projected": "Voraussichtliches Ende",
+      "criticalDays": "{count, plural, one {# Tag} other {# Tage}} auf dem kritischen Pfad",
+      "blockersTitle": "Blocker",
+      "blockersHint": "Unerledigte Aufgaben, auf die andere warten – die mit der meisten wartenden Arbeit zuerst.",
+      "task": "Aufgabe",
+      "owner": "Verantwortlich",
+      "due": "Fällig",
+      "waiting": "Wartende Aufgaben",
+      "why": "Warum es zählt",
+      "otherProject": "In einem anderen Projekt",
+      "reasons": {
+        "overdue": "überfällig",
+        "unassigned": "ohne Verantwortliche",
+        "stalled": "seit 7+ Tagen kein Fortschritt",
+        "not_started": "hätte schon beginnen sollen"
+      },
+      "waitingItself": "wartet selbst auf andere Aufgaben",
+      "noBlockers": "Nichts ist blockiert.",
+      "readyTitle": "Startbereit",
+      "readyHint": "Offene Aufgaben, deren Vorgänger alle erledigt sind.",
+      "noReady": "Keine Aufgabe wartet auf den Start.",
+      "milestonesTitle": "Meilensteine",
+      "late": "verspätet",
+      "noMilestones": "Dieses Projekt hat keine Meilensteine.",
+      "stalledTitle": "Stockende Arbeit",
+      "truncated": "Nur die ersten 5.000 Aufgaben sind enthalten.",
+      "unassigned": "nicht zugewiesen",
+      "plan": "Umsetzung mit KI planen",
+      "objectivesTitle": "Ein Ziel umsetzen",
+      "objectivesHint": "Die KI-Projektleitung schlägt ein Projekt mit Meilensteinen und abhängigen Aufgaben vor; Sie genehmigen es, bevor etwas angelegt wird.",
+      "projectN": "Projekt {n}",
+      "noProject": "noch kein Projekt"
     }
   },
   "marketing": {
@@ -14033,7 +14079,9 @@
       "start": "Hier starten",
       "alerts": "Warnungen",
       "learn": "Begriffe lernen",
-      "manager": "KI-Schreibtisch"
+      "manager": "KI-Schreibtisch",
+      "roi": "ROI",
+      "monthlyPack": "Monatspaket"
     },
     "accounting": {
       "tabs": {
@@ -14976,6 +15024,18 @@
         "why": "Sie sehen, was sich geändert hat, warum und was als Nächstes zu tun ist – ohne jede Buchung zu lesen.",
         "can": "Finanzmemo erstellen, Umsatzprognose prüfen, Budgetabweichungen verstehen und Ausgaben mit einem Klick kategorisieren.",
         "next": "Budgets prüfen"
+      },
+      "roi": {
+        "what": "Rendite der Ausgaben: KI-Mitarbeitende, Abteilungen und Marketingkampagnen.",
+        "why": "Sie sehen, welche Ausgaben Umsatz zurückbringen.",
+        "can": "Erfasste Kosten mit gewonnenen Deals für jeden Zeitraum vergleichen.",
+        "next": "Berichte ansehen"
+      },
+      "monthlyPack": {
+        "what": "Der Monat auf einer Seite: GuV, Liquidität, Burn, Budgets, KI-Ausgaben und ROI.",
+        "why": "Die Führung bekommt jeden Monat dasselbe vollständige Bild.",
+        "can": "Monat wählen und den KI-CFO das Paket schreiben lassen.",
+        "next": "Berichte ansehen"
       }
     },
     "os": {
@@ -15489,6 +15549,85 @@
           "words": "Ähnliche Beschreibungen: {confidence} % von {count} Treffern"
         }
       }
+    },
+    "aiSpend": {
+      "title": "KI- und Anbieterkosten",
+      "hint": "Im Kostenbuch erfasst: KI-Modelle, Bilder, Video, Sprache, Anrufe, Messaging und externe APIs.",
+      "openCosts": "Kosten öffnen",
+      "empty": "Für diesen Zeitraum sind keine KI- oder Anbieterkosten erfasst.",
+      "period": "Ausgaben im Zeitraum",
+      "estimated": "{amount} anhand der Anbieterpreise geschätzt",
+      "monthly": "Monatsdurchschnitt",
+      "monthlyHint": "Letzte 3 volle Monate",
+      "profitAfter": "Nettogewinn nach KI- und Anbieterkosten",
+      "burnWith": "Netto-Burn inkl. KI-Kosten",
+      "runwayWith": "Runway inkl. KI-Kosten",
+      "notConverted": "In USD angezeigt und nicht zu Ihren Zahlen addiert: Das Kostenbuch führt USD und es ist kein Wechselkurs erfasst.",
+      "byCategory": "Nach Kategorie",
+      "roiLink": "Rendite dieser Ausgaben ansehen",
+      "pnlLine": "KI- und Anbieterkosten (Kostenbuch)",
+      "pnlHint": "Keine Buchung: vom Kostenbuch aus der Anbieternutzung erfasst.",
+      "categories": {
+        "AI_TOKENS": "KI-Modelle",
+        "IMAGE": "Bilder",
+        "VIDEO": "Video",
+        "VOICE": "Sprache",
+        "STT": "Sprache zu Text",
+        "TTS": "Text zu Sprache",
+        "TELEPHONY": "Telefonie",
+        "EMAIL": "E-Mail",
+        "SMS": "SMS",
+        "MESSAGING": "Messaging",
+        "EXTERNAL_API": "Externe APIs",
+        "OTHER": "Sonstiges"
+      }
+    },
+    "roi": {
+      "method": "Kosten sind erfasste Ausgaben; Erträge sind als gewonnen markierte Deals. Ein Deal zählt für einen KI-Mitarbeitenden, wenn diese KI den Lead bearbeitet hat, und für eine Kampagne, wenn er den Kampagnencode trägt. ROI wird nur angezeigt, wenn Kosten und Umsatz dieselbe Währung haben.",
+      "aiCost": "KI- und Anbieterkosten",
+      "dealsWon": "Gewonnene Deals",
+      "revenueWon": "Gewonnener Umsatz",
+      "unattributed": "Deals ohne KI-Zuordnung",
+      "empty": "In diesem Zeitraum sind keine KI-Ausgaben, Kampagnenausgaben oder gewonnenen Deals erfasst.",
+      "agentsTitle": "KI-Mitarbeitende",
+      "agentsHint": "Kosten aus dem Kostenbuch, erledigte Aufgaben und gewonnene Deals der bearbeiteten Leads.",
+      "agent": "KI-Mitarbeitende",
+      "department": "Abteilung",
+      "cost": "Kosten",
+      "tasks": "Erledigte Aufgaben",
+      "revenue": "Umsatz",
+      "roi": "ROI",
+      "noAgents": "Kein KI-Mitarbeitender hat in diesem Zeitraum erfasste Ausgaben oder zugeordnete Deals.",
+      "departmentsTitle": "Abteilungen",
+      "departmentsHint": "KI- und Anbieterkosten je Abteilung und die gewonnenen Deals ihrer KI-Mitarbeitenden.",
+      "noDepartments": "Keine Abteilungsausgaben in diesem Zeitraum.",
+      "campaignsTitle": "Kampagnen",
+      "campaignsHint": "Erfasste Kampagnenausgaben gegenüber gewonnenen Deals mit dem Kampagnencode.",
+      "campaign": "Kampagne",
+      "budget": "Budget",
+      "spend": "Ausgaben",
+      "noCampaigns": "Keine Kampagnenausgaben oder zugeordneten Deals in diesem Zeitraum.",
+      "truncated": "Nur die neuesten 5.000 gewonnenen Deals sind enthalten.",
+      "mixed": "Kosten und Umsatz haben unterschiedliche Währungen, daher wird kein ROI berechnet.",
+      "mixedShort": "andere Währung"
+    },
+    "monthlyPack": {
+      "ask": "KI-CFO das Paket schreiben lassen",
+      "month": "Monat",
+      "partial": "Dieser Monat ist noch nicht abgeschlossen: Die Zahlen gelten bis heute.",
+      "vsPrev": "{pct}% gegenüber dem Vormonat",
+      "cashEnd": "Liquidität am Monatsende",
+      "cashChange": "Veränderung {amount}",
+      "overBudget": "Budgets über dem Limit",
+      "budgetsTitle": "Budgetabweichung",
+      "budget": "Budget",
+      "planned": "Geplant",
+      "actual": "Ist",
+      "used": "Verbraucht",
+      "noBudgets": "Für diesen Monat gibt es keine Budgets.",
+      "aiTitle": "Kommentar des KI-CFO",
+      "aiHint": "Der KI-CFO liest diese Zahlen und schreibt das Paket mit Risiken und nächsten Schritten.",
+      "raw": "Paket als Text"
     }
   },
   "hr": {

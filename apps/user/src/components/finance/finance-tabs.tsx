@@ -22,6 +22,8 @@ export const FINANCE_TABS = [
   ["cashflow", "/cashflow"],
   ["accounting", "/accounting"],
   ["reports", "/reports"],
+  ["roi", "/roi"],
+  ["monthlyPack", "/monthly-pack"],
   ["learn", "/learn"],
   ["settings", "/settings"],
 ] as const;

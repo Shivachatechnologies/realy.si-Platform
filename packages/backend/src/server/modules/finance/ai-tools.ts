@@ -13,9 +13,23 @@ import { budgetVsActual } from "./transactions";
 import { financeAlertCenter } from "./alerts";
 import { moneyFlow } from "./money-flow";
 import { applyExpenseCategory, budgetVarianceExplanations, expenseCategorySuggestions, revenueForecast } from "./manager";
+import { aiSpendView, usdFromMicros } from "./ai-costs";
+import { roiAnalytics } from "./roi";
+import { cfoMonthlyPack } from "./monthly-pack";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const money = (v: bigint, currency: string) => `${fromMinor(v, currency)} ${currency}`;
+const moneyList = (xs: { currency: string; amountMinor: bigint }[]) => (xs.length ? xs.map((x) => money(x.amountMinor, x.currency)).join(" + ") : "none");
+const roiText = (v: number | null) => (v === null ? "n/a" : `${v}%`);
+const monthArg = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+
+/** One line about AI and provider spend for book summaries (see ai-costs.ts for when it is added to book figures). */
+function aiSpendLine(ai: Awaited<ReturnType<typeof aiSpendView>>, c: string) {
+  if (!ai.recorded) return "AI and provider spend: none recorded in the cost ledger for this period.";
+  const head = `AI and provider spend (cost ledger, ${ai.entries} recorded spends, ${usdFromMicros(ai.estimatedMicros)} estimated from provider prices): ${usdFromMicros(ai.micros)} in the period, ${usdFromMicros(ai.monthlyBurnMicros)}/month over the last 3 full months.`;
+  if (!ai.comparable) return `${head} Not included in the ${c} figures above: the ledger is in USD and no exchange rate is recorded.`;
+  return `${head} Including it: net profit ${ai.profitAfterAi !== null ? money(ai.profitAfterAi, c) : "n/a"}, net burn ${ai.netBurnWithAi !== null ? money(ai.netBurnWithAi, c) : "n/a"}/month, runway ${ai.runwayWithAiMonths !== null ? `${ai.runwayWithAiMonths} months` : "not burning cash"}.`;
+}
 
 /** AI tools of the finance module, registered in src/server/modules/tools/modules.ts. Use `def` from tools/define. */
 export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
@@ -57,12 +71,14 @@ export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
         monthly.push(`- ${dayString(m).slice(0, 7)}: revenue ${money(r.revenue, c)}, expenses ${money(r.expenses, c)}, profit ${money(r.profit, c)}`);
       }
       const runway = burn.netBurn > 0n ? `${(Number((cash * 10n) / burn.netBurn) / 10).toFixed(1)} months` : "not burning cash (cash-flow positive over the last 3 months)";
+      const ai = await aiSpendView(client, organizationId, companyId, c, range, { profit: pnl.profit, netBurn: burn.netBurn, cash });
       const content = [
         `Period ${dayString(range.from)} to ${dayString(addDays(range.to, -1))}, currency ${c}.`,
         `Revenue ${money(pnl.revenue, c)}; expenses ${money(pnl.expenses, c)}; net profit ${money(pnl.profit, c)}.`,
         `Cash balance now ${money(cash, c)}. Net burn ${money(burn.netBurn, c)}/month, gross burn ${money(burn.grossBurn, c)}/month. Runway: ${runway}.`,
         `MRR ${money(rr.mrr, c)}; ARR ${money(rr.arr, c)} (from active recurring invoices).`,
         `Open receivables ${money(open, c)}, of which overdue ${money(overdue, c)}.`,
+        aiSpendLine(ai, c),
         `By month:\n${monthly.join("\n")}`,
       ].join("\n");
       return { content, count: monthly.length };
@@ -557,6 +573,90 @@ export const FINANCE_TOOLS: Record<string, ToolDefinition> = {
         )
         .join("\n");
       return { content, count: rows.length, records: rows.map((b) => `finance_budget:${b.id}`) };
+    },
+  }),
+
+  read_ai_provider_costs: def({
+    name: "read_ai_provider_costs",
+    version: 1,
+    description:
+      "AI and provider spend as finance sees it (from the cost ledger: AI tokens, images, video, voice, telephony, messaging, external APIs) for a date range (default: the last 3 full months plus this month): total, per month, by category, department, AI employee and provider, the 3-month monthly average, and net profit, burn and runway including that spend when the company's currency is USD.",
+    input: z.object({ from: date.optional(), to: date.optional() }).strict(),
+    modelSchema: { type: "object", properties: { from: { type: "string", description: "Start date YYYY-MM-DD (inclusive)" }, to: { type: "string", description: "End date YYYY-MM-DD (inclusive)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 20_000,
+    actionClass: "read",
+    summarize: ({ from, to }) => `Read AI and provider costs${from || to ? ` (${from ?? "…"} – ${to ?? "today"})` : ""}`,
+    async execute({ from, to }, { ctx, organizationId, companyId }) {
+      await authorize(ctx, organizationId, companyId, "finance.read");
+      const c = (await companyInfo(db(), organizationId, companyId)).baseCurrency;
+      const range = { from: from ? toDay(from) : addMonths(monthStart(todayUtc()), -3), to: to ? addDays(toDay(to), 1) : addDays(todayUtc(), 1) };
+      if (range.from >= range.to) throw new AppError("validation_error", "from must be before to");
+      const client = db();
+      const [pnl, burn, cash] = await Promise.all([profitAndLossTotals(client, companyId, range), burnRate(client, companyId), cashBalance(client, companyId)]);
+      const ai = await aiSpendView(client, organizationId, companyId, c, range, { profit: pnl.profit, netBurn: burn.netBurn, cash });
+      if (!ai.recorded) return { content: `No AI or provider spend is recorded in the cost ledger between ${dayString(range.from)} and ${dayString(addDays(range.to, -1))}.`, count: 0 };
+      const top = (rows: { key?: string; name?: string | null; id?: string; micros: bigint }[]) => rows.slice(0, 8).map((r) => `${r.name ?? r.key ?? r.id}: ${usdFromMicros(r.micros)}`).join("; ") || "none";
+      const content = [
+        `Period ${dayString(range.from)} to ${dayString(addDays(range.to, -1))}. Ledger currency USD; company currency ${c}.`,
+        aiSpendLine(ai, c),
+        `Book result for comparison: revenue ${money(pnl.revenue, c)}, expenses ${money(pnl.expenses, c)}, net profit ${money(pnl.profit, c)}; net burn ${money(burn.netBurn, c)}/month.`,
+        `By month: ${ai.months.map((m) => `${m.month} ${usdFromMicros(m.micros)}`).join("; ")}.`,
+        `By category: ${top(ai.byCategory)}.`,
+        `By department: ${top(ai.byDepartment)}.`,
+        `By AI employee: ${top(ai.byAgent)}.`,
+        `By provider: ${top(ai.byProvider)}.`,
+      ].join("\n");
+      return { content, count: ai.entries };
+    },
+  }),
+
+  read_roi: def({
+    name: "read_roi",
+    version: 1,
+    description:
+      "Return on spend for a date range (default: the last 3 full months plus this month): per AI employee and department (AI and provider cost from the cost ledger vs won deals whose lead the AI employee worked) and per marketing campaign (recorded campaign spend vs won deals carrying the campaign code). ROI is given only when cost and revenue are in the same currency.",
+    input: z.object({ from: date.optional(), to: date.optional() }).strict(),
+    modelSchema: { type: "object", properties: { from: { type: "string", description: "Start date YYYY-MM-DD (inclusive)" }, to: { type: "string", description: "End date YYYY-MM-DD (inclusive)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 25_000,
+    actionClass: "read",
+    summarize: () => "Read ROI by AI employee, department and campaign",
+    async execute({ from, to }, { ctx, organizationId, companyId }) {
+      const range = { from: from ? toDay(from) : addMonths(monthStart(todayUtc()), -3), to: to ? addDays(toDay(to), 1) : addDays(todayUtc(), 1) };
+      if (range.from >= range.to) throw new AppError("validation_error", "from must be before to");
+      const r = await roiAnalytics(ctx, organizationId, companyId, range);
+      if (!r.byAgent.length && !r.byCampaign.length && !r.totals.dealsWon) return { content: "No AI spend, campaign spend or won deals are recorded in this period, so there is no ROI to report.", count: 0 };
+      const content = [
+        `Period ${dayString(range.from)} to ${dayString(addDays(range.to, -1))}. AI and provider cost ${usdFromMicros(r.totals.aiCostMicros)}; won deals ${r.totals.dealsWon} worth ${moneyList(r.totals.revenue)} (${r.totals.unattributedDeals} not attributed to an AI employee).`,
+        r.byAgent.length ? `AI employees:\n${r.byAgent.slice(0, 15).map((a) => `- ${a.name ?? a.id} (${a.department ?? "no department"}): cost ${usdFromMicros(a.costMicros)}, ${a.tasksCompleted} tasks completed, ${a.dealsWon} won deals worth ${moneyList(a.revenue)}, ROI ${roiText(a.roiPct)}${a.mixedCurrencies ? " (revenue in other currencies than the USD cost)" : ""}`).join("\n")}` : "AI employees: no recorded spend or attributed deals.",
+        r.byDepartment.length ? `Departments:\n${r.byDepartment.map((d) => `- ${d.key}: cost ${usdFromMicros(d.costMicros)}, ${d.dealsWon} won deals worth ${moneyList(d.revenue)}, ROI ${roiText(d.roiPct)}`).join("\n")}` : "Departments: none.",
+        r.byCampaign.length ? `Campaigns:\n${r.byCampaign.slice(0, 15).map((x) => `- ${x.name} (${x.code}, ${x.status}): spend ${moneyList(x.spend)}, ${x.dealsWon} won deals worth ${moneyList(x.revenue)}, ROI ${roiText(x.roiPct)}`).join("\n")}` : "Campaigns: no recorded spend or attributed deals.",
+      ].join("\n");
+      return { content, count: r.byAgent.length + r.byCampaign.length };
+    },
+  }),
+
+  read_cfo_monthly_pack: def({
+    name: "read_cfo_monthly_pack",
+    version: 1,
+    description:
+      "The monthly CFO pack for one month (default: the last full month): P&L vs the previous month, cash at the start and end, burn and runway, MRR/ARR, budget variance, AI and provider spend with its change, ROI highlights and overdue receivables/payables — from the books and the cost ledger.",
+    input: z.object({ month: monthArg.optional() }).strict(),
+    modelSchema: { type: "object", properties: { month: { type: "string", description: "Month YYYY-MM (default: the last full month)" } }, required: [], additionalProperties: false },
+    permissions: ["finance.read"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 30_000,
+    actionClass: "read",
+    summarize: ({ month }) => `Read the monthly CFO pack${month ? ` for ${month}` : ""}`,
+    async execute({ month }, { ctx, organizationId, companyId }) {
+      const p = await cfoMonthlyPack(ctx, organizationId, companyId, { month });
+      return { content: p.markdown, count: 1 };
     },
   }),
 };

@@ -6,6 +6,7 @@ import { advanceProductPlans } from "./product-plan";
 import { today } from "./shared";
 import { spawnNextOccurrence } from "./tasks";
 import { runDeadlineRiskAlerts, runWeeklyProjectReports } from "./delivery";
+import { runExecutionTracking } from "./execution";
 
 const QUARTER_HOUR = 15 * 60_000;
 
@@ -35,6 +36,8 @@ export const WORK_JOBS: ModuleJobs = {
     { name: "work.weekly-status-reports", everyMs: 60 * 60_000, run: () => runWeeklyProjectReports() },
     // High-severity deadline risks: the project owner is notified at most once a day per project.
     { name: "work.deadline-risk-alerts", everyMs: 6 * 60 * 60_000, run: () => runDeadlineRiskAlerts() },
+    // Objective execution tracking: close finished milestones/projects, alert owners about critical blockers (daily).
+    { name: "work.execution-tracking", everyMs: 60 * 60_000, run: () => runExecutionTracking() },
   ],
   onEvent: [],
 };

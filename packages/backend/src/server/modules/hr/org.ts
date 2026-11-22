@@ -61,7 +61,7 @@ const uniqueName = (e: unknown, what: string) => {
 
 export async function listDepartments(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().department.findMany({
+  return db().department.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: { name: "asc" },
     include: {
@@ -129,7 +129,7 @@ export async function archiveDepartment(ctx: RequestContext, organizationId: str
 
 export async function listTeams(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "hr.read");
-  return db().team.findMany({
+  return db().team.findMany({ take: 500,
     where: { organizationId, companyId, archivedAt: null },
     orderBy: { name: "asc" },
     include: {

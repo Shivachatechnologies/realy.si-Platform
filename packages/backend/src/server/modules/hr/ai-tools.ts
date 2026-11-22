@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { AppError } from "@/server/core/errors";
 import { def, type ToolDefinition } from "@/server/modules/tools/define";
 import { dayString, employeeName } from "./access";
 import { listPolicies } from "./policies";
-import { createJob, getCandidate, listOpenJobs, recordAiScore } from "./recruiting";
+import { CANDIDATE_STAGES, createJob, getCandidate, INTERVIEW_TYPES, listCandidates, listOpenJobs, recordAiScore, scheduleInterview, updateCandidate } from "./recruiting";
 import { headcountSummary } from "./summary";
 import { EMPLOYMENT_TYPES } from "./employees";
 import { createHeadcountPlan, PLAN_PRIORITIES, quarterKey, workforcePlan } from "./planning";
@@ -296,6 +297,117 @@ export const HR_TOOLS: Record<string, ToolDefinition> = {
     async execute(input, { ctx, organizationId, companyId }) {
       const r = await applyOnboardingPlan(ctx, organizationId, companyId, input);
       return { content: `Added ${r.added} step(s) to the onboarding checklist ${r.checklistId}.`, records: [`hr_checklist:${r.checklistId}`] };
+    },
+  }),
+
+  read_candidates: def({
+    name: "read_candidates",
+    version: 1,
+    description: "Lists candidates in the hiring pipeline (newest first, up to 50): id, name, job, stage, AI score, recruiter rating, source and application date. Filter by job and/or stage (ACTIVE = applied, screening, interview or offer).",
+    input: z.object({ jobId: z.string().uuid().optional(), stage: z.enum([...CANDIDATE_STAGES, "ACTIVE"]).optional(), sort: z.enum(["applied", "score", "rating"]).optional() }).strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        jobId: { type: "string", description: "Only candidates for this job" },
+        stage: { type: "string", enum: [...CANDIDATE_STAGES, "ACTIVE"], description: "Pipeline stage; ACTIVE = still in the pipeline" },
+        sort: { type: "string", enum: ["applied", "score", "rating"] },
+      },
+      required: [],
+      additionalProperties: false,
+    },
+    permissions: ["hr.manage"],
+    risk: "LOW",
+    autonomy: "AUTONOMOUS",
+    timeoutMs: 15_000,
+    actionClass: "read",
+    summarize: ({ stage }) => `Read candidates${stage ? ` (${stage})` : ""}`,
+    async execute({ jobId, stage, sort }, { ctx, organizationId, companyId }) {
+      const r = await listCandidates(ctx, organizationId, companyId, { job: jobId, stage, sort: sort ?? "applied", page: 1 });
+      if (!r.rows.length) return { content: "No candidates match.", count: 0 };
+      const content = r.rows
+        .map((c) => `- Candidate ${c.id}: ${employeeName(c)} — ${c.job.title} (job ${c.job.id}), stage ${c.stage}${c.aiScore != null ? `, AI score ${c.aiScore}` : ""}${c.rating ? `, rating ${c.rating}/5` : ""}, source ${c.source}, applied ${dayString(c.appliedAt)}`)
+        .join("\n");
+      return { content: `${r.total} candidate(s); showing ${r.rows.length}.\n${content}`, count: r.rows.length, records: r.rows.map((c) => `hr_candidate:${c.id}`) };
+    },
+  }),
+
+  move_candidate_stage: def({
+    name: "move_candidate_stage",
+    version: 1,
+    description: "Propose moving a candidate to another pipeline stage (APPLIED, SCREENING, INTERVIEW, OFFER or REJECTED, with a reason when rejecting). Hiring is done by a person. A person must approve the move first.",
+    input: z
+      .object({
+        candidateId: z.string().uuid(),
+        stage: z.enum(["APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED"]),
+        reason: z.string().trim().min(1).max(1000).optional(),
+      })
+      .strict()
+      .refine((v) => v.stage !== "REJECTED" || !!v.reason, { message: "Give a job-related reason when rejecting", path: ["reason"] }),
+    modelSchema: {
+      type: "object",
+      properties: {
+        candidateId: { type: "string" },
+        stage: { type: "string", enum: ["APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED"] },
+        reason: { type: "string", description: "Job-related reason (required when rejecting)" },
+      },
+      required: ["candidateId", "stage"],
+      additionalProperties: false,
+    },
+    permissions: ["hr.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 15_000,
+    summarize: ({ stage }) => `Move a candidate to ${stage}`,
+    async execute({ candidateId, stage, reason }, { ctx, organizationId, companyId }) {
+      const c = await updateCandidate(ctx, organizationId, companyId, candidateId, { stage, ...(stage === "REJECTED" ? { rejectedReason: reason } : reason ? { decisionNote: reason } : {}) });
+      return { content: `The candidate is now in stage ${c.stage}.`, records: [`hr_candidate:${candidateId}`] };
+    },
+  }),
+
+  schedule_interview: def({
+    name: "schedule_interview",
+    version: 1,
+    description:
+      "Propose scheduling an interview with a candidate: date and time (ISO 8601 with offset), duration, type, location or link, interviewer employee ids (default: the job's hiring manager) and notes. On approval the interview is saved, the interviewers are notified and, when a Google or Outlook calendar is connected, the event is created there (otherwise HR can download an .ics file).",
+    input: z
+      .object({
+        candidateId: z.string().uuid(),
+        scheduledAt: z.string().datetime({ offset: true }),
+        durationMin: z.number().int().min(5).max(600).optional(),
+        type: z.enum(INTERVIEW_TYPES).optional(),
+        location: z.string().trim().max(300).optional(),
+        interviewerIds: z.array(z.string().uuid()).max(10).optional(),
+        notes: z.string().trim().max(2000).optional(),
+      })
+      .strict(),
+    modelSchema: {
+      type: "object",
+      properties: {
+        candidateId: { type: "string" },
+        scheduledAt: { type: "string", description: "Start, ISO 8601 with time-zone offset, e.g. 2026-12-01T10:00:00+01:00" },
+        durationMin: { type: "integer", description: "Minutes (default 45)" },
+        type: { type: "string", enum: [...INTERVIEW_TYPES] },
+        location: { type: "string", description: "Room, address or video link" },
+        interviewerIds: { type: "array", items: { type: "string" }, description: "Employee ids of the interviewers" },
+        notes: { type: "string" },
+      },
+      required: ["candidateId", "scheduledAt"],
+      additionalProperties: false,
+    },
+    permissions: ["hr.manage"],
+    risk: "MEDIUM",
+    autonomy: "SUPERVISED",
+    timeoutMs: 30_000,
+    // The calendar provider emails the invitation to the candidate and interviewers.
+    channel: "email",
+    summarize: ({ scheduledAt, type }) => `Schedule a${type ? ` ${type.toLowerCase()}` : "n"} interview on ${scheduledAt}`,
+    async execute(input, { ctx, organizationId, companyId }) {
+      if (new Date(input.scheduledAt).getTime() < Date.now()) throw new AppError("validation_error", "The interview time is in the past");
+      // Without named interviewers the job's hiring manager interviews (when the job has one).
+      const interviewerIds = input.interviewerIds?.length ? input.interviewerIds : [(await getCandidate(ctx, organizationId, companyId, input.candidateId)).job.hiringManagerId].filter((v): v is string => !!v);
+      const iv = await scheduleInterview(ctx, organizationId, companyId, input.candidateId, { ...input, interviewerIds });
+      const cal = iv.calendar.synced ? `It was added to the connected ${iv.calendar.provider === "google_calendar" ? "Google" : "Outlook"} calendar.` : iv.calendar.provider ? `The calendar event could not be created${iv.calendar.error ? ` (${iv.calendar.error})` : ""}; HR can retry from the interview page.` : "No calendar is connected; HR can download an .ics file from the candidate page.";
+      return { content: `Interview ${iv.id} scheduled for ${iv.scheduledAt.toISOString()}. ${cal}`, records: [`hr_interview:${iv.id}`, `hr_candidate:${input.candidateId}`] };
     },
   }),
 };

@@ -926,7 +926,7 @@ export const updateRecurringInvoiceInput = recurringInvoiceInput.partial();
 
 export async function listRecurringInvoices(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  return db().recurringInvoice.findMany({ where: { organizationId, companyId }, orderBy: [{ active: "desc" }, { nextIssueDate: "asc" }], include: { account: { select: { id: true, name: true } }, _count: { select: { invoices: true } } } });
+  return db().recurringInvoice.findMany({ take: 500, where: { organizationId, companyId }, orderBy: [{ active: "desc" }, { nextIssueDate: "asc" }], include: { account: { select: { id: true, name: true } }, _count: { select: { invoices: true } } } });
 }
 
 export async function createRecurringInvoice(ctx: RequestContext, organizationId: string, companyId: string, raw: z.input<typeof recurringInvoiceInput>) {

@@ -515,7 +515,7 @@ export const updateRecurringExpenseInput = recurringExpenseInput.partial();
 
 export async function listRecurringExpenses(ctx: RequestContext, organizationId: string, companyId: string) {
   await authorize(ctx, organizationId, companyId, "finance.read");
-  return db().recurringExpense.findMany({
+  return db().recurringExpense.findMany({ take: 500,
     where: { organizationId, companyId },
     orderBy: [{ active: "desc" }, { nextRunDate: "asc" }],
     include: { financeAccount: { select: { id: true, name: true } }, category: { select: { id: true, name: true } }, account: { select: { id: true, name: true } }, department: { select: { id: true, name: true } } },
@@ -776,8 +776,9 @@ async function reconciliationState(client: Tx | ReturnType<typeof db>, companyId
   const acct = await client.financeAccount.findFirstOrThrow({ where: { id: r.financeAccountId }, select: { openingBalanceMinor: true, openingDate: true } });
   const accountTxns = { companyId, OR: [{ financeAccountId: r.financeAccountId }, { toAccountId: r.financeAccountId }] };
   const [previously, ticked, candidates] = await Promise.all([
-    client.financeTransaction.findMany({ where: { ...accountTxns, reconciledAt: { not: null }, NOT: { reconciliationId: r.id } }, select: { type: true, amountMinor: true, financeAccountId: true, toAccountId: true } }),
-    client.financeTransaction.findMany({ where: { ...accountTxns, reconciliationId: r.id }, select: { type: true, amountMinor: true, financeAccountId: true, toAccountId: true } }),
+    // Grouped sums (exact) instead of every reconciled row: the history grows without bound.
+    client.financeTransaction.groupBy({ by: ["type", "financeAccountId", "toAccountId"], where: { ...accountTxns, reconciledAt: { not: null }, NOT: { reconciliationId: r.id } }, _sum: { amountMinor: true } }),
+    client.financeTransaction.groupBy({ by: ["type", "financeAccountId", "toAccountId"], where: { ...accountTxns, reconciliationId: r.id }, _sum: { amountMinor: true } }),
     client.financeTransaction.findMany({
       where: r.status === "COMPLETED" ? { companyId, reconciliationId: r.id } : { ...accountTxns, reconciledAt: null, date: { lte: r.statementDate } },
       orderBy: [{ date: "asc" }, { id: "asc" }],
@@ -786,8 +787,9 @@ async function reconciliationState(client: Tx | ReturnType<typeof db>, companyId
     }),
   ]);
   const opening = acct.openingDate <= r.statementDate ? acct.openingBalanceMinor : 0n;
-  const startBalance = opening + previously.reduce((s, t) => s + signedFor(r.financeAccountId, t), 0n);
-  const cleared = startBalance + ticked.reduce((s, t) => s + signedFor(r.financeAccountId, t), 0n);
+  const signedSum = (rows: typeof previously) => rows.reduce((s, g) => s + signedFor(r.financeAccountId, { ...g, amountMinor: g._sum.amountMinor ?? 0n }), 0n);
+  const startBalance = opening + signedSum(previously);
+  const cleared = startBalance + signedSum(ticked);
   return {
     startBalance,
     clearedBalance: cleared,
