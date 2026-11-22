@@ -14,7 +14,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatDateTime, formatRelativeTime } from "@/i18n/format";
 import { isAppError } from "@/server/core/errors";
 import { canPlatform } from "@/server/modules/admin/access";
-import { userTrends } from "@/server/modules/admin/trends";
+import { userTrends } from "@/server/modules/admin/people-trends";
 import { PLATFORM_ROLE_KEYS, getPlatformUser } from "@/server/modules/admin/users";
 import { requestTime, requireViewer } from "@/server/session";
 

@@ -12,7 +12,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatNumber } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { aiOverview } from "@/server/modules/admin/ai";
-import { aiDailySeries } from "@/server/modules/admin/trends";
+import { aiDailySeries } from "@/server/modules/admin/ai-trends";
 import { requireViewer } from "@/server/session";
 
 /** AI Control Center: workforce, roles, models, budgets and policy across the platform. */

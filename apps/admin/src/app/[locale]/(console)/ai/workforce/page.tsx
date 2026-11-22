@@ -5,7 +5,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AdminHeader, Avatar, EmptyState, FilterBar, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
 import { OrgAiPauseButton } from "@/components/admin/ai-models-editor";
-import { EmployeeAdmin } from "@/components/admin/people-actions";
+import { EmployeeAdmin } from "@/components/admin/ai/employee-admin";
 import { db } from "@/server/core/db";
 import { getControls } from "@/server/core/platform-controls";
 import { AGENT_PROFILES } from "@/server/modules/agents/profiles";

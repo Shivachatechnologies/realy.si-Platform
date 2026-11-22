@@ -1,6 +1,6 @@
 import { LIMITS } from "@/server/core/limits";
 import { body, route } from "@/server/core/http";
-import { employeeAdminInput, getEmployeeAdmin, updateEmployeeAdmin } from "@/server/modules/admin/ops";
+import { employeeAdminInput, getEmployeeAdmin, updateEmployeeAdmin } from "@/server/modules/admin/ai-ops";
 
 type P = { employeeId: string };
 

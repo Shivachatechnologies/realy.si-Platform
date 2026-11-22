@@ -41,6 +41,7 @@
       "admin.roles",
       "admin.search",
       "admin.securityAccess",
+      "admin.shell",
       "admin.system",
       "admin.title",
       "admin.users",
@@ -68,6 +69,7 @@
       "platformModules.*",
       "pricing.features",
       "pricing.manage",
+      "pricing.read",
       "settings.billing",
       "status.*"
     ]

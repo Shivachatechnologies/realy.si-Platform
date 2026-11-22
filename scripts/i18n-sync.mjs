@@ -21,6 +21,13 @@ const args = process.argv.slice(2);
 const check = args.includes("--check");
 const add = args.includes("--add") ? args[args.indexOf("--add") + 1] : null;
 
+/** Namespaces that exist only in the admin catalogs; the sync copies product namespaces around them, never over them. */
+const ADMIN_OWNED = new Set(["admin"]);
+if (add && ADMIN_OWNED.has(add)) {
+  console.error(`i18n-sync: "${add}" is admin-owned and cannot be copied from apps/user`);
+  process.exit(1);
+}
+
 let stale = 0;
 for (const file of fs.readdirSync(userDir).filter((f) => f.endsWith(".json")).sort()) {
   const user = JSON.parse(fs.readFileSync(path.join(userDir, file), "utf8"));
@@ -31,7 +38,8 @@ for (const file of fs.readdirSync(userDir).filter((f) => f.endsWith(".json")).so
     process.exit(1);
   }
   const next = {};
-  for (const [ns, value] of Object.entries(admin)) next[ns] = ns in user ? user[ns] : value;
+  // Admin-owned namespaces are never replaced by a user-app namespace of the same name (admin.* keys live only here).
+  for (const [ns, value] of Object.entries(admin)) next[ns] = ns in user && !ADMIN_OWNED.has(ns) ? user[ns] : value;
   if (add && !(add in next)) next[add] = user[add];
   const before = `${JSON.stringify(admin, null, 2)}\n`;
   const after = `${JSON.stringify(next, null, 2)}\n`;

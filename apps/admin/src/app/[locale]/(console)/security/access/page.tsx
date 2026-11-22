@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AdminHeader, Empty, FilterBar, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
-import { RevokeSession } from "@/components/admin/people-actions";
+import { RevokeSession } from "@/components/admin/security/revoke-session";
 import { getLocale, getT } from "@/i18n/server";
 import { formatRelativeTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
-import { securityHistory } from "@/server/modules/admin/ops";
+import { securityHistory } from "@/server/modules/admin/security-access";
 import { requireViewer } from "@/server/session";
 
 /** Login history (sessions + auth events), permission-change history and session management, per user or platform-wide. */

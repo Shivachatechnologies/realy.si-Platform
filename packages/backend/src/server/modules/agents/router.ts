@@ -75,7 +75,7 @@ const NEXT_TIER: Record<ComplexityTier, ComplexityTier | null> = { simple: "stan
 export async function fallbackChain(organizationId: string, profileKey: string, model: string, tier: ComplexityTier): Promise<string[]> {
   const out: string[] = [];
   // Lazy import: admin/ops → workforce/service → agents/service → runtime → router would otherwise be a load-time cycle.
-  const { fallbackModels } = await import("@/server/modules/admin/ops");
+  const { fallbackModels } = await import("@/server/modules/admin/ai-ops");
   for (const m of await fallbackModels(model).catch(() => [] as string[])) if (!out.includes(m) && m !== model) out.push(m);
   let t = NEXT_TIER[tier];
   while (t && out.length < 3) {

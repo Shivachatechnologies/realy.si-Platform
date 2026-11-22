@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { AdminHeader, Avatar, SectionLink, StatGrid, StatTile, guard } from "@/components/admin/kit";
-import { RoleGrant, RoleRevoke } from "@/components/admin/platform-actions";
+import { RoleGrant, RoleRevoke } from "@/components/admin/people/role-actions";
 import { getLocale, getT } from "@/i18n/server";
 import { formatRelativeTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";

@@ -16,7 +16,7 @@ import { db } from "@/server/core/db";
 import { PLATFORM_MODULES } from "@/server/core/platform-controls";
 import { canPlatform } from "@/server/modules/admin/access";
 import { getPlatformOrganization, hasTenantViewGrant } from "@/server/modules/admin/tenants";
-import { organizationTrends } from "@/server/modules/admin/trends";
+import { organizationTrends } from "@/server/modules/admin/people-trends";
 import { requestTime, requireViewer } from "@/server/session";
 
 const STATUS_TONE = { ACTIVE: "success", SUSPENDED: "danger", CLOSED: "neutral" } as const;

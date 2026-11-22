@@ -58,6 +58,15 @@ export const PERMISSIONS: PermissionDef[] = [
   // Super Admin Control Center: global kill switches / platform settings, and the platform AI policy.
   { key: "platform.controls.manage", description: "change platform kill switches, maintenance and platform settings", platformOnly: true },
   ...platform("platform.ai", ["read", "manage"], "the platform AI workforce policy, models and budgets"),
+  // Control Center workstreams (docs/admin/STREAMS.md), all added in Step 0 so streams never edit this list in parallel.
+  ...platform("platform.incidents", ["read", "manage"], "platform incidents, health, alerts and postmortems"),
+  { key: "platform.alerts.manage", description: "acknowledge, assign, snooze, resolve and escalate platform alerts", platformOnly: true },
+  { key: "platform.billing.refund", description: "issue refunds and handle disputes for platform payments", platformOnly: true },
+  { key: "platform.roles.manage", description: "create, clone, edit and delete custom platform roles; run access reviews", platformOnly: true },
+  { key: "platform.impersonate", description: "start an audited, time-boxed impersonation session as a user", platformOnly: true },
+  ...platform("platform.data", ["read", "export"], "database operations, migration status, integrity checks and data exports"),
+  { key: "platform.logs.read", description: "read platform logs, error groups and API request logs", platformOnly: true },
+  { key: "platform.copilot.use", description: "use the read-only admin copilot", platformOnly: true },
 ];
 
 export const PERMISSION_KEYS = new Set(PERMISSIONS.map((p) => p.key));
@@ -76,8 +85,15 @@ export const MFA_GATED = new Set([
   "organizations.delete",
   "platform.security.manage",
   "platform.users.manage",
+  "platform.organizations.manage",
+  "platform.subscriptions.manage",
+  "platform.support.manage",
   "platform.controls.manage",
   "platform.ai.manage",
+  "platform.billing.refund",
+  "platform.roles.manage",
+  "platform.impersonate",
+  "platform.data.export",
   "payroll.manage",
   "developer.manage",
 ]);
@@ -161,6 +177,12 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
       "platform.support.read",
       "platform.audit.read",
       "platform.ai.read",
+      "platform.incidents.read",
+      "platform.incidents.manage",
+      "platform.alerts.manage",
+      "platform.data.read",
+      "platform.logs.read",
+      "platform.copilot.use",
     ],
   },
   {
@@ -168,7 +190,7 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
     name: "Billing admin",
     description: "Pricing catalog and subscriptions.",
     assignableAt: PLATFORM_SCOPES,
-    permissions: ["pricing.read", "pricing.manage", "platform.subscriptions.read", "platform.subscriptions.manage", "platform.audit.read", "globalization.read"],
+    permissions: ["pricing.read", "pricing.manage", "platform.subscriptions.read", "platform.subscriptions.manage", "platform.audit.read", "globalization.read", "platform.billing.refund"],
   },
   {
     key: "FINANCE_ADMIN",
@@ -189,7 +211,7 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
     name: "Security admin",
     description: "Security settings and audit.",
     assignableAt: PLATFORM_SCOPES,
-    permissions: ["platform.security.read", "platform.security.manage", "platform.audit.read", "flags.read", "platform.users.read"],
+    permissions: ["platform.security.read", "platform.security.manage", "platform.audit.read", "flags.read", "platform.users.read", "platform.incidents.read", "platform.logs.read"],
   },
   {
     key: "CONTENT_ADMIN",
@@ -203,14 +225,14 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
     name: "AI operations admin",
     description: "Operates the AI workforce platform-wide: models, routing, budgets, task logs and AI employees.",
     assignableAt: PLATFORM_SCOPES,
-    permissions: ["platform.ai.read", "platform.ai.manage", "platform.organizations.read", "platform.audit.read"],
+    permissions: ["platform.ai.read", "platform.ai.manage", "platform.organizations.read", "platform.audit.read", "platform.incidents.read", "platform.logs.read", "platform.copilot.use"],
   },
   {
     key: "READ_ONLY_ADMIN",
     name: "Read-only admin",
     description: "Sees every Control Center area without changing anything.",
     assignableAt: PLATFORM_SCOPES,
-    permissions: ["pricing.read", "globalization.read", "flags.read", "platform.users.read", "platform.organizations.read", "platform.subscriptions.read", "platform.security.read", "platform.support.read", "platform.audit.read", "platform.ai.read"],
+    permissions: ["pricing.read", "globalization.read", "flags.read", "platform.users.read", "platform.organizations.read", "platform.subscriptions.read", "platform.security.read", "platform.support.read", "platform.audit.read", "platform.ai.read", "platform.incidents.read", "platform.data.read", "platform.logs.read"],
   },
   {
     key: "REGION_ADMIN",

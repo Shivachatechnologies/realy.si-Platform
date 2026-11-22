@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AdminHeader, Empty, Facts, QuickFilters, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
-import { MaintenanceToggle } from "@/components/admin/people-actions";
+import { MaintenanceToggle } from "@/components/admin/ops/maintenance-toggle";
 import { getLocale, getT } from "@/i18n/server";
 import { formatMoney, formatNumber, formatRelativeTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";

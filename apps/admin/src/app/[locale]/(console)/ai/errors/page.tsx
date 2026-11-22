@@ -6,7 +6,7 @@ import { AdminHeader, Empty, StatGrid, StatTile, guard } from "@/components/admi
 import { BarList } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatNumber, formatRelativeTime } from "@/i18n/format";
-import { aiErrors } from "@/server/modules/admin/ops";
+import { aiErrors } from "@/server/modules/admin/ai-ops";
 import { requireViewer } from "@/server/session";
 
 /** AI error management: failures by error code, role and organization (7 days) with drill-down to the task logs. */

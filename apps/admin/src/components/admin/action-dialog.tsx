@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
+import { useToast } from "@/components/ui/toast";
 import { FormError } from "@/components/form-error";
 import { useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
@@ -98,11 +99,26 @@ export function ActionDialog({
   );
 }
 
-/** Call the admin API, then refresh the server-rendered page. */
-export function useAdminAction() {
+export interface AdminActionOptions {
+  /** Toast shown after the call succeeds (omit for none; the refreshed page usually shows the outcome). */
+  success?: string;
+  /** Also toast the error (default false: errors stay inline in the dialog that rethrows them). */
+  toastError?: boolean;
+}
+
+/** Call the admin API, then refresh the server-rendered page. Optional toasts via the console ToastProvider. */
+export function useAdminAction(defaults: AdminActionOptions = {}) {
   const router = useRouter();
-  return async (path: string, method: string, body: unknown) => {
-    await api(path, { method, body });
+  const toast = useToast();
+  return async (path: string, method: string, body: unknown, options: AdminActionOptions = {}) => {
+    const o = { ...defaults, ...options };
+    try {
+      await api(path, { method, body });
+    } catch (err) {
+      if (o.toastError) toast.error(err instanceof Error ? err.message : String(err));
+      throw err;
+    }
+    if (o.success) toast.success(o.success);
     router.refresh();
   };
 }

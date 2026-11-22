@@ -12,8 +12,8 @@ import { adminCapabilities } from "@/server/modules/admin/access";
 import { aiModelsOverview, aiRoutingOverview } from "@/server/modules/admin/ai-models";
 import { TierRoutingToggle, TierRowEditor } from "@/components/admin/ai-tier-editor";
 import { getControls } from "@/server/core/platform-controls";
-import { aiRouting } from "@/server/modules/admin/ops";
-import { CreditEditor, FallbackChainEditor } from "@/components/admin/people-actions";
+import { aiRouting } from "@/server/modules/admin/ai-ops";
+import { CreditEditor, FallbackChainEditor } from "@/components/admin/ai/ai-routing-editors";
 import { requireViewer } from "@/server/session";
 
 /** AI Control → Models & providers: provider switches, model catalog, defaults per profile class, org overrides, budget, cost. */

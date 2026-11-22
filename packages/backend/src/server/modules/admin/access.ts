@@ -20,6 +20,16 @@ export async function requireAnyPlatform(ctx: RequestContext, permissions: strin
 /** UI capability hint (never enforcement). */
 export const canPlatform = (ctx: RequestContext, permission: string) => can(ctx, permission, platformChain());
 
+/**
+ * Resolve several platform permissions at once (UI capability hint, never enforcement):
+ * `const caps = await capabilitiesFor(ctx, ["platform.users.manage", "pricing.read"]); caps["pricing.read"]`.
+ * Unknown keys throw (like `can`), so typos surface in tests.
+ */
+export async function capabilitiesFor<const K extends string>(ctx: RequestContext, keys: readonly K[]): Promise<Record<K, boolean>> {
+  const values = await Promise.all(keys.map((k) => can(ctx, k, platformChain())));
+  return Object.fromEntries(keys.map((k, i) => [k, values[i]!])) as Record<K, boolean>;
+}
+
 /** Permissions the admin UI needs to decide what to show, resolved once. */
 export async function adminCapabilities(ctx: RequestContext) {
   const keys = [
@@ -42,8 +52,7 @@ export async function adminCapabilities(ctx: RequestContext) {
     "platform.support.read",
     "platform.subscriptions.manage",
   ] as const;
-  const values = await Promise.all(keys.map((k) => can(ctx, k, platformChain())));
-  return Object.fromEntries(keys.map((k, i) => [k, values[i]!])) as Record<(typeof keys)[number], boolean>;
+  return capabilitiesFor(ctx, keys);
 }
 
 /** Typed confirmation for critical actions: the admin must type the exact phrase shown in the dialog. */

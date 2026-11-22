@@ -36,6 +36,14 @@ const PRICING = ["pricing.read", "platform.subscriptions.read", "globalization.r
 const OPS = ["platform.controls.manage", "platform.security.read", "platform.audit.read"];
 const PLATFORM_KEYS = ["platform.controls.manage", "platform.security.manage", "platform.security.read"];
 const PEOPLE = ["platform.users.read", "platform.organizations.read", "platform.support.read"];
+// Step 0 groups for the new Control Center sections (docs/admin/STREAMS.md). Placeholders until each stream ships.
+const AI = ["platform.ai.read", "platform.ai.manage"];
+const INCIDENTS = ["platform.incidents.read", "platform.incidents.manage"];
+const OBSERVE = [...OPS, ...INCIDENTS];
+const LOGS = ["platform.logs.read", "platform.incidents.read"];
+const DATA = ["platform.data.read", "platform.data.export"];
+const SUPPORT = ["platform.support.read", "platform.support.manage"];
+const ACCESS = ["platform.roles.manage", "platform.security.manage", "platform.security.read"];
 
 /**
  * Admin RBAC per Control Center section: the platform permissions of which ANY grants access to a page section
@@ -77,15 +85,57 @@ const SECTIONS: Record<string, string[]> = {
   "audit-logs": AUDIT,
   security: AUDIT,
   sessions: AUDIT,
-  roles: ["platform.security.read", "platform.security.manage", "platform.users.read"],
+  roles: ["platform.security.read", "platform.security.manage", "platform.users.read", "platform.roles.manage"],
   cms: CONTENT,
   "email-templates": CONTENT,
   marketplace: CONTENT,
   notes: PEOPLE,
+  // ── Step 0 placeholders, one block per stream (docs/admin/STREAMS.md). Later changes go through stream B. ──
+  // A — shell: "", search, actions, notifications and me need only a platform role (OPEN_SECTIONS below).
+  // B — people and access
+  "access-reviews": ACCESS,
+  impersonation: ["platform.impersonate"],
+  // C — AI platform
+  workflows: AI,
+  knowledge: AI,
+  copilot: ["platform.copilot.use"],
+  // D — billing and growth
+  invoices: PRICING,
+  payments: PRICING,
+  refunds: ["platform.billing.refund", "platform.subscriptions.read"],
+  credits: PRICING,
+  usage: PRICING,
+  growth: [...PRICING, "platform.users.read"],
+  analytics: [...PRICING, "platform.users.read"],
+  // E — health, incidents and operations
+  health: OBSERVE,
+  incidents: INCIDENTS,
+  alerts: ["platform.incidents.read", "platform.alerts.manage"],
+  infra: OBSERVE,
+  logs: LOGS,
+  errors: LOGS,
+  releases: OBSERVE,
+  data: DATA,
+  // F — security, platform and support
+  support: SUPPORT,
+  email: [...OPS, "platform.content.manage", "platform.support.read"],
+  telephony: ["platform.organizations.read", "platform.security.read", "platform.controls.manage"],
+  files: ["platform.organizations.read", "platform.security.read", "platform.content.manage"],
+  "api-logs": ["platform.logs.read", "platform.security.read"],
 };
+
+/**
+ * Sections every platform admin may open (no section permission): the shell pages of stream A. Listed explicitly so
+ * a missing SECTIONS entry is a visible decision, not an accident. Their content is filtered per permission.
+ */
+export const OPEN_SECTIONS: ReadonlySet<string> = new Set(["search", "actions", "notifications", "me"]);
 
 export function sectionPermissions(pathname: string): string[] | null {
   const parts = pathname.split("/").filter(Boolean);
   const section = parts[0] === "api" ? (parts[2] === "admin" ? parts[3] : undefined) : parts[1];
-  return section ? (SECTIONS[section] ?? null) : null;
+  if (!section || OPEN_SECTIONS.has(section)) return null;
+  return SECTIONS[section] ?? null;
 }
+
+/** Every gated section key (tests and the nav registry check against it). */
+export const SECTION_KEYS: readonly string[] = Object.keys(SECTIONS);

@@ -2,83 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Dialog as D } from "radix-ui";
-import {
-  ArrowRight,
-  Bot,
-  Building2,
-  CornerDownLeft,
-  CreditCard,
-  Gauge,
-  Globe2,
-  LayoutDashboard,
-  Loader2,
-  Plug,
-  Search,
-  Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Store,
-  ToggleRight,
-  User,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, CornerDownLeft, Loader2, Search } from "lucide-react";
 import { dialogOverlayClass } from "@/components/ui/dialog";
 import { useI18n } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-
-interface Item {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  children?: { href: string; label: string }[];
-}
-
-/** Admin Control Center sections (labels under admin.nav.*). */
-export const ADMIN_SECTIONS: Item[] = [
-  { href: "", label: "overview", icon: LayoutDashboard },
-  { href: "/users", label: "users", icon: Users, children: [{ href: "/users", label: "users" }, { href: "/roles", label: "roles" }, { href: "/roles/view-as", label: "viewAs" }] },
-  { href: "/organizations", label: "companies", icon: Building2 },
-  {
-    href: "/ai",
-    label: "ai",
-    icon: Bot,
-    children: [
-      { href: "/ai", label: "aiOverview" },
-      { href: "/ai/models", label: "aiModels" },
-      { href: "/ai/workforce", label: "aiWorkforce" },
-      { href: "/ai/tasks", label: "aiTasks" },
-      { href: "/ai/errors", label: "aiErrors" },
-      { href: "/ai/usage", label: "aiUsage" },
-    ],
-  },
-  {
-    href: "/pricing",
-    label: "billing",
-    icon: CreditCard,
-    children: [{ href: "/pricing", label: "pricing" }, { href: "/plans", label: "plans" }, { href: "/subscriptions", label: "subscriptions" }, { href: "/revenue", label: "revenue" }, { href: "/countries", label: "countries" }],
-  },
-  {
-    href: "/cms",
-    label: "content",
-    icon: Globe2,
-    children: [{ href: "/cms", label: "cms" }, { href: "/cms/media", label: "media" }, { href: "/email-templates", label: "emailTemplates" }, { href: "/announcements", label: "announcements" }],
-  },
-  { href: "/marketplace", label: "marketplace", icon: Store },
-  { href: "/controls", label: "features", icon: SlidersHorizontal, children: [{ href: "/controls", label: "controls" }, { href: "/flags", label: "flags" }] },
-  { href: "/integrations", label: "integrations", icon: Plug, children: [{ href: "/integrations", label: "integrations" }, { href: "/developers", label: "developers" }] },
-  { href: "/system", label: "system", icon: Gauge, children: [{ href: "/system", label: "system" }, { href: "/ops", label: "ops" }] },
-  {
-    href: "/audit",
-    label: "securityAudit",
-    icon: ShieldCheck,
-    children: [{ href: "/audit", label: "audit" }, { href: "/security", label: "security" }, { href: "/security/access", label: "securityAccess" }],
-  },
-  { href: "/settings", label: "settings", icon: Settings, children: [{ href: "/settings", label: "settings" }, { href: "/keys", label: "keys" }] },
-];
+import type { AdminSearchResult } from "@/server/modules/admin/search";
+import { ADMIN_NAV } from "./nav/registry";
+import { PALETTE_SOURCES, type PaletteHit } from "./palette/registry";
 
 function isActive(pathname: string | null, base: string, href: string) {
   if (pathname === null) return false;
@@ -91,11 +24,11 @@ function SidebarBase({ pathname }: { pathname: string | null }) {
   const base = `/${locale}`;
   return (
     <ul className="flex gap-1 overflow-x-auto pb-1 lg:grid lg:gap-0.5 lg:overflow-visible lg:pb-0">
-      {ADMIN_SECTIONS.map((s) => {
+      {ADMIN_NAV.map((s) => {
         const sectionActive = isActive(pathname, base, s.href) || !!s.children?.some((c) => isActive(pathname, base, c.href));
         const Icon = s.icon;
         return (
-          <li key={s.label} className="shrink-0">
+          <li key={s.id} className="shrink-0">
             <Link
               href={`${base}${s.href}`}
               aria-current={sectionActive && !s.children ? "page" : undefined}
@@ -106,7 +39,7 @@ function SidebarBase({ pathname }: { pathname: string | null }) {
             >
               {sectionActive ? <span aria-hidden className="absolute inset-y-2 start-0 hidden w-0.5 rounded-full bg-primary lg:block" /> : null}
               <Icon className={cn("size-4 shrink-0", sectionActive && "text-primary")} aria-hidden />
-              <span>{t(`admin.nav.${s.label}`)}</span>
+              <span>{t(s.label)}</span>
             </Link>
             {s.children && sectionActive ? (
               <ul className="ms-6 mt-0.5 hidden gap-0.5 border-s ps-2 lg:grid">
@@ -120,7 +53,7 @@ function SidebarBase({ pathname }: { pathname: string | null }) {
                         aria-current={active ? "page" : undefined}
                         className={cn("block rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2", active && "font-medium text-foreground")}
                       >
-                        {t(`admin.nav.${c.label}`)}
+                        {t(c.label)}
                       </Link>
                     </li>
                   );
@@ -151,25 +84,9 @@ export function AdminSidebar() {
 
 // ───────────── Command palette (⌘K) ─────────────
 
-interface SearchResponse {
-  users: { id: string; email: string; name: string; status: string }[];
-  organizations: { id: string; name: string; slug: string; status: string }[];
-  companies: { id: string; name: string; organizationId: string; organization: { name: string } }[];
-  tasks: { id: string; title: string; status: string }[];
-  controls: string[];
-  integrations: { provider: string; connections: number }[];
-}
-
-interface Hit {
-  id: string;
+interface Hit extends PaletteHit {
   group: string;
-  label: string;
-  sub?: string;
-  href: string;
-  icon: ReactNode;
 }
-
-const CONTROL_PAGE: Record<string, string> = { ai: "/ai", kill: "/controls", settings: "/settings" };
 
 /**
  * Global admin search: a ⌘K / Ctrl+K / "/" command palette with sections ("Go to") and live results grouped by type
@@ -184,7 +101,7 @@ export function AdminSearchBox({ controls = [] }: { controls?: { key: string; gr
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [res, setRes] = useState<{ q: string; data: SearchResponse | null } | null>(null);
+  const [res, setRes] = useState<{ q: string; data: AdminSearchResult | null } | null>(null);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -209,7 +126,7 @@ export function AdminSearchBox({ controls = [] }: { controls?: { key: string; gr
     if (!searching) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      api<SearchResponse>(`/api/v1/admin/search?q=${encodeURIComponent(needle)}`)
+      api<AdminSearchResult>(`/api/v1/admin/search?q=${encodeURIComponent(needle)}`)
         .then((r) => !cancelled && setRes({ q: needle, data: r }))
         .catch(() => !cancelled && setRes({ q: needle, data: null }));
     }, 180);
@@ -221,25 +138,19 @@ export function AdminSearchBox({ controls = [] }: { controls?: { key: string; gr
 
   const hits = useMemo<Hit[]>(() => {
     const low = needle.toLowerCase();
-    const nav: Hit[] = ADMIN_SECTIONS.flatMap((s): Hit[] => [
-      { id: `nav:${s.label}`, group: "nav", label: t(`admin.nav.${s.label}`), href: `${base}${s.href}`, icon: <s.icon /> },
+    const nav: Hit[] = ADMIN_NAV.flatMap((s): Hit[] => [
+      { id: `nav:${s.id}`, group: "nav", label: t(s.label), href: `${base}${s.href}`, icon: s.icon },
       ...(s.children ?? [])
         .filter((c) => c.href !== s.href)
-        .map((c) => ({ id: `nav:${c.label}`, group: "nav", label: t(`admin.nav.${c.label}`), sub: t(`admin.nav.${s.label}`), href: `${base}${c.href}`, icon: <s.icon /> })),
+        .map((c) => ({ id: `nav:${c.id}`, group: "nav", label: t(c.label), sub: t(s.label), href: `${base}${c.href}`, icon: s.icon })),
     ]).filter((h) => !low || h.label.toLowerCase().includes(low) || h.sub?.toLowerCase().includes(low));
     const out: Hit[] = low ? nav.slice(0, 5) : nav;
-    if (low.length >= 2) {
-      const matchedControls = controls.filter((c) => data?.controls.includes(c.key) || t(`admin.controls.keys.${c.key}.label`).toLowerCase().includes(low));
-      for (const c of matchedControls.slice(0, 6)) out.push({ id: `ctl:${c.key}`, group: "controls", label: t(`admin.controls.keys.${c.key}.label`), sub: c.key, href: `${base}${CONTROL_PAGE[c.group] ?? "/controls"}`, icon: <ToggleRight /> });
+    // Stream sources (palette/sources/<stream>.ts): live search groups and static commands, in registry order.
+    if (low) {
+      const ctx = { t, base, needle, low, data, controls };
+      for (const src of PALETTE_SOURCES) for (const h of src.hits(ctx)) out.push({ ...h, group: src.group });
     }
-    if (data) {
-      for (const u of data.users) out.push({ id: `u:${u.id}`, group: "users", label: u.name, sub: `${u.email} · ${t(`admin.users.status.${u.status}`)}`, href: `${base}/users/${u.id}`, icon: <User /> });
-      for (const o of data.organizations) out.push({ id: `o:${o.id}`, group: "organizations", label: o.name, sub: `${o.slug} · ${t(`admin.organizations.status.${o.status}`)}`, href: `${base}/organizations/${o.id}`, icon: <Building2 /> });
-      for (const c of data.companies) out.push({ id: `c:${c.id}`, group: "companies", label: c.name, sub: c.organization.name, href: `${base}/organizations/${c.organizationId}`, icon: <Building2 /> });
-      for (const task of data.tasks) out.push({ id: `t:${task.id}`, group: "tasks", label: task.title, sub: `${task.id.slice(0, 8)} · ${t(`admin.ai.status.${task.status}`)}`, href: `${base}/ai/tasks?q=${task.id}`, icon: <Bot /> });
-      for (const i of data.integrations) out.push({ id: `i:${i.provider}`, group: "integrations", label: i.provider, sub: t("admin.search.connections", { count: i.connections }), href: `${base}/integrations?provider=${i.provider}`, icon: <Plug /> });
-    }
-    if (low.length >= 2) out.push({ id: "all", group: "all", label: t("admin.search.seeAll", { q: needle }), href: `${base}/search?q=${encodeURIComponent(needle)}`, icon: <Search /> });
+    if (low.length >= 2) out.push({ id: "all", group: "all", label: t("admin.search.seeAll", { q: needle }), href: `${base}/search?q=${encodeURIComponent(needle)}`, icon: Search });
     return out;
   }, [needle, data, controls, base, t]);
 
@@ -256,12 +167,7 @@ export function AdminSearchBox({ controls = [] }: { controls?: { key: string; gr
 
   const groupLabel: Record<string, string> = {
     nav: t("admin.search.groups.nav"),
-    controls: t("admin.search.controls"),
-    users: t("admin.nav.users"),
-    organizations: t("admin.search.organizations"),
-    companies: t("admin.search.companies"),
-    tasks: t("admin.nav.aiTasks"),
-    integrations: t("admin.nav.integrations"),
+    ...Object.fromEntries(PALETTE_SOURCES.map((src) => [src.group, t(src.label)])),
     all: t("admin.search.groups.more"),
   };
   const groups = [...new Set(hits.map((h) => h.group))];
@@ -350,7 +256,7 @@ export function AdminSearchBox({ controls = [] }: { controls?: { key: string; gr
                       )}
                     >
                       <span aria-hidden className={cn("grid size-7 shrink-0 place-items-center rounded-md border bg-surface [&_svg]:size-3.5", i === current && "border-primary/40 text-primary")}>
-                        {h.icon}
+                        <h.icon />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{h.label}</span>

@@ -1,0 +1,11 @@
+// ───────────────────────────── Admin Control Center: Stream C — AI platform, workforce, tasks, workflows, knowledge, copilot ─────────────────────────────
+// Owned by stream C (docs/admin/STREAMS.md). Only stream C edits this file. Planned models: AiRequestLog (AgentTaskStatus.PAUSED goes in core.prisma, C only).
+//
+// RULES for every model in this file:
+//   - NO Prisma relations from these tables to Organization or Company (or any other core.prisma model), and no
+//     back-relation lines in core.prisma. Reference tenants with plain columns, e.g.
+//       organizationId String? @map("organization_id") @db.Uuid
+//     plus an @@index on them, and check existence in application code (the worker_job_runs.organization_id pattern).
+//   - Relations between this stream's own new tables are fine.
+//   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
+//   - At most one migration per PR, timestamp minute reserved for stream C: …_30xx.

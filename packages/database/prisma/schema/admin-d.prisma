@@ -1,0 +1,11 @@
+// ───────────────────────────── Admin Control Center: Stream D — billing, revenue, credits, usage, growth analytics ─────────────────────────────
+// Owned by stream D (docs/admin/STREAMS.md). Only stream D edits this file. Planned models: PlatformInvoice, PlatformPayment, PlatformRefund, PlatformDispute, MrrSnapshot, PlatformDailyMetric, CreditLedgerEntry, QuotaEvent.
+//
+// RULES for every model in this file:
+//   - NO Prisma relations from these tables to Organization or Company (or any other core.prisma model), and no
+//     back-relation lines in core.prisma. Reference tenants with plain columns, e.g.
+//       organizationId String? @map("organization_id") @db.Uuid
+//     plus an @@index on them, and check existence in application code (the worker_job_runs.organization_id pattern).
+//   - Relations between this stream's own new tables are fine.
+//   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
+//   - At most one migration per PR, timestamp minute reserved for stream D: …_40xx.

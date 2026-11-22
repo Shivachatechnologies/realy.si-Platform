@@ -11,7 +11,7 @@ import { BarList, TrendChart } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatNumber } from "@/i18n/format";
 import { aiCostUsage } from "@/server/modules/admin/ai";
-import { aiDailySeries } from "@/server/modules/admin/trends";
+import { aiDailySeries } from "@/server/modules/admin/ai-trends";
 import { requireViewer } from "@/server/session";
 
 const RANGES = [7, 30, 90] as const;
