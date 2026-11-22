@@ -20,6 +20,12 @@ import { VOICE_JOBS } from "@/server/modules/voice/jobs";
 import { COSTS_JOBS } from "@/server/modules/costs/jobs";
 import { CREATIVE_JOBS } from "@/server/modules/creative/jobs";
 import { SITES_JOBS } from "@/server/modules/sites/jobs";
+// Control Center stream B (people/RBAC): one DB-only job every 15 min.
+import { PEOPLE_JOBS } from "@/server/modules/admin/jobs-people";
+// Control Center stream C: hourly AI request log retention (DB only).
+import { ADMIN_C_JOBS } from "@/server/modules/admin/ai-jobs";
+// Control Center stream D: MRR snapshot 6 h, daily metrics 1 h, credit ledger 6 h, dispute deadlines 6 h (DB only).
+import { BILLING_JOBS } from "@/server/modules/billing/jobs";
 
 /** Background work contributed by business modules. */
-export const MODULE_JOBS: ModuleJobs[] = [BUILDER_JOBS, BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS, LIVECHAT_JOBS, BRIEFING_JOBS, VOICE_JOBS, SITES_JOBS, COSTS_JOBS, CREATIVE_JOBS];
+export const MODULE_JOBS: ModuleJobs[] = [BUILDER_JOBS, BRAIN_JOBS, MARKETING_JOBS, FINANCE_JOBS, HR_JOBS, WORK_JOBS, COMMS_JOBS, SUPPORT_JOBS, AUTOMATION_JOBS, INTEGRATIONS_JOBS, WORKFORCE_JOBS, BI_JOBS, MARKETPLACE_JOBS, ENTERPRISE_JOBS, CRM_JOBS, LIVECHAT_JOBS, BRIEFING_JOBS, VOICE_JOBS, SITES_JOBS, COSTS_JOBS, CREATIVE_JOBS, PEOPLE_JOBS, ADMIN_C_JOBS, BILLING_JOBS];

@@ -8,6 +8,20 @@ export interface ObservabilityStatus {
   otel: boolean;
 }
 
+export type ProcessApp = "user" | "admin" | "worker";
+
+const processStore = globalThis as unknown as { realyProcessApp?: ProcessApp };
+
+/** Which deployable this process is: the worker marks itself at start; the admin build inlines REALY_APP=admin. */
+export function processApp(): ProcessApp {
+  return processStore.realyProcessApp ?? (process.env.REALY_APP === "admin" ? "admin" : "user");
+}
+
+/** Called once by the worker entry point (src/worker/index.ts). */
+export function markProcessApp(app: ProcessApp) {
+  processStore.realyProcessApp = app;
+}
+
 export function observabilityStatus(): ObservabilityStatus {
   const e = env();
   return { sentry: !!e.SENTRY_DSN, otel: !!e.OTEL_EXPORTER_OTLP_ENDPOINT };
