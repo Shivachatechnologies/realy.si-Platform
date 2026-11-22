@@ -123,6 +123,13 @@ const baseCatalog = {
   "approval.resolved": { 1: z.object({ approvalId: id, companyId: id, tool: z.string(), status: z.string() }) },
   "objective.created": { 1: z.object({ objectiveId: id, companyId: id }) },
   "milestone.completed": { 1: z.object({ milestoneId: id, objectiveId: id, companyId: id }) },
+  // Control Center operations (stream E, modules/admin/{alerts,incidents}.ts). Platform-level: no organization.
+  // Consumers (e.g. stream A's action center) live in their own jobs.ts.
+  "platform.alert.raised": { 1: z.object({ alertId: id, rule: z.string(), severity: z.string(), service: z.string().nullable(), fingerprint: z.string() }) },
+  "platform.alert.resolved": { 1: z.object({ alertId: id, rule: z.string(), by: z.string() }) },
+  "platform.alert.escalated": { 1: z.object({ alertId: id, rule: z.string(), level: z.number().int() }) },
+  "platform.incident.opened": { 1: z.object({ incidentId: id, number: z.number().int(), severity: z.string(), source: z.string(), services: z.array(z.string()) }) },
+  "platform.incident.status_changed": { 1: z.object({ incidentId: id, number: z.number().int(), from: z.string(), to: z.string() }) },
 } as const;
 
 export const eventCatalog = baseCatalog as typeof baseCatalog & Record<DomainEventType, { 1: typeof domainEvent }>;

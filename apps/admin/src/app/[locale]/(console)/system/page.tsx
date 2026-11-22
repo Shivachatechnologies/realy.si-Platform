@@ -51,6 +51,11 @@ export default async function SystemStatusPage() {
         why={t("admin.system.why")}
         actions={
           <div className="flex flex-wrap items-center gap-3">
+            {(["health", "incidents", "alerts", "errors", "logs", "infra", "releases", "data"] as const).map((k) => (
+              <Link key={k} href={`/${locale}/${k}`} className="text-sm font-semibold text-primary hover:underline">
+                {t(`admin.system.nav.${k}`)}
+              </Link>
+            ))}
             <Link href={`/${locale}/system/jobs`} className="text-sm font-semibold text-primary hover:underline">
               {t("admin.system.jobs.title")}
             </Link>

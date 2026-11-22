@@ -26,7 +26,8 @@ import { env } from "@/server/core/env";
 import { logger } from "@/server/core/logger";
 import { relayBatch, type OutboxEvent } from "@/server/modules/events/relay";
 import { db } from "@/server/core/db";
-import { initObservability } from "@/server/core/observability";
+import { initObservability, markProcessApp } from "@/server/core/observability";
+import { monitorEventLoopDelay } from "node:perf_hooks";
 import { ensurePlatformSecretsFresh } from "@/server/core/platform-secrets";
 import { captureException, withSpan } from "@/server/core/telemetry";
 import { purgeExpiredIdempotencyKeys } from "@/server/core/idempotency";
@@ -58,6 +59,7 @@ import { MODULE_JOBS } from "./modules";
 import { workerConfig, type WorkerRole } from "./config";
 import { errorMessage, tracked, WORKER_ID, type DeadLetterSink } from "./tracking";
 import { registerSchedulers, scheduleProcessor } from "./schedules";
+import { OPS_JOBS } from "./ops-jobs";
 
 const POLL_MS = 500;
 let stopping = false;
@@ -90,7 +92,7 @@ async function maintenance(): Promise<number> {
 }
 
 /** Platform-level recurring jobs (module jobs come from src/worker/modules.ts). */
-const PLATFORM_JOBS: PeriodicJob[] = [{ name: "platform.maintenance", everyMs: 10 * 60_000, run: maintenance }];
+const PLATFORM_JOBS: PeriodicJob[] = [{ name: "platform.maintenance", everyMs: 10 * 60_000, run: maintenance }, ...OPS_JOBS];
 
 const orgOf = (data: unknown) => {
   const d = data as { organizationId?: unknown; data?: { event?: { organizationId?: unknown } } } | null;
@@ -101,11 +103,15 @@ const orgOf = (data: unknown) => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
+  markProcessApp("worker");
   // Platform keys set in the Control Center (docs/platform-keys.md): overlay before anything reads env(), then keep
   // them fresh (~30 s) for long-running jobs. Never throws; falls back to the host env.
   await ensurePlatformSecretsFresh();
   setInterval(() => void ensurePlatformSecretsFresh(), 30_000).unref();
   await initObservability("realy-worker");
+  // Stream E: error grouping of failed jobs and the warn+ log store, then this boot's release row.
+  await (await import("@/server/core/request-hooks")).installHooks("worker");
+  void (await import("@/server/modules/admin/releases")).recordRelease("worker");
   if (!workerConfigured()) {
     // Production without REDIS_URL: the web app falls back (Postgres rate limits) and reports "worker not configured".
     log.fatal("REDIS_URL is not set: the worker service needs Redis (docs/deployment.md). Exiting.");
@@ -305,10 +311,17 @@ async function main() {
   const startedAt = new Date();
   const heartbeatId = `worker:${hostname()}:${process.pid}`;
   const version = process.env.APP_VERSION ?? process.env.GIT_SHA ?? process.env.RENDER_GIT_COMMIT ?? process.env.FLY_IMAGE_REF ?? null;
+  // Event-loop lag for Admin → Infrastructure (no Redis involved: written into the Postgres heartbeat row).
+  const loopDelay = monitorEventLoopDelay({ resolution: 50 });
+  loopDelay.enable();
   const heartbeat = async () => {
     const now = new Date();
+    const mem = process.memoryUsage();
     const info = {
       paused,
+      // Queues this process does not consume right now because of platform controls (local, no Redis call).
+      pausedQueues: workers.filter((w) => (paused.agents && w.name === AGENT_TASK_QUEUE) || (paused.background && [EVENTS_QUEUE, MODULE_JOBS_QUEUE, WEBHOOKS_QUEUE].includes(w.name))).map((w) => w.name),
+      process: { rssBytes: mem.rss, heapUsedBytes: mem.heapUsed, uptimeSeconds: Math.round(process.uptime()), eventLoopLagMs: Math.round((loopDelay.percentile(99) / 1e6) * 10) / 10, node: process.version },
       roles: [...cfg.roles],
       queues: workers.map((w) => w.name),
       concurrency: cfg.concurrency,
@@ -317,6 +330,7 @@ async function main() {
       moduleTasks: tasks.length,
       version,
     };
+    loopDelay.reset();
     try {
       await db().platformHeartbeat.upsert({
         where: { id: heartbeatId },

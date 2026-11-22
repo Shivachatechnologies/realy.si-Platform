@@ -12,6 +12,9 @@ export async function register() {
     await ensurePlatformSecretsFresh();
     const { initObservability } = await import("@/server/core/observability");
     await initObservability("realy-web");
+    // Release history (Admin → Releases): one platform_releases row per boot of a new build. Best effort.
+    const { recordRelease } = await import("@/server/modules/admin/releases");
+    await recordRelease("user");
   })().catch(() => {});
 }
 

@@ -12,6 +12,9 @@ export async function register() {
     await ensurePlatformSecretsFresh();
     const { initObservability } = await import("@/server/core/observability");
     await initObservability("realy-admin");
+    // Release history (Admin → Releases): one platform_releases row per boot of a new build. Best effort.
+    const { recordRelease } = await import("@/server/modules/admin/releases");
+    await recordRelease("admin");
   })().catch(() => {});
 }
 
@@ -24,4 +27,9 @@ export async function onRequestError(
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { captureException } = await import("@/server/core/telemetry");
   captureException(error, { method: request.method, route: context.routePath, routeType: context.routeType });
+  // Error grouping (Admin → Errors): page renders, server actions and the proxy. Route handlers report via route().
+  if (context.routeType !== "route") {
+    const { reportServerError } = await import("@/server/core/http");
+    reportServerError(error, { method: request.method, route: context.routePath, path: request.path.replace(/[?#].*$/, ""), kind: "render" });
+  }
 }

@@ -10,9 +10,11 @@ import { sha256 } from "./crypto";
 import { consume, mostRestrictive, rateLimitHeaders, type RateLimitResult, type RateLimitRule } from "./rate-limit";
 import { claimIdempotencyKey, completeIdempotencyKey, releaseIdempotencyKey, requestHash } from "./idempotency";
 import { captureException, securityEvent, withSpan } from "./telemetry";
+import { processApp } from "./observability";
 import { requestGate } from "./platform-controls";
 import { ensurePlatformSecretsFresh } from "./platform-secrets";
 import { SESSION_COOKIE, validateSessionToken, type SessionInfo } from "@/server/modules/auth/session";
+import { after } from "next/server";
 
 export interface HandlerArgs {
   req: NextRequest;
@@ -93,6 +95,178 @@ function databaseError(err: unknown): { status: number; code: "conflict" | "serv
   return null;
 }
 
+// ───────────────────────────── Request and error hooks (stream E; docs/admin/hooks.md) ─────────────────────────────
+//
+// Two process-wide observer lists that every `route()` handler feeds:
+//   onRequestComplete(fn)  once per handled request, after the response is built (status, duration, actor, route)
+//   onError(fn)            once per unexpected server error (status >= 500: unhandled exceptions and database
+//                          failures); expected AppErrors (4xx, validation, rate limits) never reach it
+// Both run AFTER the response (Next.js `after()`, or a detached promise outside a request scope), never delay it, and
+// can never break a request: a throwing or rejecting hook is swallowed. Hook events carry only metadata — never
+// headers, cookies, bodies or query strings. The lists live on globalThis because a server process holds one copy of
+// this module per route bundle.
+//
+// A third list, onRequestGate(fn), runs BEFORE the handler and may refuse the request by throwing (B: impersonation).
+//
+// Who registers: each stream owns one installer in core/request-hooks/<stream>.ts (E: error grouping and the app log
+// sink; B: impersonation gate and per-request attribution; F: the API request log). core/request-hooks/index.ts runs them once per process, lazily on the first request,
+// and the worker calls installHooks("worker") at start. Call `reportServerError` from places outside `route()` that
+// catch server errors themselves (instrumentation.ts onRequestError for pages and server actions).
+
+/** Metadata of one handled API request (no headers, cookies, bodies or query strings). */
+export interface RequestCompleteEvent {
+  requestId: string;
+  /** Process: "user" (app.realy.si), "admin" (Control Center) or "worker" (core/observability.ts processApp). */
+  app: string;
+  method: string;
+  /** Route template (`opts.name`), e.g. "POST /organizations/:orgId/companies". */
+  route: string;
+  /** Request path without the query string. */
+  path: string;
+  status: number;
+  durationMs: number;
+  startedAt: Date;
+  /** Error code of the envelope when status >= 400 ("validation_error", "rate_limited", "internal_error"…). */
+  errorCode: string | null;
+  actorType: string | null;
+  actorId: string | null;
+  sessionId: string | null;
+  /** Authenticated with a developer API key (Authorization: Bearer rly_…). */
+  apiKey: boolean;
+  /** Tenant from the path (/api/v1/organizations/<id>/…) or the API key's organization. */
+  organizationId: string | null;
+  ip: string | null;
+  userAgent: string | null;
+}
+
+/** An unexpected server error (status >= 500). `error` is the original thrown value: scrub before storing it. */
+export interface RequestErrorEvent {
+  requestId: string | null;
+  app: string;
+  /** "unhandled" exception, "database" failure, or "render" (pages / server actions via reportServerError). */
+  kind: "unhandled" | "database" | "render";
+  error: unknown;
+  method: string | null;
+  route: string | null;
+  path: string | null;
+  status: number;
+  actorType: string | null;
+  actorId: string | null;
+  organizationId: string | null;
+}
+
+/** Input of a request gate: runs BEFORE the handler, after authentication and the platform gate. */
+export interface RequestGateEvent {
+  requestId: string;
+  app: string;
+  method: string;
+  /** Request path without the query string. */
+  pathname: string;
+  route: string;
+  /** Session id of a cookie-authenticated request; null for API keys and anonymous requests. */
+  sessionId: string | null;
+  ctx: RequestContext;
+}
+
+/** May throw an AppError to refuse the request (the error envelope is returned; the handler never runs). */
+export type RequestGateHook = (event: RequestGateEvent) => void | Promise<void>;
+
+export type RequestCompleteHook = (event: RequestCompleteEvent) => void | Promise<void>;
+export type RequestErrorHook = (event: RequestErrorEvent) => void | Promise<void>;
+
+const hookStore = globalThis as unknown as { realyHttpHooks?: { complete: Set<RequestCompleteHook>; error: Set<RequestErrorHook>; gate: Set<RequestGateHook>; installing?: Promise<void>; installed?: boolean } };
+const hooks = () => {
+  const h = (hookStore.realyHttpHooks ??= { complete: new Set(), error: new Set(), gate: new Set() });
+  h.gate ??= new Set();
+  return h;
+};
+
+/**
+ * Gate every request before its handler runs (e.g. stream B's impersonation read-only gate). Unlike the observer
+ * hooks this one can refuse a request by throwing an AppError, and it runs on the request path: keep it cheap
+ * (no I/O for the common case; at most one cached lookup). Returns an unsubscribe function.
+ */
+export function onRequestGate(fn: RequestGateHook): () => void {
+  hooks().gate.add(fn);
+  return () => void hooks().gate.delete(fn);
+}
+
+/** Observe every handled request. Returns an unsubscribe function. Register from core/request-hooks/<stream>.ts. */
+export function onRequestComplete(fn: RequestCompleteHook): () => void {
+  hooks().complete.add(fn);
+  return () => void hooks().complete.delete(fn);
+}
+
+/** Observe every unexpected server error (status >= 500). Returns an unsubscribe function. */
+export function onError(fn: RequestErrorHook): () => void {
+  hooks().error.add(fn);
+  return () => void hooks().error.delete(fn);
+}
+
+/** Run work after the response: `after()` inside a request scope, a detached promise elsewhere (tests, scripts). */
+function afterResponse(work: () => Promise<void>) {
+  try {
+    after(work);
+  } catch {
+    void work();
+  }
+}
+
+async function runHooks<E>(list: Set<(e: E) => void | Promise<void>>, event: E) {
+  for (const fn of [...list]) {
+    try {
+      await fn(event);
+    } catch (err) {
+      logger.debug({ err: err instanceof Error ? err.message : String(err) }, "http hook failed");
+    }
+  }
+}
+
+/** Install every stream's hooks once per process (lazy: route bundles that never serve a request pay nothing). */
+function ensureHooksInstalled(): Promise<void> {
+  const h = hooks();
+  h.installing ??= import("./request-hooks")
+    .then((m) => m.installHooks(processApp()))
+    .catch((err) => logger.warn({ err: err instanceof Error ? err.message : String(err) }, "request hooks install failed"))
+    .finally(() => {
+      h.installed = true;
+    });
+  return h.installing;
+}
+
+/**
+ * Report a server error caught outside `route()` (instrumentation onRequestError: pages, server actions). Never
+ * throws; the hooks run after the response.
+ */
+export function reportServerError(error: unknown, meta: { requestId?: string | null; method?: string | null; route?: string | null; path?: string | null; kind?: RequestErrorEvent["kind"] } = {}) {
+  const event: RequestErrorEvent = {
+    requestId: meta.requestId ?? null,
+    app: processApp(),
+    kind: meta.kind ?? "render",
+    error,
+    method: meta.method ?? null,
+    route: meta.route ?? null,
+    path: meta.path ?? null,
+    status: 500,
+    actorType: null,
+    actorId: null,
+    organizationId: null,
+  };
+  afterResponse(async () => {
+    await ensureHooksInstalled();
+    await runHooks(hooks().error, event);
+  });
+}
+
+/** The error envelope's code and HTTP status for a thrown value (same mapping as errorResponse, no side effects). */
+function classify(err: unknown): { status: number; code: string; kind: RequestErrorEvent["kind"] | null } {
+  if (err instanceof ZodError) return { status: 400, code: "validation_error", kind: null };
+  if (isAppError(err)) return { status: err.status, code: err.code, kind: err.status >= 500 ? "unhandled" : null };
+  const d = databaseError(err);
+  if (d) return { status: d.status, code: d.code, kind: d.status >= 500 ? "database" : null };
+  return { status: 500, code: "internal_error", kind: "unhandled" };
+}
+
 /** CSRF defense for cookie-authenticated mutations: the Origin must be this app. */
 function sameOrigin(req: NextRequest): boolean {
   const origin = req.headers.get("origin");
@@ -150,6 +324,10 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
   return async (req: NextRequest, routeCtx: { params: Promise<P> }): Promise<Response> => {
     const requestId = newRequestId(req.headers.get("x-request-id"));
     const name = opts.name ?? `${req.method} ${req.nextUrl.pathname}`;
+    const startedAt = new Date();
+    const hooksReady = ensureHooksInstalled();
+    // Filled in as the request is authenticated; read by the request hooks after the response.
+    const seen: { ctx: RequestContext | null; session: SessionInfo | null; apiKey: boolean; orgId: string | null; failure: { err: unknown; code: string; kind: RequestErrorEvent["kind"] | null } | null } = { ctx: null, session: null, apiKey: false, orgId: null, failure: null };
     return withSpan("http.server.request", { "http.method": req.method, "http.route": name, "realy.request_id": requestId }, async (span) => {
       let limitResult: RateLimitResult | null = null;
       let idempotencyId: string | null = null;
@@ -157,6 +335,39 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         res.headers.set("x-request-id", requestId);
         if (limitResult) for (const [k, v] of Object.entries(rateLimitHeaders(limitResult))) res.headers.set(k, v);
         span.setAttribute("http.status_code", res.status);
+        const h = hooks();
+        if (!h.installed || h.complete.size || h.error.size) {
+          const status = res.status;
+          const durationMs = Date.now() - startedAt.getTime();
+          afterResponse(async () => {
+            await hooksReady;
+            const app = processApp();
+            const actorType = seen.ctx?.actor.type ?? null;
+            const actorId = seen.ctx?.actor.id ?? seen.session?.userId ?? null;
+            const orgId = seen.orgId ?? /^\/api\/v1\/organizations\/([0-9a-f-]{36})(?:\/|$)/.exec(req.nextUrl.pathname)?.[1] ?? null;
+            await runHooks(hooks().complete, {
+              requestId,
+              app,
+              method: req.method,
+              route: name,
+              path: req.nextUrl.pathname,
+              status,
+              durationMs,
+              startedAt,
+              errorCode: seen.failure?.code ?? null,
+              actorType,
+              actorId,
+              sessionId: seen.session?.id ?? null,
+              apiKey: seen.apiKey,
+              organizationId: orgId,
+              ip: clientIp(req),
+              userAgent: req.headers.get("user-agent"),
+            });
+            if (seen.failure?.kind) {
+              await runHooks(hooks().error, { requestId, app, kind: seen.failure.kind, error: seen.failure.err, method: req.method, route: name, path: req.nextUrl.pathname, status, actorType, actorId, organizationId: orgId });
+            }
+          });
+        }
         return res;
       };
       try {
@@ -181,9 +392,12 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
           const principal = await authenticateApiKey(req.headers, { requestId, ip, userAgent: req.headers.get("user-agent") });
           apiCtx = principal.ctx;
           apiKeyOrgId = principal.organizationId;
+          seen.apiKey = true;
+          seen.orgId = principal.organizationId;
         } else if (opts.auth !== "none") {
           session = await validateSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
           if (!session) throw new AppError("unauthenticated", "Sign in required");
+          seen.session = session;
           if (session.mfaPending && opts.auth === "required") throw new AppError("mfa_required", "Complete two-factor verification");
         }
 
@@ -208,6 +422,7 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
           : session
           ? userContext(session.userId, { requestId, ip, userAgent, sessionId: session.id, mfaVerifiedAt: session.mfaVerifiedAt })
           : { requestId, actor: { type: "USER", id: null }, mfaVerifiedAt: null, sessionId: null, ip, userAgent };
+        seen.ctx = ctx;
 
         // Organization security policy (require MFA, session timeout, IP allowlist) for members on org-scoped APIs.
         const orgMatch = /^\/api\/v1\/organizations\/([0-9a-f-]{36})(?:\/|$)/.exec(req.nextUrl.pathname);
@@ -223,6 +438,14 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         if ((session || apiCtx) && req.nextUrl.pathname.startsWith("/api/v1/organizations/")) {
           const { entitlementApiGate } = await import("@/server/modules/entitlements/gate");
           await entitlementApiGate({ pathname: req.nextUrl.pathname, method: req.method });
+        }
+
+        // Request gates (core/request-hooks/<stream>.ts): the first request of a process waits for installation once.
+        await hooksReady;
+        const gates = hooks().gate;
+        if (gates.size) {
+          const gateEvent: RequestGateEvent = { requestId, app: processApp(), method: req.method, pathname: req.nextUrl.pathname, route: name, sessionId: session?.id ?? null, ctx };
+          for (const gate of [...gates]) await gate(gateEvent);
         }
 
         const idemKey = req.headers.get("idempotency-key");
@@ -255,6 +478,7 @@ export function route<P = unknown>(opts: RouteOptions, handler: (args: HandlerAr
         if (isAppError(err) && (err.code === "unauthenticated" || err.code === "forbidden")) {
           span.setAttribute("realy.auth_failure", err.code);
         }
+        seen.failure = { err, ...classify(err) };
         return finish(errorResponse(err, requestId));
       }
     });

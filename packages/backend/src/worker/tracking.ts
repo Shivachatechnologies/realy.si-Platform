@@ -2,7 +2,7 @@ import { UnrecoverableError, type Job } from "bullmq";
 import { hostname } from "node:os";
 import { db, type Prisma } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
-import { WORKER_QUEUES } from "@/server/core/jobs";
+import { emitJobFailure, WORKER_QUEUES } from "@/server/core/jobs";
 
 /**
  * Persisted job status and execution log (worker_job_runs). Every write is best effort: tracking must never fail or
@@ -129,6 +129,22 @@ export function tracked<T, R>(opts: TrackOptions, fn: (job: Job<T>) => Promise<R
         finishedAt: final ? new Date() : undefined,
         durationMs,
         deadLettered,
+      });
+      // Job-failure hook (error grouping, stream E). Error details stay withheld for jobs that handle personal data.
+      await emitJobFailure({
+        queue: opts.queue,
+        jobName: (opts.nameOf?.(job as Job) ?? job.name).slice(0, 200),
+        jobId: String(job.id ?? ""),
+        attempt,
+        maxAttempts: max,
+        final,
+        deadLettered,
+        organizationId: (() => {
+          const o = opts.organizationOf?.(job.data);
+          return isUuid(o) ? o : null;
+        })(),
+        error: opts.redactErrors ? null : err,
+        message,
       });
       throw err;
     }
