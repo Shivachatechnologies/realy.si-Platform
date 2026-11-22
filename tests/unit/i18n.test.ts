@@ -91,7 +91,12 @@ const uiFiles = uiRoots.flatMap((r) => {
 
 describe("UI source guards", () => {
   it("uses logical (RTL-safe) spacing and alignment utilities only", () => {
-    const physical = /(?<![\w-])(?:-?m[lr]-|p[lr]-|left-|right-|text-left|text-right|border-[lr](?:-|\b)|rounded-[lr](?:-|\b)|float-left|float-right)/;
+    // A spacing/inset utility needs a Tailwind value (pl-4, -ml-[3px], left-1/2, right-auto), so element ids such as
+    // htmlFor="pr-desc" are not mistaken for padding-right.
+    const value = String.raw`(?:\d|\[|px\b|auto\b|full\b)`;
+    const physical = new RegExp(
+      String.raw`(?<![\w-])(?:-?m[lr]-${value}|p[lr]-${value}|-?(?:left|right)-${value}|text-left|text-right|border-[lr](?:-|\b)|rounded-[lr](?:-|\b)|float-left|float-right)`,
+    );
     const offenders = uiFiles.flatMap((f) =>
       readFileSync(f, "utf8")
         .split("\n")
@@ -103,16 +108,69 @@ describe("UI source guards", () => {
   });
 
   it("contains no hard-coded user-facing text in JSX", () => {
-    // A JSX text node: after a tag's closing ">" (not "=>" or a generic's "\">"), letters, then the next tag.
-    // Code-like characters exclude TypeScript generics and arrow functions from matching.
-    const textNode = /(?:(?<![=\-])>|\})\s*([^<>{}\n();=|&]*\p{L}[^<>{}\n();=|&]*)\s*<[/A-Za-z]/u;
-    const offenders = uiFiles.flatMap((f) =>
-      readFileSync(f, "utf8")
+    const offenders = uiFiles.flatMap((f) => {
+      const rel = path.relative(path.resolve(import.meta.dirname, "../.."), f).split(path.sep).join("/");
+      return readFileSync(f, "utf8")
         .split("\n")
         .map((line, i) => ({ line, i }))
-        .filter(({ line }) => !line.trim().startsWith("//") && !line.includes("i18n-ignore") && textNode.test(line))
-        .map(({ i, line }) => `${path.relative(process.cwd(), f)}:${i + 1}: ${line.trim()}`),
-    );
+        .filter(({ line }) => hardCodedText(rel, line).length > 0)
+        .map(({ i, line }) => `${rel}:${i + 1}: ${line.trim()}`);
+    });
     expect(offenders).toEqual([]);
   });
+
+  it("the hard-coded text guard flags real JSX text and ignores code", () => {
+    const f = "apps/user/src/components/x.tsx";
+    expect(hardCodedText(f, `<p className="x">Hello world</p>`)).toEqual(["Hello world"]);
+    expect(hardCodedText(f, `<Button>{count} items left</Button>`)).toEqual(["items left"]);
+    expect(hardCodedText(f, `{open ? <span>Close menu</span> : null}`)).toEqual(["Close menu"]);
+    expect(hardCodedText(f, `<Th className="text-end">Revenue</Th>`)).toEqual(["Revenue"]);
+    expect(hardCodedText(f, `{a ? <Notice>{t("x")}</Notice> : b ? <Other /> : <Notice>{t("y")}</Notice>}`)).toEqual([]);
+    expect(hardCodedText(f, `const ICON: Record<Area, React.ReactNode> = { a: <A />, b: <B /> };`)).toEqual([]);
+    expect(hardCodedText(f, ` * Pair with <PageHeader world="finance" />`)).toEqual([]);
+    expect(hardCodedText(f, `<Badge tone="brand">AI</Badge>`)).toEqual([]);
+    expect(hardCodedText(f, `<span>{size} KB</span>`)).toEqual([]);
+    expect(hardCodedText(f, `<p>Not translated</p> {/* i18n-ignore */}`)).toEqual([]);
+  });
 });
+
+// ── Hard-coded JSX text detection ──
+
+/** A JSX text node: after a tag's closing ">" (not "=>" or a generic's "\">") or an expression's "}", up to the next tag. */
+const TEXT_NODE = /(?:(?<![=\-])>|\})\s*([^<>{}\n();=|&]*\p{L}[^<>{}\n();=|&]*?)\s*(?=<[/A-Za-z])/gu;
+
+/**
+ * Words that are the same in every locale: the brand, product names, acronyms, keyboard keys and unit symbols.
+ * Anything else shown to people goes through t() (docs/globalization.md §2).
+ */
+const UNIVERSAL = new Set(["Realy", "si", "AI", "MFA", "ROAS", "CSAT", "SAML", "Calendly", "Esc", "Aa", "ms", "KB", "MB", "m"]);
+
+/** Deliberate English text, each with its reason. Keep this list short. */
+const INTENTIONAL: { file: RegExp; text?: RegExp; why: string }[] = [
+  { file: /\/opengraph-image\.tsx$/, why: "rendered into a PNG; the bundled OG font covers Latin only (see the file's comment)" },
+  { file: /^apps\/user\/src\/app\/s\/\[siteSlug\]\/not-found\.tsx$/, why: "published customer sites have no platform locale; kept neutral (see the file's comment)" },
+  { file: /\/(?:site\/waitlist-form|sites\/contact-form)\.tsx$/, text: /^Website$/, why: "aria-hidden spam honeypot label, never shown" },
+];
+
+/** Code-like captures: ternaries (`} : cond ? <X`), TypeScript (`as T`, generics), statements and template literals. */
+function looksLikeCode(text: string): boolean {
+  return /^[?:,]|[?:]$|\s[?:]\s|`|\$\{|\bas\s+[A-Z]|\b(?:const|let|return|function|export|import|null|undefined|true|false)\b|\w\.\w|[\[\]]|^\*|,\S/.test(text);
+}
+
+function hardCodedText(file: string, line: string): string[] {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*") || line.includes("i18n-ignore")) return [];
+  const found: string[] = [];
+  for (const m of line.matchAll(TEXT_NODE)) {
+    const text = m[1]!.trim();
+    if (!text || looksLikeCode(text)) continue;
+    // Text inside <code> / <kbd> is a literal (a CSV header, a keyboard shortcut).
+    const before = line.slice(0, m.index + 1);
+    if (/<(code|kbd)\b[^>]*>[^<]*$/.test(before)) continue;
+    const words = text.match(/\p{L}+/gu) ?? [];
+    if (words.every((w) => UNIVERSAL.has(w))) continue;
+    if (INTENTIONAL.some((x) => x.file.test(file) && (!x.text || x.text.test(text)))) continue;
+    found.push(text);
+  }
+  return found;
+}

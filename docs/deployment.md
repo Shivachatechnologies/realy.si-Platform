@@ -47,9 +47,49 @@ Set the **same values on web and worker** unless the column says otherwise. Ever
 ### AI, email, billing, observability (optional, both services)
 
 `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_ALLOWED_MODELS`, `AI_DAILY_TOKEN_LIMIT`,
-`EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`,
+`EMAIL_PROVIDER` (`resend`, `postmark` or `smtp`), `EMAIL_API_KEY` (Resend / Postmark), `EMAIL_FROM`,
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` (with `EMAIL_PROVIDER=smtp`, see
+[Email through Google Workspace](#email-through-google-workspace-smtp)),
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (web), `STRIPE_AUTOMATIC_TAX`,
 `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT`.
+
+### Email through Google Workspace (SMTP)
+
+Transactional email (password resets, invitations, notifications) can go through Google Workspace instead of Resend or
+Postmark. Every value can be set in the Control Center → **Platform keys** → Email (write-only for the password) or in
+the hosting environment; the worker reads them through the same platform-keys overlay (~30 s refresh). Use the
+**Test** button on `SMTP_HOST` or `SMTP_PASSWORD`: it connects, negotiates TLS and authenticates without sending.
+
+**Option A — a mailbox with an App Password (smtp.gmail.com).**
+
+1. Create (or pick) a mailbox such as `no-reply@yourdomain.com`. Turn on 2-Step Verification for it.
+2. Google Account → Security → 2-Step Verification → **App passwords** → create one ("Realy"). (App Passwords are only
+   offered once 2-Step Verification is on; some Workspace security policies hide them.)
+3. Set:
+
+   | Key | Value |
+   |---|---|
+   | `EMAIL_PROVIDER` | `smtp` |
+   | `SMTP_HOST` | `smtp.gmail.com` |
+   | `SMTP_PORT` | `587` (STARTTLS) or `465` (implicit TLS) |
+   | `SMTP_SECURE` | empty (derived from the port: 465 → TLS, otherwise STARTTLS) or `true` / `false` |
+   | `SMTP_USER` | the mailbox address |
+   | `SMTP_PASSWORD` | the App Password (the spaces Google shows are ignored) |
+   | `EMAIL_FROM` | `Realy <no-reply@yourdomain.com>` |
+
+   Gmail only sends **as the authenticated user or a verified "Send mail as" alias**. With any other `EMAIL_FROM`
+   Gmail silently replaces the sender; the Test result warns when `EMAIL_FROM` is not `SMTP_USER`, and a refused
+   sender surfaces as "The SMTP server refused the From address…". Gmail sending limits apply (about 2,000 messages a
+   day per Workspace user).
+
+**Option B — the Workspace SMTP relay (smtp-relay.gmail.com).** Admin console → Apps → Google Workspace → Gmail →
+Routing → **SMTP relay service**: allow "Only addresses in my domains", require TLS, and choose either SMTP
+authentication (then set `SMTP_USER` / `SMTP_PASSWORD` as above) or the sending servers' IP addresses (leave both
+empty; Vercel has no fixed egress IPs, so use authentication there). `SMTP_HOST=smtp-relay.gmail.com`, port `587`
+(or `465` / `25`). The From domain must be one of your Workspace domains.
+
+STARTTLS is mandatory on non-TLS ports (connections that cannot upgrade are refused); certificates are verified.
+Resend and Postmark keep working unchanged: switch back by setting `EMAIL_PROVIDER` to `resend` or `postmark`.
 
 ### Sign-in and integration OAuth apps (optional, both services)
 
@@ -117,7 +157,7 @@ keys under Integrations; they are verified with the provider before the connecti
 
 **Command:** `node_modules/.bin/tsx src/worker/index.ts` (in the image's `worker` target, working directory `/app/packages/backend`) · `pnpm worker` (locally).
 **Image:** `docker build --target worker .` (or the default image with the command override).
-**Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker + Redis), `deploy/worker/fly.toml`
+**Ready-made configs:** `deploy/worker/render.yaml` (Render Blueprint: worker only; uses the web app's Redis via `REDIS_URL`), `deploy/worker/fly.toml`
 (Fly.io), `deploy/worker/worker.env.example` (variable names), `docker-compose.yml` profile `app` (local full stack).
 
 **Running server modules outside Next.** The worker loads the same `src/server/**` modules as the web apps, many of

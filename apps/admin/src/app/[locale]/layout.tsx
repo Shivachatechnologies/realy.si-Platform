@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, IBM_Plex_Sans_Arabic, Inter, Noto_Sans_Devanagari, Sora } from "next/font/google";
 import { connection } from "next/server";
 import { directionOf, type AppLocale } from "@/i18n/config";
-import { getLocale, getMessages, getT } from "@/i18n/server";
+import { getClientMessages, getLocale, getT, LAZY_UNITS } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { Providers } from "@/components/providers";
 import "../globals.css";
@@ -41,7 +41,8 @@ export default async function AdminRootLayout({ children }: LayoutProps<"/[local
   // Render per request: required for the per-request CSP nonce and the console gate.
   await connection();
   const locale = await getLocale();
-  const messages = await getMessages(locale);
+  // Only the namespaces this layout's own client components use; route groups add theirs (<ClientMessages>).
+  const messages = await getClientMessages("[locale]", locale);
   const font = LOCALE_FONT[locale];
   return (
     <html
@@ -51,7 +52,7 @@ export default async function AdminRootLayout({ children }: LayoutProps<"/[local
       style={font ? ({ "--font-locale": font } as React.CSSProperties) : undefined}
     >
       <body className="min-h-full bg-background font-sans text-[13px] text-foreground antialiased" data-surface="admin">
-        <I18nProvider locale={locale} messages={messages}>
+        <I18nProvider locale={locale} messages={messages} lazy={LAZY_UNITS}>
           <Providers>{children}</Providers>
         </I18nProvider>
       </body>

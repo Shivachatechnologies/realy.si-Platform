@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Vercel's 8 GB build machine: Turbopack's native memory plus a full TypeScript pass no longer fit together.
   // Types are checked separately (`pnpm typecheck`, CI) so the build itself skips the type pass; no server source maps.
-  typescript: { ignoreBuildErrors: process.env.VERCEL === "1" },
+  // CI and the Docker image build set SKIP_BUILD_TYPECHECK=1 for the same reason (the pass OOMs at a 4 GB heap).
+  typescript: { ignoreBuildErrors: process.env.VERCEL === "1" || process.env.SKIP_BUILD_TYPECHECK === "1" },
   experimental: { serverSourceMaps: false },
   // Inlined at build time: selects the admin session cookie in @realy/auth-core (shared backend code).
   env: { REALY_APP: "admin" },

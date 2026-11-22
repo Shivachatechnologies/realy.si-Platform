@@ -46,7 +46,7 @@ export function RetentionSettings({
         {rows.map((r) => {
           const options = CHOICES.includes(r.retentionDays as (typeof CHOICES)[number]) ? CHOICES : [...CHOICES, r.retentionDays];
           return (
-            <li key={r.layer} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
+            <li key={r.layer} className="flex min-w-0 items-center justify-between gap-3 rounded-md border px-3 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{t(`brain.memory.layers.${r.layer}`)}</p>
                 <p className="text-xs text-muted-foreground">{r.custom ? t("brain.memory.retention.custom") : t("brain.memory.retention.default")}</p>

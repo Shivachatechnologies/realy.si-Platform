@@ -847,7 +847,7 @@ interface Track {
 }
 
 /** Licensed music: search the connected licensed source, or upload with a license confirmation. */
-export function MusicPanel({ base, projectId, locale, canManage, integrationsHref }: { base: string; projectId: string; locale: string; canManage: boolean; integrationsHref: string | null }) {
+export function MusicPanel({ base, projectId, locale, canManage }: { base: string; projectId: string; locale: string; canManage: boolean }) {
   const t = useT();
   const { busy, error, run } = useAction();
   const [q, setQ] = useState("");
@@ -873,7 +873,7 @@ export function MusicPanel({ base, projectId, locale, canManage, integrationsHre
           </Button>
         </form>
         {result && !result.connected ? (
-          <Notice tone="info" action={integrationsHref ? <Link href={integrationsHref} className="text-sm font-medium text-primary hover:underline">{t("creative.common.connect")}</Link> : undefined}>
+          <Notice tone="info">
             {t("creative.music.notConnected")}
           </Notice>
         ) : null}

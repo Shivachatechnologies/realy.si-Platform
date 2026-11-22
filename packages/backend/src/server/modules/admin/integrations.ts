@@ -5,6 +5,8 @@ import { notFound } from "@/server/core/errors";
 import { getControls } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
 import { revokeApiKey } from "@/server/modules/enterprise/api-keys";
+import { isPlatformManaged } from "@/server/modules/integrations/catalog";
+import { disconnectIntegration } from "@/server/modules/integrations/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
 import { daysAgo, isUuid, reasonSchema, requireAnyPlatform } from "./access";
@@ -80,4 +82,24 @@ export async function adminRevokeApiKey(ctx: RequestContext, keyId: string, raw:
     writeAudit(tx, ctx, { category: "SECURITY", organizationId: key.organizationId, action: "platform.api_key_revoked", resourceType: "api_key", resourceId: keyId, oldValue: { prefix: key.prefix, name: key.name }, reason }),
   );
   return { ok: true };
+}
+
+/**
+ * Disconnect any organization's integration connection (docs/integrations.md "Who manages what"): revokes the token at
+ * the provider where supported and clears the stored credentials, exactly like the customer's own Disconnect. Runs the
+ * integrations service as trusted platform code on the admin's behalf (actor id kept for the record) and is audited as
+ * the admin with a reason. Legacy rows of platform-managed providers are left alone: they are unused, never deleted.
+ */
+export async function adminDisconnectIntegration(ctx: RequestContext, connectionId: string, raw: { reason?: string }) {
+  const reason = reasonSchema.parse(raw.reason);
+  await requireAnyPlatform(ctx, ["platform.organizations.manage", "platform.controls.manage"]);
+  if (!isUuid(connectionId)) throw notFound("Connection");
+  const row = await db().integrationConnection.findUnique({ where: { id: connectionId }, select: { organizationId: true, companyId: true, provider: true, status: true } });
+  if (!row || row.status === "DISCONNECTED" || isPlatformManaged(row.provider)) throw notFound("Connection");
+  const staff: RequestContext = { ...ctx, actor: { type: "SYSTEM", id: ctx.actor.id } };
+  const result = await disconnectIntegration(staff, row.organizationId, row.companyId, row.provider);
+  await transaction((tx) =>
+    writeAudit(tx, ctx, { category: "ADMIN", organizationId: row.organizationId, action: "platform.integration_disconnected", resourceType: "integration_connection", resourceId: connectionId, oldValue: { provider: row.provider, status: row.status }, reason }),
+  );
+  return result;
 }

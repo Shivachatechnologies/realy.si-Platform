@@ -6,13 +6,15 @@ import { assignRole, can, createCustomRole, revokeAssignment, systemRoleId } fro
 import { companyChain, orgChain } from "@/server/modules/rbac/scope";
 import { listAuditLogs } from "@/server/modules/audit/service";
 import { SYSTEM_ROLES } from "@/server/modules/rbac/catalog";
-import { expectCode, makeUser, resetDb } from "../helpers";
+import { expectCode, makeUser, raiseLimits, resetDb } from "../helpers";
 
 beforeAll(resetDb);
 
 async function setup() {
   const owner = await makeUser({ name: "Owner" });
   const org = await createOrganization(owner.ctx, { name: `Acme ${Math.random()}` });
+  // More companies and members than the Growth trial allows (1 company, 3 seats).
+  await raiseLimits(org.id, { "companies.max": 2, "seats.max": 5 });
   const company = await createCompany(owner.ctx, org.id, { name: "Acme US", incorporationCountryCode: "US" });
   return { owner, org, company };
 }

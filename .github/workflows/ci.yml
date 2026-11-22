@@ -55,6 +55,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - name: Build both apps
+        env:
+          # Types were already checked by `pnpm typecheck` above; Next's own type pass needs more than the build's
+          # 4 GB heap (apps/*/package.json), so skip it here exactly as Vercel does (apps/*/next.config.ts).
+          SKIP_BUILD_TYPECHECK: "1"
         run: |
           pnpm build:user
           pnpm build:admin

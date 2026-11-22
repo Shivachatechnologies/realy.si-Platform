@@ -86,7 +86,7 @@ export async function LegalPage({ doc }: { doc: LegalDoc }) {
       </div>
       <header className="grid gap-3">
         <p className="eyebrow-rule">{t("legal.eyebrow")}</p>
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-balance">{t(`legal.docs.${doc}.title`)}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-balance hyphens-auto [overflow-wrap:anywhere]">{t(`legal.docs.${doc}.title`)}</h1>
         <p className="text-xs text-muted-foreground">
           {t("legal.lastUpdated", { date: formatDate(LEGAL_DRAFT_DATE, locale, "UTC", { dateStyle: "long" }) })}
           {locale !== "en-US" ? ` · ${t("legal.englishOnly")}` : ""}

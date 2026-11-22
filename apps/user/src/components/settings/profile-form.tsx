@@ -94,7 +94,8 @@ export function ProfileForm({ user, countryCodes }: { user: { name: string; loca
       </Field>
       <Field label={t("settings.profile.timezone")} htmlFor="timezone">
         <Select id="timezone" value={v.timezone} onChange={(e) => setV({ ...v, timezone: e.target.value })}>
-          {timezones.map((tz) => (
+          {/* Intl lists legacy zone names (Asia/Calcutta); keep the stored canonical one (Asia/Kolkata) selectable. */}
+          {(timezones.includes(v.timezone) ? timezones : [v.timezone, ...timezones]).map((tz) => (
             <option key={tz} value={tz}>
               {tz}
             </option>

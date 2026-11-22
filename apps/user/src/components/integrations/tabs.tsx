@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type IntegrationsTab = "marketplace" | "connected" | "usage" | "webhooks" | "syncs";
+/** Webhook management is not in the user app (Control Center only). */
+export type IntegrationsTab = "marketplace" | "connected" | "usage" | "syncs";
 
 /** Tab labels from a translator (server or client). */
 export const integrationTabLabels = (t: (key: string) => string): Record<IntegrationsTab, string> => ({
   marketplace: t("integrations.tabs.marketplace"),
   connected: t("integrations.tabs.connected"),
   usage: t("integrations.tabs.usage"),
-  webhooks: t("integrations.tabs.webhooks"),
   syncs: t("integrations.tabs.syncs"),
 });
 
@@ -18,7 +18,6 @@ export function IntegrationsTabs({ locale, active, labels }: { locale: string; a
     { key: "marketplace", href: `/${locale}/integrations` },
     { key: "connected", href: `/${locale}/integrations?view=connected` },
     { key: "usage", href: `/${locale}/integrations/usage` },
-    { key: "webhooks", href: `/${locale}/integrations/webhooks` },
     { key: "syncs", href: `/${locale}/integrations/syncs` },
   ];
   return (

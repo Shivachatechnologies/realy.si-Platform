@@ -9,7 +9,7 @@ import { FormError } from "@/components/form-error";
 import { useT } from "@/i18n/client";
 import { api } from "@/lib/api-client";
 import { ActionButton, PeoplePicker, useAction, type Person } from "@/components/comms/client";
-import { PRIORITIES } from "./ticket-forms";
+import { PRIORITIES } from "./constants";
 
 interface Option {
   id: string;

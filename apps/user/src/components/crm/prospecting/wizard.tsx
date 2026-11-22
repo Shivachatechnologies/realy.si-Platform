@@ -365,12 +365,12 @@ export function AutopilotWizard({ base, locale, initial, autopilotId, hasContact
         {step > 0 ? (
           <Button type="button" variant="ghost" onClick={() => setStep(step - 1)}>
             <ArrowLeft aria-hidden className="rtl:rotate-180" />
-            {t("crm.back")}
+            {t("crm.prospecting.wizard.back")}
           </Button>
         ) : null}
         {step < steps.length - 1 ? (
           <Button type="submit" disabled={!canNext}>
-            {t("crm.next")}
+            {t("crm.prospecting.wizard.next")}
             <ArrowRight aria-hidden className="rtl:rotate-180" />
           </Button>
         ) : (

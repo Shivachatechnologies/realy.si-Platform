@@ -2,14 +2,16 @@ import "server-only";
 import { z } from "zod";
 import { db, transaction, type Prisma, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
-import { AppError, invalid, notFound } from "@/server/core/errors";
+import { AppError, forbidden, invalid, notFound } from "@/server/core/errors";
+import { getControls, isIntegrationEnabled } from "@/server/core/platform-controls";
 import { logger } from "@/server/core/logger";
 import { pageInput, prismaPage, toPage, type PageInput } from "@/server/core/pagination";
 import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
-import { isConnectable, PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
+import { isConnectable, isPlatformManaged, PROVIDERS, providerInfo, type ProviderInfo } from "./catalog";
 import { afterConnect, beforeDisconnect } from "./lifecycle";
+import { assertNotPlatformManaged, platformAvailability, platformAvailabilityMap, type PlatformAvailability } from "./platform-managed";
 import { providerWebhookUrl } from "./provider-webhooks";
 import { asConfig, assertConnectionEntitled, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
 import { logProviderCall, providerFetch } from "./client";
@@ -18,6 +20,16 @@ import { validateTargetUrl } from "./webhooks";
 import { exchangeCode, integrationRedirectUri, missingEnvVars, oauthClient, postConnectDetails, ProviderError, revokeToken, testConnection } from "./providers";
 
 type Perm = "integrations.read" | "integrations.manage";
+
+/**
+ * Customer-side changes to a provider connection. Platform-managed providers (AI, research, creative, voice, video,
+ * telephony) are configured only in Admin → Platform keys, so every customer write is refused (403); connecting a
+ * provider the platform admin switched off (Platform Controls → disabled integrations) is refused too.
+ */
+async function assertCustomerProvider(provider: string, connecting: boolean) {
+  assertNotPlatformManaged(provider);
+  if (connecting && !(await isIntegrationEnabled(provider))) throw forbidden("This integration is not available on the platform right now", { reason: "integrations_disabled", provider });
+}
 
 export async function authorizeIntegrations(ctx: RequestContext, organizationId: string, companyId: string, permission: Perm, tx?: Tx) {
   const chain = await companyChain(tx ?? db(), organizationId, companyId);
@@ -65,14 +77,20 @@ export async function listIntegrations(ctx: RequestContext, organizationId: stri
     db().integrationHook.count({ where: { organizationId, companyId, active: true } }),
   ]);
   const byProvider = new Map(rows.map((r) => [r.provider, r]));
-  const access = await planAccessByCategory(organizationId);
+  const [access, platform, disabled] = await Promise.all([planAccessByCategory(organizationId), platformAvailabilityMap(), disabledProviders()]);
   return PROVIDERS.map((info) => {
-    const connection = byProvider.get(info.key) ?? null;
-    const status = info.key === "webhook" ? (hookCount > 0 ? "CONNECTED" : null) : connection && connection.status !== "DISCONNECTED" ? connection.status : null;
+    const managed = platform[info.key] ?? null;
+    // Platform-managed providers never expose the company's own (legacy) connection row: it is kept but unused.
+    const connection = managed ? null : (byProvider.get(info.key) ?? null);
+    const status = managed ? null : info.key === "webhook" ? (hookCount > 0 ? "CONNECTED" : null) : connection && connection.status !== "DISCONNECTED" ? connection.status : null;
     return {
       info,
       connection,
       status,
+      /** Platform-managed provider: availability on the platform's account (null = the company connects it itself). */
+      platform: managed as PlatformAvailability | null,
+      /** Switched off platform-wide by the admin (customer-connected providers). */
+      disabled: !managed && disabled.has(info.key),
       configured: info.authType !== "oauth2" || oauthClient(info.key) !== null,
       oauthAvailable: (info.authType === "oauth2" || !!info.oauthAlternative) && oauthClient(info.key) !== null,
       /** Plan restriction of the provider's category (docs/entitlements.md): the cheapest plan and whether this org has it. */
@@ -88,7 +106,27 @@ export async function getIntegration(ctx: RequestContext, organizationId: string
   const syncs = connection
     ? await db().integrationSyncRun.findMany({ where: { organizationId, companyId, connectionId: connection.id }, orderBy: { startedAt: "desc" }, take: 20 })
     : [];
+  const managed = isPlatformManaged(provider) ? await platformAvailability(provider) : null;
+  if (managed) {
+    // Read-only status: the platform's account powers it; nothing about the company's legacy row is shown.
+    return {
+      info,
+      connection: null,
+      previous: null,
+      syncs: [],
+      missingEnv: [],
+      redirectUri: null,
+      oauthAvailable: false,
+      webhookUrl: null,
+      plan: (await planAccessByCategory(organizationId)).get(info.category) ?? { minPlan: "starter", locked: false },
+      platform: managed,
+      disabled: false,
+    };
+  }
+  const disabled = !(await isIntegrationEnabled(provider));
   return {
+    platform: null as PlatformAvailability | null,
+    disabled,
     info,
     connection: connection && connection.status !== "DISCONNECTED" ? connection : null,
     previous: connection?.status === "DISCONNECTED" ? connection : null,
@@ -100,6 +138,11 @@ export async function getIntegration(ctx: RequestContext, organizationId: string
     webhookUrl: info.inboundWebhooks && connection && connection.status !== "DISCONNECTED" ? providerWebhookUrl(provider, connection.id) : null,
     plan: (await planAccessByCategory(organizationId)).get(info.category) ?? { minPlan: "starter", locked: false },
   };
+}
+
+/** Providers switched off platform-wide (Admin → Platform Controls). */
+async function disabledProviders(): Promise<Set<string>> {
+  return new Set((await getControls()).disabledIntegrations.map((p) => p.toLowerCase()));
 }
 
 /** Plan access per provider category: the cheapest plan that unlocks it and whether the organization's plan does. */
@@ -168,6 +211,7 @@ export const apiKeyInput = z.record(z.string().max(64), z.string().max(MAX_FIELD
 /** Connect an API-key provider. The credentials are verified with a live test call before anything is stored. */
 export async function saveApiKeyConnection(ctx: RequestContext, organizationId: string, companyId: string, provider: string, raw: z.input<typeof apiKeyInput>) {
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
+  await assertCustomerProvider(provider, true);
   const info = requireInfo(provider);
   if (info.authType !== "api_key") throw invalid("This integration does not use an API key");
   if (!isConnectable(info)) throw invalid("This integration is not available yet", { reason: "integrations_awaiting_docs" });
@@ -229,6 +273,7 @@ export async function saveApiKeyConnection(ctx: RequestContext, organizationId: 
 /** Start the OAuth flow (returns the provider URL and the signed state cookie). */
 export async function startOAuthConnection(ctx: RequestContext, organizationId: string, companyId: string, provider: string, locale: string) {
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
+  await assertCustomerProvider(provider, true);
   const info = requireInfo(provider);
   if (info.authType !== "oauth2" && !info.oauthAlternative) throw invalid("This integration does not use OAuth");
   await assertConnectionEntitled(ctx, organizationId, companyId, provider);
@@ -241,6 +286,7 @@ export async function completeOAuthConnection(ctx: RequestContext, state: Integr
   const { organizationId, companyId, provider } = state;
   if (ctx.actor.id !== state.userId) throw new AppError("forbidden", "Signed-in user changed during the OAuth flow");
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
+  await assertCustomerProvider(provider, true);
   const info = requireInfo(provider);
   const tokens = await exchangeCode(provider, code, state.verifier);
   const existing = await db().integrationConnection.findFirst({ where: { organizationId, companyId, provider }, select: { config: true, credentialsEnc: true } });
@@ -298,6 +344,7 @@ async function loadRow(organizationId: string, companyId: string, provider: stri
 /** Run the provider's lightweight test call with the stored (refreshed) credentials. */
 export async function testIntegration(ctx: RequestContext, organizationId: string, companyId: string, provider: string) {
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
+  await assertCustomerProvider(provider, false);
   requireInfo(provider);
   const row = await loadRow(organizationId, companyId, provider);
   // getConnection refreshes an expiring token first.
@@ -356,6 +403,7 @@ export async function testCalendar(conn: Connection): Promise<{ ok: boolean; cal
 /** Disconnect: revoke the token at the provider where supported, then wipe every stored secret. */
 export async function disconnectIntegration(ctx: RequestContext, organizationId: string, companyId: string, provider: string) {
   await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage");
+  await assertCustomerProvider(provider, false);
   const info = requireInfo(provider);
   const row = await loadRow(organizationId, companyId, provider);
   let revoked = false;
@@ -394,6 +442,7 @@ export const settingsInput = z.object({
 export async function updateIntegrationSettings(ctx: RequestContext, organizationId: string, companyId: string, provider: string, raw: z.input<typeof settingsInput>) {
   const input = settingsInput.parse(raw);
   const info = requireInfo(provider);
+  await assertCustomerProvider(provider, false);
   return transaction(async (tx) => {
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
     const row = await tx.integrationConnection.findFirst({ where: { organizationId, companyId, provider, status: { not: "DISCONNECTED" } }, select: { id: true, syncEnabled: true, syncIntervalMinutes: true } });
@@ -464,6 +513,7 @@ export const activeAccountInput = z.object({ accountId: z.string().min(1).max(30
 export async function setActiveAccount(ctx: RequestContext, organizationId: string, companyId: string, provider: string, raw: z.input<typeof activeAccountInput>) {
   const { accountId } = activeAccountInput.parse(raw);
   requireInfo(provider);
+  await assertCustomerProvider(provider, false);
   return transaction(async (tx) => {
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
     const row = await tx.integrationConnection.findFirst({ where: { organizationId, companyId, provider, status: { not: "DISCONNECTED" } }, select: { id: true, config: true } });
@@ -481,6 +531,7 @@ export async function setActiveAccount(ctx: RequestContext, organizationId: stri
 /** Update a connection's settings (catalog `configFields`): non-secret ones in config, secret ones encrypted with the credentials. */
 export async function updateConnectionConfig(ctx: RequestContext, organizationId: string, companyId: string, provider: string, raw: z.input<typeof apiKeyInput>) {
   const info = requireInfo(provider);
+  await assertCustomerProvider(provider, false);
   if (!info.configFields?.length) throw invalid("This integration has no settings");
   const input = apiKeyInput.parse(raw);
   // Only fields that were sent are changed; an empty value clears a non-secret setting, secrets are kept unless replaced.

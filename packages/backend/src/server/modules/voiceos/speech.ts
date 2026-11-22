@@ -4,7 +4,7 @@ import { db } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { AppError, notFound } from "@/server/core/errors";
 import { logger } from "@/server/core/logger";
-import { isIntegrationEnabled } from "@/server/core/platform-controls";
+import { availablePlatformProviders } from "@/server/modules/integrations/platform-managed";
 import { getConnection, type Connection } from "@/server/modules/integrations/connections";
 import { providerFetch } from "@/server/modules/integrations/client";
 import { ProviderError } from "@/server/modules/integrations/providers";
@@ -35,12 +35,9 @@ const LIMIT_KEY = "voice.assistant.minutes.month" as const;
 
 /** Connected speech providers of the company (no decryption; platform-disabled providers excluded). */
 export async function connectedSpeechProviders(scope: VoiceScope): Promise<{ stt: SttProvider[]; tts: TtsProvider[] }> {
-  const rows = await db().integrationConnection.findMany({
-    where: { ...scope, provider: { in: [...SPEECH_PROVIDERS] }, status: { not: "DISCONNECTED" }, credentialsEnc: { not: null } },
-    select: { provider: true },
-  });
-  const enabled: string[] = [];
-  for (const r of rows) if (await isIntegrationEnabled(r.provider)) enabled.push(r.provider);
+  // OpenAI, ElevenLabs and Deepgram are platform-managed: available to every company once the platform configured them.
+  void scope;
+  const enabled: string[] = await availablePlatformProviders(SPEECH_PROVIDERS);
   return {
     stt: STT_PROVIDERS.filter((p) => enabled.includes(p)),
     tts: TTS_PROVIDERS.filter((p) => enabled.includes(p)),

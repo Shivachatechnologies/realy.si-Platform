@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { useI18n } from "@/i18n/client";
@@ -117,15 +116,7 @@ export function VoiceSettingsPanel({ voice, base }: { voice: VoiceOS; base: stri
         </Row>
         {!b.providers.stt.length || !b.providers.tts.length ? (
           <p className="text-xs text-muted-foreground">
-            {t("jarvis.settings.connectHint")}{" "}
-            {b.canManageIntegrations ? (
-              <Link href={`/${locale}/integrations`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                {t("jarvis.settings.openIntegrations")}
-                <ExternalLink className="size-3" aria-hidden />
-              </Link>
-            ) : (
-              t("jarvis.settings.askAdmin")
-            )}
+            {t("jarvis.settings.connectHint")}
           </p>
         ) : null}
         <p className="text-xs text-muted-foreground">

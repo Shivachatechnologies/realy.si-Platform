@@ -12,7 +12,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { getConnection } from "@/server/modules/integrations/connections";
 import { ProviderError } from "@/server/modules/integrations/providers";
 import { requestTool } from "@/server/modules/tools/gateway";
-import { actorId, authorize, calleeTimeZone, inWindow, isUuid, LIVE_STATUSES, maskNumber, nextWindowStart, OUTCOMES, PROVIDER_KEY, toE164, uuid } from "./common";
+import { actorId, authorize, calleeTimeZone, companyTwilioNumbers, TWILIO_VOICE, inWindow, isUuid, LIVE_STATUSES, maskNumber, nextWindowStart, OUTCOMES, PROVIDER_KEY, toE164, uuid } from "./common";
 import { placeCall } from "./providers";
 import { sealControlUrl, twilioCallerId, twilioPlaceCall } from "./telephony";
 import { emitVoiceEvent, ensureSettings, isDoNotCall, providerLabel } from "./service";
@@ -267,9 +267,12 @@ type DialableCall = Prisma.VoiceCallGetPayload<{ include: { agent: true; number:
 async function dialViaTwilio(call: DialableCall, settings: Awaited<ReturnType<typeof ensureSettings>>, companyName: string): Promise<{ status: VoiceCallStatus; detail: string }> {
   void companyName;
   const { organizationId, companyId } = call;
-  const conn = await getConnection(organizationId, companyId, "twilio");
+  const conn = await getConnection(organizationId, companyId, TWILIO_VOICE);
   if (!conn?.accessToken) return block(call.id, "credential_required");
-  const from = call.number && !call.number.releasedAt && call.number.source === "TWILIO" ? call.number.number : twilioCallerId(conn, settings.twilioFromNumber);
+  // Platform account: a configured caller id is used only when it is one of this company's numbers.
+  const own = await companyTwilioNumbers(organizationId, companyId);
+  const configured = settings.twilioFromNumber && own.has(settings.twilioFromNumber) ? settings.twilioFromNumber : null;
+  const from = call.number && !call.number.releasedAt && call.number.source === "TWILIO" ? call.number.number : twilioCallerId(conn, configured);
   if (!from) return block(call.id, "twilio_caller_id_missing");
   const ready = settings.bridgeMode === "PROVIDER_SIP" ? call.agent?.provider === "RETELL" || !!settings.bridgeSipUri : settings.bridgeMode === "CUSTOM_SIP" ? !!settings.bridgeSipUri : !!settings.mediaStreamUrl;
   if (!ready) return block(call.id, "bridge_not_configured");
@@ -466,7 +469,7 @@ export async function recordingResponse(ctx: RequestContext, organizationId: str
   const reqHeaders: Record<string, string> = range && /^bytes=\d*-\d*$/.test(range) ? { range } : {};
   // Twilio recordings may require the account's credentials (HTTP Basic) when media authentication is on.
   if (u.hostname === "api.twilio.com") {
-    const tw = await getConnection(organizationId, companyId, "twilio");
+    const tw = await getConnection(organizationId, companyId, TWILIO_VOICE);
     const sid = typeof tw?.config.accountSid === "string" ? tw.config.accountSid : null;
     if (tw?.accessToken && sid && u.pathname.startsWith(`/2010-04-01/Accounts/${sid}/`)) reqHeaders.authorization = `Basic ${Buffer.from(`${sid}:${tw.accessToken}`).toString("base64")}`;
     else throw notFound("Recording");

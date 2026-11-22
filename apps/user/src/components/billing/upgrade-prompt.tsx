@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useI18n } from "@/i18n/client";
+import { useI18n, usePrefetchMessages } from "@/i18n/client";
 import { formatMoney, formatNumber } from "@/i18n/format";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -74,6 +74,7 @@ export function upgradePropsFromError(err: unknown): UpgradePromptProps | null {
  */
 export function UpgradePrompt(props: UpgradePromptProps) {
   const { t, locale } = useI18n();
+  usePrefetchMessages("errors.reasons"); // specific reasons for failed upgrade actions (lazy subtree)
   const q = useEntitlementOverview(props.orgId, props.initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

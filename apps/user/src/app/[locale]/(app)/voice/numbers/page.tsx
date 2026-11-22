@@ -27,7 +27,7 @@ export default async function VoiceNumbersPage() {
   return wrap(
     <div className="grid gap-4">
       {provider && !o.providerConnected ? (
-        <Notice tone="warning" action={perms.integrations && providerKey ? <Link href={`/${locale}/integrations/${providerKey}`} className="text-sm font-medium text-primary hover:underline">{t("voice.setup.connect")}</Link> : undefined}>
+        <Notice tone="warning">
           {t("voice.credentialRequired", { provider: t(`voice.providers.${providerKey}.name`) })}
         </Notice>
       ) : null}

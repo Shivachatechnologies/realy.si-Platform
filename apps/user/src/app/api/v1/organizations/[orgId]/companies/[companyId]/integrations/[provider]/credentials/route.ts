@@ -1,11 +1,13 @@
 import { LIMITS } from "@/server/core/limits";
-import { body, route } from "@/server/core/http";
-import { apiKeyInput, saveApiKeyConnection } from "@/server/modules/integrations/service";
+import { route } from "@/server/core/http";
+import { adminManaged } from "@/server/modules/integrations/customer-access";
 
 type P = { orgId: string; companyId: string; provider: string };
 
-/** Connect an API-key provider. The response never contains the secret. */
-export const POST = route<P>(
-  { auth: "required", name: "POST /organizations/:orgId/companies/:companyId/integrations/:provider/credentials", rateLimits: LIMITS.tenantWrite, idempotent: true },
-  async ({ req, ctx }, { orgId, companyId, provider }) => saveApiKeyConnection(ctx, orgId, companyId, provider, await body(req, apiKeyInput)),
-);
+/**
+ * Customer credentials are not managed in the user app (docs/integrations.md "Who manages what"): every request is
+ * refused with 403 and a clear message. The backend service is kept; nothing stored is deleted.
+ */
+export const POST = route<P>({ auth: "required", name: "POST /organizations/:orgId/companies/:companyId/integrations/:provider/credentials", rateLimits: LIMITS.tenantWrite }, async () => {
+  throw adminManaged("credentials");
+});

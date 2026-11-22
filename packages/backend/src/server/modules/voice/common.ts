@@ -28,6 +28,22 @@ export const actorId = (ctx: RequestContext, organizationId: string) => ctx.acto
 export const PROVIDERS = ["VAPI", "RETELL"] as const satisfies readonly VoiceProvider[];
 /** Integrations catalog key of each voice provider. */
 export const PROVIDER_KEY: Record<VoiceProvider, "vapi" | "retell"> = { VAPI: "vapi", RETELL: "retell" };
+
+/**
+ * Telephony runs on the PLATFORM's Twilio account (platform-managed "twilio_voice", Admin → Platform keys): numbers
+ * and minutes go through it and count against the company's plan (voice.minutes). The company's own messaging
+ * "twilio" connection is not used for calls.
+ */
+export const TWILIO_VOICE = "twilio_voice" as const;
+
+/**
+ * Numbers on the platform Twilio account that belong to this company (bought or imported through Realy). The platform
+ * account holds every tenant's numbers, so caller ids, imports and webhook changes are limited to these.
+ */
+export async function companyTwilioNumbers(organizationId: string, companyId: string): Promise<Set<string>> {
+  const rows = await db().voicePhoneNumber.findMany({ where: { organizationId, companyId, source: "TWILIO", releasedAt: null }, select: { number: true } });
+  return new Set(rows.map((r) => r.number));
+}
 export const GOALS = ["QUALIFY_LEAD", "BOOK_MEETING", "SUPPORT_TRIAGE", "COLLECTIONS_REMINDER", "RECEPTIONIST"] as const;
 export const LANGUAGES = ["en-US", "de-DE", "hi-IN", "zh-CN", "ar-AE"] as const;
 export type VoiceLanguage = (typeof LANGUAGES)[number];

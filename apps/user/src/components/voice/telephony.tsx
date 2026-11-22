@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
@@ -27,35 +26,10 @@ export interface TelephonyValue {
   twilioStatusUrl: string;
 }
 
-function CopyField({ label, value }: { label: string; value: string }) {
-  const t = useT();
-  const [ok, setOk] = useState(false);
-  return (
-    <div className="grid gap-1">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-2">
-        <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-2 py-1.5 text-xs" dir="ltr">{value}</code>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            void navigator.clipboard?.writeText(value).then(() => setOk(true), () => setOk(false));
-          }}
-          aria-label={t("voice.telephony.copy")}
-        >
-          <Copy aria-hidden />
-          {ok ? t("voice.telephony.copied") : t("voice.telephony.copy")}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 /** Telephony layer (provider numbers or Twilio + AI bridge), human transfer number and retry rules. */
 export function TelephonyForm({ base, value, canManage, twilioConnected, retellSelected }: { base: string; value: TelephonyValue; canManage: boolean; twilioConnected: boolean; retellSelected: boolean }) {
   const t = useT();
-  const [f, setF] = useState({ ...value, sipPassword: "" });
+  const [f, setF] = useState({ ...value });
   const [saved, setSaved] = useState(false);
   const [connectNumber, setConnectNumber] = useState(value.twilioFromNumber ?? "");
   const [connected, setConnected] = useState<string | null>(null);
@@ -78,8 +52,6 @@ export function TelephonyForm({ base, value, canManage, twilioConnected, retellS
                 telephony: f.telephony,
                 bridgeMode: f.bridgeMode,
                 bridgeSipUri: f.bridgeSipUri || null,
-                sipUsername: f.sipUsername || null,
-                ...(f.sipPassword ? { sipPassword: f.sipPassword } : {}),
                 mediaStreamUrl: f.mediaStreamUrl || null,
                 twilioFromNumber: f.twilioFromNumber || null,
                 liveTranscription: f.liveTranscription,
@@ -109,17 +81,10 @@ export function TelephonyForm({ base, value, canManage, twilioConnected, retellS
             </Field>
             {f.bridgeMode === "PROVIDER_SIP" && !retellSelected ? <Notice tone="info">{t("voice.telephony.providerSipRetell")}</Notice> : null}
             {f.bridgeMode !== "MEDIA_STREAM" ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Field label={t("voice.telephony.sipUri")} htmlFor="tel-sip" className="sm:col-span-3">
-                  <Input id="tel-sip" dir="ltr" value={f.bridgeSipUri ?? ""} onChange={(e) => set("bridgeSipUri", e.target.value)} placeholder="sip:assistant@sip.vapi.ai" />
-                </Field>
-                <Field label={t("voice.telephony.sipUser")} htmlFor="tel-sip-user">
-                  <Input id="tel-sip-user" dir="ltr" autoComplete="off" value={f.sipUsername ?? ""} onChange={(e) => set("sipUsername", e.target.value)} />
-                </Field>
-                <Field label={t("voice.telephony.sipPassword")} htmlFor="tel-sip-pw" hint={f.sipPasswordSet ? t("voice.telephony.sipPasswordSet") : undefined}>
-                  <Input id="tel-sip-pw" type="password" autoComplete="new-password" value={f.sipPassword} onChange={(e) => set("sipPassword", e.target.value)} />
-                </Field>
-              </div>
+              // SIP credentials are never entered here (docs/integrations.md "Who manages what"): only the bridge address.
+              <Field label={t("voice.telephony.sipUri")} htmlFor="tel-sip">
+                <Input id="tel-sip" dir="ltr" value={f.bridgeSipUri ?? ""} onChange={(e) => set("bridgeSipUri", e.target.value)} placeholder="sip:assistant@sip.vapi.ai" />
+              </Field>
             ) : (
               <Field label={t("voice.telephony.streamUrl")} htmlFor="tel-wss" hint={t("voice.telephony.streamHint")}>
                 <Input id="tel-wss" dir="ltr" value={f.mediaStreamUrl ?? ""} onChange={(e) => set("mediaStreamUrl", e.target.value)} placeholder="wss://bridge.example.com/twilio" />
@@ -137,11 +102,7 @@ export function TelephonyForm({ base, value, canManage, twilioConnected, retellS
                 </span>
               </label>
             </div>
-            <div className="grid gap-2 rounded-md border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">{t("voice.telephony.webhooksHint")}</p>
-              <CopyField label={t("voice.telephony.voiceUrl")} value={value.twilioVoiceUrl} />
-              <CopyField label={t("voice.telephony.statusUrl")} value={value.twilioStatusUrl} />
-            </div>
+            <p className="text-xs text-muted-foreground">{t("voice.telephony.webhooksHint")}</p>
           </>
         ) : null}
         <div className="grid gap-3 sm:grid-cols-3">

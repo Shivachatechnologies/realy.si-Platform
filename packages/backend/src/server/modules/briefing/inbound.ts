@@ -57,13 +57,17 @@ export async function handleMetaVerify(key: string, query: URLSearchParams): Pro
 export async function handleMetaWebhook(key: string, raw: string, signature: string | null): Promise<{ status: number }> {
   const cfg = await configByKey(key);
   if (!cfg) return { status: 404 };
-  if (!cfg.metaAppSecretEnc) return { status: 403 };
-  let secret: string;
-  try {
-    secret = decryptSecret(cfg.metaAppSecretEnc, metaSecretPurpose(cfg.companyId));
-  } catch {
-    return { status: 403 };
+  // WhatsApp runs on Realy's Meta app (platform key WHATSAPP_APP_SECRET, Admin → Platform keys); a secret a company
+  // stored earlier is still honoured so existing setups keep working.
+  let secret: string | null = process.env.WHATSAPP_APP_SECRET?.trim() || null;
+  if (cfg.metaAppSecretEnc) {
+    try {
+      secret = decryptSecret(cfg.metaAppSecretEnc, metaSecretPurpose(cfg.companyId));
+    } catch {
+      return { status: 403 };
+    }
   }
+  if (!secret) return { status: 403 };
   if (!verifyMetaSignature(secret, raw, signature)) return { status: 403 };
   let body: unknown;
   try {

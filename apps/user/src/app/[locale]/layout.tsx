@@ -3,7 +3,7 @@ import { Geist_Mono, IBM_Plex_Sans_Arabic, Inter, Noto_Sans_Devanagari, Sora } f
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { directionOf, type AppLocale } from "@/i18n/config";
-import { getLocale, getMessages, getT } from "@/i18n/server";
+import { getClientMessages, getLocale, getT, LAZY_UNITS } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { Providers } from "@/components/providers";
 import { CookieNotice } from "@/components/legal/cookie-notice";
@@ -48,7 +48,8 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
   // Render per request: required for the per-request CSP nonce (see next.config.ts).
   await connection();
   const locale = await getLocale();
-  const messages = await getMessages(locale);
+  // Only the namespaces this layout's own client components use; route groups add theirs (<ClientMessages>).
+  const messages = await getClientMessages("[locale]", locale);
   const font = LOCALE_FONT[locale];
   // JARVIS (dark) is the default look; "light" and "system" are opt-in (components/theme/theme-switch.tsx).
   const theme = themeAttr(parseTheme((await cookies()).get(THEME_COOKIE)?.value));
@@ -61,7 +62,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
       style={font ? ({ "--font-locale": font } as React.CSSProperties) : undefined}
     >
       <body className="min-h-full bg-background font-sans text-sm text-foreground antialiased" data-surface="app">
-        <I18nProvider locale={locale} messages={messages}>
+        <I18nProvider locale={locale} messages={messages} lazy={LAZY_UNITS}>
           <Providers>{children}</Providers>
           {/* Strictly necessary cookies only, so an informational notice — not a consent gate (see the component). */}
           <CookieNotice />

@@ -56,7 +56,7 @@ export default async function VoiceOverviewPage() {
         </Card>
       ) : null}
       {overview.settings.provider && !overview.providerConnected ? (
-        <Notice tone="warning" action={perms.integrations ? <Link href={`/${locale}/integrations/${overview.settings.provider === "VAPI" ? "vapi" : "retell"}`} className="text-sm font-medium text-primary hover:underline">{t("voice.setup.connect")}</Link> : undefined}>
+        <Notice tone="warning">
           {t("voice.credentialRequired", { provider: t(`voice.providers.${overview.settings.provider === "VAPI" ? "vapi" : "retell"}.name`) })}
         </Notice>
       ) : null}

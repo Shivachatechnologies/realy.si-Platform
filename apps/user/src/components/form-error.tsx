@@ -1,13 +1,15 @@
 "use client";
 
 import { Notice } from "@/components/ui/notice";
-import { useT } from "@/i18n/client";
+import { usePrefetchMessages, useT } from "@/i18n/client";
 import { ApiError } from "@/lib/api-client";
 import { UpgradePrompt, upgradePropsFromError } from "@/components/billing/upgrade-prompt";
 
 /** Localized message for an API error code (the server's English message is for developers/logs). */
 export function useErrorMessage() {
   const t = useT();
+  // API error reasons are a lazy subtree (not inlined into the HTML): load it in the background for forms.
+  usePrefetchMessages("errors.reasons");
   return (err: unknown) => {
     const code = err instanceof ApiError ? err.code : "internal_error";
     // A more specific, user-actionable reason when the server provides one (e.g. checkout_in_progress).

@@ -220,7 +220,7 @@ export default async function MarketingRunPage() {
           <CardHeader title={t("marketing.run.ready.title")} description={t("marketing.run.ready.subtitle")} />
           <ul className="grid divide-y text-sm">
             {checks.map((c) => (
-              <li key={c.key} className="flex items-center gap-3 px-4 py-2.5">
+              <li key={c.key} className="flex min-w-0 items-center gap-3 px-4 py-2.5">
                 {c.ok ? <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden /> : <CircleAlert className="size-4 shrink-0 text-warning" aria-hidden />}
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{t(`marketing.run.ready.${c.key}`)}</span>

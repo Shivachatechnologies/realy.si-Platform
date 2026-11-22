@@ -477,7 +477,7 @@ export async function getKitView(ctx: RequestContext, organizationId: string, co
   const [tasks, images, research, refusal] = await Promise.all([
     db().agentTask.findMany({ where: { organizationId, companyId, id: { in: taskIds } }, select: { id: true, status: true, profile: true, startedAt: true } }),
     imageProviderStatus(organizationId, companyId),
-    db().integrationConnection.count({ where: { organizationId, companyId, provider: { in: ["tavily", "exa", "serpapi"] }, status: "CONNECTED" } }),
+    import("@/server/modules/integrations/platform-managed").then((m) => m.availablePlatformProviders(["tavily", "exa", "serpapi"])).then((l) => l.length),
     aiRefusal(organizationId, { model: await agentModel(env().AGENT_MODEL) }).catch(() => null),
   ]);
   const byKey = new Map(items.map((i) => [i.key, i]));

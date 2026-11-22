@@ -1032,3 +1032,91 @@ export const providerInfo = (key: string): ProviderInfo | undefined => PROVIDERS
 
 /** Providers that can be connected today (adapters awaiting documentation are listed but not connectable). */
 export const isConnectable = (info: ProviderInfo) => info.availability !== "awaiting_docs";
+
+// ───────────── Platform-managed providers ─────────────
+
+/**
+ * Providers run on REALY's own account (docs/integrations.md "Who manages what"): only the platform admin sets their
+ * keys, once, in Admin → Platform keys; customers never see or enter keys. Every customer call is attributed to the
+ * organization and company (plan meters, cost ledger). In the user app these providers show only as Available /
+ * Not available. Existing company connection rows for them are kept in the database but no longer used.
+ */
+export const PLATFORM_MANAGED_PROVIDERS = [
+  // AI
+  "openai",
+  "gemini",
+  "openrouter",
+  "openai_compatible",
+  // Research
+  "tavily",
+  "exa",
+  "serpapi",
+  "apollo",
+  "hunter",
+  "pdl",
+  // Creative
+  "stability",
+  "replicate",
+  "runway",
+  // Voice
+  "elevenlabs",
+  "deepgram",
+  // Video
+  "jamendo",
+  "luma",
+  "kling",
+  "shotstack",
+  "creatomate",
+  // Telephony
+  "twilio_voice",
+  "sip_trunk",
+  "vapi",
+  "retell",
+  // Email, messaging, storage and payments (Realy's accounts)
+  "sendgrid",
+  "mailchimp",
+  "twilio",
+  "whatsapp",
+  "s3",
+  "cloudflare",
+  "stripe",
+  "razorpay",
+] as const;
+export type PlatformManagedProvider = (typeof PLATFORM_MANAGED_PROVIDERS)[number];
+
+const PLATFORM_MANAGED = new Set<string>(PLATFORM_MANAGED_PROVIDERS);
+export const isPlatformManaged = (key: string): key is PlatformManagedProvider => PLATFORM_MANAGED.has(key);
+
+const snake = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+
+/** Environment / platform-key name of one credential field: OPENAI_API_KEY, TWILIO_VOICE_AUTH_TOKEN, KLING_ACCESS_KEY... */
+export const platformFieldKey = (provider: string, field: Pick<CredentialField, "key" | "labelKey">) => `${provider.toUpperCase()}_${snake(field.labelKey ?? field.key)}`;
+
+/** Every credential / setting field of a platform-managed provider (setup fields, then settings), with its platform key name. */
+export function platformCredentialFields(info: ProviderInfo): (CredentialField & { envKey: string })[] {
+  if (!isPlatformManaged(info.key)) return [];
+  const seen = new Set<string>();
+  const out: (CredentialField & { envKey: string })[] = [];
+  for (const f of [...(info.fields ?? []), ...(info.configFields ?? [])]) {
+    if (seen.has(f.key)) continue;
+    seen.add(f.key);
+    out.push({ ...f, envKey: platformFieldKey(info.key, f) });
+  }
+  return out;
+}
+
+/**
+ * How a customer gets a provider in the user app:
+ *  - "platform": runs on Realy's keys (Admin → Platform keys); read-only Available / Not available.
+ *  - "oauth": the customer logs in to their OWN account with Realy's OAuth app (client id / secret in Platform keys) —
+ *    a plain Connect / Disconnect button and the status, nothing else.
+ *  - "unavailable": acts in the customer's own account but has no OAuth flow yet; customers cannot connect it (an
+ *    existing connection keeps working and shows its status; the admin can disconnect it).
+ */
+export type CustomerConnectMode = "platform" | "oauth" | "unavailable";
+
+export function customerConnectMode(info: Pick<ProviderInfo, "key" | "authType" | "availability">): CustomerConnectMode {
+  if (isPlatformManaged(info.key)) return "platform";
+  if (info.authType === "oauth2" && info.availability !== "awaiting_docs") return "oauth";
+  return "unavailable";
+}

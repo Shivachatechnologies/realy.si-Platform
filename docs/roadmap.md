@@ -18,7 +18,7 @@ Status as of 2026-10-14. ✅ = implemented and covered by automated tests.
 | Identity | ✅ sign-up/in/out, argon2id, hashed DB sessions (absolute + idle expiry), TOTP MFA with replay protection, single-use recovery codes, MFA-pending sessions | `auth-events.test.ts`, E2E |
 | Tenancy | ✅ organizations, memberships, invitations (single-use, addressee-bound), companies with independent country dimensions, workspaces, projects | `rbac-tenancy.test.ts`, E2E |
 | RBAC | ✅ 59 permissions, 15 system roles, custom roles, 7 scope levels, no-escalation, MFA-gated critical permissions, AI-identity restrictions, 404-on-foreign-tenant | `rbac-tenancy.test.ts` |
-| Globalization | ✅ en-US, hi-IN, ar-AE (RTL), de-DE, zh-CN; locale negotiation; Intl formatting; 17 countries, 8 regions, 12 currencies, tax configs; logical-CSS and no-hardcoded-text guards | `i18n.test.ts`, `global-pricing.test.ts`, E2E |
+| Globalization | ✅ en-US, hi-IN, ar-AE (RTL), de-DE, zh-CN; locale negotiation; Intl formatting; 18 countries, 8 regions, 12 currencies, tax configs; logical-CSS and no-hardcoded-text guards | `i18n.test.ts`, `global-pricing.test.ts`, E2E |
 | Pricing/Billing foundation | ✅ catalog, COUNTRY→REGION→GLOBAL resolution, immutable versioning (DB-enforced), entitlements, promotions/coupons, billing profile with explicit country confirmation, regional quote, subscriptions locked to price versions | `global-pricing.test.ts`, E2E |
 | Admin foundation | ✅ Admin Console: pricing console, countries/regions, feature flags, platform audit log; audited bootstrap CLI for the first platform admin | E2E |
 | Audit + events | ✅ same-transaction audit (append-only, DB-enforced) and outbox; relay worker → BullMQ | `auth-events.test.ts`, live worker run |

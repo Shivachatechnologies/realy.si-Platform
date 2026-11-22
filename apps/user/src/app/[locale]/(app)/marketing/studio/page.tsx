@@ -51,16 +51,7 @@ export default async function CreativeStudioPage({ searchParams }: PageProps<"/[
           <CardHeader title={t("marketing.studio.creative.generateTitle")} description={t("marketing.studio.creative.generateHint")} />
           <div className="grid gap-3 p-4">
             {!status.image ? (
-              <Notice tone="info">
-                {t("marketing.studio.creative.connectImages")}{" "}
-                <Link className="underline" href={`/${locale}/integrations/openai`}>
-                  OpenAI
-                </Link>{" "}
-                ·{" "}
-                <Link className="underline" href={`/${locale}/integrations/stability`}>
-                  Stability
-                </Link>
-              </Notice>
+              <Notice tone="info">{t("marketing.studio.creative.notConnected")}</Notice>
             ) : null}
             {canManage ? <CreativeGenerator base={base} campaigns={campaigns} connected={status.image} /> : <p className="text-sm text-muted-foreground">{t("errors.forbidden")}</p>}
           </div>

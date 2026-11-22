@@ -3,7 +3,7 @@ import { db } from "@/server/core/db";
 import { logger } from "@/server/core/logger";
 import { dispatchJob, MODULE_JOBS_QUEUE } from "@/server/core/jobs";
 import { notifyUsers, usersWithPermission } from "@/server/modules/notifications/service";
-import { providerInfo } from "./catalog";
+import { isPlatformManaged, PLATFORM_MANAGED_PROVIDERS, providerInfo } from "./catalog";
 import { getConnection } from "./connections";
 import { logProviderCall } from "./client";
 import { ProviderError, testConnection } from "./providers";
@@ -27,6 +27,8 @@ export type VerifyOutcome = "verified" | "rejected" | "transient" | "no_credenti
 export async function verifyConnection(connectionId: string): Promise<VerifyOutcome> {
   const row = await db().integrationConnection.findUnique({ where: { id: connectionId } });
   if (!row || row.status === "DISCONNECTED" || !row.credentialsEnc) return "skipped";
+  // Legacy rows of platform-managed providers are kept but unused (Realy's keys are tested in Admin → Platform keys).
+  if (isPlatformManaged(row.provider)) return "skipped";
   const info = providerInfo(row.provider);
   if (!info || info.authType === "none" || (NO_SCHEDULED_TEST as readonly string[]).includes(row.provider) || info.availability === "awaiting_docs") return "skipped";
   // getConnection refreshes expiring OAuth tokens (and marks the connection ERROR when the refresh is refused).
@@ -95,7 +97,7 @@ export async function runDueHealthChecks(limit = 25): Promise<number> {
     where: {
       status: { in: ["CONNECTED", "ERROR"] },
       credentialsEnc: { not: null },
-      provider: { notIn: ["webhook", ...NO_SCHEDULED_TEST] },
+      provider: { notIn: ["webhook", ...NO_SCHEDULED_TEST, ...PLATFORM_MANAGED_PROVIDERS] },
       AND: [{ OR: [{ lastTestedAt: null }, { lastTestedAt: { lt: cutoff } }] }, { OR: [{ lastSuccessAt: null }, { lastSuccessAt: { lt: cutoff } }] }],
     },
     orderBy: { lastTestedAt: { sort: "asc", nulls: "first" } },

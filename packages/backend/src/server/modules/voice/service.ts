@@ -5,11 +5,11 @@ import { db, transaction, type Db, type Tx } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { decryptSecret, encryptSecret, randomToken } from "@/server/core/crypto";
 import { conflict, invalid, notFound } from "@/server/core/errors";
-import { isIntegrationEnabled } from "@/server/core/platform-controls";
 import { writeAudit } from "@/server/modules/audit/service";
 import { emitDomainEvent } from "@/server/modules/events/emit";
 import { DOMAIN_EVENTS, type DomainEventType } from "@/server/modules/events/catalog";
-import { actorId, authorize, isUuid, minutesLabel, PROVIDER_KEY, PROVIDERS, toE164, uuid } from "./common";
+import { actorId, authorize, companyTwilioNumbers, isUuid, minutesLabel, PROVIDER_KEY, PROVIDERS, toE164, TWILIO_VOICE, uuid } from "./common";
+import { platformAvailability } from "@/server/modules/integrations/platform-managed";
 import { webhookUrl } from "./providers";
 import { CAPABILITIES, isSipUri, isWss, sealSipPassword, twilioHookUrl } from "./telephony";
 
@@ -90,17 +90,15 @@ export type ConnectionState = "connected" | "error" | "missing" | "disabled";
 
 /** Connection state of the voice providers and Twilio (no credentials read). */
 export async function providerStates(organizationId: string, companyId: string): Promise<Record<"vapi" | "retell" | "twilio", ConnectionState>> {
-  const rows = await db().integrationConnection.findMany({ where: { organizationId, companyId, provider: { in: ["vapi", "retell", "twilio"] } }, select: { provider: true, status: true, credentialsEnc: true } });
-  const out = { vapi: "missing", retell: "missing", twilio: "missing" } as Record<"vapi" | "retell" | "twilio", ConnectionState>;
-  for (const key of ["vapi", "retell", "twilio"] as const) {
-    if (!(await isIntegrationEnabled(key))) {
-      out[key] = "disabled";
-      continue;
-    }
-    const r = rows.find((x) => x.provider === key);
-    out[key] = !r || r.status === "DISCONNECTED" || !r.credentialsEnc ? "missing" : r.status === "ERROR" ? "error" : "connected";
-  }
-  return out;
+  void organizationId;
+  void companyId;
+  // Vapi, Retell and Twilio Voice are platform-managed (Admin → Platform keys): "connected" means available on the
+  // platform's account, "missing" means the platform has not configured it yet. "twilio" is the Twilio Voice account.
+  const state = async (p: string): Promise<ConnectionState> => {
+    const a = await platformAvailability(p);
+    return a === "available" ? "connected" : a === "disabled" ? "disabled" : "missing";
+  };
+  return { vapi: await state("vapi"), retell: await state("retell"), twilio: await state(TWILIO_VOICE) };
 }
 
 export function publicSettings(s: Awaited<ReturnType<typeof ensureSettings>>) {
@@ -285,8 +283,10 @@ export async function connectTwilioNumber(ctx: RequestContext, organizationId: s
   const { getConnection } = await import("@/server/modules/integrations/connections");
   const { twilioOwnedNumbers } = await import("./providers");
   const { providerFetch } = await import("@/server/modules/integrations/client");
-  const conn = await getConnection(organizationId, companyId, "twilio");
-  if (!conn?.accessToken) throw invalid("Connect Twilio in Integrations first", { reason: "voice_credential_required" });
+  const conn = await getConnection(organizationId, companyId, TWILIO_VOICE);
+  if (!conn?.accessToken) throw invalid("Telephony is not available on the platform right now", { reason: "voice_credential_required" });
+  // Platform account: only this company's own numbers can be pointed at its webhooks.
+  if (!(await companyTwilioNumbers(organizationId, companyId)).has(e164)) throw notFound("Twilio number");
   const owned = await twilioOwnedNumbers(conn);
   const hit = owned.find((n) => n.number === e164);
   if (!hit?.sid) throw notFound("Twilio number");

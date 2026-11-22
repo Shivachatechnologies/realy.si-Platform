@@ -12,10 +12,8 @@ import { useT } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { useAction, type Person } from "@/components/comms/client";
+import { CHANNELS, PRIORITIES, STATUSES } from "./constants";
 
-export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
-export const STATUSES = ["NEW", "OPEN", "PENDING", "ON_HOLD", "SOLVED", "CLOSED"] as const;
-export const CHANNELS = ["WEB", "EMAIL", "CHAT", "PHONE"] as const;
 const MAX_BYTES = 5 * 1024 * 1024;
 
 interface Option {

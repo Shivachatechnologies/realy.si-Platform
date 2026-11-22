@@ -35,6 +35,8 @@
   --primary: var(--brand-blue);
   --primary-2: var(--brand-deep);
   --primary-foreground: #ffffff;
+  /* Solid fills under white text (primary buttons): ≥ 4.5:1 with --primary-foreground in both themes. */
+  --primary-solid: var(--primary);
   --accent: var(--brand-mist);
   --accent-foreground: var(--brand-deep);
   --info: var(--brand-blue);
@@ -96,6 +98,7 @@
     --primary: #3a7bff;
     --primary-2: var(--brand-deep);
     --primary-foreground: #ffffff;
+    --primary-solid: #2a66e8;
     --accent: #142a55;
     --accent-foreground: #b9d0ff;
     --info: var(--brand-sky);
@@ -130,6 +133,7 @@
   --primary: #3a7bff;
   --primary-2: var(--brand-deep);
   --primary-foreground: #ffffff;
+  --primary-solid: #2a66e8;
   --accent: #142a55;
   --accent-foreground: #b9d0ff;
   --info: var(--brand-sky);
@@ -171,6 +175,7 @@
   --color-primary: var(--primary);
   --color-primary-2: var(--primary-2);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-solid: var(--primary-solid);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-info: var(--info);

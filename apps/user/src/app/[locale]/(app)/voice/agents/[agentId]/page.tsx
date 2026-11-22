@@ -56,7 +56,7 @@ export default async function VoiceAgentPage({ params }: PageProps<"/[locale]/vo
         />
         <CardBody className="grid gap-3">
           {a.syncError ? (
-            <Notice tone="warning" action={perms.integrations ? <Link href={`/${locale}/integrations/${providerKey}`} className="text-sm font-medium text-primary hover:underline">{t("voice.setup.connect")}</Link> : undefined}>
+            <Notice tone="warning">
               {a.syncError}
             </Notice>
           ) : null}

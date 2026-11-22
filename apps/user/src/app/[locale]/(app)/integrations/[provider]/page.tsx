@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AccountPicker, ApiKeyForm, ConnectionActions, ConnectionSettingsForm, DocsLink, OAuthConnectButton } from "@/components/integrations/setup";
+import { DisconnectButton, DocsLink, OAuthConnectButton } from "@/components/integrations/setup";
 import { formatCostMicros } from "@/components/integrations/usage-format";
-import { CopyText, HookRowActions, NewHookForm } from "@/components/integrations/webhook-managers";
 import { SyncTable } from "@/components/integrations/sync-table";
-import { BankFeedCard, ProviderEventsCard, ProviderWebhookCard } from "@/components/integrations/provider-panels";
+import { BankFeedCard, ProviderEventsCard } from "@/components/integrations/provider-panels";
 import { listProviderEventsFor } from "@/server/modules/integrations/provider-webhooks";
 import { bankFeed } from "@/server/modules/integrations/services/banking";
 import { integrationTabLabels, IntegrationsTabs } from "@/components/integrations/tabs";
@@ -16,10 +15,9 @@ import { Notice } from "@/components/ui/notice";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDateTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
-import { providerInfo, type ConnectionAccount } from "@/server/modules/integrations/catalog";
-import { getIntegration, storedSecretNames, usageSummary } from "@/server/modules/integrations/service";
+import { customerConnectMode, providerInfo } from "@/server/modules/integrations/catalog";
+import { getIntegration, usageSummary } from "@/server/modules/integrations/service";
 import { providerRateLimit } from "@/server/modules/integrations/client";
-import { listHooks } from "@/server/modules/integrations/webhooks";
 import { can } from "@/server/modules/rbac/service";
 import { companyChain } from "@/server/modules/rbac/scope";
 import { requireOrgContext } from "@/server/workspace";
@@ -61,20 +59,12 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
   const tz = company.timezone ?? "UTC";
   const conn = data.connection;
   const oauthError = typeof sp.oauthError === "string" && OAUTH_ERRORS.includes(sp.oauthError) ? sp.oauthError : null;
-  const hooks = info.key === "webhook" ? await listHooks(viewer.ctx, org.id, company.id) : [];
   const isBankFeed = info.key === "plaid" || info.key === "wise";
-  const [usage, secretNames, events, feed] = await Promise.all([
+  const [usage, events, feed] = await Promise.all([
     info.key === "webhook" ? null : usageSummary(viewer.ctx, org.id, company.id, { provider }),
-    conn && info.configFields?.length && canManage ? storedSecretNames(org.id, company.id, provider) : Promise.resolve([] as string[]),
     info.inboundWebhooks && (conn || data.previous) ? listProviderEventsFor(org.id, company.id, provider) : null,
     conn && isBankFeed ? bankFeed(viewer.ctx, org.id, company.id, info.key as "plaid" | "wise", 20) : null,
   ]);
-  const awaitingDocs = info.availability === "awaiting_docs";
-  const cfg = (conn?.config && typeof conn.config === "object" && !Array.isArray(conn.config) ? conn.config : {}) as Record<string, unknown>;
-  const accounts = Array.isArray(cfg.accounts) ? (cfg.accounts as ConnectionAccount[]) : [];
-  const activeAccountId = typeof cfg.activeAccountId === "string" ? cfg.activeAccountId : (accounts[0]?.id ?? null);
-  const setupSteps = t(`integrations.providers.${info.key}.setup`).split("\n").filter(Boolean);
-  const usesOAuth = info.authType === "oauth2" || !!info.oauthAlternative;
   const rate = providerRateLimit(info.key);
   const tabs = (
     <IntegrationsTabs
@@ -84,46 +74,88 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
     />
   );
 
-  if (info.key === "webhook") {
+  if (data.platform) {
+    // Platform-managed provider (AI, research, creative, voice, video, telephony): runs on the platform's account. No
+    // key entry or setup here — customers only see whether it is available; usage counts against their plan.
+    const available = data.platform === "available";
     return frame(
       <>
         {tabs}
-        <Card>
-          <CardHeader title={t("integrations.webhooks.incoming")} description={t("integrations.webhooks.incomingHelp")} actions={<Link className="text-sm text-primary hover:underline" href={`/${locale}/integrations/webhooks`}>{t("integrations.webhooks.manageAll")}</Link>} />
-          {canManage ? <NewHookForm base={base} /> : null}
-          {hooks.length === 0 ? (
-            <p className="border-t p-4 text-muted-foreground">{t("integrations.webhooks.noHooks")}</p>
-          ) : (
-            <ul className="divide-y border-t">
-              {hooks.map((h) => (
-                <li key={h.id} className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                  <div className="grid min-w-0 gap-1">
-                    <Link href={`/${locale}/integrations/webhooks/hooks/${h.id}`} className="font-medium hover:underline">
-                      {h.name}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="grid content-start gap-4">
+            <Card>
+              <CardHeader
+                title={t("integrations.platform.title")}
+                actions={
+                  <Badge tone={available ? "success" : "neutral"}>
+                    <StatusDot tone={available ? "success" : "neutral"} />
+                    {available ? t("integrations.platform.available") : t("integrations.platform.unavailable")}
+                  </Badge>
+                }
+              />
+              <CardBody className="grid gap-3 text-sm">
+                <p>{available ? t("integrations.platform.availableBody", { name: info.name }) : data.platform === "disabled" ? t("integrations.platform.disabledBody", { name: info.name }) : t("integrations.platform.unavailableBody", { name: info.name })}</p>
+                <p className="text-muted-foreground">{t("integrations.platform.usageBody")}</p>
+                {data.plan.locked ? <Notice tone="warning">{t("integrations.marketplace.planLockedNotice", { plan: t(`integrations.marketplace.plans.${data.plan.minPlan}`) })}</Notice> : null}
+              </CardBody>
+            </Card>
+            {usage && usage.totals.calls > 0 ? (
+              <Card>
+                <CardHeader
+                  title={t("integrations.usage.title")}
+                  description={t("integrations.usage.cardSummary", { calls: usage.totals.calls, failed: usage.totals.failed, cost: formatCostMicros(usage.totals.costMicros, locale) })}
+                  actions={
+                    <Link href={`/${locale}/integrations/${info.key}/usage`} className="text-sm text-primary hover:underline">
+                      {t("integrations.usage.open")}
                     </Link>
-                    <CopyText value={h.url} label={t("integrations.webhooks.copy")} />
-                    <p className="text-xs text-muted-foreground">
-                      {t(`integrations.webhooks.verification${h.verification}`)} · {h.active ? t("common.enabled") : t("common.disabled")} · {t("integrations.webhooks.deliveryCount", { count: h._count.deliveries })}
-                    </p>
+                  }
+                />
+              </Card>
+            ) : null}
+          </div>
+          <div className="grid content-start gap-4">
+            <Card>
+              <CardHeader title={t("integrations.about")} />
+              <CardBody className="grid gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("integrations.category")}</p>
+                  <p>{t(`integrations.categories.${info.category}`)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("integrations.authType")}</p>
+                  <p>{t("integrations.platform.managedBy")}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("integrations.powers")}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {info.capabilities.map((c) => (
+                      <Badge key={c}>{t(`integrations.capabilities.${c}`)}</Badge>
+                    ))}
                   </div>
-                  {canManage ? <HookRowActions base={base} hookId={h.id} active={h.active} /> : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
       </>,
     );
   }
+
+  // Customer-connected providers: an OAuth login to the customer's OWN account is the only thing they can do here.
+  // Everything else (API keys, credentials, settings, webhooks) is managed by Realy in the Control Center.
+  const mode = customerConnectMode(info);
+  const oauth = mode === "oauth";
+  const canConnect = oauth && canManage && !data.disabled && data.oauthAvailable && !data.plan.locked;
 
   return frame(
     <>
       {tabs}
       {sp.connected === "1" ? <Notice tone="success">{t("integrations.connectedNotice")}</Notice> : null}
       {oauthError ? <Notice tone="danger">{t(`integrations.oauthErrors.${oauthError}`)}</Notice> : null}
-      {awaitingDocs ? <Notice tone="info">{t(`integrations.providers.${info.key}.awaiting`)}</Notice> : null}
+      {data.disabled ? <Notice tone="warning">{t("integrations.platform.providerDisabled", { name: info.name })}</Notice> : null}
+      {!data.disabled && oauth && !data.oauthAvailable ? <Notice tone="info">{t("integrations.platform.oauthNotReady", { name: info.name })}</Notice> : null}
+      {!oauth ? <Notice tone="info">{conn ? t("integrations.platform.legacyConnection", { name: info.name }) : t("integrations.platform.notConnectable", { name: info.name })}</Notice> : null}
       {data.plan.locked && !conn ? <Notice tone="warning">{t("integrations.marketplace.planLockedNotice", { plan: t(`integrations.marketplace.plans.${data.plan.minPlan}`) })}</Notice> : null}
-      {info.verification === "config_only" && conn ? <Notice tone="info">{t("integrations.marketplace.configOnlyNotice")}</Notice> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid content-start gap-4">
           <Card>
@@ -152,10 +184,6 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                     <dd>{formatDateTime(conn.connectedAt, locale, tz)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">{t("integrations.lastTested")}</dt>
-                    <dd>{conn.lastTestedAt ? formatDateTime(conn.lastTestedAt, locale, tz) : "—"}</dd>
-                  </div>
-                  <div>
                     <dt className="text-xs text-muted-foreground">{t("integrations.lastSync")}</dt>
                     <dd>{conn.lastSyncAt ? formatDateTime(conn.lastSyncAt, locale, tz) : "—"}</dd>
                   </div>
@@ -163,114 +191,24 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
                     <dt className="text-xs text-muted-foreground">{t("integrations.health.lastSuccess")}</dt>
                     <dd>{conn.lastSuccessAt ? formatDateTime(conn.lastSuccessAt, locale, tz) : "—"}</dd>
                   </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">{t("integrations.health.lastFailure")}</dt>
-                    <dd>
-                      {conn.lastFailureAt ? formatDateTime(conn.lastFailureAt, locale, tz) : "—"}
-                      {conn.errorStreak > 0 ? <span className="ms-2 text-xs text-danger">{t("integrations.health.streak", { count: conn.errorStreak })}</span> : null}
-                    </dd>
-                  </div>
-                  {conn.tokenExpiresAt ? (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">{t("integrations.tokenExpires")}</dt>
-                      <dd>{formatDateTime(conn.tokenExpiresAt, locale, tz)}</dd>
-                    </div>
-                  ) : null}
                 </dl>
               ) : (
-                <p className="text-sm text-muted-foreground">{t("integrations.notConnectedHelp")}</p>
+                <p className="text-sm text-muted-foreground">{oauth ? t("integrations.platform.oauthHelp", { name: info.name }) : t("integrations.notConnectedHelp")}</p>
               )}
-              {conn?.lastError ? <Notice tone="danger">{conn.lastError}</Notice> : null}
-              {conn && conn.status === "CONNECTED" && !conn.lastError && !conn.lastTestedAt && !conn.lastSuccessAt ? <Notice tone="warning">{t("integrations.marketplace.unverifiedNotice")}</Notice> : null}
-
-              {info.oauthAlternative && !data.oauthAvailable ? null : usesOAuth ? (
-                data.missingEnv.length && !data.oauthAvailable ? (
-                  <Notice tone="warning">
-                    <p className="font-medium">{t("integrations.notConfiguredTitle")}</p>
-                    <p className="mt-1">{t("integrations.notConfiguredBody")}</p>
-                    <ul className="mt-2 grid gap-1">
-                      {data.missingEnv.map((v) => (
-                        <li key={v}>
-                          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{v}</code>
-                        </li>
-                      ))}
-                    </ul>
-                    {data.redirectUri ? (
-                      <p className="mt-2 text-xs">
-                        {t("integrations.redirectUri")}: <code className="break-all font-mono">{data.redirectUri}</code>
-                      </p>
-                    ) : null}
-                  </Notice>
-                ) : canManage ? (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <OAuthConnectButton provider={info.key} name={info.name} orgId={org.id} companyId={company.id} locale={locale} reconnect={!!conn} />
-                    <p className="text-xs text-muted-foreground">{t("integrations.oauthHelp")}</p>
-                  </div>
-                ) : null
-              ) : null}
-
-              {info.oauthAlternative && data.oauthAvailable && canManage ? <p className="text-xs text-muted-foreground">{t("integrations.orApiKey")}</p> : null}
-              {info.authType === "api_key" && canManage && !awaitingDocs ? (
-                <div className="grid gap-2">
-                  <h3 className="text-sm font-medium">{conn ? t("integrations.replaceCredentials") : t("integrations.enterCredentials")}</h3>
-                  <ApiKeyForm base={base} provider={info.key} fields={info.fields ?? []} connected={!!conn} />
+              {conn?.status === "ERROR" ? <Notice tone="danger">{oauth ? t("integrations.platform.reconnectHint", { name: info.name }) : t("integrations.platform.failingHint")}</Notice> : null}
+              {canConnect ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <OAuthConnectButton provider={info.key} name={info.name} orgId={org.id} companyId={company.id} locale={locale} reconnect={!!conn} />
+                  <p className="text-xs text-muted-foreground">{t("integrations.oauthHelp")}</p>
                 </div>
               ) : null}
-
-              {conn && canManage ? <ConnectionActions base={base} provider={info.key} canSync={!!info.syncKinds?.length} syncEnabled={conn.syncEnabled} syncIntervalMinutes={conn.syncIntervalMinutes} /> : null}
+              {conn && oauth && canManage ? <DisconnectButton base={base} provider={info.key} /> : null}
               {!canManage ? <p className="text-xs text-muted-foreground">{t("integrations.manageHint")}</p> : null}
             </CardBody>
           </Card>
 
-          {conn && data.webhookUrl && info.inboundWebhooks ? <ProviderWebhookCard t={t} info={info} url={data.webhookUrl} config={cfg} /> : null}
           {feed && isBankFeed ? <BankFeedCard t={t} provider={info.key as "plaid" | "wise"} feed={feed} base={base} locale={locale} tz={tz} canManage={canManage} returned={sp.plaid === "return"} /> : null}
           {events ? <ProviderEventsCard t={t} rows={events.data.slice(0, 15)} locale={locale} tz={tz} /> : null}
-
-          {!conn && !awaitingDocs ? (
-            <Card>
-              <CardHeader title={t("integrations.setup.title")} description={t("integrations.setup.help")} />
-              <ol className="grid list-decimal gap-2 p-4 ps-8 text-sm">
-                {setupSteps.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-                {info.authType === "oauth2" ? (
-                  <>
-                    <li>{t("integrations.setup.oauthEnv", { vars: info.envVars.join(", ") })}</li>
-                    {data.redirectUri ? (
-                      <li>
-                        {t("integrations.setup.oauthRedirect")} <code className="break-all font-mono text-xs" dir="ltr">{data.redirectUri}</code>
-                      </li>
-                    ) : null}
-                    <li>{t("integrations.setup.oauthConnect", { name: info.name })}</li>
-                  </>
-                ) : info.authType === "api_key" ? (
-                  <li>{t("integrations.setup.apiKeyPaste", { fields: (info.fields ?? []).filter((f) => f.required).map((f) => t(`integrations.fields.${f.labelKey ?? f.key}`)).join(", ") })}</li>
-                ) : null}
-              </ol>
-            </Card>
-          ) : null}
-
-          {conn && info.multiAccount ? (
-            <Card>
-              <CardHeader title={t("integrations.accounts.title")} description={t("integrations.accounts.help")} />
-              <div className="p-4">{accounts.length ? <AccountPicker base={base} provider={info.key} accounts={accounts} activeId={activeAccountId} canManage={canManage} /> : <p className="text-sm text-muted-foreground">{t("integrations.accounts.empty")}</p>}</div>
-            </Card>
-          ) : null}
-
-          {conn && info.configFields?.length && canManage ? (
-            <Card>
-              <CardHeader title={t("integrations.settings.title")} description={t(`integrations.providers.${info.key}.settingsHelp`)} />
-              <div className="p-4">
-                <ConnectionSettingsForm
-                  base={base}
-                  provider={info.key}
-                  fields={info.configFields}
-                  values={Object.fromEntries(info.configFields.filter((f) => !f.secret && typeof cfg[f.key] === "string").map((f) => [f.key, cfg[f.key] as string]))}
-                  storedSecrets={secretNames}
-                />
-              </div>
-            </Card>
-          ) : null}
 
           {usage && (conn || usage.totals.calls > 0) ? (
             <Card>
@@ -300,7 +238,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
             </Card>
           ) : null}
 
-          {info.syncKinds?.length ? (
+          {info.syncKinds?.length && conn ? (
             <Card>
               <CardHeader title={t("integrations.syncHistory")} description={t(`integrations.providers.${info.key}.sync`)} />
               {data.syncs.length ? <SyncTable rows={data.syncs} t={t} locale={locale} tz={tz} /> : <p className="p-4 text-muted-foreground">{t("integrations.syncs.empty")}</p>}
@@ -318,7 +256,7 @@ export default async function IntegrationPage({ params, searchParams }: PageProp
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("integrations.authType")}</p>
-                <p>{t(`integrations.authTypes.${info.authType}`)}</p>
+                <p>{oauth ? t("integrations.platform.oauthLogin") : t("integrations.platform.managedBy")}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("integrations.powers")}</p>

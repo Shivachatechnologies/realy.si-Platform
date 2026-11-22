@@ -40,7 +40,7 @@ export default async function StudioImagesPage() {
           <CardHeader icon={<Sparkles />} title={t("creative.images.title")} description={t("creative.images.description")} />
           <CardBody className="grid gap-3">
             {!connected ? (
-              <Notice tone="info" action={perms.integrations ? <Link href={`/${locale}/integrations/openai`} className="text-sm font-medium text-primary hover:underline">{t("creative.common.connect")}</Link> : undefined}>
+              <Notice tone="info">
                 {t("creative.images.notConnected")}
               </Notice>
             ) : null}

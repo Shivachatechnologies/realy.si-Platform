@@ -1,5 +1,6 @@
 # Render Blueprint for the Realy worker service (docs/deployment.md "Worker service").
-# The web app runs on Vercel; this file only defines the background worker and its Redis.
+# The web app runs on Vercel; this file only defines the background worker. It must use the SAME Redis as the web
+# app (REDIS_URL from Vercel, e.g. Upstash rediss://…): web enqueues jobs there and the worker consumes them.
 # Usage: Render → Blueprints → New Blueprint Instance → this repository, blueprint path deploy/worker/render.yaml.
 # Secrets are `sync: false`: Render asks for their values on first deploy; never commit them.
 services:
@@ -9,7 +10,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: node_modules/.bin/tsx src/worker/index.ts
-    plan: standard
+    plan: starter
     numInstances: 1
     # Must exceed WORKER_SHUTDOWN_TIMEOUT_MS so running jobs can finish on deploys and restarts.
     maxShutdownDelaySeconds: 60
@@ -20,11 +21,9 @@ services:
         value: worker
       - key: WORKER_SHUTDOWN_TIMEOUT_MS
         value: "45000"
+      # Same value as REDIS_URL on Vercel (shared queue). Never a separate Redis.
       - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: realy-redis
-          property: connectionString
+        sync: false
       # Same values as the web app (Vercel): database, encryption key, app URL, AI and provider credentials.
       - key: DATABASE_URL
         sync: false
@@ -43,9 +42,3 @@ services:
       - key: SENTRY_DSN
         sync: false
 
-  # Redis for BullMQ: keys must never be evicted.
-  - type: keyvalue
-    name: realy-redis
-    plan: standard
-    maxmemoryPolicy: noeviction
-    ipAllowList: []
