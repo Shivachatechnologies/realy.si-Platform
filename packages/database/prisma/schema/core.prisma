@@ -753,6 +753,8 @@ model Company {
   voiceTranscriptLines            VoiceTranscriptLine[]
   voiceCallingRuns                VoiceCallingRun[]
   voiceCallingTargets             VoiceCallingTarget[]
+  // ── G1 ──
+  aiRoleProfiles                  AiRoleProfile[]
 
   // Target of composite FKs that pin child rows to the same organization (database-level tenant consistency).
   @@unique([id, organizationId])
@@ -968,6 +970,8 @@ enum AgentTaskStatus {
   COMPLETED
   FAILED
   CANCELLED
+  /// Parked: the run filed approval requests and resumes with their outcome once they are decided (G1, B27).
+  WAITING_APPROVAL
 }
 
 model AgentTask {
@@ -1009,6 +1013,8 @@ model AgentTask {
   parentTaskId String? @map("parent_task_id") @db.Uuid
   /// Delegation depth (0 = assigned by a person or schedule).
   depth        Int     @default(0)
+  /// Park-on-approval state (G1, B27): { parkOnApproval, parks, waitingFor[], conversation… } — resumed by approvals/jobs.ts.
+  resumeState  Json?   @map("resume_state")
 
   company    Company     @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   milestone  Milestone?  @relation(fields: [milestoneId, companyId], references: [id, companyId], onDelete: NoAction)
@@ -1085,6 +1091,11 @@ model Approval {
   expiresAt           DateTime       @map("expires_at") @db.Timestamptz(3)
   createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  /// Execution attempts of the approved action (G1, B3): the first run plus manual retries of a FAILED action.
+  attempts            Int            @default(0)
+  lastAttemptAt       DateTime?      @map("last_attempt_at") @db.Timestamptz(3)
+  /// The AI Command run the requesting task belongs to (annotated with the outcome).
+  commandRunId        String?        @map("command_run_id") @db.Uuid
 
   company Company    @relation(fields: [companyId, organizationId], references: [id, organizationId], onDelete: Cascade)
   task    AgentTask? @relation(fields: [taskId, companyId], references: [id, companyId], onDelete: NoAction)
@@ -1092,6 +1103,7 @@ model Approval {
   @@index([organizationId, companyId, status, createdAt])
   @@index([taskId])
   @@index([status, expiresAt])
+  @@index([commandRunId])
   @@map("approvals")
 }
 

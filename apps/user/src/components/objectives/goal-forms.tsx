@@ -19,9 +19,15 @@ interface GoalFields {
   ownerId: string;
   pillarId: string;
   targetDate: string;
+  /** Budget (B15): an amount in a currency, or empty for none. */
+  budgetAmount: string;
+  budgetCurrency: string;
 }
 
-const emptyGoal: GoalFields = { title: "", description: "", horizon: "QUARTER", ownerId: "", pillarId: "", targetDate: "" };
+const emptyGoal: GoalFields = { title: "", description: "", horizon: "QUARTER", ownerId: "", pillarId: "", targetDate: "", budgetAmount: "", budgetCurrency: "USD" };
+
+/** Request body for a goal: the budget travels as { amount, currency } (null clears it). */
+const goalBody = ({ budgetAmount, budgetCurrency, ...rest }: GoalFields) => ({ ...rest, budget: budgetAmount.trim() ? { amount: budgetAmount.trim(), currency: budgetCurrency.trim().toUpperCase() } : null });
 
 function GoalFieldset({ prefix, v, set, people, pillars }: { prefix: string; v: GoalFields; set: (p: Partial<GoalFields>) => void; people: Option[]; pillars: Option[] }) {
   const t = useT();
@@ -62,6 +68,12 @@ function GoalFieldset({ prefix, v, set, people, pillars }: { prefix: string; v: 
           ))}
         </Select>
       </Field>
+      <Field label={t("objectives.budget.amount")} htmlFor={`${prefix}-budget`} hint={t("objectives.budget.hint")}>
+        <Input id={`${prefix}-budget`} inputMode="decimal" value={v.budgetAmount} pattern={"^\\d{1,12}(\\.\\d{1,4})?$"} placeholder="5000" onChange={(e) => set({ budgetAmount: e.target.value })} />
+      </Field>
+      <Field label={t("objectives.budget.currency")} htmlFor={`${prefix}-currency`}>
+        <Input id={`${prefix}-currency`} value={v.budgetCurrency} maxLength={3} pattern="^[A-Za-z]{3}$" onChange={(e) => set({ budgetCurrency: e.target.value.toUpperCase() })} />
+      </Field>
     </div>
   );
 }
@@ -72,7 +84,7 @@ export function NewGoalForm({ base, locale, people, pillars, canPlan }: { base: 
   const [v, setV] = useState<GoalFields>(emptyGoal);
   const [plan, setPlan] = useState(canPlan);
   const { busy, error, submit } = useSubmit(async () => {
-    const r = await api<{ goal: { id: string }; planError: { reason: string | null; code: string } | null }>(`${base}/goals`, { body: { ...v, plan: canPlan && plan } });
+    const r = await api<{ goal: { id: string }; planError: { reason: string | null; code: string } | null }>(`${base}/goals`, { body: { ...goalBody(v), plan: canPlan && plan } });
     if (canPlan && plan) router.push(`/${locale}/objectives/plan/${r.goal.id}${r.planError ? `?planError=${encodeURIComponent(r.planError.reason ?? r.planError.code)}` : ""}`);
   }, () => setV(emptyGoal));
   return (
@@ -99,7 +111,7 @@ export function EditGoalDialog({ base, goal, people, pillars }: { base: string; 
   const t = useT();
   const [open, setOpen] = useState(false);
   const [v, setV] = useState<GoalFields>(goal);
-  const { busy, error, submit } = useSubmit(() => api(`${base}/goals/${goal.id}`, { method: "PATCH", body: v }));
+  const { busy, error, submit } = useSubmit(() => api(`${base}/goals/${goal.id}`, { method: "PATCH", body: goalBody(v) }));
   return (
     <Dialog open={open} onOpenChange={(o) => (setOpen(o), o && setV(goal))}>
       <DialogTrigger asChild>

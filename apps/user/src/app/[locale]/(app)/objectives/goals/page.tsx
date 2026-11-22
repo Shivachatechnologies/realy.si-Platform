@@ -4,6 +4,7 @@ import Link from "next/link";
 import { EditGoalDialog, GoalStatusSelect, NewGoalForm } from "@/components/objectives/goal-forms";
 import { DeleteButton } from "@/components/objectives/objective-forms";
 import { ProgressBar } from "@/components/objectives/progress";
+import { BudgetCell } from "@/components/objectives/budget-cell";
 import { ObjectivesTabs } from "@/components/objectives/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { aiConfigured } from "@/server/modules/agents/runtime";
-import { GOAL_HORIZONS, GOAL_STATUSES, listGoals, type GoalFilters } from "@/server/modules/objectives/goals";
+import { GOAL_HORIZONS, GOAL_STATUSES, listGoalsWithBudgets, type GoalFilters } from "@/server/modules/objectives/goals";
 import { average, evaluateObjectives } from "@/server/modules/objectives/key-results";
 import { objectiveOwnerOptions } from "@/server/modules/objectives/pickers";
 import { can } from "@/server/modules/rbac/service";
@@ -64,7 +65,7 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const filters: GoalFilters = { q: first(sp.q)?.slice(0, 200), status: oneOf(GOAL_STATUSES, first(sp.status)), horizon: oneOf(GOAL_HORIZONS, first(sp.horizon)) };
   const [goals, people, pillars] = await Promise.all([
-    listGoals(viewer.ctx, org.id, company.id, filters),
+    listGoalsWithBudgets(viewer.ctx, org.id, company.id, filters),
     canManage ? objectiveOwnerOptions(org.id, chain) : [],
     db().strategyPillar.findMany({ where: { organizationId: org.id, companyId: company.id }, orderBy: { position: "asc" }, select: { id: true, title: true } }),
   ]);
@@ -119,6 +120,7 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
                 <Th>{t("objectives.owner")}</Th>
                 <Th>{t("objectives.list")}</Th>
                 <Th>{t("objectives.overallProgress")}</Th>
+                <Th>{t("objectives.budget.column")}</Th>
                 <Th>{t("objectives.plan.heading")}</Th>
                 <Th>
                   <span className="sr-only">{t("common.actions")}</span>
@@ -150,6 +152,9 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
                         <ProgressBar value={p} label={g.title} />
                       </div>
                     </Td>
+                    <Td className="min-w-40 text-xs">
+                      <BudgetCell status={g.budgetStatus} locale={locale} t={t} />
+                    </Td>
                     <Td>
                       <Link className="text-xs text-primary hover:underline" href={`/${locale}/objectives/plan/${g.id}`}>
                         {g.planAppliedAt ? t("objectives.plan.applied") : g.planTaskId ? t("objectives.plan.review") : t("objectives.plan.open")}
@@ -163,7 +168,7 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
                             base={base}
                             people={people}
                             pillars={pillarOptions}
-                            goal={{ id: g.id, title: g.title, description: g.description ?? "", horizon: g.horizon, ownerId: g.ownerId ?? "", pillarId: g.pillarId ?? "", targetDate: iso(g.targetDate) }}
+                            goal={{ id: g.id, title: g.title, description: g.description ?? "", horizon: g.horizon, ownerId: g.ownerId ?? "", pillarId: g.pillarId ?? "", targetDate: iso(g.targetDate), budgetAmount: g.budgetStatus.budget?.amount ?? "", budgetCurrency: g.budgetStatus.budget?.currency ?? company.baseCurrency }}
                           />
                           <DeleteButton endpoint={`${base}/goals/${g.id}`} label={t("objectives.goals.delete")} confirmText={t("objectives.goals.deleteConfirm", { title: g.title })} />
                         </span>

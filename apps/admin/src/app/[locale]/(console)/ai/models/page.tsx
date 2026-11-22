@@ -9,7 +9,8 @@ import { BudgetEditor, ModelToggle, OrgModelOverride, ProfileModelPicker, Provid
 import { getLocale, getT } from "@/i18n/server";
 import { formatNumber } from "@/i18n/format";
 import { adminCapabilities } from "@/server/modules/admin/access";
-import { aiModelsOverview } from "@/server/modules/admin/ai-models";
+import { aiModelsOverview, aiRoutingOverview } from "@/server/modules/admin/ai-models";
+import { TierRoutingToggle, TierRowEditor } from "@/components/admin/ai-tier-editor";
 import { getControls } from "@/server/core/platform-controls";
 import { aiRouting } from "@/server/modules/admin/ops";
 import { CreditEditor, FallbackChainEditor } from "@/components/admin/people-actions";
@@ -20,9 +21,9 @@ export default async function AdminAiModelsPage() {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
-  const r = await guard(Promise.all([aiModelsOverview(viewer.ctx), adminCapabilities(viewer.ctx), getControls(), aiRouting(viewer.ctx)]), t("errors.forbidden"));
+  const r = await guard(Promise.all([aiModelsOverview(viewer.ctx), adminCapabilities(viewer.ctx), getControls(), aiRouting(viewer.ctx), aiRoutingOverview(viewer.ctx)]), t("errors.forbidden"));
   if (!r.ok) return r.node;
-  const [o, caps, controls, routing] = r.value;
+  const [o, caps, controls, routing, tiers] = r.value;
   const canManage = caps["platform.ai.manage"];
   const enabledModels = o.models.filter((m) => !m.disabled && m.allowed).map((m) => m.id);
   const n = (v: number) => formatNumber(v, locale);
@@ -167,6 +168,77 @@ export default async function AdminAiModelsPage() {
             </ul>
           </Card>
         </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <Card>
+          <CardHeader icon={<Layers />} title={t("admin.aiModels.tiers")} description={t("admin.aiModels.tiersHint")} actions={canManage ? <TierRoutingToggle enabled={tiers.table.enabled} /> : null} />
+          {!tiers.table.enabled ? <p className="px-4 pt-2 text-xs text-warning">{t("admin.aiModels.tiersOff")}</p> : null}
+          <Table>
+            <THead>
+              <Tr>
+                <Th>{t("admin.aiModels.tierClass")}</Th>
+                <Th>{t("admin.aiModels.tier.simple")}</Th>
+                <Th>{t("admin.aiModels.tier.standard")}</Th>
+                <Th>{t("admin.aiModels.tier.complex")}</Th>
+                <Th className="text-end">{t("admin.common.actions")}</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {tiers.classes.map((cls) => {
+                const row = tiers.table.byClass[cls] ?? {};
+                const eff = tiers.effective[cls]!;
+                const label = cls === "*" ? t("admin.aiModels.tierAllClasses") : cls.replace(/_/g, " ");
+                return (
+                  <Tr key={cls}>
+                    <Td className="font-medium capitalize">{label}</Td>
+                    {(["simple", "standard", "complex"] as const).map((tier) => (
+                      <Td key={tier}>
+                        <div className="font-mono text-[11px]">{eff[tier] ?? "—"}</div>
+                        <div className="text-[10px] text-muted-foreground">{row[tier] ? t("admin.aiModels.tierSet") : t("admin.aiModels.tierInherited")}</div>
+                      </Td>
+                    ))}
+                    <Td className="text-end">{canManage ? <TierRowEditor profileClass={cls} label={label} current={row} models={enabledModels} /> : null}</Td>
+                  </Tr>
+                );
+              })}
+            </TBody>
+          </Table>
+        </Card>
+        <Card>
+          <CardHeader icon={<Server />} title={t("admin.aiModels.health")} description={t("admin.aiModels.healthHint")} />
+          <ul className="divide-y">
+            {tiers.providers.map((p) => (
+              <li key={p.key} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+                <span className="min-w-0">
+                  <span className="font-medium">{p.label}</span>
+                  <span className="ms-2 font-mono text-[11px] text-muted-foreground">{p.envKey}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  {p.configured ? <Badge tone="success">{t("admin.aiModels.configured")}</Badge> : <Badge tone="warning">{t("admin.aiModels.notConfigured")}</Badge>}
+                  {p.openBreakers ? <Badge tone="danger">{t("admin.aiModels.breakersOpen", { count: p.openBreakers })}</Badge> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <CardBody>
+            {tiers.breakers.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t("admin.aiModels.noBreakers")}</p>
+            ) : (
+              <ul className="grid gap-1 text-xs">
+                {tiers.breakers.map((b) => (
+                  <li key={b.key} className="flex items-center justify-between gap-2">
+                    <span className="font-mono">{b.model}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="tabular-nums text-muted-foreground">{t("admin.aiModels.breakerFailures", { count: b.failures })}</span>
+                      {b.open ? <Badge tone="danger">{t("admin.aiModels.breakerOpen")}</Badge> : <Badge tone="warning">{t("admin.aiModels.breakerDegraded")}</Badge>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardBody>
+        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

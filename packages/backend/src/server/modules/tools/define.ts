@@ -60,6 +60,19 @@ export interface ToolDefinition<I = unknown> {
   amount?(input: I): { amountMinor: bigint; currency: string } | null;
   /** How a person can reverse an autonomous run: another registered tool and its input (null = not reversible). */
   reverse?(input: I, output: ToolOutput): { tool: string; input: unknown } | null;
+  /**
+   * Optional output schema (docs/tool-system.md §2 step 11). Every result is first checked against the generic
+   * ToolOutput contract by the gateway (tools/gateway.ts verifyToolOutput); a tool may add its own stricter schema.
+   * An invalid result is a tool failure, never passed to the model or stored as an approval result.
+   */
+  output?: z.ZodType<ToolOutput>;
+  /**
+   * Optional validation of a proposal before anything happens (G1 for G2): runs after the input schema and permission
+   * checks, before an approval is filed or the tool runs on its own, and again right before an approved action
+   * executes. Return a reason to refuse (e.g. "Instagram posts need an image or video"), or null when the input is
+   * acceptable. Must not change data.
+   */
+  precheck?(input: I, x: ToolExecutionContext): Promise<string | null> | string | null;
 }
 
 export const def = <I>(t: ToolDefinition<I>) => t as unknown as ToolDefinition;

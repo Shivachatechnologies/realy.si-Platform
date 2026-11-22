@@ -15,7 +15,7 @@ import { metricContext, metricValues } from "@/server/modules/bi/service";
 import { computeBriefingSections, sectionsText } from "./briefing-card";
 
 export const BRIEFING_MODES = ["DAILY", "WEEKLY", "MONTHLY", "TREND_RISK"] as const satisfies readonly AiBriefingMode[];
-export const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst"] as const;
+export const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst", "ai_cfo"] as const;
 export const briefingInput = z.object({
   mode: z.enum(BRIEFING_MODES),
   profile: z.enum(BRIEFING_PROFILES).optional(),
@@ -69,7 +69,7 @@ export async function generateBriefing(
   if (aiEmployeeId) {
     const e = await db().aiEmployee.findFirst({ where: { id: aiEmployeeId, organizationId, companyId, archivedAt: null }, select: { profileKey: true } });
     if (!e) throw notFound("AI employee");
-    if (!(BRIEFING_PROFILES as readonly string[]).includes(e.profileKey)) throw conflict("Briefings are written by the AI CEO or a BI analyst", { reason: "workforce_briefing_wrong_profile" });
+    if (!(BRIEFING_PROFILES as readonly string[]).includes(e.profileKey)) throw conflict("Briefings are written by the AI CEO, the AI CFO or a BI analyst", { reason: "workforce_briefing_wrong_profile" });
     profile = e.profileKey;
   } else {
     aiEmployeeId = (await db().aiEmployee.findFirst({ where: { organizationId, companyId, profileKey: profile, status: "ACTIVE", archivedAt: null }, orderBy: { createdAt: "asc" }, select: { id: true } }))?.id;

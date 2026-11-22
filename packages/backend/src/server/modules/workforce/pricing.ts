@@ -1,6 +1,6 @@
 /**
- * Cost estimation for AI tasks. Prices are Anthropic first-party list prices in USD per million tokens
- * (input / output). Since $ per 1M tokens equals micro-dollars per token, cost in micro-USD is tokens × price.
+ * Cost estimation for AI tasks. Prices are the providers' list prices (Anthropic, OpenAI, Google Gemini) in USD per
+ * million tokens (input / output); platform admins override them in Admin → AI (costs/prices.ts). Since $ per 1M tokens equals micro-dollars per token, cost in micro-USD is tokens × price.
  */
 export const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   "claude-fable-5-2": { input: 8, output: 40 },
@@ -18,6 +18,15 @@ export const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   "claude-sonnet-4-6": { input: 3, output: 15 },
   "claude-haiku-5-5": { input: 0.1, output: 0.5 },
   "claude-haiku-4-5": { input: 1, output: 5 },
+  // OpenAI and Google Gemini (agent runtime adapters, agents/providers).
+  "gpt-5": { input: 1.25, output: 10 },
+  "gpt-5-mini": { input: 0.25, output: 2 },
+  "gpt-5-nano": { input: 0.05, output: 0.4 },
+  "gpt-4.1": { input: 2, output: 8 },
+  "gpt-4.1-mini": { input: 0.4, output: 1.6 },
+  "gemini-2.5-pro": { input: 1.25, output: 10 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
 };
 
 /** Fallback when a task ran on a model missing from the table (priced like the default Opus tier). */

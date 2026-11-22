@@ -59,6 +59,40 @@ export async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   }
 }
 
+/** Longest tool result passed to the model / stored (characters); longer results are cut with a marker. */
+export const MAX_TOOL_CONTENT = 100_000;
+const toolOutputContract = z.object({
+  content: z.string(),
+  records: z.array(z.string().min(1).max(300)).max(2000).optional(),
+  count: z.number().int().min(0).optional(),
+});
+
+/**
+ * Step 11 (docs/tool-system.md §2): deterministic verification of a tool result before the model or an approval
+ * sees it — the generic ToolOutput contract, then the tool's own `output` schema if it declares one.
+ */
+export function verifyToolOutput(name: string, out: unknown): ToolOutput {
+  const tool = getTool(name);
+  const base = toolOutputContract.safeParse(out);
+  if (!base.success) throw new ToolDenied("failed", `${name} returned an invalid result`);
+  if (tool?.output && !tool.output.safeParse(out).success) throw new ToolDenied("failed", `${name} returned a result that does not match its schema`);
+  const v = out as ToolOutput;
+  return v.content.length > MAX_TOOL_CONTENT ? { ...v, content: `${v.content.slice(0, MAX_TOOL_CONTENT)}\n[…result truncated]` } : v;
+}
+
+/** A tool's precheck (define.ts): a returned reason refuses the call as invalid input; a crash refuses it as failed. */
+export async function runPrecheck(tool: ToolDefinition, input: unknown, x: ToolExecutionContext): Promise<void> {
+  if (!tool.precheck) return;
+  let reason: string | null;
+  try {
+    reason = await tool.precheck(input, x);
+  } catch (err) {
+    if (err instanceof ToolDenied) throw err;
+    throw new ToolDenied("failed", `${tool.name} could not validate this request`);
+  }
+  if (reason) throw new ToolDenied("invalid_input", `Not filed: ${reason}`.slice(0, 300));
+}
+
 /** Steps 4–5: the principal must hold every permission at the task's company, and none may be agent-forbidden. */
 export async function authorizeTool(tool: ToolDefinition, ctx: RequestContext, organizationId: string, companyId: string) {
   if (tool.permissions.some((p) => NEVER_FOR_AGENTS.has(p))) throw new ToolDenied("not_allowed", `${tool.name} can never be used by an agent`);
@@ -93,6 +127,9 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
     if (err instanceof ToolDenied) throw err;
     throw new ToolDenied("not_permitted", "Not permitted: the requesting user lacks the permission this action needs");
   }
+
+  // Tool precheck: an invalid proposal is refused now, never filed for a person to approve.
+  await runPrecheck(tool, parsed.data, { ctx: run.ctx, organizationId: run.organizationId, companyId: run.companyId, cite: run.cite });
 
   // Platform AI policy (Admin → AI & Workforce): a read-only ceiling refuses non-read tools; a supervised ceiling or
   // "require approval for all writes" turns every non-read tool into an approval request.
@@ -135,7 +172,7 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
       if (reserved.actionId) {
         let out: ToolOutput;
         try {
-          out = await withTimeout(tool.execute(parsed.data, x), tool.timeoutMs);
+          out = verifyToolOutput(tool.name, await withTimeout(tool.execute(parsed.data, x), tool.timeoutMs));
         } catch (err) {
           const message = err instanceof ToolDenied ? err.message : err instanceof Error ? err.message : "The action failed";
           await finishAutonomousAction(run.ctx, run.organizationId, run.companyId, reserved.actionId, { ok: false, error: message }).catch(() => undefined);
@@ -167,11 +204,14 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
   }
 
   if (tool.autonomy === "AUTONOMOUS" && policy === "as_defined") {
-    const out = await withTimeout(tool.execute(parsed.data, x), tool.timeoutMs);
+    const out = verifyToolOutput(tool.name, await withTimeout(tool.execute(parsed.data, x), tool.timeoutMs));
     return { status: "executed", ...out };
   }
 
   const summary = tool.summarize(parsed.data).slice(0, 1000);
+  // The AI Command run the requesting task works for (its outcome is annotated there, approvals/jobs.ts).
+  const subject = run.taskId ? await db().agentTask.findFirst({ where: { id: run.taskId, companyId: run.companyId }, select: { subjectType: true, subjectId: true } }) : null;
+  const commandRunId = subject?.subjectType === "command_run" ? subject.subjectId : null;
   const approval = await transaction(async (tx) => {
     const a = await tx.approval.create({
       data: {
@@ -187,6 +227,7 @@ export async function requestTool(name: string, rawInput: unknown, run: ToolRun)
         risk: tool.risk,
         autonomy: tool.autonomy === "AUTONOMOUS" ? "SUPERVISED" : tool.autonomy,
         requiredPermissions: tool.permissions,
+        commandRunId,
         expiresAt: new Date(Date.now() + APPROVAL_TTL_MS),
       },
     });

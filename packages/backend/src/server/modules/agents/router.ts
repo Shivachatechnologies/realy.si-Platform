@@ -1,5 +1,11 @@
-import { providerOf, resolveTierModel, type RoutingTier } from "@/server/modules/admin/ai-models";
+import { Redis } from "ioredis";
+import { env } from "@/server/core/env";
+import { queuePrefix } from "@/server/core/jobs";
+import { logger } from "@/server/core/logger";
+import { getControls } from "@/server/core/platform-controls";
+import { resolveTierModel, type RoutingTier } from "@/server/modules/admin/ai-models";
 import type { AgentProfile } from "./profiles";
+import { AI_PROVIDERS, providerOf } from "./providers/catalog";
 
 /**
  * Model router (agents runtime). Each run is classified by complexity — the profile's class, how many tools it is
@@ -61,7 +67,11 @@ export const specializedModel = (organizationId: string, profileKey: string | nu
 
 const NEXT_TIER: Record<ComplexityTier, ComplexityTier | null> = { simple: "standard", standard: "complex", complex: null };
 
-/** Ordered alternatives after `model` fails: the admin fallback chain, then the next tier's model. Distinct, max 3. */
+/**
+ * Ordered alternatives after `model` fails: the admin fallback chain, then the next tier's model, then (G1, B13) the
+ * same tier on every other provider whose platform key is set (cross-provider fallback). Distinct, disallowed models
+ * skipped, max 5.
+ */
 export async function fallbackChain(organizationId: string, profileKey: string, model: string, tier: ComplexityTier): Promise<string[]> {
   const out: string[] = [];
   // Lazy import: admin/ops → workforce/service → agents/service → runtime → router would otherwise be a load-time cycle.
@@ -73,10 +83,21 @@ export async function fallbackChain(organizationId: string, profileKey: string, 
     if (m && m !== model && !out.includes(m)) out.push(m);
     t = NEXT_TIER[t];
   }
-  return out.slice(0, 3);
+  const sameProvider = out.slice(0, 3);
+  const c = await getControls().catch(() => null);
+  const allowed = (m: string) => !c || (!c.aiDisabledModels.includes(m) && (c.aiAllowedModels.length === 0 || c.aiAllowedModels.includes(m)));
+  const cross: string[] = [];
+  for (const p of AI_PROVIDERS) {
+    if (p.key === providerOf(model)) continue;
+    const v = process.env[p.envKey];
+    if (!v || !v.trim()) continue;
+    const m = p.fallbackModels[tier];
+    if (m !== model && !sameProvider.includes(m) && allowed(m)) cross.push(m);
+  }
+  return [...sameProvider, ...cross].slice(0, 5);
 }
 
-// ───────────── Circuit breaker (per provider / model, per process) ─────────────
+// ───────────── Circuit breaker (per provider / model, shared across replicas through Redis) ─────────────
 
 export const BREAKER_FAILURES = 4;
 export const BREAKER_OPEN_MS = 60_000;
@@ -84,9 +105,58 @@ interface Breaker {
   failures: number;
   openedAt: number | null;
   probing: boolean;
+  /** Last change (ms), to merge local and shared state. */
+  at: number;
 }
 const breakers = new Map<string, Breaker>();
 const keyOf = (model: string) => `${providerOf(model)}:${model}`;
+
+/**
+ * Shared state (G1, B14): every replica mirrors its breaker changes into one Redis hash and pulls the others' at most
+ * every SYNC_MS, so a model one worker found failing is skipped by all of them. Redis unavailable → per-process only.
+ */
+const SYNC_MS = 5_000;
+const SHARED_TTL_S = 3600;
+let redis: Redis | null = null;
+let lastSync = 0;
+const sharedKey = () => `${queuePrefix()}:ai:breakers`;
+function shared(): Redis | null {
+  if (!process.env.REDIS_URL?.trim() && env().NODE_ENV === "production") return null;
+  if (!redis) {
+    redis = new Redis(env().REDIS_URL, { maxRetriesPerRequest: 1, enableOfflineQueue: false, commandTimeout: 500, lazyConnect: false });
+    redis.on("error", () => undefined);
+  }
+  return redis;
+}
+
+function publish(key: string, b: Breaker | null) {
+  const r = shared();
+  if (!r) return;
+  const p = b ? r.hset(sharedKey(), key, JSON.stringify({ failures: b.failures, openedAt: b.openedAt, at: b.at })).then(() => r.expire(sharedKey(), SHARED_TTL_S)) : r.hdel(sharedKey(), key);
+  p.catch((err: unknown) => logger.debug({ err: err instanceof Error ? err.message : String(err) }, "AI breaker state not shared"));
+}
+
+/** Pull the shared breaker states (newer entries win). Cheap: at most once per SYNC_MS per process. */
+export async function syncBreakers(now = Date.now(), force = false): Promise<void> {
+  if (!force && now - lastSync < SYNC_MS) return;
+  lastSync = now;
+  const r = shared();
+  if (!r) return;
+  try {
+    const all = await r.hgetall(sharedKey());
+    const seen = new Set<string>();
+    for (const [key, raw] of Object.entries(all)) {
+      seen.add(key);
+      const remote = JSON.parse(raw) as { failures: number; openedAt: number | null; at: number };
+      const local = breakers.get(key);
+      if (!local || remote.at > local.at) breakers.set(key, { failures: remote.failures, openedAt: remote.openedAt, probing: local?.probing ?? false, at: remote.at });
+    }
+    // Closed elsewhere (a success deleted the shared entry) and older locally: close here too.
+    for (const [key, b] of breakers) if (!seen.has(key) && now - b.at > SYNC_MS) breakers.delete(key);
+  } catch {
+    // shared store unavailable: keep the local view
+  }
+}
 
 /** May a call go to this model now? Closed → yes; open → no until the cool-down ends, then one half-open probe. */
 export function breakerAllows(model: string, now = Date.now()): boolean {
@@ -99,24 +169,32 @@ export function breakerAllows(model: string, now = Date.now()): boolean {
 }
 
 export function breakerSuccess(model: string) {
-  breakers.delete(keyOf(model));
+  const k = keyOf(model);
+  if (breakers.delete(k)) publish(k, null);
 }
 
 export function breakerFailure(model: string, now = Date.now()) {
   const k = keyOf(model);
-  const b = breakers.get(k) ?? { failures: 0, openedAt: null, probing: false };
+  const b = breakers.get(k) ?? { failures: 0, openedAt: null, probing: false, at: now };
   b.failures++;
+  b.at = now;
   if (b.probing || b.failures >= BREAKER_FAILURES) {
     b.openedAt = now;
     b.probing = false;
   }
   breakers.set(k, b);
+  publish(k, b);
 }
 
-/** Current breaker states (monitoring). */
-export function breakerSnapshot() {
-  return [...breakers.entries()].map(([key, b]) => ({ key, failures: b.failures, open: b.openedAt !== null && Date.now() - b.openedAt < BREAKER_OPEN_MS, openedAt: b.openedAt }));
+/** Current breaker states across replicas (monitoring: Admin → AI → Models). */
+export async function breakerSnapshot(now = Date.now()) {
+  await syncBreakers(now, true);
+  return [...breakers.entries()].map(([key, b]) => ({ key, provider: key.split(":")[0]!, model: key.slice(key.indexOf(":") + 1), failures: b.failures, open: b.openedAt !== null && now - b.openedAt < BREAKER_OPEN_MS, openedAt: b.openedAt ? new Date(b.openedAt).toISOString() : null }));
 }
 
 /** Test seam. */
-export const resetBreakers = () => breakers.clear();
+export const resetBreakers = async () => {
+  breakers.clear();
+  lastSync = 0;
+  await shared()?.del(sharedKey()).catch(() => undefined);
+};

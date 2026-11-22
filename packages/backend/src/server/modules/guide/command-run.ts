@@ -13,7 +13,7 @@ import { companyChain } from "@/server/modules/rbac/scope";
 import { DEFAULT_LOCALE, isAppLocale, LOCALE_NAMES, type AppLocale } from "@/i18n/config";
 import { getT } from "@/i18n/server";
 import type { CommandRunOrigin, CommandRunStatus, CommandStepKind } from "@/generated/prisma/enums";
-import { buildPlan, nextStepLine } from "./command-plan";
+import { buildPlan, nextStepLine, type PlanHints } from "./command-plan";
 import type { RoutedIntent } from "./command";
 
 /**
@@ -25,7 +25,8 @@ import type { RoutedIntent } from "./command";
 
 type Scope = { organizationId: string; companyId: string };
 const TERMINAL = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
-const ACTIVE = new Set(["QUEUED", "RUNNING"]);
+/** Work still in progress — including a step parked while its approval requests are decided (B27). */
+const ACTIVE = new Set(["QUEUED", "RUNNING", "WAITING_APPROVAL"]);
 const OUTPUT_IN_PROMPT = 2500;
 export const COMMAND_RUN_SUBJECT = "command_run";
 /** A failed step task is retried automatically this many times before the run moves on without it. */
@@ -43,6 +44,8 @@ export interface Understanding {
   page: string | null;
   /** The AI CEO's brief (why this work, evidence), for runs it started. */
   brief?: string;
+  /** How the command was understood: the fast-tier model or the keyword map (B26). */
+  classifier?: "model" | "keywords";
 }
 
 function reasonOf(err: unknown): string {
@@ -87,11 +90,13 @@ export async function startRun(
     parentRunId?: string | null;
     /** Extra brief for every step (the CEO's reasons and evidence); company data, not user instructions. */
     brief?: string | null;
+    /** The classifier's research decision and step dependencies (B26); absent = keyword planning. */
+    plan?: PlanHints;
   },
 ) {
-  const plan = buildPlan(args.text, args.intents);
+  const plan = buildPlan(args.text, args.intents, args.plan);
   const knowledge = await gatherKnowledge(ctx, scope, args.text);
-  const understanding: Understanding = { intents: args.intents, research: plan.research, facts: args.facts, sources: knowledge.sources, page: args.page, ...(args.brief ? { brief: args.brief.slice(0, 2500) } : {}) };
+  const understanding: Understanding = { intents: args.intents, research: plan.research, facts: args.facts, sources: knowledge.sources, page: args.page, classifier: args.plan?.source ?? "keywords", ...(args.brief ? { brief: args.brief.slice(0, 2500) } : {}) };
   const t = await getT(args.locale);
   const run = await transaction(async (tx) => {
     const r = await tx.commandRun.create({
@@ -228,14 +233,16 @@ export async function advanceRun(ctx: RequestContext, scope: Scope, runId: strin
       const employee = await hiredEmployee(scope, step.profile);
       if (employee) {
         try {
-          taskId = (await createTask(ctx, scope.organizationId, scope.companyId, { ...base, aiEmployeeId: employee.id })).id;
+          taskId = (await createTask(ctx, scope.organizationId, scope.companyId, { ...base, aiEmployeeId: employee.id }, { parkOnApproval: true })).id;
           employeeId = employee.id;
         } catch (err) {
           // A paused or over-budget employee: the role itself still does the work.
           if (!reasonOf(err).startsWith("workforce_employee")) throw err;
         }
       }
-      taskId ??= (await createTask(ctx, scope.organizationId, scope.companyId, { ...base, profile: step.profile as never })).id;
+      // Step tasks park while their approval requests are decided and resume with the outcome (B3 / B27), so the
+      // review step and the run's result reflect what was actually done.
+      taskId ??= (await createTask(ctx, scope.organizationId, scope.companyId, { ...base, profile: step.profile }, { parkOnApproval: true })).id;
     } catch (err) {
       errorReason = err instanceof Error && err.message === "profile_unavailable" ? "profile_unavailable" : reasonOf(err);
     }

@@ -6,7 +6,7 @@ import { conflict, invalid, notFound } from "@/server/core/errors";
 import { toJson } from "@/server/core/json";
 import { getControls, getOrgOverride, listOrgOverrides } from "@/server/core/platform-controls";
 import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
-import { aiConfigured } from "@/server/modules/agents/runtime";
+import { AI_PROVIDER_KEYS, AI_PROVIDERS, providerKeyConfigured, providerOf } from "@/server/modules/agents/providers/catalog";
 import { writeAudit } from "@/server/modules/audit/service";
 import { requirePermission } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
@@ -34,11 +34,8 @@ const ORG_MODELS_KEY = "ai:orgModels";
 const BUDGET_KEY = "ai:monthlyBudgetUsd";
 const modelId = z.string().regex(/^[a-z0-9.@-]{3,64}$/);
 
-export const AI_PROVIDERS = [
-  { key: "anthropic", label: "Anthropic API", env: "ANTHROPIC_API_KEY", match: (m: string) => !/^[a-z]+\.anthropic\./.test(m) },
-  { key: "aws-bedrock", label: "Amazon Bedrock", env: null, match: (m: string) => /^[a-z]+\.anthropic\./.test(m) },
-] as const;
-export const providerOf = (model: string | null | undefined) => (model ? (AI_PROVIDERS.find((p) => p.match(model))?.key ?? "anthropic") : "anthropic");
+/** Agent-runtime providers (agents/providers/catalog.ts): Anthropic, OpenAI and Gemini adapters, one platform key each. */
+export { AI_PROVIDERS, providerOf };
 
 export const PROFILE_CLASSES = [...new Set(AGENT_PROFILES.map((p) => p.department ?? "general"))].sort();
 
@@ -98,7 +95,8 @@ export async function aiModelsOverview(ctx: RequestContext, raw: { days?: unknow
     return {
       key: p.key,
       label: p.label,
-      configured: p.key === "anthropic" ? aiConfigured() : false,
+      configured: providerKeyConfigured(p.key),
+      envKey: p.envKey,
       models: own.length,
       enabled: own.length > 0 ? own.some((m) => !controls.aiDisabledModels.includes(m)) : false,
       usage: providerCost.get(p.key) ?? { tokens: 0, costMicros: 0, tasks: 0 },
@@ -128,7 +126,7 @@ async function saveSetting(ctx: RequestContext, key: string, value: unknown, rea
 }
 
 export const aiModelsInput = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("provider"), provider: z.enum(["anthropic", "aws-bedrock"]), enabled: z.boolean(), reason: reasonSchema }),
+  z.object({ action: z.literal("provider"), provider: z.enum(AI_PROVIDER_KEYS), enabled: z.boolean(), reason: reasonSchema }),
   z.object({ action: z.literal("profileModel"), profileClass: z.string().max(60), model: modelId.nullable(), reason: reasonSchema }),
   z.object({ action: z.literal("orgModel"), organizationId: z.string().uuid(), model: modelId.nullable(), reason: reasonSchema }),
   z.object({ action: z.literal("budget"), monthlyUsd: budgetSchema, reason: reasonSchema }),
@@ -139,7 +137,7 @@ export async function updateAiModels(ctx: RequestContext, raw: z.input<typeof ai
   const c = await getControls();
   const known = new Set([...Object.keys(MODEL_PRICES), env().AGENT_MODEL]);
   const usable = (m: string) => {
-    if (!known.has(m) && !/^[a-z]+\.anthropic\./.test(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
+    if (!known.has(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
     if (c.aiDisabledModels.includes(m) || (c.aiAllowedModels.length && !c.aiAllowedModels.includes(m))) throw conflict("That model is disabled platform-wide. Enable it first.", { reason: "ai_model_disabled" });
   };
   switch (input.action) {
@@ -306,6 +304,7 @@ export const tierModelsInput = z.object({
 
 /** Admin: edit the routing table (per class or platform-wide "*"), audited. */
 export async function updateTierModels(ctx: RequestContext, raw: z.input<typeof tierModelsInput>) {
+  await requirePermission(ctx, "platform.ai.manage", platformChain());
   const input = tierModelsInput.parse(raw);
   const cur = await readSetting(TIER_MODELS_KEY, tierTable, { enabled: true, byClass: {} });
   const next: TierTable = { enabled: input.enabled ?? cur.enabled, byClass: { ...cur.byClass } };
@@ -315,11 +314,39 @@ export async function updateTierModels(ctx: RequestContext, raw: z.input<typeof 
     const known = new Set([...Object.keys(MODEL_PRICES), env().AGENT_MODEL]);
     for (const t of ["simple", "standard", "complex"] as const) {
       const m = input.tiers[t];
-      if (m && !known.has(m) && !/^[a-z]+\.anthropic\./.test(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
+      if (m && !known.has(m)) throw invalid("Unknown model", { reason: "ai_unknown_model" });
     }
     next.byClass[cls] = input.tiers;
   }
   await saveSetting(ctx, TIER_MODELS_KEY, next, input.reason, { action: "platform.ai.tier_models_changed", oldValue: cur, newValue: next });
   tierCache = null;
   return next;
+}
+
+/**
+ * Admin → AI → Models (G1, B14): the routing table (per class and platform-wide), the model each agent tier resolves
+ * to right now, and provider health — whether each provider's platform key is set, plus the shared circuit-breaker
+ * state of every model that failed recently (agents/router.ts).
+ */
+export async function aiRoutingOverview(ctx: RequestContext) {
+  await requireAnyPlatform(ctx, AI_READ);
+  const { breakerSnapshot } = await import("@/server/modules/agents/router");
+  const [table, breakers] = await Promise.all([readTierModels(), breakerSnapshot().catch(() => [])]);
+  const effective: Record<string, Record<"simple" | "standard" | "complex", string | null>> = {};
+  for (const cls of ["*", ...PROFILE_CLASSES]) {
+    const profile = cls === "*" ? null : (AGENT_PROFILES.find((p) => (p.department ?? "general") === cls)?.key ?? null);
+    effective[cls] = {
+      simple: await resolveTierModel({ profile, tier: "simple" }),
+      standard: await resolveTierModel({ profile, tier: "standard" }),
+      complex: await resolveTierModel({ profile, tier: "complex" }),
+    };
+  }
+  return {
+    table,
+    classes: ["*", ...PROFILE_CLASSES],
+    effective,
+    defaults: DEFAULT_TIER_MODELS,
+    providers: AI_PROVIDERS.map((p) => ({ key: p.key, label: p.label, envKey: p.envKey, configured: providerKeyConfigured(p.key), fallbackModels: p.fallbackModels, openBreakers: breakers.filter((b) => b.provider === p.key && b.open).length })),
+    breakers,
+  };
 }

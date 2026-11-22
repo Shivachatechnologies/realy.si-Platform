@@ -2232,7 +2232,8 @@
       "RUNNING": "Running",
       "COMPLETED": "Completed",
       "FAILED": "Failed",
-      "CANCELLED": "Cancelled"
+      "CANCELLED": "Cancelled",
+      "WAITING_APPROVAL": "Waiting for approval"
     },
     "back": "All tasks",
     "deliverable": "Deliverable",
@@ -2500,7 +2501,10 @@
       "handoff_video_to_publishing": "Hand a video to publishing",
       "start_calling_campaign": "Start an AI calling run",
       "read_calling_runs": "Read AI calling runs",
-      "send_meeting_follow_up_email": "Send a meeting follow-up email"
+      "send_meeting_follow_up_email": "Send a meeting follow-up email",
+      "book_crm_meeting": "Book a meeting",
+      "read_crm_meetings": "Read meetings",
+      "read_security_posture": "Read security posture"
     },
     "needsApproval": "needs approval",
     "tabs": {
@@ -3316,6 +3320,23 @@
       "hint": "People who manage AI employees directly.",
       "openNetwork": "See the live network",
       "counts": "{ai} AI reports · {humans} human reports"
+    },
+    "roles": {
+      "title": "Your company's own roles",
+      "hint": "Define a role the built-in list does not have: what it does, which tools it may use and how many steps a task may take. Actions still follow your approvals, autonomy and budgets.",
+      "empty": "No custom roles yet.",
+      "create": "Create a role",
+      "name": "Role name",
+      "department": "Department",
+      "description": "Short description",
+      "instructions": "What this role does",
+      "instructionsHint": "Write it like a job description: goals, how to work, what to report. The AI follows it inside the platform's safety rules.",
+      "tools": "{count, plural, one {Tools (# selected)} other {Tools (# selected)}}",
+      "maxTurns": "Steps per task",
+      "maxTurnsHint": "1–15. More steps allow longer research but cost more.",
+      "save": "Save role",
+      "archive": "Archive",
+      "archiveConfirm": "Archive the role “{name}”? AI employees must not hold it anymore."
     }
   },
   "profiles": {
@@ -3570,6 +3591,18 @@
     "voice_assistant": {
       "name": "Realy Voice Assistant",
       "summary": "Answers your questions and small talk in Realy from live company data."
+    },
+    "ai_clo": {
+      "name": "AI Chief Legal Officer",
+      "summary": "Reviews contracts and policies from your documents and flags legal and compliance risk."
+    },
+    "ai_ciso": {
+      "name": "AI Chief Information Security Officer",
+      "summary": "Checks two-factor coverage, API keys, integrations and security events, and proposes fixes."
+    },
+    "ai_cdo": {
+      "name": "AI Chief Data Officer",
+      "summary": "Finds missing or stale data and broken sources, and proposes the fixes that matter most."
     }
   },
   "projects": {
@@ -3608,7 +3641,12 @@
       "HIGH": "High risk",
       "CRITICAL": "Critical"
     },
-    "messagePreview": "Message to be sent"
+    "messagePreview": "Message to be sent",
+    "retry": "Retry action",
+    "retrying": "Retrying…",
+    "retryFailed": "The retry could not start",
+    "retryLimit": "Retried too often — reject it or ask the AI for a new proposal.",
+    "attempts": "Attempt {count} of {max}"
   },
   "objectives": {
     "subtitle": "Set objectives, break them into milestones, link milestones to projects, and let AI employees propose milestones for your approval.",
@@ -3841,6 +3879,17 @@
       "noInitiatives": "No initiatives yet. Plan them with AI or add your own.",
       "runsTitle": "AI work for this objective",
       "runsHint": "Every command run started for it."
+    },
+    "budget": {
+      "amount": "Budget",
+      "hint": "Optional. Actual spend is the real AI and provider cost of the work on this goal.",
+      "currency": "Currency",
+      "column": "Budget vs actual",
+      "of": "{actual} of {budget}",
+      "spentNoBudget": "{actual} spent · no budget",
+      "over": "Over budget ({pct}%)",
+      "otherCurrency": "Actual AI spend is in USD; compare manually.",
+      "initiativeAmount": "Budget ({currency}, optional)"
     }
   },
   "notifications": {
@@ -5665,7 +5714,8 @@
     "frequencies": {
       "HOURLY": "Every hour",
       "DAILY": "Every day",
-      "WEEKLY": "Every week"
+      "WEEKLY": "Every week",
+      "MONTHLY": "Every month"
     },
     "weekdays": {
       "0": "Sunday",
@@ -5698,7 +5748,9 @@
       "instructions": "Instructions",
       "instructionsHint": "Placeholders: '{{date}}', '{{event}}' and '{{data.field}}' for event fields.",
       "enabled": "On",
-      "create": "Create schedule"
+      "create": "Create schedule",
+      "dayOfMonth": "Day of the month",
+      "dayOfMonthHint": "In shorter months, days 29–31 run on the last day."
     }
   },
   "intelligence": {
@@ -20249,7 +20301,9 @@
         "HOURLY": "Every hour",
         "HOURLYHint": "Only for things that change fast",
         "EVENT": "When something happens",
-        "EVENTHint": "For example a new lead, a paid invoice or a new ticket"
+        "EVENTHint": "For example a new lead, a paid invoice or a new ticket",
+        "MONTHLY": "Once a month",
+        "MONTHLYHint": "Good for month-end packs and board reports"
       },
       "whatQ": "What should {name} do each time?",
       "whatHint": "Pick an idea or write your own instructions.",
@@ -20264,7 +20318,8 @@
       "weekly": "Every {day} at {time}",
       "hourly": "Every hour at :{minute}",
       "event": "Whenever someone {event}",
-      "full": "{when}, {name} ({role}) will do “{job}”."
+      "full": "{when}, {name} ({role}) will do “{job}”.",
+      "monthly": "Every month on day {day} at {time}"
     },
     "help": {
       "title": "Need ideas?",
@@ -20322,6 +20377,10 @@
       "kpi_week": {
         "name": "Weekly numbers",
         "body": "Explain how our key numbers moved this week and what might be behind the changes."
+      },
+      "cfo_monthly_pack": {
+        "name": "CFO monthly pack",
+        "body": "On the 1st of each month: revenue, expenses and profit versus last month, cash and runway, receivables and payables, budget versus actual, AI and provider spend, and the decisions needed — from your real records only."
       }
     }
   },
@@ -21848,6 +21907,43 @@
       },
       "reportNote": "Details (optional)",
       "reportSend": "Send report"
+    },
+    "unified": {
+      "title": "How far the AI may go — one view",
+      "description": "Four settings decide it, checked in this order. The most restrictive one always wins.",
+      "order": {
+        "platform": "Platform and “Pause all AI”",
+        "platformHint": "When paused, nothing runs — no tasks, tools or messages.",
+        "autopilot": "Autopilot of the department",
+        "autopilotHint": "Whether the AI may start work on its own (schedules, signals) or only when a person asks.",
+        "rules": "Rules per action and Auto mode",
+        "rulesHint": "Whether an action runs within limits, waits for approval, is only suggested, or is off.",
+        "employees": "Each AI employee's autonomy",
+        "employeesHint": "Which tools an AI employee is offered at all (read-only, draft, act with approval, act on its own)."
+      },
+      "levels": {
+        "PAUSED": "Paused",
+        "MANUAL": "Manual",
+        "MANUALHint": "works only when asked",
+        "ASSISTED": "Assisted",
+        "ASSISTEDHint": "drafts and recommends",
+        "APPROVAL": "Approval",
+        "APPROVALHint": "acts after your approval",
+        "AUTONOMOUS": "Autonomous",
+        "AUTONOMOUSHint": "acts on its own within limits"
+      },
+      "department": "Department",
+      "effective": "In effect",
+      "autopilot": "Autopilot",
+      "rules": "Action rules",
+      "employees": "AI employees",
+      "decidedBy": {
+        "pause": "set by Pause all AI",
+        "autopilot": "set by Autopilot",
+        "rules": "set by the action rules",
+        "employees": "set by the AI employees' autonomy"
+      },
+      "autopilotLink": "Change Autopilot per department"
     }
   },
   "briefing": {

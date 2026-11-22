@@ -2487,7 +2487,8 @@
         "RUNNING": "运行中",
         "COMPLETED": "已完成",
         "FAILED": "失败",
-        "CANCELLED": "已取消"
+        "CANCELLED": "已取消",
+        "WAITING_APPROVAL": "等待审批"
       },
       "tasksSubtitle": "平台上的所有 AI 任务。按 ID 或标题搜索、筛选失败、取消或重试。",
       "failures": "失败（7 天）",
@@ -2958,7 +2959,32 @@
       "organizationIdHint": "可从组织页面复制。",
       "removeOverride": "移除 {name} 的覆盖",
       "noOverrides": "没有组织覆盖。",
-      "costByOrg": "按组织的成本"
+      "costByOrg": "按组织的成本",
+      "tiers": "分级路由",
+      "tiersHint": "每次 AI 运行按复杂度使用的模型。空单元格依次继承：类别 → 所有类别 → 内置默认。配置了密钥的其他服务商作为备用。",
+      "tiersOff": "分级路由已关闭：每次运行都使用类别或平台默认模型。",
+      "tierClass": "角色类别",
+      "tier": {
+        "simple": "简单",
+        "standard": "标准",
+        "complex": "复杂"
+      },
+      "tierAllClasses": "所有类别",
+      "tierSet": "此处设置",
+      "tierInherited": "继承",
+      "tiersEdit": "编辑分级",
+      "tiersEditTitle": "分级模型 · {name}",
+      "tiersEditHint": "为每个复杂度分级选择模型，或留空以继承。仅列出已启用的模型。",
+      "tiersInherit": "继承",
+      "tiersDisable": "关闭分级路由",
+      "tiersEnable": "开启分级路由",
+      "health": "服务商健康状况",
+      "healthHint": "平台密钥，以及近期失败的每个模型的共享熔断状态（所有 worker）。",
+      "breakersOpen": "{count, plural, other {# 个模型已暂停}}",
+      "noBreakers": "近期没有模型失败。",
+      "breakerFailures": "{count, plural, other {# 次失败}}",
+      "breakerOpen": "已暂停",
+      "breakerDegraded": "降级"
     },
     "aiWorkforce": {
       "subtitle": "所有组织的 AI 员工：角色、模型、自主程度、预算与用量。",
@@ -4234,7 +4260,10 @@
       "handoff_video_to_publishing": "将视频交付发布",
       "start_calling_campaign": "启动 AI 外呼活动",
       "read_calling_runs": "查看 AI 外呼活动",
-      "send_meeting_follow_up_email": "发送会议跟进邮件"
+      "send_meeting_follow_up_email": "发送会议跟进邮件",
+      "book_crm_meeting": "预约会议",
+      "read_crm_meetings": "查看会议",
+      "read_security_posture": "查看安全状况"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -5050,6 +5079,23 @@
       "hint": "直接管理 AI 员工的人员。",
       "openNetwork": "查看实时网络",
       "counts": "{ai} 名 AI 下属 · {humans} 名人类下属"
+    },
+    "roles": {
+      "title": "贵公司自定义的角色",
+      "hint": "定义内置列表中没有的角色：它做什么、可用哪些工具、每个任务最多多少步。所有操作仍遵循你的审批、自主权和预算。",
+      "empty": "还没有自定义角色。",
+      "create": "创建角色",
+      "name": "角色名称",
+      "department": "部门",
+      "description": "简短描述",
+      "instructions": "该角色的职责",
+      "instructionsHint": "像职位描述一样书写：目标、工作方式、需要汇报什么。AI 会在平台安全规则内遵循。",
+      "tools": "{count, plural, other {工具（已选 # 个）}}",
+      "maxTurns": "每个任务的步数",
+      "maxTurnsHint": "1–15。步数越多，研究越深入，但费用更高。",
+      "save": "保存角色",
+      "archive": "归档",
+      "archiveConfirm": "归档角色“{name}”？此前须确保没有 AI 员工担任该角色。"
     }
   },
   "profiles": {
@@ -5304,6 +5350,18 @@
     "voice_assistant": {
       "name": "Realy 语音助手",
       "summary": "在 Realy 中根据实时公司数据回答你的问题和闲聊。"
+    },
+    "ai_clo": {
+      "name": "AI 首席法务官",
+      "summary": "根据你的文档审阅合同和政策，并指出法律与合规风险。"
+    },
+    "ai_ciso": {
+      "name": "AI 首席信息安全官",
+      "summary": "检查双重验证覆盖、API 密钥、集成和安全事件，并提出修复建议。"
+    },
+    "ai_cdo": {
+      "name": "AI 首席数据官",
+      "summary": "找出缺失或过时的数据和失效的数据源，并提出最重要的修复。"
     }
   },
   "projects": {
@@ -5342,7 +5400,12 @@
       "HIGH": "高风险",
       "CRITICAL": "关键"
     },
-    "messagePreview": "待发送的消息"
+    "messagePreview": "待发送的消息",
+    "retry": "重试操作",
+    "retrying": "正在重试…",
+    "retryFailed": "无法开始重试",
+    "retryLimit": "重试次数过多——请拒绝，或让 AI 重新提议。",
+    "attempts": "第 {count} 次尝试，共 {max} 次"
   },
   "objectives": {
     "subtitle": "设定目标，拆分为里程碑，将里程碑关联到项目，并让 AI 员工提出里程碑供你批准。",
@@ -5575,6 +5638,17 @@
       "noInitiatives": "尚无举措。用 AI 规划或自行添加。",
       "runsTitle": "此目标的 AI 工作",
       "runsHint": "为此启动的每一次指令运行。"
+    },
+    "budget": {
+      "amount": "预算",
+      "hint": "可选。实际支出为该目标相关工作的真实 AI 与服务商成本。",
+      "currency": "货币",
+      "column": "预算与实际",
+      "of": "{actual} / {budget}",
+      "spentNoBudget": "已花费 {actual} · 无预算",
+      "over": "超出预算（{pct}%）",
+      "otherCurrency": "实际 AI 支出以美元计；请手动比较。",
+      "initiativeAmount": "预算（{currency}，可选）"
     }
   },
   "notifications": {

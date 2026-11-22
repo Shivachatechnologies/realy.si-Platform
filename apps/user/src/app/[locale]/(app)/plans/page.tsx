@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarClock, CalendarDays, ListChecks, Repeat, Trash2, Zap } from "lucide-react";
 import { PlanComposer } from "@/components/ai-plans/plan-composer";
+// G4 (finance/monthly-pack.ts): the CFO monthly-pack preset for B18. Resolves after the integrator merges G4.
+import { CFO_MONTHLY_PACK_PRESET } from "@/server/modules/finance/monthly-pack";
 import { WeekCalendar } from "@/components/ai-plans/week-calendar";
 import { HelpMeButton } from "@/components/guide-kit/help-me";
 import { PageIntro } from "@/components/guide-kit/page-intro";
@@ -67,11 +69,12 @@ export default async function PlansPage() {
     if (s.kind === "EVENT") return t("aiPlans.sentence.event", { event: eventLabel(s.eventType ?? "") });
     if (s.frequency === "HOURLY") return t("aiPlans.sentence.hourly", { minute: (s.timeOfDay ?? "00:00").slice(3) });
     if (s.frequency === "WEEKLY") return t("aiPlans.sentence.weekly", { day: t(`plans.weekdays.${s.weekday ?? 1}`), time: s.timeOfDay ?? "" });
+    if (s.frequency === "MONTHLY") return t("aiPlans.sentence.monthly", { day: s.dayOfMonth ?? 1, time: s.timeOfDay ?? "" });
     return t("aiPlans.sentence.daily", { time: s.timeOfDay ?? "" });
   };
   const todayWeekday = WD[new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: company.timezone ?? "UTC" }).format(new Date())] ?? 1;
   const enabled = schedules.filter((s) => s.enabled);
-  const perWeek = enabled.reduce((n, s) => n + (s.kind === "EVENT" ? 0 : s.frequency === "HOURLY" ? 168 : s.frequency === "DAILY" ? 7 : 1), 0);
+  const perWeek = enabled.reduce((n, s) => n + (s.kind === "EVENT" ? 0 : s.frequency === "HOURLY" ? 168 : s.frequency === "DAILY" ? 7 : s.frequency === "WEEKLY" ? 1 : 0), 0);
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-4">
@@ -149,6 +152,7 @@ export default async function PlansPage() {
                   eventTypes={DOMAIN_EVENTS}
                   draft={draft ? { step: draft.step, data: draft.data } : null}
                   timezone={company.timezone ?? "UTC"}
+                  cfoPreset={{ name: CFO_MONTHLY_PACK_PRESET.name, instructions: CFO_MONTHLY_PACK_PRESET.instructions, briefingMode: CFO_MONTHLY_PACK_PRESET.briefingMode }}
                 />
               )}
             </CardBody>
@@ -216,6 +220,7 @@ export default async function PlansPage() {
                         frequency: s.frequency ?? "DAILY",
                         timeOfDay: s.timeOfDay ?? "09:00",
                         weekday: s.weekday ?? 1,
+                        dayOfMonth: s.dayOfMonth ?? 1,
                         eventType: s.eventType ?? DOMAIN_EVENTS[0],
                         instructions: s.instructions,
                         briefingMode: s.briefingMode ?? "",

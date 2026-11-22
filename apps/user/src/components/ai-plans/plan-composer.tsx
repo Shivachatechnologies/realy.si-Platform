@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarCheck, Clock, Repeat, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarCheck, CalendarDays, Clock, Repeat, Sparkles, Zap } from "lucide-react";
 import { FormError } from "@/components/form-error";
 import { FlowSteps, ResumeNote, SavedIndicator } from "@/components/cockpit/flow-bits";
 import { useGuidedDraft } from "@/components/cockpit/use-guided-draft";
@@ -14,12 +14,12 @@ import { useI18n } from "@/i18n/client";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst"];
+const BRIEFING_PROFILES = ["ai_ceo", "bi_analyst", "ai_cfo"];
 const WEEK = [1, 2, 3, 4, 5, 6, 0];
 /** Ready-made recurring jobs per department (aiPlans.ideas.<id>.name / .body). */
 const IDEAS: Record<string, string[]> = {
   executive: ["weekly_review", "morning_brief"],
-  finance: ["cash_monday", "overdue_chase"],
+  finance: ["cfo_monthly_pack", "cash_monday", "overdue_chase"],
   sales: ["pipeline_monday", "new_lead_research"],
   marketing: ["content_week", "campaign_check"],
   hr: ["people_pulse"],
@@ -27,6 +27,8 @@ const IDEAS: Record<string, string[]> = {
   operations: ["ops_week"],
   research: ["kpi_week"],
 };
+/** Ideas that come with their own timing (B18: the CFO monthly pack runs on the 1st of each month). */
+const IDEA_TIMING: Record<string, Record<string, unknown>> = { cfo_monthly_pack: { when: "MONTHLY", dayOfMonth: 1, timeOfDay: "08:00" } };
 const ideasFor = (dept: string) => [...(IDEAS[dept] ?? []), ...(dept === "executive" ? [] : IDEAS.executive!.slice(0, 1))];
 
 export interface PlanEmployee {
@@ -41,11 +43,26 @@ export interface PlanEmployee {
  * Plain-language plan editor: who → when → what, read back as one sentence ("Every Monday at 09:00, Ada (AI CFO) will
  * …") before it is saved as a real AI schedule. Answers are saved as you go.
  */
-export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }: { apiBase: string; employees: PlanEmployee[]; eventTypes: readonly string[]; draft: { step: number; data: Record<string, unknown> } | null; timezone: string }) {
+export function PlanComposer({
+  apiBase,
+  employees,
+  eventTypes,
+  draft,
+  timezone,
+  cfoPreset,
+}: {
+  apiBase: string;
+  employees: PlanEmployee[];
+  eventTypes: readonly string[];
+  draft: { step: number; data: Record<string, unknown> } | null;
+  timezone: string;
+  /** The CFO monthly pack (finance/monthly-pack.ts CFO_MONTHLY_PACK_PRESET): its instructions and briefing mode. */
+  cfoPreset?: { name: string; instructions: string; briefingMode: string } | null;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const defaults = useMemo(
-    () => ({ aiEmployeeId: employees[0]?.id ?? "", when: "WEEKLY", weekday: 1, timeOfDay: "09:00", minute: "00", eventType: eventTypes[0] ?? "", name: "", instructions: "", briefingMode: "" }),
+    () => ({ aiEmployeeId: employees[0]?.id ?? "", when: "WEEKLY", weekday: 1, dayOfMonth: 1, timeOfDay: "09:00", minute: "00", eventType: eventTypes[0] ?? "", name: "", instructions: "", briefingMode: "" }),
     [employees, eventTypes],
   );
   const d = useGuidedDraft(apiBase, "plans.editor", defaults, draft);
@@ -65,7 +82,9 @@ export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }
         ? t("aiPlans.sentence.hourly", { minute: String(v.minute) })
         : when === "WEEKLY"
           ? t("aiPlans.sentence.weekly", { day: t(`plans.weekdays.${Number(v.weekday)}`), time: String(v.timeOfDay) })
-          : t("aiPlans.sentence.daily", { time: String(v.timeOfDay) });
+          : when === "MONTHLY"
+            ? t("aiPlans.sentence.monthly", { day: Number(v.dayOfMonth) || 1, time: String(v.timeOfDay) })
+            : t("aiPlans.sentence.daily", { time: String(v.timeOfDay) });
   const roleName = emp ? t(`profiles.${emp.profileKey}.name`) : "";
   const go = (i: number) => {
     d.setStep(i);
@@ -88,6 +107,7 @@ export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }
           frequency: recurring ? when : null,
           timeOfDay: recurring ? (when === "HOURLY" ? `00:${v.minute}` : String(v.timeOfDay)) : null,
           weekday: when === "WEEKLY" ? Number(v.weekday) : null,
+          dayOfMonth: when === "MONTHLY" ? Number(v.dayOfMonth) || 1 : null,
           eventType: recurring ? null : String(v.eventType),
           instructions: String(v.instructions).trim(),
           briefingMode: BRIEFING_PROFILES.includes(emp.profileKey) && v.briefingMode ? v.briefingMode : null,
@@ -167,6 +187,7 @@ export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }
             {option("WEEKLY", <CalendarCheck />)}
             {option("DAILY", <Repeat />)}
             {option("HOURLY", <Clock />)}
+            {option("MONTHLY", <CalendarDays />)}
             {option("EVENT", <Zap />)}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -181,7 +202,18 @@ export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }
                 </Select>
               </Field>
             ) : null}
-            {when === "WEEKLY" || when === "DAILY" ? (
+            {when === "MONTHLY" ? (
+              <Field label={t("plans.form.dayOfMonth")} htmlFor="pl-dom" hint={t("plans.form.dayOfMonthHint")}>
+                <Select id="pl-dom" value={Number(v.dayOfMonth) || 1} onChange={(e) => d.set("dayOfMonth", Number(e.target.value))}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : null}
+            {when === "WEEKLY" || when === "DAILY" || when === "MONTHLY" ? (
               <Field label={t("plans.form.time")} htmlFor="pl-time">
                 <Input id="pl-time" type="time" value={String(v.timeOfDay)} onChange={(e) => d.set("timeOfDay", e.target.value)} />
               </Field>
@@ -223,7 +255,14 @@ export function PlanComposer({ apiBase, employees, eventTypes, draft, timezone }
               <button
                 key={id}
                 type="button"
-                onClick={() => d.patch({ name: t(`aiPlans.ideas.${id}.name`), instructions: t(`aiPlans.ideas.${id}.body`) })}
+                onClick={() =>
+                  d.patch({
+                    name: t(`aiPlans.ideas.${id}.name`),
+                    instructions: id === "cfo_monthly_pack" && cfoPreset ? cfoPreset.instructions : t(`aiPlans.ideas.${id}.body`),
+                    ...(IDEA_TIMING[id] ?? {}),
+                    ...(id === "cfo_monthly_pack" && cfoPreset ? { briefingMode: cfoPreset.briefingMode } : {}),
+                  })
+                }
                 className="hover-lift flex items-start gap-2 rounded-md border bg-surface-2/60 p-2.5 text-start text-sm"
               >
                 <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />

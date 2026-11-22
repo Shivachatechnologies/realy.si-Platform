@@ -2232,7 +2232,8 @@
       "RUNNING": "运行中",
       "COMPLETED": "已完成",
       "FAILED": "失败",
-      "CANCELLED": "已取消"
+      "CANCELLED": "已取消",
+      "WAITING_APPROVAL": "等待审批"
     },
     "back": "全部任务",
     "deliverable": "成果",
@@ -2500,7 +2501,10 @@
       "handoff_video_to_publishing": "将视频交付发布",
       "start_calling_campaign": "启动 AI 外呼活动",
       "read_calling_runs": "查看 AI 外呼活动",
-      "send_meeting_follow_up_email": "发送会议跟进邮件"
+      "send_meeting_follow_up_email": "发送会议跟进邮件",
+      "book_crm_meeting": "预约会议",
+      "read_crm_meetings": "查看会议",
+      "read_security_posture": "查看安全状况"
     },
     "needsApproval": "需审批",
     "tabs": {
@@ -3316,6 +3320,23 @@
       "hint": "直接管理 AI 员工的人员。",
       "openNetwork": "查看实时网络",
       "counts": "{ai} 名 AI 下属 · {humans} 名人类下属"
+    },
+    "roles": {
+      "title": "贵公司自定义的角色",
+      "hint": "定义内置列表中没有的角色：它做什么、可用哪些工具、每个任务最多多少步。所有操作仍遵循你的审批、自主权和预算。",
+      "empty": "还没有自定义角色。",
+      "create": "创建角色",
+      "name": "角色名称",
+      "department": "部门",
+      "description": "简短描述",
+      "instructions": "该角色的职责",
+      "instructionsHint": "像职位描述一样书写：目标、工作方式、需要汇报什么。AI 会在平台安全规则内遵循。",
+      "tools": "{count, plural, other {工具（已选 # 个）}}",
+      "maxTurns": "每个任务的步数",
+      "maxTurnsHint": "1–15。步数越多，研究越深入，但费用更高。",
+      "save": "保存角色",
+      "archive": "归档",
+      "archiveConfirm": "归档角色“{name}”？此前须确保没有 AI 员工担任该角色。"
     }
   },
   "profiles": {
@@ -3570,6 +3591,18 @@
     "voice_assistant": {
       "name": "Realy 语音助手",
       "summary": "在 Realy 中根据实时公司数据回答你的问题和闲聊。"
+    },
+    "ai_clo": {
+      "name": "AI 首席法务官",
+      "summary": "根据你的文档审阅合同和政策，并指出法律与合规风险。"
+    },
+    "ai_ciso": {
+      "name": "AI 首席信息安全官",
+      "summary": "检查双重验证覆盖、API 密钥、集成和安全事件，并提出修复建议。"
+    },
+    "ai_cdo": {
+      "name": "AI 首席数据官",
+      "summary": "找出缺失或过时的数据和失效的数据源，并提出最重要的修复。"
     }
   },
   "projects": {
@@ -3608,7 +3641,12 @@
       "HIGH": "高风险",
       "CRITICAL": "关键"
     },
-    "messagePreview": "待发送的消息"
+    "messagePreview": "待发送的消息",
+    "retry": "重试操作",
+    "retrying": "正在重试…",
+    "retryFailed": "无法开始重试",
+    "retryLimit": "重试次数过多——请拒绝，或让 AI 重新提议。",
+    "attempts": "第 {count} 次尝试，共 {max} 次"
   },
   "objectives": {
     "subtitle": "设定目标，拆分为里程碑，将里程碑关联到项目，并让 AI 员工提出里程碑供你批准。",
@@ -3841,6 +3879,17 @@
       "noInitiatives": "尚无举措。用 AI 规划或自行添加。",
       "runsTitle": "此目标的 AI 工作",
       "runsHint": "为此启动的每一次指令运行。"
+    },
+    "budget": {
+      "amount": "预算",
+      "hint": "可选。实际支出为该目标相关工作的真实 AI 与服务商成本。",
+      "currency": "货币",
+      "column": "预算与实际",
+      "of": "{actual} / {budget}",
+      "spentNoBudget": "已花费 {actual} · 无预算",
+      "over": "超出预算（{pct}%）",
+      "otherCurrency": "实际 AI 支出以美元计；请手动比较。",
+      "initiativeAmount": "预算（{currency}，可选）"
     }
   },
   "notifications": {
@@ -5665,7 +5714,8 @@
     "frequencies": {
       "HOURLY": "每小时",
       "DAILY": "每天",
-      "WEEKLY": "每周"
+      "WEEKLY": "每周",
+      "MONTHLY": "每月"
     },
     "weekdays": {
       "0": "星期日",
@@ -5698,7 +5748,9 @@
       "instructions": "指令",
       "instructionsHint": "占位符：'{{date}}'、'{{event}}'，事件字段用 '{{data.field}}'。",
       "enabled": "启用",
-      "create": "创建计划任务"
+      "create": "创建计划任务",
+      "dayOfMonth": "每月日期",
+      "dayOfMonthHint": "在较短的月份，29–31 日会在当月最后一天运行。"
     }
   },
   "intelligence": {
@@ -20249,7 +20301,9 @@
         "HOURLY": "每小时",
         "HOURLYHint": "仅用于变化很快的事情",
         "EVENT": "当某事发生时",
-        "EVENTHint": "例如新线索、已付款发票或新工单"
+        "EVENTHint": "例如新线索、已付款发票或新工单",
+        "MONTHLY": "每月一次",
+        "MONTHLYHint": "适合月末报告和董事会报告"
       },
       "whatQ": "{name} 每次应该做什么？",
       "whatHint": "选择一个想法或写下你自己的指示。",
@@ -20264,7 +20318,8 @@
       "weekly": "每{day} {time}",
       "hourly": "每小时第 {minute} 分",
       "event": "每当有人{event}时",
-      "full": "{when}，{name}（{role}）将执行“{job}”。"
+      "full": "{when}，{name}（{role}）将执行“{job}”。",
+      "monthly": "每月 {day} 日 {time}"
     },
     "help": {
       "title": "需要灵感？",
@@ -20322,6 +20377,10 @@
       "kpi_week": {
         "name": "每周数据",
         "body": "解释本周关键数据的变化以及背后可能的原因。"
+      },
+      "cfo_monthly_pack": {
+        "name": "CFO 月度报告包",
+        "body": "每月 1 日：收入、支出和利润与上月对比，现金与跑道，应收与应付，预算与实际，AI 与服务商支出，以及需要做的决定——只基于你的真实记录。"
       }
     }
   },
@@ -21848,6 +21907,43 @@
       },
       "reportNote": "详情（可选）",
       "reportSend": "发送报告"
+    },
+    "unified": {
+      "title": "AI 能做到哪一步——一览",
+      "description": "由四项设置决定，按此顺序检查。始终以最严格的一项为准。",
+      "order": {
+        "platform": "平台与“暂停所有 AI”",
+        "platformHint": "暂停时一切都不会运行——没有任务、工具或消息。",
+        "autopilot": "部门自动驾驶",
+        "autopilotHint": "AI 是否可以自行开始工作（计划、信号），还是只能在有人要求时。",
+        "rules": "各类操作规则与自动模式",
+        "rulesHint": "操作是在限额内执行、等待审批、仅建议，还是关闭。",
+        "employees": "每位 AI 员工的自主级别",
+        "employeesHint": "AI 员工能使用哪些工具（只读、起草、经审批执行、自主执行）。"
+      },
+      "levels": {
+        "PAUSED": "已暂停",
+        "MANUAL": "手动",
+        "MANUALHint": "仅在被要求时工作",
+        "ASSISTED": "辅助",
+        "ASSISTEDHint": "起草并建议",
+        "APPROVAL": "审批",
+        "APPROVALHint": "经你审批后执行",
+        "AUTONOMOUS": "自主",
+        "AUTONOMOUSHint": "在限额内自主执行"
+      },
+      "department": "部门",
+      "effective": "实际生效",
+      "autopilot": "自动驾驶",
+      "rules": "操作规则",
+      "employees": "AI 员工",
+      "decidedBy": {
+        "pause": "由“暂停所有 AI”决定",
+        "autopilot": "由自动驾驶决定",
+        "rules": "由操作规则决定",
+        "employees": "由 AI 员工的自主级别决定"
+      },
+      "autopilotLink": "按部门更改自动驾驶"
     }
   },
   "briefing": {

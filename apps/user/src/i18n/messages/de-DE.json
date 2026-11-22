@@ -2232,7 +2232,8 @@
       "RUNNING": "Läuft",
       "COMPLETED": "Abgeschlossen",
       "FAILED": "Fehlgeschlagen",
-      "CANCELLED": "Abgebrochen"
+      "CANCELLED": "Abgebrochen",
+      "WAITING_APPROVAL": "Wartet auf Freigabe"
     },
     "back": "Alle Aufgaben",
     "deliverable": "Ergebnis",
@@ -2500,7 +2501,10 @@
       "handoff_video_to_publishing": "Video zur Veröffentlichung übergeben",
       "start_calling_campaign": "KI-Anrufkampagne starten",
       "read_calling_runs": "KI-Anrufkampagnen lesen",
-      "send_meeting_follow_up_email": "Follow-up-E-Mail zum Termin senden"
+      "send_meeting_follow_up_email": "Follow-up-E-Mail zum Termin senden",
+      "book_crm_meeting": "Termin buchen",
+      "read_crm_meetings": "Termine lesen",
+      "read_security_posture": "Sicherheitslage lesen"
     },
     "needsApproval": "braucht Freigabe",
     "tabs": {
@@ -3316,6 +3320,23 @@
       "hint": "Menschen, die KI-Mitarbeitende direkt führen.",
       "openNetwork": "Live-Netzwerk ansehen",
       "counts": "{ai} KI-Berichtende · {humans} menschliche Berichtende"
+    },
+    "roles": {
+      "title": "Eigene Rollen Ihres Unternehmens",
+      "hint": "Definieren Sie eine Rolle, die es noch nicht gibt: was sie tut, welche Werkzeuge sie nutzen darf und wie viele Schritte eine Aufgabe haben darf. Aktionen folgen weiter Ihren Freigaben, Ihrer Autonomie und Ihren Budgets.",
+      "empty": "Noch keine eigenen Rollen.",
+      "create": "Rolle erstellen",
+      "name": "Rollenname",
+      "department": "Abteilung",
+      "description": "Kurzbeschreibung",
+      "instructions": "Was diese Rolle tut",
+      "instructionsHint": "Wie eine Stellenbeschreibung: Ziele, Arbeitsweise, was berichtet wird. Die KI folgt ihr innerhalb der Sicherheitsregeln der Plattform.",
+      "tools": "{count, plural, one {Werkzeuge (# ausgewählt)} other {Werkzeuge (# ausgewählt)}}",
+      "maxTurns": "Schritte pro Aufgabe",
+      "maxTurnsHint": "1–15. Mehr Schritte erlauben längere Recherchen, kosten aber mehr.",
+      "save": "Rolle speichern",
+      "archive": "Archivieren",
+      "archiveConfirm": "Rolle „{name}“ archivieren? Keine KI-Mitarbeitenden dürfen sie noch haben."
     }
   },
   "profiles": {
@@ -3570,6 +3591,18 @@
     "voice_assistant": {
       "name": "Realy-Sprachassistent",
       "summary": "Beantwortet deine Fragen und Small Talk in Realy mit Live-Unternehmensdaten."
+    },
+    "ai_clo": {
+      "name": "KI-Chefjurist (CLO)",
+      "summary": "Prüft Verträge und Richtlinien aus Ihren Dokumenten und markiert rechtliche und Compliance-Risiken."
+    },
+    "ai_ciso": {
+      "name": "KI-Sicherheitschef (CISO)",
+      "summary": "Prüft Zwei-Faktor-Abdeckung, API-Schlüssel, Integrationen und Sicherheitsereignisse und schlägt Korrekturen vor."
+    },
+    "ai_cdo": {
+      "name": "KI-Datenchef (CDO)",
+      "summary": "Findet fehlende oder veraltete Daten und defekte Quellen und schlägt die wichtigsten Korrekturen vor."
     }
   },
   "projects": {
@@ -3608,7 +3641,12 @@
       "HIGH": "Hohes Risiko",
       "CRITICAL": "Kritisch"
     },
-    "messagePreview": "Zu sendende Nachricht"
+    "messagePreview": "Zu sendende Nachricht",
+    "retry": "Aktion wiederholen",
+    "retrying": "Wird wiederholt …",
+    "retryFailed": "Die Wiederholung konnte nicht starten",
+    "retryLimit": "Zu oft wiederholt – lehnen Sie ab oder bitten Sie die KI um einen neuen Vorschlag.",
+    "attempts": "Versuch {count} von {max}"
   },
   "objectives": {
     "subtitle": "Setzen Sie Ziele, gliedern Sie sie in Meilensteine, verknüpfen Sie Meilensteine mit Projekten und lassen Sie KI-Mitarbeiter Meilensteine zur Freigabe vorschlagen.",
@@ -3841,6 +3879,17 @@
       "noInitiatives": "Noch keine Initiativen. Planen Sie sie mit KI oder fügen Sie eigene hinzu.",
       "runsTitle": "KI-Arbeit für dieses Ziel",
       "runsHint": "Jeder dafür gestartete Befehlslauf."
+    },
+    "budget": {
+      "amount": "Budget",
+      "hint": "Optional. Ist-Kosten sind die echten KI- und Anbieterkosten der Arbeit an diesem Ziel.",
+      "currency": "Währung",
+      "column": "Budget vs. Ist",
+      "of": "{actual} von {budget}",
+      "spentNoBudget": "{actual} ausgegeben · kein Budget",
+      "over": "Budget überschritten ({pct} %)",
+      "otherCurrency": "KI-Ausgaben werden in USD erfasst; bitte manuell vergleichen.",
+      "initiativeAmount": "Budget ({currency}, optional)"
     }
   },
   "notifications": {
@@ -5665,7 +5714,8 @@
     "frequencies": {
       "HOURLY": "Stündlich",
       "DAILY": "Täglich",
-      "WEEKLY": "Wöchentlich"
+      "WEEKLY": "Wöchentlich",
+      "MONTHLY": "Jeden Monat"
     },
     "weekdays": {
       "0": "Sonntag",
@@ -5698,7 +5748,9 @@
       "instructions": "Anweisungen",
       "instructionsHint": "Platzhalter: '{{date}}', '{{event}}' und '{{data.field}}' für Ereignisfelder.",
       "enabled": "Aktiv",
-      "create": "Zeitplan erstellen"
+      "create": "Zeitplan erstellen",
+      "dayOfMonth": "Tag im Monat",
+      "dayOfMonthHint": "In kürzeren Monaten laufen die Tage 29–31 am letzten Tag."
     }
   },
   "intelligence": {
@@ -20249,7 +20301,9 @@
         "HOURLY": "Jede Stunde",
         "HOURLYHint": "Nur für Dinge, die sich schnell ändern",
         "EVENT": "Wenn etwas passiert",
-        "EVENTHint": "Zum Beispiel ein neuer Lead, eine bezahlte Rechnung oder ein neues Ticket"
+        "EVENTHint": "Zum Beispiel ein neuer Lead, eine bezahlte Rechnung oder ein neues Ticket",
+        "MONTHLY": "Einmal im Monat",
+        "MONTHLYHint": "Gut für Monatsabschlüsse und Berichte an den Vorstand"
       },
       "whatQ": "Was soll {name} jedes Mal tun?",
       "whatHint": "Wähle eine Idee oder schreibe eigene Anweisungen.",
@@ -20264,7 +20318,8 @@
       "weekly": "Jeden {day} um {time}",
       "hourly": "Stündlich um :{minute}",
       "event": "Immer wenn jemand {event}",
-      "full": "{when} erledigt {name} ({role}) „{job}“."
+      "full": "{when} erledigt {name} ({role}) „{job}“.",
+      "monthly": "Jeden Monat am {day}. um {time}"
     },
     "help": {
       "title": "Brauchst du Ideen?",
@@ -20322,6 +20377,10 @@
       "kpi_week": {
         "name": "Wöchentliche Zahlen",
         "body": "Erkläre, wie sich unsere Kennzahlen diese Woche bewegt haben und was dahinterstecken könnte."
+      },
+      "cfo_monthly_pack": {
+        "name": "Monatsbericht des CFO",
+        "body": "Am 1. jedes Monats: Umsatz, Ausgaben und Gewinn im Vergleich zum Vormonat, Liquidität und Reichweite, Forderungen und Verbindlichkeiten, Budget gegen Ist, KI- und Anbieterkosten sowie nötige Entscheidungen – nur aus Ihren echten Daten."
       }
     }
   },
@@ -21848,6 +21907,43 @@
       },
       "reportNote": "Details (optional)",
       "reportSend": "Meldung senden"
+    },
+    "unified": {
+      "title": "Wie weit die KI gehen darf – auf einen Blick",
+      "description": "Vier Einstellungen entscheiden, in dieser Reihenfolge geprüft. Die strengste gewinnt immer.",
+      "order": {
+        "platform": "Plattform und „Alle KI pausieren“",
+        "platformHint": "Wenn pausiert, läuft nichts – keine Aufgaben, Werkzeuge oder Nachrichten.",
+        "autopilot": "Autopilot der Abteilung",
+        "autopilotHint": "Ob die KI selbst Arbeit beginnen darf (Zeitpläne, Signale) oder nur auf Anfrage.",
+        "rules": "Regeln je Aktion und Auto-Modus",
+        "rulesHint": "Ob eine Aktion in Grenzen läuft, auf Freigabe wartet, nur vorgeschlagen wird oder aus ist.",
+        "employees": "Autonomie jedes KI-Mitarbeitenden",
+        "employeesHint": "Welche Werkzeuge ein KI-Mitarbeitender überhaupt bekommt (nur lesen, entwerfen, mit Freigabe handeln, selbst handeln)."
+      },
+      "levels": {
+        "PAUSED": "Pausiert",
+        "MANUAL": "Manuell",
+        "MANUALHint": "arbeitet nur auf Anfrage",
+        "ASSISTED": "Unterstützt",
+        "ASSISTEDHint": "entwirft und empfiehlt",
+        "APPROVAL": "Freigabe",
+        "APPROVALHint": "handelt nach Ihrer Freigabe",
+        "AUTONOMOUS": "Autonom",
+        "AUTONOMOUSHint": "handelt selbst innerhalb der Grenzen"
+      },
+      "department": "Abteilung",
+      "effective": "Gilt",
+      "autopilot": "Autopilot",
+      "rules": "Aktionsregeln",
+      "employees": "KI-Mitarbeitende",
+      "decidedBy": {
+        "pause": "durch „Alle KI pausieren“",
+        "autopilot": "durch den Autopiloten",
+        "rules": "durch die Aktionsregeln",
+        "employees": "durch die Autonomie der KI-Mitarbeitenden"
+      },
+      "autopilotLink": "Autopilot je Abteilung ändern"
     }
   },
   "briefing": {

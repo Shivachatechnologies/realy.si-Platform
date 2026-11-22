@@ -58,6 +58,10 @@ decomposition, memory, retrieval, tool registry + Tool Gateway (internal tools),
 (Anthropic/OpenAI/Gemini) with routing, budgets and usage metering.
 **Exit:** "Get our first 100 US customers" produces a persisted, editable plan; internal tools execute
 under policy; approvals pause/resume runs; kill switch halts all runs.
+**Status (2026-11):** implemented — AI Command (model-based understanding with keyword fallback, plans with step
+dependencies, review), park-on-approval with resume, approved-action feedback and retry, multi-provider runtime
+(Anthropic / OpenAI / Gemini) with cross-provider fallback and shared circuit breakers, admin tier routing, budgets on
+goals and initiatives. Acceptance test: `tests/integration/g1-acceptance-flow.test.ts`.
 
 ## Phase 4 — Digital Workforce
 Agent runtime state machine, templates for ~20 employees (CEO, Chief of Staff, Strategy, Research,
@@ -65,6 +69,9 @@ CFO, CTO, CMO, PM, Software Architect, Full-Stack Eng, QA, DevOps, SEO, Content 
 Marketing, Lead Researcher, SDR, Financial Analyst, Support Specialist, Data Analyst), per-agent
 metrics. Then expand to 50–100 roles as data. Workflow engine GA.
 **Exit:** agent runtime tests for limits (iterations, timeout, budget, cancellation, escalation).
+**Status (2026-11):** implemented — 65 role profiles (including the C-suite: CEO, COO, CTO, CRO, CHRO, CFO, CMO, CLO,
+CISO, CDO), company-defined roles stored as data (`AiRoleProfile`), hierarchy and delegation with depth / tree caps,
+monthly schedules (CFO monthly pack), one autonomy model shown on `/autonomy`.
 
 ## Phase 5 — External Execution
 Realy Connect (OAuth, encrypted credentials, refresh, webhooks, health, revocation) + adapters

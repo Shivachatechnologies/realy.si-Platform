@@ -65,6 +65,9 @@ model CompanyGoal {
   /// Records created so far by "Apply plan": { "<item key>": "<record id>" } — makes a re-apply resume, never duplicate.
   planApplied    Json               @default("{}") @map("plan_applied")
   planAppliedAt  DateTime?          @map("plan_applied_at") @db.Timestamptz(3)
+  /// Budget for the goal (minor units of budgetCurrency); actual = AI and provider spend of its work (G1, B15).
+  budgetMinor    BigInt?            @map("budget_minor")
+  budgetCurrency String?            @map("budget_currency") @db.Char(3)
   createdById    String             @map("created_by_id") @db.Uuid
   createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -169,6 +172,9 @@ model ObjectiveInitiative {
   /// Latest command run carrying the initiative.
   commandRunId   String?                   @map("command_run_id") @db.Uuid
   position       Int                       @default(0)
+  /// Budget for the initiative (minor units of budgetCurrency) (G1, B15).
+  budgetMinor    BigInt?                   @map("budget_minor")
+  budgetCurrency String?                   @map("budget_currency") @db.Char(3)
   createdById    String?                   @map("created_by_id") @db.Uuid
   createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)

@@ -6,7 +6,7 @@ import { profileByKey } from "@/server/modules/agents/profiles";
 import { DEFAULT_LOCALE, isAppLocale, type AppLocale } from "@/i18n/config";
 import { getT } from "@/i18n/server";
 import type { CommandRunOrigin } from "@/generated/prisma/enums";
-import { COMMAND_INTENTS } from "./command";
+import { COMMAND_INTENTS } from "./command-intents";
 import { startRun } from "./command-run";
 
 /**
