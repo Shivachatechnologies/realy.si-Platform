@@ -12,7 +12,7 @@ const AiCore3D = dynamic(() => import("./ai-core-3d"), { ssr: false, loading: ()
 /**
  * The AI intelligence core — loaded on demand (next/dynamic, ssr:false) only where it carries meaning (auth, Command
  * Center, AI journey). `activity` (0–1) must come from real workload (running/queued AI tasks); `nodes` from real AI
- * employees. 3D on capable devices (phones at the "lite" tier: ≤1.5 DPR, fewer particles, 30 fps) when it holds the
+ * employees. 3D on capable devices (phones at the "lite" tier: 1–2 DPR, fewer particles, 30 fps) when it holds the
  * page's single WebGL slot; otherwise — and on the server, during load, without WebGL or on low-end devices — the
  * animated CSS core at the same size (no layout shift); the still CSS core under reduced motion. Pauses rendering
  * when hidden or scrolled off-screen. Decorative: describe the data in surrounding text.

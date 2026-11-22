@@ -37,7 +37,7 @@ function useHeat(pulses: CoreVisualProps["pulses"], enabled: boolean): number[] 
  * The Realy AI Core, driven by the console's real signals (state, audio level, department events, workload).
  *
  *   3D (React Three Fiber) where WebGL is available and the device is capable — phones included, at the "lite" tier
- *   (≤1.5 DPR, fewer particles, 30 fps) — and only for the one core holding the page's WebGL slot (`priority`).
+ *   (1–2 DPR, fewer particles, 30 fps) — and only for the one core holding the page's WebGL slot (`priority`).
  *   Animated CSS core everywhere else: compact (dock, tab bar), no WebGL, Data Saver, low memory, before the 3D chunk
  *   loads (also the server render, so there is no layout shift), or when the 3D scene could not keep up.
  *   Still CSS core under reduced motion.

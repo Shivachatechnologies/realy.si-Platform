@@ -62,11 +62,11 @@ export function CommandHero({
             ))}
           </ul>
         ) : null}
-        <div className="relative z-10 order-3 grid min-w-0 gap-5 lg:order-1">
+        <div className="relative z-10 order-3 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 lg:order-1">
           <div className="eyebrow-rule">{eyebrow}</div>
           <h1 className="font-display text-hero text-balance">{headline}</h1>
           <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">{sub}</p>
-          <div className="max-w-2xl">{children}</div>
+          <div className="min-w-0 max-w-2xl">{children}</div>
         </div>
         {/* One core for every size (the page's single WebGL context): the animated header on phones, beside the text on desktop. */}
         <div className="relative order-1 mx-auto aspect-square w-[min(68vw,16rem)] lg:order-2 lg:w-full lg:max-w-[30rem]">

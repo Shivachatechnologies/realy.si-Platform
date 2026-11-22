@@ -23,7 +23,7 @@ const NODE_RADIUS = 2.55;
 
 interface SceneProps extends CoreVisualProps {
   palette: CorePalette;
-  /** "lite" on phones: fewer particles, ≤1.5 DPR, 30 fps, no MSAA (components/graphics/core-quality.ts). */
+  /** "lite" on phones: fewer particles, 1–2 DPR, 30 fps (components/graphics/core-quality.ts). */
   quality?: "full" | "lite";
   /** Decorative heartbeat (public site): a slow energy wave every few seconds while idle. Not a signal. */
   ambient?: boolean;
@@ -214,12 +214,16 @@ function Scene({ state, level, pulses, activity, palette, quality = "full", ambi
   return (
     <group>
       <mesh ref={core}>
-        <icosahedronGeometry args={[0.78, 2]} />
-        <meshStandardMaterial ref={coreMat} color={colA} emissive={colA} emissiveIntensity={0.8} roughness={0.25} metalness={0.3} flatShading />
+        <icosahedronGeometry args={[0.78, 5]} />
+        <meshStandardMaterial ref={coreMat} color={colA} emissive={colA} emissiveIntensity={0.8} roughness={0.35} metalness={0.3} />
       </mesh>
       <mesh ref={halo}>
-        <sphereGeometry args={[0.95, 32, 32]} />
+        <sphereGeometry args={[0.95, 48, 48]} />
         <meshBasicMaterial ref={haloMat} color={colB} transparent opacity={0.14} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[1.12, 48, 48]} />
+        <meshBasicMaterial color={colA} transparent opacity={0.06} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh ref={shell}>
         <icosahedronGeometry args={[1.3, 2]} />
