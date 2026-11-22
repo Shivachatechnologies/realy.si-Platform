@@ -271,9 +271,12 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Stripe",
     category: "payments",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
-    docsUrl: "https://docs.stripe.com/keys",
+    // Customer's own account: Stripe Connect OAuth (Standard accounts) on Realy's platform; the key fields are only for
+    // a setup by the Realy team (Admin → organization → Integrations), never entered by customers.
+    oauthAlternative: true,
+    scopes: ["read_write"],
+    envVars: ["STRIPE_CONNECT_CLIENT_ID", "STRIPE_SECRET_KEY"],
+    docsUrl: "https://docs.stripe.com/connect/oauth-standard-accounts",
     fields: [{ key: "apiKey", secret: true, required: true, placeholder: "rk_live_… / sk_live_…", pattern: "^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$" }],
     syncKinds: ["stripe.payments"],
     capabilities: ["payments", "sync"],
@@ -283,8 +286,11 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "WhatsApp Business",
     category: "messaging",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
+    // Customer's own WhatsApp Business account: Meta Embedded Signup on Realy's Meta app; key fields only for the Realy
+    // team's setup (a permanent system-user token + phone number id).
+    oauthAlternative: true,
+    scopes: ["whatsapp_business_management", "whatsapp_business_messaging", "business_management"],
+    envVars: ["WHATSAPP_APP_ID", "WHATSAPP_APP_SECRET", "WHATSAPP_CONFIG_ID"],
     docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
     fields: [
       { key: "apiKey", secret: true, required: true, placeholder: "EAAG…" },
@@ -582,9 +588,11 @@ export const PROVIDERS: ProviderInfo[] = [
     name: "Razorpay",
     category: "payments",
     authType: "api_key",
-    scopes: [],
-    envVars: [],
-    docsUrl: "https://razorpay.com/docs/api/authentication/",
+    // Customer's own account: Razorpay Partner OAuth on Realy's partner app; key fields only for the Realy team's setup.
+    oauthAlternative: true,
+    scopes: ["read_write"],
+    envVars: ["RAZORPAY_CLIENT_ID", "RAZORPAY_CLIENT_SECRET"],
+    docsUrl: "https://razorpay.com/docs/partners/technology-partners/onboard-businesses/integrate-oauth/",
     fields: [
       { key: "keyId", secret: false, required: true, placeholder: "rzp_live_…", pattern: "^rzp_(live|test)_[A-Za-z0-9]{10,}$" },
       { key: "apiKey", secret: true, required: true, labelKey: "keySecret", placeholder: "…", pattern: "^[A-Za-z0-9]{16,64}$" },
@@ -1072,15 +1080,12 @@ export const PLATFORM_MANAGED_PROVIDERS = [
   "sip_trunk",
   "vapi",
   "retell",
-  // Email, messaging, storage and payments (Realy's accounts)
+  // Email, messaging and storage (Realy's accounts). Stripe, Razorpay, WhatsApp and Mailchimp are the customer's OWN
+  // accounts (OWN_ACCOUNT_PROVIDERS below).
   "sendgrid",
-  "mailchimp",
   "twilio",
-  "whatsapp",
   "s3",
   "cloudflare",
-  "stripe",
-  "razorpay",
 ] as const;
 export type PlatformManagedProvider = (typeof PLATFORM_MANAGED_PROVIDERS)[number];
 
@@ -1117,6 +1122,47 @@ export type CustomerConnectMode = "platform" | "oauth" | "unavailable";
 
 export function customerConnectMode(info: Pick<ProviderInfo, "key" | "authType" | "availability">): CustomerConnectMode {
   if (isPlatformManaged(info.key)) return "platform";
+  // The customer's own payment / messaging / email-marketing accounts connect with Realy's platform app ("Connect with X").
+  if (isOwnAccountProvider(info.key)) return "oauth";
   if (info.authType === "oauth2" && info.availability !== "awaiting_docs") return "oauth";
   return "unavailable";
+}
+
+// ───────────── Customer's own accounts (payments, WhatsApp, Mailchimp) ─────────────
+
+/**
+ * Providers that act in the CUSTOMER'S OWN account and are connected without the customer ever handling a key
+ * (docs/integrations.md §7): the customer signs in / approves through Realy's platform app ("Connect with X"), or the
+ * Realy team sets the account up from the admin app for that organization (Admin → organization → Integrations). Money
+ * from payment links goes to the customer's own Stripe / Razorpay account; Realy's own Stripe (subscription billing,
+ * STRIPE_SECRET_KEY) is a separate use and is never charged on the customer's behalf.
+ */
+export const OWN_ACCOUNT_PROVIDERS = ["stripe", "razorpay", "whatsapp", "mailchimp"] as const;
+export type OwnAccountProvider = (typeof OWN_ACCOUNT_PROVIDERS)[number];
+const OWN_ACCOUNT = new Set<string>(OWN_ACCOUNT_PROVIDERS);
+export const isOwnAccountProvider = (key: string): key is OwnAccountProvider => OWN_ACCOUNT.has(key);
+
+/** How the customer connects each own-account provider (the "Connect with X" login it starts). */
+export const OWN_ACCOUNT_CONNECT: Record<OwnAccountProvider, "stripe_connect" | "razorpay_oauth" | "meta_embedded_signup" | "mailchimp_oauth"> = {
+  stripe: "stripe_connect",
+  razorpay: "razorpay_oauth",
+  whatsapp: "meta_embedded_signup",
+  mailchimp: "mailchimp_oauth",
+};
+
+/** Non-secret marker stored in a connection's config when the Realy team set it up from the admin app. */
+export const SETUP_BY_REALY = "realy_team";
+export const isSetUpByRealy = (config: unknown): boolean => !!config && typeof config === "object" && (config as { setupBy?: unknown }).setupBy === SETUP_BY_REALY;
+
+/** The fields the Realy team enters for an organization (admin setup fallback): setup fields, then secret settings. */
+export function ownAccountSetupFields(info: ProviderInfo): CredentialField[] {
+  if (!isOwnAccountProvider(info.key)) return [];
+  const seen = new Set<string>();
+  const out: CredentialField[] = [];
+  for (const f of [...(info.fields ?? []), ...(info.configFields ?? [])]) {
+    if (seen.has(f.key)) continue;
+    seen.add(f.key);
+    out.push(f);
+  }
+  return out;
 }

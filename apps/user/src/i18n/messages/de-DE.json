@@ -3566,6 +3566,10 @@
     "studio_video_producer": {
       "name": "Videoproduzent (Studio)",
       "summary": "Führt Videoprojekte von Skript und Storyboard bis zu Voiceover, Untertiteln und finalem Schnitt."
+    },
+    "voice_assistant": {
+      "name": "Realy-Sprachassistent",
+      "summary": "Beantwortet deine Fragen und Small Talk in Realy mit Live-Unternehmensdaten."
     }
   },
   "projects": {
@@ -7079,6 +7083,12 @@
       "legacyConnection": "Ihre bestehende {name}-Verbindung funktioniert weiter. Ihre Zugangsdaten verwaltet Realy; sie können hier nicht geändert werden.",
       "reconnectHint": "{name} meldet ein Problem mit dieser Verbindung. Verbinden Sie sich erneut, um sich noch einmal anzumelden.",
       "failingHint": "Diese Verbindung schlägt fehl. Realy wurde benachrichtigt."
+    },
+    "ownAccount": {
+      "setUpByRealy": "Vom Realy-Team eingerichtet",
+      "setUpByRealyBody": "Das Realy-Team hat Ihr eigenes {name}-Konto für Sie eingerichtet. Es funktioniert wie eine selbst hergestellte Verbindung, und Sie können sie jederzeit trennen.",
+      "help": "Verbinden Sie Ihr eigenes {name}-Konto: Melden Sie sich an und bestätigen Sie Realy. Hier geben Sie nie Schlüssel ein. Auf Wunsch richtet das Realy-Team es für Sie ein.",
+      "notReady": "Die Anmeldung mit {name} ist noch nicht freigeschaltet. Wenden Sie sich an Realy, dann richtet unser Team Ihr eigenes {name}-Konto für Sie ein."
     }
   },
   "workflows": {
@@ -23518,7 +23528,7 @@
       "CRITICAL": "kritisch"
     },
     "reply": {
-      "delegated": "Mach ich. Ich habe das an {team} übergeben und melde mich, sobald es ein Ergebnis gibt.",
+      "delegated": "Ich habe das mit {team} gestartet und sage dir Bescheid, sobald es ein Ergebnis gibt.",
       "blocked": "Ich konnte das nicht starten: {reason}",
       "planned": "Ich habe das geplant und weise es jetzt zu.",
       "failed": "Ich konnte diesen Befehl nicht starten. Bitte versuch es noch einmal.",
@@ -23530,7 +23540,22 @@
       "confirmUnclear": "Ich habe keine eindeutige Entscheidung verstanden. Bitte sag „genehmigen“ oder „ablehnen“.",
       "doneNoAnswer": "Erledigt. Die Ergebnisse findest du in AI Command.",
       "runFailed": "Das hat nicht geklappt: {reason}",
-      "runCancelled": "Dieser Befehl wurde abgebrochen."
+      "runCancelled": "Dieser Befehl wurde abgebrochen.",
+      "queuedWorkerDown": "Ich habe das für {team} eingereiht, aber die Hintergrundverarbeitung läuft gerade nicht. Es startet erst, wenn sie wieder läuft – ein baldiges Ergebnis kann ich nicht versprechen.",
+      "queuedNoWorkerSetup": "Ich habe das für {team} eingereiht, aber die Hintergrundverarbeitung ist in diesem Workspace noch nicht eingerichtet. Es startet erst, wenn sie eingerichtet ist.",
+      "status": {
+        "hello": "Hallo, ich bin da.",
+        "intro": "Das sehe ich gerade:",
+        "tasks": "{running, plural, one {# KI-Aufgabe läuft} other {# KI-Aufgaben laufen}}, {queued} warten.",
+        "failed": "{count, plural, one {# Aufgabe ist} other {# Aufgaben sind}} am letzten Tag fehlgeschlagen.",
+        "approvals": "{count, plural, =0 {Keine Freigaben offen.} one {# Freigabe wartet.} other {# Freigaben warten.}}",
+        "myTasks": "{count, plural, =0 {Keine deiner Aufgaben ist heute fällig.} one {# deiner Aufgaben ist heute fällig oder überfällig.} other {# deiner Aufgaben sind heute fällig oder überfällig.}}",
+        "meetings": "{count, plural, =0 {Heute keine Meetings.} one {# Meeting heute.} other {# Meetings heute.}}",
+        "workerDown": "Die Hintergrundverarbeitung läuft nicht, deshalb warten eingereihte Aufgaben.",
+        "nothingVisible": "Mit deinem Zugriff kann ich keine Unternehmenszahlen vorlesen.",
+        "noAi": "KI-Antworten sind gerade nicht verfügbar, das sind nur die Live-Zahlen.",
+        "aiFailed": "Ich konnte die KI gerade nicht erreichen, das sind nur die Live-Zahlen."
+      }
     },
     "notice": {
       "notHeard": "Ich habe nichts gehört. Halte den Button gedrückt, während du sprichst.",

@@ -57,8 +57,9 @@ export async function handleMetaVerify(key: string, query: URLSearchParams): Pro
 export async function handleMetaWebhook(key: string, raw: string, signature: string | null): Promise<{ status: number }> {
   const cfg = await configByKey(key);
   if (!cfg) return { status: 404 };
-  // WhatsApp runs on Realy's Meta app (platform key WHATSAPP_APP_SECRET, Admin → Platform keys); a secret a company
-  // stored earlier is still honoured so existing setups keep working.
+  // The company's own Meta app secret when it stored one; otherwise Realy's Meta app (WHATSAPP_APP_SECRET, used by
+  // Embedded Signup). Connections made with Embedded Signup normally deliver to the app-level webhook instead
+  // (/api/v1/webhooks/whatsapp, routed by phone_number_id — handleRoutedWhatsAppMessages below).
   let secret: string | null = process.env.WHATSAPP_APP_SECRET?.trim() || null;
   if (cfg.metaAppSecretEnc) {
     try {
@@ -77,7 +78,9 @@ export async function handleMetaWebhook(key: string, raw: string, signature: str
   }
   const conn = await usableConnection(cfg.organizationId, cfg.companyId, "whatsapp");
   const parsed = parseMetaInbound(body);
-  if (!conn || (parsed.phoneNumberId && str(conn.config.phoneNumberId) !== parsed.phoneNumberId)) return { status: 200 };
+  // The body must name this company's own phone number: Realy's Meta app signs every customer's events, so a payload
+  // without (or with another) phone_number_id is never treated as this company's.
+  if (!conn || !parsed.phoneNumberId || str(conn.config.phoneNumberId) !== parsed.phoneNumberId) return { status: 200 };
   for (const m of parsed.messages.slice(0, 20)) {
     const reply = await handleMessage("whatsapp", cfg.organizationId, cfg.companyId, m);
     if (reply) {
@@ -86,6 +89,27 @@ export async function handleMetaWebhook(key: string, raw: string, signature: str
     }
   }
   return { status: 200 };
+}
+
+/**
+ * WhatsApp messages that reached Realy's app-level webhook (integrations/own-account-webhooks.ts) and were routed to
+ * this company by phone_number_id, after the platform signature was verified. Handled as briefing replies only when
+ * the company set up briefing channels; the body holds only this company's changes.
+ */
+export async function handleRoutedWhatsAppMessages(organizationId: string, companyId: string, body: Record<string, unknown>): Promise<number> {
+  const cfg = await db().briefingChannelConfig.findUnique({ where: { companyId }, select: { organizationId: true } });
+  if (!cfg || cfg.organizationId !== organizationId) return 0;
+  const parsed = parseMetaInbound(body);
+  let handled = 0;
+  for (const m of parsed.messages.slice(0, 20)) {
+    const reply = await handleMessage("whatsapp", organizationId, companyId, m);
+    handled++;
+    if (reply) {
+      const r = await sendWhatsApp(organizationId, companyId, { to: m.from, body: reply });
+      if (!r.ok) logger.warn({ companyId, error: r.error }, "briefing whatsapp reply failed");
+    }
+  }
+  return handled;
 }
 
 const wordsOf = (v: string) =>

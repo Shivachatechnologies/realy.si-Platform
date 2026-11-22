@@ -70,6 +70,7 @@ export const WORKFORCE_PROFILES: AgentProfile[] = [
       "read_metric_series",
       "read_open_issues",
       "read_integrations",
+      "guide_account_connection",
       "read_sync_runs",
       "read_workflows",
       "read_workflow_runs",

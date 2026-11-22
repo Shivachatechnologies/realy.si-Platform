@@ -1,7 +1,7 @@
 # Fly.io config for the Realy worker service (docs/deployment.md "Worker service").
 #   fly launch --no-deploy --copy-config --config deploy/worker/fly.toml
 #   fly secrets set --config deploy/worker/fly.toml DATABASE_URL=... REDIS_URL=... REALY_ENCRYPTION_KEY=... APP_URL=...
-#   fly deploy --config deploy/worker/fly.toml --dockerfile Dockerfile      (run from the repository root)
+#   fly deploy --config deploy/worker/fly.toml       (run from the repository root; uses deploy/worker/Dockerfile)
 # The worker has no HTTP service: no [http_service] section, and machines must never auto-stop.
 app = "realy-worker"
 primary_region = "fra"
@@ -10,7 +10,7 @@ kill_signal = "SIGTERM"
 kill_timeout = "60s"
 
 [build]
-  build-target = "worker"
+  dockerfile = "deploy/worker/Dockerfile"
 
 [env]
   NODE_ENV = "production"

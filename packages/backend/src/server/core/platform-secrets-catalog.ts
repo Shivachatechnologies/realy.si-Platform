@@ -12,7 +12,7 @@ import { PLATFORM_MANAGED_PROVIDERS, platformCredentialFields, providerInfo, typ
 export type PlatformKeyGroup = "ai" | "research" | "creative" | "voice" | "video" | "telephony" | "messaging" | "storage" | "email" | "payments" | "login" | "integrations" | "observability" | "platform";
 
 /** Feature ids (translated under admin.keys.features.*) that stop working while the key is missing. */
-export type PlatformFeature = "aiTasks" | "liveChatAi" | "email" | "billing" | "billingWebhooks" | "socialLogin" | "integrations" | "errorTracking" | "tracing" | "firstAdmin" | "platformProviders";
+export type PlatformFeature = "aiTasks" | "liveChatAi" | "email" | "billing" | "billingWebhooks" | "socialLogin" | "integrations" | "errorTracking" | "tracing" | "firstAdmin" | "platformProviders" | "ownAccounts" | "ownAccountWebhooks";
 
 export interface PlatformKeyDef {
   key: string;
@@ -138,13 +138,9 @@ const PROVIDER_GROUP: Record<PlatformManagedProvider, PlatformKeyGroup> = {
   vapi: "telephony",
   retell: "telephony",
   sendgrid: "email",
-  mailchimp: "email",
   twilio: "messaging",
-  whatsapp: "messaging",
   s3: "storage",
   cloudflare: "storage",
-  stripe: "payments",
-  razorpay: "payments",
 };
 
 const words = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase()).replace(/\bApi\b/g, "API").replace(/\bUrl\b/g, "URL").replace(/\bId\b/g, "ID").replace(/\bSip\b/g, "SIP");
@@ -304,7 +300,7 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     group: "payments",
     kind: "secret",
     label: "Stripe secret key",
-    help: "Secret (sk_…) or restricted (rk_…) key from the Stripe Dashboard → Developers → API keys. Test keys work in test mode.",
+    help: "Secret (sk_…) or restricted (rk_…) key of Realy's own Stripe account (Stripe Dashboard → Developers → API keys), used for Realy's subscription billing. It is also the platform secret of Stripe Connect (customers connecting their own Stripe accounts). Test keys work in test mode.",
     docsUrl: "https://dashboard.stripe.com/apikeys",
     validate: pattern(/^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$/, "Stripe keys start with sk_live_, sk_test_, rk_live_ or rk_test_"),
     blocks: ["billing"],
@@ -322,6 +318,45 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
     validate: pattern(/^whsec_[A-Za-z0-9+/=]{10,}$/, "Webhook secrets start with whsec_"),
     blocks: ["billingWebhooks"],
     placeholder: "whsec_…",
+  },
+  // Customers' OWN Stripe accounts (Stripe Connect, Standard accounts): Connect with Stripe in the user app.
+  {
+    key: "STRIPE_CONNECT_CLIENT_ID",
+    group: "payments",
+    kind: "plain",
+    label: "Stripe Connect client ID",
+    help: "Live (or test) client ID (ca_…) of Realy's Connect platform: Stripe Dashboard → Settings → Connect → Onboarding options → OAuth. Enable OAuth for Standard accounts and add the redirect URI below. Customers' payment-link money goes to their own Stripe account.",
+    docsUrl: "https://dashboard.stripe.com/settings/connect/onboarding-options/oauth",
+    register: { kind: "redirect", paths: [OAUTH_INT("stripe")] },
+    validate: pattern(/^ca_[A-Za-z0-9]{16,64}$/, "Connect client IDs start with ca_"),
+    blocks: ["ownAccounts"],
+    placeholder: "ca_…",
+  },
+  {
+    key: "STRIPE_CONNECT_WEBHOOK_SECRET",
+    group: "payments",
+    kind: "secret",
+    label: "Stripe Connect webhook signing secret",
+    help: "Signing secret of a webhook endpoint that listens to \"Events on connected accounts\" (Stripe Dashboard → Developers → Webhooks), at the URL below. Include account.application.deauthorized, checkout.session.completed, payment_intent.succeeded and charge.refunded. Separate from the billing webhook.",
+    docsUrl: "https://dashboard.stripe.com/webhooks",
+    register: { kind: "webhook", paths: ["/api/v1/webhooks/stripe-connect"] },
+    validate: pattern(/^whsec_[A-Za-z0-9+/=]{10,}$/, "Webhook secrets start with whsec_"),
+    blocks: ["ownAccountWebhooks"],
+    placeholder: "whsec_…",
+  },
+  // Customers' OWN Razorpay accounts (Razorpay Partner OAuth).
+  ...oauthPair("payments", "RAZORPAY_CLIENT_ID", "RAZORPAY_CLIENT_SECRET", "Razorpay Partner", "https://dashboard.razorpay.com/app/partners/applications", [OAUTH_INT("razorpay")], ["ownAccounts"]),
+  { key: "RAZORPAY_OAUTH_MODE", group: "payments", kind: "plain", label: "Razorpay OAuth mode", help: "live (default) or test, for the token request of Razorpay Partner OAuth.", validate: oneOf(["live", "test"]), placeholder: "live" },
+  {
+    key: "RAZORPAY_WEBHOOK_SECRET",
+    group: "payments",
+    kind: "secret",
+    label: "Razorpay partner webhook secret",
+    help: "Secret of the partner webhook (Partner dashboard → Applications → your app → Webhooks) at the URL below; events of every connected account are routed by account_id. Include account.app.authorization_revoked.",
+    docsUrl: "https://razorpay.com/docs/partners/technology-partners/onboard-businesses/integrate-oauth/webhooks/",
+    register: { kind: "webhook", paths: ["/api/v1/webhooks/razorpay"] },
+    validate: pattern(/^[\x21-\x7e]{8,256}$/, "8–256 printable characters without spaces"),
+    blocks: ["ownAccountWebhooks"],
   },
   {
     key: "STRIPE_AUTOMATIC_TAX",
@@ -357,7 +392,50 @@ export const PLATFORM_KEYS: PlatformKeyDef[] = [
   ...oauthPair("integrations", "TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TikTok", "https://developers.tiktok.com/apps", [OAUTH_INT("tiktok")], ["integrations"]),
   ...oauthPair("integrations", "TIKTOK_ADS_APP_ID", "TIKTOK_ADS_APP_SECRET", "TikTok Ads", "https://business-api.tiktok.com/portal/apps", [OAUTH_INT("tiktok_ads")], ["integrations"]),
   ...oauthPair("integrations", "PINTEREST_CLIENT_ID", "PINTEREST_CLIENT_SECRET", "Pinterest", "https://developers.pinterest.com/apps/", [OAUTH_INT("pinterest")], ["integrations"]),
-  ...oauthPair("integrations", "MAILCHIMP_CLIENT_ID", "MAILCHIMP_CLIENT_SECRET", "Mailchimp", "https://admin.mailchimp.com/account/oauth2/", [OAUTH_INT("mailchimp")], ["integrations"]),
+  ...oauthPair("integrations", "MAILCHIMP_CLIENT_ID", "MAILCHIMP_CLIENT_SECRET", "Mailchimp", "https://admin.mailchimp.com/account/oauth2/", [OAUTH_INT("mailchimp")], ["integrations", "ownAccounts"]),
+  // Customers' OWN WhatsApp Business accounts (Meta Embedded Signup on Realy's Meta app).
+  {
+    key: "WHATSAPP_APP_ID",
+    group: "messaging",
+    kind: "plain",
+    label: "WhatsApp (Meta) app ID",
+    help: "App ID of Realy's Meta app with the WhatsApp product (developers.facebook.com → your app). Add the redirect URI below under Facebook Login for Business → Settings → Valid OAuth redirect URIs.",
+    docsUrl: "https://developers.facebook.com/docs/whatsapp/embedded-signup",
+    register: { kind: "redirect", paths: [OAUTH_INT("whatsapp")] },
+    validate: pattern(/^\d{5,25}$/, "Numeric Meta app ID"),
+    blocks: ["ownAccounts"],
+  },
+  {
+    key: "WHATSAPP_APP_SECRET",
+    group: "messaging",
+    kind: "secret",
+    label: "WhatsApp (Meta) app secret",
+    help: "App secret of the same Meta app (App settings → Basic). Used for the token exchange and to verify every WhatsApp webhook (X-Hub-Signature-256).",
+    docsUrl: "https://developers.facebook.com/apps",
+    validate: pattern(/^[a-f0-9]{32}$/, "32 hexadecimal characters"),
+    blocks: ["ownAccounts", "ownAccountWebhooks"],
+  },
+  {
+    key: "WHATSAPP_CONFIG_ID",
+    group: "messaging",
+    kind: "plain",
+    label: "WhatsApp Embedded Signup configuration ID",
+    help: "Facebook Login for Business → Configurations → create one with the WhatsApp Embedded Signup variation, permissions whatsapp_business_management and whatsapp_business_messaging, and a token that never expires (System user access token).",
+    docsUrl: "https://developers.facebook.com/docs/whatsapp/embedded-signup/implementation",
+    validate: pattern(/^\d{5,25}$/, "Numeric configuration ID"),
+    blocks: ["ownAccounts"],
+  },
+  {
+    key: "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+    group: "messaging",
+    kind: "secret",
+    label: "WhatsApp webhook verify token",
+    help: "Any random string; enter the same value with the callback URL below in the Meta app → WhatsApp → Configuration, and subscribe to the messages field. Inbound messages and statuses are routed to the company by phone_number_id.",
+    docsUrl: "https://developers.facebook.com/docs/graph-api/webhooks/getting-started",
+    register: { kind: "webhook", paths: ["/api/v1/webhooks/whatsapp"] },
+    validate: pattern(/^[\x21-\x7e]{12,256}$/, "12–256 printable characters without spaces"),
+    blocks: ["ownAccountWebhooks"],
+  },
   ...oauthPair("integrations", "QUICKBOOKS_CLIENT_ID", "QUICKBOOKS_CLIENT_SECRET", "QuickBooks", "https://developer.intuit.com/app/developer/dashboard", [OAUTH_INT("quickbooks")], ["integrations"]),
   { key: "QUICKBOOKS_ENVIRONMENT", group: "integrations", kind: "plain", label: "QuickBooks environment", help: "production or sandbox.", validate: oneOf(["production", "sandbox"]), placeholder: "production" },
   ...oauthPair("integrations", "XERO_CLIENT_ID", "XERO_CLIENT_SECRET", "Xero", "https://developer.xero.com/app/manage", [OAUTH_INT("xero")], ["integrations"]),

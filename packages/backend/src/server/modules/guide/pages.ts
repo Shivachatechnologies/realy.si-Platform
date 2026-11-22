@@ -662,7 +662,7 @@ export const GUIDE_PAGES: GuidePage[] = [
     pattern: "/integrations",
     module: "platform",
     profile: "integrations_engineer",
-    tools: ["read_integrations", "read_sync_runs"],
+    tools: ["read_integrations", "guide_account_connection", "read_sync_runs"],
     metrics: ["connections"],
     steps: [S("connect", "/integrations", { done: { metric: "connections", min: 1 }, selector: TABLE }), S("sync", "/integrations/syncs"), S("webhooks", "/integrations/webhooks")],
     next: ["/workflows", "/marketplace"],

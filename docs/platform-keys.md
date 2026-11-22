@@ -27,14 +27,20 @@ The allow-list in `platform-secrets-catalog.ts`, grouped on the page:
 - **Platform-managed providers** (docs/integrations.md §7): one key per credential field of every provider that runs
   on Realy's account, generated from the integrations catalog (`<PROVIDER>_<FIELD>`, e.g. `OPENAI_API_KEY`,
   `OPENAI_MODEL`, `TAVILY_API_KEY`, `KLING_ACCESS_KEY` / `KLING_SECRET_KEY`, `TWILIO_VOICE_ACCOUNT_SID` /
-  `TWILIO_VOICE_AUTH_TOKEN`, `S3_BUCKET` / `S3_SECRET_ACCESS_KEY`, `STRIPE_API_KEY`), grouped as AI, Research,
-  Creative, Voice, Video, Telephony, Messaging, Storage, Email and Payments, with a per-provider "Available to
+  `TWILIO_VOICE_AUTH_TOKEN`, `S3_BUCKET` / `S3_SECRET_ACCESS_KEY`), grouped as AI, Research,
+  Creative, Voice, Video, Telephony, Messaging, Storage and Email, with a per-provider "Available to
   customers" status. A provider is available once every required key has a value. **Test** runs the integration's own
   connection test with the candidate and the provider's other saved keys.
-- **Payments**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_AUTOMATIC_TAX`
+- **Payments**: `STRIPE_SECRET_KEY` (Realy's billing account; also the Stripe Connect platform secret),
+  `STRIPE_WEBHOOK_SECRET`, `STRIPE_AUTOMATIC_TAX`; customers' own accounts: `STRIPE_CONNECT_CLIENT_ID`,
+  `STRIPE_CONNECT_WEBHOOK_SECRET`, `RAZORPAY_CLIENT_ID`, `RAZORPAY_CLIENT_SECRET`, `RAZORPAY_OAUTH_MODE`,
+  `RAZORPAY_WEBHOOK_SECRET`
+- **Messaging** (customers' own WhatsApp Business accounts, Embedded Signup): `WHATSAPP_APP_ID`, `WHATSAPP_APP_SECRET`,
+  `WHATSAPP_CONFIG_ID`, `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
 - **Sign-in OAuth**: `OAUTH_GOOGLE_*`, `OAUTH_GITHUB_*`, `OAUTH_MICROSOFT_*`, `OAUTH_MICROSOFT_TENANT`
 - **Integration OAuth apps**: `SLACK_*`, `HUBSPOT_*`, `SALESFORCE_*` (+ `SALESFORCE_LOGIN_URL`), `LINKEDIN_*`, `X_*`,
-  `FACEBOOK_APP_*`, `THREADS_APP_*`, `TIKTOK_CLIENT_*`, `TIKTOK_ADS_APP_*`, `PINTEREST_*`, `MAILCHIMP_*`,
+  `FACEBOOK_APP_*`, `THREADS_APP_*`, `TIKTOK_CLIENT_*`, `TIKTOK_ADS_APP_*`, `PINTEREST_*`, `MAILCHIMP_*` (customers' own
+  Mailchimp accounts),
   `QUICKBOOKS_*` (+ `QUICKBOOKS_ENVIRONMENT`), `XERO_*`, `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_API_VERSION`
 - **Observability**: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `LOG_LEVEL`
 - **Platform**: `REALY_BOOTSTRAP_ADMIN_EMAIL`, `ENTITLEMENTS_ENFORCEMENT`

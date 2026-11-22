@@ -55,14 +55,14 @@ export function setModelForTests(model: ModelCall | null) {
 /** True when tasks can actually execute. Without a provider, tasks are refused up front — never simulated. */
 export const aiConfigured = () => Boolean(testModel || env().ANTHROPIC_API_KEY);
 
-function callModel(params: MessageCreateParamsNonStreaming): Promise<BetaMessage> {
+function callModel(params: MessageCreateParamsNonStreaming, opts?: { timeoutMs?: number; maxRetries?: number }): Promise<BetaMessage> {
   if (testModel) return testModel(params);
   // SDK retries connection errors, 408/409/429 and 5xx twice per call; the queue retries the whole task after that.
   // Rebuilt when the key changes (Admin → Platform keys rotates it at runtime).
   const key = env().ANTHROPIC_API_KEY;
   const fp = keyFingerprint(key);
   if (client?.fp !== fp) client = { c: new Anthropic({ apiKey: key, timeout: 120_000, maxRetries: 2 }), fp };
-  return client.c.beta.messages.create(params);
+  return client.c.beta.messages.create(params, opts ? { timeout: opts.timeoutMs, maxRetries: opts.maxRetries } : undefined);
 }
 
 const MAX_TOKENS = 16_000;
@@ -470,4 +470,127 @@ function providerErrorBase(err: unknown): TaskError {
   }
   if (err instanceof Anthropic.BadRequestError) return new TaskError("provider_rejected", "The AI provider rejected the request");
   return new TaskError("provider_error", "The AI provider call failed", true);
+}
+
+// ───────────── Quick calls (synchronous, no tools) ─────────────
+
+export interface QuickCallInput {
+  organizationId: string;
+  companyId: string;
+  /** Routing / platform-control profile key (need not be a hireable AI employee profile). */
+  profileKey: string;
+  /** Router tier: "simple" maps to the admin table's cheap / fast model. */
+  tier: ComplexityTier;
+  system: string;
+  messages: BetaMessageParam[];
+  maxTokens: number;
+  /** Structured output: the reply is JSON matching this schema (output_config.format). */
+  jsonSchema?: Record<string, unknown>;
+  /** Cost ledger labels (operation e.g. "voiceos.answer"; source makes the row idempotent). */
+  operation: string;
+  sourceType: string;
+  sourceId: string;
+  department?: string | null;
+  /** Per-attempt timeout (default 20 s); a request-path call must not hang. */
+  timeoutMs?: number;
+}
+
+export interface QuickCallResult {
+  text: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costMicros: number;
+}
+
+/**
+ * One short model call for request-path features (no tools, no task row): the model router's tier, the admin fallback
+ * chain and circuit breaker, the platform AI budget and hard-stop cost budgets before the call, and the cost ledger
+ * after it. Throws TaskError (codes as runTask) on refusal or provider failure; never fabricates a reply.
+ */
+export async function quickModelCall(input: QuickCallInput): Promise<QuickCallResult> {
+  if (!aiConfigured()) throw new TaskError("ai_not_configured", "AI is not configured on this platform");
+  const budget = await platformBudgetRefusal();
+  if (budget) throw new TaskError(budget, "The platform's monthly AI budget is used up; retry later");
+  const { organizationId, companyId } = input;
+  let model: string;
+  try {
+    model = (await modelForTier(organizationId, input.profileKey, input.tier)) ?? (await resolvePlatformModel({ organizationId, profile: input.profileKey }));
+  } catch {
+    model = await resolvePlatformModel({ organizationId, profile: input.profileKey });
+  }
+  const department = input.department ?? null;
+  const estimate = await tokenCostMicros(model, { inputTokens: estimateTokens(input.system + JSON.stringify(input.messages)), outputTokens: input.maxTokens });
+  const spend = await checkSpend({ organizationId, companyId, department }, estimate);
+  if (!spend.ok) throw new TaskError("cost_budget_reached", `${spend.message}, so nothing was spent. Raise the budget in Costs or retry next period.`);
+
+  const call = (m: string) => {
+    const cap = capabilities(m);
+    const outputConfig = { ...(cap.effort ? { effort: EFFORT[input.tier] } : {}), ...(input.jsonSchema ? { format: { type: "json_schema" as const, schema: input.jsonSchema } } : {}) };
+    return callModel(
+      {
+        model: m,
+        max_tokens: input.maxTokens,
+        system: input.system,
+        messages: input.messages,
+        ...(Object.keys(outputConfig).length ? { output_config: outputConfig } : {}),
+        ...(cap.serverFallback ? { fallbacks: "default" as const, betas: ["server-side-fallback-2026-07-01"] } : {}),
+      },
+      { timeoutMs: input.timeoutMs ?? 20_000, maxRetries: 1 },
+    );
+  };
+  const chain = [model, ...(await fallbackChain(organizationId, input.profileKey, model, input.tier).catch(() => [] as string[]))];
+  let response: BetaMessage | null = null;
+  let lastErr: unknown = null;
+  for (const m of chain.slice(0, MAX_FALLBACK_ATTEMPTS)) {
+    if (!breakerAllows(m)) continue;
+    try {
+      response = await call(m);
+      breakerSuccess(m);
+      model = m;
+      break;
+    } catch (err) {
+      lastErr = err;
+      const mapped = providerError(err);
+      if (!mapped.fallbackEligible) throw mapped;
+      breakerFailure(m);
+    }
+  }
+  if (!response) {
+    if (lastErr === null) throw new TaskError("provider_unavailable", "Every AI model is temporarily paused after repeated provider errors; retry shortly", true);
+    throw providerError(lastErr);
+  }
+  const u = response.usage;
+  const read = u.cache_read_input_tokens ?? 0;
+  const write = u.cache_creation_input_tokens ?? 0;
+  const servedBy = response.model || model;
+  const costMicros = await tokenCostMicros(servedBy, { inputTokens: u.input_tokens, outputTokens: u.output_tokens, cacheReadTokens: read, cacheWriteTokens: write });
+  await recordCost({
+    organizationId,
+    companyId,
+    category: "AI_TOKENS",
+    provider: providerOf(servedBy),
+    model: servedBy,
+    operation: input.operation,
+    department,
+    sourceType: input.sourceType,
+    sourceId: input.sourceId,
+    inputTokens: u.input_tokens,
+    outputTokens: u.output_tokens,
+    cachedTokens: read,
+    cacheWriteTokens: write,
+    units: u.input_tokens + read + write + u.output_tokens,
+    unit: "token",
+    costMicros,
+    meta: { tier: input.tier, profile: input.profileKey },
+  });
+  const inputTokens = u.input_tokens + read + write;
+  if (response.stop_reason === "refusal") throw Object.assign(new TaskError("refused", "The AI declined this request"), { usage: { model: servedBy, inputTokens, outputTokens: u.output_tokens } });
+  const text = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { text: string }).text)
+    .join("")
+    .trim();
+  if (!text) throw Object.assign(new TaskError("empty_output", "The AI returned no reply"), { usage: { model: servedBy, inputTokens, outputTokens: u.output_tokens } });
+  return { text, model: servedBy, inputTokens, outputTokens: u.output_tokens, costMicros };
 }

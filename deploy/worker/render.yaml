@@ -7,9 +7,8 @@ services:
   - type: worker
     name: realy-worker
     runtime: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./deploy/worker/Dockerfile
     dockerContext: .
-    dockerCommand: node_modules/.bin/tsx src/worker/index.ts
     plan: starter
     numInstances: 1
     # Must exceed WORKER_SHUTDOWN_TIMEOUT_MS so running jobs can finish on deploys and restarts.

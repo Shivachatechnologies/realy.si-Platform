@@ -7,6 +7,7 @@ import { can, requirePermission } from "@/server/modules/rbac/service";
 import { companyChain, type ScopeChain } from "@/server/modules/rbac/scope";
 import { isUuid, type VoiceScope } from "./access";
 import { eventRule, profileDepartment, type Department } from "./catalog";
+import { VOICE_PROFILE } from "./intent";
 
 /**
  * Realtime company event stream (Server-Sent Events). Each open connection polls the transactional outbox (events
@@ -88,7 +89,7 @@ export async function pollCompany(access: StreamAccess, sinceMs: number, seen: M
       select: { id: true, type: true, aggregateType: true, aggregateId: true, payload: true, occurredAt: true },
     }),
     perms.has("agents.read")
-      ? db().agentTask.findMany({ where: { ...scope, updatedAt: { gt: from } }, orderBy: { updatedAt: "asc" }, take: 40, select: { id: true, title: true, profile: true, status: true, updatedAt: true } })
+      ? db().agentTask.findMany({ where: { ...scope, updatedAt: { gt: from }, profile: { not: VOICE_PROFILE } }, orderBy: { updatedAt: "asc" }, take: 40, select: { id: true, title: true, profile: true, status: true, updatedAt: true } })
       : [],
     perms.has("agents.read")
       ? db().commandRun.findMany({ where: { ...scope, updatedAt: { gt: from } }, orderBy: { updatedAt: "asc" }, take: 20, select: { id: true, status: true, userId: true, text: true, updatedAt: true } })

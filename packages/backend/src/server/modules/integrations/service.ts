@@ -13,6 +13,7 @@ import { isConnectable, isPlatformManaged, PROVIDERS, providerInfo, type Provide
 import { afterConnect, beforeDisconnect } from "./lifecycle";
 import { assertNotPlatformManaged, platformAvailability, platformAvailabilityMap, type PlatformAvailability } from "./platform-managed";
 import { providerWebhookUrl } from "./provider-webhooks";
+import { assertWhatsAppNumberFree } from "./own-accounts";
 import { asConfig, assertConnectionEntitled, decryptCredentials, encryptCredentials, getConnection, type Connection } from "./connections";
 import { logProviderCall, providerFetch } from "./client";
 import { buildAuthorizeUrl, type IntegrationOAuthState } from "./oauth";
@@ -297,10 +298,14 @@ export async function completeOAuthConnection(ctx: RequestContext, state: Integr
   const config: Record<string, unknown> = { ...kept, ...tokens.extra };
   if (provider === "quickbooks" && extras.realmId && /^\d{1,30}$/.test(extras.realmId)) config.realmId = extras.realmId;
   Object.assign(config, await postConnectDetails(provider, tokens.accessToken).catch(() => ({})));
+  // A WhatsApp number routes inbound messages to exactly one company (own-accounts.ts).
+  if (provider === "whatsapp") await assertWhatsAppNumberFree(companyId, config.phoneNumberId);
+  // Secrets the provider issued with the token (e.g. the WhatsApp registration PIN) are stored encrypted, never in config.
+  const tokenSecrets = { ...previousSecrets, ...(tokens.secrets ?? {}) };
   let account: string | null = null;
   let lastError: string | null = null;
   try {
-    const r = await testConnection({ provider, token: tokens.accessToken, config: { ...config, ...previousSecrets } });
+    const r = await testConnection({ provider, token: tokens.accessToken, config: { ...config, ...tokenSecrets } });
     account = r.account;
     Object.assign(config, mergeAccounts(previousConfig, r.extra ?? {}));
   } catch (err) {
@@ -310,7 +315,7 @@ export async function completeOAuthConnection(ctx: RequestContext, state: Integr
     await authorizeIntegrations(ctx, organizationId, companyId, "integrations.manage", tx);
     const data = {
       status: lastError ? ("ERROR" as const) : ("CONNECTED" as const),
-      credentialsEnc: encryptCredentials(companyId, provider, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, ...(Object.keys(previousSecrets).length ? { secrets: previousSecrets } : {}) }),
+      credentialsEnc: encryptCredentials(companyId, provider, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, ...(Object.keys(tokenSecrets).length ? { secrets: tokenSecrets } : {}) }),
       tokenExpiresAt: tokens.expiresAt,
       scopes: tokens.scopes ?? info.scopes,
       config: config as Prisma.InputJsonValue,
@@ -412,12 +417,14 @@ export async function disconnectIntegration(ctx: RequestContext, organizationId:
     logger.warn({ provider, err: err instanceof Error ? err.message : "cleanup failed" }, "integration disconnect cleanup failed");
     return false;
   });
-  if (info.authType === "oauth2") {
-    const creds = decryptCredentials(companyId, provider, row.credentialsEnc);
-    const token = creds.refreshToken ?? creds.accessToken;
+  const creds = decryptCredentials(companyId, provider, row.credentialsEnc);
+  // OAuth grants are revoked at the provider (also an api-key provider connected through its OAuth alternative, e.g.
+  // Stripe Connect deauthorizes the account from Realy's platform); keys set up by the Realy team stay at the provider.
+  if (info.authType === "oauth2" || (info.oauthAlternative && !creds.apiKey)) {
+    const token = provider === "stripe" || provider === "razorpay" ? creds.accessToken : (creds.refreshToken ?? creds.accessToken);
     if (token) {
       try {
-        revoked = await revokeToken(provider, token);
+        revoked = await revokeToken(provider, token, asConfig(row.config));
       } catch (err) {
         logger.warn({ provider, err: err instanceof Error ? err.message : "revoke failed" }, "integration token revocation failed");
       }
