@@ -3238,7 +3238,10 @@
           "ads_spend_month": "Ad spend cap / month",
           "sites_pages_max": "Website pages",
           "sites_landing_pages_max": "Landing pages"
-        }
+        },
+        "unlockAll": "Unlock everything",
+        "unlockAllHint": "Internal or owner account: turns on every feature and sets Scale-plan limits as overrides. Without a subscription, the trial window is extended so usage keeps working. Type the organization slug to confirm.",
+        "unlockAllConfirm": "Unlock"
       },
       "lifecycle": {
         "clone": "Clone…",

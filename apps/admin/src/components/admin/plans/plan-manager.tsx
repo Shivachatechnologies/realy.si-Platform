@@ -481,3 +481,19 @@ export function GrantAddonButton({ organizationId }: { organizationId: string })
     </ActionDialog>
   );
 }
+
+/** Internal / owner accounts: every feature on and Scale limits, with a long trial window when unsubscribed. */
+export function UnlockAllButton({ organizationId, orgSlug }: { organizationId: string; orgSlug: string }) {
+  const { t } = useI18n();
+  const run = useAdminAction();
+  return (
+    <ActionDialog
+      trigger={<Button size="sm" variant="secondary">{t("admin.plans.manager.unlockAll")}</Button>}
+      title={t("admin.plans.manager.unlockAll")}
+      description={t("admin.plans.manager.unlockAllHint")}
+      confirmLabel={t("admin.plans.manager.unlockAllConfirm")}
+      phrase={orgSlug}
+      onConfirm={(reason) => run(`/api/v1/admin/entitlements/organizations/${organizationId}/unlock-all`, "POST", { reason })}
+    />
+  );
+}

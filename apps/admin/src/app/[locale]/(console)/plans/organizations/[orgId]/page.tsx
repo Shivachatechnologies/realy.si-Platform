@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 import { AdminHeader, SectionLink, guard } from "@/components/admin/kit";
-import { GrantAddonButton, GrantOverrideButton, RevokeOverrideButton } from "@/components/admin/plans/plan-manager";
+import { GrantAddonButton, GrantOverrideButton, RevokeOverrideButton, UnlockAllButton } from "@/components/admin/plans/plan-manager";
 import { CreditAdjustButton } from "@/components/admin/billing/actions";
 import { LEDGER_METERS } from "@/server/modules/entitlements/ledger";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,7 @@ export default async function OrgEntitlementsPage({ params }: PageProps<"/[local
             <div className="flex flex-wrap gap-2">
               <GrantAddonButton organizationId={org.id} />
               <GrantOverrideButton organizationId={org.id} />
+              <UnlockAllButton organizationId={org.id} orgSlug={org.slug} />
               {canSubs ? <CreditAdjustButton organizationId={org.id} meters={[...LEDGER_METERS]} /> : null}
             </div>
           ) : null

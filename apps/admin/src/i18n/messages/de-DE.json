@@ -3238,7 +3238,10 @@
           "ads_spend_month": "Werbebudget-Obergrenze / Monat",
           "sites_pages_max": "Website-Seiten",
           "sites_landing_pages_max": "Landingpages"
-        }
+        },
+        "unlockAll": "Alles freischalten",
+        "unlockAllHint": "Internes oder Inhaberkonto: aktiviert alle Funktionen und setzt die Limits des Scale-Plans als Overrides. Ohne Abonnement wird die Testphase verlängert, damit die Nutzung weiter funktioniert. Zur Bestätigung den Slug der Organisation eingeben.",
+        "unlockAllConfirm": "Freischalten"
       },
       "lifecycle": {
         "clone": "Klonen…",
