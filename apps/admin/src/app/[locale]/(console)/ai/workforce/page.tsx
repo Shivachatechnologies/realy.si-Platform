@@ -5,7 +5,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AdminHeader, Avatar, EmptyState, FilterBar, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
 import { OrgAiPauseButton } from "@/components/admin/ai-models-editor";
-import { EmployeeAdmin } from "@/components/admin/people-actions";
+import { EmployeeAdmin } from "@/components/admin/ai/employee-admin";
 import { db } from "@/server/core/db";
 import { getControls } from "@/server/core/platform-controls";
 import { AGENT_PROFILES } from "@/server/modules/agents/profiles";
@@ -112,7 +112,9 @@ export default async function AdminAiWorkforcePage({ searchParams }: PageProps<"
                     <div className="flex items-center gap-2">
                       <Avatar name={e.name} size="sm" square />
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{e.name}</div>
+                        <Link href={`${base}/${e.id}`} className="block truncate font-medium hover:underline">
+                          {e.name}
+                        </Link>
                         <div className="truncate text-[11px] text-muted-foreground">{e.jobTitle ?? e.profileKey}</div>
                       </div>
                     </div>

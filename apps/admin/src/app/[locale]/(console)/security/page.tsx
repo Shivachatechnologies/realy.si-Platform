@@ -30,7 +30,12 @@ export default async function AdminSecurityPage() {
         title={t("admin.nav.security")}
         description={t("admin.security.subtitle")}
         why={t("admin.security.why")}
-        actions={<SectionLink href={`${base}/audit?category=SECURITY&scope=all`}>{t("admin.nav.audit")}</SectionLink>}
+        actions={
+          <>
+            <SectionLink href={`${base}/security/posture`}>{t("admin.security.posture.title")}</SectionLink>
+            <SectionLink href={`${base}/audit?category=SECURITY&scope=all`}>{t("admin.nav.audit")}</SectionLink>
+          </>
+        }
       />
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>

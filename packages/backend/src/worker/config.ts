@@ -40,9 +40,32 @@ export function workerConfig() {
     },
     /** How long a graceful shutdown waits for running jobs before closing forcefully (keep below the platform's kill timeout). */
     shutdownTimeoutMs: int("WORKER_SHUTDOWN_TIMEOUT_MS", 25_000, 1_000, 300_000),
-    heartbeatMs: 30_000,
+    /**
+     * Heartbeat (Postgres row + Redis key) interval. A worker counts as alive for 3 minutes after its last beat
+     * (src/server/core/job-admin.ts WORKER_STALE_MS), so keep this well below that.
+     */
+    heartbeatMs: int("WORKER_HEARTBEAT_MS", 60_000, 10_000, 90_000),
     /** Lock duration of AI task jobs (renewed while running). */
     agentLockMs: int("WORKER_AI_LOCK_MS", 60_000, 10_000, 600_000),
+    // ── Redis command budget (docs/deployment.md "Redis command budget"). Managed Redis such as Upstash bills every
+    // command, including the ones BullMQ's Lua scripts run, so idle polling is kept to a minimum. ──
+    /**
+     * Seconds an idle BullMQ worker blocks (BZPOPMIN) on an empty queue before polling again. A new job wakes it at
+     * once, so this does not delay work; it only sets the idle poll rate (BullMQ default 5). A queue holding delayed
+     * jobs still wakes at least every 10 s (BullMQ's cap).
+     */
+    drainDelayS: int("WORKER_DRAIN_DELAY_S", 60, 1, 300),
+    /** How often each worker checks its queue for stalled jobs (lock expired: crashed or killed worker). BullMQ default 30 s. */
+    stalledIntervalMs: int("WORKER_STALLED_INTERVAL_MS", 120_000, 5_000, 600_000),
+    /** Times a job may stall (be recovered after its worker died) before it fails. BullMQ default 1. */
+    maxStalledCount: int("WORKER_MAX_STALLED_COUNT", 1, 1, 10),
+    /**
+     * Recurring jobs: how often each replica checks which periodic jobs are due (one Redis script call per check). Also
+     * the finest schedule resolution: a job every 15 s starts at most this late. Default 15 s (the shortest interval).
+     */
+    scheduleTickMs: int("WORKER_SCHEDULE_TICK_MS", 15_000, 1_000, 300_000),
+    /** Outbox relay: an idle relay backs off from 500 ms up to this between database polls (no Redis involved). */
+    relayIdleMaxMs: int("WORKER_RELAY_IDLE_MAX_MS", 2_000, 500, 30_000),
   };
 }
 

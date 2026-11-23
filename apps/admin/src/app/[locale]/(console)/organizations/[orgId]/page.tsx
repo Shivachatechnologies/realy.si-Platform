@@ -6,17 +6,20 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { AnimatedProgress } from "@/components/motion/animated-progress";
 import { CountUp } from "@/components/motion/count-up";
+import { PageCrumbs } from "@/components/admin/nav/breadcrumbs";
 import { AdminHeader, AuditTimeline, Avatar, EmptyState, Facts, SectionLink, StatGrid, StatTile, guard, usd } from "@/components/admin/kit";
 import { OrgRestrictions, OrgStatusButton, TenantViewGate } from "@/components/admin/org-actions";
 import { OrgAdminExtras, OrgTabs } from "@/components/admin/people-extras";
+import { OrgAiPauseButton } from "@/components/admin/ai-models-editor";
+import { ArchiveOrgButton, ExportCompanyButton, ReopenOrgButton } from "@/components/admin/people/access-admin-actions";
 import { Sparkline, TrendChart } from "@/components/admin/viz";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatDateTime, formatNumber, formatRelativeTime } from "@/i18n/format";
 import { db } from "@/server/core/db";
 import { PLATFORM_MODULES } from "@/server/core/platform-controls";
-import { canPlatform } from "@/server/modules/admin/access";
+import { canPlatform, capabilitiesFor } from "@/server/modules/admin/access";
 import { getPlatformOrganization, hasTenantViewGrant } from "@/server/modules/admin/tenants";
-import { organizationTrends } from "@/server/modules/admin/trends";
+import { organizationTrends } from "@/server/modules/admin/people-trends";
 import { requestTime, requireViewer } from "@/server/session";
 
 const STATUS_TONE = { ACTIVE: "success", SUSPENDED: "danger", CLOSED: "neutral" } as const;
@@ -44,7 +47,9 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
   const r = await guard(Promise.all([getPlatformOrganization(viewer.ctx, orgId), organizationTrends(viewer.ctx, orgId)]), t("errors.forbidden"));
   if (!r.ok) return r.node;
   const [o, tr] = r.value;
-  const canManage = await canPlatform(viewer.ctx, "platform.organizations.manage");
+  const caps = await capabilitiesFor(viewer.ctx, ["platform.organizations.manage", "platform.data.export"] as const);
+  const canManage = caps["platform.organizations.manage"];
+  const canExport = caps["platform.data.export"];
   const tz = viewer.user.timezone;
   const now = requestTime();
   const sub = o.subscriptions[0];
@@ -66,13 +71,7 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
   return (
     <div className="grid gap-5">
       <OrgTabs locale={locale} orgId={orgId} active="overview" />
-      <nav aria-label={t("admin.common.breadcrumb")} className="text-xs text-muted-foreground">
-        <Link href={`${base}/organizations`} className="hover:text-foreground hover:underline">
-          {t("admin.nav.companies")}
-        </Link>
-        <span aria-hidden> / </span>
-        <span>{o.name}</span>
-      </nav>
+      <PageCrumbs items={[{ label: o.name }]} />
       <AdminHeader
         icon={<Building2 />}
         title={o.name}
@@ -95,10 +94,22 @@ export default async function AdminOrganizationPage({ params }: PageProps<"/[loc
         actions={
           <>
             {canManage ? <OrgStatusButton organizationId={o.id} slug={o.slug} status={o.status} /> : null}
+            {canManage && o.status !== "CLOSED" ? <OrgAiPauseButton organizationId={o.id} name={o.name} paused={o.override.aiDisabled} /> : null}
             <OrgRestrictions organizationId={o.id} value={o.override} modules={[...PLATFORM_MODULES]} canManage={canManage} />
+            {canExport ? <ExportCompanyButton organizationId={o.id} companies={o.companies.filter((c) => !c.deletedAt).map((c) => ({ id: c.id, name: c.name }))} /> : null}
+            {canManage && o.status !== "CLOSED" ? <ArchiveOrgButton organizationId={o.id} slug={o.slug} /> : null}
+            {canManage && o.status === "CLOSED" ? <ReopenOrgButton organizationId={o.id} slug={o.slug} /> : null}
           </>
         }
       />
+      {o.status === "CLOSED" ? (
+        <Notice tone="warning">{t("admin.access.org.closedNotice", { date: o.closedAt ? formatDateTime(o.closedAt, locale, tz) : "—", reason: o.closedReason ?? "—" })}</Notice>
+      ) : null}
+      <div className="-mt-2 flex flex-wrap gap-3 text-xs">
+        <SectionLink href={`/${locale}/plans/organizations/${o.id}`}>{t("admin.access.org.planLimitsCredits")}</SectionLink>
+        <SectionLink href={`/${locale}/ai/workforce?org=${o.id}`}>{t("admin.access.org.aiEmployees")}</SectionLink>
+        <SectionLink href={`/${locale}/users?org=${o.id}`}>{t("admin.access.org.usersOfOrg")}</SectionLink>
+      </div>
 
       <StatGrid>
         <StatTile icon={<Users />} label={t("admin.organizations.columns.members")} value={<CountUp value={activeMembers} />} hint={o.owners.map((u) => u.email).join(", ") || "—"} />

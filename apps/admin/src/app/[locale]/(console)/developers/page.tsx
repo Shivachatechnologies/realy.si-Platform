@@ -10,6 +10,9 @@ import { getLocale, getT } from "@/i18n/server";
 import { formatRelativeTime } from "@/i18n/format";
 import { canPlatform } from "@/server/modules/admin/access";
 import { developersOverview } from "@/server/modules/admin/developers";
+import { rateLimitSummary } from "@/server/modules/admin/api-logs";
+import { AdminBreadcrumbs } from "@/components/admin/nav/breadcrumbs";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { requireViewer } from "@/server/session";
 
 /** API & webhooks across tenants: API keys (revoke), webhook subscriptions (disable / enable) and delivery failures. */
@@ -19,9 +22,9 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
   const viewer = await requireViewer(locale);
   const q = await searchParams;
   const params = { q: sp(q.q), keys: sp(q.keys), org: sp(q.org) };
-  const r = await guard(Promise.all([developersOverview(viewer.ctx, params), canPlatform(viewer.ctx, "platform.security.manage")]), t("errors.forbidden"));
+  const r = await guard(Promise.all([developersOverview(viewer.ctx, params), canPlatform(viewer.ctx, "platform.security.manage"), rateLimitSummary(viewer.ctx, 7)]), t("errors.forbidden"));
   if (!r.ok) return r.node;
-  const [o, canManage] = r.value;
+  const [o, canManage, limited] = r.value;
   const base = `/${locale}/developers`;
   const orgLink = (id: string, name: string) => (
     <Link href={`/${locale}/organizations/${id}`} className="hover:underline">
@@ -30,7 +33,19 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
   );
   return (
     <div className="grid gap-4">
-      <AdminHeader icon={<KeyRound />} title={t("admin.nav.developers")} description={t("admin.developers.subtitle")} why={t("admin.developers.why")} />
+      <AdminBreadcrumbs />
+      <AdminHeader
+        icon={<KeyRound />}
+        title={t("admin.nav.developers")}
+        description={t("admin.developers.subtitle")}
+        why={t("admin.developers.why")}
+        actions={
+          <>
+            <Link href={`/${locale}/api-logs`} className="text-xs text-primary hover:underline">{t("admin.developers.openApiLogs")}</Link>
+            <Link href={`/${locale}/webhooks`} className="text-xs text-primary hover:underline">{t("admin.developers.openWebhooks")}</Link>
+          </>
+        }
+      />
       <StatGrid>
         <StatTile icon={<KeyRound />} label={t("admin.developers.activeKeys")} value={o.keyCounts.active} hint={t("admin.developers.used7d", { count: o.keyCounts.used7d })} href={`${base}?keys=active`} />
         <StatTile icon={<Webhook />} label={t("admin.developers.webhooks")} value={o.webhooks.filter((w) => w.active).length} hint={t("admin.developers.disabledCount", { count: o.webhooks.filter((w) => !w.active).length })} />
@@ -64,7 +79,7 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
               {o.keys.map((k) => (
                 <Tr key={k.id}>
                   <Td>
-                    <div className="font-medium">{k.name}</div>
+                    <Link href={`${base}/keys/${k.id}`} className="font-medium text-primary hover:underline">{k.name}</Link>
                     <div className="font-mono text-[11px] text-muted-foreground">
                       {k.prefix}… · {k.serviceAccount.name}
                     </div>
@@ -72,7 +87,7 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
                   <Td className="text-xs">{orgLink(k.organizationId, k.organizationName)}</Td>
                   <Td className="text-xs text-muted-foreground">{k.lastUsedAt ? formatRelativeTime(k.lastUsedAt, locale) : t("admin.developers.never")}</Td>
                   <Td>
-                    <Badge tone={k.state === "active" ? "success" : k.state === "revoked" ? "danger" : "neutral"}>{t(`admin.developers.keyState.${k.state}`)}</Badge>
+                    <StatusBadge domain="apiKey" value={k.state}>{t(`admin.developers.keyState.${k.state}`)}</StatusBadge>
                   </Td>
                   <Td className="text-end">
                     {canManage && k.state === "active" ? <ActionButton label={t("admin.developers.revoke")} title={t("admin.developers.revokeTitle", { name: k.name })} description={t("admin.developers.revokeHint")} path={`/api/v1/admin/api-keys/${k.id}`} method="DELETE" danger variant="ghost" /> : null}
@@ -84,7 +99,30 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
         )}
       </Card>
       <Card>
-        <CardHeader icon={<Webhook />} title={t("admin.developers.webhooks")} description={t("admin.developers.webhooksHint")} />
+        <CardHeader icon={<AlertTriangle />} title={t("admin.developers.rateLimited")} description={t("admin.developers.rateLimitedHint", { count: limited.total })} actions={<Link href={`/${locale}/api-logs?view=limits`} className="text-xs text-primary hover:underline">{t("admin.developers.allEvents")}</Link>} />
+        {limited.byRule.length === 0 ? (
+          <Empty>{t("admin.developers.noRateLimited")}</Empty>
+        ) : (
+          <Table>
+            <THead>
+              <Tr>
+                <Th>{t("admin.developers.rule")}</Th>
+                <Th>{t("admin.developers.events429")}</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {limited.byRule.map((b) => (
+                <Tr key={b.rule}>
+                  <Td className="font-mono text-xs">{b.rule}</Td>
+                  <Td className="text-xs tabular-nums">{b.count}</Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </Card>
+      <Card>
+        <CardHeader icon={<Webhook />} title={t("admin.developers.webhooks")} description={t("admin.developers.webhooksHint")} actions={<Link href={`/${locale}/webhooks`} className="text-xs text-primary hover:underline">{t("admin.developers.openWebhooks")}</Link>} />
         {o.webhooks.length === 0 ? (
           <Empty>{t("admin.developers.noWebhooks")}</Empty>
         ) : (
@@ -103,7 +141,7 @@ export default async function AdminDevelopersPage({ searchParams }: PageProps<"/
                 <Tr key={w.id}>
                   <Td>
                     <div className="font-medium">
-                      {w.name} {!w.active ? <Badge tone="neutral">{t("admin.developers.disabled")}</Badge> : null}
+                      <Link href={`/${locale}/webhooks/${w.id}`} className="text-primary hover:underline">{w.name}</Link> {!w.active ? <Badge tone="neutral">{t("admin.developers.disabled")}</Badge> : null}
                     </div>
                     <div className="max-w-xs truncate font-mono text-[11px] text-muted-foreground">{w.url}</div>
                   </Td>

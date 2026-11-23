@@ -8,6 +8,9 @@ import { Input, Select } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
 import { cn } from "@/lib/utils";
 import { isAppError } from "@/server/core/errors";
+import { Avatar } from "./avatar";
+
+export { Avatar };
 
 /**
  * Page header strip of the admin console: what this is (title + description), why it matters (`why`), what you can do
@@ -114,32 +117,6 @@ export function StatTile({
 
 export function StatGrid({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("stagger grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4", className)}>{children}</div>;
-}
-
-/** Initials avatar with a stable hue per name. */
-export function Avatar({ name, size = "md", square }: { name: string; size?: "sm" | "md" | "lg"; square?: boolean }) {
-  const initials =
-    name
-      .split(/[\s@._-]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]!.toUpperCase())
-      .join("") || "?";
-  let h = 0;
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid shrink-0 place-items-center font-semibold text-white shadow-elev-1",
-        square ? "rounded-md" : "rounded-full",
-        size === "sm" ? "size-7 text-[11px]" : size === "lg" ? "size-12 text-base" : "size-9 text-xs",
-      )}
-      style={{ background: `linear-gradient(135deg, oklch(0.62 0.13 ${h}), oklch(0.5 0.12 ${(h + 40) % 360}))` }}
-    >
-      {initials}
-    </span>
-  );
 }
 
 /** Smart empty state: what is missing, why, and what to do (optional action). */

@@ -63,6 +63,7 @@
     "integrations": "Integrations",
     "marketplace": "Marketplace",
     "settings": "Settings",
+    "contactRealy": "Contact Realy support",
     "admin": "Admin Console",
     "commandPalette": "Command palette",
     "phaseShort": "P{phase}"
@@ -2233,7 +2234,8 @@
       "COMPLETED": "Completed",
       "FAILED": "Failed",
       "CANCELLED": "Cancelled",
-      "WAITING_APPROVAL": "Waiting for approval"
+      "WAITING_APPROVAL": "Waiting for approval",
+      "PAUSED": "Paused"
     },
     "back": "All tasks",
     "deliverable": "Deliverable",
@@ -24892,5 +24894,54 @@
       "notConnected": "not connected"
     },
     "nav": "Creative Studio"
+  },
+  "platformSupport": {
+    "back": "All my tickets",
+    "categories": {
+      "account": "Account",
+      "ai": "AI",
+      "billing": "Billing",
+      "bug": "Something is broken",
+      "integration": "Integration",
+      "other": "Other"
+    },
+    "category": "Topic",
+    "closedNotice": "This ticket is closed. Open a new ticket if you need more help.",
+    "conversation": "Conversation",
+    "markSolved": "Mark as solved",
+    "message": "Message",
+    "messageHint": "Describe what happened, what you expected and any error message. Never send passwords or keys.",
+    "myTickets": "My tickets",
+    "newTicket": "New ticket",
+    "newTicketHint": "Our team answers by email and here.",
+    "noOrganization": "Not about an organization",
+    "noTickets": "You have not opened any ticket yet.",
+    "organization": "Organization",
+    "priorities": {
+      "HIGH": "High",
+      "LOW": "Low",
+      "NORMAL": "Normal"
+    },
+    "priority": "Urgency",
+    "priorityHint": "High is for work that is blocked.",
+    "realyTeam": "Realy team",
+    "reply": "Your reply",
+    "send": "Send",
+    "statuses": {
+      "CLOSED": "Closed",
+      "NEW": "Received",
+      "ON_HOLD": "On hold",
+      "OPEN": "In progress",
+      "PENDING_CUSTOMER": "Waiting for you",
+      "SOLVED": "Solved"
+    },
+    "subject": "Subject",
+    "submit": "Send to Realy support",
+    "subtitle": "Questions or problems with Realy itself? Write to the Realy team.",
+    "system": "Update",
+    "ticketMeta": "Ticket #{number} · opened {created}",
+    "title": "Contact Realy support",
+    "updated": "Updated {when}",
+    "you": "You"
   }
 }

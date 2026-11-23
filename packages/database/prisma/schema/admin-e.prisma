@@ -1,0 +1,298 @@
+// ───────────────────────────── Admin Control Center: Stream E — health, incidents, alerts, infra, jobs, logs, errors, releases, data ops ─────────────────────────────
+// Owned by stream E (docs/admin/STREAMS.md). Only stream E edits this file. Planned models: ServiceHealthCheck, PlatformIncident(+Update), PlatformAlert(+Event), ErrorGroup, ErrorEvent, PlatformRelease, AppLogEntry.
+//
+// RULES for every model in this file:
+//   - NO Prisma relations from these tables to Organization or Company (or any other core.prisma model), and no
+//     back-relation lines in core.prisma. Reference tenants with plain columns, e.g.
+//       organizationId String? @map("organization_id") @db.Uuid
+//     plus an @@index on them, and check existence in application code (the worker_job_runs.organization_id pattern).
+//   - Relations between this stream's own new tables are fine.
+//   - Table names are snake_case via @@map; timestamps are @db.Timestamptz(3); ids are @default(uuid(7)) @db.Uuid.
+//   - At most one migration per PR, timestamp minute reserved for stream E: …_50xx.
+
+// ── Health center: one row per probe of one service (worker job `ops.health_probe`, every 5 min; kept 30 days) ──
+
+/// Service status vocabulary of the health center. HEALTHY: a live probe succeeded within its latency budget.
+/// OPERATIONAL: configured, no failures observed, but not live-probed this tick (e.g. derived from recent traffic).
+/// DEGRADED: slow or elevated failure rate. CRITICAL: most calls fail. DOWN: the probe failed.
+/// MAINTENANCE: platform maintenance mode. UNKNOWN: no data. NOT_CONFIGURED: credentials / config absent.
+enum ServiceHealthStatus {
+  OPERATIONAL
+  HEALTHY
+  DEGRADED
+  CRITICAL
+  DOWN
+  MAINTENANCE
+  UNKNOWN
+  NOT_CONFIGURED
+}
+
+model ServiceHealthCheck {
+  id        String              @id @default(uuid(7)) @db.Uuid
+  /// web|admin|api|auth|db|db.connections|redis|workers|queues|ai.anthropic|ai.openai|ai.gemini|email|payments|storage|telephony|webhooks|oauth|integrations
+  service   String
+  status    ServiceHealthStatus
+  latencyMs Int?                @map("latency_ms")
+  /// Secret-free probe detail (counts, HTTP status, reason codes).
+  detail    Json                @default("{}")
+  checkedAt DateTime            @default(now()) @map("checked_at") @db.Timestamptz(3)
+
+  @@index([service, checkedAt(sort: Desc)])
+  @@index([checkedAt])
+  @@map("service_health_checks")
+}
+
+// ── Incident center ──
+
+enum PlatformIncidentSeverity {
+  SEV1
+  SEV2
+  SEV3
+  SEV4
+}
+
+/// Lifecycle: DETECTED → INVESTIGATING → IDENTIFIED → MITIGATING → MONITORING → RESOLVED → CLOSED.
+enum PlatformIncidentStatus {
+  DETECTED
+  INVESTIGATING
+  IDENTIFIED
+  MITIGATING
+  MONITORING
+  RESOLVED
+  CLOSED
+}
+
+model PlatformIncident {
+  id                      String                   @id @default(uuid(7)) @db.Uuid
+  number                  Int                      @unique @default(autoincrement())
+  title                   String
+  severity                PlatformIncidentSeverity
+  status                  PlatformIncidentStatus   @default(DETECTED)
+  /// "manual" (created by an admin) or "alert" (opened from a fired detection rule).
+  source                  String                   @default("manual")
+  /// Health-center service keys affected.
+  services                String[]                 @default([])
+  /// Affected organizations (plain ids, no relation; existence checked in code).
+  affectedOrganizationIds String[]                 @default([]) @map("affected_organization_ids") @db.Uuid
+  customerImpact          String?                  @map("customer_impact")
+  summary                 String?
+  ownerId                 String?                  @map("owner_id") @db.Uuid
+  rootCause               String?                  @map("root_cause")
+  mitigation              String?
+  resolution              String?
+  /// Markdown postmortem document.
+  postmortem              String?
+  /// none|draft|published
+  postmortemState         String                   @default("none") @map("postmortem_state")
+  detectedAt              DateTime                 @default(now()) @map("detected_at") @db.Timestamptz(3)
+  acknowledgedAt          DateTime?                @map("acknowledged_at") @db.Timestamptz(3)
+  identifiedAt            DateTime?                @map("identified_at") @db.Timestamptz(3)
+  mitigatedAt             DateTime?                @map("mitigated_at") @db.Timestamptz(3)
+  resolvedAt              DateTime?                @map("resolved_at") @db.Timestamptz(3)
+  closedAt                DateTime?                @map("closed_at") @db.Timestamptz(3)
+  /// Null when opened by the alert engine (system).
+  createdById             String?                  @map("created_by_id") @db.Uuid
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  updates PlatformIncidentUpdate[]
+
+  @@index([status, detectedAt(sort: Desc)])
+  @@index([severity, detectedAt(sort: Desc)])
+  @@index([ownerId])
+  @@map("platform_incidents")
+}
+
+/// Incident timeline: status changes, notes, owner changes, linked alerts, postmortem edits.
+model PlatformIncidentUpdate {
+  id         String                  @id @default(uuid(7)) @db.Uuid
+  incidentId String                  @map("incident_id") @db.Uuid
+  /// created|status|note|owner|field|alert_linked|postmortem
+  kind       String
+  status     PlatformIncidentStatus?
+  message    String
+  authorId   String?                 @map("author_id") @db.Uuid
+  createdAt  DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  incident PlatformIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+  @@map("platform_incident_updates")
+}
+
+// ── Alert engine ──
+
+enum PlatformAlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum PlatformAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  SNOOZED
+  RESOLVED
+}
+
+model PlatformAlert {
+  id               String                @id @default(uuid(7)) @db.Uuid
+  /// rule + subject; while not RESOLVED, a repeat firing bumps `count` instead of creating a new alert (dedupe).
+  fingerprint      String
+  /// Rule key, e.g. "queue.backlog", "dlq.growth", "worker.stale", "ai.breaker_open", "errors.spike".
+  rule             String
+  /// Grouping key (rule + service): the alert center folds alerts of one group together.
+  groupKey         String                @map("group_key")
+  service          String?
+  severity         PlatformAlertSeverity
+  status           PlatformAlertStatus   @default(OPEN)
+  title            String
+  /// Secret-free evidence the rule saw (values, thresholds, links).
+  detail           Json                  @default("{}")
+  organizationId   String?               @map("organization_id") @db.Uuid
+  count            Int                   @default(1)
+  firstSeenAt      DateTime              @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt       DateTime              @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  assigneeId       String?               @map("assignee_id") @db.Uuid
+  acknowledgedAt   DateTime?             @map("acknowledged_at") @db.Timestamptz(3)
+  acknowledgedById String?               @map("acknowledged_by_id") @db.Uuid
+  snoozedUntil     DateTime?             @map("snoozed_until") @db.Timestamptz(3)
+  resolvedAt       DateTime?             @map("resolved_at") @db.Timestamptz(3)
+  /// "rule" (condition cleared) or the admin who resolved it.
+  resolvedBy       String?               @map("resolved_by")
+  escalationLevel  Int                   @default(0) @map("escalation_level")
+  escalatedAt      DateTime?             @map("escalated_at") @db.Timestamptz(3)
+  /// Last notification sent for this alert (notification rate limit).
+  lastNotifiedAt   DateTime?             @map("last_notified_at") @db.Timestamptz(3)
+  incidentId       String?               @map("incident_id") @db.Uuid
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  events PlatformAlertEvent[]
+
+  @@index([fingerprint, status])
+  @@index([status, severity, lastSeenAt(sort: Desc)])
+  @@index([groupKey, lastSeenAt(sort: Desc)])
+  @@index([incidentId])
+  @@map("platform_alerts")
+}
+
+model PlatformAlertEvent {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  alertId   String   @map("alert_id") @db.Uuid
+  /// raised|repeated|acked|assigned|snoozed|unsnoozed|resolved|auto_resolved|reopened|escalated|note|incident_linked|notified|suppressed
+  kind      String
+  actorId   String?  @map("actor_id") @db.Uuid
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  alert PlatformAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([alertId, createdAt])
+  @@map("platform_alert_events")
+}
+
+// ── Error grouping (fed by the core/http.ts onError hook, the worker job-failure hook and instrumentation) ──
+
+enum ErrorGroupStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  IGNORED
+  REGRESSED
+}
+
+model ErrorGroup {
+  id           String           @id @default(uuid(7)) @db.Uuid
+  /// sha256(source + name + top frame + route), truncated.
+  fingerprint  String           @unique
+  /// user|admin|worker
+  source       String
+  name         String
+  message      String
+  route        String?
+  status       ErrorGroupStatus @default(OPEN)
+  count        Int              @default(0)
+  assigneeId   String?          @map("assignee_id") @db.Uuid
+  /// [{ at, authorId, text }] — at most 50 notes.
+  notes        Json             @default("[]")
+  incidentId   String?          @map("incident_id") @db.Uuid
+  firstSeenAt  DateTime         @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt   DateTime         @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  firstRelease String?          @map("first_release")
+  lastRelease  String?          @map("last_release")
+  resolvedAt   DateTime?        @map("resolved_at") @db.Timestamptz(3)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, lastSeenAt(sort: Desc)])
+  @@index([lastSeenAt(sort: Desc)])
+  @@map("error_groups")
+}
+
+model ErrorEvent {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  groupId        String   @map("group_id") @db.Uuid
+  requestId      String?  @map("request_id")
+  organizationId String?  @map("organization_id") @db.Uuid
+  release        String?
+  route          String?
+  method         String?
+  statusCode     Int?     @map("status_code")
+  /// Truncated and scrubbed (no secrets, emails or tokens).
+  stack          String?
+  /// Secret-free context (job queue/name, error code, actor type).
+  meta           Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([groupId, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@index([requestId])
+  @@map("error_events")
+}
+
+// ── Releases (recorded on boot by the apps' instrumentation.ts and the worker) ──
+
+model PlatformRelease {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  /// user|admin|worker
+  app          String
+  /// Commit SHA, or "unknown" when the host exposes none.
+  sha          String
+  ref          String?
+  message      String?
+  /// production|preview|development
+  environment  String
+  deploymentId String?   @map("deployment_id")
+  url          String?
+  /// Deploy time when the host provides one (DEPLOYED_AT / BUILD_TIME), else null.
+  deployedAt   DateTime? @map("deployed_at") @db.Timestamptz(3)
+  firstSeenAt  DateTime  @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt   DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  boots        Int       @default(1)
+
+  @@unique([app, sha, environment])
+  @@index([app, firstSeenAt(sort: Desc)])
+  @@map("platform_releases")
+}
+
+// ── Optional central log store: warn and above from core/logger.ts (batched, rate limited; kept 7 days) ──
+
+model AppLogEntry {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  /// warn|error|fatal
+  level          String
+  /// user|admin|worker (REALY_SERVICE)
+  source         String
+  message        String
+  requestId      String?  @map("request_id")
+  organizationId String?  @map("organization_id") @db.Uuid
+  /// Scrubbed primitive fields of the log record.
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([level, createdAt(sort: Desc)])
+  @@index([requestId])
+  @@map("app_log_entries")
+}

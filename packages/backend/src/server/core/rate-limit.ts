@@ -3,6 +3,7 @@ import { db } from "./db";
 import { env } from "./env";
 import { logger } from "./logger";
 import { securityEvent } from "./telemetry";
+import { sha256 } from "./crypto";
 
 let client: Redis | null = null;
 
@@ -23,6 +24,25 @@ export function redis(): Redis {
     client.on("error", (err) => logger.warn({ err: err.message }, "redis error"));
   }
   return client;
+}
+
+const PING_CACHE_MS = 15_000;
+let lastPing: { at: number; ok: boolean } | null = null;
+
+/**
+ * Is Redis reachable? One PING per process every 15 s at most: the readiness endpoint is public and polled by uptime
+ * monitors, and managed Redis bills per command, so callers must not be able to turn requests into Redis commands.
+ */
+export async function redisReachable(now = Date.now()): Promise<boolean> {
+  if (lastPing && now - lastPing.at < PING_CACHE_MS) return lastPing.ok;
+  let ok = false;
+  try {
+    ok = (await redis().ping()) === "PONG";
+  } catch {
+    ok = false;
+  }
+  lastPing = { at: now, ok };
+  return ok;
 }
 
 export interface RateLimitRule {
@@ -98,6 +118,62 @@ async function dbIncr(cur: string, prev: string, ttlMs: number): Promise<[number
   return [Number(rows[0]?.count ?? 1), Number(prevRows[0]?.count ?? 0)];
 }
 
+// ───────────── 429 events (Admin → API logs / Developers) ─────────────
+
+/** A request the limiter refused (never a degraded fail-closed decision). `subject` is the raw bucket subject. */
+export interface LimitedEvent {
+  rule: string;
+  subject: string;
+  limit: number;
+  windowMs: number;
+}
+
+type LimitedHandler = (event: LimitedEvent) => void;
+const limitedHandlers = new Set<LimitedHandler>();
+
+/** Subscribe to refused requests (synchronous, must not throw or block). Returns the unsubscribe function. */
+export function onLimited(handler: LimitedHandler): () => void {
+  limitedHandlers.add(handler);
+  return () => limitedHandlers.delete(handler);
+}
+
+// At most one stored event per (rule, subject, window) and process: a client hammering a limit writes one row, not one
+// per refused request. Bounded so it cannot grow without limit.
+const recorded = new Map<string, number>();
+const RECORDED_MAX = 5_000;
+const EVENT_RETENTION_MS = 14 * 86_400_000;
+
+/** Default handler: one `rate_limit_events` row per refused (rule, hashed subject, window). Fire-and-forget. */
+function recordLimited(e: LimitedEvent, now: number) {
+  const window = Math.floor(now / e.windowMs);
+  const dedupe = `${e.rule}:${e.subject}:${window}`;
+  if (recorded.has(dedupe)) return;
+  if (recorded.size >= RECORDED_MAX) for (const [k, w] of recorded) if (w < now) recorded.delete(k);
+  if (recorded.size >= RECORDED_MAX) recorded.clear();
+  recorded.set(dedupe, (window + 1) * e.windowMs);
+  try {
+    const principal = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(e.subject) ? e.subject : null;
+    void db()
+      .rateLimitEvent.create({ data: { rule: e.rule, keyHash: sha256(e.subject).slice(0, 32), userId: e.rule.endsWith(":principal") ? principal : null, limit: e.limit } })
+      .then(() => (Math.random() < 0.01 ? db().rateLimitEvent.deleteMany({ where: { createdAt: { lt: new Date(now - EVENT_RETENTION_MS) } } }) : null))
+      .catch((err: unknown) => logger.debug({ err: (err as Error).message }, "rate limit event not recorded"));
+  } catch {
+    // No database in this process (unit tests): the event is dropped.
+  }
+}
+
+function emitLimited(rule: RateLimitRule, subject: string, now: number) {
+  const event = { rule: rule.name, subject, limit: rule.limit, windowMs: rule.windowMs };
+  recordLimited(event, now);
+  for (const h of limitedHandlers) {
+    try {
+      h(event);
+    } catch {
+      // A subscriber never breaks the request path.
+    }
+  }
+}
+
 /** Count one hit for `subject` against `rule`. `subject` must not contain secrets (hash emails etc.). */
 export async function consume(rule: RateLimitRule, subject: string, now = Date.now()): Promise<RateLimitResult> {
   const window = Math.floor(now / rule.windowMs);
@@ -107,7 +183,9 @@ export async function consume(rule: RateLimitRule, subject: string, now = Date.n
   if (useRedis) {
     try {
       const [c, p] = (await redis().eval(SCRIPT, 2, cur, prev, String(rule.windowMs * 2))) as [number, number];
-      return evaluate(rule, Number(c), Number(p), now, false);
+      const r = evaluate(rule, Number(c), Number(p), now, false);
+      if (!r.allowed) emitLimited(rule, subject, now);
+      return r;
     } catch (err) {
       redisDownUntil = now + REDIS_RETRY_MS;
       logger.warn({ err: (err as Error).message, rule: rule.name }, "redis rate limiter unavailable; using database counters");
@@ -116,7 +194,9 @@ export async function consume(rule: RateLimitRule, subject: string, now = Date.n
   try {
     const [c, p] = await dbIncr(cur, prev, rule.windowMs * 2);
     // Degraded only when Redis was expected; Postgres is the normal store when REDIS_URL is unset.
-    return evaluate(rule, c, p, now, redisConfigured());
+    const r = evaluate(rule, c, p, now, redisConfigured());
+    if (!r.allowed) emitLimited(rule, subject, now);
+    return r;
   } catch (err) {
     const production = env().NODE_ENV === "production";
     if (production && rule.sensitive) {
@@ -153,4 +233,5 @@ export function mostRestrictive(results: RateLimitResult[]): RateLimitResult | n
 /** Test hook. */
 export function resetMemoryLimiter() {
   memory.clear();
+  recorded.clear();
 }

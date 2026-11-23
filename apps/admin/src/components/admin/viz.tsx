@@ -44,7 +44,13 @@ function useDayLabel() {
   const { locale } = useI18n();
   return useMemo(() => {
     const f = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", timeZone: "UTC" });
-    return (day: string) => f.format(new Date(`${day}T00:00:00Z`));
+    const h = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
+    // "YYYY-MM-DD" days, or full ISO bucket starts (hourly buckets show the UTC hour).
+    return (day: string) => {
+      if (day.length <= 10) return f.format(new Date(`${day}T00:00:00Z`));
+      const d = new Date(day);
+      return d.getUTCHours() || d.getUTCMinutes() ? `${h.format(d)} UTC` : f.format(d);
+    };
   }, [locale]);
 }
 

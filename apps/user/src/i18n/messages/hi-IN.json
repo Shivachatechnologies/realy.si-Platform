@@ -63,6 +63,7 @@
     "integrations": "इंटीग्रेशन",
     "marketplace": "मार्केटप्लेस",
     "settings": "सेटिंग्स",
+    "contactRealy": "Realy सहायता से संपर्क करें",
     "admin": "एडमिन कंसोल",
     "commandPalette": "कमांड पैलेट",
     "phaseShort": "च{phase}"
@@ -2233,7 +2234,8 @@
       "COMPLETED": "पूर्ण",
       "FAILED": "विफल",
       "CANCELLED": "रद्द",
-      "WAITING_APPROVAL": "स्वीकृति की प्रतीक्षा"
+      "WAITING_APPROVAL": "स्वीकृति की प्रतीक्षा",
+      "PAUSED": "रोका गया"
     },
     "back": "सभी कार्य",
     "deliverable": "परिणाम",
@@ -24892,5 +24894,54 @@
       "notConnected": "कनेक्ट नहीं"
     },
     "nav": "क्रिएटिव स्टूडियो"
+  },
+  "platformSupport": {
+    "back": "मेरे सभी टिकट",
+    "categories": {
+      "account": "खाता",
+      "ai": "AI",
+      "billing": "बिलिंग",
+      "bug": "कुछ काम नहीं कर रहा",
+      "integration": "इंटीग्रेशन",
+      "other": "अन्य"
+    },
+    "category": "विषय क्षेत्र",
+    "closedNotice": "यह टिकट बंद है। और सहायता चाहिए तो नया टिकट खोलें।",
+    "conversation": "बातचीत",
+    "markSolved": "हल के रूप में चिह्नित करें",
+    "message": "संदेश",
+    "messageHint": "बताएँ क्या हुआ, आपको क्या अपेक्षित था और कोई त्रुटि संदेश। पासवर्ड या कुंजियाँ कभी न भेजें।",
+    "myTickets": "मेरे टिकट",
+    "newTicket": "नया टिकट",
+    "newTicketHint": "हमारी टीम ईमेल से और यहाँ जवाब देती है।",
+    "noOrganization": "किसी संगठन से संबंधित नहीं",
+    "noTickets": "आपने अभी कोई टिकट नहीं खोला है।",
+    "organization": "संगठन",
+    "priorities": {
+      "HIGH": "उच्च",
+      "LOW": "निम्न",
+      "NORMAL": "सामान्य"
+    },
+    "priority": "तात्कालिकता",
+    "priorityHint": "उच्च उस काम के लिए है जो रुका हुआ है।",
+    "realyTeam": "Realy टीम",
+    "reply": "आपका जवाब",
+    "send": "भेजें",
+    "statuses": {
+      "CLOSED": "बंद",
+      "NEW": "प्राप्त",
+      "ON_HOLD": "रुका हुआ",
+      "OPEN": "प्रगति में",
+      "PENDING_CUSTOMER": "आपकी प्रतीक्षा",
+      "SOLVED": "हल"
+    },
+    "subject": "विषय",
+    "submit": "Realy सहायता को भेजें",
+    "subtitle": "Realy से जुड़े प्रश्न या समस्याएँ? Realy टीम को लिखें।",
+    "system": "अपडेट",
+    "ticketMeta": "टिकट #{number} · {created} को खोला",
+    "title": "Realy सहायता से संपर्क करें",
+    "updated": "{when} अपडेट",
+    "you": "आप"
   }
 }

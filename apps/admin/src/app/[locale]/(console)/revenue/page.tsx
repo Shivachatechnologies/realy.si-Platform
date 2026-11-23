@@ -1,199 +1,130 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, CircleDollarSign, ExternalLink, Globe2, Layers, ReceiptText, TrendingUp, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, ArrowDownRight, BadgePercent, CircleDollarSign, Globe2, Landmark, Layers, ReceiptText, Scale, TrendingUp, Undo2, Users } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
-import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AdminHeader, Empty, EmptyState, StatGrid, StatTile, guard } from "@/components/admin/kit";
-import { BarList } from "@/components/admin/viz";
+import { AdminBreadcrumbs } from "@/components/admin/nav/breadcrumbs";
+import { AdminHeader, Empty, SectionLink, StatGrid, StatTile, guard, sp } from "@/components/admin/kit";
+import { BarList, TrendChart } from "@/components/admin/viz";
+import { DataSource, RangeLinks, moneyList, pct } from "@/components/admin/billing/ui";
 import { getLocale, getT } from "@/i18n/server";
-import { displayName, formatDate, formatMoney, formatNumber } from "@/i18n/format";
+import { displayName, formatNumber, minorUnits } from "@/i18n/format";
+import { billingOverview } from "@/server/modules/admin/billing";
 import { revenueOverview } from "@/server/modules/admin/revenue";
 import { requireViewer } from "@/server/session";
 
-type MoneyList = { currency: string; amountMinor: bigint }[];
+type MoneyRows = { currency: string; amountMinor: bigint }[];
 
-/** Revenue: MRR/ARR, movement (new / expansion / churn), by plan and country, Stripe invoices (real rows only). */
-export default async function AdminRevenuePage() {
+/**
+ * Billing overview: MRR / ARR from live subscriptions; gross, refunds, net, discounts, tax, failed payments,
+ * outstanding balances and disputes from the Stripe mirror (platform_* tables); daily trends. Per currency, never mixed.
+ */
+export default async function AdminRevenuePage({ searchParams }: PageProps<"/[locale]/revenue">) {
   const locale = await getLocale();
   const t = await getT(locale);
   const viewer = await requireViewer(locale);
-  const r = await guard(revenueOverview(viewer.ctx), t("errors.forbidden"));
-  if (!r.ok) return r.node;
-  const o = r.value;
-  const money = (list: MoneyList) => (list.length ? list.map((m) => formatMoney({ amountMinor: m.amountMinor, currency: m.currency }, locale)).join(" · ") : "—");
-  const first = (list: MoneyList) => (list[0] ? formatMoney({ amountMinor: list[0].amountMinor, currency: list[0].currency }, locale) : "—");
-  const rest = (list: MoneyList) => (list.length > 1 ? list.slice(1).map((m) => formatMoney({ amountMinor: m.amountMinor, currency: m.currency }, locale)).join(" · ") : undefined);
-  const maxMonth = Math.max(1, ...o.months.map((m) => Math.max(m.started, m.canceled)));
-  const tz = viewer.user.timezone;
+  const days = Number(sp((await searchParams).days) ?? 30);
+  const [b, r] = await Promise.all([guard(billingOverview(viewer.ctx, { days }), t("errors.forbidden")), guard(revenueOverview(viewer.ctx), t("errors.forbidden"))]);
+  if (!b.ok) return b.node;
+  const o = b.value;
+  const base = `/${locale}`;
+  const first = (rows: MoneyRows) => moneyList(rows.slice(0, 1), locale);
+  const rest = (rows: MoneyRows) => (rows.length > 1 ? moneyList(rows.slice(1), locale) : undefined);
+  const scale = o.series.currency ? 10 ** minorUnits(o.series.currency) : 1;
+  const mirrorEmpty = o.mirror.invoices === 0 && o.mirror.payments === 0;
   return (
     <div className="grid gap-4">
-      <AdminHeader icon={<TrendingUp />} title={t("admin.nav.revenue")} description={t("admin.revenue.subtitle")} why={t("admin.revenue.why")} />
+      <AdminBreadcrumbs />
+      <AdminHeader
+        icon={<TrendingUp />}
+        title={t("admin.revenue.overview.title")}
+        description={t("admin.revenue.overview.subtitle")}
+        why={t("admin.revenue.why")}
+        actions={<RangeLinks base={`${base}/revenue`} value={o.days} options={[7, 30, 90, 365]} label={t("admin.revenue.overview.range")} format={(d) => t("admin.revenue.overview.days", { count: Number(d) })} />}
+        meta={<DataSource source={t("admin.revenue.overview.source")} updatedAt={o.mirror.lastSyncedAt} updatedLabel={t("admin.invoices.common.lastSynced")} />}
+      />
+      {!o.configured ? <Notice tone="warning" title={t("admin.invoices.common.notConfiguredTitle")}>{t("admin.invoices.common.notConfigured")}</Notice> : null}
+      {o.configured && mirrorEmpty ? (
+        <Notice tone="info" title={t("admin.invoices.common.emptyMirrorTitle")} action={<SectionLink href={`${base}/invoices`}>{t("admin.invoices.sync.open")}</SectionLink>}>
+          {t("admin.invoices.common.emptyMirror")}
+        </Notice>
+      ) : null}
       <StatGrid>
-        <StatTile icon={<CircleDollarSign />} label={t("admin.revenue.mrr")} value={first(o.mrr)} hint={rest(o.mrr) ?? (o.mrr.length ? t("admin.revenue.mrrHint") : t("admin.overview.noMrr"))} tone={o.mrr.length ? "success" : undefined} />
-        <StatTile icon={<Layers />} label={t("admin.revenue.arr")} value={first(o.arr)} hint={rest(o.arr) ?? t("admin.revenue.arrHint")} />
-        <StatTile icon={<Users />} label={t("admin.revenue.paying")} value={formatNumber(o.paying, locale)} hint={t("admin.revenue.trialing", { count: o.trialing })} href={`/${locale}/subscriptions?status=ACTIVE`} />
+        <StatTile icon={<CircleDollarSign />} label={t("admin.revenue.mrr")} value={first(o.mrr)} hint={rest(o.mrr) ?? (o.mrr.length ? t("admin.revenue.mrrHint") : t("admin.overview.noMrr"))} tone={o.mrr.length ? "success" : undefined} href={`${base}/revenue/analytics`} />
+        <StatTile icon={<Layers />} label={t("admin.revenue.arr")} value={first(o.arr)} hint={rest(o.arr) ?? t("admin.revenue.arrHint")} href={`${base}/revenue/analytics`} />
+        <StatTile icon={<Landmark />} label={t("admin.revenue.overview.net")} value={first(o.net)} hint={rest(o.net) ?? t("admin.revenue.overview.netHint")} href={`${base}/payments`} />
+        <StatTile icon={<Undo2 />} label={t("admin.revenue.overview.refunds")} value={first(o.refunds)} hint={rest(o.refunds) ?? t("admin.revenue.overview.refundsHint")} href={`${base}/payments/refunds`} tone={o.refunds.length ? "warning" : undefined} />
+        <StatTile icon={<AlertTriangle />} label={t("admin.revenue.overview.failed")} value={formatNumber(o.failedPayments, locale)} hint={t("admin.revenue.overview.failedHint", { count: o.failedSubscriptions })} href={`${base}/payments?status=failed`} tone={o.failedPayments || o.failedSubscriptions ? "danger" : undefined} />
+        <StatTile icon={<ReceiptText />} label={t("admin.revenue.overview.outstanding")} value={first(o.outstanding)} hint={t("admin.revenue.overview.outstandingHint", { count: o.outstanding.reduce((a, x) => a + x.invoices, 0), overdue: o.overdueInvoices })} href={`${base}/invoices?status=open`} tone={o.overdueInvoices ? "warning" : undefined} />
+        <StatTile icon={<BadgePercent />} label={t("admin.revenue.overview.discounts")} value={first(o.discounts)} hint={rest(o.discounts) ?? t("admin.revenue.overview.discountsHint")} href={`${base}/invoices?status=paid`} />
         <StatTile
-          icon={<ArrowDownRight />}
-          label={t("admin.revenue.churnRate")}
-          value={o.churnRate === null ? "—" : formatNumber(o.churnRate, locale, { style: "percent", maximumFractionDigits: 1 })}
-          hint={t("admin.revenue.canceled30", { count: o.canceled30 })}
-          tone={o.churnRate !== null && o.churnRate > 0.05 ? "warning" : undefined}
+          icon={<Scale />}
+          label={t("admin.revenue.overview.tax")}
+          value={o.tax.length ? first(o.tax) : t("admin.revenue.overview.taxNone")}
+          hint={o.taxUnknownInvoices ? t("admin.revenue.overview.taxUnknown", { count: o.taxUnknownInvoices }) : t("admin.revenue.overview.taxHint")}
+          href={`${base}/invoices?status=paid`}
         />
       </StatGrid>
-      <div className="grid gap-4 lg:grid-cols-3">
-        {(
-          [
-            ["newMrr", o.newMrr, "success", <ArrowUpRight key="i" />],
-            ["expansionMrr", o.expansionMrr, "success", <TrendingUp key="i" />],
-            ["churnedMrr", o.churnedMrr, "danger", <ArrowDownRight key="i" />],
-          ] as const
-        ).map(([key, list, tone, icon]) => (
-          <Card key={key}>
-            <CardHeader icon={icon} title={t(`admin.revenue.${key}`)} description={t(`admin.revenue.${key}Hint`)} />
-            <CardBody>
-              <p className={`text-xl font-semibold tabular-nums ${list.length ? (tone === "danger" ? "text-danger" : "text-success") : "text-muted-foreground"}`}>{money(list)}</p>
-            </CardBody>
-          </Card>
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader icon={<Layers />} title={t("admin.revenue.byPlan")} description={t("admin.revenue.byPlanHint")} />
-          <CardBody>
-            <BarList
-              label={t("admin.revenue.byPlan")}
-              tone="success"
-              items={o.byPlan.map((p) => ({ key: p.planId, label: p.name, value: p.subs, display: `${formatNumber(p.subs, locale)} · ${money(p.mrr)}`, href: `/${locale}/subscriptions?plan=${p.key}` }))}
-              empty={<Empty>{t("admin.revenue.noPaying")}</Empty>}
-            />
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader icon={<Globe2 />} title={t("admin.revenue.byCountry")} description={t("admin.revenue.byCountryHint")} />
-          <CardBody>
-            <BarList
-              label={t("admin.revenue.byCountry")}
-              items={o.byCountry.slice(0, 15).map((c) => ({ key: c.country, label: `${displayName(c.country, "region", locale)} (${c.country})`, value: c.subs, display: `${formatNumber(c.subs, locale)} · ${money(c.mrr)}` }))}
-              empty={<Empty>{t("admin.revenue.noPaying")}</Empty>}
-            />
-          </CardBody>
-        </Card>
-      </div>
+      {o.openDisputes ? (
+        <Notice tone="danger" title={t("admin.payments.disputes.openTitle", { count: o.openDisputes })} action={<SectionLink href={`${base}/payments/disputes?open=1`}>{t("admin.payments.disputes.investigate")}</SectionLink>}>
+          {t("admin.payments.disputes.openBody", { amount: moneyList(o.disputedAmount, locale) })}
+        </Notice>
+      ) : null}
       <Card>
-        <CardHeader icon={<TrendingUp />} title={t("admin.revenue.movement")} description={t("admin.revenue.movementHint")} />
+        <CardHeader icon={<TrendingUp />} title={t("admin.revenue.overview.trend", { currency: o.series.currency ?? "—" })} description={t("admin.revenue.overview.trendHint")} actions={<SectionLink href={`${base}/payments`}>{t("admin.payments.title")}</SectionLink>} />
         <CardBody>
-          <div className="flex h-36 items-end gap-1.5" role="img" aria-label={t("admin.revenue.movement")}>
-            {o.months.map((m) => (
-              <div key={m.month} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${m.month}: +${m.started} / −${m.canceled}`}>
-                <div className="flex h-full w-full items-end justify-center gap-0.5">
-                  <span className="w-1/2 max-w-3 rounded-t-sm bg-primary" style={{ height: `${(m.started / maxMonth) * 100}%` }} />
-                  <span className="w-1/2 max-w-3 rounded-t-sm bg-danger/70" style={{ height: `${(m.canceled / maxMonth) * 100}%` }} />
-                </div>
-                <span className="text-[10px] text-muted-foreground tabular-nums">{m.month.slice(5)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-primary" />
-              {t("admin.revenue.started")}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-danger/70" />
-              {t("admin.revenue.canceled")}
-            </span>
-          </div>
+          {o.series.currency ? (
+            <TrendChart
+              title={t("admin.revenue.overview.trend", { currency: o.series.currency })}
+              days={o.series.days}
+              series={[
+                { label: t("admin.revenue.overview.gross"), values: o.series.gross.map((v) => Math.round(v / scale)), tone: "success" },
+                { label: t("admin.revenue.overview.refunds"), values: o.series.refunds.map((v) => Math.round(v / scale)), tone: "warning" },
+                { label: t("admin.revenue.overview.failedCount"), values: o.series.failed, tone: "danger" },
+              ]}
+            />
+          ) : (
+            <Empty>{t("admin.revenue.overview.noPayments")}</Empty>
+          )}
         </CardBody>
       </Card>
-      <Card>
-        <CardHeader
-          icon={<ReceiptText />}
-          title={t("admin.revenue.stripeInvoices")}
-          description={o.stripe.connected ? t("admin.revenue.stripeConnected") : t("admin.revenue.stripeNotConnected")}
-          actions={o.stripe.connected ? <Badge tone={"livemode" in o.stripe && o.stripe.livemode ? "success" : "warning"}>{"livemode" in o.stripe && o.stripe.livemode ? t("admin.revenue.live") : t("admin.revenue.test")}</Badge> : <Badge>{t("admin.revenue.notConnected")}</Badge>}
-        />
-        {o.stripe.error ? <div className="p-3"><Notice tone="danger">{t("admin.revenue.stripeError", { error: o.stripe.error })}</Notice></div> : null}
-        {!o.stripe.connected ? (
-          <EmptyState icon={<ReceiptText />} title={t("admin.revenue.stripeNotConnected")} body={t("admin.revenue.stripeSetup")} />
-        ) : o.stripe.invoices.length === 0 ? (
-          <Empty>{t("admin.revenue.noInvoices")}</Empty>
-        ) : (
-          <Table>
-            <THead>
-              <Tr>
-                <Th>{t("admin.revenue.invoice")}</Th>
-                <Th>{t("admin.revenue.customer")}</Th>
-                <Th>{t("admin.users.columns.status")}</Th>
-                <Th>{t("admin.pricing.amount")}</Th>
-                <Th>{t("admin.revenue.date")}</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {o.stripe.invoices.map((i) => (
-                <Tr key={i.id}>
-                  <Td className="font-mono text-xs">
-                    {i.hostedUrl ? (
-                      <a href={i.hostedUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 hover:underline">
-                        {i.number ?? i.id.slice(0, 14)}
-                        <ExternalLink className="size-3" aria-hidden />
-                      </a>
-                    ) : (
-                      (i.number ?? i.id.slice(0, 14))
-                    )}
-                  </Td>
-                  <Td className="text-xs">{i.customerName ?? i.customerEmail ?? "—"}</Td>
-                  <Td>
-                    <Badge tone={i.status === "paid" ? "success" : i.status === "open" ? "warning" : i.status === "uncollectible" ? "danger" : "neutral"}>{i.status ?? "—"}</Badge>
-                  </Td>
-                  <Td className="text-xs tabular-nums">{formatMoney({ amountMinor: i.status === "paid" ? i.amountPaid : i.amountDue, currency: i.currency }, locale)}</Td>
-                  <Td className="text-xs text-muted-foreground">{formatDate(i.created, locale, tz)}</Td>
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
-        )}
-      </Card>
-      <Card>
-        <CardHeader icon={<ReceiptText />} title={t("admin.revenue.paymentEvents")} description={t("admin.revenue.paymentEventsHint")} />
-        {o.events.length === 0 ? (
-          <Empty>{t("admin.revenue.noEvents")}</Empty>
-        ) : (
-          <Table>
-            <THead>
-              <Tr>
-                <Th>{t("admin.revenue.event")}</Th>
-                <Th>{t("admin.organizations.columns.name")}</Th>
-                <Th>{t("admin.revenue.outcome")}</Th>
-                <Th>{t("admin.revenue.date")}</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {o.events.map((e) => (
-                <Tr key={e.id}>
-                  <Td>
-                    <Badge tone={e.type === "invoice.payment_failed" ? "danger" : e.type.includes("paid") || e.type.includes("succeeded") ? "success" : "neutral"} className="font-mono">
-                      {e.type}
-                    </Badge>
-                    {!e.livemode ? <span className="ms-1 text-[11px] text-muted-foreground">{t("admin.revenue.test")}</span> : null}
-                  </Td>
-                  <Td className="text-xs">
-                    {e.organizationId ? (
-                      <Link href={`/${locale}/organizations/${e.organizationId}`} className="hover:underline">
-                        {e.organizationName ?? e.organizationId.slice(0, 8)}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </Td>
-                  <Td className="font-mono text-[11px] text-muted-foreground">{e.outcome}</Td>
-                  <Td className="text-xs text-muted-foreground">{formatDate(e.processedAt, locale, tz, { dateStyle: "medium", timeStyle: "short" })}</Td>
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
-        )}
-      </Card>
+      {r.ok ? (
+        <>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <StatTile icon={<Users />} label={t("admin.revenue.paying")} value={formatNumber(r.value.paying, locale)} hint={t("admin.revenue.trialing", { count: r.value.trialing })} href={`${base}/subscriptions?status=ACTIVE`} />
+            <StatTile icon={<ArrowDownRight />} label={t("admin.revenue.churnRate")} value={pct(r.value.churnRate, locale)} hint={t("admin.revenue.canceled30", { count: r.value.canceled30 })} tone={r.value.churnRate !== null && r.value.churnRate > 0.05 ? "warning" : undefined} href={`${base}/subscriptions?status=CANCELED`} />
+            <StatTile icon={<TrendingUp />} label={t("admin.revenue.overview.analytics")} value={t("admin.revenue.overview.open")} hint={t("admin.revenue.overview.analyticsHint")} href={`${base}/revenue/analytics`} />
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader icon={<Layers />} title={t("admin.revenue.byPlan")} description={t("admin.revenue.byPlanHint")} />
+              <CardBody>
+                <BarList
+                  label={t("admin.revenue.byPlan")}
+                  tone="success"
+                  items={r.value.byPlan.map((p) => ({ key: p.planId, label: p.name, value: p.subs, display: `${formatNumber(p.subs, locale)} · ${moneyList(p.mrr, locale)}`, href: `${base}/subscriptions?plan=${p.key}` }))}
+                  empty={<Empty>{t("admin.revenue.noPaying")}</Empty>}
+                />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader icon={<Globe2 />} title={t("admin.revenue.byCountry")} description={t("admin.revenue.byCountryHint")} />
+              <CardBody>
+                <BarList
+                  label={t("admin.revenue.byCountry")}
+                  items={r.value.byCountry.slice(0, 15).map((c) => ({ key: c.country, label: `${displayName(c.country, "region", locale)} (${c.country})`, value: c.subs, display: `${formatNumber(c.subs, locale)} · ${moneyList(c.mrr, locale)}` }))}
+                  empty={<Empty>{t("admin.revenue.noPaying")}</Empty>}
+                />
+              </CardBody>
+            </Card>
+          </div>
+        </>
+      ) : null}
+      <p className="text-xs text-muted-foreground">
+        {t("admin.revenue.overview.footnote")}{" "}
+        <Link className="text-primary hover:underline" href={`${base}/invoices`}>
+          {t("admin.invoices.title")}
+        </Link>
+      </p>
     </div>
   );
 }

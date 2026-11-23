@@ -1,6 +1,6 @@
 import { LIMITS } from "@/server/core/limits";
 import { body, route } from "@/server/core/http";
-import { aiRouting, aiRoutingInput, updateAiRouting } from "@/server/modules/admin/ops";
+import { aiRouting, aiRoutingInput, updateAiRouting } from "@/server/modules/admin/ai-ops";
 
 export const GET = route({ auth: "required", name: "GET /admin/ai/routing" }, async ({ ctx }) => aiRouting(ctx));
 

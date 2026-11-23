@@ -90,7 +90,10 @@ export async function enqueueAgentTask(taskId: string, jobId: string): Promise<v
 
 /** Per-handler processing of published domain events and module tasks (integration syncs, health checks...). */
 export const MODULE_JOBS_QUEUE = "module-jobs";
-/** Recurring work (module periodic jobs: recurring plans, workflow schedules, syncs...) driven by BullMQ job schedulers. */
+/**
+ * Recurring work (module periodic jobs: recurring plans, workflow schedules, syncs...). Run in-process by the worker's
+ * periodic runner (src/worker/schedules.ts); this queue receives dead-lettered runs requeued by administrators.
+ */
 export const SCHEDULES_QUEUE = "schedules";
 /** Outbound webhook deliveries (signed POSTs to subscriber URLs). */
 export const WEBHOOKS_QUEUE = "webhooks";
@@ -195,4 +198,45 @@ export async function resetJobQueuesForTests() {
   await agentQueue?.close().catch(() => undefined);
   queue = null;
   agentQueue = null;
+}
+
+// ───────────────────────────── Worker job-failure hook (stream E; docs/admin/hooks.md) ─────────────────────────────
+
+/** One failed attempt of a worker job (src/worker/tracking.ts). Never carries job data, which may hold personal data. */
+export interface JobFailureEvent {
+  queue: string;
+  jobName: string;
+  jobId: string;
+  attempt: number;
+  maxAttempts: number;
+  /** The last attempt failed (the job is FAILED or dead-lettered). */
+  final: boolean;
+  deadLettered: boolean;
+  organizationId: string | null;
+  /** The thrown value; scrub before storing. Withheld (null) for jobs that redact errors (personal data). */
+  error: unknown;
+  /** Secret-free message as persisted in worker_job_runs. */
+  message: string;
+}
+
+export type JobFailureHook = (event: JobFailureEvent) => void | Promise<void>;
+
+const jobHookStore = globalThis as unknown as { realyJobFailureHooks?: Set<JobFailureHook> };
+const jobHooks = () => (jobHookStore.realyJobFailureHooks ??= new Set());
+
+/** Observe failed worker job attempts (error grouping). Returns an unsubscribe function. */
+export function onJobFailure(fn: JobFailureHook): () => void {
+  jobHooks().add(fn);
+  return () => void jobHooks().delete(fn);
+}
+
+/** Called by the worker's job tracking after a failed attempt. Never throws, never waits on slow hooks for long. */
+export async function emitJobFailure(event: JobFailureEvent): Promise<void> {
+  for (const fn of [...jobHooks()]) {
+    try {
+      await fn(event);
+    } catch {
+      // A failing observer must never affect the job.
+    }
+  }
 }

@@ -26,6 +26,7 @@ import {
   usageSummary,
   type AddonKey,
 } from "./service";
+import { meterOfLimit, writeLedgerEntry } from "./ledger";
 
 const READ = ["platform.subscriptions.read", "pricing.read"];
 const MANAGE = ["platform.subscriptions.manage", "pricing.manage"];
@@ -196,6 +197,10 @@ export async function grantAddon(ctx: RequestContext, raw: z.input<typeof addonG
       },
     });
     await writeAudit(tx, ctx, { category: "ADMIN", organizationId: input.organizationId, action: "entitlements.addon.granted", resourceType: "addon_purchase", resourceId: created.id, newValue: created, reason: input.reason });
+    const meter = meterOfLimit(addon.limit);
+    if (meter) {
+      await writeLedgerEntry(tx, { organizationId: input.organizationId, meter, kind: "GRANT", delta: created.quantity, period: window, sourceType: "addon_purchase", sourceId: created.id, reason: input.reason, actorId: ctx.actor.id ?? null });
+    }
     return created;
   });
   invalidateEntitlements(input.organizationId);
@@ -210,7 +215,7 @@ export async function adminChangePlan(ctx: RequestContext, organizationId: strin
   const input = adminPlanChangeInput.parse(raw);
   await requireAnyPlatform(ctx, ["platform.subscriptions.manage"]);
   const { changeSubscriptionPlan } = await import("@/server/modules/billing/stripe-billing");
-  return changeSubscriptionPlan(ctx, organizationId, { planKey: input.planKey, interval: input.interval }, { asPlatform: true });
+  return changeSubscriptionPlan(ctx, organizationId, { planKey: input.planKey, interval: input.interval }, { asPlatform: true, reason: input.reason });
 }
 
 export const adminCancelInput = z.object({ cancel: z.boolean(), reason: reasonSchema });

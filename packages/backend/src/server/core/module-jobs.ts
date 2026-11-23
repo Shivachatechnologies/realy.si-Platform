@@ -1,8 +1,9 @@
 import type { OutboxEvent } from "@/server/modules/events/relay";
 
 /**
- * A job the worker runs every `everyMs`. With Redis the worker registers it as a BullMQ job scheduler on the
- * "schedules" queue, so exactly one run happens per tick across all worker replicas (retried with backoff on failure).
+ * A job the worker runs every `everyMs`. The worker's periodic runner (src/worker/schedules.ts) claims each interval's
+ * run through Redis, so exactly one run happens per interval across all worker replicas, never two at once (retried
+ * with backoff on failure, then dead-lettered).
  * Must be idempotent. Returns how much work it did (persisted in worker_job_runs when non-zero).
  */
 export interface PeriodicJob {

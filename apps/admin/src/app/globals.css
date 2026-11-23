@@ -955,3 +955,25 @@
     transform: none;
   }
 }
+
+/* ───────────── Control Center shell (stream A) ───────────── */
+
+/* Compact mode (admin preference, /me): tighter tables, cards and tiles across the console. */
+[data-surface="admin"][data-density="compact"] {
+  font-size: 13px;
+}
+[data-surface="admin"][data-density="compact"] main section > header {
+  padding-block: 0.5rem;
+}
+[data-surface="admin"][data-density="compact"] main td {
+  padding-block: 0.25rem;
+}
+[data-surface="admin"][data-density="compact"] main th {
+  height: 2rem;
+}
+[data-surface="admin"][data-density="compact"] main .gap-4 {
+  gap: 0.75rem;
+}
+[data-surface="admin"][data-density="compact"] main .gap-5 {
+  gap: 1rem;
+}

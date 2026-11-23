@@ -6,6 +6,7 @@ import { closestLocale } from "@/i18n/config";
 import { createTranslator, type Messages } from "@/i18n/translate";
 import { companyEmailProvider, emailProvider } from "./provider";
 import { publishedEmail } from "@/server/modules/cms/email-templates";
+import { suppressionFor } from "./suppression";
 import enUS from "@/i18n/messages/en-US.json";
 import hiIN from "@/i18n/messages/hi-IN.json";
 import arAE from "@/i18n/messages/ar-AE.json";
@@ -35,6 +36,8 @@ export function renderEmail(template: EmailTemplate, locale: string, vars: Recor
 export interface SendResult {
   status: EmailStatus;
   messageId: string | null;
+  /** The `email_messages` row recording this attempt. */
+  id?: string;
 }
 
 /**
@@ -54,7 +57,12 @@ export async function sendEmail(args: {
   let status: EmailStatus = "NOT_CONFIGURED";
   let messageId: string | null = null;
   let error: string | null = null;
-  if (configured) {
+  const suppressed = configured ? await suppressionFor(args.to) : null;
+  if (configured && suppressed) {
+    // Hard-bounced / complained / manually suppressed address (Admin → Email → Suppression): never handed to the provider.
+    status = "FAILED";
+    error = `suppressed:${suppressed}`;
+  } else if (configured) {
     try {
       // A template published in Admin → Content → Email templates wins over the built-in catalog text.
       const rendered = (await publishedEmail(args.template, args.locale, { ...args.vars, link: args.link })) ?? renderEmail(args.template, args.locale, args.vars, args.link);
@@ -68,7 +76,7 @@ export async function sendEmail(args: {
       captureException(err, { template: args.template });
     }
   }
-  await db().emailMessage.create({
+  const row = await db().emailMessage.create({
     data: {
       organizationId: args.organizationId ?? null,
       userId: args.userId ?? null,
@@ -80,8 +88,9 @@ export async function sendEmail(args: {
       providerMessageId: messageId,
       error,
     },
+    select: { id: true },
   });
-  return { status, messageId };
+  return { status, messageId, id: row.id };
 }
 
 export const emailConfigured = () => emailProvider() !== null;
@@ -109,7 +118,8 @@ export async function sendPlainEmail(args: {
   html?: string;
   headers?: Record<string, string>;
   template: string;
-  organizationId: string;
+  /** null for platform mail that belongs to no organization (e.g. platform support replies). */
+  organizationId: string | null;
   userId?: string | null;
   locale?: string;
   /** Send as this company: its connected SendGrid account when present, else the platform provider. */
@@ -119,12 +129,18 @@ export async function sendPlainEmail(args: {
   /** Provider metadata echoed in delivery webhooks (SendGrid custom_args). */
   customArgs?: Record<string, string>;
 }): Promise<SendResult> {
-  const company = args.companyId ? await companyEmailProvider(args.organizationId, args.companyId) : null;
+  const company = args.companyId && args.organizationId ? await companyEmailProvider(args.organizationId, args.companyId) : null;
   const configured = args.companyId ? (args.companyOnly && company?.scope !== "company" ? null : company) : emailProvider();
   let status: EmailStatus = "NOT_CONFIGURED";
   let messageId: string | null = null;
   let error: string | null = null;
-  if (configured) {
+  // The platform suppression list applies to the platform provider only (a company's own SendGrid keeps its own).
+  const platformScope = !!configured && (!("scope" in configured) || configured.scope === "platform");
+  const suppressed = platformScope ? await suppressionFor(args.to) : null;
+  if (configured && suppressed) {
+    status = "FAILED";
+    error = `suppressed:${suppressed}`;
+  } else if (configured) {
     try {
       const html = args.html ?? textToHtml(args.text);
       const r = await configured.provider.send({ to: args.to, from: configured.from, subject: args.subject, text: args.text, html, headers: args.headers, customArgs: args.customArgs });
@@ -137,7 +153,7 @@ export async function sendPlainEmail(args: {
       captureException(err, { template: args.template });
     }
   }
-  await db().emailMessage.create({
+  const row = await db().emailMessage.create({
     data: {
       organizationId: args.organizationId,
       userId: args.userId ?? null,
@@ -149,8 +165,9 @@ export async function sendPlainEmail(args: {
       providerMessageId: messageId,
       error,
     },
+    select: { id: true },
   });
-  return { status, messageId };
+  return { status, messageId, id: row.id };
 }
 
 /** Alias for HTML messages (same recording and truthfulness rules as sendPlainEmail). */

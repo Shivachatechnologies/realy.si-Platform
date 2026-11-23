@@ -15,6 +15,8 @@ export interface GatewaySubscription {
   cancelAtPeriodEnd: boolean;
   canceledAt: number | null;
   trialEnd: number | null;
+  /** Stripe `pause_collection.behavior` while collection is paused (absent from older test doubles). */
+  pauseCollection?: string | null;
   items: { id: string; priceId: string; quantity: number; currentPeriodStart: number | null; currentPeriodEnd: number | null }[];
 }
 
@@ -73,7 +75,23 @@ export interface PaymentGateway {
     locale: string;
     expiresAt: Date;
   }, idempotencyKey: string): Promise<{ id: string; url: string }>;
+  // Optional (Control Center billing, docs/admin/STREAMS.md stream D). Every call is a real Stripe API call.
+  /** One page of Stripe objects, newest first (admin backfill of the platform_* mirror tables). Raw Stripe JSON. */
+  listStripeObjects?(kind: StripeSyncKind, args: { createdGte?: number; startingAfter?: string; limit: number }): Promise<{ data: Record<string, unknown>[]; hasMore: boolean }>;
+  /** Refund (part of) a charge. Moves money: only behind platform.billing.refund, MFA, confirmation and audit. */
+  createRefund?(args: { chargeId: string; amountMinor: bigint; reason: "duplicate" | "fraudulent" | "requested_by_customer" | null; metadata: Record<string, string> }, idempotencyKey: string): Promise<Record<string, unknown>>;
+  /** Pause collection (`behavior`) or resume it (null). */
+  setPauseCollection?(subscriptionId: string, behavior: "keep_as_draft" | "mark_uncollectible" | "void" | null, idempotencyKey: string): Promise<void>;
+  /** Move the trial end (unix seconds), without proration. */
+  setTrialEnd?(subscriptionId: string, trialEnd: number, idempotencyKey: string): Promise<void>;
+  /** Cancel immediately (no proration credit). */
+  cancelSubscriptionNow?(subscriptionId: string, idempotencyKey: string): Promise<void>;
+  /** Apply a coupon to future invoices of the subscription. */
+  applySubscriptionCoupon?(subscriptionId: string, couponId: string, idempotencyKey: string): Promise<void>;
 }
+
+/** Stripe object families mirrored into platform_* tables. */
+export type StripeSyncKind = "invoices" | "charges" | "refunds" | "disputes";
 
 export interface GatewayInvoice {
   id: string;
@@ -132,6 +150,7 @@ const toGatewaySubscription = (s: Stripe.Subscription): GatewaySubscription => (
   cancelAtPeriodEnd: s.cancel_at_period_end,
   canceledAt: s.canceled_at,
   trialEnd: s.trial_end,
+  pauseCollection: s.pause_collection?.behavior ?? null,
   items: s.items.data.map((i) => ({
     id: i.id,
     priceId: i.price.id,
@@ -270,6 +289,34 @@ export function stripeGateway(stripe: Stripe): PaymentGateway {
       }, { idempotencyKey });
       if (!s.url) throw new Error("Stripe did not return a checkout URL");
       return { id: s.id, url: s.url };
+    },
+    async listStripeObjects(kind, a) {
+      const params = { limit: a.limit, ...(a.startingAfter ? { starting_after: a.startingAfter } : {}), ...(a.createdGte ? { created: { gte: a.createdGte } } : {}) };
+      const res =
+        kind === "invoices" ? await stripe.invoices.list(params)
+        : kind === "charges" ? await stripe.charges.list(params)
+        : kind === "refunds" ? await stripe.refunds.list(params)
+        : await stripe.disputes.list(params);
+      return { data: res.data as unknown as Record<string, unknown>[], hasMore: res.has_more };
+    },
+    async createRefund(a, idempotencyKey) {
+      const r = await stripe.refunds.create(
+        { charge: a.chargeId, amount: Number(a.amountMinor), ...(a.reason ? { reason: a.reason } : {}), metadata: a.metadata },
+        { idempotencyKey },
+      );
+      return r as unknown as Record<string, unknown>;
+    },
+    async setPauseCollection(subscriptionId, behavior, idempotencyKey) {
+      await stripe.subscriptions.update(subscriptionId, { pause_collection: behavior ? { behavior } : "" }, { idempotencyKey });
+    },
+    async setTrialEnd(subscriptionId, trialEnd, idempotencyKey) {
+      await stripe.subscriptions.update(subscriptionId, { trial_end: trialEnd, proration_behavior: "none" }, { idempotencyKey });
+    },
+    async cancelSubscriptionNow(subscriptionId, idempotencyKey) {
+      await stripe.subscriptions.cancel(subscriptionId, {}, { idempotencyKey });
+    },
+    async applySubscriptionCoupon(subscriptionId, couponId, idempotencyKey) {
+      await stripe.subscriptions.update(subscriptionId, { discounts: [{ coupon: couponId }] }, { idempotencyKey });
     },
   };
 }

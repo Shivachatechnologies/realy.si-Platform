@@ -1,13 +1,17 @@
 import { db, Prisma } from "@/server/core/db";
 import type { RequestContext } from "@/server/core/context";
 import { costMicros } from "@/server/modules/workforce/pricing";
-import { daysAgo, isUuid, requireAnyPlatform, requirePlatform, utcDayStart } from "./access";
+import { daysAgo, requireAnyPlatform, utcDayStart } from "./access";
 
-/** Read-only daily series for the admin console charts. Every point is counted from real rows; empty days are 0. */
+/**
+ * Read-only daily series for the admin console charts. Every point is counted from real rows; empty days are 0.
+ * Stream A owns this file. The helpers (trendDays, since, fill, fillAi, aiByDay) are shared with ./people-trends (B)
+ * and ./ai-trends (C): keep their signatures stable.
+ */
 export const TREND_DAYS = 30;
 
-type DayRow = { day: Date; n: bigint | number | null };
-type DayModelRow = { day: Date; model: string | null; input: bigint | null; output: bigint | null; tasks: bigint };
+export type DayRow = { day: Date; n: bigint | number | null };
+export type DayModelRow = { day: Date; model: string | null; input: bigint | null; output: bigint | null; tasks: bigint };
 
 /** UTC day keys (YYYY-MM-DD), oldest first, ending today. */
 export function trendDays(days = TREND_DAYS) {
@@ -15,15 +19,15 @@ export function trendDays(days = TREND_DAYS) {
   return Array.from({ length: days }, (_, i) => new Date(end - (days - 1 - i) * 86_400_000).toISOString().slice(0, 10));
 }
 
-const since = (days = TREND_DAYS) => new Date(utcDayStart().getTime() - (days - 1) * 86_400_000);
+export const since = (days = TREND_DAYS) => new Date(utcDayStart().getTime() - (days - 1) * 86_400_000);
 const key = (d: Date) => d.toISOString().slice(0, 10);
 
-function fill(rows: DayRow[], days = TREND_DAYS) {
+export function fill(rows: DayRow[], days = TREND_DAYS) {
   const m = new Map(rows.map((r) => [key(r.day), Number(r.n ?? 0)]));
   return trendDays(days).map((d) => m.get(d) ?? 0);
 }
 
-function fillAi(rows: DayModelRow[], days = TREND_DAYS) {
+export function fillAi(rows: DayModelRow[], days = TREND_DAYS) {
   const tokens = new Map<string, number>();
   const cost = new Map<string, number>();
   const tasks = new Map<string, number>();
@@ -39,7 +43,7 @@ function fillAi(rows: DayModelRow[], days = TREND_DAYS) {
   return { tokens: ds.map((d) => tokens.get(d) ?? 0), costMicros: ds.map((d) => cost.get(d) ?? 0), tasks: ds.map((d) => tasks.get(d) ?? 0) };
 }
 
-const aiByDay = (from: Date, where: Prisma.Sql = Prisma.empty) =>
+export const aiByDay = (from: Date, where: Prisma.Sql = Prisma.empty) =>
   db().$queryRaw<DayModelRow[]>(Prisma.sql`
     SELECT date_trunc('day', started_at AT TIME ZONE 'UTC') AS day, model,
            SUM(input_tokens)::bigint AS input, SUM(output_tokens)::bigint AS output, COUNT(*)::bigint AS tasks
@@ -79,40 +83,4 @@ export async function platformTrends(ctx: RequestContext) {
     fleet: [...roles].map(([profile, v]) => ({ profile, ...v })).sort((a, b) => b.running + b.queued - (a.running + a.queued)).slice(0, 8),
     completed24h,
   };
-}
-
-/** 30-day activity of one organization (AI tasks, tokens, cost, failures, API requests). Caller already opened the audited tenant view. */
-export async function organizationTrends(ctx: RequestContext, organizationId: string) {
-  await requirePlatform(ctx, "platform.organizations.read");
-  if (!isUuid(organizationId)) return null;
-  const from = since();
-  const [ai, failed, api] = await Promise.all([
-    aiByDay(from, Prisma.sql`AND organization_id = ${organizationId}::uuid`),
-    db().$queryRaw<DayRow[]>`SELECT date_trunc('day', completed_at AT TIME ZONE 'UTC') AS day, COUNT(*)::bigint AS n FROM agent_tasks WHERE organization_id = ${organizationId}::uuid AND status = 'FAILED' AND completed_at >= ${from} GROUP BY 1`,
-    db().$queryRaw<DayRow[]>`SELECT date_trunc('day', occurred_at AT TIME ZONE 'UTC') AS day, SUM(quantity)::bigint AS n FROM usage_records WHERE organization_id = ${organizationId}::uuid AND meter = 'api.request' AND occurred_at >= ${from} GROUP BY 1`,
-  ]);
-  return { days: trendDays(), ai: fillAi(ai), failed: fill(failed), apiRequests: fill(api) };
-}
-
-/** 30-day activity of one user: sign-ins and AI tasks they started (tokens and cost). */
-export async function userTrends(ctx: RequestContext, userId: string) {
-  await requirePlatform(ctx, "platform.users.read");
-  if (!isUuid(userId)) return null;
-  const from = since();
-  const [signIns, ai] = await Promise.all([
-    db().$queryRaw<DayRow[]>`SELECT date_trunc('day', created_at AT TIME ZONE 'UTC') AS day, COUNT(*)::bigint AS n FROM sessions WHERE user_id = ${userId}::uuid AND created_at >= ${from} GROUP BY 1`,
-    aiByDay(from, Prisma.sql`AND created_by_id = ${userId}::uuid`),
-  ]);
-  return { days: trendDays(), signIns: fill(signIns), ai: fillAi(ai) };
-}
-
-/** Daily AI tokens/cost for the AI Control Center (any window up to 90 days). */
-export async function aiDailySeries(ctx: RequestContext, days: number) {
-  await requireAnyPlatform(ctx, ["platform.ai.read", "platform.ai.manage"]);
-  const d = Math.min(90, Math.max(1, Math.floor(days)));
-  const [ai, failed] = await Promise.all([
-    aiByDay(since(d)),
-    db().$queryRaw<DayRow[]>`SELECT date_trunc('day', completed_at AT TIME ZONE 'UTC') AS day, COUNT(*)::bigint AS n FROM agent_tasks WHERE status = 'FAILED' AND completed_at >= ${since(d)} GROUP BY 1`,
-  ]);
-  return { days: trendDays(d), ...fillAi(ai, d), failed: fill(failed, d) };
 }

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { AdminHeader, Empty, Facts, guard, sp } from "@/components/admin/kit";
-import { ViewAsForm } from "@/components/admin/platform-actions";
+import { ViewAsForm } from "@/components/admin/people/role-actions";
 import { getLocale, getT } from "@/i18n/server";
 import { formatDate, formatRelativeTime } from "@/i18n/format";
 import { viewAsSummary } from "@/server/modules/admin/roles";

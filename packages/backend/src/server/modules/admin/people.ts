@@ -8,7 +8,7 @@ import { writeAudit } from "@/server/modules/audit/service";
 import { createOrganization } from "@/server/modules/organizations/service";
 import { requirePermission, systemRoleId } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
-import { daysAgo, isUuid, reasonSchema, requireAnyPlatform, utcMonthStart } from "./access";
+import { daysAgo, isUuid, reasonSchema, requireAnyPlatform, requireConfirmation, utcMonthStart } from "./access";
 import { aiUsageSince } from "./overview";
 
 /**
@@ -76,6 +76,108 @@ export async function resetUserAccess(ctx: RequestContext, userId: string, raw: 
   });
   const delivery = input.sendPasswordReset ? await requestPasswordReset(ctx, { email: result.email }) : null;
   return { revokedSessions: result.revokedSessions, mfaReset: input.resetMfa, emailDelivery: delivery?.emailDelivery ?? null };
+}
+
+export const singleResetInput = z.object({ reason: reasonSchema, confirm: z.string().max(254) });
+
+/**
+ * Secure MFA reset: removes every MFA factor and recovery code and revokes all sessions, so the user must sign in
+ * again and re-enrol. Typed confirmation (the user's email) because it weakens the account until re-enrolment.
+ */
+export async function resetUserMfa(ctx: RequestContext, userId: string, raw: z.input<typeof singleResetInput>) {
+  const input = singleResetInput.parse(raw);
+  if (!isUuid(userId)) throw notFound("User");
+  if (userId === ctx.actor.id) throw conflict("Use your own security settings to reset your MFA");
+  return transaction(async (tx) => {
+    await requirePermission(ctx, "platform.users.manage", platformChain(), tx);
+    const u = await tx.user.findUnique({ where: { id: userId }, select: { email: true, mfaEnabled: true, status: true } });
+    if (!u) throw notFound("User");
+    if (u.status === "DELETED") throw conflict("Deleted users cannot be changed");
+    requireConfirmation(input.confirm, u.email);
+    const [factors, codes] = await Promise.all([tx.mfaFactor.deleteMany({ where: { userId } }), tx.mfaRecoveryCode.deleteMany({ where: { userId } })]);
+    const sessions = await tx.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    await tx.user.update({ where: { id: userId }, data: { mfaEnabled: false } });
+    await writeAudit(tx, ctx, { category: "SECURITY", action: "platform.user.mfa_reset", resourceType: "user", resourceId: userId, oldValue: { mfaEnabled: u.mfaEnabled }, newValue: { factorsRemoved: factors.count, recoveryCodesRemoved: codes.count, revokedSessions: sessions.count }, reason: input.reason });
+    return { factorsRemoved: factors.count, revokedSessions: sessions.count };
+  });
+}
+
+export const passwordResetInput = z.object({ reason: reasonSchema });
+
+/** Initiate a password reset: the standard reset email (auth recovery flow). Sessions are not touched. */
+export async function sendUserPasswordReset(ctx: RequestContext, userId: string, raw: z.input<typeof passwordResetInput>) {
+  const { reason } = passwordResetInput.parse(raw);
+  if (!isUuid(userId)) throw notFound("User");
+  const email = await transaction(async (tx) => {
+    await requirePermission(ctx, "platform.users.manage", platformChain(), tx);
+    const u = await tx.user.findUnique({ where: { id: userId }, select: { email: true, status: true } });
+    if (!u) throw notFound("User");
+    if (u.status !== "ACTIVE") throw conflict("Only active accounts can reset their password", { reason: "not_active" });
+    await writeAudit(tx, ctx, { category: "SECURITY", action: "platform.user.password_reset_sent", resourceType: "user", resourceId: userId, reason });
+    return u.email;
+  });
+  const delivery = await requestPasswordReset(ctx, { email });
+  return { emailDelivery: delivery.emailDelivery };
+}
+
+/**
+ * Authentication picture of one user: login methods, MFA factors (type and dates only, never secrets), recovery codes
+ * left, sessions, failed sign-ins, password resets, other security events and impersonations of this account.
+ */
+export async function userAuthentication(ctx: RequestContext, userId: string) {
+  await requireAnyPlatform(ctx, ["platform.users.read", "platform.support.read"]);
+  if (!isUuid(userId)) throw notFound("User");
+  const u = await db().user.findUnique({ where: { id: userId }, select: { email: true, passwordHash: true, mfaEnabled: true, emailVerifiedAt: true } });
+  if (!u) throw notFound("User");
+  const since = daysAgo(90);
+  const [oauth, factors, codesLeft, sessions, failed, resets, verifications, events, impersonations] = await Promise.all([
+    db().oAuthAccount.findMany({ where: { userId }, select: { provider: true, providerEmail: true, createdAt: true, lastLoginAt: true } }),
+    db().mfaFactor.findMany({ where: { userId }, select: { id: true, type: true, confirmedAt: true, createdAt: true } }),
+    db().mfaRecoveryCode.count({ where: { userId, usedAt: null } }),
+    db().session.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50, select: { id: true, ip: true, userAgent: true, createdAt: true, lastSeenAt: true, expiresAt: true, revokedAt: true, mfaVerifiedAt: true, mfaPending: true, impersonationId: true } }),
+    // Failed sign-ins are recorded against the account (resourceId) when the email matched one.
+    db().auditLog.findMany({ where: { action: "auth.sign_in_failed", resourceType: "user", resourceId: userId, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 50, select: { id: true, ip: true, userAgent: true, createdAt: true } }),
+    db().passwordResetToken.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, createdAt: true, expiresAt: true, usedAt: true } }),
+    db().emailVerificationToken.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 10, select: { id: true, createdAt: true, expiresAt: true, usedAt: true } }),
+    db().auditLog.findMany({ where: { category: "SECURITY", resourceType: { in: ["user", "session"] }, OR: [{ resourceId: userId }, { actorId: userId }], action: { not: "auth.sign_in_failed" } }, orderBy: { createdAt: "desc" }, take: 40, select: { id: true, action: true, actorId: true, ip: true, reason: true, createdAt: true } }),
+    db().adminImpersonation.findMany({ where: { targetUserId: userId }, orderBy: { startedAt: "desc" }, take: 20, select: { id: true, adminUserId: true, mode: true, reason: true, ticketRef: true, startedAt: true, expiresAt: true, endedAt: true, endedBy: true, redeemedAt: true } }),
+  ]);
+  const now = Date.now();
+  const failed24h = failed.filter((f) => now - f.createdAt.getTime() < 86_400_000).length;
+  const ids = [...new Set([...events.map((e) => e.actorId), ...impersonations.map((i) => i.adminUserId)].filter((x): x is string => !!x && x !== userId))];
+  const people = ids.length ? await db().user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, email: true } }) : [];
+  const who = (id: string | null) => (id === userId ? null : (people.find((p) => p.id === id) ?? null));
+  return {
+    methods: { password: !!u.passwordHash, oauth },
+    mfa: { enabled: u.mfaEnabled, factors, recoveryCodesLeft: codesLeft },
+    emailVerifiedAt: u.emailVerifiedAt,
+    sessions: sessions.map((s) => ({ ...s, active: !s.revokedAt && s.expiresAt.getTime() > now })),
+    failedLogins: { items: failed, last24h: failed24h, last90d: failed.length, capped: failed.length >= 50 },
+    passwordResets: resets.map((r) => ({ ...r, state: r.usedAt ? "used" : r.expiresAt.getTime() < now ? "expired" : "pending" })),
+    verifications: verifications.map((r) => ({ ...r, state: r.usedAt ? "used" : r.expiresAt.getTime() < now ? "expired" : "pending" })),
+    events: events.map((e) => ({ ...e, actor: who(e.actorId) })),
+    impersonations: impersonations.map((i) => ({ ...i, admin: who(i.adminUserId), live: !i.endedAt && i.expiresAt.getTime() > now })),
+  };
+}
+
+export const addMembershipInput = z.object({
+  organization: z.string().trim().min(1).max(120),
+  roleKey: z.enum(["ORGANIZATION_OWNER", "ORGANIZATION_ADMIN", "MEMBER"]),
+  reason: reasonSchema,
+});
+
+/** Add a user to an organization (by id or slug) from the user page; same rules and audit as the members editor. */
+export async function adminAddUserMembership(ctx: RequestContext, userId: string, raw: z.input<typeof addMembershipInput>) {
+  const input = addMembershipInput.parse(raw);
+  if (!isUuid(userId)) throw notFound("User");
+  const [user, org] = await Promise.all([
+    db().user.findUnique({ where: { id: userId }, select: { email: true } }),
+    db().organization.findFirst({ where: isUuid(input.organization) ? { id: input.organization } : { slug: input.organization.toLowerCase() }, select: { id: true, status: true } }),
+  ]);
+  if (!user) throw notFound("User");
+  if (!org) throw notFound("Organization");
+  if (org.status === "CLOSED") throw conflict("The organization is archived", { reason: "organization_closed" });
+  return { organizationId: org.id, ...(await adminAddMember(ctx, org.id, { email: user.email, roleKey: input.roleKey, reason: input.reason })) };
 }
 
 /** Usage, subscriptions (of organizations the user owns or belongs to) and an activity timeline for one user. */

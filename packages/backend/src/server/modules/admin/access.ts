@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { RequestContext } from "@/server/core/context";
-import { forbidden, invalid } from "@/server/core/errors";
+import { env } from "@/server/core/env";
+import { AppError, forbidden, invalid } from "@/server/core/errors";
 import { can, requirePermission } from "@/server/modules/rbac/service";
 import { platformChain } from "@/server/modules/rbac/scope";
 
@@ -19,6 +20,16 @@ export async function requireAnyPlatform(ctx: RequestContext, permissions: strin
 
 /** UI capability hint (never enforcement). */
 export const canPlatform = (ctx: RequestContext, permission: string) => can(ctx, permission, platformChain());
+
+/**
+ * Resolve several platform permissions at once (UI capability hint, never enforcement):
+ * `const caps = await capabilitiesFor(ctx, ["platform.users.manage", "pricing.read"]); caps["pricing.read"]`.
+ * Unknown keys throw (like `can`), so typos surface in tests.
+ */
+export async function capabilitiesFor<const K extends string>(ctx: RequestContext, keys: readonly K[]): Promise<Record<K, boolean>> {
+  const values = await Promise.all(keys.map((k) => can(ctx, k, platformChain())));
+  return Object.fromEntries(keys.map((k, i) => [k, values[i]!])) as Record<K, boolean>;
+}
 
 /** Permissions the admin UI needs to decide what to show, resolved once. */
 export async function adminCapabilities(ctx: RequestContext) {
@@ -42,8 +53,7 @@ export async function adminCapabilities(ctx: RequestContext) {
     "platform.support.read",
     "platform.subscriptions.manage",
   ] as const;
-  const values = await Promise.all(keys.map((k) => can(ctx, k, platformChain())));
-  return Object.fromEntries(keys.map((k, i) => [k, values[i]!])) as Record<(typeof keys)[number], boolean>;
+  return capabilitiesFor(ctx, keys);
 }
 
 /** Typed confirmation for critical actions: the admin must type the exact phrase shown in the dialog. */
@@ -61,3 +71,18 @@ export const utcDayStart = () => {
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 };
+
+/**
+ * MFA re-check for the most sensitive admin changes (platform roles, custom roles, break-glass, impersonation): a
+ * current authenticator (or recovery) code is verified against this session. Development may relax it with
+ * REALY_DEV_RELAX_MFA.
+ */
+export async function recheckMfa(ctx: RequestContext, code: string | undefined) {
+  if (env().REALY_DEV_RELAX_MFA && !code) return;
+  if (!ctx.sessionId) throw new AppError("mfa_required", "Confirm with your authenticator code", { reason: "mfa_recheck" });
+  if (!code) throw new AppError("mfa_required", "Enter the current code from your authenticator app", { reason: "mfa_recheck" });
+  const { verifyMfa } = await import("@/server/modules/auth/service");
+  await verifyMfa(ctx, ctx.sessionId, ctx.actor.id!, code);
+}
+
+export const mfaCodeSchema = z.string().trim().max(20).optional();
