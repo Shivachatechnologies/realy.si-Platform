@@ -27,6 +27,7 @@ import {
   type AddonKey,
 } from "./service";
 import { meterOfLimit, writeLedgerEntry } from "./ledger";
+import { LIMITS } from "./catalog";
 
 const READ = ["platform.subscriptions.read", "pricing.read"];
 const MANAGE = ["platform.subscriptions.manage", "pricing.manage"];
@@ -164,6 +165,66 @@ export async function revokeOverride(ctx: RequestContext, overrideId: string, re
   });
   invalidateEntitlements(row.organizationId);
   return row;
+}
+
+// ───────────── Internal accounts: unlock everything ─────────────
+
+export const unlockAllInput = z.object({
+  organizationId: z.string().uuid(),
+  /** Trial end for organizations without a subscription, so usage keeps working (default 10 years). */
+  trialYears: z.number().int().min(1).max(10).default(10),
+  reason: reasonSchema,
+});
+
+/**
+ * Internal / owner accounts: one override per feature (enabled) and per limit (the Scale plan value; high-cost
+ * limits always stay finite), plus a long trial window when there is no subscription. Previous active overrides are
+ * revoked (kept for history). One audit entry with every key granted.
+ */
+export async function unlockAllEntitlements(ctx: RequestContext, raw: z.input<typeof unlockAllInput>) {
+  const input = unlockAllInput.parse(raw);
+  const now = new Date();
+  const result = await transaction(async (tx) => {
+    await requireAnyPlatform(ctx, MANAGE);
+    if (!(await tx.organization.findUnique({ where: { id: input.organizationId }, select: { id: true } }))) throw notFound("Organization");
+    const keys = [...FEATURE_KEYS, ...LIMIT_KEYS] as string[];
+    await tx.entitlementOverride.updateMany({
+      where: { organizationId: input.organizationId, key: { in: keys }, revokedAt: null },
+      data: { revokedAt: now, revokedById: ctx.actor.id },
+    });
+    const limitValue = (k: (typeof LIMIT_KEYS)[number]) => {
+      const v = LIMITS[k].values.scale;
+      if (v === null) return isHighCostLimit(k) ? 0n : null;
+      return BigInt(v);
+    };
+    const data = [
+      ...FEATURE_KEYS.map((key) => ({ organizationId: input.organizationId, key, enabled: true, limitValue: null, reason: input.reason, createdById: ctx.actor.id })),
+      ...LIMIT_KEYS.map((key) => ({ organizationId: input.organizationId, key, enabled: true, limitValue: limitValue(key), reason: input.reason, createdById: ctx.actor.id })),
+    ];
+    await tx.entitlementOverride.createMany({ data });
+    const subscribed = await tx.subscription.count({ where: { organizationId: input.organizationId, status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } }).catch(() => 0);
+    let trialEndsAt: Date | null = null;
+    if (!subscribed) {
+      trialEndsAt = new Date(now.getTime() + input.trialYears * 365 * 86_400_000);
+      await tx.entitlementTrial.upsert({
+        where: { organizationId: input.organizationId },
+        create: { organizationId: input.organizationId, startedAt: now, endsAt: trialEndsAt, source: "manual" },
+        update: { endsAt: trialEndsAt, source: "manual" },
+      });
+    }
+    await writeAudit(tx, ctx, {
+      category: "ADMIN",
+      organizationId: input.organizationId,
+      action: "entitlements.internal_unlock",
+      resourceType: "organization",
+      resourceId: input.organizationId,
+      newValue: { features: FEATURE_KEYS.length, limits: LIMIT_KEYS.length, trialEndsAt },
+      reason: input.reason,
+    });
+    return { features: FEATURE_KEYS.length, limits: LIMIT_KEYS.length, trialEndsAt };
+  });
+  invalidateEntitlements(input.organizationId);
+  return result;
 }
 
 // ───────────── Admin add-on grants (credit allocation for one organization) ─────────────

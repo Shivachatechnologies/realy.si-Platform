@@ -3238,7 +3238,10 @@
           "ads_spend_month": "广告支出上限 / 月",
           "sites_pages_max": "网站页面",
           "sites_landing_pages_max": "落地页"
-        }
+        },
+        "unlockAll": "全部解锁",
+        "unlockAllHint": "内部或所有者账户：开启所有功能，并以覆盖方式设置 Scale 套餐的额度。没有订阅时会延长试用期，以便继续使用。请输入组织的 slug 以确认。",
+        "unlockAllConfirm": "解锁"
       },
       "lifecycle": {
         "clone": "克隆…",
